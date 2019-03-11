@@ -48,7 +48,7 @@ TTTR::TTTR(
 
 
 TTTR::TTTR(TTTR *parent,
-           unsigned long long *selection,
+           long long *selection,
            int n_selection) :
         TTTR() {
     TTTR::n_valid_events = (size_t) n_selection;
@@ -376,8 +376,8 @@ int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        unsigned long **out, int *n_out,
-        long *in, int n_in
+        long long **out, int *n_out,
+        long long *in, int n_in
 ){
     ::getIndicesByChannel(
             out, n_out,
@@ -387,21 +387,21 @@ void TTTR::get_selection_by_channel(
 }
 
 
-TTTR* TTTR::select(unsigned long long *selection, int n_selection) {
+TTTR* TTTR::select(long long *selection, int n_selection) {
     return new TTTR(this, selection, n_selection);
 }
 
 
 void getIndicesByChannel(
-        unsigned long **out, int *n_out,
-        long *in, int n_in,
+        long long **out, int *n_out,
+        long long *in, int n_in,
         short *routing_channels, int n_routing_channels) {
     int ch;
     size_t n_sel;
-    *out = (unsigned long *) malloc(n_routing_channels * sizeof(unsigned long));
+    *out = (long long *) malloc(n_routing_channels * sizeof(long long));
 
     n_sel = 0;
-    for (size_t i = 0; i < n_routing_channels; i++) {
+    for (long long i = 0; i < n_routing_channels; i++) {
         ch = routing_channels[i];
         for (int j = 0; j < n_in; j++) {
             if (in[j] == ch) {
@@ -467,11 +467,11 @@ void get_ranges_time_window(
 
 
 void selection_by_count_rate(
-        int **out, int *n_out,
-        unsigned long *time, int n_time,
+        long long **out, int *n_out,
+        unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 ){
-    *out = (int*) malloc(n_time * sizeof(int));
+    *out = (long long*) malloc(n_time * sizeof(long long));
     int r, n_ph;
     int i = 0;
 

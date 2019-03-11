@@ -78,8 +78,8 @@ size_t determine_number_of_records_by_file_size(
  * @param n_ph_max
  */
 void selection_by_count_rate(
-        int **out, int *n_out,
-        unsigned long *time, int n_time,
+        long long **out, int *n_out,
+        unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 );
 
@@ -112,8 +112,8 @@ void get_ranges_channel(
  * @param n_routing_channels
  */
 void getIndicesByChannel(
-        unsigned long **out, int *n_out,
-        long *in, int n_in,
+        long long **out, int *n_out,
+        long long *in, int n_in,
         short *routing_channels, int n_routing_channels);
 
 
@@ -317,7 +317,7 @@ public:
     void get_routing_channel(short ** out, int* n_out);
     void get_event_type(short ** out, int* n_out);
     int get_n_valid_events();
-    TTTR* select(unsigned long long *selection, int n_selection);
+    TTTR* select(long long *selection, int n_selection);
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
@@ -346,7 +346,7 @@ public:
     );
 
     TTTR(TTTR *parent,
-         unsigned long long *selection,
+         long long *selection,
          int n_selection
     );
 
@@ -365,8 +365,8 @@ public:
     /// @param in a pointer to an array of int16_tchannel numbers that are used to select indices of photons
     /// @param n_in the length of the channel list.
     void get_selection_by_channel(
-            unsigned long **out, int *n_out,
-            long *in, int n_in
+            long long **out, int *n_out,
+            long long *in, int n_in
     );
 
 

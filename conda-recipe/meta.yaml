@@ -1,10 +1,11 @@
 package:
   name: tttrlib
-  version: {{ environ.get('GIT_DESCRIBE_NUMBER', 'default')}}
+  #version: {{ environ.get('GIT_DESCRIBE_NUMBER', 'default')}}
+  version: 0.0.4
 
 source:
-  git_url: ../../CLionProjects/tttrlib
-  #path: ../../CLionProjects/tttrlib/
+  #git_url: ..
+  path: ..
 
 requirements:
   build:
