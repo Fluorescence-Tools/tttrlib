@@ -16,12 +16,11 @@
 #ifndef TTTRLIB_HISTOGRAM_H
 #define TTTRLIB_HISTOGRAM_H
 
-#include <algorithm>    // std::lower_bound, std::upper_bound, std::sort
-#include <vector>       // std::vector
+#include <algorithm>
+#include <vector>   
 #include <stdio.h>
 #include <string.h>
 #include <map>
-#include <omp.h>
 #include <cmath>
 
 
