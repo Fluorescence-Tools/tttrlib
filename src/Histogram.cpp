@@ -13,7 +13,6 @@
  ****************************************************************************/
 
 #include "../include/Histogram.h"
-#include <omp.h>
 #include <iostream>
 
 
