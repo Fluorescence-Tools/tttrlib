@@ -9,7 +9,6 @@ FIND_PACKAGE(PythonLibs)
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIR})
 LINK_DIRECTORIES(${PYTHON_LIBRARY})
 
-
 execute_process(
         COMMAND python -c
         "from __future__ import print_function\ntry: import numpy; print(numpy.get_include(), end='')\nexcept:pass\n"
@@ -22,13 +21,16 @@ INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
 
 # This is the "new" way but it does not work yet
 # There may be fixes
-#FIND_PACKAGE(Python COMPONENTS Interpreter)
 #INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
+#FIND_PACKAGE(Python COMPONENTS Interpreter)
 #LINK_DIRECTORIES(${Python_LIBRARY_DIRS})
+#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS})
+
 
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
 SET(SWIG_SRC tttrlib.i)
+# The output path is controlled by the setup.py
 #SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/pyext)
 
 SET_PROPERTY(SOURCE tttrlib.i PROPERTY CPLUSPLUS ON)
@@ -51,5 +53,5 @@ INCLUDE_DIRECTORIES(
 TARGET_LINK_LIBRARIES(
         ${MODULE_NAME}
         ${HDF5_LIBRARIES}
-        ${Python_LIBRARIES}
+        ${PYTHON_LIBRARY}
 )
