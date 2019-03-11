@@ -5,8 +5,9 @@ CMakeLists.txt.user
 CMakeLists.txt.user.*
 cmake-build-*
 
-# Documentation
+# Documentation and tools
 doc*
+utility*
 
 # JetBrains
 # User-specific stuff
