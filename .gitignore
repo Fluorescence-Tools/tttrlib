@@ -5,6 +5,9 @@ CMakeLists.txt.user
 CMakeLists.txt.user.*
 cmake-build-*
 
+# Documentation
+doc*
+
 # JetBrains
 # User-specific stuff
 .idea/**/workspace.xml
