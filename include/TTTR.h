@@ -111,7 +111,7 @@ void get_ranges_channel(
  * @param routing_channels
  * @param n_routing_channels
  */
-void getIndicesByChannel(
+void selection_by_channels(
         long long **out, int *n_out,
         long long *in, int n_in,
         short *routing_channels, int n_routing_channels);
@@ -174,7 +174,7 @@ inline void get_array(
  *
  *
  */
-void get_ranges_time_window(
+void ranges_by_time_window(
         int **ranges, int *n_range,
         unsigned long *time, int n_time,
         int tw_min, int tw_max,
@@ -316,6 +316,7 @@ public:
     void get_micro_time(unsigned int **out, int *n_out);
     void get_routing_channel(short ** out, int* n_out);
     void get_event_type(short ** out, int* n_out);
+    int get_number_of_tac_channels();
     int get_n_valid_events();
     TTTR* select(long long *selection, int n_selection);
 
@@ -361,12 +362,27 @@ public:
      */
     char* get_filename();
 
-    /// Returns a vector containing indices of records that
-    /// @param in a pointer to an array of int16_tchannel numbers that are used to select indices of photons
-    /// @param n_in the length of the channel list.
+    /*!
+     * Returns a vector containing indices of records that
+     * @param in a pointer to an array of int16_tchannel numbers that are used to select indices of photons
+     * @param n_in the length of the channel list.
+     */
     void get_selection_by_channel(
             long long **out, int *n_out,
             long long *in, int n_in
+    );
+
+
+    /*!
+     *
+     * @param out
+     * @param n_out
+     * @param tw
+     * @param n_ph_max
+     */
+    void get_selection_by_count_rate(
+            long long **out, int *n_out,
+            unsigned long tw, int n_ph_max
     );
 
 

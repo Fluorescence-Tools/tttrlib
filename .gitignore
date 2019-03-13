@@ -6,7 +6,8 @@ CMakeLists.txt.user.*
 cmake-build-*
 
 # Documentation and tools
-doc*
+doc/_*
+doc/paper*
 utility*
 
 # JetBrains

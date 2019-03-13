@@ -42,6 +42,7 @@
 #include <functional>
 #include <numeric>
 #include <algorithm>
+#include <limits.h>
 
 
 
@@ -70,7 +71,7 @@
 void normalize_correlation(
         double np1, uint64_t dt1,
         double np2, uint64_t dt2,
-        std::vector<uint64_t> &x_axis, std::vector<double> &corr,
+        std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
         size_t n_bins
 );
 
@@ -86,10 +87,12 @@ void normalize_correlation(
  * macro time array.
  *
  * @param[in,out] t An array containing the time events (macro times)
- * @param[in] tac An array containing the micro times of the corresponding macro times
  * @param[in] n_times The number of macro times.
+ * @param[in] tac An array containing the micro times of the corresponding macro times
+ * @param[in] tac The number of micro time channels (TAC channels)
+
  */
-void make_fine_times(unsigned long long *t, unsigned int* tac, size_t n_times);
+void make_fine_times(unsigned long long *t, int n_times, unsigned int* tac, int n_tac);
 
 
 
@@ -197,7 +200,7 @@ private:
     std::vector<double> corr;
 
     /// The normalized x-axis (the time axis) of the correlation
-    std::vector<uint64_t > x_axis_normalized;
+    std::vector<unsigned long long> x_axis_normalized;
     /// The normalized correlation
     std::vector<double> corr_normalized;
 
@@ -224,18 +227,7 @@ protected:
      *
      * Updates x-axis to the current @param n_bins and @param n_casc and reserves memory for the correlation
      */
-    void update_axis(){
-        n_corr = n_casc * n_bins + 1;
-
-        x_axis.resize(n_corr);
-        corr.resize(n_corr);
-
-        x_axis[0] = 0;
-        for(unsigned int j=1; j <= n_casc*n_bins; j++){
-            x_axis[j] = x_axis[j-1] + (uint64_t) std::pow(2, std::floor( (j-1)  / n_bins));
-            corr[j] = 0;
-        }
-    }
+    void update_axis();
 
 
 public:
@@ -279,19 +271,14 @@ public:
     }
 
     /*!
-     * Changes the
-     * @param[in] tac_1
-     * @param[in] n_tac_1
-     * @param[in] tac_2
-     * @param[in] n_tac_2
+     * Changes the time axis to consider the micro times.
+     * @param[in] tac_1 The micro times of the first correlation channel
+     * @param[in] n_tac_1 The number of events in the first correlation channel
+     * @param[in] tac_2 The micro times of the second correlation channel
+     * @param[in] n_tac_2 The number of events in the second correlation channel
+     * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
-    void make_fine(unsigned int* tac_1, size_t n_tac_1, unsigned int* tac_2, size_t n_tac_2){
-        if(!is_fine){
-            make_fine_times(t1, tac_1, n_t1);
-            make_fine_times(t2, tac_2, n_t2);
-            is_fine = true;
-        }
-    }
+    void make_fine(unsigned int* tac_1, int n_tac_1, unsigned int* tac_2, int n_tac_2, int n_tac);
 
     /*!
      * Get the x-axis of the correlation
@@ -300,14 +287,7 @@ public:
      * @param[out] x_axis a pointer to an array that will contain the x-axis
      * @param[out] n_out a pointer to the an integer that will contain the number of elements of the x-axis
      */
-    void get_x_axis(unsigned long long** x_axis, int* n_out){
-        (*n_out) = (int) this->x_axis.size();
-        auto* t = (unsigned long long*) malloc((*n_out) * sizeof(unsigned long long));
-        for(int i = 0; i<(*n_out); i++){
-            t[i] = this->x_axis[i];
-        }
-        *x_axis = t;
-    }
+    void get_x_axis(unsigned long long** x_axis, int* n_out);
 
 
     /*!
@@ -317,14 +297,7 @@ public:
      * @param[out] corr a pointer to an array that will contain the correlation
      * @param[out] n_out a pointer to the an integer that will contain the number of elements of the x-axis
      */
-    void get_corr(double** corr, int* n_out){
-        (*n_out) = (int) this->corr.size();
-        auto* t = (double *) malloc((*n_out) * sizeof(double));
-        for(int i = 0; i < (*n_out); i++){
-            t[i] = this->corr[i];
-        }
-        *corr = t;
-    }
+    void get_corr(double** corr, int* n_out);
 
 
     /*!
@@ -335,14 +308,7 @@ public:
      * @param[out] n_out a pointer to the an integer that will contain the number of elements
      * of the x-axis
      */
-    void get_x_axis_normalized(unsigned long long** x_axis, int* n_out){
-        (*n_out) = (int) x_axis_normalized.size();
-        auto* t = (unsigned long long*) malloc((*n_out) * sizeof(unsigned long long));
-        for(int i = 0; i<(*n_out); i++){
-            t[i] = x_axis_normalized[i];
-        }
-        *x_axis = t;
-    }
+    void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
 
 
     /*!
@@ -353,14 +319,7 @@ public:
      * @param[out] n_out a pointer to the an integer that will contain the number of elements
      * of the normalized x-axis
      */
-    void get_corr_normalized(double** corr, int* n_out){
-        (*n_out) = (int) corr_normalized.size();
-        auto* t = (double *) malloc((*n_out) * sizeof(double));
-        for(int i = 0; i < (*n_out); i++){
-            t[i] = corr_normalized[i];
-        }
-        *corr = t;
-    }
+    void get_corr_normalized(double** corr, int* n_out);
 
 
     /*!
@@ -379,20 +338,7 @@ public:
             double* weight_ch1, int n_weights_ch1,
             unsigned long long  *t2, int n_t2,
             double* weight_ch2, int n_weights_ch2
-            ){
-        Correlator::t1 = t1;
-        Correlator::w1 = weight_ch1;
-        Correlator::n_t1 = (size_t) n_t1;
-
-        Correlator::t2 = t2;
-        Correlator::w2 = weight_ch2;
-        Correlator::n_t2 = (size_t) n_t2;
-
-        dt1 = t1[n_t1 - 1] - t1[0];
-        dt2 = t2[n_t2 - 1] - t2[0];
-        maximum_macro_time = std::max(dt1, dt2);
-
-    }
+            );
 
     /*!
      * Calculates the normalized correlation amplitudes and x-axis
@@ -401,39 +347,9 @@ public:
      * Makes a copy of the current correlation curve, i.e., the x-axis and and the corresponding
      * correlation amplitudes and calculates the values of the normalized correlation.
      */
-    void normalize(){
-        std::copy(x_axis.begin(), x_axis.end(), std::back_inserter(x_axis_normalized));
-        std::copy(corr.begin(), corr.end(), std::back_inserter(corr_normalized));
-        double np1 = std::accumulate(w1, w1+n_t1, 0.0);
-        double np2 = std::accumulate(w2, w2+n_t2, 0.0);
-        normalize_correlation(
-                np1, dt1,
-                np2, dt2,
-                x_axis_normalized,
-                corr_normalized,
-                n_bins
-                );
-    }
+    void normalize();
 
-    void run(){
-
-        for(size_t i_casc=0; i_casc<n_casc; i_casc++){
-
-            correlate(
-                    0, n_t1,
-                    0, n_t2,
-                    i_casc, n_bins,
-                    x_axis, corr,
-                    t1, w1, n_t1,
-                    t2, w2, n_t2
-                    );
-
-            coarsen(t1, w1, n_t1);
-            coarsen(t2, w2, n_t2);
-        }
-        // calculate a normalized correlation
-        normalize();
-    }
+    void run();
 
 };
 

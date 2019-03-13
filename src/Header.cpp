@@ -19,9 +19,11 @@
 #include <stdio.h>
 #include <string>
 #include <string.h>
+#include <limits.h>
 
 #include "../include/Header.h"
 #include "../include/RecordReader.h"
+
 
 
 
@@ -30,6 +32,7 @@ Header::~Header(){};
 Header::Header() :
         micro_time_resolution(0),
         macro_time_resolution(0),
+        number_of_tac_channels(0),
         tttr_container_type(0)
 {}
 
@@ -62,6 +65,7 @@ Header::Header(
                     micro_time_resolution
                     );
             bytes_per_record = 4;
+            number_of_tac_channels = UINT16_MAX ;
             break;
         case BH_SPC600_256_CONTAINER:
             header_end = 0;
@@ -69,6 +73,7 @@ Header::Header(
             macro_time_resolution = 1.0;
             micro_time_resolution = 1.0;
             bytes_per_record = 4;
+            number_of_tac_channels = 256;
             break;
         case BH_SPC600_4096_CONTAINER:
             header_end = 0;
@@ -76,6 +81,7 @@ Header::Header(
             macro_time_resolution = 1.0;
             micro_time_resolution = 1.0;
             bytes_per_record = 6;
+            number_of_tac_channels = 4096;
             break;
         case BH_SPC130_CONTAINER:
             header_end = 0;
@@ -83,6 +89,7 @@ Header::Header(
             macro_time_resolution = 1.0;
             micro_time_resolution = 1.0;
             bytes_per_record = 4;
+            number_of_tac_channels = 4096;
             break;
         default:
             header_end = 0;
@@ -90,6 +97,7 @@ Header::Header(
             macro_time_resolution = 1.0;
             micro_time_resolution = 1.0;
             bytes_per_record = 4;
+            number_of_tac_channels = 4096;
             break;
     }
 }
@@ -185,7 +193,7 @@ size_t read_ht3_header(
     if(fread(&resolution, 1, 4, fpin) == 4){
         data["Resolution"] = std::to_string(resolution);
     } else{
-        data["Resolution"] = std::string("NA");
+        data["Resolution"] = std::string("1");
     }
 
     macro_time_resolution = 1.0;
@@ -277,7 +285,7 @@ size_t read_ptu_header(
                 sprintf(buffer_out, "%s", bool(TagHead.TagValue) ? "True" : "False");
                 break;
             case tyInt8:
-                sprintf(buffer_out, "%lu", TagHead.TagValue);
+                sprintf(buffer_out, "%lu", (unsigned long) TagHead.TagValue);
                 break;
             case tyBitSet64:
                 sprintf(buffer_out, "0x%16.16IX", TagHead.TagValue);

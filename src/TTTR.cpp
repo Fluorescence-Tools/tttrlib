@@ -155,7 +155,7 @@ int TTTR::read_hdf_file(char *fn){
     H5Fclose(hdf5_file);
     H5Sclose(space);
     return 1;
-    // TODO: implement proper return that checks if file was successfully read.
+    // TODO.md: implement proper return that checks if file was successfully read.
 }
 
 
@@ -379,10 +379,22 @@ void TTTR::get_selection_by_channel(
         long long **out, int *n_out,
         long long *in, int n_in
 ){
-    ::getIndicesByChannel(
+    ::selection_by_channels(
             out, n_out,
             in, n_in,
             routing_channels, get_n_events()
+    );
+}
+
+
+void TTTR::get_selection_by_count_rate(
+        long long **out, int *n_out,
+        unsigned long tw, int n_ph_max
+){
+    selection_by_count_rate(
+            out, n_out,
+            macro_times, (int) n_valid_events,
+            tw, n_ph_max
             );
 }
 
@@ -392,7 +404,7 @@ TTTR* TTTR::select(long long *selection, int n_selection) {
 }
 
 
-void getIndicesByChannel(
+void selection_by_channels(
         long long **out, int *n_out,
         long long *in, int n_in,
         short *routing_channels, int n_routing_channels) {
@@ -433,7 +445,7 @@ size_t determine_number_of_records_by_file_size(
 }
 
 
-void get_ranges_time_window(
+void ranges_by_time_window(
         int **ranges, int *n_range,
         unsigned long *time, int n_time,
         int tw_min, int tw_max,
@@ -497,6 +509,9 @@ void selection_by_count_rate(
     }
 }
 
+int TTTR::get_number_of_tac_channels(){
+    return header->number_of_tac_channels;
+}
 
 
 void get_ranges_channel(

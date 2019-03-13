@@ -5,7 +5,7 @@ import re
 import sys
 import platform
 import subprocess
-import numpy
+from sphinx.setup_command import BuildDoc
 
 from setuptools import setup, Extension
 from distutils.command.build_ext import build_ext
@@ -67,16 +67,16 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 
-if 'doc' in sys.argv:
+if 'doc2' in sys.argv:
     cwd = os.getcwd()
-    os.chdir('../include/')
+    os.chdir('./include/')
     subprocess.call(
-        "doxygen ../include/Doxyfile",
+        "doxygen ./include/Doxyfile",
         shell=True
     )
     os.chdir('../utility/')
     subprocess.call(
-        "python doxy2swig.py ../doc/xml/index.xml documentation.i",
+        "python doxy2swig.py ../doc2/api/xml/index.xml documentation.i",
         shell=True
     )
     os.chdir(cwd)
@@ -87,7 +87,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.3',
+    version='0.0.4',
     ext_modules=[CMakeExtension('tttrlib')],
     cmdclass={
         'build_ext': CMakeBuild
