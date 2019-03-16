@@ -84,6 +84,21 @@ void selection_by_count_rate(
 );
 
 
+/*!
+ * Splits the time trace into bins that are at least of the length specified by @param time_window and
+ * counts the number of photons in each time interval
+ *
+ * @param out array of counts
+ * @param n_out number of elements in @param out
+ * @param time array of detection times
+ * @param n_time number of elements in the @param time array
+ * @param time_window The size of the
+ */
+void histogram_trace(
+        int **out, int *n_out,
+        unsigned long long *time, int n_time,
+        int time_window);
+
 
 /*!
  *
@@ -137,8 +152,12 @@ inline void get_array(
 
 
 /*!
- * Determines time windows for an array of consecutive time events based
- * on
+ * Determines time windows (tw) for an array of consecutive time events based
+ * on a minimum tw size @param tw_min, a minimum number of photons in
+ * a tw @param n_ph_min.
+ *
+ * Optionally, the tw bigger than @param tw_max and tw with more photons than
+ * @param n_ph_max are disregarded.
  *
  * The function determines for an array of consecutive time events passed to the
  * function by the argument @param time an interleaved array @param time_windows
@@ -176,7 +195,7 @@ inline void get_array(
  */
 void ranges_by_time_window(
         int **ranges, int *n_range,
-        unsigned long *time, int n_time,
+        unsigned long long *time, int n_time,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max
 );
@@ -370,8 +389,7 @@ public:
     void get_selection_by_channel(
             long long **out, int *n_out,
             long long *in, int n_in
-    );
-
+            );
 
     /*!
      *
@@ -383,12 +401,16 @@ public:
     void get_selection_by_count_rate(
             long long **out, int *n_out,
             unsigned long tw, int n_ph_max
-    );
+            );
 
+    void get_ranges_by_count_rate(
+            int **out, int *n_out,
+            int tw_min, int tw_max,
+            int n_ph_min, int n_ph_max
+            );
 
     /// Get header returns the header (if present) as a map of strings.
     Header get_header();
-
 
     /*!
      * Returns the number of events in the TTTR file for cases no selection is specified

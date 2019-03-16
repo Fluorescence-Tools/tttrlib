@@ -1,8 +1,8 @@
-TTTR objects
+TTTR Objects
 ============
 
 Anatomy
-*******
+-------
 
 The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing 
 a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by `SWIG <http://swig.org/>`_
@@ -10,10 +10,11 @@ a vendor independent C++ application programming interface (API) for TTTR files 
 languages such as C# and Java including Octave, Scilab and R. This way, the information provided by the TTTR files 
 can be conveniently accessed without the need of converting the files to alternative vendor independent exchange 
 file formats as `Photon-HDF <http://photon-hdf5.github.io/>`_.
- 
 
 Common in all TTTR file formats is that the photon data is stored as a stream of events. Every event contains
-information on the   
+information on the
+
+.. highlights::
 
     1. Macro time
     2. Micro time
@@ -30,25 +31,60 @@ The event type is a special identifier that informs whether the registered event
 do not provide the macro time directly. Typically, instead of directly providing the macro time, the number of 
 events since the last detected event are counted. 
 
-For convenience, tttrlib provides a unified way of accessing the TTTR data irrespectively of the vendor data format. 
-In memory the TTTR data are handled by tttrlib as follows: 
-conda install conda-build
-conda build conda-recipe
+For convenience, tttrlib provides a unified way of accessing the TTTR data irrespectively of the vendor data format
+via the class :class:`TTTR`. In memory the TTTR data are handled by tttrlib in :class:`TTTR` objects as follows:
 
     1. Macro time - 64 bit unsigned integer
     2. Micro time - 32 bit unsigned integer
     3. Channel number - 16 bit integer
     4. Event type - 16 bit integer
+    5. TTTR Header data
 
-TTTR files are handled by creating TTTR objects that contain the TTTR data of the files. The data contained in the
-files can be accessed by the methods provided by the TTTR class. Opening and and accessing the information contained 
-in TTTR files is demonstrated by the Python code examples shown below.
+TTTR files are handled by creating :class:`TTTR` objects that contain the TTTR data of the files. The data contained
+in the files can be accessed by the methods provided by the TTTR class. Opening and and accessing the information
+contained in TTTR files is demonstrated by the Python code examples shown below. A TTTR object provides four getter
+methods to access the data contained in the associated file.
 
-Attention: The macro time *depends* on the specific instrument settings.
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+    macro_time = data.get_macro_time()
+    micro_time = data.get_micro_time()
+    channel = data.get_channel()
+    event_type = data.get_event_type()
+
+In Python, the getter methods return `NumPy <http://www.numpy.org/>`_ arrays.
 
 
-TTTR objects based on files
----------------------------
+Some manufactures inject special markers that relate to ""events"" into the TTTR stream. Some manufacturers use the
+same routing channel numbers for markers and for photon detection channels. To distinguish photons from markers,
+``TTTR`` objects present for every event an additional event type specifier. The event types stored in TTTR objects
+help to distinguish such events from normal photon events. Currently the following events are considered
+
+
+.. _event-types:
+.. table:: Table of supported file types and corresponding identifiers
+    :widths: auto
+
+    +--------------------------+--------+----------------+
+    | Event type               | Event type number       |
+    +==========================+========+================+
+    |Photon event              |0                        |
+    |Special event             |1                        |
+    +--------------------------+-------------------------+
+
+Overflow events that are used in some file formats are implicitly considered when reading the files. The precise type
+of a special event depends often on channel number associated to the event. A use case for the decoding of imaging
+data is presented in the the :ref:`Imaging:Confocal laser scanning` section.
+
+.. note::
+    The units of the macro time and the micro time *depend* on the specific instrument settings.
+
+
+
+Create TTTR objects using data files
+------------------------------------
 
 In Python, first, the tttrlib module needs to be imported. Next, a TTTR object needs to be created. When creating a
 new TTTR object, the file name and the file type can be passed to the object's constructor. If a TTTR object is
@@ -70,71 +106,33 @@ is either specified by a number or by passing a string to the TTTR object's cons
     |Photon-HDF5               |5       |'PHOTON-HDF5'   |
     +--------------------------+--------+----------------+
 
-
 The two different approaches of initializing TTTR objects. A TTTR object that contains the data in a TTTR file can
-be initialized by the filename and the data type as specified in above (see :ref:`supported-file-types`).
+be initialized by the filename and the data type as specified in above (see :ref:`supported-file-types`). Both
+Alternatively, TTTR objects are initialized by the filename and the file type identifier as displayed in
+the table above (see :ref:`supported-file-types`). Both approaches are equivalent and demonstrated for the
+Becker&Hickl SPC-130 and the PicoQuant PTU file supplied in the example folder in the Python code below.
 
 
 .. code-block:: python
 
     import tttrlib
     ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
-    ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 1)
-    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 2)
-    spc600_256 = tttrlib.TTTR('./examples/BH/BH_SPC630_256.spc', 3)
-    ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 1)
-    hdf5 = tttrlib.TTTR('./examples/HDF/PHOTON-HDF.hdf5', 5)
-
-Alternatively, TTTR objects are initialized by the filename and the file type identifier as displayed in
-the table above (see :ref:`supported-file-types`).
-
-
-.. code-block:: python
-
-    import tttrlib
     ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
-    ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 'HT3')
-    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
-    spc600_256 = tttrlib.TTTR('./examples/BH/BH_SPC630_256.spc', 'SPC-630-256')
-    photon_hdf5 = tttrlib.TTTR('./examples/HDF/1a_1b_Mix.hdf5', 'PHOTON-HDF5')
 
-A TTTR object provides four getter methods to access the data contained in the associated file.
+    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 2)
+    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
 
-.. code-block:: python
-
-    import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
-    macro_time = data.get_macro_time()
-    micro_time = data.get_micro_time()
-    channel = data.get_channel()
-    event_type = data.get_event_type()
-
-In Python, the getter methods return `NumPy <http://www.numpy.org/>`_ arrays.
+Beyond opening files and processing the content contained in a TTTR file TTTR objects can be created that contain
+initially no data. Moreover, TTTR objects can be created based on existing files and selection.
 
 
-TTTR objects based on selections
---------------------------------
+Create TTTR objects using selections
+------------------------------------
 
 Based on an existing TTTR object and a selection a new TTTR object can be created. That only contains the selected
-elements:
-
-.. code-block:: python
-
-    import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
-    ch_indeces = data.get_selection_by_channel(np.array([0]))
-    ph = tttrlib.TTTR(data, ch_indeces)
-
-The new TTTR object contains a copy of the relevant events.
-
-
-
-Subsets
-*******
-
-Beyond the the array processing capabilities either provided by the high-level programming language or an library
-like `NumPy <http://www.numpy.org/>`_, ``tttrlib`` offers a set of functions and methods to select a subset of the
-data contained in a TTTR file. There are two options to get selection for a subset of the data
+elements. Beyond the the array processing capabilities either provided by the high-level programming language or
+an library like `NumPy <http://www.numpy.org/>`_, ``tttrlib`` offers a set of functions and methods to select a
+subset of the data contained in a TTTR file. There are two options to get selection for a subset of the data
 
     1. By *ranges*
     2. By *selection*
@@ -185,7 +183,7 @@ are saved in the variables ``green_indices``  and ``red_indices``, respectively.
     import numpy as np
     import tttrlib
 
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
 
     green_indices = data.get_selection_by_channel(np.array([0, 8]))
     red_indices = data.get_selection_by_channel(np.array([1, 9]))
@@ -195,17 +193,17 @@ This examples needs to be adapted to the channel assignment dependent on the act
 Count rate
 ^^^^^^^^^^
 
-Another very common selection is to select certain events out of the photon stream based on the count rate. The count
-rate is determined by the number of detected events within a given time window. The selection by the method
-``get_selection_by_count_rate`` returns all indices where less photons were detected within a specified time window.
-The time window is given by the number of macro time steps.
+Another very common selection is based on the count rate. The count rate is determined by the number of
+detected events within a given time window. The selection by the method ``get_selection_by_count_rate`` returns all
+indices where less photons were detected within a specified time window. The time window is given by the number
+of macro time steps.
 
 .. code-block:: python
 
     import numpy as np
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
-    cr_selection = data.get_selection_by_count_rate(1200000, 30)
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+    cr_selection = data.get_ranges_by_count_rate(1, 30)
 
 In the example shown above, the time window is 1200000 and 30 is the maximum number of photons within that is
 permitted in a time window.
@@ -214,23 +212,23 @@ permitted in a time window.
 Ranges
 ------
 
-Ranges by time-windows
-^^^^^^^^^^^^^^^^^^^^^^
+Ranges by count rate
+^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
     import numpy as np
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
-    cr_selection = data.get_selection_by_count_rate(1200000, 30)
+    import pylab as p
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+    tw_ranges = data.get_ranges_by_count_rate(10000, -1, 30, -1)
 
-
-ranges_by_time_window
-
+The function :py:function:``get_ranges_by_count_rate``
 
 Frames
 ^^^^^^
 
 
 
+.. code-block:: python
 

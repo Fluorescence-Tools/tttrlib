@@ -18,7 +18,7 @@
 #include "../test/tttr_test.h"
 #include <iostream>
 #include <string>
-
+#include <include/RecordReader.h>
 
 
 /*! Processes PicoHarp T3 Tags
@@ -207,7 +207,7 @@ bool ProcessHHT3v2(
             record_type = RECORD_PHOTON;
             channel = (uint16_t) (rec.bits.channel);
             true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = 0;
+            micro_time = rec.bits.dtime;
             return true;
         }
     }
@@ -241,7 +241,7 @@ bool ProcessHHT3v1(
             record_type = RECORD_PHOTON;
             channel = (uint16_t) (rec.bits.channel);
             true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = 0;
+            micro_time = rec.bits.dtime;
             return true;
         }
     }

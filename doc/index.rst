@@ -21,22 +21,21 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
 
 
 Contents
-========
+--------
 
 .. toctree::
    :maxdepth: 1
 
    installation
-   compilation
-   reading_files
-   correlation
-   examples
+   tttr_objects
+   header_data
+   applications
    glossary
    references
 
 
 Indices and tables
-==================
+------------------
 
 * `API <../../api/html/index.html>`_
 * :ref:`genindex`
@@ -45,6 +44,6 @@ Indices and tables
 
 
 License
-=======
+-------
 
-tttrlib is released under the open source MIT license.
+tttrlib is released under the open source `MIT license <https://opensource.org/licenses/MIT>`_.

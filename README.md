@@ -5,8 +5,8 @@
 
 ## General description
 
-tttrlib is a low level, high performance API to read and process time-tagged-time resolved (TTTR) data acquired by 
-PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR files in the open Photon-HDF format.
+tttrlib is a file format agnostic low level, high performance API to read and process time-tagged-time resolved (TTTR) 
+data acquired by  PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR files in the open Photon-HDF format.
 
 The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing 
 a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by SWIG (Simplified 
@@ -20,13 +20,23 @@ languages such as C# and Java including Octave, Scilab and R.
 * Photon distribution anaylsis
 * FLIM image generation and analysis
 
+tttrlib is NOT intended as ready-to-use software for specific application purposes.
 
-tttrlib is NOT intended as ready-to-use software for specific application purposes. 
 
+## Supported file formats
+
+### PicoQuant (PQ)
+* PicoHarp ptu, T2/T3
+* HydraHarp ptu, T2/T3
+* HydraHarp ht3, PTU
+
+
+### Becker & Hickl (BH)
+* spc132 
+* spc630 (256 & 4096 mode)
 
 
 ## Design goals
-
 
 * Low memory footprint (keep objective large datasets, e.g.  FLIM in memory). 
   Particulary useful for FLIM.
@@ -103,18 +113,6 @@ Legacy 32-bit platforms are currently not supported.
 ```
   
   
-
-# Supported file formats
-
-## PicoQuant (PQ)
-* PicoHarp ptu, T2/T3
-* HydraHarp ptu, T2/T3
-* HydraHarp ht3, PTU
-
-
-## Becker & Hickl (BH)
-* spc132 
-* spc630 (256 & 4096 mode)
 
 
 # License

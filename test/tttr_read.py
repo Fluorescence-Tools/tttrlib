@@ -24,7 +24,7 @@ plot_output = True
 
 
 ptu = tttrlib.TTTR('../../examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
-ht3 = tttrlib.TTTR('../../examples/PQ/HT3/01.ht3', 1)
+ht3 = tttrlib.TTTR('../../examples/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
 spc132 = tttrlib.TTTR('../../examples/BH/BH_SPC132.spc', 2)
 spc600_256 = tttrlib.TTTR('../../examples/BH/BH_SPC630_256.spc', 3)
 photon_hdf5 = tttrlib.TTTR('../../examples/HDF/1a_1b_Mix.hdf5', 5)

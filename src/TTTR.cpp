@@ -399,6 +399,21 @@ void TTTR::get_selection_by_count_rate(
 }
 
 
+void TTTR::get_ranges_by_count_rate(
+        int **out, int *n_out,
+        int tw_min, int tw_max,
+        int n_ph_min, int n_ph_max){
+
+    ranges_by_time_window(
+            out, n_out,
+            macro_times, (int) n_valid_events,
+            tw_min, tw_max,
+            n_ph_min, n_ph_max
+            );
+
+}
+
+
 TTTR* TTTR::select(long long *selection, int n_selection) {
     return new TTTR(this, selection, n_selection);
 }
@@ -447,7 +462,7 @@ size_t determine_number_of_records_by_file_size(
 
 void ranges_by_time_window(
         int **ranges, int *n_range,
-        unsigned long *time, int n_time,
+        unsigned long long *time, int n_time,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max
 ) {
@@ -509,8 +524,36 @@ void selection_by_count_rate(
     }
 }
 
+
 int TTTR::get_number_of_tac_channels(){
     return header->number_of_tac_channels;
+}
+
+
+void histogram_trace(
+        int **out, int *n_out,
+        unsigned long long *in, int n_in,
+        int time_window){
+    int l, r;
+    unsigned long long t_max = in[n_in - 1];
+    int i_bin, n_bin;
+
+    n_bin = (int) (t_max / time_window);
+
+    *n_out = n_bin;
+    *out = (int*) malloc(n_bin * sizeof(int));
+    for(int i=0; i<n_bin; i++) (*out)[i] = 0;
+
+    l = 0; r = 0;
+    while(r < n_in){
+        r++;
+        i_bin = int (in[l] / time_window);
+        if ((in[r] - in[l]) > time_window){
+            l = r;
+        } else{
+            (*out)[i_bin] += 1;
+        }
+    }
 }
 
 
