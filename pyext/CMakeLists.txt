@@ -43,7 +43,8 @@ SWIG_ADD_LIBRARY(
         ../src/RecordReader.cpp
         ../src/Header.cpp
         ../src/Histogram.cpp
-        ../src/correlate.cpp
+        ../src/Correlate.cpp
+        ../src/Image.cpp
 )
 
 INCLUDE_DIRECTORIES(

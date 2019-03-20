@@ -7,7 +7,7 @@ import numpy as np
 import pylab as p
 import numba as nb
 
-events = tttrlib.TTTR('./examples/PQ/HT3/04.ht3', 1)
+events = tttrlib.TTTR('./examples/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
 #events = tttrlib.TTTR('./examples/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
 # select special events
 e = events.get_event_type()

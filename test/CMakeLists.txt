@@ -6,5 +6,5 @@ ADD_EXECUTABLE(
         ../include/RecordReader.h ../src/RecordReader.cpp
         ../src/Header.cpp ../include/Header.h
         ../src/Histogram.cpp ../include/Histogram.h
-        ../src/correlate.cpp ../include/correlate.h
+        Correlate.cpp Correlate.h
 )

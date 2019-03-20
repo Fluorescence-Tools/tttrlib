@@ -4,7 +4,9 @@
     #define SWIG_FILE_WITH_INIT
     #include "../include/TTTR.h"
     #include "../include/Histogram.h"
-    #include "../include/correlate.h"
+    #include "../include/Correlate.h"
+    #include "../include/Image.h"
+
 %}
 
 %include <typemaps.i>
@@ -30,8 +32,10 @@ namespace std {
 %include "tttr.i"
 %include "histogram.i"
 %include "correlate.i"
+%include "image.i"
 
 %include "../include/TTTR.h"
 %include "../include/Header.h"
 %include "../include/Histogram.h"
-%include "../include/correlate.h"
+%include "../include/Correlate.h"
+%include "../include/Image.h"

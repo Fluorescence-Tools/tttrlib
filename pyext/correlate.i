@@ -1,6 +1,7 @@
 %module tttrlib
 %{
-    #include "../include/correlate.h"
+    #include "include/Correlate.h"
+
 %}
 
 
@@ -9,5 +10,5 @@
 %apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** corr, int* n_out)}
 %apply (double* IN_ARRAY1, int DIM1) {(double* weight_ch1, int n_weights_ch1), (double* weight_ch2, int n_weights_ch2)}
 
-%include "../include/correlate.h"
+%include "../include/Correlate.h"
 

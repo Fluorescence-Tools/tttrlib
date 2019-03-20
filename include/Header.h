@@ -204,7 +204,7 @@ protected:
 public:
 
     int tttr_record_type;
-    int number_of_tac_channels;
+    unsigned int number_of_tac_channels;
 
     /*!
      * Marks the end of the header in the file

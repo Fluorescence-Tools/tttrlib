@@ -65,7 +65,7 @@ Header::Header(
                     micro_time_resolution
                     );
             bytes_per_record = 4;
-            number_of_tac_channels = UINT16_MAX ;
+            number_of_tac_channels =     32768; //2**15
             break;
         case BH_SPC600_256_CONTAINER:
             header_end = 0;

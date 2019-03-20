@@ -28,8 +28,9 @@
 #include "hdf5.h"
 #include "H5Tpublic.h"
 
-#include "RecordReader.h"
-#include "Header.h"
+#include <RecordReader.h>
+#include <Header.h>
+
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
@@ -201,9 +202,49 @@ void ranges_by_time_window(
 );
 
 
+class TTTRRange {
+protected:
+
+    unsigned int start;
+    unsigned int stop;
+    unsigned long long start_time;
+    unsigned long long stop_time;
+
+public:
+
+    TTTRRange() = default;
+    ~TTTRRange() = default;
+
+    std::vector<unsigned int> get_tttr_indices(){
+        std::vector<unsigned int> v;
+        for(unsigned int i=start; i<stop; i++){
+            v.push_back(i);
+        }
+        return v;
+    }
+
+    std::vector<unsigned int> get_start_stop(){
+        std::vector<unsigned int> v = {start, stop};
+        return v;
+    }
+
+    std::vector<unsigned long long> get_start_stop_time(){
+        std::vector<unsigned long long> v = {start_time, stop_time};
+        return v;
+    }
+
+    unsigned long long get_duration(){
+        return get_start_stop_time()[1] - get_start_stop_time()[0];
+    }
+
+};
+
+
 
 
 class TTTR {
+
+    friend class CLSMImage;
 
 private:
     /// the input file

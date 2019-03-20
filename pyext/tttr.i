@@ -6,8 +6,6 @@
 
 %import std_vector.i
 
-%template(vectort) std::vector<TTTR*>;
-
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}
 
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *selection, int n_selection)}
