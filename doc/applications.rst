@@ -6,12 +6,10 @@ Reading TTTR files
 ------------------
 
 
-Creating Histograms
--------------------
+.. toctree::
+   :maxdepth: 2
 
-
-.. plot:: plots/histogram.py
-   :include-source:
+   histograms
 
 
 .. toctree::

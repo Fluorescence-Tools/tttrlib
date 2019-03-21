@@ -5,6 +5,7 @@ scratch.py
 CMakeLists.txt.user
 CMakeLists.txt.user.*
 cmake-build-*
+examples/Leica/Image_KL.lif
 
 # Documentation and tools
 doc/_*

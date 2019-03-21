@@ -19,6 +19,7 @@ Glossary
 
     CLSM confocal laser scanning microscopy
 
+    PDA Photon Distribution Analysis
 
     MFD (Multiparameter Fluorescence Detection)
         A MFD experiments is a time-resolved fluorescence experiment which probes the absorption and fluorescence,
