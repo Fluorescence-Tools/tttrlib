@@ -5,7 +5,10 @@
 #include <include/Image.h>
 
 
-CLSMFrame::CLSMFrame(){}
+CLSMFrame::CLSMFrame():
+TTTRRange(),
+n_lines(0)
+{}
 
 
 CLSMFrame::~CLSMFrame(){
@@ -15,8 +18,15 @@ CLSMFrame::~CLSMFrame(){
 }
 
 
-CLSMFrame::CLSMFrame(unsigned int frame_start){
+CLSMFrame::CLSMFrame(unsigned int frame_start) :
+CLSMFrame()
+{
     CLSMFrame::start = frame_start;
+}
+
+void CLSMFrame::push_back(CLSMLine * line){
+    lines.push_back(line);
+    n_lines++;
 }
 
 
@@ -29,7 +39,10 @@ CLSMImage::CLSMImage():
 marker_frame(0),
 marker_line_start(0),
 marker_line_stop(0),
-marker_event_type(1)
+marker_event(1),
+n_frames(0),
+n_pixel(0),
+n_lines(0)
 {
 }
 
@@ -40,14 +53,102 @@ CLSMImage::CLSMImage (
         unsigned int marker_line_start,
         unsigned int marker_line_stop,
         unsigned int marker_event_type,
-        unsigned int pixel_per_line
-){
+        unsigned int pixel_per_line,
+        unsigned int reading_routine
+) : CLSMImage() {
     CLSMImage::marker_frame = marker_frame_start;
     CLSMImage::marker_line_start = marker_line_start;
     CLSMImage::marker_line_stop = marker_line_stop;
-    CLSMImage::marker_event_type = marker_event_type;
+    CLSMImage::marker_event = marker_event_type;
+    CLSMImage::n_pixel = pixel_per_line;
+    switch (reading_routine){
+        case 0:
+            initialize(tttr_data);
+            break;
+        case 1:
+            initialize_leica_sp8_ptu(tttr_data);
+            break;
+        default:
+            initialize(tttr_data);
+            break;
+    }
+}
+
+
+CLSMImage::CLSMImage
+(
+        TTTR *tttr_data,
+        unsigned int marker_frame_start,
+        unsigned int marker_line_start,
+        unsigned int marker_line_stop,
+        unsigned int marker_event_type,
+        unsigned int pixel_per_line
+        )  : CLSMImage()
+{
+    CLSMImage::marker_frame = marker_frame_start;
+    CLSMImage::marker_line_start = marker_line_start;
+    CLSMImage::marker_line_stop = marker_line_stop;
+    CLSMImage::marker_event = marker_event_type;
     CLSMImage::n_pixel = pixel_per_line;
     initialize(tttr_data);
+}
+
+
+void CLSMImage::push_back(CLSMFrame* frame) {
+    frames.push_back(frame);
+    n_frames++;
+}
+
+/*!
+ *
+ * @param tttr_data
+ */
+void CLSMImage::initialize_leica_sp8_ptu(TTTR *tttr_data){
+    std::cout << "Initialize Leica SP8 PTU" << std::endl;
+    short c;               // routing channel
+    unsigned int m;        // micro time
+    unsigned long long t;  // macro time
+
+    // the start and stops are alternating
+    unsigned int i_event = 0;
+    size_t n_events = tttr_data->n_valid_events;
+
+    // insert the first frame
+    if(frames.empty()){
+        push_back(new CLSMFrame(0));
+    }
+
+    for(i_event=0; i_event < n_events; i_event++){
+        auto* frame = frames.back();
+        if(tttr_data->routing_channels[i_event] == marker_event){
+            if(tttr_data->micro_times[i_event] == marker_line_start){
+                // if new start is found continue and add new line and break
+                auto* line = new CLSMLine(i_event, n_pixel);
+                frame->push_back(line);
+                continue;
+            }
+            if(tttr_data->micro_times[i_event] == marker_line_stop){
+                // is new stop is found the line is complete
+                // fill all the line info and break search
+                auto* line = frame->lines.back();
+                line->stop = i_event;
+                line->start_time = tttr_data->macro_times[line->start];
+                line->stop_time = tttr_data->macro_times[line->stop];
+                line->pixel_duration = (unsigned int) (line->get_duration() / n_pixel);
+                continue;
+            }
+            if(tttr_data->micro_times[i_event] == marker_frame){
+                // if new frame is found fill the info of the last frame
+                // and create a new frame
+                frame->stop = i_event;
+                frame->start_time = tttr_data->macro_times[frame->start];
+                frame->stop_time = tttr_data->macro_times[frame->stop];
+                push_back(new CLSMFrame(i_event));
+                continue;
+            }
+        }
+    }
+    n_lines = frames[0]->n_lines;
 }
 
 
@@ -66,9 +167,8 @@ void CLSMImage::initialize(TTTR* tttr_data){
         e = tttr_data->event_types[i];
 
         // Identify events
-        if(e == marker_event_type){
+        if(e == marker_event){
             c = tttr_data->routing_channels[i];
-
             // Frame marker
             if(c == marker_frame){
                 if(frames.size()>1){
@@ -79,28 +179,27 @@ void CLSMImage::initialize(TTTR* tttr_data){
                 }
                 auto next_frame = new CLSMFrame(i);
                 next_frame->start_time = tttr_data->macro_times[i];
-                frames.push_back(next_frame);
+                push_back(next_frame);
             }
 
             // Line marker
             if(c == marker_line_start){
                 auto frame = frames.back();
                 auto line = new CLSMLine(i + 1, n_pixel);
-                frame->lines.push_back(line);
+                frame->push_back(line);
 
                 // Find line end
                 for(unsigned j=i + 1; j<tttr_data->n_valid_events; j++){
                     c = tttr_data->routing_channels[j];
                     e = tttr_data->event_types[j];
-                    if( (e == marker_event_type) && (c == marker_line_stop) ){
+                    if( (e == marker_event) && (c == marker_line_stop) ){
                         line->stop = j;
                         break;
                     }
                 }
-                line->start_time = tttr_data->macro_times[line->start];
-                line->stop_time = tttr_data->macro_times[line->stop];
+                line->start_time = tttr_data->macro_times[line->start + 1];
+                line->stop_time = tttr_data->macro_times[line->stop -1];
                 line->pixel_duration = (unsigned int) (line->get_duration() / n_pixel);
-
             }
         }
     }
@@ -112,8 +211,7 @@ void CLSMImage::initialize(TTTR* tttr_data){
     for(auto frame : frames){
         if(frame->lines.size() < n_lines){
             frames.erase(frames.begin() + i_frame);
-        } else {
-            n_frames++;
+            n_frames--;
         }
         i_frame++;
     }
@@ -138,11 +236,15 @@ void CLSMImage::fill_pixels(TTTR* tttr_data, std::vector<unsigned int> channels)
                 if (e == RECORD_PHOTON) {
                     for(auto ci : channels){
                         if(c == ci){
-                            pixel_nbr = (tttr_data->macro_times[i] - line->start_time) / line->pixel_duration;
-                            if(pixel_nbr < line->n_pixel){
-                                (line->pixels[pixel_nbr])->append(i);
+                            if(line->pixel_duration == 0){
+                                break;
+                            } else{
+                                pixel_nbr = (tttr_data->macro_times[i] - line->start_time) / line->pixel_duration;
+                                if(pixel_nbr < line->n_pixel){
+                                    (line->pixels[pixel_nbr])->append(i);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }

@@ -243,7 +243,31 @@ a set of ``CLSMFrame``, ``CLSMLine``, and ``CLSMPixel`` objects are create.
                               line_start_marker,
                               line_stop_marker,
                               event_type_marker,
-                              pixel_per_line)
+                              pixel_per_line,
+                              reading_routine=0)
+
+.. note::
+
+    In the example above the reading routine is specified to the default (=0). If no reading routine is specified
+    the ``CLSMImage`` class uses the channel number of an event to identify line start/stops and frame marker.
+    In Leica SP8 PTU files the micro time of an photon events encodes the type of the event. Here, a different
+    reading routine needs to be specified.
+
+
+The last parameter (here 0) specifies the reading routine (parameter = ``reading_routine``) for the line and
+frame markers. The supported marker types are shown in the table below.
+
+.. _marker-types:
+.. table:: Table of selections for reading routines for CLSMImages
+    :widths: auto
+
+    +--------------------------+--------+----------------+
+    | Line, Framer marker type | Option                  |
+    +==========================+========+================+
+    |Default (routing channel) |0                        |
+    +--------------------------+-------------------------+
+    |Leica SP8 (micro time)    |1                        |
+    +--------------------------+-------------------------+
 
 
 As illustrated by the code shown below, every ``CLSMImage`` object may contain multiple ``CLSMFrame`` objects , every
@@ -253,24 +277,25 @@ code example above). The ``CLSMFrame``, ``CLSMLine``, and the ``CLSMPixel`` clas
 and provide access to the associated TTTR indices that mark the beginning and the end of the respective object via the
 function ``get_start_stop`` (see example below).
 
+
 .. code-block:: python
 
     frames = image.get_frames()
-    frame = frames[20]
+    frame = frames[0]
 
     print("Frame")
     print("-----")
     print("start, stop: ", frame.get_start_stop())
     print("start time, stop time: ", frame.get_start_stop_time())
-    print("duration: ", frame.get_start_stop_time())
+    print("duration: ", frame.get_duration())
 
     lines = frame.get_lines()
-    line = lines[50]
+    line = lines[0]
     print("Line")
     print("-----")
     print("start, stop: ", line.get_start_stop())
     print("start time, stop time: ", line.get_start_stop_time())
-    print("duration: ", line.get_start_stop_time())
+    print("duration: ", line.get_duration())
 
     pixels = line.get_pixels()
     pixel = pixels[100]
@@ -278,7 +303,7 @@ function ``get_start_stop`` (see example below).
     print("-----")
     print("start, stop: ", pixel.get_start_stop())
     print("start time, stop time: ", pixel.get_start_stop_time())
-    print("duration: ", pixel.get_start_stop_time())
+    print("duration: ", pixel.get_duration())
 
 
 

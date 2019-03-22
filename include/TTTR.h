@@ -205,12 +205,12 @@ void ranges_by_time_window(
 class TTTRRange {
 protected:
 
+
+public:
     unsigned int start;
     unsigned int stop;
     unsigned long long start_time;
     unsigned long long stop_time;
-
-public:
 
     TTTRRange() = default;
     ~TTTRRange() = default;

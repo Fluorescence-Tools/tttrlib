@@ -89,6 +89,7 @@ private:
     std::vector<CLSMLine*> lines;
 
 public:
+    unsigned int n_lines;
 
     std::vector<CLSMLine*> get_lines();
 
@@ -97,6 +98,8 @@ public:
     ~CLSMFrame();
 
     CLSMFrame(unsigned int frame_start);
+
+    void push_back(CLSMLine * line);
 };
 
 
@@ -107,12 +110,13 @@ private:
 
 protected:
     void initialize(TTTR* tttr_data);
+    void initialize_leica_sp8_ptu(TTTR *tttr_data);
 
 public:
     unsigned int marker_frame;
     unsigned int marker_line_start;
     unsigned int marker_line_stop;
-    int marker_event_type;
+    int marker_event;
 
     unsigned int n_frames;
     unsigned int n_lines;
@@ -138,6 +142,8 @@ public:
             int n_ph_min
     );
 
+    void push_back(CLSMFrame* frame);
+
     // constructor
     CLSMImage();
 
@@ -147,9 +153,19 @@ public:
             unsigned int marker_line_start,
             unsigned int marker_line_stop,
             unsigned int marker_event_type,
-            unsigned int n_pixel_per_line
+            unsigned int n_pixel_per_line,
+            unsigned int reading_routine
     );
-    
+
+    CLSMImage (
+            TTTR *tttr_data,
+            unsigned int marker_frame_start,
+            unsigned int marker_line_start,
+            unsigned int marker_line_stop,
+            unsigned int marker_event_type,
+            unsigned int pixel_per_line
+    );
+
     ~CLSMImage(){
         for(auto frame : frames){
             delete(frame);

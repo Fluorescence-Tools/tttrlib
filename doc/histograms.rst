@@ -15,6 +15,13 @@ more performance in direct comparison to general purpose routines for analysis m
 One dimensional histograms
 --------------------------
 
+``tttrlib`` supports one dimensional histograms with linear, logarithmic, or arbitrary spaced bins.
+
+.. plot:: plots/histogram_1D.py
+   :include-source:
+
+In the example shown above, the histograms for the three bin spacings are shown.
+
 
 Multi dimensional histograms
 ----------------------------
@@ -32,6 +39,8 @@ A working example for 2D normal distributed data is shown below.
 .. plot:: plots/histogram_2D.py
    :include-source:
 
+Above, a two dimensional histogram with linear spaced bins is shown.
+
 
 Benchmark
 ---------
@@ -41,7 +50,6 @@ Linux) demonstrates that except for arbitrarily spaced histograms the ``tttrlib`
 numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)
 
 .. plot:: plots/histogram_benchmark.py
-   :include-source:
 
 The current histogram implementation in ``tttrlib`` is not particularly optimized for speed, e.g., by making use
 of multiple cores. Nevertheless, in special cases it outperforms Numpy. This comparison demonstrates that Numpy is

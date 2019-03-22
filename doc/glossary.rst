@@ -58,7 +58,7 @@ Glossary
         instrument using a scattering sample, or a short lived dye.
 
     Time-tagged time resolved (TTTR)
-        TTTR stands for time tagged time-resolved data or experiments. In TTTR-datasets the events, e.g., the detection
+         TTTR stands for time tagged time-resolved data or experiments. In TTTR-datasets the events, e.g., the detection
          of a photon, are tagged by a detection channel number. Moreover, the recording clock usually registers the
          events with a high time resolution of a few picoseconds. For long recording times of the detected events,
          a coarse and a fine clock are combined. The fine clock measures the time of the events relative to the coarse

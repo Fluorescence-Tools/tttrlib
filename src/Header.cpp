@@ -45,6 +45,7 @@ Header::Header(
 {
     switch(tttr_container_type){
         case PQ_PTU_CONTAINER:
+            number_of_tac_channels = 32768; //2**15
             header_end = read_ptu_header(
                     fpin,
                     true,

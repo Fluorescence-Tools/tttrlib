@@ -1,5 +1,3 @@
-TTTR Objects
-============
 
 Anatomy
 -------
@@ -64,13 +62,14 @@ help to distinguish such events from normal photon events. Currently the followi
 
 
 .. _event-types:
-.. table:: Table of supported file types and corresponding identifiers
+.. table:: Table of event type identifiers
     :widths: auto
 
     +--------------------------+--------+----------------+
     | Event type               | Event type number       |
     +==========================+========+================+
     |Photon event              |0                        |
+    +--------------------------+-------------------------+
     |Special event             |1                        |
     +--------------------------+-------------------------+
 
@@ -83,8 +82,11 @@ data is presented in the the :ref:`Imaging:Confocal laser scanning` section.
 
 
 
-Create TTTR objects using data files
-------------------------------------
+Create TTTR objects
+-------------------
+
+Opening files
++++++++++++++
 
 In Python, first, the tttrlib module needs to be imported. Next, a TTTR object needs to be created. When creating a
 new TTTR object, the file name and the file type can be passed to the object's constructor. If a TTTR object is
@@ -99,10 +101,15 @@ is either specified by a number or by passing a string to the TTTR object's cons
     | File type                | Number | Identifier     |
     +==========================+========+================+
     |PicoQuant, PTU            |0       |'PTU'           |
+    +--------------------------+--------+----------------+
     |PicoQuant, HT3            |1       |'HT3'           |
+    +--------------------------+--------+----------------+
     |Becker&Hickl, SPC130      |2       |'SPC-130'       |
+    +--------------------------+--------+----------------+
     |Becker&Hickl, SPC630-256  |3       |'SPC-630-256'   |
+    +--------------------------+--------+----------------+
     |Becker&Hickl, SPC630-4096 |4       |'SPC-630-4096'  |
+    +--------------------------+--------+----------------+
     |Photon-HDF5               |5       |'PHOTON-HDF5'   |
     +--------------------------+--------+----------------+
 
@@ -126,8 +133,8 @@ Beyond opening files and processing the content contained in a TTTR file TTTR ob
 initially no data. Moreover, TTTR objects can be created based on existing files and selection.
 
 
-Create TTTR objects using selections
-------------------------------------
+Using selections
+++++++++++++++++
 
 Based on an existing TTTR object and a selection a new TTTR object can be created. That only contains the selected
 elements. Beyond the the array processing capabilities either provided by the high-level programming language or
@@ -162,7 +169,7 @@ are usually defined by *ranges*, while detection channels are usually selected b
 
 
 Selections
-----------
++++++++++
 
 Channels
 ^^^^^^^^
@@ -210,7 +217,7 @@ permitted in a time window.
 
 
 Ranges
-------
+++++++
 
 Ranges by count rate
 ^^^^^^^^^^^^^^^^^^^^
@@ -225,8 +232,9 @@ Ranges by count rate
 
 The function :py:function:``get_ranges_by_count_rate``
 
-Frames
-^^^^^^
+
+Images
+------
 
 
 

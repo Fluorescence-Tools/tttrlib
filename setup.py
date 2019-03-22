@@ -87,7 +87,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.4',
+    version='0.0.6',
     ext_modules=[CMakeExtension('tttrlib')],
     cmdclass={
         'build_ext': CMakeBuild
