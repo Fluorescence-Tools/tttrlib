@@ -83,7 +83,7 @@ void normalize_correlation(
 
     for(int j=0; j<x_axis.size(); j++){
         pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
-        t_corr = (dt1 < dt2 - x_axis[j]) ? dt1 : dt2 - x_axis[j];
+        t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 - x_axis[j]);
         corr[j] /= pw;
         corr[j] /= (cr1 * cr2 * t_corr);
         x_axis[j] = x_axis[j] / pw * pw;
@@ -91,7 +91,7 @@ void normalize_correlation(
 }
 
 
-void make_fine_times(unsigned long long *t, int n_times, unsigned int* tac, int n_tac){
+void make_fine_times(unsigned long long *t, unsigned int n_times, unsigned int* tac, unsigned int n_tac){
     for(size_t i=0; i < n_times; i++){
         t[i] = t[i] * n_tac + tac[i];
     }

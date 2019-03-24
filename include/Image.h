@@ -72,8 +72,8 @@ public:
     CLSMLine(unsigned int line_start, unsigned int n_pixel){
         start = line_start;
         CLSMLine::n_pixel = n_pixel;
-        for(int i=0; i<n_pixel; i++){
-            CLSMPixel* pixel = new CLSMPixel();
+        for(unsigned int i=0; i<n_pixel; i++){
+            auto* pixel = new CLSMPixel();
             pixels.push_back(pixel);
         }
     }

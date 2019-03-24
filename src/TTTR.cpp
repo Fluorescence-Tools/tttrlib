@@ -595,4 +595,10 @@ void get_ranges_channel(
 }
 
 
-
+std::vector<unsigned int> TTTRRange::get_tttr_indices() {
+    std::vector<unsigned int> v;
+    for(unsigned int i=start; i<stop; i++){
+        v.push_back(i);
+    }
+    return v;
+}

@@ -105,9 +105,6 @@ void CLSMImage::push_back(CLSMFrame* frame) {
  */
 void CLSMImage::initialize_leica_sp8_ptu(TTTR *tttr_data){
     std::cout << "Initialize Leica SP8 PTU" << std::endl;
-    short c;               // routing channel
-    unsigned int m;        // micro time
-    unsigned long long t;  // macro time
 
     // the start and stops are alternating
     unsigned int i_event = 0;
@@ -159,8 +156,6 @@ void CLSMImage::initialize(TTTR* tttr_data){
 
     short c;              // routing channel
     short e;              // event type
-
-    unsigned int pixel_nbr;
 
     // find the frame and line markers
     for(unsigned int i=0; i<tttr_data->n_valid_events; i++){

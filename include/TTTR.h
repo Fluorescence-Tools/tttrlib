@@ -203,25 +203,20 @@ void ranges_by_time_window(
 
 
 class TTTRRange {
+
 protected:
-
-
-public:
     unsigned int start;
     unsigned int stop;
     unsigned long long start_time;
     unsigned long long stop_time;
+    bool tttr_filled;
+
+public:
 
     TTTRRange() = default;
     ~TTTRRange() = default;
 
-    std::vector<unsigned int> get_tttr_indices(){
-        std::vector<unsigned int> v;
-        for(unsigned int i=start; i<stop; i++){
-            v.push_back(i);
-        }
-        return v;
-    }
+    virtual std::vector<unsigned int> get_tttr_indices();
 
     std::vector<unsigned int> get_start_stop(){
         std::vector<unsigned int> v = {start, stop};

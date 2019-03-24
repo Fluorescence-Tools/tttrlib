@@ -92,7 +92,7 @@ void normalize_correlation(
  * @param[in] tac The number of micro time channels (TAC channels)
 
  */
-void make_fine_times(unsigned long long *t, int n_times, unsigned int* tac, int n_tac);
+void make_fine_times(unsigned long long *t, unsigned int n_times, unsigned int* tac, unsigned int n_tac);
 
 
 
@@ -278,7 +278,7 @@ public:
      * @param[in] n_tac_2 The number of events in the second correlation channel
      * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
-    void make_fine(unsigned int* tac_1, int n_tac_1, unsigned int* tac_2, int n_tac_2, int n_tac);
+    void make_fine(unsigned int* tac_1, unsigned int n_tac_1, unsigned int* tac_2, unsigned int n_tac_2, unsigned int n_tac);
 
     /*!
      * Get the x-axis of the correlation
