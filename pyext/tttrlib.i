@@ -1,3 +1,4 @@
+%module tttrlib
 %include "documentation.i"
 
 %{
