@@ -3,14 +3,11 @@ Roadmap
 =======
 
 ## v0.0.5
-* Working test cases
 * Automated compilation and testing
 * Tested FCS
 * User documentation of FCS and TTTR with use cases
 * Webpage with API and User documentation and automatic integration of software changes
 * Fully tested TTTR reading
-* Fluorescence decay
-* Laser scanning imaging
 
 
 Documentation & Test cases
@@ -34,7 +31,6 @@ Low priority
 ------------
 ### High efforting
 ### Low effort
-1. Test cases for histograms
 
 
 Features
@@ -43,7 +39,6 @@ Features
 High prioritying
 -------------
 ### High effort
-1. Fluorescence decays
 ### Low effort
 
 

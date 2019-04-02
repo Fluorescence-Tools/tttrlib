@@ -164,7 +164,6 @@ void Correlator::run(){
                 t1, w1, n_t1,
                 t2, w2, n_t2
         );
-
         coarsen(t1, w1, n_t1);
         coarsen(t2, w2, n_t2);
     }
