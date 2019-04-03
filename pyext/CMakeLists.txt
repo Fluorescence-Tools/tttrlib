@@ -35,17 +35,13 @@ SET(SWIG_SRC tttrlib.i)
 #SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/pyext)
 
 SET_PROPERTY(SOURCE tttrlib.i PROPERTY CPLUSPLUS ON)
+file(GLOB SRC_files "../src/*.cpp")
 SWIG_ADD_LIBRARY(
         ${MODULE_NAME}
         LANGUAGE python
         SOURCES
         tttrlib.i
-        ../src/TTTR.cpp
-        ../src/RecordReader.cpp
-        ../src/Header.cpp
-        ../src/Histogram.cpp
-        ../src/Correlate.cpp
-        ../src/Image.cpp
+        ${SRC_files}
 )
 
 INCLUDE_DIRECTORIES(

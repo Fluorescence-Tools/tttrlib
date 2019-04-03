@@ -13,7 +13,6 @@
  ****************************************************************************/
 
 
-#include "../include/RecordReader.h"
 #include "../include/TTTR.h"
 #include "../test/tttr_test.h"
 #include <iostream>

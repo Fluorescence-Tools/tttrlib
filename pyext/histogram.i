@@ -14,6 +14,6 @@
 
 %template(histogram1D_int) histogram1D<int>;
 %template(histogram1D_double) histogram1D<double>;
-%template(doubleAxis) Axis<double>;
+%template(doubleAxis) HistogramAxis<double>;
 %template(doubleHistogram) Histogram<double>;
 
