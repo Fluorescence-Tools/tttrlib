@@ -100,7 +100,7 @@ inline int calc_bin_idx(T begin, T bin_width, T value){
 
 
 template<class T>
-class Axis{
+class HistogramAxis{
 
 private:
     std::string name;
@@ -122,7 +122,7 @@ public:
     void update(){
         free(bin_edges);
         bin_edges = (T*) malloc(n_bins * sizeof(T));
-        switch (Axis::axis_type){
+        switch (HistogramAxis::axis_type){
             case 0:
                 // linear axis
                 bin_width = (end - begin) / n_bins;
@@ -138,9 +138,9 @@ public:
 
     void setAxisType(const std::string &axis_type) {
         if(axis_type == "log10")
-            Axis::axis_type = 1;
+            HistogramAxis::axis_type = 1;
         if(axis_type == "lin")
-            Axis::axis_type = 0;
+            HistogramAxis::axis_type = 0;
     }
 
     int getNumberOfBins(){
@@ -176,11 +176,11 @@ public:
     }
 
     void setName(const std::string &name) {
-        Axis::name = name;
+        HistogramAxis::name = name;
     }
 
-    Axis() = default;
-    Axis(
+    HistogramAxis() = default;
+    HistogramAxis(
             std::string name,
             T begin,
             T end,
@@ -195,12 +195,12 @@ public:
             end = temp;
         }
 
-        Axis::begin = begin;
-        Axis::end = end;
-        Axis::n_bins = n_bins;
-        Axis::setAxisType(axis_type);
-        Axis::name = name;
-        Axis::update();
+        HistogramAxis::begin = begin;
+        HistogramAxis::end = end;
+        HistogramAxis::n_bins = n_bins;
+        HistogramAxis::setAxisType(axis_type);
+        HistogramAxis::name = name;
+        HistogramAxis::update();
     }
 };
 
@@ -215,7 +215,7 @@ private:
     T* weights;
     int n_rows_weights,  n_cols_weights;
 
-    std::map<size_t , Axis<T>> axes;
+    std::map<size_t , HistogramAxis<T>> axes;
 
     T* histogram; // A 1D array of that contains the histogram
     int number_of_axis;
@@ -233,7 +233,7 @@ public:
         int global_bin_offset;
         int n_axis;
         int current_bin_idx, current_n_bins;
-        Axis<T> *current_axis;
+        HistogramAxis<T> *current_axis;
         T data_value;
 
         // update the axes
@@ -291,16 +291,16 @@ public:
         *dim = n_total_bins;
     }
 
-    void setAxis(size_t data_column, Axis<T> &new_axis){
+    void setAxis(size_t data_column, HistogramAxis<T> &new_axis){
         axes[data_column] = new_axis;
     }
 
     void setAxis(size_t data_column, std::string name, T begin, T end, int n_bins, std::string axis_type){
-        Axis<T> new_axis(name, begin, end, n_bins, axis_type);
+        HistogramAxis<T> new_axis(name, begin, end, n_bins, axis_type);
         setAxis(data_column, new_axis);
     }
 
-    Axis<T> getAxis(size_t axis_index){
+    HistogramAxis<T> getAxis(size_t axis_index){
         return axes[axis_index];
     }
 

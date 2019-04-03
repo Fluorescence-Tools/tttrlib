@@ -25,11 +25,6 @@ namespace std {
     %template(map_string_string) map<string, string>;
 }
 
-%inline %{
-    using namespace std;
-%}
-
-
 %include "tttr.i"
 %include "histogram.i"
 %include "correlate.i"
