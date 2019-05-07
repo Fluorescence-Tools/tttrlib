@@ -1,0 +1,3 @@
+[submodule "thirdparty/cpp-taskflow"]
+	path = thirdparty/cpp-taskflow
+	url = https://github.com/cpp-taskflow/cpp-taskflow

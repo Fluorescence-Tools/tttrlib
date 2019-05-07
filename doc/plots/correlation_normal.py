@@ -7,7 +7,7 @@ fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
 
-data = tttrlib.TTTR('../../examples/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../..//examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
 
 # Create correlator
 B = 9
@@ -42,8 +42,8 @@ ax[0].semilogx(x, y)
 
 # green-red cross correlation
 
-ch1_indeces = data.get_selection_by_channel(np.array([0, 8]))
-ch2_indeces = data.get_selection_by_channel(np.array([1, 9]))
+ch1_indeces = data.get_selection_by_channel(np.array([0, 1]))
+ch2_indeces = data.get_selection_by_channel(np.array([0, 1]))
 
 mt = data.get_macro_time()
 
