@@ -20,6 +20,8 @@
 
 #include <stdint.h>
 #include <string>
+#include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -50,7 +52,7 @@
  * @param bytes_per_record
  */
 size_t determine_number_of_records_by_file_size(
-        std::FILE *fpin,
+        std::FILE *fp,
         size_t offset,
         size_t bytes_per_record
 );
@@ -304,7 +306,7 @@ private:
     size_t bytes_per_record;
 
     /// The input file, i.e., the TTTR file, and the output file for the header
-    std::FILE *fpin;
+    std::FILE *fp;
     hid_t      hdf5_file;                        /*HDF5 file handle */
 
     /// marks the end of the header in the input file (to seek the beginning of the tttr records)
@@ -360,8 +362,10 @@ protected:
 
     /// the number of time tagged data records in the TTTR file
     size_t n_records_in_file;
+
     /// the number of read time tagged data
     size_t n_records_read;
+
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events;
 
@@ -465,6 +469,8 @@ public:
      */
     int read_file(char *fn, int container_type);
     int read_file();
+
+    bool write_file(char *fn, int container_type);
 };
 
 

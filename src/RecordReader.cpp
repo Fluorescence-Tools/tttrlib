@@ -66,7 +66,6 @@ bool ProcessPHT3(
 }
 
 
-
 /// PicoHarp T2 input
 bool ProcessPHT2(
     uint64_t &TTTRRecord,

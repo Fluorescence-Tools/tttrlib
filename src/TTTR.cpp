@@ -12,6 +12,7 @@
  *                                                                          *
  ****************************************************************************/
 
+#include <include/RecordTypes.h>
 #include "../include/TTTR.h"
 
 
@@ -169,11 +170,11 @@ int TTTR::read_file(char *fn, int container_type) {
             break;
 
         default:
-            fpin = fopen(fn, "rb");
+            fp = fopen(fn, "rb");
 
-            if (fpin != nullptr)
+            if (fp != nullptr)
             {
-                header = new Header(fpin, container_type);
+                header = new Header(fp, container_type);
 
                 fp_records_begin = header->header_end;
                 bytes_per_record = header->bytes_per_record;
@@ -181,7 +182,7 @@ int TTTR::read_file(char *fn, int container_type) {
                 std::cout << "TTTR record type: " << tttr_record_type << std::endl;
                 processRecord = processRecord_map[tttr_record_type];
                 n_records_in_file = determine_number_of_records_by_file_size(
-                        fpin,
+                        fp,
                         header->header_end,
                         bytes_per_record
                 );
@@ -193,7 +194,7 @@ int TTTR::read_file(char *fn, int container_type) {
             }
             allocate_memory_for_records(n_records_in_file);
             read_records();
-            fclose(fpin);
+            fclose(fp);
             break;
     }
     return 1;
@@ -254,7 +255,7 @@ void TTTR::read_records(
         size_t chunk
         ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-    if(rewind) fseek(fpin, (long) fp_records_begin, SEEK_SET);
+    if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
     // are read. In the second the records are read and processed record by
@@ -266,7 +267,7 @@ void TTTR::read_records(
     bool is_valid_record = true;
     // read if possible the data in chunks to speed up the access
     char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
-    while((n_records_read < n_rec) && (fread(tmp, bytes_per_record, chunk, fpin) == chunk)){
+    while((n_records_read < n_rec) && (fread(tmp, bytes_per_record, chunk, fp) == chunk)){
 
         for(size_t i=0; i<chunk; i++){
             offset = bytes_per_record * i;
@@ -288,7 +289,7 @@ void TTTR::read_records(
     // records that do not fit in chunks are read one by one (slower)
     while (
             (n_records_read < n_rec) &&
-            fread(&TTTRRecord, (size_t) bytes_per_record, 1, fpin)
+            fread(&TTTRRecord, (size_t) bytes_per_record, 1, fp)
             )
     {
         is_valid_record = processRecord(
@@ -441,21 +442,21 @@ void selection_by_channels(
 
 
 size_t determine_number_of_records_by_file_size(
-        std::FILE *fpin,
+        std::FILE *fp,
         size_t offset,
         size_t bytes_per_record
         ){
     size_t n_records_in_file;
     // use the file size and the header to calculate the number of records
     // the position of the first record in the file
-    auto current_position = (size_t) ftell(fpin);
-    fseek(fpin, 0L, SEEK_END);
-    auto fileSize = (size_t) ftell(fpin);
+    auto current_position = (size_t) ftell(fp);
+    fseek(fp, 0L, SEEK_END);
+    auto fileSize = (size_t) ftell(fp);
     // calculate the number of records based on the size of the file
     // and the bytes per record
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
-    fseek(fpin, (long) current_position, SEEK_SET);
+    fseek(fp, (long) current_position, SEEK_SET);
     return n_records_in_file;
 }
 
@@ -602,3 +603,53 @@ std::vector<unsigned int> TTTRRange::get_tttr_indices() {
     }
     return v;
 }
+
+
+bool TTTR::write_file(char *fn, int container_type) {
+    switch (container_type) {
+        case BH_SPC130_CONTAINER:
+            fp = fopen(fn, "wb");
+            if (fp != nullptr) {
+
+                bh_overflow_t record_overflow;
+                record_overflow.bits.invalid = true;
+                record_overflow.bits.mtov = true;
+                record_overflow.bits.empty = 0;
+
+                bh_spc130_record_t record;
+                record.bits.invalid = false;
+                record.bits.mtov = false;
+
+                int n = 0;
+                int MT, MT_ov_last;
+                unsigned long MT_ov = 0;
+
+                while (n < n_valid_events) {
+
+                    MT = macro_times[n] - MT_ov * 4095;
+                    if (MT > 4095) {
+                        /* invalid photon */
+                        MT_ov_last = MT / (4096);
+                        record_overflow.bits.cnt = MT_ov_last;
+                        fwrite(&record_overflow, 4, 1, fp);
+                        MT_ov += MT_ov_last;
+                    } else {
+                        /* valid photon */
+                        record.bits.adc = 4095 - micro_times[n];
+                        record.bits.rout = routing_channels[n];
+                        record.bits.mt = MT;
+                        fwrite(&record, 1, 4, fp);
+                        n++;
+                    }
+                }
+            fclose(fp);
+            } else {
+                std::cerr << "Cannot write to file: " << filename <<  std::endl;
+                return false;
+            }
+
+            break;
+    }
+    return true;
+}
+
