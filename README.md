@@ -7,13 +7,18 @@
 
 ## General description
 
-tttrlib is a file format agnostic low level, high performance API to read and process time-tagged-time resolved (TTTR) 
-data acquired by  PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR files in the open Photon-HDF format.
+tttrlib is a file format agnostic low level, high performance API to 
+read and process time-tagged-time resolved (TTTR) data acquired by 
+PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR 
+files in the open Photon-HDF format.
 
-The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing 
-a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by SWIG (Simplified 
-Wrapper and Interface Generator) for common scripting languages as Python as target languages and non-scripting 
-languages such as C# and Java including Octave, Scilab and R.
+The library tttrlib facilitates the work with files containing 
+time-tagged time resolved photon streams by providing 
+a vendor independent C++ application programming interface (API) 
+for TTTR files that is wrapped by SWIG (Simplified Wrapper and Interface 
+Generator) for common scripting languages as Python as target languages 
+and non-scripting languages such as C# and Java including Octave, 
+Scilab and R.
 
 
 * Multi-dimensional histograms
@@ -22,7 +27,8 @@ languages such as C# and Java including Octave, Scilab and R.
 * Photon distribution anaylsis
 * FLIM image generation and analysis
 
-tttrlib is NOT intended as ready-to-use software for specific application purposes.
+tttrlib is NOT intended as ready-to-use software for specific application 
+purposes.
 
 
 ## Supported file formats
@@ -93,13 +99,14 @@ cd tttrlib
 sudo python setup.py install
 ```
 
-In an [anaconda](https://www.anaconda.com/) environment the library can be installed by the following command: 
+In an [anaconda](https://www.anaconda.com/) environment the library can 
+be installed by the following command: 
 ```console
 conda install -c tpeulen tttrlib
 ```
 
-For most users the later approach is recommended. Currently, pre-compiled packages for the anaconda distribution
-system are available for:
+For most users the later approach is recommended. Currently, pre-compiled 
+packages for the anaconda distribution system are available for:
 
 * Windows: Python 2.7, Python 3.7 (x64)
 * Linux: Python 2.7, Python 3.7 (x64)
@@ -107,15 +114,14 @@ system are available for:
 
 Legacy 32-bit platforms are currently not supported.
 
-# Examples
+# Documentation
 
-
-```python
+Some use cases of tttrlib are documented on its [web page](https://tpeulen.github.io/tttrlib) 
 
 ```
-  
-  
-
+ Note: tttrlib is highly experimental library in current development. In case you notice unusual behaviour do not hesitate to contact the authors. 
+```
+    
 
 # License
 
