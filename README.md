@@ -116,12 +116,10 @@ Legacy 32-bit platforms are currently not supported.
 
 # Documentation
 
-Some use cases of tttrlib are documented on its [web page](https://tpeulen.github.io/tttrlib) 
+The API of tttrlib as well as some use cases are documented on its [web page](https://tpeulen.github.io/tttrlib) 
 
-```
- Note: tttrlib is highly experimental library in current development. 
- In case you notice unusual behaviour do not hesitate to contact the authors. 
-```
+Note, tttrlib is highly experimental library in current development. In 
+case you notice unusual behaviour do not hesitate to contact the authors. 
     
 
 # License
