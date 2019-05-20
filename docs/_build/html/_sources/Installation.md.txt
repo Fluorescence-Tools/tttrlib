@@ -1,0 +1,12 @@
+# Installation
+
+## 
+
+
+## Conda
+
+The most convient way to install tttrlib
+
+```console
+conda install -c tpeulen tttrlib
+```

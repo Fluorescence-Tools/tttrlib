@@ -1,0 +1,313 @@
+Analyzing CLSM marker (Leica SP8)
+---------------------------------
+
+Not always it is completely documented by the manufacturer of a microscope how the laser scanning is implemented.
+Meaning, how the frame and line marker are integrated into the event data stream. Below, it is briefly outlined on a
+test case how for a given image the event stream can analyzed. The example data illustrated below, was recored on a
+Leica SP8 with three hybrid detectors and PicoQuant counting electronics.
+
+First, the data corresponding to the image needs to be exported from the Leica file container to yield a PTU file that
+contains the TTTR events. This file is loaded in ``tttrlib`` and the event types, the routing channel numbers, the
+macro time, and the micro time are inspected.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    import tttrlib
+    import numpy as np
+    import pylab as p
+
+    data = tttrlib.TTTR('./examples/Leica/SP8_Hybrid_detectors.ptu', 'PTU')
+
+    e = data.get_event_type()
+    c = data.get_routing_channel()
+    t = data.get_macro_time()
+    m = data.get_micro_time()
+
+As a first step, the routing channels are inspected to determine the actual channel numbers of the detectors. By making
+a bincount of the channel numbers the number how often a channel occurs in the data stream and the channel numbers in
+the data stream can be determined.
+
+.. code-block:: python
+
+    # Look for used channels
+    y = np.bincount(c)
+    print(y)
+    p.plot(y)
+    p.show()
+
+For the given dataset three channels were populated (channel 1, channel 2, channel 3, and channel 15). The microscopy
+is only equipped with three detectors. The counts per channel were as follows
+
+    * 1 - 2170040
+    * 2 - 43020969
+    * 3 - 198919134
+    * 15 - 8194
+
+.. note::
+
+    Usually, the TTTR records utilize the event type to distinguish markers from photons. Here, Leica decided to use
+    the routing channel number to identify markers.
+
+
+Based on these counts channel 15 very likely identifies the markers. The number of events 8090 closely matches a
+multiple of 2 (8194 = 4 * 1024 * 2 - 1 + 3). Note, there are 1024 lines in the images, 4 images in the file.
+
+By looking at the macro time one can also identify that there are four images in the file, as intensity within the
+image in non-uniform. Hence, the macro time fluctuates.
+
+
+.. image:: ./images/imaging_analyzing_clsm_marker_2.png
+
+
+To make sure that the routing channels 1, 2, and 3 are indeed detection channels, one can create (in a time-resolved
+experiment) a bincount of the associated micro times.
+
+.. code-block:: python
+
+    y = np.bincount(m_ch_1)
+    p.plot(y)
+    p.show()
+
+    y = np.bincount(m_ch_2)
+    p.plot(y)
+    p.show()
+
+    y = np.bincount(m_ch_3)
+    p.plot(y)
+    p.show()
+
+Next, to identify if in addition to the channel number 15 the markers are identified by non-photon event marker we
+make a bincount of the channel numbers, where the event type is 1 (photon events have the event type 0, non-photon
+events have the event type 1).
+
+.. code-block:: python
+
+    y = np.bincount(c[np.where(e==1)])
+    print(y)
+    p.plot(y)
+    p.show()
+
+The bin count yield the following:
+
+    * 1 - 1950
+    * 2 - 48349
+    * 3 - 172871
+
+This means we never have events where the channel number is 15 and the event type is 1. Moreover, the number of special
+events scales with the number of counts in a channel. Thus, the special events are very likely to mark overflows or
+gaps in the stream.
+
+To sum up, channel 1, 2, and 3 were determined as the routing channels of the detectors. Channel 15 is the routing
+channel used to inject the special markers. Next, we inspect the micro time and the macro time of the events registered
+by the routing channel 15.
+
+.. code-block:: python
+    m_ch_15 = m[np.where(c == 15)]
+    p.plot(m_ch_15)
+    p.show()
+
+
+.. image:: ./images/imaging_analyzing_clsm_marker_3.png
+
+The plot of the micro times for the events of the routing channel 15 reveals, that the micro time is either 1, 2, or 4.
+A more close inspection reveals that a micro time value of 1 is always succeeded by a micro time value of 2.
+
+.. image:: ./images/imaging_analyzing_clsm_marker_3_1.png
+
+A micro time value of 4 is followed by a micro time value of 1.
+
+.. image:: ./images/imaging_analyzing_clsm_marker_3_2.png
+
+This means, that the micro time encodes the frame marker and the line start/stop markers.
+
+    * micro time 1 - line start
+    * micro time 2 - line stop
+    * micro time 4 - frame start
+
+.. note::
+    The first frame does not have a frame start.
+
+Next, the macro time of the events where the routing channel number equals 15 is inspected.
+
+.. image:: ./images/imaging_analyzing_clsm_marker_4.png
+
+As anticipated, the macro time increases on first glance continuously. On closer inspection, however, steps in the
+macro time are visible.
+
+.. image:: ./images/imaging_analyzing_clsm_marker_4_1.png
+
+
+# check micro times
+m_ch_1 = m[np.where(c == 1)]
+m_ch_2 = m[np.where(c == 2)]
+m_ch_3 = m[np.where(c == 3)]
+m_ch_15 = m[np.where(c == 15)]
+
+
+y = np.bincount(m_ch_15)
+p.plot(m_ch_15)
+p.show()
+# Channel 15 is no detection channel
+bc = np.bincount(m_ch_15.astype(np.int64))
+
+
+
+p.plot(t[np.where(c == 15)])
+p.show()
+
+p.plot(m[np.where(c == 15)])
+p.show()
+# it looks like ch15 occurs periodic
+# there are three "slow time" peaks and
+# many repeated oscilating times.
+# Supprisingly the macro time does not increase constantly.
+# It seems that Leica encodes the line start, line stop and the frame markers
+# in the marcro time of the channel 15. make bincounts to test how many
+# of the macro times are there
+## Maybe ther so something encoded for chanell 15, dtime, nsync
+
+index_15 = np.where(c == 15)[0]
+t_15 = t[index_15]
+m_15 = m[index_15]
+p.plot(t_15[np.where(m_15 == 2)] - t_15[np.where(m_15 == 1)][1:])
+p.show()
+
+p.plot(t_15[np.where(m_15 == 1)][:-1] - t_15[np.where(m_15 == 2)])
+p.show()
+## 1 - is stop 2 is start
+t_15_ranges = t_15.reshape(len(t_15)/2, 2)
+
+index_15_ranges = index_15.reshape(len(index_15)/2, 2) # these inces mark the lines
+
+
+'''
+content of t_15_ranges
+array([[         0,     314368],
+       [    314368,     628736],
+       [    628736,     943104],
+       ...,
+       [1286708224, 1286708224],
+       [1287022592, 1287022592],
+       [1287336960, 1287336960]], dtype=uint64)
+'''
+
+# seems like the enteries in the array come always as start-stop pairs
+# this means that the micro time just informs wether or not a new frame, line
+# begins and the ranges are always set by the photons in ch 15
+
+p.plot(m[index_15_ranges[:, 0]])
+p.plot(m[index_15_ranges[:, 1]])
+p.show()
+
+i15d = index_15_ranges[:, 1] - index_15_ranges[:, 0]
+p.plot(i15d)
+p.show()
+
+i15d = t[index_15_ranges[:, 1]] - t[index_15_ranges[:, 0]]
+p.plot(i15d)
+p.show()
+# The macro time saves the line line_durations
+
+
+i15d = m[index_15_ranges[1025]]
+p.plot(i15d)
+p.show()
+# The macro time saves the line line_durations
+
+
+# This looks like that there are only two images
+# The indices between the markers have to vary due to varying
+# number of photons in each line
+# Maybe the extra (non photon filled range contain other information?)
+
+
+# Conculsion
+# the bincounts if ch 15 show that likely
+# micro time == 1:  is a line stop (binbount 4096)
+# micro time == 2:  is a line start (bincount 4095)
+# micro time == 4: is a frame start (bincout 3)
+
+# In the file are overall 3 frame starts -> there are 4 frames
+# each frame has 1023 line starts -> 1024 lines per frame
+
+
+
+import tttrlib
+import pylab as p
+import numpy as np
+
+frame_marker = 4
+line_start_marker = 1
+line_stop_marker = 2
+# 2 seems not to be a stop marker time between start and stop
+# very irregular
+pixel_per_line = 1024
+event_type_marker = 15
+
+data = tttrlib.TTTR('./examples/Leica/11-2_z3.ptu', 'PTU')
+e = data.get_event_type()
+c = data.get_routing_channel()
+t = data.get_macro_time()
+m = data.get_micro_time()
+
+image = tttrlib.CLSMImage(data,
+                          frame_marker,
+                          line_start_marker,
+                          line_stop_marker,
+                          event_type_marker,
+                          pixel_per_line,
+                          1)
+
+frame = image.get_frames()[0]
+line_durations = np.array([line.get_duration() for line in frame.get_lines()])
+
+channels = (1, 2, 3)
+image.fill_pixels(data, channels)
+image_intensity = image.get_intensity_image()
+p.imshow(np.log(image_intensity.sum(axis=0)))
+p.show()
+
+# Does not give an nice image
+# is there some additional encoding?!
+
+# Probably 1 marks the line start
+# and 2 marks a region in the stream that encodes for
+# the laser scanning the position
+
+import tttrlib
+import pylab as p
+import numpy as np
+
+frame_marker = 4
+line_start_marker = 1
+line_stop_marker = 2
+# 2 seems not to be a stop marker time between start and stop
+# very irregular
+pixel_per_line = 1024
+event_type_marker = 15
+
+data = tttrlib.TTTR('./examples/Leica/11-2_z3.ptu', 'PTU')
+e = data.get_event_type()
+c = data.get_routing_channel()
+t = data.get_macro_time()
+m = data.get_micro_time()
+
+image = tttrlib.CLSMImage(data,
+                          frame_marker,
+                          line_start_marker,
+                          line_stop_marker,
+                          event_type_marker,
+                          pixel_per_line,
+                          1)
+
+frame = image.get_frames()[0]
+line_durations = np.array([line.get_duration() for line in frame.get_lines()])
+
+channels = (1,)
+image.fill_pixels(data, channels)
+image_intensity = image.get_intensity_image()
+p.imshow(np.log(image_intensity.sum(axis=0)))
+p.show()
+
+

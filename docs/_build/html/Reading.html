@@ -1,0 +1,224 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>TTTR objects &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tttr-objects">
+<h1>TTTR objects<a class="headerlink" href="#tttr-objects" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="reading-tttr-files">
+<h2>Reading TTTR files<a class="headerlink" href="#reading-tttr-files" title="Permalink to this headline">¶</a></h2>
+<p>The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing
+a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by <a class="reference external" href="http://swig.org/">SWIG</a>
+(Simplified Wrapper and Interface Generator) for common scripting languages as Python as target languages and non-scripting
+languages such as C# and Java including Octave, Scilab and R. This way, the information provided by the TTTR files
+can be conveniently accessed without the need of converting the files to alternative vendor independent exchange
+file formats as <a class="reference external" href="http://photon-hdf5.github.io/">Photon-HDF</a>.</p>
+<p>Common in all TTTR file formats is that the photon data is stored as a stream of events. Every event contains
+information on the</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">Macro</span> <span class="n">time</span>
+<span class="mf">2.</span> <span class="n">Micro</span> <span class="n">time</span>
+<span class="mf">3.</span> <span class="n">Channel</span> <span class="n">number</span>
+<span class="mf">4.</span> <span class="n">Event</span> <span class="nb">type</span>
+</pre></div>
+</div>
+<p>The macro time counts the number of clock cycles since the start of the experiment. In TCSPC experiments the
+macro time is typically the number of excitation sync pulses of the laser exciting the sample. In continuous wave FCS
+experiments the macro time is often the number of clock cycles of an external clock. In time-correlated single
+photon counting (TCSPC) experiments, the micro time is usually the time when a photon was detected since the
+last excitation laser pulse (macro time). The channel number encodes the detector that detected the event (the photon).
+The event type is a special identifier that informs whether the registered event is a photon or an other event
+(like a line marker in confocal laser scanning microscopy).To save storage space and band-width most TTTR formats
+do not provide the macro time directly. Typically, instead of directly providing the macro time, the number of
+events since the last detected event are counted.</p>
+<p>For convenience, tttrlib provides a unified way of accessing the TTTR data irrespectively of the vendor data format.
+In memory the TTTR data are handled by tttrlib as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">Macro</span> <span class="n">time</span> <span class="o">-</span> <span class="mi">64</span> <span class="n">bit</span> <span class="n">unsigned</span> <span class="n">integer</span>
+<span class="mf">2.</span> <span class="n">Micro</span> <span class="n">time</span> <span class="o">-</span> <span class="mi">32</span> <span class="n">bit</span> <span class="n">unsigned</span> <span class="n">integer</span>
+<span class="mf">3.</span> <span class="n">Channel</span> <span class="n">number</span> <span class="o">-</span> <span class="mi">16</span> <span class="n">bit</span> <span class="n">integer</span>
+<span class="mf">4.</span> <span class="n">Event</span> <span class="nb">type</span> <span class="o">-</span> <span class="mi">16</span> <span class="n">bit</span> <span class="n">integer</span>
+</pre></div>
+</div>
+<p>TTTR files are handeled by creating TTTR objects that contain the TTTR data of the files. The data contained in the
+files can be accessed by the methods provided by the TTTR class. Opening and and accessing the information contained
+in TTTR files is demonstrated by the Python code examples shown below.</p>
+<p>In Python, first, the tttrlib module needs to be imported. Next, a TTTR object needs to be created. When creating a
+new TTTR object, the file name and the file type can be passed to the object’s constructor. If a TTTR object is
+created this way, by default, the data contained in the TTTR file is read into the TTTR object. The TTTR file type
+is either specified by a number or by passing a string to the TTTR object’s constructor.</p>
+<p>| File type               | Number | Identifier     |
+|————————-|——–|—————-|
+|PicoQuant, PTU           |0       |’PTU’           |
+|PicoQuant, HT3           |1       |’HT3’           |
+|Becker&amp;Hickl, SPC130     |2       |’SPC-130’       |
+|Becker&amp;Hickl, SPC630-256 |3       |’SPC-630-256’   |
+|Becker&amp;Hickl, SPC630-4096|4       |’SPC-630-4096’  |
+|Photon-HDF5              |5       |’PHOTON-HDF5’   |</p>
+<p>The two different approaches of initializing TTTR objects are demonstrated below for the files
+provided in the examples directory provided by the tttrlib library.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span> 
+
+<span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">ht3</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/HT3/01.ht3&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">spc600_256</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC630_256.spc&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">ht3</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/HT3/01.ht3&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">hdf5</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/HDF/PHOTON-HDF.hdf5&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span> 
+
+<span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+<span class="n">ht3</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/HT3/01.ht3&#39;</span><span class="p">,</span> <span class="s1">&#39;HT3&#39;</span><span class="p">)</span>
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">spc600_256</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC630_256.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-630-256&#39;</span><span class="p">)</span>
+<span class="n">photon_hdf5</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/HDF/1a_1b_Mix.hdf5&#39;</span><span class="p">,</span> <span class="s1">&#39;PHOTON-HDF5&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A TTTR object provides four getter methods to access the data contained in the associated file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span> 
+
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">macro_time</span> <span class="o">=</span> <span class="n">spc132</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
+<span class="n">micro_time</span> <span class="o">=</span> <span class="n">spc132</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
+<span class="n">channel</span> <span class="o">=</span> <span class="n">spc132</span><span class="o">.</span><span class="n">get_channel</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The filename associated to a TTTR file is obtained by the method ‘get_filename()’</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span> 
+
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">spc132</span><span class="o">.</span><span class="n">get_filename</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="selections">
+<h2>Selections<a class="headerlink" href="#selections" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="channels">
+<h3>Channels<a class="headerlink" href="#channels" title="Permalink to this headline">¶</a></h3>
+<p>The method ‘get_selection_by_channel’ returns an array that contains the indices where a the channel equals
+the channel number of the provided arguments. To obtain the indices where the channel number equals 0 or 8
+use the selector below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tttrlib</span> 
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+
+<span class="n">ch1_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]))</span>
+<span class="n">ch2_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">8</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="count-rate">
+<h3>Count rate<a class="headerlink" href="#count-rate" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="tttr-objects-based-on-selections">
+<h3>TTTR objects based on selections<a class="headerlink" href="#tttr-objects-based-on-selections" title="Permalink to this headline">¶</a></h3>
+<p>Based on an existing TTTR object and a selection a new TTTR object can be created. That only contains the selected
+elements:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">ch_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]))</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ch_indeces</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The new TTTR object contains a copy of the relevant events.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">tttrlib</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Thomas-Otavio Peulen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Reading.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,143 @@
+# TTTR objects
+## Reading TTTR files
+
+The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing 
+a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by [SWIG](http://swig.org/)
+(Simplified Wrapper and Interface Generator) for common scripting languages as Python as target languages and non-scripting 
+languages such as C# and Java including Octave, Scilab and R. This way, the information provided by the TTTR files 
+can be conveniently accessed without the need of converting the files to alternative vendor independent exchange 
+file formats as [Photon-HDF](http://photon-hdf5.github.io/).
+ 
+
+Common in all TTTR file formats is that the photon data is stored as a stream of events. Every event contains
+information on the   
+
+    1. Macro time
+    2. Micro time
+    3. Channel number
+    4. Event type
+
+The macro time counts the number of clock cycles since the start of the experiment. In TCSPC experiments the 
+macro time is typically the number of excitation sync pulses of the laser exciting the sample. In continuous wave FCS 
+experiments the macro time is often the number of clock cycles of an external clock. In time-correlated single 
+photon counting (TCSPC) experiments, the micro time is usually the time when a photon was detected since the 
+last excitation laser pulse (macro time). The channel number encodes the detector that detected the event (the photon).
+The event type is a special identifier that informs whether the registered event is a photon or an other event 
+(like a line marker in confocal laser scanning microscopy).To save storage space and band-width most TTTR formats 
+do not provide the macro time directly. Typically, instead of directly providing the macro time, the number of 
+events since the last detected event are counted. 
+
+For convenience, tttrlib provides a unified way of accessing the TTTR data irrespectively of the vendor data format. 
+In memory the TTTR data are handled by tttrlib as follows: 
+
+    1. Macro time - 64 bit unsigned integer
+    2. Micro time - 32 bit unsigned integer
+    3. Channel number - 16 bit integer
+    4. Event type - 16 bit integer
+
+TTTR files are handeled by creating TTTR objects that contain the TTTR data of the files. The data contained in the 
+files can be accessed by the methods provided by the TTTR class. Opening and and accessing the information contained 
+in TTTR files is demonstrated by the Python code examples shown below.
+
+
+In Python, first, the tttrlib module needs to be imported. Next, a TTTR object needs to be created. When creating a
+new TTTR object, the file name and the file type can be passed to the object's constructor. If a TTTR object is
+created this way, by default, the data contained in the TTTR file is read into the TTTR object. The TTTR file type
+is either specified by a number or by passing a string to the TTTR object's constructor.
+
+
+| File type               | Number | Identifier     |
+|-------------------------|--------|----------------|
+|PicoQuant, PTU           |0       |'PTU'           |
+|PicoQuant, HT3           |1       |'HT3'           |
+|Becker&Hickl, SPC130     |2       |'SPC-130'       |
+|Becker&Hickl, SPC630-256 |3       |'SPC-630-256'   |
+|Becker&Hickl, SPC630-4096|4       |'SPC-630-4096'  |
+|Photon-HDF5              |5       |'PHOTON-HDF5'   |
+
+
+The two different approaches of initializing TTTR objects are demonstrated below for the files
+provided in the examples directory provided by the tttrlib library.
+ 
+ 
+```python
+import tttrlib 
+
+ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
+ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 1)
+spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 2)
+spc600_256 = tttrlib.TTTR('./examples/BH/BH_SPC630_256.spc', 3)
+ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 1)
+hdf5 = tttrlib.TTTR('./examples/HDF/PHOTON-HDF.hdf5', 5)
+```
+
+
+```python
+import tttrlib 
+
+ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
+ht3 = tttrlib.TTTR('./examples/PQ/HT3/01.ht3', 'HT3')
+spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+spc600_256 = tttrlib.TTTR('./examples/BH/BH_SPC630_256.spc', 'SPC-630-256')
+photon_hdf5 = tttrlib.TTTR('./examples/HDF/1a_1b_Mix.hdf5', 'PHOTON-HDF5')
+```
+
+A TTTR object provides four getter methods to access the data contained in the associated file. 
+
+```python
+import tttrlib 
+
+spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+macro_time = spc132.get_macro_time()
+micro_time = spc132.get_micro_time()
+channel = spc132.get_channel()
+
+```
+
+The filename associated to a TTTR file is obtained by the method 'get_filename()'
+
+```python
+import tttrlib 
+
+spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+
+print(spc132.get_filename())
+
+```
+
+## Selections
+
+### Channels
+The method 'get_selection_by_channel' returns an array that contains the indices where a the channel equals
+the channel number of the provided arguments. To obtain the indices where the channel number equals 0 or 8
+use the selector below. 
+
+
+```python
+import numpy as np
+import tttrlib 
+
+data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+
+ch1_indeces = data.get_selection_by_channel(np.array([0]))
+ch2_indeces = data.get_selection_by_channel(np.array([8]))
+```
+
+### Count rate
+
+
+
+### TTTR objects based on selections
+
+Based on an existing TTTR object and a selection a new TTTR object can be created. That only contains the selected
+elements:
+
+```python
+import tttrlib
+data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+ch_indeces = data.get_selection_by_channel(np.array([0]))
+ph = tttrlib.TTTR(data, ch_indeces)
+```
+
+The new TTTR object contains a copy of the relevant events.
+
