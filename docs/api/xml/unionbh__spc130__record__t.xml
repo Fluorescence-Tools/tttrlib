@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="unionbh__spc130__record__t" kind="union" language="C++" prot="public">
+    <compoundname>bh_spc130_record_t</compoundname>
+    <includes refid="_record_reader_8h" local="no">RecordReader.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a2014a3168433f028cac1f0723ce921b2" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t bh_spc130_record_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="116" column="1" bodyfile="RecordReader.h" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a7fdaa2e24967b55ea29a6cabb8578a6c" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::mt</definition>
+        <argsstring></argsstring>
+        <name>mt</name>
+        <bitfield> 12</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="118" column="1" bodyfile="RecordReader.h" bodystart="118" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1aecbfa30dcdb602237b62d54024ac2ca5" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::rout</definition>
+        <argsstring></argsstring>
+        <name>rout</name>
+        <bitfield> 4</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="119" column="1" bodyfile="RecordReader.h" bodystart="119" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a695247010c82993f945abd80deee7556" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::adc</definition>
+        <argsstring></argsstring>
+        <name>adc</name>
+        <bitfield> 12</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="120" column="1" bodyfile="RecordReader.h" bodystart="120" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a9bcb0274d4ae84d4bbba836312011b27" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::mark</definition>
+        <argsstring></argsstring>
+        <name>mark</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="121" column="1" bodyfile="RecordReader.h" bodystart="121" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a7fb7c206e2cc7e8fee8a0513155a1fcf" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::gap</definition>
+        <argsstring></argsstring>
+        <name>gap</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="122" column="1" bodyfile="RecordReader.h" bodystart="122" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1ae03447ff73fd2a2db0a00c3f7fe77171" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="123" column="1" bodyfile="RecordReader.h" bodystart="123" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1a29ee8e65017dce674a1db7b719313bef" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_record_t::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="124" column="1" bodyfile="RecordReader.h" bodystart="124" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__record__t_1aa332796c04d377ab78ac81de809866ac" prot="public" static="no" mutable="no">
+        <type>struct bh_spc130_record_t::@6</type>
+        <definition>struct bh_spc130_record_t::@6  bh_spc130_record_t::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="125" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-130, regular record. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="RecordReader.h" line="115" column="1" bodyfile="RecordReader.h" bodystart="115" bodyend="126"/>
+    <listofallmembers>
+      <member refid="unionbh__spc130__record__t_1a695247010c82993f945abd80deee7556" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>adc</name></member>
+      <member refid="unionbh__spc130__record__t_1a2014a3168433f028cac1f0723ce921b2" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>allbits</name></member>
+      <member refid="unionbh__spc130__record__t_1aa332796c04d377ab78ac81de809866ac" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>bits</name></member>
+      <member refid="unionbh__spc130__record__t_1a7fb7c206e2cc7e8fee8a0513155a1fcf" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>gap</name></member>
+      <member refid="unionbh__spc130__record__t_1a29ee8e65017dce674a1db7b719313bef" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>invalid</name></member>
+      <member refid="unionbh__spc130__record__t_1a9bcb0274d4ae84d4bbba836312011b27" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>mark</name></member>
+      <member refid="unionbh__spc130__record__t_1a7fdaa2e24967b55ea29a6cabb8578a6c" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>mt</name></member>
+      <member refid="unionbh__spc130__record__t_1ae03447ff73fd2a2db0a00c3f7fe77171" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>mtov</name></member>
+      <member refid="unionbh__spc130__record__t_1aecbfa30dcdb602237b62d54024ac2ca5" prot="public" virt="non-virtual"><scope>bh_spc130_record_t</scope><name>rout</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

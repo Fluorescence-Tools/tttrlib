@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="struct_swig_py_client_data" kind="struct" language="C++" prot="public">
+    <compoundname>SwigPyClientData</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a482d64908147c310a56d1541476079dc" prot="public" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* SwigPyClientData::klass</definition>
+        <argsstring></argsstring>
+        <name>klass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1453" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1453" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a4da9e7723a1319cb42cda4ad186f65a3" prot="public" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* SwigPyClientData::newraw</definition>
+        <argsstring></argsstring>
+        <name>newraw</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1454" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1454" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a8f6dacca2c445f175d622fb9264e3715" prot="public" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* SwigPyClientData::newargs</definition>
+        <argsstring></argsstring>
+        <name>newargs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1455" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1455" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a1c4e62712f23db599e85e24e14818d59" prot="public" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* SwigPyClientData::destroy</definition>
+        <argsstring></argsstring>
+        <name>destroy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1456" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1456" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a9cb4b9b02743d09dbe216f304e2b7df0" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int SwigPyClientData::delargs</definition>
+        <argsstring></argsstring>
+        <name>delargs</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1457" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1457" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a5f9ebdbc04a774559a64b926b6ec4070" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int SwigPyClientData::implicitconv</definition>
+        <argsstring></argsstring>
+        <name>implicitconv</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1458" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1458" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_client_data_1a1f172e51bb27f670dacdf8247843b4c2" prot="public" static="no" mutable="no">
+        <type>PyTypeObject *</type>
+        <definition>PyTypeObject* SwigPyClientData::pytype</definition>
+        <argsstring></argsstring>
+        <name>pytype</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1459" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1459" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="1452" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1452" bodyend="1460"/>
+    <listofallmembers>
+      <member refid="struct_swig_py_client_data_1a9cb4b9b02743d09dbe216f304e2b7df0" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>delargs</name></member>
+      <member refid="struct_swig_py_client_data_1a1c4e62712f23db599e85e24e14818d59" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>destroy</name></member>
+      <member refid="struct_swig_py_client_data_1a5f9ebdbc04a774559a64b926b6ec4070" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>implicitconv</name></member>
+      <member refid="struct_swig_py_client_data_1a482d64908147c310a56d1541476079dc" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>klass</name></member>
+      <member refid="struct_swig_py_client_data_1a8f6dacca2c445f175d622fb9264e3715" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>newargs</name></member>
+      <member refid="struct_swig_py_client_data_1a4da9e7723a1319cb42cda4ad186f65a3" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>newraw</name></member>
+      <member refid="struct_swig_py_client_data_1a1f172e51bb27f670dacdf8247843b4c2" prot="public" virt="non-virtual"><scope>SwigPyClientData</scope><name>pytype</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

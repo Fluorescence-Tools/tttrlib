@@ -1,0 +1,101 @@
+\hypertarget{_record_reader_8h}{}\section{Record\+Reader.\+h File Reference}
+\label{_record_reader_8h}\index{Record\+Reader.\+h@{Record\+Reader.\+h}}
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+union \hyperlink{unionpq__hh__t2__record__t}{pq\+\_\+hh\+\_\+t2\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Hydra\+Harp/\+Time\+Harp260 T2 record. \end{DoxyCompactList}\item 
+union \hyperlink{unionpq__hh__t3__record__t}{pq\+\_\+hh\+\_\+t3\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Hydra\+Harp/\+Time\+Harp260 T3 record. \end{DoxyCompactList}\item 
+union \hyperlink{unionpq__ph__t2__record__t}{pq\+\_\+ph\+\_\+t2\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Pico\+Harp T2 input. \end{DoxyCompactList}\item 
+union \hyperlink{unionpq__ph__t3__record__t}{pq\+\_\+ph\+\_\+t3\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Pico\+Harp T3 input. \end{DoxyCompactList}\item 
+union \hyperlink{unionbh__spc600__256__record__t}{bh\+\_\+spc600\+\_\+256\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Becker Hickl S\+P\+C-\/600/630 256 Channel Mode, regular record. \end{DoxyCompactList}\item 
+union \hyperlink{unionbh__spc600__4096__record__t}{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Becker Hickl S\+P\+C-\/600/630 4096 Channel Mode. \end{DoxyCompactList}\item 
+union \hyperlink{unionbh__spc130__record__t}{bh\+\_\+spc130\+\_\+record\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Becker Hickl S\+P\+C-\/130, regular record. \end{DoxyCompactList}\item 
+union \hyperlink{unionbh__overflow__t}{bh\+\_\+overflow\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Becker Hickl S\+P\+C-\/130/600 macro time overflow record. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{_record_reader_8h_a593d01306230048302f8d94189c20344}{Process\+S\+P\+C130} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_aeb56e94061994cba32ba92308c1a6d29}{Process\+S\+P\+C600\+\_\+4096} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_accc9659cd21fe76853878b72243423ab}{Process\+S\+P\+C600\+\_\+256} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_a546ff8086bff7209f68cac95a4c416a7}{Process\+H\+H\+T2v2} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_a7c83927ae75f0b31639440129b48ef2b}{Process\+H\+H\+T2v1} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_aab8b96a0d785b3f691a34d85d0c2da76}{Process\+H\+H\+T3v2} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_ae3308f8b3837107a6171f6a86872c8e9}{Process\+H\+H\+T3v1} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_ad3ed538072a55bc91d73f45806c9cdd2}{Process\+P\+H\+T3} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\item 
+bool \hyperlink{_record_reader_8h_a88dec77cba7f3785165d6774c8ec07a2}{Process\+P\+H\+T2} (uint64\+\_\+t \&T\+T\+T\+R\+Record, uint64\+\_\+t \&overflow\+\_\+counter, uint64\+\_\+t \&true\+\_\+nsync, uint32\+\_\+t \&micro\+\_\+time, int16\+\_\+t \&channel, int16\+\_\+t \&record\+\_\+type)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{_record_reader_8h_a7c83927ae75f0b31639440129b48ef2b}\label{_record_reader_8h_a7c83927ae75f0b31639440129b48ef2b}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+H\+H\+T2v1@{Process\+H\+H\+T2v1}}
+\index{Process\+H\+H\+T2v1@{Process\+H\+H\+T2v1}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+H\+H\+T2v1()}{ProcessHHT2v1()}}
+{\footnotesize\ttfamily bool Process\+H\+H\+T2v1 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_a546ff8086bff7209f68cac95a4c416a7}\label{_record_reader_8h_a546ff8086bff7209f68cac95a4c416a7}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+H\+H\+T2v2@{Process\+H\+H\+T2v2}}
+\index{Process\+H\+H\+T2v2@{Process\+H\+H\+T2v2}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+H\+H\+T2v2()}{ProcessHHT2v2()}}
+{\footnotesize\ttfamily bool Process\+H\+H\+T2v2 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_ae3308f8b3837107a6171f6a86872c8e9}\label{_record_reader_8h_ae3308f8b3837107a6171f6a86872c8e9}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+H\+H\+T3v1@{Process\+H\+H\+T3v1}}
+\index{Process\+H\+H\+T3v1@{Process\+H\+H\+T3v1}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+H\+H\+T3v1()}{ProcessHHT3v1()}}
+{\footnotesize\ttfamily bool Process\+H\+H\+T3v1 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_aab8b96a0d785b3f691a34d85d0c2da76}\label{_record_reader_8h_aab8b96a0d785b3f691a34d85d0c2da76}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+H\+H\+T3v2@{Process\+H\+H\+T3v2}}
+\index{Process\+H\+H\+T3v2@{Process\+H\+H\+T3v2}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+H\+H\+T3v2()}{ProcessHHT3v2()}}
+{\footnotesize\ttfamily bool Process\+H\+H\+T3v2 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_a88dec77cba7f3785165d6774c8ec07a2}\label{_record_reader_8h_a88dec77cba7f3785165d6774c8ec07a2}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+P\+H\+T2@{Process\+P\+H\+T2}}
+\index{Process\+P\+H\+T2@{Process\+P\+H\+T2}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+P\+H\+T2()}{ProcessPHT2()}}
+{\footnotesize\ttfamily bool Process\+P\+H\+T2 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_ad3ed538072a55bc91d73f45806c9cdd2}\label{_record_reader_8h_ad3ed538072a55bc91d73f45806c9cdd2}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+P\+H\+T3@{Process\+P\+H\+T3}}
+\index{Process\+P\+H\+T3@{Process\+P\+H\+T3}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+P\+H\+T3()}{ProcessPHT3()}}
+{\footnotesize\ttfamily bool Process\+P\+H\+T3 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_a593d01306230048302f8d94189c20344}\label{_record_reader_8h_a593d01306230048302f8d94189c20344}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+S\+P\+C130@{Process\+S\+P\+C130}}
+\index{Process\+S\+P\+C130@{Process\+S\+P\+C130}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+S\+P\+C130()}{ProcessSPC130()}}
+{\footnotesize\ttfamily bool Process\+S\+P\+C130 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_accc9659cd21fe76853878b72243423ab}\label{_record_reader_8h_accc9659cd21fe76853878b72243423ab}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+S\+P\+C600\+\_\+256@{Process\+S\+P\+C600\+\_\+256}}
+\index{Process\+S\+P\+C600\+\_\+256@{Process\+S\+P\+C600\+\_\+256}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+S\+P\+C600\+\_\+256()}{ProcessSPC600\_256()}}
+{\footnotesize\ttfamily bool Process\+S\+P\+C600\+\_\+256 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_record_reader_8h_aeb56e94061994cba32ba92308c1a6d29}\label{_record_reader_8h_aeb56e94061994cba32ba92308c1a6d29}} 
+\index{Record\+Reader.\+h@{Record\+Reader.\+h}!Process\+S\+P\+C600\+\_\+4096@{Process\+S\+P\+C600\+\_\+4096}}
+\index{Process\+S\+P\+C600\+\_\+4096@{Process\+S\+P\+C600\+\_\+4096}!Record\+Reader.\+h@{Record\+Reader.\+h}}
+\subsubsection{\texorpdfstring{Process\+S\+P\+C600\+\_\+4096()}{ProcessSPC600\_4096()}}
+{\footnotesize\ttfamily bool Process\+S\+P\+C600\+\_\+4096 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t \&}]{T\+T\+T\+R\+Record,  }\item[{uint64\+\_\+t \&}]{overflow\+\_\+counter,  }\item[{uint64\+\_\+t \&}]{true\+\_\+nsync,  }\item[{uint32\+\_\+t \&}]{micro\+\_\+time,  }\item[{int16\+\_\+t \&}]{channel,  }\item[{int16\+\_\+t \&}]{record\+\_\+type }\end{DoxyParamCaption})}
+

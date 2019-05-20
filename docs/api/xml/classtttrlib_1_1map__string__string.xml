@@ -1,0 +1,826 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1map__string__string" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::map_string_string</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1ad21881c3f22278adac1c495d7ed779d5" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.map_string_string::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="163" column="1" bodyfile="tttrlib.py" bodystart="163" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1ae9d36e4e27bd8434c653babe5fd3ab75" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.map_string_string::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1map__string__string" kindref="compound">map_string_string</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="164" column="1" bodyfile="tttrlib.py" bodystart="164" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1afe54f48f0d56d9f0eaadf24e3da39f33" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.map_string_string::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="165" column="1" bodyfile="tttrlib.py" bodystart="165" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1a11eeaaccf6bc19a479f0a8971b8aeca8" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.map_string_string::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1map__string__string" kindref="compound">map_string_string</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="166" column="1" bodyfile="tttrlib.py" bodystart="166" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1ac26e28357d84aeeed494f8b0556291a7" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.map_string_string::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="167" column="1" bodyfile="tttrlib.py" bodystart="167" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1acefa8adba7ad446dd5082509d61159aa" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.map_string_string::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_map_string_string</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="272" column="1" bodyfile="tttrlib.py" bodystart="272" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1map__string__string_1aa79a1e4aecdde9067b322de953c05879" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.map_string_string::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="229" column="1" bodyfile="tttrlib.py" bodystart="229" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a9683072f0f530b5d31bb1724666b229c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.iterator</definition>
+        <argsstring>(self)</argsstring>
+        <name>iterator</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="169" column="1" bodyfile="tttrlib.py" bodystart="169" bodyend="170"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a5f6ff2421f2af68a951f215d9d8f2417" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__iter__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__iter__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="171" column="1" bodyfile="tttrlib.py" bodystart="171" bodyend="173"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a4e04f5aff990f2a9d0558280db0514f0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__nonzero__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__nonzero__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="174" column="1" bodyfile="tttrlib.py" bodystart="174" bodyend="176"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a69fc327d9926a4c035d3526670f65c04" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__bool__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__bool__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="177" column="1" bodyfile="tttrlib.py" bodystart="177" bodyend="179"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a45642770610509bdac2e1280ad10c3f6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__len__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__len__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="180" column="1" bodyfile="tttrlib.py" bodystart="180" bodyend="181"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a5f6ff2421f2af68a951f215d9d8f2417" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__iter__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__iter__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="182" column="1" bodyfile="tttrlib.py" bodystart="182" bodyend="183"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a3cc3a0cf17ff8594bebd4b9c51389a82" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.iterkeys</definition>
+        <argsstring>(self)</argsstring>
+        <name>iterkeys</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="184" column="1" bodyfile="tttrlib.py" bodystart="184" bodyend="185"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1af7102bba7b3d0f4828cebb616b6949de" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.itervalues</definition>
+        <argsstring>(self)</argsstring>
+        <name>itervalues</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="186" column="1" bodyfile="tttrlib.py" bodystart="186" bodyend="187"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a73f52b0a1f6044809a0d327959b092f3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.iteritems</definition>
+        <argsstring>(self)</argsstring>
+        <name>iteritems</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="188" column="1" bodyfile="tttrlib.py" bodystart="188" bodyend="190"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a5dddeee915c7b8656ecfdb0f42d9649e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__getitem__</definition>
+        <argsstring>(self, key)</argsstring>
+        <name>__getitem__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>key</type>
+          <defname>key</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="191" column="1" bodyfile="tttrlib.py" bodystart="191" bodyend="193"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ae877e9051f1c7af810b5c278cf84df65" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__delitem__</definition>
+        <argsstring>(self, key)</argsstring>
+        <name>__delitem__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>key</type>
+          <defname>key</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="194" column="1" bodyfile="tttrlib.py" bodystart="194" bodyend="196"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a6b32281696a978c324a64da3fcd99c6c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.has_key</definition>
+        <argsstring>(self, key)</argsstring>
+        <name>has_key</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>key</type>
+          <defname>key</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="197" column="1" bodyfile="tttrlib.py" bodystart="197" bodyend="199"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1aa82898173e563109df212dbadeebd418" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.keys</definition>
+        <argsstring>(self)</argsstring>
+        <name>keys</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="200" column="1" bodyfile="tttrlib.py" bodystart="200" bodyend="202"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ab43db26418287f55a7c8c0c2e0cb293d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.values</definition>
+        <argsstring>(self)</argsstring>
+        <name>values</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="203" column="1" bodyfile="tttrlib.py" bodystart="203" bodyend="205"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a9cf878c6169b585185971128885c90bd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.items</definition>
+        <argsstring>(self)</argsstring>
+        <name>items</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="206" column="1" bodyfile="tttrlib.py" bodystart="206" bodyend="208"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ab415903a9ef722402dd6b4f8773ea447" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__contains__</definition>
+        <argsstring>(self, key)</argsstring>
+        <name>__contains__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>key</type>
+          <defname>key</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="209" column="1" bodyfile="tttrlib.py" bodystart="209" bodyend="211"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a1926855d3c21f02eb8f7d27ae828d97f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.key_iterator</definition>
+        <argsstring>(self)</argsstring>
+        <name>key_iterator</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="212" column="1" bodyfile="tttrlib.py" bodystart="212" bodyend="214"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ad7e61cc83e9d46dd373132971be97ba5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.value_iterator</definition>
+        <argsstring>(self)</argsstring>
+        <name>value_iterator</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="215" column="1" bodyfile="tttrlib.py" bodystart="215" bodyend="217"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ae49de6b1676583b20373f144a2c04fc7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__setitem__</definition>
+        <argsstring>(self, args)</argsstring>
+        <name>__setitem__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="218" column="1" bodyfile="tttrlib.py" bodystart="218" bodyend="220"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a56f7616b96154a6088ab48445221e4a5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.asdict</definition>
+        <argsstring>(self)</argsstring>
+        <name>asdict</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="221" column="1" bodyfile="tttrlib.py" bodystart="221" bodyend="223"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a23d6e80ee32336b82919f8ecb36520d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.__init__</definition>
+        <argsstring>(self, args)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="224" column="1" bodyfile="tttrlib.py" bodystart="224" bodyend="230"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a0739de117b14e61cbdc99353f176a087" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.empty</definition>
+        <argsstring>(self)</argsstring>
+        <name>empty</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="231" column="1" bodyfile="tttrlib.py" bodystart="231" bodyend="233"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1adb0ed3e3d4b01881fdc4a11a124f56b2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.size</definition>
+        <argsstring>(self)</argsstring>
+        <name>size</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="234" column="1" bodyfile="tttrlib.py" bodystart="234" bodyend="236"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a1d199264ed67fee79a54b1efd72878d0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.swap</definition>
+        <argsstring>(self, v)</argsstring>
+        <name>swap</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>v</type>
+          <defname>v</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="237" column="1" bodyfile="tttrlib.py" bodystart="237" bodyend="239"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1aa638e55f643492bcb9589aa45815f247" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.begin</definition>
+        <argsstring>(self)</argsstring>
+        <name>begin</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="240" column="1" bodyfile="tttrlib.py" bodystart="240" bodyend="242"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a366b415b09ed38b26f43ed4bad628fe2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.end</definition>
+        <argsstring>(self)</argsstring>
+        <name>end</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="243" column="1" bodyfile="tttrlib.py" bodystart="243" bodyend="245"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a54038aa73a9014829a80ea90b54f0dd9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.rbegin</definition>
+        <argsstring>(self)</argsstring>
+        <name>rbegin</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="246" column="1" bodyfile="tttrlib.py" bodystart="246" bodyend="248"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ae043e45678c540cc099a8700791e34f2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.rend</definition>
+        <argsstring>(self)</argsstring>
+        <name>rend</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="249" column="1" bodyfile="tttrlib.py" bodystart="249" bodyend="251"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ab8b73fb01b121ee863f469d86fecc826" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.clear</definition>
+        <argsstring>(self)</argsstring>
+        <name>clear</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="252" column="1" bodyfile="tttrlib.py" bodystart="252" bodyend="254"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ad3bc8dcd752abf9837a284d05737458b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.get_allocator</definition>
+        <argsstring>(self)</argsstring>
+        <name>get_allocator</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="255" column="1" bodyfile="tttrlib.py" bodystart="255" bodyend="257"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a5d3a14da17c3162c1fcf077efc07005d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.count</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>count</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="258" column="1" bodyfile="tttrlib.py" bodystart="258" bodyend="260"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1ad9d4523415e62c27ed870f8d294d6be0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.erase</definition>
+        <argsstring>(self, args)</argsstring>
+        <name>erase</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="261" column="1" bodyfile="tttrlib.py" bodystart="261" bodyend="263"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1af5fbbb10ba04bc80ddfa98a93270a54a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.find</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>find</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="264" column="1" bodyfile="tttrlib.py" bodystart="264" bodyend="266"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a669473bdcfec8e5d5f2b05f762c006f4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.lower_bound</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>lower_bound</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="267" column="1" bodyfile="tttrlib.py" bodystart="267" bodyend="269"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1map__string__string_1a4da697171dcac1c0127e98b7f6bf2cfd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string.upper_bound</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>upper_bound</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="270" column="1" bodyfile="tttrlib.py" bodystart="270" bodyend="271"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="64">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="63">
+        <label>tttrlib.map_string_string</label>
+        <link refid="classtttrlib_1_1map__string__string"/>
+        <childnode refid="64" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="66">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="65">
+        <label>tttrlib.map_string_string</label>
+        <link refid="classtttrlib_1_1map__string__string"/>
+        <childnode refid="66" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="162" column="1" bodyfile="tttrlib.py" bodystart="162" bodyend="274"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1map__string__string_1a69fc327d9926a4c035d3526670f65c04" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__bool__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ab415903a9ef722402dd6b4f8773ea447" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__contains__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ae877e9051f1c7af810b5c278cf84df65" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__delitem__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a11eeaaccf6bc19a479f0a8971b8aeca8" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a5dddeee915c7b8656ecfdb0f42d9649e" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__getitem__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a23d6e80ee32336b82919f8ecb36520d2" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a5f6ff2421f2af68a951f215d9d8f2417" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__iter__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a5f6ff2421f2af68a951f215d9d8f2417" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__iter__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a45642770610509bdac2e1280ad10c3f6" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__len__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a4e04f5aff990f2a9d0558280db0514f0" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__nonzero__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ac26e28357d84aeeed494f8b0556291a7" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ae9d36e4e27bd8434c653babe5fd3ab75" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ae49de6b1676583b20373f144a2c04fc7" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__setitem__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1acefa8adba7ad446dd5082509d61159aa" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1afe54f48f0d56d9f0eaadf24e3da39f33" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ad21881c3f22278adac1c495d7ed779d5" prot="private" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a56f7616b96154a6088ab48445221e4a5" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>asdict</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1aa638e55f643492bcb9589aa45815f247" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>begin</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ab8b73fb01b121ee863f469d86fecc826" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>clear</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a5d3a14da17c3162c1fcf077efc07005d" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>count</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a0739de117b14e61cbdc99353f176a087" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>empty</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a366b415b09ed38b26f43ed4bad628fe2" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>end</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ad9d4523415e62c27ed870f8d294d6be0" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>erase</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1af5fbbb10ba04bc80ddfa98a93270a54a" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>find</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ad3bc8dcd752abf9837a284d05737458b" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>get_allocator</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a6b32281696a978c324a64da3fcd99c6c" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>has_key</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a9cf878c6169b585185971128885c90bd" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>items</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a9683072f0f530b5d31bb1724666b229c" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>iterator</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a73f52b0a1f6044809a0d327959b092f3" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>iteritems</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a3cc3a0cf17ff8594bebd4b9c51389a82" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>iterkeys</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1af7102bba7b3d0f4828cebb616b6949de" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>itervalues</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a1926855d3c21f02eb8f7d27ae828d97f" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>key_iterator</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1aa82898173e563109df212dbadeebd418" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>keys</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a669473bdcfec8e5d5f2b05f762c006f4" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>lower_bound</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a54038aa73a9014829a80ea90b54f0dd9" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>rbegin</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ae043e45678c540cc099a8700791e34f2" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>rend</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1adb0ed3e3d4b01881fdc4a11a124f56b2" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>size</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a1d199264ed67fee79a54b1efd72878d0" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>swap</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1aa79a1e4aecdde9067b322de953c05879" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>this</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1a4da697171dcac1c0127e98b7f6bf2cfd" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>upper_bound</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ad7e61cc83e9d46dd373132971be97ba5" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>value_iterator</name></member>
+      <member refid="classtttrlib_1_1map__string__string_1ab43db26418287f55a7c8c0c2e0cb293d" prot="public" virt="non-virtual"><scope>tttrlib::map_string_string</scope><name>values</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

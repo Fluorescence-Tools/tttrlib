@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig__varlinkobject" kind="struct" language="C++" prot="public">
+    <compoundname>swig_varlinkobject</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structswig__varlinkobject_1a8cf96d999cdf0b28a0e90ccb6804c9bd" prot="public" static="no" mutable="no">
+        <type>PyObject_HEAD <ref refid="structswig__globalvar" kindref="compound">swig_globalvar</ref> *</type>
+        <definition>PyObject_HEAD swig_globalvar* swig_varlinkobject::vars</definition>
+        <argsstring></argsstring>
+        <name>vars</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="15230" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="15230" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="140">
+        <label>swig_varlinkobject</label>
+        <link refid="structswig__varlinkobject"/>
+        <childnode refid="141" relation="usage">
+          <edgelabel>vars</edgelabel>
+        </childnode>
+      </node>
+      <node id="141">
+        <label>swig_globalvar</label>
+        <link refid="structswig__globalvar"/>
+        <childnode refid="141" relation="usage">
+          <edgelabel>next</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib_wrap.cpp" line="15228" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="15228" bodyend="15231"/>
+    <listofallmembers>
+      <member refid="structswig__varlinkobject_1a8cf96d999cdf0b28a0e90ccb6804c9bd" prot="public" virt="non-virtual"><scope>swig_varlinkobject</scope><name>vars</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

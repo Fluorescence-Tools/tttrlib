@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="unionpq__hh__t2__record" kind="union" language="C++" prot="public">
+    <compoundname>pq_hh_t2_record</compoundname>
+    <includes refid="definitions_8h" local="no">definitions.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionpq__hh__t2__record_1a69da013f76f986d29c6060c45e6583f6" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t pq_hh_t2_record::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="definitions.h" line="53" column="1" bodyfile="definitions.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t2__record_1a3cb26717bf72b09dd505c574ebdadc5e" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t2_record::timetag</definition>
+        <argsstring></argsstring>
+        <name>timetag</name>
+        <bitfield>25</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="definitions.h" line="55" column="1" bodyfile="definitions.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t2__record_1a82b5d3d114d4372361fc8893e9149965" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t2_record::channel</definition>
+        <argsstring></argsstring>
+        <name>channel</name>
+        <bitfield>6</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="definitions.h" line="56" column="1" bodyfile="definitions.h" bodystart="56" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t2__record_1abf71a32fa59f2b4cac860c133a3bb0f1" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t2_record::special</definition>
+        <argsstring></argsstring>
+        <name>special</name>
+        <bitfield>1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="definitions.h" line="57" column="1" bodyfile="definitions.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t2__record_1af182472ea9a12b7a698e35d1968024c5" prot="public" static="no" mutable="no">
+        <type>struct pq_hh_t2_record::@0</type>
+        <definition>struct pq_hh_t2_record::@0  pq_hh_t2_record::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="definitions.h" line="58" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>HydraHarp/TimeHarp260 T2 record. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="definitions.h" line="52" column="1" bodyfile="definitions.h" bodystart="52" bodyend="59"/>
+    <listofallmembers>
+      <member refid="unionpq__hh__t2__record_1a69da013f76f986d29c6060c45e6583f6" prot="public" virt="non-virtual"><scope>pq_hh_t2_record</scope><name>allbits</name></member>
+      <member refid="unionpq__hh__t2__record_1af182472ea9a12b7a698e35d1968024c5" prot="public" virt="non-virtual"><scope>pq_hh_t2_record</scope><name>bits</name></member>
+      <member refid="unionpq__hh__t2__record_1a82b5d3d114d4372361fc8893e9149965" prot="public" virt="non-virtual"><scope>pq_hh_t2_record</scope><name>channel</name></member>
+      <member refid="unionpq__hh__t2__record_1abf71a32fa59f2b4cac860c133a3bb0f1" prot="public" virt="non-virtual"><scope>pq_hh_t2_record</scope><name>special</name></member>
+      <member refid="unionpq__hh__t2__record_1a3cb26717bf72b09dd505c574ebdadc5e" prot="public" virt="non-virtual"><scope>pq_hh_t2_record</scope><name>timetag</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

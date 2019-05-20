@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1pq__ph__t3__record__t" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::pq_ph_t3_record_t</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1acbd46bdefcbb1fee5f6df47d1e1e547c" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ph_t3_record_t::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="527" column="1" bodyfile="tttrlib.py" bodystart="527" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1a5c01a56c61205a9fa8a5f4739d3391e2" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1pq__ph__t3__record__t" kindref="compound">pq_ph_t3_record_t</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="528" column="1" bodyfile="tttrlib.py" bodystart="528" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1a94b76ee4408d965614cceafd39bf4478" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ph_t3_record_t::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="529" column="1" bodyfile="tttrlib.py" bodystart="529" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1a0b95a88de98484d6978887b2b6eeb32a" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1pq__ph__t3__record__t" kindref="compound">pq_ph_t3_record_t</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="530" column="1" bodyfile="tttrlib.py" bodystart="530" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1a9fb4d1e24826d097856fe8ffcb9d3151" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="531" column="1" bodyfile="tttrlib.py" bodystart="531" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1aa5588be5eeb05bc3f41fba34e2986e3a" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_pq_ph_t3_record_t</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="543" column="1" bodyfile="tttrlib.py" bodystart="543" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1af0122534ca0916684e5a06a03b83e1e6" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ph_t3_record_t_allbits_get, _tttrlib.pq_ph_t3_record_t_allbits_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="535" column="1" bodyfile="tttrlib.py" bodystart="535" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ph__t3__record__t_1a99998dfd836ed0909d7bd627d9508d68" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ph_t3_record_t::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="542" column="1" bodyfile="tttrlib.py" bodystart="542" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1pq__ph__t3__record__t_1a5b555378ee271af2e9c0caeb8e7c8ffc" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.pq_ph_t3_record_t.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="537" column="1" bodyfile="tttrlib.py" bodystart="537" bodyend="542"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="112">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="111">
+        <label>tttrlib.pq_ph_t3_record_t</label>
+        <link refid="classtttrlib_1_1pq__ph__t3__record__t"/>
+        <childnode refid="112" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="114">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="113">
+        <label>tttrlib.pq_ph_t3_record_t</label>
+        <link refid="classtttrlib_1_1pq__ph__t3__record__t"/>
+        <childnode refid="114" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="526" column="1" bodyfile="tttrlib.py" bodystart="526" bodyend="545"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a0b95a88de98484d6978887b2b6eeb32a" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a5b555378ee271af2e9c0caeb8e7c8ffc" prot="public" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a9fb4d1e24826d097856fe8ffcb9d3151" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a5c01a56c61205a9fa8a5f4739d3391e2" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1aa5588be5eeb05bc3f41fba34e2986e3a" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a94b76ee4408d965614cceafd39bf4478" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1acbd46bdefcbb1fee5f6df47d1e1e547c" prot="private" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1af0122534ca0916684e5a06a03b83e1e6" prot="public" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>allbits</name></member>
+      <member refid="classtttrlib_1_1pq__ph__t3__record__t_1a99998dfd836ed0909d7bd627d9508d68" prot="public" virt="non-virtual"><scope>tttrlib::pq_ph_t3_record_t</scope><name>this</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

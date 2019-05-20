@@ -1,0 +1,363 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::pq_ht3_TTTRHdr</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a23359170a7050339a9041188c393fd9d" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ht3_TTTRHdr::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="967" column="1" bodyfile="tttrlib.py" bodystart="967" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1accefe3a699d6407908e270924940d983" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr" kindref="compound">pq_ht3_TTTRHdr</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="968" column="1" bodyfile="tttrlib.py" bodystart="968" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a97444db7ab3202ff84d6292120f7515c" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ht3_TTTRHdr::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="969" column="1" bodyfile="tttrlib.py" bodystart="969" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a62eee6b6af1775238b79303166330cb8" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr" kindref="compound">pq_ht3_TTTRHdr</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="970" column="1" bodyfile="tttrlib.py" bodystart="970" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aed5bc1b5e780fd944c8a5dbc77d090d6" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="971" column="1" bodyfile="tttrlib.py" bodystart="971" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a331b48019c1003dd2a40b459dd5493e1" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_pq_ht3_TTTRHdr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1031" column="1" bodyfile="tttrlib.py" bodystart="1031" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a30f297b06891acca4ea51050d92999be" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Globclock</definition>
+        <argsstring></argsstring>
+        <name>Globclock</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Globclock_get, _tttrlib.pq_ht3_TTTRHdr_Globclock_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="975" column="1" bodyfile="tttrlib.py" bodystart="975" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a0d708d3aaf65ae086991bf883566fe17" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::ExtDevices</definition>
+        <argsstring></argsstring>
+        <name>ExtDevices</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_ExtDevices_get, _tttrlib.pq_ht3_TTTRHdr_ExtDevices_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="979" column="1" bodyfile="tttrlib.py" bodystart="979" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a34fbe7d2d94eb90a793f4e7e34672a0c" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Reserved1</definition>
+        <argsstring></argsstring>
+        <name>Reserved1</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Reserved1_get, _tttrlib.pq_ht3_TTTRHdr_Reserved1_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="983" column="1" bodyfile="tttrlib.py" bodystart="983" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1ad9349929a246a90ea78bf8e1a0f454b3" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Reserved2</definition>
+        <argsstring></argsstring>
+        <name>Reserved2</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Reserved2_get, _tttrlib.pq_ht3_TTTRHdr_Reserved2_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="987" column="1" bodyfile="tttrlib.py" bodystart="987" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1af2432f50964c73664e5caf2219548618" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Reserved3</definition>
+        <argsstring></argsstring>
+        <name>Reserved3</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Reserved3_get, _tttrlib.pq_ht3_TTTRHdr_Reserved3_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="991" column="1" bodyfile="tttrlib.py" bodystart="991" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1ac31d89025f59e107066de27bf76468a5" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Reserved4</definition>
+        <argsstring></argsstring>
+        <name>Reserved4</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Reserved4_get, _tttrlib.pq_ht3_TTTRHdr_Reserved4_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="995" column="1" bodyfile="tttrlib.py" bodystart="995" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a1f449627548e00da124244b491b0f532" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::Reserved5</definition>
+        <argsstring></argsstring>
+        <name>Reserved5</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_Reserved5_get, _tttrlib.pq_ht3_TTTRHdr_Reserved5_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="999" column="1" bodyfile="tttrlib.py" bodystart="999" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a409fc7862821529857381a02ccfc1991" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::SyncRate</definition>
+        <argsstring></argsstring>
+        <name>SyncRate</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_SyncRate_get, _tttrlib.pq_ht3_TTTRHdr_SyncRate_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1003" column="1" bodyfile="tttrlib.py" bodystart="1003" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a3ad5b0474626bae4c689a259cc297389" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::TTTRCFDRate</definition>
+        <argsstring></argsstring>
+        <name>TTTRCFDRate</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_TTTRCFDRate_get, _tttrlib.pq_ht3_TTTRHdr_TTTRCFDRate_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1007" column="1" bodyfile="tttrlib.py" bodystart="1007" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aed01462ccfd311f8897e36a45db6ec15" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::TTTRStopAfter</definition>
+        <argsstring></argsstring>
+        <name>TTTRStopAfter</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_TTTRStopAfter_get, _tttrlib.pq_ht3_TTTRHdr_TTTRStopAfter_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1011" column="1" bodyfile="tttrlib.py" bodystart="1011" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a9cb7dc8344880c61c9dcd1e552d627e4" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::TTTRStopReason</definition>
+        <argsstring></argsstring>
+        <name>TTTRStopReason</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_TTTRStopReason_get, _tttrlib.pq_ht3_TTTRHdr_TTTRStopReason_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1015" column="1" bodyfile="tttrlib.py" bodystart="1015" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a5a68135d81b43e6d6f7df8ba69023423" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::NoOfRecords</definition>
+        <argsstring></argsstring>
+        <name>NoOfRecords</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_NoOfRecords_get, _tttrlib.pq_ht3_TTTRHdr_NoOfRecords_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1019" column="1" bodyfile="tttrlib.py" bodystart="1019" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a6ee3f6574b934bfa0b71995725291237" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::SpecialHeaderSize</definition>
+        <argsstring></argsstring>
+        <name>SpecialHeaderSize</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_TTTRHdr_SpecialHeaderSize_get, _tttrlib.pq_ht3_TTTRHdr_SpecialHeaderSize_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1023" column="1" bodyfile="tttrlib.py" bodystart="1023" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a23baf587242c8a418ade79922bba4404" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_TTTRHdr::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1030" column="1" bodyfile="tttrlib.py" bodystart="1030" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aef793503871bb05b882d9955309dd09b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_TTTRHdr.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1025" column="1" bodyfile="tttrlib.py" bodystart="1025" bodyend="1030"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="104">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="103">
+        <label>tttrlib.pq_ht3_TTTRHdr</label>
+        <link refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr"/>
+        <childnode refid="104" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="106">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="105">
+        <label>tttrlib.pq_ht3_TTTRHdr</label>
+        <link refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr"/>
+        <childnode refid="106" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="966" column="1" bodyfile="tttrlib.py" bodystart="966" bodyend="1033"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a62eee6b6af1775238b79303166330cb8" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aef793503871bb05b882d9955309dd09b" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aed5bc1b5e780fd944c8a5dbc77d090d6" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1accefe3a699d6407908e270924940d983" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a331b48019c1003dd2a40b459dd5493e1" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a97444db7ab3202ff84d6292120f7515c" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a23359170a7050339a9041188c393fd9d" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a0d708d3aaf65ae086991bf883566fe17" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>ExtDevices</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a30f297b06891acca4ea51050d92999be" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Globclock</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a5a68135d81b43e6d6f7df8ba69023423" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>NoOfRecords</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a34fbe7d2d94eb90a793f4e7e34672a0c" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Reserved1</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1ad9349929a246a90ea78bf8e1a0f454b3" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Reserved2</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1af2432f50964c73664e5caf2219548618" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Reserved3</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1ac31d89025f59e107066de27bf76468a5" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Reserved4</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a1f449627548e00da124244b491b0f532" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>Reserved5</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a6ee3f6574b934bfa0b71995725291237" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>SpecialHeaderSize</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a409fc7862821529857381a02ccfc1991" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>SyncRate</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a23baf587242c8a418ade79922bba4404" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>this</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a3ad5b0474626bae4c689a259cc297389" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>TTTRCFDRate</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1aed01462ccfd311f8897e36a45db6ec15" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>TTTRStopAfter</name></member>
+      <member refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr_1a9cb7dc8344880c61c9dcd1e552d627e4" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_TTTRHdr</scope><name>TTTRStopReason</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

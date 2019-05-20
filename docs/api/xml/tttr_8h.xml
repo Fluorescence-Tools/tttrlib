@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="tttr_8h" kind="file" language="C++">
+    <compoundname>tttr.h</compoundname>
+    <includes refid="stdint_8h" local="no">stdint.h</includes>
+    <includes local="no">string</includes>
+    <includes local="no">conio.h</includes>
+    <includes local="no">iostream</includes>
+    <includes local="no">vector</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">map</includes>
+    <includedby refid="_becker_hickl_8h" local="yes">BeckerHickl.h</includedby>
+    <includedby refid="_pico_quant_8h" local="yes">PicoQuant.h</includedby>
+    <includedby refid="_t_t_t_r_reader_8h" local="yes">TTTRReader.h</includedby>
+    <incdepgraph>
+      <node id="47">
+        <label>string</label>
+      </node>
+      <node id="52">
+        <label>map</label>
+      </node>
+      <node id="48">
+        <label>conio.h</label>
+      </node>
+      <node id="45">
+        <label>limits.h</label>
+      </node>
+      <node id="46">
+        <label>wchar.h</label>
+      </node>
+      <node id="50">
+        <label>vector</label>
+      </node>
+      <node id="44">
+        <label>stdint.h</label>
+        <link refid="stdint_8h_source"/>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="46" relation="include">
+        </childnode>
+      </node>
+      <node id="49">
+        <label>iostream</label>
+      </node>
+      <node id="43">
+        <label>tttr.h</label>
+        <link refid="tttr_8h"/>
+        <childnode refid="44" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="50" relation="include">
+        </childnode>
+        <childnode refid="51" relation="include">
+        </childnode>
+        <childnode refid="52" relation="include">
+        </childnode>
+      </node>
+      <node id="51">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="56">
+        <label>TTTRReader.h</label>
+        <link refid="_t_t_t_r_reader_8h_source"/>
+      </node>
+      <node id="55">
+        <label>PicoQuant.h</label>
+        <link refid="_pico_quant_8h_source"/>
+      </node>
+      <node id="53">
+        <label>tttr.h</label>
+        <link refid="tttr_8h"/>
+        <childnode refid="54" relation="include">
+        </childnode>
+        <childnode refid="55" relation="include">
+        </childnode>
+        <childnode refid="56" relation="include">
+        </childnode>
+      </node>
+      <node id="54">
+        <label>BeckerHickl.h</label>
+        <link refid="_becker_hickl_8h_source"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="structrecord" prot="public">record</innerclass>
+    <innerclass refid="class_t_t_t_r" prot="public">TTTR</innerclass>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="tttr_8h_1a411c46599e926f8cdf49c63957255359" prot="public" static="no">
+        <name>_CRT_SECURE_NO_DEPRECATE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttr.h" line="4" column="9" bodyfile="tttr.h" bodystart="4" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="tttr_8h_1a4997b4a679c7559512d50124247a298b" prot="public" static="no">
+        <name>TTTRLIB_TTTR_H</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttr.h" line="7" column="9" bodyfile="tttr.h" bodystart="7" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="tttr_8h_1a850ac46f39c6fb9bbd3f96295f9b5d50" prot="public" static="no">
+        <type>struct <ref refid="structrecord" kindref="compound">record</ref></type>
+        <definition>typedef struct record  record_t</definition>
+        <argsstring></argsstring>
+        <name>record_t</name>
+        <briefdescription>
+<para>A record containing either a photon, a marker, or an overflow. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttr.h" line="24" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Created<sp/>by<sp/>thoma<sp/>on<sp/>31.12.2018.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>_CRT_SECURE_NO_DEPRECATE</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>TTTRLIB_TTTR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRLIB_TTTR_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdint.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;conio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19" refid="structrecord" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="structrecord" kindref="compound">record</ref><sp/>{</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/>int64_t<sp/>n_sync;<sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="21" refid="structrecord_1a560f6bf53d7391bc0913e86b0afd0050" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/><ref refid="structrecord_1a560f6bf53d7391bc0913e86b0afd0050" kindref="member">micro_time</ref>;<sp/></highlight></codeline>
+<codeline lineno="22" refid="structrecord_1aa00c54d4069198c49b7392208ffa5557" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int16_t<sp/><ref refid="structrecord_1aa00c54d4069198c49b7392208ffa5557" kindref="member">channel</ref>;<sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="23" refid="structrecord_1a0795a4b9a10dff80dd3612627d19850a" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int16_t<sp/><ref refid="structrecord_1a0795a4b9a10dff80dd3612627d19850a" kindref="member">type</ref>;<sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="24"><highlight class="normal">}<sp/><ref refid="structrecord" kindref="compound">record_t</ref>;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28" refid="class_t_t_t_r" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_t_t_t_r" kindref="compound">TTTR</ref><sp/>{</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="32" refid="class_t_t_t_r_1a3468b73e14d0744f097c7ad5e16d1c58" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>std::FILE<sp/>*<ref refid="class_t_t_t_r_1a3468b73e14d0744f097c7ad5e16d1c58" kindref="member">fpin</ref>;</highlight></codeline>
+<codeline lineno="34" refid="class_t_t_t_r_1ad380866879776f4a8b6970b87b636f80" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="class_t_t_t_r_1ad380866879776f4a8b6970b87b636f80" kindref="member">current_photon_index</ref>;</highlight></codeline>
+<codeline lineno="36" refid="class_t_t_t_r_1ab818d69f3ddd6559871ce251f47c789d" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>*<ref refid="class_t_t_t_r_1ab818d69f3ddd6559871ce251f47c789d" kindref="member">filename</ref>;</highlight></codeline>
+<codeline lineno="38" refid="class_t_t_t_r_1afc45082c08bc495de938f56a3c025158" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_t_t_t_r_1afc45082c08bc495de938f56a3c025158" kindref="member">microtime_resolution</ref>;</highlight></codeline>
+<codeline lineno="40" refid="class_t_t_t_r_1a60722015f5c963293aa3b56537bed01f" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_t_t_t_r_1a60722015f5c963293aa3b56537bed01f" kindref="member">macrotime_resolution</ref>;</highlight></codeline>
+<codeline lineno="42" refid="class_t_t_t_r_1a0358eb03e5d7376824835fef3e8ab47e" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="structrecord" kindref="compound">record_t</ref><sp/><ref refid="class_t_t_t_r_1a0358eb03e5d7376824835fef3e8ab47e" kindref="member">current_record</ref>;</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>got_record(int64_t<sp/>n_sync,<sp/>uint32_t<sp/><ref refid="structrecord_1a560f6bf53d7391bc0913e86b0afd0050" kindref="member">micro_time</ref>,<sp/>int16_t<sp/><ref refid="structrecord_1aa00c54d4069198c49b7392208ffa5557" kindref="member">channel</ref>,<sp/>uint16_t<sp/><ref refid="structrecord_1a0795a4b9a10dff80dd3612627d19850a" kindref="member">type</ref>);</highlight></codeline>
+<codeline lineno="46" refid="class_t_t_t_r_1aa8deedbf82c07609970b268345e53988" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><ref refid="class_t_t_t_r_1aa8deedbf82c07609970b268345e53988" kindref="member">fp_records_begin</ref>;</highlight></codeline>
+<codeline lineno="48" refid="class_t_t_t_r_1a8c495fd08ca0cb4419cd4e427431a126" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/><ref refid="class_t_t_t_r_1a8c495fd08ca0cb4419cd4e427431a126" kindref="member">header</ref>;</highlight></codeline>
+<codeline lineno="50" refid="class_t_t_t_r_1a300fea8d16133ed0151200f6d8109be9" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>uint32_t<sp/><ref refid="class_t_t_t_r_1a300fea8d16133ed0151200f6d8109be9" kindref="member">TTTRRecord</ref>;</highlight></codeline>
+<codeline lineno="52" refid="class_t_t_t_r_1a050de7c0abda39f1d2af4a2dc6dc769b" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/><ref refid="class_t_t_t_r_1a050de7c0abda39f1d2af4a2dc6dc769b" kindref="member">tmp</ref>;</highlight></codeline>
+<codeline lineno="54" refid="class_t_t_t_r_1ae012d9d66422f2877a37253bf8611abd" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>void<sp/>(<ref refid="class_t_t_t_r" kindref="compound">TTTR</ref>::*processRecord)(uint32_t);</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>skipHeader();</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>read_record();</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="62" refid="class_t_t_t_r_1ac7cf82904283d479e50b64cfb7aefd73" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int64_t<sp/>*<ref refid="class_t_t_t_r_1ac7cf82904283d479e50b64cfb7aefd73" kindref="member">macro_times</ref>;</highlight></codeline>
+<codeline lineno="64" refid="class_t_t_t_r_1a6a2231c93858bae8ab7eae7a737ba8b6" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>*<ref refid="class_t_t_t_r_1a6a2231c93858bae8ab7eae7a737ba8b6" kindref="member">micro_times</ref>;</highlight></codeline>
+<codeline lineno="66" refid="class_t_t_t_r_1a9a9d0333a478637cf7d82a218cb80250" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int16_t<sp/>*<ref refid="class_t_t_t_r_1a9a9d0333a478637cf7d82a218cb80250" kindref="member">routing_channels</ref>;</highlight></codeline>
+<codeline lineno="68" refid="class_t_t_t_r_1a08631a98541e230844ac020613686a6a" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int16_t<sp/>*<ref refid="class_t_t_t_r_1a08631a98541e230844ac020613686a6a" kindref="member">record_types</ref>;</highlight></codeline>
+<codeline lineno="70" refid="class_t_t_t_r_1a19dadec7ec2d25f4265f935349c8a23a" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>*<ref refid="class_t_t_t_r_1a19dadec7ec2d25f4265f935349c8a23a" kindref="member">photon_idx</ref>;</highlight></codeline>
+<codeline lineno="72" refid="class_t_t_t_r_1aaa81900721c35cb2b0c9ad59984b5c82" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>*<ref refid="class_t_t_t_r_1aaa81900721c35cb2b0c9ad59984b5c82" kindref="member">marker_idx</ref>;</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75" refid="class_t_t_t_r_1a72e5a97ba291c09517cbc06ce78e2c63" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_records_in_file<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="77" refid="class_t_t_t_r_1a4cc37548f6564c05496d95ca1b25b2d4" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_records_read<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="79" refid="class_t_t_t_r_1a8ec0d734069e10357824283e2e1c700f" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_photons<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="81" refid="class_t_t_t_r_1a09047e136ec64bef8c42a147688272ab" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_marker<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" kindref="member">TTTR::TTTR</ref>();</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" kindref="member">TTTR::TTTR</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal">*<sp/>fn);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_t_t_t_r" kindref="compound">TTTR</ref>();</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>getFilename();</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;uint64_t&gt;<sp/><ref refid="class_t_t_t_r_1adb3d3b4a6db01f4bea43f8ee5de255d6" kindref="member">TTTR::getPhotonIndicesByChannel</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>channels,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_channels);</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>getMicroTimeResolution();</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">virtual</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>getSyncPulseInterval();</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>read_records(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>n_rec);</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>read_records();</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>getNumerOfRecordsInFile();</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/>getHeader();</highlight></codeline>
+<codeline lineno="118"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_TTTR_H</highlight></codeline>
+    </programlisting>
+    <location file="tttr.h"/>
+  </compounddef>
+</doxygen>

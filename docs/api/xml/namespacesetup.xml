@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="namespacesetup" kind="namespace" language="Python">
+    <compoundname>setup</compoundname>
+    <innerclass refid="classsetup_1_1_build_python_extension" prot="public">setup::BuildPythonExtension</innerclass>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="setup_8py_1ab3a7a0638d76a01367c5bc3cc699447f" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>setup.name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <initializer>=  &quot;tttrlib&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="13" column="1" bodyfile="setup.py" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a52eaf4a217a97fb82180c1b16165017e" prot="public" static="no" mutable="no">
+        <type>list</type>
+        <definition>setup.include_dirs</definition>
+        <argsstring></argsstring>
+        <name>include_dirs</name>
+        <initializer>=  [&apos;.&apos;, &apos;../include/&apos;]</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="15" column="1" bodyfile="setup.py" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a3f774facf9b5098e602ebb7b1b1722fa" prot="public" static="no" mutable="no">
+        <type>list</type>
+        <definition>list setup::extra_args</definition>
+        <argsstring></argsstring>
+        <name>extra_args</name>
+        <initializer>=  [
+        &quot;/std:c++latest&quot;,
+        &quot;/EHsc&quot;
+    ]</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="21" column="1" bodyfile="setup.py" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1ab6b72d56ff85e52faea3f1487c6904f8" prot="public" static="no" mutable="no">
+        <type>list</type>
+        <definition>list setup.extensions</definition>
+        <argsstring></argsstring>
+        <name>extensions</name>
+        <initializer>=  [
+    Extension(
+        name=&apos;_tttrlib&apos;,  # SWIG requires _ as a prefix for the module name
+        sources=[
+            &quot;tttrlib.i&quot;,
+            &quot;../src/TTTR.cpp&quot;,
+            &quot;../src/PicoQuant.cpp&quot;
+        ],
+        include_dirs=include_dirs,
+        extra_compile_args=extra_args,
+        swig_opts=[&quot;-c++&quot;])
+]</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="45" column="1" bodyfile="setup.py" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1add074bfbabb8fa153de4bf5daf941063" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.cwd</definition>
+        <argsstring></argsstring>
+        <name>cwd</name>
+        <initializer>=  os.getcwd()</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="59" column="1" bodyfile="setup.py" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a137d6286fb9c1355868a64b6bb41c1a9" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.shell</definition>
+        <argsstring></argsstring>
+        <name>shell</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="60" column="1" bodyfile="setup.py" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1a1bf56ea61d1e9865f316116dca2fbfea" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.ext_modules</definition>
+        <argsstring></argsstring>
+        <name>ext_modules</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="65" column="1" bodyfile="setup.py" bodystart="65" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1ad6a0f278ba38b7ed3595fd6896196fb3" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.py_modules</definition>
+        <argsstring></argsstring>
+        <name>py_modules</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="67" column="1" bodyfile="setup.py" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1aa128e9ba397a7b5b03bb964c4d14268d" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.cmdclass</definition>
+        <argsstring></argsstring>
+        <name>cmdclass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="68" column="1" bodyfile="setup.py" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="setup_8py_1abe96a9c38c1c61f9f0fdb002c482f785" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.classifiers</definition>
+        <argsstring></argsstring>
+        <name>classifiers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="71" column="1" bodyfile="setup.py" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="setup.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

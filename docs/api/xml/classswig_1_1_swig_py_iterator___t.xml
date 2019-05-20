@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classswig_1_1_swig_py_iterator___t" kind="class" language="C++" prot="public">
+    <compoundname>swig::SwigPyIterator_T</compoundname>
+    <basecompoundref refid="structswig_1_1_swig_py_iterator" prot="public" virt="non-virtual">swig::SwigPyIterator</basecompoundref>
+    <derivedcompoundref refid="classswig_1_1_swig_py_iterator_closed___t" prot="public" virt="non-virtual">swig::SwigPyIteratorClosed_T&lt; OutIterator, ValueType, FromOper &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classswig_1_1_swig_py_iterator_open___t" prot="public" virt="non-virtual">swig::SwigPyIteratorOpen_T&lt; OutIterator, ValueType, FromOper &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classswig_1_1_swig_py_iterator_closed___t" prot="public" virt="non-virtual">swig::SwigPyIteratorClosed_T&lt; OutIterator, typename OutIterator::value_type, FromOper &gt;</derivedcompoundref>
+    <templateparamlist>
+      <param>
+        <type>typename OutIterator</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="classswig_1_1_swig_py_iterator___t_1aec35545038c3d804975a147253f061e4" prot="public" static="no">
+        <type>OutIterator</type>
+        <definition>typedef OutIterator swig::SwigPyIterator_T&lt; OutIterator &gt;::out_iterator</definition>
+        <argsstring></argsstring>
+        <name>out_iterator</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4335" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4335" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classswig_1_1_swig_py_iterator___t_1a1441e2409c41706ad7aee977165f675e" prot="public" static="no">
+        <type>std::iterator_traits&lt; out_iterator &gt;::value_type</type>
+        <definition>typedef std::iterator_traits&lt;out_iterator&gt;::value_type swig::SwigPyIterator_T&lt; OutIterator &gt;::value_type</definition>
+        <argsstring></argsstring>
+        <name>value_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4336" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4336" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="classswig_1_1_swig_py_iterator___t_1af10eb8078eb41f1dbca3701f27bd8e73" prot="public" static="no">
+        <type><ref refid="classswig_1_1_swig_py_iterator___t" kindref="compound">SwigPyIterator_T</ref>&lt; out_iterator &gt;</type>
+        <definition>typedef SwigPyIterator_T&lt;out_iterator&gt; swig::SwigPyIterator_T&lt; OutIterator &gt;::self_type</definition>
+        <argsstring></argsstring>
+        <name>self_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4337" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4337" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="classswig_1_1_swig_py_iterator___t_1a7b69908f19b9150a4d2b357567f8bd82" prot="protected" static="no" mutable="no">
+        <type>out_iterator</type>
+        <definition>out_iterator swig::SwigPyIterator_T&lt; OutIterator &gt;::current</definition>
+        <argsstring></argsstring>
+        <name>current</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4371" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4371" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classswig_1_1_swig_py_iterator___t_1aed627e359856103f6e9b2e939fc85d9c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>swig::SwigPyIterator_T&lt; OutIterator &gt;::SwigPyIterator_T</definition>
+        <argsstring>(out_iterator curr, PyObject *seq)</argsstring>
+        <name>SwigPyIterator_T</name>
+        <param>
+          <type>out_iterator</type>
+          <declname>curr</declname>
+        </param>
+        <param>
+          <type>PyObject *</type>
+          <declname>seq</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4339" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4339" bodyend="4342"/>
+      </memberdef>
+      <memberdef kind="function" id="classswig_1_1_swig_py_iterator___t_1a5079275c680963f14ba496ebd4f07c7b" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const out_iterator &amp;</type>
+        <definition>const out_iterator&amp; swig::SwigPyIterator_T&lt; OutIterator &gt;::get_current</definition>
+        <argsstring>() const</argsstring>
+        <name>get_current</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4344" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4344" bodyend="4347"/>
+      </memberdef>
+      <memberdef kind="function" id="classswig_1_1_swig_py_iterator___t_1a14f2ba114f370932df0bf1ab06d0a5e2" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>bool</type>
+        <definition>bool swig::SwigPyIterator_T&lt; OutIterator &gt;::equal</definition>
+        <argsstring>(const SwigPyIterator &amp;iter) const</argsstring>
+        <name>equal</name>
+        <reimplements refid="structswig_1_1_swig_py_iterator_1ab6fc2cfd1457e734739cf3d4bfe39456">equal</reimplements>
+        <param>
+          <type>const <ref refid="structswig_1_1_swig_py_iterator" kindref="compound">SwigPyIterator</ref> &amp;</type>
+          <declname>iter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4350" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4350" bodyend="4358"/>
+      </memberdef>
+      <memberdef kind="function" id="classswig_1_1_swig_py_iterator___t_1ab98b853b7da59239d8b260be34dbda26" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>ptrdiff_t</type>
+        <definition>ptrdiff_t swig::SwigPyIterator_T&lt; OutIterator &gt;::distance</definition>
+        <argsstring>(const SwigPyIterator &amp;iter) const</argsstring>
+        <name>distance</name>
+        <reimplements refid="structswig_1_1_swig_py_iterator_1a76881aa4c938f5915badd57fc7da074c">distance</reimplements>
+        <param>
+          <type>const <ref refid="structswig_1_1_swig_py_iterator" kindref="compound">SwigPyIterator</ref> &amp;</type>
+          <declname>iter</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4360" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4360" bodyend="4368"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="163">
+        <label>swig::SwigPyIteratorClosed_T&lt; OutIterator &gt;</label>
+        <link refid="classswig_1_1_swig_py_iterator_closed___t"/>
+        <childnode refid="161" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="167">
+        <label>swig::SwigPyMapIterator_T&lt; OutIterator, FromOper &gt;</label>
+        <link refid="structswig_1_1_swig_py_map_iterator___t"/>
+        <childnode refid="166" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="164">
+        <label>swig::SwigPyMapIterator_T&lt; OutIterator, ValueType, FromOper &gt;</label>
+        <link refid="structswig_1_1_swig_py_map_iterator___t"/>
+        <childnode refid="163" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="162">
+        <label>swig::SwigPyIterator</label>
+        <link refid="structswig_1_1_swig_py_iterator"/>
+      </node>
+      <node id="168">
+        <label>swig::SwigPyMapKeyIterator_T&lt; OutIterator, FromOper &gt;</label>
+        <link refid="structswig_1_1_swig_py_map_key_iterator___t"/>
+        <childnode refid="167" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="161">
+        <label>swig::SwigPyIterator_T&lt; OutIterator &gt;</label>
+        <link refid="classswig_1_1_swig_py_iterator___t"/>
+        <childnode refid="162" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="169">
+        <label>swig::SwigPyMapValueITerator_T&lt; OutIterator, FromOper &gt;</label>
+        <link refid="structswig_1_1_swig_py_map_value_i_terator___t"/>
+        <childnode refid="167" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="166">
+        <label>SwigPyIteratorClosed_T&lt; OutIterator, typename OutIterator::value_type, FromOper &gt;</label>
+        <link refid="classswig_1_1_swig_py_iterator_closed___t"/>
+        <childnode refid="161" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="165">
+        <label>swig::SwigPyIteratorOpen_T&lt; OutIterator &gt;</label>
+        <link refid="classswig_1_1_swig_py_iterator_open___t"/>
+        <childnode refid="161" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="171">
+        <label>swig::SwigPyIterator</label>
+        <link refid="structswig_1_1_swig_py_iterator"/>
+      </node>
+      <node id="172">
+        <label>OutIterator</label>
+      </node>
+      <node id="170">
+        <label>swig::SwigPyIterator_T&lt; OutIterator &gt;</label>
+        <link refid="classswig_1_1_swig_py_iterator___t"/>
+        <childnode refid="171" relation="public-inheritance">
+        </childnode>
+        <childnode refid="172" relation="usage">
+          <edgelabel>current</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib_wrap.cpp" line="4333" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4332" bodyend="4372"/>
+    <listofallmembers>
+      <member refid="structswig_1_1_swig_py_iterator_1a441c6d2f704560c0552a70077b92f749" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>__next__</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1ac14880767f73c71e8adb59cac6bed3ef" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>advance</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1ae74c4b06f59975d9df19b30780cdefc1" prot="public" virt="pure-virtual"><scope>swig::SwigPyIterator_T</scope><name>copy</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1a7b69908f19b9150a4d2b357567f8bd82" prot="protected" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>current</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1aad0c74a8c95526184fefb897476320ef" prot="public" virt="virtual"><scope>swig::SwigPyIterator_T</scope><name>decr</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1ac77f47f6ed06f7113252940588a3f39e" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>descriptor</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1ab98b853b7da59239d8b260be34dbda26" prot="public" virt="virtual"><scope>swig::SwigPyIterator_T</scope><name>distance</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1a14f2ba114f370932df0bf1ab06d0a5e2" prot="public" virt="virtual"><scope>swig::SwigPyIterator_T</scope><name>equal</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1a5079275c680963f14ba496ebd4f07c7b" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>get_current</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a8881170ecd7d9e674ef37eb16b2c9a7a" prot="public" virt="pure-virtual"><scope>swig::SwigPyIterator_T</scope><name>incr</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1aafe564ca6084dccf9e98425363c8f9fc" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>next</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a13f4adca1733e6c24c97c0bcbcb161a2" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator!=</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a35a2eef6ddbe2342fb0c9881084d3ee4" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator+</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a81afed8a7dfb6c44a8d31069e44aabc2" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator+=</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1af41383899796677955b31807fd7ccfd7" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator-</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a2d8edb0c0896c7766cfebe7ac2140496" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator-</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a1de70234523e1e2512586c06ad697f21" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator-=</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a38be5d8177173d8858482f21b12748a1" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>operator==</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1aec35545038c3d804975a147253f061e4" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>out_iterator</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1ae2a3dea10c5f69c67ef7fbb4e279ad7a" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>previous</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1af10eb8078eb41f1dbca3701f27bd8e73" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>self_type</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a88c0a14160ab680c8251f61e01b38d77" prot="protected" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>SwigPyIterator</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1aed627e359856103f6e9b2e939fc85d9c" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>SwigPyIterator_T</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1a7ba184c8ea37f53dbd75b6678a23f20c" prot="public" virt="pure-virtual"><scope>swig::SwigPyIterator_T</scope><name>value</name></member>
+      <member refid="classswig_1_1_swig_py_iterator___t_1a1441e2409c41706ad7aee977165f675e" prot="public" virt="non-virtual"><scope>swig::SwigPyIterator_T</scope><name>value_type</name></member>
+      <member refid="structswig_1_1_swig_py_iterator_1ab47c4f340032dc58caad34198d8cdfaf" prot="public" virt="virtual"><scope>swig::SwigPyIterator_T</scope><name>~SwigPyIterator</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

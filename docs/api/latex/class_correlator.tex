@@ -1,0 +1,238 @@
+\hypertarget{class_correlator}{}\section{Correlator Class Reference}
+\label{class_correlator}\index{Correlator@{Correlator}}
+
+
+{\ttfamily \#include $<$correlate.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_correlator_a6114955836dba0b4b61138490cd3fe91}{Correlator} ()
+\item 
+\hyperlink{class_correlator_a85102747d6ae6ff216218a001683b942}{$\sim$\+Correlator} ()=default
+\item 
+void \hyperlink{class_correlator_a8e96a0c2d5235e912965632b280da01b}{set\+\_\+n\+\_\+casc} (int n\+\_\+casc)
+\item 
+size\+\_\+t \hyperlink{class_correlator_a0240bc7c9704530dcd61cdd2713143b3}{get\+\_\+n\+\_\+casc} ()
+\item 
+void \hyperlink{class_correlator_adbce9483839ba3985398176a5cf1822e}{set\+\_\+n\+\_\+bins} (int n\+\_\+bins)
+\item 
+size\+\_\+t \hyperlink{class_correlator_a0f11555de3ab1c568f2c849e849a513e}{get\+\_\+n\+\_\+bins} ()
+\item 
+size\+\_\+t \hyperlink{class_correlator_a657815ec6b5c96624826bdbe0ec8d4d9}{get\+\_\+n\+\_\+corr} ()
+\item 
+void \hyperlink{class_correlator_a98605e701052a2fefc798424483909b0}{make\+\_\+fine} (unsigned int $\ast$tac\+\_\+1, size\+\_\+t n\+\_\+tac\+\_\+1, unsigned int $\ast$tac\+\_\+2, size\+\_\+t n\+\_\+tac\+\_\+2)
+\item 
+void \hyperlink{class_correlator_a277e6652097f81aa1870c4a04485ba41}{get\+\_\+x\+\_\+axis} (unsigned long long $\ast$$\ast$x\+\_\+axis, int $\ast$n\+\_\+out)
+\item 
+void \hyperlink{class_correlator_aecdb727bbdb02330f00f7b19564db448}{get\+\_\+corr} (double $\ast$$\ast$corr, int $\ast$n\+\_\+out)
+\item 
+void \hyperlink{class_correlator_a8ad9be08f71ef766292bf67145acba99}{get\+\_\+x\+\_\+axis\+\_\+normalized} (unsigned long long $\ast$$\ast$x\+\_\+axis, int $\ast$n\+\_\+out)
+\item 
+void \hyperlink{class_correlator_a1575020c5bc498208ad59e92731dd066}{get\+\_\+corr\+\_\+normalized} (double $\ast$$\ast$corr, int $\ast$n\+\_\+out)
+\item 
+void \hyperlink{class_correlator_a57e67409c1784f6582d80ae72b642e5b}{set\+\_\+events} (unsigned long long $\ast$t1, int n\+\_\+t1, double $\ast$weight\+\_\+ch1, int n\+\_\+weights\+\_\+ch1, unsigned long long $\ast$t2, int n\+\_\+t2, double $\ast$weight\+\_\+ch2, int n\+\_\+weights\+\_\+ch2)
+\item 
+void \hyperlink{class_correlator_a0d904b7fc2724287c646aad5909b8671}{normalize} ()
+\item 
+void \hyperlink{class_correlator_a5ed562f28f104690743a9c053b4ca1a9}{run} ()
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_correlator_af4caefcd9465346248a5dc1949846f3e}{update\+\_\+axis} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_correlator_a6114955836dba0b4b61138490cd3fe91}\label{class_correlator_a6114955836dba0b4b61138490cd3fe91}} 
+\index{Correlator@{Correlator}!Correlator@{Correlator}}
+\index{Correlator@{Correlator}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{Correlator()}{Correlator()}}
+{\footnotesize\ttfamily Correlator\+::\+Correlator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_correlator_a85102747d6ae6ff216218a001683b942}\label{class_correlator_a85102747d6ae6ff216218a001683b942}} 
+\index{Correlator@{Correlator}!````~Correlator@{$\sim$\+Correlator}}
+\index{````~Correlator@{$\sim$\+Correlator}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{$\sim$\+Correlator()}{~Correlator()}}
+{\footnotesize\ttfamily Correlator\+::$\sim$\+Correlator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_correlator_aecdb727bbdb02330f00f7b19564db448}\label{class_correlator_aecdb727bbdb02330f00f7b19564db448}} 
+\index{Correlator@{Correlator}!get\+\_\+corr@{get\+\_\+corr}}
+\index{get\+\_\+corr@{get\+\_\+corr}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+corr()}{get\_corr()}}
+{\footnotesize\ttfamily void Correlator\+::get\+\_\+corr (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{corr,  }\item[{int $\ast$}]{n\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the correlation.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em corr} & a pointer to an array that will contain the correlation \\
+\hline
+\mbox{\tt out}  & {\em n\+\_\+out} & a pointer to the an integer that will contain the number of elements of the x-\/axis \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_a1575020c5bc498208ad59e92731dd066}\label{class_correlator_a1575020c5bc498208ad59e92731dd066}} 
+\index{Correlator@{Correlator}!get\+\_\+corr\+\_\+normalized@{get\+\_\+corr\+\_\+normalized}}
+\index{get\+\_\+corr\+\_\+normalized@{get\+\_\+corr\+\_\+normalized}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+corr\+\_\+normalized()}{get\_corr\_normalized()}}
+{\footnotesize\ttfamily void Correlator\+::get\+\_\+corr\+\_\+normalized (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{corr,  }\item[{int $\ast$}]{n\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the normalized correlation.
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em corr} & a pointer to an array that will contain the normalized correlation \\
+\hline
+\mbox{\tt out}  & {\em n\+\_\+out} & a pointer to the an integer that will contain the number of elements of the normalized x-\/axis \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_a0f11555de3ab1c568f2c849e849a513e}\label{class_correlator_a0f11555de3ab1c568f2c849e849a513e}} 
+\index{Correlator@{Correlator}!get\+\_\+n\+\_\+bins@{get\+\_\+n\+\_\+bins}}
+\index{get\+\_\+n\+\_\+bins@{get\+\_\+n\+\_\+bins}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+n\+\_\+bins()}{get\_n\_bins()}}
+{\footnotesize\ttfamily size\+\_\+t Correlator\+::get\+\_\+n\+\_\+bins (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_correlator_a0240bc7c9704530dcd61cdd2713143b3}\label{class_correlator_a0240bc7c9704530dcd61cdd2713143b3}} 
+\index{Correlator@{Correlator}!get\+\_\+n\+\_\+casc@{get\+\_\+n\+\_\+casc}}
+\index{get\+\_\+n\+\_\+casc@{get\+\_\+n\+\_\+casc}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+n\+\_\+casc()}{get\_n\_casc()}}
+{\footnotesize\ttfamily size\+\_\+t Correlator\+::get\+\_\+n\+\_\+casc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_correlator_a657815ec6b5c96624826bdbe0ec8d4d9}\label{class_correlator_a657815ec6b5c96624826bdbe0ec8d4d9}} 
+\index{Correlator@{Correlator}!get\+\_\+n\+\_\+corr@{get\+\_\+n\+\_\+corr}}
+\index{get\+\_\+n\+\_\+corr@{get\+\_\+n\+\_\+corr}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+n\+\_\+corr()}{get\_n\_corr()}}
+{\footnotesize\ttfamily size\+\_\+t Correlator\+::get\+\_\+n\+\_\+corr (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_correlator_a277e6652097f81aa1870c4a04485ba41}\label{class_correlator_a277e6652097f81aa1870c4a04485ba41}} 
+\index{Correlator@{Correlator}!get\+\_\+x\+\_\+axis@{get\+\_\+x\+\_\+axis}}
+\index{get\+\_\+x\+\_\+axis@{get\+\_\+x\+\_\+axis}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+x\+\_\+axis()}{get\_x\_axis()}}
+{\footnotesize\ttfamily void Correlator\+::get\+\_\+x\+\_\+axis (\begin{DoxyParamCaption}\item[{unsigned long long $\ast$$\ast$}]{x\+\_\+axis,  }\item[{int $\ast$}]{n\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the x-\/axis of the correlation
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em x\+\_\+axis} & a pointer to an array that will contain the x-\/axis \\
+\hline
+\mbox{\tt out}  & {\em n\+\_\+out} & a pointer to the an integer that will contain the number of elements of the x-\/axis \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_a8ad9be08f71ef766292bf67145acba99}\label{class_correlator_a8ad9be08f71ef766292bf67145acba99}} 
+\index{Correlator@{Correlator}!get\+\_\+x\+\_\+axis\+\_\+normalized@{get\+\_\+x\+\_\+axis\+\_\+normalized}}
+\index{get\+\_\+x\+\_\+axis\+\_\+normalized@{get\+\_\+x\+\_\+axis\+\_\+normalized}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{get\+\_\+x\+\_\+axis\+\_\+normalized()}{get\_x\_axis\_normalized()}}
+{\footnotesize\ttfamily void Correlator\+::get\+\_\+x\+\_\+axis\+\_\+normalized (\begin{DoxyParamCaption}\item[{unsigned long long $\ast$$\ast$}]{x\+\_\+axis,  }\item[{int $\ast$}]{n\+\_\+out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the normalized x-\/axis of the correlation
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em x\+\_\+axis} & a pointer to an array that will contain the x-\/axis \\
+\hline
+\mbox{\tt out}  & {\em n\+\_\+out} & a pointer to the an integer that will contain the number of elements of the x-\/axis \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_a98605e701052a2fefc798424483909b0}\label{class_correlator_a98605e701052a2fefc798424483909b0}} 
+\index{Correlator@{Correlator}!make\+\_\+fine@{make\+\_\+fine}}
+\index{make\+\_\+fine@{make\+\_\+fine}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{make\+\_\+fine()}{make\_fine()}}
+{\footnotesize\ttfamily void Correlator\+::make\+\_\+fine (\begin{DoxyParamCaption}\item[{unsigned int $\ast$}]{tac\+\_\+1,  }\item[{size\+\_\+t}]{n\+\_\+tac\+\_\+1,  }\item[{unsigned int $\ast$}]{tac\+\_\+2,  }\item[{size\+\_\+t}]{n\+\_\+tac\+\_\+2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Changes the 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tac\+\_\+1} & \\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+tac\+\_\+1} & \\
+\hline
+\mbox{\tt in}  & {\em tac\+\_\+2} & \\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+tac\+\_\+2} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_a0d904b7fc2724287c646aad5909b8671}\label{class_correlator_a0d904b7fc2724287c646aad5909b8671}} 
+\index{Correlator@{Correlator}!normalize@{normalize}}
+\index{normalize@{normalize}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{normalize()}{normalize()}}
+{\footnotesize\ttfamily void Correlator\+::normalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Calculates the normalized correlation amplitudes and x-\/axis
+
+Makes a copy of the current correlation curve, i.\+e., the x-\/axis and and the corresponding correlation amplitudes and calculates the values of the normalized correlation. \mbox{\Hypertarget{class_correlator_a5ed562f28f104690743a9c053b4ca1a9}\label{class_correlator_a5ed562f28f104690743a9c053b4ca1a9}} 
+\index{Correlator@{Correlator}!run@{run}}
+\index{run@{run}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{run()}{run()}}
+{\footnotesize\ttfamily void Correlator\+::run (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_correlator_a57e67409c1784f6582d80ae72b642e5b}\label{class_correlator_a57e67409c1784f6582d80ae72b642e5b}} 
+\index{Correlator@{Correlator}!set\+\_\+events@{set\+\_\+events}}
+\index{set\+\_\+events@{set\+\_\+events}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{set\+\_\+events()}{set\_events()}}
+{\footnotesize\ttfamily void Correlator\+::set\+\_\+events (\begin{DoxyParamCaption}\item[{unsigned long long $\ast$}]{t1,  }\item[{int}]{n\+\_\+t1,  }\item[{double $\ast$}]{weight\+\_\+ch1,  }\item[{int}]{n\+\_\+weights\+\_\+ch1,  }\item[{unsigned long long $\ast$}]{t2,  }\item[{int}]{n\+\_\+t2,  }\item[{double $\ast$}]{weight\+\_\+ch2,  }\item[{int}]{n\+\_\+weights\+\_\+ch2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em Array} & t1 of the time events of the first channel (the array is modified in place) \\
+\hline
+\mbox{\tt in}  & {\em n\+\_\+t1} & The number of time events in the first channel \\
+\hline
+ & {\em w1} & A vector of weights for the time events of the first channel \\
+\hline
+ & {\em n\+\_\+weights\+\_\+ch1} & The number of weights of the first channel \\
+\hline
+ & {\em t2} & A vector of the time events of the second channel \\
+\hline
+ & {\em n\+\_\+t2} & The number of time events in the second channel \\
+\hline
+ & {\em w2} & A vector of weights for the time events of the second channel \\
+\hline
+ & {\em n\+\_\+weights\+\_\+ch2} & The number of weights of the second channel \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_adbce9483839ba3985398176a5cf1822e}\label{class_correlator_adbce9483839ba3985398176a5cf1822e}} 
+\index{Correlator@{Correlator}!set\+\_\+n\+\_\+bins@{set\+\_\+n\+\_\+bins}}
+\index{set\+\_\+n\+\_\+bins@{set\+\_\+n\+\_\+bins}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{set\+\_\+n\+\_\+bins()}{set\_n\_bins()}}
+{\footnotesize\ttfamily void Correlator\+::set\+\_\+n\+\_\+bins (\begin{DoxyParamCaption}\item[{int}]{n\+\_\+bins }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_correlator_a8e96a0c2d5235e912965632b280da01b}\label{class_correlator_a8e96a0c2d5235e912965632b280da01b}} 
+\index{Correlator@{Correlator}!set\+\_\+n\+\_\+casc@{set\+\_\+n\+\_\+casc}}
+\index{set\+\_\+n\+\_\+casc@{set\+\_\+n\+\_\+casc}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{set\+\_\+n\+\_\+casc()}{set\_n\_casc()}}
+{\footnotesize\ttfamily void Correlator\+::set\+\_\+n\+\_\+casc (\begin{DoxyParamCaption}\item[{int}]{n\+\_\+casc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Sets the number of cascades of the correlation curve and updates the correlation axis. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em n\+\_\+casc} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_correlator_af4caefcd9465346248a5dc1949846f3e}\label{class_correlator_af4caefcd9465346248a5dc1949846f3e}} 
+\index{Correlator@{Correlator}!update\+\_\+axis@{update\+\_\+axis}}
+\index{update\+\_\+axis@{update\+\_\+axis}!Correlator@{Correlator}}
+\subsubsection{\texorpdfstring{update\+\_\+axis()}{update\_axis()}}
+{\footnotesize\ttfamily void Correlator\+::update\+\_\+axis (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+tau\+\_\+j = tau\+\_\+(i\+\_\+casc -\/1 ) + 2 $\ast$$\ast$ (floor(i\+\_\+casc-\/1 / n\+\_\+bins))
+
+for n\+\_\+casc = 3, n\+\_\+bins = 10 tau\+\_\+j = \href{j=0...n_casc*n_bins}{\tt 0, 1, 2, ..., 9, 10, 12, ..., 28, 30, 34, ..., 70}
+
+Updates x-\/axis to the current 
+\begin{DoxyParams}{Parameters}
+{\em n\+\_\+bins} & and \\
+\hline
+{\em n\+\_\+casc} & and reserves memory for the correlation \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{correlate_8h}{correlate.\+h}\end{DoxyCompactItemize}

@@ -1,0 +1,273 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1pq__ht3__ascii__t" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::pq_ht3_ascii_t</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1aab7c9f908de607aa45d0fba10a964135" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ht3_ascii_t::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="749" column="1" bodyfile="tttrlib.py" bodystart="749" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a36dae83189df97b7f290e9861ed3e0a9" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1pq__ht3__ascii__t" kindref="compound">pq_ht3_ascii_t</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="750" column="1" bodyfile="tttrlib.py" bodystart="750" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a491581d77966265343beba26d3bdb368" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.pq_ht3_ascii_t::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="751" column="1" bodyfile="tttrlib.py" bodystart="751" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a02e3701ea5fdae502f64650f7e4f8b9b" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1pq__ht3__ascii__t" kindref="compound">pq_ht3_ascii_t</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="752" column="1" bodyfile="tttrlib.py" bodystart="752" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1afd38146234e1cb018acdcaaaa49a411c" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="753" column="1" bodyfile="tttrlib.py" bodystart="753" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a2cb07db8df4197f5102966f256c3e3e0" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_pq_ht3_ascii_t</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="789" column="1" bodyfile="tttrlib.py" bodystart="789" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a26e08e4faddeaf73286bdef5f47def94" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::Ident</definition>
+        <argsstring></argsstring>
+        <name>Ident</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_Ident_get, _tttrlib.pq_ht3_ascii_t_Ident_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="757" column="1" bodyfile="tttrlib.py" bodystart="757" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a739b9e63802a859cce5d58b0496659cc" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::FormatVersion</definition>
+        <argsstring></argsstring>
+        <name>FormatVersion</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_FormatVersion_get, _tttrlib.pq_ht3_ascii_t_FormatVersion_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="761" column="1" bodyfile="tttrlib.py" bodystart="761" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1acbcf3ffd07a15e4aca0627333997ea33" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::CreatorName</definition>
+        <argsstring></argsstring>
+        <name>CreatorName</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_CreatorName_get, _tttrlib.pq_ht3_ascii_t_CreatorName_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="765" column="1" bodyfile="tttrlib.py" bodystart="765" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a9a95a157c48a5341bf2b05c1f42d05f1" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::CreatorVersion</definition>
+        <argsstring></argsstring>
+        <name>CreatorVersion</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_CreatorVersion_get, _tttrlib.pq_ht3_ascii_t_CreatorVersion_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="769" column="1" bodyfile="tttrlib.py" bodystart="769" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1ab3039cc562d3af1c53b2edd4ebc7abf6" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::FileTime</definition>
+        <argsstring></argsstring>
+        <name>FileTime</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_FileTime_get, _tttrlib.pq_ht3_ascii_t_FileTime_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="773" column="1" bodyfile="tttrlib.py" bodystart="773" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1af708451f878802564903f2d9a7f5c402" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::CRLF</definition>
+        <argsstring></argsstring>
+        <name>CRLF</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_CRLF_get, _tttrlib.pq_ht3_ascii_t_CRLF_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="777" column="1" bodyfile="tttrlib.py" bodystart="777" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1a1dff97afcd0a2325b083efa1877c5add" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::CommentField</definition>
+        <argsstring></argsstring>
+        <name>CommentField</name>
+        <initializer>=  _swig_property(_tttrlib.pq_ht3_ascii_t_CommentField_get, _tttrlib.pq_ht3_ascii_t_CommentField_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="781" column="1" bodyfile="tttrlib.py" bodystart="781" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1pq__ht3__ascii__t_1ad1111177e3e2be574c8859227a8f1dfe" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.pq_ht3_ascii_t::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="788" column="1" bodyfile="tttrlib.py" bodystart="788" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1pq__ht3__ascii__t_1a3f96df7f1b6141b183c60c5ce0346251" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_ascii_t.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="783" column="1" bodyfile="tttrlib.py" bodystart="783" bodyend="788"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="92">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="91">
+        <label>tttrlib.pq_ht3_ascii_t</label>
+        <link refid="classtttrlib_1_1pq__ht3__ascii__t"/>
+        <childnode refid="92" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="94">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="93">
+        <label>tttrlib.pq_ht3_ascii_t</label>
+        <link refid="classtttrlib_1_1pq__ht3__ascii__t"/>
+        <childnode refid="94" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="748" column="1" bodyfile="tttrlib.py" bodystart="748" bodyend="791"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a02e3701ea5fdae502f64650f7e4f8b9b" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a3f96df7f1b6141b183c60c5ce0346251" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1afd38146234e1cb018acdcaaaa49a411c" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a36dae83189df97b7f290e9861ed3e0a9" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a2cb07db8df4197f5102966f256c3e3e0" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a491581d77966265343beba26d3bdb368" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1aab7c9f908de607aa45d0fba10a964135" prot="private" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a1dff97afcd0a2325b083efa1877c5add" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>CommentField</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1acbcf3ffd07a15e4aca0627333997ea33" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>CreatorName</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a9a95a157c48a5341bf2b05c1f42d05f1" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>CreatorVersion</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1af708451f878802564903f2d9a7f5c402" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>CRLF</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1ab3039cc562d3af1c53b2edd4ebc7abf6" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>FileTime</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a739b9e63802a859cce5d58b0496659cc" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>FormatVersion</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1a26e08e4faddeaf73286bdef5f47def94" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>Ident</name></member>
+      <member refid="classtttrlib_1_1pq__ht3__ascii__t_1ad1111177e3e2be574c8859227a8f1dfe" prot="public" virt="non-virtual"><scope>tttrlib::pq_ht3_ascii_t</scope><name>this</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

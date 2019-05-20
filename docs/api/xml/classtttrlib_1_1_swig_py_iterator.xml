@@ -1,0 +1,525 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1_swig_py_iterator" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::SwigPyIterator</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1a38f1bf3c2f0168f627df062fb95ee7a4" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.SwigPyIterator::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="99" column="1" bodyfile="tttrlib.py" bodystart="99" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1a2d444f3f7ed8ba21259a36556f597faf" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.SwigPyIterator::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1_swig_py_iterator" kindref="compound">SwigPyIterator</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="100" column="1" bodyfile="tttrlib.py" bodystart="100" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1a5e4c10a0562d24a48323cc338c954202" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.SwigPyIterator::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="101" column="1" bodyfile="tttrlib.py" bodystart="101" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1ae6ddce8fa27004a89a99c49c03f326b8" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.SwigPyIterator::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1_swig_py_iterator" kindref="compound">SwigPyIterator</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="102" column="1" bodyfile="tttrlib.py" bodystart="102" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1ac44da1271884fad9bd6407c457bf3c6d" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.SwigPyIterator::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="106" column="1" bodyfile="tttrlib.py" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1a8e256cbe5ffc337fbc110cd1047c8f16" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.SwigPyIterator::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_SwigPyIterator</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="107" column="1" bodyfile="tttrlib.py" bodystart="107" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1_swig_py_iterator_1a9ec86f246dd4b9bdcd841157b8c5e471" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.SwigPyIterator::__del__</definition>
+        <argsstring></argsstring>
+        <name>__del__</name>
+        <initializer>=  lambda self: None</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="108" column="1" bodyfile="tttrlib.py" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a41c8abd11786130a07efe31a7f90ff91" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__init__</definition>
+        <argsstring>(self, args, kwargs)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+        </param>
+        <param>
+          <type>kwargs</type>
+          <defname>kwargs</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="104" column="1" bodyfile="tttrlib.py" bodystart="104" bodyend="105"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1ac6565bc9f4c2184030de8c8ac1b1c349" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.value</definition>
+        <argsstring>(self)</argsstring>
+        <name>value</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="110" column="1" bodyfile="tttrlib.py" bodystart="110" bodyend="112"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1ac3217a6addc1fb374fa8bb3f36d3abb0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.incr</definition>
+        <argsstring>(self, n=1)</argsstring>
+        <name>incr</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+          <defval>1</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="113" column="1" bodyfile="tttrlib.py" bodystart="113" bodyend="115"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a24a4391d937e61cc8fbf8dce371f9f13" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.decr</definition>
+        <argsstring>(self, n=1)</argsstring>
+        <name>decr</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+          <defval>1</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="116" column="1" bodyfile="tttrlib.py" bodystart="116" bodyend="118"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a183d3dda60cdb5ec2abb6ff5aab4ea5e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.distance</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>distance</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="119" column="1" bodyfile="tttrlib.py" bodystart="119" bodyend="121"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a4d325ea82fc196ebeec04abf040754fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.equal</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>equal</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="122" column="1" bodyfile="tttrlib.py" bodystart="122" bodyend="124"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a1cb41d7badd61bb90c82814dd5fe18ed" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.copy</definition>
+        <argsstring>(self)</argsstring>
+        <name>copy</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="125" column="1" bodyfile="tttrlib.py" bodystart="125" bodyend="127"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1aa3192a290e4454c019bcb22a39ae093b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.next</definition>
+        <argsstring>(self)</argsstring>
+        <name>next</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="128" column="1" bodyfile="tttrlib.py" bodystart="128" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a5b8e1f3f6c24145f318ac8d936a157ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__next__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__next__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="131" column="1" bodyfile="tttrlib.py" bodystart="131" bodyend="133"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1aa9b55f62d5852ea508456d0ef45011cf" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.previous</definition>
+        <argsstring>(self)</argsstring>
+        <name>previous</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="134" column="1" bodyfile="tttrlib.py" bodystart="134" bodyend="136"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1ad6cd030e0c2355de65740338335f2afe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.advance</definition>
+        <argsstring>(self, n)</argsstring>
+        <name>advance</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="137" column="1" bodyfile="tttrlib.py" bodystart="137" bodyend="139"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1ada2cb65e8c8325348bba7a88d6396c00" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__eq__</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>__eq__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="140" column="1" bodyfile="tttrlib.py" bodystart="140" bodyend="142"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a1c338d136d3eca0ee656bb05a26f5c44" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__ne__</definition>
+        <argsstring>(self, x)</argsstring>
+        <name>__ne__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>x</type>
+          <defname>x</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="143" column="1" bodyfile="tttrlib.py" bodystart="143" bodyend="145"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a5272d1913408ca2dc4a9a206443a5e1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__iadd__</definition>
+        <argsstring>(self, n)</argsstring>
+        <name>__iadd__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="146" column="1" bodyfile="tttrlib.py" bodystart="146" bodyend="148"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1af7b246ea06129321394aac3439a76f5b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__isub__</definition>
+        <argsstring>(self, n)</argsstring>
+        <name>__isub__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="149" column="1" bodyfile="tttrlib.py" bodystart="149" bodyend="151"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1aa216d3221fc884b3e4812fbf287781f8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__add__</definition>
+        <argsstring>(self, n)</argsstring>
+        <name>__add__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>n</type>
+          <defname>n</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="152" column="1" bodyfile="tttrlib.py" bodystart="152" bodyend="154"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1ac6e76d6e13470cb6ae825c247dc298eb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__sub__</definition>
+        <argsstring>(self, args)</argsstring>
+        <name>__sub__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>args</type>
+          <defname>args</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="155" column="1" bodyfile="tttrlib.py" bodystart="155" bodyend="156"/>
+      </memberdef>
+      <memberdef kind="function" id="classtttrlib_1_1_swig_py_iterator_1a9130c1bdb3e9c8b17dbb614ba077e45e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator.__iter__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__iter__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="157" column="1" bodyfile="tttrlib.py" bodystart="157" bodyend="158"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="158">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="157">
+        <label>tttrlib.SwigPyIterator</label>
+        <link refid="classtttrlib_1_1_swig_py_iterator"/>
+        <childnode refid="158" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="160">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="159">
+        <label>tttrlib.SwigPyIterator</label>
+        <link refid="classtttrlib_1_1_swig_py_iterator"/>
+        <childnode refid="160" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="98" column="1" bodyfile="tttrlib.py" bodystart="98" bodyend="159"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1aa216d3221fc884b3e4812fbf287781f8" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__add__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a9ec86f246dd4b9bdcd841157b8c5e471" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__del__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ada2cb65e8c8325348bba7a88d6396c00" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__eq__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ae6ddce8fa27004a89a99c49c03f326b8" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a5272d1913408ca2dc4a9a206443a5e1c" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__iadd__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a41c8abd11786130a07efe31a7f90ff91" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1af7b246ea06129321394aac3439a76f5b" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__isub__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a9130c1bdb3e9c8b17dbb614ba077e45e" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__iter__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a1c338d136d3eca0ee656bb05a26f5c44" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__ne__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a5b8e1f3f6c24145f318ac8d936a157ee" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__next__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ac44da1271884fad9bd6407c457bf3c6d" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a2d444f3f7ed8ba21259a36556f597faf" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ac6e76d6e13470cb6ae825c247dc298eb" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__sub__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a8e256cbe5ffc337fbc110cd1047c8f16" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a5e4c10a0562d24a48323cc338c954202" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a38f1bf3c2f0168f627df062fb95ee7a4" prot="private" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ad6cd030e0c2355de65740338335f2afe" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>advance</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a1cb41d7badd61bb90c82814dd5fe18ed" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>copy</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a24a4391d937e61cc8fbf8dce371f9f13" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>decr</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a183d3dda60cdb5ec2abb6ff5aab4ea5e" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>distance</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1a4d325ea82fc196ebeec04abf040754fe" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>equal</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ac3217a6addc1fb374fa8bb3f36d3abb0" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>incr</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1aa3192a290e4454c019bcb22a39ae093b" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>next</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1aa9b55f62d5852ea508456d0ef45011cf" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>previous</name></member>
+      <member refid="classtttrlib_1_1_swig_py_iterator_1ac6565bc9f4c2184030de8c8ac1b1c349" prot="public" virt="non-virtual"><scope>tttrlib::SwigPyIterator</scope><name>value</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

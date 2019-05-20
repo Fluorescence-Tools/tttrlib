@@ -26,6 +26,7 @@
 #include <vector>
 #include <stdio.h>
 #include <map>
+#include <array>
 #include <memory>
 #include "hdf5.h"
 #include "H5Tpublic.h"

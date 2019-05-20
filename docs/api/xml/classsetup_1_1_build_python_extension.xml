@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classsetup_1_1_build_python_extension" kind="class" language="Python" prot="public">
+    <compoundname>setup::BuildPythonExtension</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">build</basecompoundref>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classsetup_1_1_build_python_extension_1a3a73172f145fd2e3463c62892384a37b" prot="public" static="yes" mutable="no">
+        <type>list</type>
+        <definition>list setup.BuildPythonExtension::sub_commands</definition>
+        <argsstring></argsstring>
+        <name>sub_commands</name>
+        <initializer>=  [
+        (&apos;build_ext&apos;, build.has_ext_modules),
+        (&apos;build_py&apos;, build.has_pure_modules),
+        (&apos;build_clib&apos;, build.has_c_libraries),
+        (&apos;build_scripts&apos;, build.has_scripts),
+    ]</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="37" column="1" bodyfile="setup.py" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="44">
+        <label>build</label>
+      </node>
+      <node id="43">
+        <label>setup.BuildPythonExtension</label>
+        <link refid="classsetup_1_1_build_python_extension"/>
+        <childnode refid="44" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="46">
+        <label>build</label>
+      </node>
+      <node id="45">
+        <label>setup.BuildPythonExtension</label>
+        <link refid="classsetup_1_1_build_python_extension"/>
+        <childnode refid="46" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="setup.py" line="36" column="1" bodyfile="setup.py" bodystart="36" bodyend="45"/>
+    <listofallmembers>
+      <member refid="classsetup_1_1_build_python_extension_1a3a73172f145fd2e3463c62892384a37b" prot="public" virt="non-virtual"><scope>setup::BuildPythonExtension</scope><name>sub_commands</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

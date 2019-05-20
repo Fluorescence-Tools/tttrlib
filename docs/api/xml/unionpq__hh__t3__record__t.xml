@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="unionpq__hh__t3__record__t" kind="union" language="C++" prot="public">
+    <compoundname>pq_hh_t3_record_t</compoundname>
+    <includes refid="_record_reader_8h" local="no">RecordReader.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1a7c19c5bdd8be57b851744afa3ee5560b" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t pq_hh_t3_record_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="43" column="1" bodyfile="RecordReader.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1abb244c46493f88b25bddd2720d8db775" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t3_record_t::n_sync</definition>
+        <argsstring></argsstring>
+        <name>n_sync</name>
+        <bitfield>10</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="45" column="1" bodyfile="RecordReader.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1adf08c8dc759cb14e16ac7ac17f2891de" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t3_record_t::dtime</definition>
+        <argsstring></argsstring>
+        <name>dtime</name>
+        <bitfield>15</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="46" column="1" bodyfile="RecordReader.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1a93243944e4b4197d80c1ba9540fca8f2" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t3_record_t::channel</definition>
+        <argsstring></argsstring>
+        <name>channel</name>
+        <bitfield>6</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="47" column="1" bodyfile="RecordReader.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1ae5a00d94ca6826e4a9825793cd646b7b" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned pq_hh_t3_record_t::special</definition>
+        <argsstring></argsstring>
+        <name>special</name>
+        <bitfield>1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="48" column="1" bodyfile="RecordReader.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionpq__hh__t3__record__t_1ab34dd4f4cc6edf9d1136155e07fb847c" prot="public" static="no" mutable="no">
+        <type>struct pq_hh_t3_record_t::@1</type>
+        <definition>struct pq_hh_t3_record_t::@1  pq_hh_t3_record_t::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="RecordReader.h" line="49" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>HydraHarp/TimeHarp260 T3 record. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="RecordReader.h" line="42" column="1" bodyfile="RecordReader.h" bodystart="42" bodyend="50"/>
+    <listofallmembers>
+      <member refid="unionpq__hh__t3__record__t_1a7c19c5bdd8be57b851744afa3ee5560b" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>allbits</name></member>
+      <member refid="unionpq__hh__t3__record__t_1ab34dd4f4cc6edf9d1136155e07fb847c" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>bits</name></member>
+      <member refid="unionpq__hh__t3__record__t_1a93243944e4b4197d80c1ba9540fca8f2" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>channel</name></member>
+      <member refid="unionpq__hh__t3__record__t_1adf08c8dc759cb14e16ac7ac17f2891de" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>dtime</name></member>
+      <member refid="unionpq__hh__t3__record__t_1abb244c46493f88b25bddd2720d8db775" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>n_sync</name></member>
+      <member refid="unionpq__hh__t3__record__t_1ae5a00d94ca6826e4a9825793cd646b7b" prot="public" virt="non-virtual"><scope>pq_hh_t3_record_t</scope><name>special</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

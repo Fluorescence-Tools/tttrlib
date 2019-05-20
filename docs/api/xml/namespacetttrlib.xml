@@ -1,0 +1,994 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="namespacetttrlib" kind="namespace" language="Python">
+    <compoundname>tttrlib</compoundname>
+    <innerclass refid="classtttrlib_1_1__object" prot="public">tttrlib::_object</innerclass>
+    <innerclass refid="classtttrlib_1_1bh__spc130__overflow__t" prot="public">tttrlib::bh_overflow_t</innerclass>
+    <innerclass refid="classtttrlib_1_1bh__spc130__record__t" prot="public">tttrlib::bh_spc130_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1bh__spc600__256__overflow__t" prot="public">tttrlib::bh_spc600_256_overflow_t</innerclass>
+    <innerclass refid="classtttrlib_1_1bh__spc600__256__record__t" prot="public">tttrlib::bh_spc600_256_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1bh__spc600__4096__record__t" prot="public">tttrlib::bh_spc600_4096_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1_curve_mapping__t" prot="public">tttrlib::CurveMapping_t</innerclass>
+    <innerclass refid="classtttrlib_1_1map__string__string" prot="public">tttrlib::map_string_string</innerclass>
+    <innerclass refid="classtttrlib_1_1_param_struct__t" prot="public">tttrlib::ParamStruct_t</innerclass>
+    <innerclass refid="classtttrlib_1_1_p_q" prot="public">tttrlib::PQ</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__hh__t2__record__t" prot="public">tttrlib::pq_hh_t2_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__hh__t3__record__t" prot="public">tttrlib::pq_hh_t3_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ht3__ascii__t" prot="public">tttrlib::pq_ht3_ascii_t</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ht3___bin_hdr__t" prot="public">tttrlib::pq_ht3_BinHdr_t</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ht3___board_hdr" prot="public">tttrlib::pq_ht3_BoardHdr</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ht3___t_t_t_r_hdr" prot="public">tttrlib::pq_ht3_TTTRHdr</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ph__t2__record__t" prot="public">tttrlib::pq_ph_t2_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1pq__ph__t3__record__t" prot="public">tttrlib::pq_ph_t3_record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1record__t" prot="public">tttrlib::record_t</innerclass>
+    <innerclass refid="classtttrlib_1_1_swig_py_iterator" prot="public">tttrlib::SwigPyIterator</innerclass>
+    <innerclass refid="classtttrlib_1_1tag__head__t" prot="public">tttrlib::tag_head_t</innerclass>
+    <innerclass refid="classtttrlib_1_1_t_t_t_r" prot="public">tttrlib::TTTR</innerclass>
+      <sectiondef kind="var">
+      <memberdef kind="variable" id="tttrlib_8py_1abd316c00aad5e8c3092d5b83334bbd22" prot="private" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib::_tttrlib</definition>
+        <argsstring></argsstring>
+        <name>_tttrlib</name>
+        <initializer>=  swig_import_helper()</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="17" column="1" bodyfile="tttrlib.py" bodystart="17" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a607a9230ee64880c414b895e2f79dedb" prot="private" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib._newclass</definition>
+        <argsstring></argsstring>
+        <name>_newclass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="96" column="1" bodyfile="tttrlib.py" bodystart="96" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a048cd3d1928a2a355c07b684bcc23c75" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.SwigPyIterator_swigregister</definition>
+        <argsstring></argsstring>
+        <name>SwigPyIterator_swigregister</name>
+        <initializer>=  _tttrlib.SwigPyIterator_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="159" column="1" bodyfile="tttrlib.py" bodystart="159" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a490d1508afc33225db5e2ed53923a32b" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.map_string_string_swigregister</definition>
+        <argsstring></argsstring>
+        <name>map_string_string_swigregister</name>
+        <initializer>=  _tttrlib.map_string_string_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="274" column="1" bodyfile="tttrlib.py" bodystart="274" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a0d2be86a4adf3d5c83b9d628ccf195eb" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.RECORD_TYPE_PHOTON</definition>
+        <argsstring></argsstring>
+        <name>RECORD_TYPE_PHOTON</name>
+        <initializer>=  _tttrlib.RECORD_TYPE_PHOTON</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="277" column="1" bodyfile="tttrlib.py" bodystart="277" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1addb7825684f6895140cae5cd197d65bc" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.RECORD_TYPE_MARKER</definition>
+        <argsstring></argsstring>
+        <name>RECORD_TYPE_MARKER</name>
+        <initializer>=  _tttrlib.RECORD_TYPE_MARKER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="278" column="1" bodyfile="tttrlib.py" bodystart="278" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a77e6025249bded7f3cd1b464309b2495" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.RECORD_TYPE_SYNC</definition>
+        <argsstring></argsstring>
+        <name>RECORD_TYPE_SYNC</name>
+        <initializer>=  _tttrlib.RECORD_TYPE_SYNC</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="279" column="1" bodyfile="tttrlib.py" bodystart="279" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ac4b62834b41b20eb00904ece2e66cf64" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.RECORD_TYPE_OVERFLOW</definition>
+        <argsstring></argsstring>
+        <name>RECORD_TYPE_OVERFLOW</name>
+        <initializer>=  _tttrlib.RECORD_TYPE_OVERFLOW</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="280" column="1" bodyfile="tttrlib.py" bodystart="280" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a919cff7904df43ceb8fb0e3cac0ffc30" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.PQ_PTU_CONTAINER</definition>
+        <argsstring></argsstring>
+        <name>PQ_PTU_CONTAINER</name>
+        <initializer>=  _tttrlib.PQ_PTU_CONTAINER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="281" column="1" bodyfile="tttrlib.py" bodystart="281" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a6bb4352545a49ac9e3034b5e74d4431c" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.PQ_HT3_CONTAINER</definition>
+        <argsstring></argsstring>
+        <name>PQ_HT3_CONTAINER</name>
+        <initializer>=  _tttrlib.PQ_HT3_CONTAINER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="282" column="1" bodyfile="tttrlib.py" bodystart="282" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a3f0653ddeca19c365ca3a1caf8be46d4" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.BH_SPC130_CONTAINER</definition>
+        <argsstring></argsstring>
+        <name>BH_SPC130_CONTAINER</name>
+        <initializer>=  _tttrlib.BH_SPC130_CONTAINER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="283" column="1" bodyfile="tttrlib.py" bodystart="283" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a93b781bd7aab1ace82cc469b11b677b3" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.BH_SPC600_256_CONTAINER</definition>
+        <argsstring></argsstring>
+        <name>BH_SPC600_256_CONTAINER</name>
+        <initializer>=  _tttrlib.BH_SPC600_256_CONTAINER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="284" column="1" bodyfile="tttrlib.py" bodystart="284" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a73f26be8695812ed13c8e59f5341ab64" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.BH_SPC600_4096_CONTAINER</definition>
+        <argsstring></argsstring>
+        <name>BH_SPC600_4096_CONTAINER</name>
+        <initializer>=  _tttrlib.BH_SPC600_4096_CONTAINER</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="285" column="1" bodyfile="tttrlib.py" bodystart="285" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1addc79c844c132bb23d9ae6b8573ac3f5" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>record_t_swigregister</name>
+        <initializer>=  _tttrlib.record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="317" column="1" bodyfile="tttrlib.py" bodystart="317" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a8481b8101603771c370314f2e88a178a" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.TTTR_swigregister</definition>
+        <argsstring></argsstring>
+        <name>TTTR_swigregister</name>
+        <initializer>=  _tttrlib.TTTR_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="429" column="1" bodyfile="tttrlib.py" bodystart="429" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a606468cf8472a7b61b4fb3a4595aa333" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.TTTRTagTTTRRecType</definition>
+        <argsstring></argsstring>
+        <name>TTTRTagTTTRRecType</name>
+        <initializer>=  _tttrlib.TTTRTagTTTRRecType</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="432" column="1" bodyfile="tttrlib.py" bodystart="432" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a19fa00e3301268a27d7c5605c4097ced" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.TTTRTagNumRecords</definition>
+        <argsstring></argsstring>
+        <name>TTTRTagNumRecords</name>
+        <initializer>=  _tttrlib.TTTRTagNumRecords</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="433" column="1" bodyfile="tttrlib.py" bodystart="433" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ad5033f10664acf8a9bf6a8b12ea2242d" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.TTTRTagRes</definition>
+        <argsstring></argsstring>
+        <name>TTTRTagRes</name>
+        <initializer>=  _tttrlib.TTTRTagRes</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="434" column="1" bodyfile="tttrlib.py" bodystart="434" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a0f2bb3b6483100ac4ccea2f303ba7931" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.TTTRTagGlobRes</definition>
+        <argsstring></argsstring>
+        <name>TTTRTagGlobRes</name>
+        <initializer>=  _tttrlib.TTTRTagGlobRes</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="435" column="1" bodyfile="tttrlib.py" bodystart="435" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1adeffcdb5a829d97e8a19e812263b212e" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.FileTagEnd</definition>
+        <argsstring></argsstring>
+        <name>FileTagEnd</name>
+        <initializer>=  _tttrlib.FileTagEnd</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="436" column="1" bodyfile="tttrlib.py" bodystart="436" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aba181d4b910c956a30a11068171657e6" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyEmpty8</definition>
+        <argsstring></argsstring>
+        <name>tyEmpty8</name>
+        <initializer>=  _tttrlib.tyEmpty8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="437" column="1" bodyfile="tttrlib.py" bodystart="437" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a2057e5674cfed4287d4dedf9b92578f5" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyBool8</definition>
+        <argsstring></argsstring>
+        <name>tyBool8</name>
+        <initializer>=  _tttrlib.tyBool8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="438" column="1" bodyfile="tttrlib.py" bodystart="438" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1adbde5f2f43c371d8fa7f0f00bbf19358" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyInt8</definition>
+        <argsstring></argsstring>
+        <name>tyInt8</name>
+        <initializer>=  _tttrlib.tyInt8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="439" column="1" bodyfile="tttrlib.py" bodystart="439" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aa1396e9bd5be1d98e1d5beaaedbf0828" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyBitSet64</definition>
+        <argsstring></argsstring>
+        <name>tyBitSet64</name>
+        <initializer>=  _tttrlib.tyBitSet64</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="440" column="1" bodyfile="tttrlib.py" bodystart="440" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a4acd9053dd8b1907b08be11cce1acf4a" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyColor8</definition>
+        <argsstring></argsstring>
+        <name>tyColor8</name>
+        <initializer>=  _tttrlib.tyColor8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="441" column="1" bodyfile="tttrlib.py" bodystart="441" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a424b5ef19e4a5772fbe61f192da201ee" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyFloat8</definition>
+        <argsstring></argsstring>
+        <name>tyFloat8</name>
+        <initializer>=  _tttrlib.tyFloat8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="442" column="1" bodyfile="tttrlib.py" bodystart="442" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a108231965d701346231b6882e3902bd9" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyTDateTime</definition>
+        <argsstring></argsstring>
+        <name>tyTDateTime</name>
+        <initializer>=  _tttrlib.tyTDateTime</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="443" column="1" bodyfile="tttrlib.py" bodystart="443" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a385ee529f2edad02bc0e6e7b15f62814" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyFloat8Array</definition>
+        <argsstring></argsstring>
+        <name>tyFloat8Array</name>
+        <initializer>=  _tttrlib.tyFloat8Array</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="444" column="1" bodyfile="tttrlib.py" bodystart="444" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aef25263366afd8b338c7bb7884f1bc14" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyAnsiString</definition>
+        <argsstring></argsstring>
+        <name>tyAnsiString</name>
+        <initializer>=  _tttrlib.tyAnsiString</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="445" column="1" bodyfile="tttrlib.py" bodystart="445" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aec851bf4fab956a4ca6db877441814f4" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyWideString</definition>
+        <argsstring></argsstring>
+        <name>tyWideString</name>
+        <initializer>=  _tttrlib.tyWideString</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="446" column="1" bodyfile="tttrlib.py" bodystart="446" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a3dbd6001286fb74bb8ce3d2d81c58bd2" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tyBinaryBlob</definition>
+        <argsstring></argsstring>
+        <name>tyBinaryBlob</name>
+        <initializer>=  _tttrlib.tyBinaryBlob</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="447" column="1" bodyfile="tttrlib.py" bodystart="447" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a15555e107a36d062986b36c673baf0cf" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtPicoHarpT3</definition>
+        <argsstring></argsstring>
+        <name>rtPicoHarpT3</name>
+        <initializer>=  _tttrlib.rtPicoHarpT3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="448" column="1" bodyfile="tttrlib.py" bodystart="448" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aabd643094f5a66410ef7729335d8b4c4" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtPicoHarpT2</definition>
+        <argsstring></argsstring>
+        <name>rtPicoHarpT2</name>
+        <initializer>=  _tttrlib.rtPicoHarpT2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="449" column="1" bodyfile="tttrlib.py" bodystart="449" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ae2b6c00842f6fc40c9a9123249e8fdff" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtHydraHarpT3</definition>
+        <argsstring></argsstring>
+        <name>rtHydraHarpT3</name>
+        <initializer>=  _tttrlib.rtHydraHarpT3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="450" column="1" bodyfile="tttrlib.py" bodystart="450" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a20c7a3d3c85bc858eb2ede2b35ae6c5c" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtHydraHarpT2</definition>
+        <argsstring></argsstring>
+        <name>rtHydraHarpT2</name>
+        <initializer>=  _tttrlib.rtHydraHarpT2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="451" column="1" bodyfile="tttrlib.py" bodystart="451" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ae9a25e44a990128a0f5abf755a5b1920" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtHydraHarp2T3</definition>
+        <argsstring></argsstring>
+        <name>rtHydraHarp2T3</name>
+        <initializer>=  _tttrlib.rtHydraHarp2T3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="452" column="1" bodyfile="tttrlib.py" bodystart="452" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a8289dd227cb18d11121ad7a42ab929de" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtHydraHarp2T2</definition>
+        <argsstring></argsstring>
+        <name>rtHydraHarp2T2</name>
+        <initializer>=  _tttrlib.rtHydraHarp2T2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="453" column="1" bodyfile="tttrlib.py" bodystart="453" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a3856c06c64b9aee6f6e7190c8e314abf" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtTimeHarp260NT3</definition>
+        <argsstring></argsstring>
+        <name>rtTimeHarp260NT3</name>
+        <initializer>=  _tttrlib.rtTimeHarp260NT3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="454" column="1" bodyfile="tttrlib.py" bodystart="454" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aeb072b02e37efa19155fd2bb44093a9b" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtTimeHarp260NT2</definition>
+        <argsstring></argsstring>
+        <name>rtTimeHarp260NT2</name>
+        <initializer>=  _tttrlib.rtTimeHarp260NT2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="455" column="1" bodyfile="tttrlib.py" bodystart="455" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a666c10e1f6f192ef9b82c6cdce2cba8d" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtTimeHarp260PT3</definition>
+        <argsstring></argsstring>
+        <name>rtTimeHarp260PT3</name>
+        <initializer>=  _tttrlib.rtTimeHarp260PT3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="456" column="1" bodyfile="tttrlib.py" bodystart="456" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a606162edddd9e4715bb526920d3154aa" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtTimeHarp260PT2</definition>
+        <argsstring></argsstring>
+        <name>rtTimeHarp260PT2</name>
+        <initializer>=  _tttrlib.rtTimeHarp260PT2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="457" column="1" bodyfile="tttrlib.py" bodystart="457" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a08e311c25480750a57fc58ec45c67970" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtMultiHarpNT3</definition>
+        <argsstring></argsstring>
+        <name>rtMultiHarpNT3</name>
+        <initializer>=  _tttrlib.rtMultiHarpNT3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="458" column="1" bodyfile="tttrlib.py" bodystart="458" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a7add08592c0435349983f5df2b78c89c" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.rtMultiHarpNT2</definition>
+        <argsstring></argsstring>
+        <name>rtMultiHarpNT2</name>
+        <initializer>=  _tttrlib.rtMultiHarpNT2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="459" column="1" bodyfile="tttrlib.py" bodystart="459" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ae20ff2f1e16bf9f6cbef793230eb2c92" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_hh_t2_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_hh_t2_record_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_hh_t2_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="479" column="1" bodyfile="tttrlib.py" bodystart="479" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a21cc3fea4eb3a1ae3f37ab79c2643845" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_hh_t3_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_hh_t3_record_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_hh_t3_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="501" column="1" bodyfile="tttrlib.py" bodystart="501" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a5db97fbe37d2197e6e5a736ede8b496e" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ph_t2_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ph_t2_record_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_ph_t2_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="523" column="1" bodyfile="tttrlib.py" bodystart="523" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ad124b9465d0e7daa5cd9f4ed2282064f" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ph_t3_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ph_t3_record_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_ph_t3_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="545" column="1" bodyfile="tttrlib.py" bodystart="545" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ae15474a57e8c5633b872d1504beb868e" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.tag_head_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>tag_head_t_swigregister</name>
+        <initializer>=  _tttrlib.tag_head_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="579" column="1" bodyfile="tttrlib.py" bodystart="579" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a7fa658bad4eff1477fa7b3b10f4dff3a" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc600_256_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>bh_spc600_256_record_t_swigregister</name>
+        <initializer>=  _tttrlib.bh_spc600_256_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="601" column="1" bodyfile="tttrlib.py" bodystart="601" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a9516f3b44362826939e2930860a4f0c5" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc600_4096_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>bh_spc600_4096_record_t_swigregister</name>
+        <initializer>=  _tttrlib.bh_spc600_4096_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="623" column="1" bodyfile="tttrlib.py" bodystart="623" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ab3a5c6cbe10da7a6fed9e158d01e421a" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc600_256_overflow_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>bh_spc600_256_overflow_t_swigregister</name>
+        <initializer>=  _tttrlib.bh_spc600_256_overflow_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="645" column="1" bodyfile="tttrlib.py" bodystart="645" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a38afd2689ed82cdcc391f7606a3344c5" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc130_record_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>bh_spc130_record_t_swigregister</name>
+        <initializer>=  _tttrlib.bh_spc130_record_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="667" column="1" bodyfile="tttrlib.py" bodystart="667" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a0d5d83c6b032f2976a8e0db48168d90b" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc130_overflow_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>bh_spc130_overflow_t_swigregister</name>
+        <initializer>=  _tttrlib.bh_spc130_overflow_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="689" column="1" bodyfile="tttrlib.py" bodystart="689" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a1574888bb5e7666012ec4aa742b1205e" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.CurveMapping_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>CurveMapping_t_swigregister</name>
+        <initializer>=  _tttrlib.CurveMapping_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="715" column="1" bodyfile="tttrlib.py" bodystart="715" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a23f0c801722418eeb6463989bf1f308f" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.ParamStruct_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>ParamStruct_t_swigregister</name>
+        <initializer>=  _tttrlib.ParamStruct_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="745" column="1" bodyfile="tttrlib.py" bodystart="745" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1aea06f2c9c77d2aa7465182028459b962" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_ascii_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ht3_ascii_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_ht3_ascii_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="791" column="1" bodyfile="tttrlib.py" bodystart="791" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1ab8284369b5b89b67b55593b4cbe0434a" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_BinHdr_t_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ht3_BinHdr_t_swigregister</name>
+        <initializer>=  _tttrlib.pq_ht3_BinHdr_t_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="913" column="1" bodyfile="tttrlib.py" bodystart="913" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a715443793669764479c63bd2d43c7f25" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_BoardHdr_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ht3_BoardHdr_swigregister</name>
+        <initializer>=  _tttrlib.pq_ht3_BoardHdr_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="963" column="1" bodyfile="tttrlib.py" bodystart="963" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1a035469d08bcb4dde4cd0787519ced2da" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.pq_ht3_TTTRHdr_swigregister</definition>
+        <argsstring></argsstring>
+        <name>pq_ht3_TTTRHdr_swigregister</name>
+        <initializer>=  _tttrlib.pq_ht3_TTTRHdr_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1033" column="1" bodyfile="tttrlib.py" bodystart="1033" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="tttrlib_8py_1af85797875d93737c502baab986d1b246" prot="public" static="no" mutable="no">
+        <type>def</type>
+        <definition>def tttrlib.PQ_swigregister</definition>
+        <argsstring></argsstring>
+        <name>PQ_swigregister</name>
+        <initializer>=  _tttrlib.PQ_swigregister</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="1071" column="1" bodyfile="tttrlib.py" bodystart="1071" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="tttrlib_8py_1aea5a9b54a92ac6101f1c095b2b1db96a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib::swig_import_helper</definition>
+        <argsstring>()</argsstring>
+        <name>swig_import_helper</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="9" column="1" bodyfile="tttrlib.py" bodystart="9" bodyend="16"/>
+      </memberdef>
+      <memberdef kind="function" id="tttrlib_8py_1a4e871082b5bb0adf53bdf5860d589578" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib._swig_setattr_nondynamic</definition>
+        <argsstring>(self, class_type, name, value, static=1)</argsstring>
+        <name>_swig_setattr_nondynamic</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>class_type</type>
+          <defname>class_type</defname>
+        </param>
+        <param>
+          <type>name</type>
+          <defname>name</defname>
+        </param>
+        <param>
+          <type>value</type>
+          <defname>value</defname>
+        </param>
+        <param>
+          <type>static</type>
+          <defname>static</defname>
+          <defval>1</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="51" column="1" bodyfile="tttrlib.py" bodystart="51" bodyend="69"/>
+      </memberdef>
+      <memberdef kind="function" id="tttrlib_8py_1af68c16aa79d1fc8a879c3e2af233de28" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib._swig_setattr</definition>
+        <argsstring>(self, class_type, name, value)</argsstring>
+        <name>_swig_setattr</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>class_type</type>
+          <defname>class_type</defname>
+        </param>
+        <param>
+          <type>name</type>
+          <defname>name</defname>
+        </param>
+        <param>
+          <type>value</type>
+          <defname>value</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="70" column="1" bodyfile="tttrlib.py" bodystart="70" bodyend="73"/>
+      </memberdef>
+      <memberdef kind="function" id="tttrlib_8py_1ad661a00972def920e0fc545aa48c6ada" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib._swig_getattr</definition>
+        <argsstring>(self, class_type, name)</argsstring>
+        <name>_swig_getattr</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>class_type</type>
+          <defname>class_type</defname>
+        </param>
+        <param>
+          <type>name</type>
+          <defname>name</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="74" column="1" bodyfile="tttrlib.py" bodystart="74" bodyend="82"/>
+      </memberdef>
+      <memberdef kind="function" id="tttrlib_8py_1a70c291c879a074372f2c2983d0df0803" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib._swig_repr</definition>
+        <argsstring>(self)</argsstring>
+        <name>_swig_repr</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="83" column="1" bodyfile="tttrlib.py" bodystart="83" bodyend="92"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib.py" line="1" column="1"/>
+  </compounddef>
+</doxygen>

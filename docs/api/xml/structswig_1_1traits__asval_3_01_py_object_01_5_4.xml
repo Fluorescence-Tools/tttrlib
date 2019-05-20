@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__asval_3_01_py_object_01_5_4" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_asval&lt; PyObject *&gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structswig_1_1traits__asval_3_01_py_object_01_5_4_1a27a163991e96a33bcf1937a8ca435479" prot="public" static="no">
+        <type>PyObject *</type>
+        <definition>typedef PyObject* swig::traits_asval&lt; PyObject *&gt;::value_type</definition>
+        <argsstring></argsstring>
+        <name>value_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4034" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4034" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__asval_3_01_py_object_01_5_4_1aca155c255a1d5d8a00141cbc502f6197" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>static int swig::traits_asval&lt; PyObject *&gt;::asval</definition>
+        <argsstring>(PyObject *obj, value_type *val)</argsstring>
+        <name>asval</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>obj</declname>
+        </param>
+        <param>
+          <type>value_type *</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4035" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4035" bodyend="4038"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="4033" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4033" bodyend="4039"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__asval_3_01_py_object_01_5_4_1aca155c255a1d5d8a00141cbc502f6197" prot="public" virt="non-virtual"><scope>swig::traits_asval&lt; PyObject *&gt;</scope><name>asval</name></member>
+      <member refid="structswig_1_1traits__asval_3_01_py_object_01_5_4_1a27a163991e96a33bcf1937a8ca435479" prot="public" virt="non-virtual"><scope>swig::traits_asval&lt; PyObject *&gt;</scope><name>value_type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

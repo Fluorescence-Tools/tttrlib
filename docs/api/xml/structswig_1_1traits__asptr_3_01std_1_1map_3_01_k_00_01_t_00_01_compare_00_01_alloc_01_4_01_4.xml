@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__asptr_3_01std_1_1map_3_01_k_00_01_t_00_01_compare_00_01_alloc_01_4_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_asptr&lt; std::map&lt; K, T, Compare, Alloc &gt; &gt;</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class K</type>
+      </param>
+      <param>
+        <type>class T</type>
+      </param>
+      <param>
+        <type>class Compare</type>
+      </param>
+      <param>
+        <type>class Alloc</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structswig_1_1traits__asptr_3_01std_1_1map_3_01_k_00_01_t_00_01_compare_00_01_alloc_01_4_01_4_1a601c281ad9967eee64015c692cc41423" prot="public" static="no">
+        <type>std::map&lt; K, T, Compare, Alloc &gt;</type>
+        <definition>typedef std::map&lt;K,T,Compare,Alloc &gt; swig::traits_asptr&lt; std::map&lt; K, T, Compare, Alloc &gt; &gt;::map_type</definition>
+        <argsstring></argsstring>
+        <name>map_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="5297" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5297" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__asptr_3_01std_1_1map_3_01_k_00_01_t_00_01_compare_00_01_alloc_01_4_01_4_1aee64fde1f08f8570c566c93075ef4f61" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>static int swig::traits_asptr&lt; std::map&lt; K, T, Compare, Alloc &gt; &gt;::asptr</definition>
+        <argsstring>(PyObject *obj, map_type **val)</argsstring>
+        <name>asptr</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>obj</declname>
+        </param>
+        <param>
+          <type>map_type **</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="5298" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5298" bodyend="5316"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="5296" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5296" bodyend="5317"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__asptr_3_01std_1_1map_3_01_k_00_01_t_00_01_compare_00_01_alloc_01_4_01_4_1aee64fde1f08f8570c566c93075ef4f61" prot="public" virt="non-virtual"><scope>swig::traits_asptr&lt; std::map&lt; K, T, Compare, Alloc &gt; &gt;</scope><name>asptr</name></member>
+      <member refid="structswig_1_1traits__asptr_3_01std_1_1map_3_01_k_00_01_t_00_01_compare_00_01_alloc_01_4_01_4_1a601c281ad9967eee64015c692cc41423" prot="public" virt="non-virtual"><scope>swig::traits_asptr&lt; std::map&lt; K, T, Compare, Alloc &gt; &gt;</scope><name>map_type</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

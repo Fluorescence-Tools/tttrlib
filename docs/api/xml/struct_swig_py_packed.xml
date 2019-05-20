@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="struct_swig_py_packed" kind="struct" language="C++" prot="public">
+    <compoundname>SwigPyPacked</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_swig_py_packed_1af5122bcb9e73bf2dec4ce5f58f004e1b" prot="public" static="no" mutable="no">
+        <type>PyObject_HEAD void *</type>
+        <definition>PyObject_HEAD void* SwigPyPacked::pack</definition>
+        <argsstring></argsstring>
+        <name>pack</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="2038" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="2038" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_packed_1aa6f6be0a8a1bff7710200fbe8d51acf0" prot="public" static="no" mutable="no">
+        <type><ref refid="structswig__type__info" kindref="compound">swig_type_info</ref> *</type>
+        <definition>swig_type_info* SwigPyPacked::ty</definition>
+        <argsstring></argsstring>
+        <name>ty</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="2039" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="2039" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_packed_1aed2bfb8fb3c9f804c386215db63921cb" prot="public" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t SwigPyPacked::size</definition>
+        <argsstring></argsstring>
+        <name>size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="2040" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="2040" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="230">
+        <label>swig_dycast_func</label>
+        <link refid="structswig__type__info"/>
+        <childnode refid="231" relation="usage">
+          <edgelabel>cast</edgelabel>
+        </childnode>
+      </node>
+      <node id="229">
+        <label>SwigPyPacked</label>
+        <link refid="struct_swig_py_packed"/>
+        <childnode refid="230" relation="usage">
+          <edgelabel>ty</edgelabel>
+        </childnode>
+      </node>
+      <node id="231">
+        <label>swig_cast_info</label>
+        <link refid="structswig__cast__info"/>
+        <childnode refid="230" relation="usage">
+          <edgelabel>type</edgelabel>
+        </childnode>
+        <childnode refid="231" relation="usage">
+          <edgelabel>prev</edgelabel>
+          <edgelabel>next</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib_wrap.cpp" line="2036" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="2036" bodyend="2041"/>
+    <listofallmembers>
+      <member refid="struct_swig_py_packed_1af5122bcb9e73bf2dec4ce5f58f004e1b" prot="public" virt="non-virtual"><scope>SwigPyPacked</scope><name>pack</name></member>
+      <member refid="struct_swig_py_packed_1aed2bfb8fb3c9f804c386215db63921cb" prot="public" virt="non-virtual"><scope>SwigPyPacked</scope><name>size</name></member>
+      <member refid="struct_swig_py_packed_1aa6f6be0a8a1bff7710200fbe8d51acf0" prot="public" virt="non-virtual"><scope>SwigPyPacked</scope><name>ty</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__as" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_as</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class Type</type>
+      </param>
+      <param>
+        <type>class Category</type>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="3778" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3778" bodyend="3778"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

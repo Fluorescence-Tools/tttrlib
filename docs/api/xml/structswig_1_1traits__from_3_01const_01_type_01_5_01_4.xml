@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__from_3_01const_01_type_01_5_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_from&lt; const Type * &gt;</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class Type</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__from_3_01const_01_type_01_5_01_4_1ae36dbdb3c905af0dab508e7bf360a8d6" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>PyObject *</type>
+        <definition>static PyObject* swig::traits_from&lt; const Type * &gt;::from</definition>
+        <argsstring>(const Type *val)</argsstring>
+        <name>from</name>
+        <param>
+          <type>const Type *</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="3809" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3809" bodyend="3811"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="3808" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3808" bodyend="3812"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__from_3_01const_01_type_01_5_01_4_1ae36dbdb3c905af0dab508e7bf360a8d6" prot="public" virt="non-virtual"><scope>swig::traits_from&lt; const Type * &gt;</scope><name>from</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

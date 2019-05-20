@@ -1,0 +1,724 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="_pico_quant_8h" kind="file" language="C++">
+    <compoundname>PicoQuant.h</compoundname>
+    <includes local="no">iostream</includes>
+    <includes local="no">stdint.h</includes>
+    <includes local="no">stdio.h</includes>
+    <includes local="no">string.h</includes>
+    <includes refid="_t_t_t_r_8h" local="yes">TTTR.h</includes>
+    <incdepgraph>
+      <node id="2">
+        <label>stdint.h</label>
+      </node>
+      <node id="6">
+        <label>string</label>
+      </node>
+      <node id="8">
+        <label>map</label>
+      </node>
+      <node id="5">
+        <label>TTTR.h</label>
+        <link refid="_t_t_t_r_8h_source"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="1" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="0">
+        <label>PicoQuant.h</label>
+        <link refid="_pico_quant_8h"/>
+        <childnode refid="1" relation="include">
+        </childnode>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>string.h</label>
+      </node>
+      <node id="7">
+        <label>vector</label>
+      </node>
+      <node id="1">
+        <label>iostream</label>
+      </node>
+      <node id="3">
+        <label>stdio.h</label>
+      </node>
+    </incdepgraph>
+    <innerclass refid="unionpq__hh__t2__record__t" prot="public">pq_hh_t2_record_t</innerclass>
+    <innerclass refid="unionpq__hh__t3__record__t" prot="public">pq_hh_t3_record_t</innerclass>
+    <innerclass refid="unionpq__ph__t2__record__t" prot="public">pq_ph_t2_record_t</innerclass>
+    <innerclass refid="unionpq__ph__t3__record__t" prot="public">pq_ph_t3_record_t</innerclass>
+    <innerclass refid="structtag__head__t" prot="public">tag_head_t</innerclass>
+    <innerclass refid="unionbh__spc600__256__record__t" prot="public">bh_spc600_256_record_t</innerclass>
+    <innerclass refid="unionbh__spc600__4096__record__t" prot="public">bh_spc600_4096_record_t</innerclass>
+    <innerclass refid="unionbh__spc600__256__overflow__t" prot="public">bh_spc600_256_overflow_t</innerclass>
+    <innerclass refid="unionbh__spc130__record__t" prot="public">bh_spc130_record_t</innerclass>
+    <innerclass refid="unionbh__spc130__overflow__t" prot="public">bh_overflow_t</innerclass>
+    <innerclass refid="struct_curve_mapping__t" prot="public">CurveMapping_t</innerclass>
+    <innerclass refid="struct_param_struct__t" prot="public">ParamStruct_t</innerclass>
+    <innerclass refid="structpq__ht3__ascii__t" prot="public">pq_ht3_ascii_t</innerclass>
+    <innerclass refid="structpq__ht3___bin_hdr__t" prot="public">pq_ht3_BinHdr_t</innerclass>
+    <innerclass refid="structpq__ht3___board_hdr" prot="public">pq_ht3_BoardHdr</innerclass>
+    <innerclass refid="structpq__ht3___t_t_t_r_hdr" prot="public">pq_ht3_TTTRHdr</innerclass>
+    <innerclass refid="class_p_q" prot="public">PQ</innerclass>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="_pico_quant_8h_1a411c46599e926f8cdf49c63957255359" prot="public" static="no">
+        <name>_CRT_SECURE_NO_DEPRECATE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="7" column="17" bodyfile="PicoQuant.h" bodystart="7" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a09c6aa7dcc114b54592791e12fd64110" prot="public" static="no">
+        <name>TTTRTagTTTRRecType</name>
+        <initializer>&quot;TTResultFormat_TTTRRecType&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="12" column="9" bodyfile="PicoQuant.h" bodystart="12" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a8915c5ca9e83ea740b046f3514914f5b" prot="public" static="no">
+        <name>TTTRTagNumRecords</name>
+        <initializer>&quot;TTResult_NumberOfRecords&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="13" column="9" bodyfile="PicoQuant.h" bodystart="13" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a2bc56fc0ab030e8f35498d3e3b0581a4" prot="public" static="no">
+        <name>TTTRTagRes</name>
+        <initializer>&quot;MeasDesc_Resolution&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="14" column="9" bodyfile="PicoQuant.h" bodystart="14" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ad5b1b7cf9a08e02898e70d6d64dee335" prot="public" static="no">
+        <name>TTTRTagGlobRes</name>
+        <initializer>&quot;MeasDesc_GlobalResolution&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="15" column="9" bodyfile="PicoQuant.h" bodystart="15" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a070e24386ebc3bce69b53299ff5d3d29" prot="public" static="no">
+        <name>FileTagEnd</name>
+        <initializer>&quot;Header_End&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="16" column="9" bodyfile="PicoQuant.h" bodystart="16" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a3d9b94b4c01d4eb434d0b868d98e1e01" prot="public" static="no">
+        <name>tyEmpty8</name>
+        <initializer>0xFFFF0008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="18" column="9" bodyfile="PicoQuant.h" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ae6864513577f29254198788d7a2a1c7b" prot="public" static="no">
+        <name>tyBool8</name>
+        <initializer>0x00000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="19" column="9" bodyfile="PicoQuant.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a5230275aa8a99786c7fca4ef4fa179c7" prot="public" static="no">
+        <name>tyInt8</name>
+        <initializer>0x10000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="20" column="9" bodyfile="PicoQuant.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ad015bd3aa9944c5c2bb7857238f569d2" prot="public" static="no">
+        <name>tyBitSet64</name>
+        <initializer>0x11000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="21" column="9" bodyfile="PicoQuant.h" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a4f820b59ee0c8e04da8197e33d5f09b1" prot="public" static="no">
+        <name>tyColor8</name>
+        <initializer>0x12000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="22" column="9" bodyfile="PicoQuant.h" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a0174ccddd5f32890fed0f09274469e15" prot="public" static="no">
+        <name>tyFloat8</name>
+        <initializer>0x20000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="23" column="9" bodyfile="PicoQuant.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ab2737469c39445c391463c78134c9415" prot="public" static="no">
+        <name>tyTDateTime</name>
+        <initializer>0x21000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="24" column="9" bodyfile="PicoQuant.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a1faba2a9e3fa7d90d78802a73f326367" prot="public" static="no">
+        <name>tyFloat8Array</name>
+        <initializer>0x2001FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="25" column="9" bodyfile="PicoQuant.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a50fb6700d648a1fc5b6add0683f2b795" prot="public" static="no">
+        <name>tyAnsiString</name>
+        <initializer>0x4001FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="26" column="9" bodyfile="PicoQuant.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a29468958d802901e4fda64621c2feb4b" prot="public" static="no">
+        <name>tyWideString</name>
+        <initializer>0x4002FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="27" column="9" bodyfile="PicoQuant.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a51476cec225bad0ea86d7f71f55a42ad" prot="public" static="no">
+        <name>tyBinaryBlob</name>
+        <initializer>0xFFFFFFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="28" column="9" bodyfile="PicoQuant.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ada5234f48c10a2a466b71d3a287d0e59" prot="public" static="no">
+        <name>rtPicoHarpT3</name>
+        <initializer>0x00010303</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="30" column="9" bodyfile="PicoQuant.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a8f96a7a5b8e13bd3649cb5c2766bfcee" prot="public" static="no">
+        <name>rtPicoHarpT2</name>
+        <initializer>0x00010203</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="31" column="9" bodyfile="PicoQuant.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1afdaebb98ab8c22b611a2e2dda08adcc8" prot="public" static="no">
+        <name>rtHydraHarpT3</name>
+        <initializer>0x00010304</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="32" column="9" bodyfile="PicoQuant.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a2bcd27de9c0694fb5db874c27875f334" prot="public" static="no">
+        <name>rtHydraHarpT2</name>
+        <initializer>0x00010204</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="33" column="9" bodyfile="PicoQuant.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a28a61d29cf3e1ef65588a2a3119ece45" prot="public" static="no">
+        <name>rtHydraHarp2T3</name>
+        <initializer>0x01010304</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="34" column="9" bodyfile="PicoQuant.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a492772501b2cc02b0e3bcee5d00a3c3a" prot="public" static="no">
+        <name>rtHydraHarp2T2</name>
+        <initializer>0x01010204</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="35" column="9" bodyfile="PicoQuant.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1aca1874fc22de9deef63db4651ebd3e36" prot="public" static="no">
+        <name>rtTimeHarp260NT3</name>
+        <initializer>0x00010305</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="36" column="9" bodyfile="PicoQuant.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1ac05ba3eb6ce9513c8731336e5b1efbe0" prot="public" static="no">
+        <name>rtTimeHarp260NT2</name>
+        <initializer>0x00010205</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="37" column="9" bodyfile="PicoQuant.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a817ec0fd0fff3665b16741248e7e735d" prot="public" static="no">
+        <name>rtTimeHarp260PT3</name>
+        <initializer>0x00010306</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="38" column="9" bodyfile="PicoQuant.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a531d30dbcf4fc23b629d3cf54352127f" prot="public" static="no">
+        <name>rtTimeHarp260PT2</name>
+        <initializer>0x00010206</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="39" column="9" bodyfile="PicoQuant.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1a5dab14981723e1c305c85066a71d8899" prot="public" static="no">
+        <name>rtMultiHarpNT3</name>
+        <initializer>0x00010307</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="40" column="9" bodyfile="PicoQuant.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="_pico_quant_8h_1af8c1410c0b91d05c7731592f32b5d6d7" prot="public" static="no">
+        <name>rtMultiHarpNT2</name>
+        <initializer>0x00010207</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="PicoQuant.h" line="41" column="9" bodyfile="PicoQuant.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Created<sp/>by<sp/>thoma<sp/>on<sp/>31.12.2018.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>TTTRLIB_PQ_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRLIB_PQ_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>_CRT_SECURE_NO_DEPRECATE</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="comment">//<sp/>some<sp/>important<sp/>Tag<sp/>Idents<sp/>(TTagHead.Ident)<sp/>that<sp/>we<sp/>will<sp/>need<sp/>to<sp/>read<sp/>the<sp/>most<sp/>common<sp/>content<sp/>of<sp/>a<sp/>PTU<sp/>file</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="comment">//<sp/>check<sp/>the<sp/>output<sp/>of<sp/>this<sp/>program<sp/>and<sp/>consult<sp/>the<sp/>tag<sp/>dictionary<sp/>if<sp/>you<sp/>need<sp/>more</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagTTTRRecType<sp/>&quot;TTResultFormat_TTTRRecType&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagNumRecords<sp/><sp/>&quot;TTResult_NumberOfRecords&quot;<sp/><sp/>//<sp/>Number<sp/>of<sp/>TTTR<sp/>Records<sp/>in<sp/>the<sp/>File;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagRes<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;MeasDesc_Resolution&quot;<sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>Resolution<sp/>for<sp/>the<sp/>Dtime<sp/>(T3<sp/>Only)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagGlobRes<sp/><sp/><sp/><sp/><sp/>&quot;MeasDesc_GlobalResolution&quot;<sp/>//<sp/>Global<sp/>Resolution<sp/>of<sp/>TimeTag(T2)<sp/>/NSync<sp/>(T3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>FileTagEnd<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;Header_End&quot;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>Always<sp/>appended<sp/>as<sp/>last<sp/>tag<sp/>(BLOCKEND)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyEmpty8<sp/><sp/><sp/><sp/><sp/><sp/>0xFFFF0008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBool8<sp/><sp/><sp/><sp/><sp/><sp/><sp/>0x00000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyInt8<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>0x10000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBitSet64<sp/><sp/><sp/><sp/>0x11000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyColor8<sp/><sp/><sp/><sp/><sp/><sp/>0x12000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyFloat8<sp/><sp/><sp/><sp/><sp/><sp/>0x20000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyTDateTime<sp/><sp/><sp/>0x21000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyFloat8Array<sp/>0x2001FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyAnsiString<sp/><sp/>0x4001FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyWideString<sp/><sp/>0x4002FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBinaryBlob<sp/><sp/>0xFFFFFFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtPicoHarpT3<sp/><sp/><sp/><sp/><sp/>0x00010303<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$03<sp/>(PicoHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtPicoHarpT2<sp/><sp/><sp/><sp/><sp/>0x00010203<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$03<sp/>(PicoHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarpT3<sp/><sp/><sp/><sp/>0x00010304<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarpT2<sp/><sp/><sp/><sp/>0x00010204<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarp2T3<sp/><sp/><sp/>0x01010304<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$01<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarp2T2<sp/><sp/><sp/>0x01010204<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$01<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260NT3<sp/>0x00010305<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$05<sp/>(TimeHarp260N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260NT2<sp/>0x00010205<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$05<sp/>(TimeHarp260N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260PT3<sp/>0x00010306<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T3),<sp/>HW:<sp/>$06<sp/>(TimeHarp260P)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260PT2<sp/>0x00010206<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$06<sp/>(TimeHarp260P)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtMultiHarpNT3<sp/><sp/><sp/>0x00010307<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T3),<sp/>HW:<sp/>$07<sp/>(MultiHarp150N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtMultiHarpNT2<sp/><sp/><sp/>0x00010207<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$07<sp/>(MultiHarp150N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdint.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;stdio.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;TTTR.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52" refid="unionpq__hh__t2__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">pq_hh_t2_record<sp/>{</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>timetag<sp/><sp/>:25;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>channel<sp/><sp/>:6;</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>special<sp/><sp/>:1;<sp/></highlight><highlight class="comment">//<sp/>or<sp/>sync,<sp/>if<sp/>channel==0</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal">}<sp/><ref refid="unionpq__hh__t2__record__t" kindref="compound">pq_hh_t2_record_t</ref>;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62" refid="unionpq__hh__t3__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">pq_hh_t3_record<sp/>{</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>n_sync<sp/><sp/><sp/><sp/>:10;<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>number<sp/>of<sp/>sync<sp/>period</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>dtime<sp/><sp/><sp/><sp/>:15;<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>delay<sp/>from<sp/>last<sp/>sync<sp/>in<sp/>units<sp/>of<sp/>chosen<sp/>macrotime_resolution</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>channel<sp/><sp/>:6;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>special<sp/><sp/>:1;</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal">}<sp/><ref refid="unionpq__hh__t3__record__t" kindref="compound">pq_hh_t3_record_t</ref>;</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight></codeline>
+<codeline lineno="73" refid="unionpq__ph__t2__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">ph_ph_t2_record<sp/>{</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>time<sp/><sp/><sp/><sp/><sp/>:28;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>channel<sp/><sp/>:4;</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal">}<sp/><ref refid="unionpq__ph__t2__record__t" kindref="compound">pq_ph_t2_record_t</ref>;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83" refid="unionpq__ph__t3__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">pq_ph_t3_record<sp/>{</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>n_sync<sp/><sp/><sp/>:16;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>dtime<sp/><sp/><sp/><sp/>:12;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>channel<sp/><sp/>:4;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>n_sync<sp/><sp/><sp/>:16;</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>markers<sp/><sp/>:12;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>channel<sp/><sp/>:4;</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>special;</highlight></codeline>
+<codeline lineno="95"><highlight class="normal">}<sp/><ref refid="unionpq__ph__t3__record__t" kindref="compound">pq_ph_t3_record_t</ref>;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99" refid="structtag__head__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">tag_head<sp/>{</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>Ident[32];<sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Identifier<sp/>of<sp/>the<sp/>tag</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>Idx;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Index<sp/>for<sp/>multiple<sp/>tags<sp/>or<sp/>-1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/>uint32_t<sp/>Typ;<sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Type<sp/>of<sp/>tag<sp/>ty.....<sp/>see<sp/>const<sp/>section</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>TagValue;<sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Value<sp/>of<sp/>tag.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal">}<sp/><ref refid="structtag__head__t" kindref="compound">tag_head_t</ref>;</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="109" refid="unionbh__spc600__256__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">bh_spc600_256_record{</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>adc<sp/><sp/><sp/><sp/><sp/>:<sp/>8;</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mt<sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>17;</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>rout<sp/><sp/><sp/><sp/>:<sp/>3;</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>empty<sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>gap<sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mtov<sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>invalid<sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="120"><highlight class="normal">}<sp/><ref refid="unionbh__spc600__256__record__t" kindref="compound">bh_spc600_256_record_t</ref>;</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"></highlight></codeline>
+<codeline lineno="124" refid="unionbh__spc600__4096__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">bh_spc600_4096_record{</highlight></codeline>
+<codeline lineno="134" refid="unionbh__spc600__4096__record__t_1af84e62a389f6ad3392d353153ec4ec0e" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/><ref refid="unionbh__spc600__4096__record__t_1af84e62a389f6ad3392d353153ec4ec0e" kindref="member">allbits</ref>;</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>adc<sp/><sp/><sp/><sp/><sp/>:<sp/>12;</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>invalid<sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mtov<sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>gap<sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>empty<sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mt3<sp/><sp/><sp/><sp/><sp/>:<sp/>8;</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>rout<sp/><sp/><sp/><sp/>:<sp/>8;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mt1<sp/><sp/><sp/><sp/><sp/>:<sp/>8;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mt2<sp/><sp/><sp/><sp/><sp/>:<sp/>8;</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal">}<sp/><ref refid="unionbh__spc600__4096__record__t" kindref="compound">bh_spc600_4096_record_t</ref>;</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150" refid="unionbh__spc600__256__overflow__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">bh_spc600_256_overflow{</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>cnt<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>28;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>empty<sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>2;</highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mtov<sp/><sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>invalid<sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="158"><highlight class="normal">}<sp/><ref refid="unionbh__spc600__256__overflow__t" kindref="compound">bh_spc600_256_overflow_t</ref>;</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight></codeline>
+<codeline lineno="162" refid="unionbh__spc130__record__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">bh_spc130_record{</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mt<sp/><sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>12;</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>rout<sp/><sp/><sp/><sp/><sp/>:<sp/>4;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>adc<sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>12;</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mark<sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>gap<sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mtov<sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>invalid<sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="173"><highlight class="normal">}<sp/><ref refid="unionbh__spc130__record__t" kindref="compound">bh_spc130_record_t</ref>;</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight></codeline>
+<codeline lineno="177" refid="unionbh__spc130__overflow__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">union<sp/></highlight><highlight class="normal">bh_spc130_overflow{</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>allbits;</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>n_sync<sp/><sp/><sp/><sp/><sp/>:<sp/>28;</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>empty<sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>2;</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>mtov<sp/><sp/><sp/><sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>invalid<sp/><sp/><sp/><sp/>:<sp/>1;</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/>}<sp/>bits;</highlight></codeline>
+<codeline lineno="185"><highlight class="normal">}<sp/><ref refid="unionbh__spc130__overflow__t" kindref="compound">bh_overflow_t</ref>;</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal"></highlight><highlight class="comment">/*********************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight><highlight class="comment">/***<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>***/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="190"><highlight class="normal"></highlight><highlight class="comment">/***<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>HT3<sp/>HHv1.0<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>***/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="191"><highlight class="normal"></highlight><highlight class="comment">/***<sp/><sp/>https://github.com/tsbischof/libpicoquant/blob/master/src/hydraharp/hh_v20.h<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>***/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="192"><highlight class="normal"></highlight><highlight class="comment">/*********************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="193"><highlight class="normal"></highlight></codeline>
+<codeline lineno="194" refid="struct_curve_mapping__t" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>MapTo;</highlight></codeline>
+<codeline lineno="196"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Show;</highlight></codeline>
+<codeline lineno="197"><highlight class="normal">}<sp/><ref refid="struct_curve_mapping__t" kindref="compound">CurveMapping_t</ref>;</highlight></codeline>
+<codeline lineno="198"><highlight class="normal"></highlight></codeline>
+<codeline lineno="199" refid="struct_param_struct__t" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>Start;</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>Step;</highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>End;</highlight></codeline>
+<codeline lineno="203"><highlight class="normal">}<sp/><ref refid="struct_param_struct__t" kindref="compound">ParamStruct_t</ref>;</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"></highlight></codeline>
+<codeline lineno="205"><highlight class="normal"></highlight></codeline>
+<codeline lineno="207" refid="structpq__ht3__ascii__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>Ident[16];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//&quot;PicoHarp<sp/>300&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="209"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>FormatVersion[6];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//file<sp/>format<sp/>version</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CreatorName[18];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//name<sp/>of<sp/>creating<sp/>software</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CreatorVersion[12];<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//version<sp/>of<sp/>creating<sp/>software</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>FileTime[18];</highlight></codeline>
+<codeline lineno="213"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CRLF[2];</highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CommentField[256];</highlight></codeline>
+<codeline lineno="215"><highlight class="normal">}<sp/><ref refid="structpq__ht3__ascii__t" kindref="compound">pq_ht3_ascii_t</ref>;</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"></highlight></codeline>
+<codeline lineno="218" refid="structpq__ht3___bin_hdr__t" refkind="compound"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Channels;</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Curves;</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>BitsPerChannel;</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RoutingChannels;</highlight></codeline>
+<codeline lineno="223"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>NumberOfBoards;</highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>ActiveCurve;</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>MeasMode;</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SubMode;</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RangeNo;</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Offset;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>in<sp/>ns<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="229"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Tacq;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>in<sp/>ms<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>StopAt;</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>StopOnOvfl;</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Restart;</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispLinLog;</highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispTimeFrom;</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispTimeTo;</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispCountsFrom;</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispCountsTo;</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_curve_mapping__t" kindref="compound">CurveMapping_t</ref><sp/>DispCurves[8];</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_param_struct__t" kindref="compound">ParamStruct_t</ref><sp/>Params[3];</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatMode;</highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatsPerCurve;</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatTime;</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatWaitTime;</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>ScriptName[20];</highlight></codeline>
+<codeline lineno="245"><highlight class="normal">}<sp/><ref refid="structpq__ht3___bin_hdr__t" kindref="compound">pq_ht3_BinHdr_t</ref>;</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"></highlight></codeline>
+<codeline lineno="247" refid="structpq__ht3___board_hdr" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>HardwareIdent[16];</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>HardwareVersion[8];</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>BoardSerial;</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>CFDZeroCross;</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>CFDDiscrMin;</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SyncLevel;</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>CurveOffset;</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>Resolution;</highlight></codeline>
+<codeline lineno="256"><highlight class="normal">}<sp/><ref refid="structpq__ht3___board_hdr" kindref="compound">pq_ht3_BoardHdr</ref>;</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"></highlight></codeline>
+<codeline lineno="258" refid="structpq__ht3___t_t_t_r_hdr" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Globclock;</highlight></codeline>
+<codeline lineno="260"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>ExtDevices;</highlight></codeline>
+<codeline lineno="261"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved1;</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved2;</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved3;</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved4;</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved5;</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SyncRate;</highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRCFDRate;</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRStopAfter;</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRStopReason;</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>NoOfRecords;</highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SpecialHeaderSize;</highlight></codeline>
+<codeline lineno="272"><highlight class="normal">}<sp/><ref refid="structpq__ht3___t_t_t_r_hdr" kindref="compound">pq_ht3_TTTRHdr</ref>;</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"></highlight></codeline>
+<codeline lineno="274"><highlight class="normal"></highlight></codeline>
+<codeline lineno="275" refid="class_p_q" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_p_q" kindref="compound">PQ</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/><ref refid="class_t_t_t_r" kindref="compound">TTTR</ref><sp/>{</highlight></codeline>
+<codeline lineno="276"><highlight class="normal"></highlight></codeline>
+<codeline lineno="277"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="280"><highlight class="normal"><sp/><sp/><sp/><sp/>void<sp/>(<ref refid="class_p_q" kindref="compound">PQ</ref>::*processRecord)(uint64_t);</highlight></codeline>
+<codeline lineno="281"><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionpq__hh__t2__record__t" kindref="compound">pq_hh_t2_record_t</ref><sp/>pq_hh_t2_rec;</highlight></codeline>
+<codeline lineno="284"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionpq__hh__t3__record__t" kindref="compound">pq_hh_t3_record_t</ref><sp/>pq_hh_t3_rec;</highlight></codeline>
+<codeline lineno="285"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionpq__ph__t2__record__t" kindref="compound">pq_ph_t2_record_t</ref><sp/>pq_ph_t2_rec;</highlight></codeline>
+<codeline lineno="286"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionpq__ph__t3__record__t" kindref="compound">pq_ph_t3_record_t</ref><sp/>pq_ph_t3_rec;</highlight></codeline>
+<codeline lineno="287"><highlight class="normal"></highlight></codeline>
+<codeline lineno="289"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionbh__spc130__record__t" kindref="compound">bh_spc130_record_t</ref><sp/><sp/><sp/><sp/><sp/><sp/><sp/>bh_spc130_rec;</highlight></codeline>
+<codeline lineno="290"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionbh__spc130__overflow__t" kindref="compound">bh_overflow_t</ref><sp/><sp/><sp/><sp/><sp/>bh_spc130_ovf;</highlight></codeline>
+<codeline lineno="291"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionbh__spc600__256__record__t" kindref="compound">bh_spc600_256_record_t</ref><sp/><sp/><sp/>bh_spc600_256_rec;</highlight></codeline>
+<codeline lineno="292"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionbh__spc600__256__overflow__t" kindref="compound">bh_spc600_256_overflow_t</ref><sp/>bh_spc600_256_ovf;</highlight></codeline>
+<codeline lineno="293"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="unionbh__spc600__4096__record__t" kindref="compound">bh_spc600_4096_record_t</ref><sp/><sp/>bh_spc600_4096_record;</highlight></codeline>
+<codeline lineno="294"><highlight class="normal"></highlight></codeline>
+<codeline lineno="295"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="296"><highlight class="normal"></highlight></codeline>
+<codeline lineno="298" refid="class_p_q_1a6a8835159fddcd5a32834a5d2bf41e0c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>version[8];</highlight></codeline>
+<codeline lineno="299"><highlight class="normal"></highlight></codeline>
+<codeline lineno="300"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>Magic[8];</highlight></codeline>
+<codeline lineno="301"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>tmp;</highlight></codeline>
+<codeline lineno="302"><highlight class="normal"></highlight></codeline>
+<codeline lineno="304" refid="class_p_q_1a0bf8599535f2ef851cd77c96c7c6b07c" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/>int64_t<sp/><ref refid="class_p_q_1a0bf8599535f2ef851cd77c96c7c6b07c" kindref="member">file_type</ref>;</highlight></codeline>
+<codeline lineno="305"><highlight class="normal"></highlight></codeline>
+<codeline lineno="307"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessPHT3(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="308"><highlight class="normal"></highlight></codeline>
+<codeline lineno="310"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessPHT2(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="311"><highlight class="normal"></highlight></codeline>
+<codeline lineno="313"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessHHT2v1(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="314"><highlight class="normal"></highlight></codeline>
+<codeline lineno="316"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessHHT2v2(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="317"><highlight class="normal"></highlight></codeline>
+<codeline lineno="319"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessHHT3v2(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="320"><highlight class="normal"></highlight></codeline>
+<codeline lineno="321"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessSPC600_256(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="322"><highlight class="normal"></highlight></codeline>
+<codeline lineno="323"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessSPC600_4096(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="324"><highlight class="normal"></highlight></codeline>
+<codeline lineno="325"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>ProcessSPC130(uint64_t<sp/>TTTRRecord);</highlight></codeline>
+<codeline lineno="326"><highlight class="normal"></highlight></codeline>
+<codeline lineno="329"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>read_ptu_header();</highlight></codeline>
+<codeline lineno="330"><highlight class="normal"></highlight></codeline>
+<codeline lineno="333"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>read_ht3_header();</highlight></codeline>
+<codeline lineno="334"><highlight class="normal"></highlight></codeline>
+<codeline lineno="335"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>read_record();</highlight></codeline>
+<codeline lineno="336"><highlight class="normal"></highlight></codeline>
+<codeline lineno="337"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="338"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_p_q" kindref="compound">PQ</ref>();</highlight></codeline>
+<codeline lineno="339"><highlight class="normal"></highlight></codeline>
+<codeline lineno="340"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_p_q" kindref="compound">PQ</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*fn,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>container_type);</highlight></codeline>
+<codeline lineno="341"><highlight class="normal"></highlight></codeline>
+<codeline lineno="342"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_p_q" kindref="compound">PQ</ref>();</highlight></codeline>
+<codeline lineno="343"><highlight class="normal"></highlight></codeline>
+<codeline lineno="345" refid="class_p_q_1a44cbafe0c0ddd72f87711927977a2d64" refkind="member"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="structpq__ht3__ascii__t" kindref="compound">pq_ht3_ascii_t</ref><sp/><ref refid="class_p_q_1a44cbafe0c0ddd72f87711927977a2d64" kindref="member">ht3_header_ascii</ref>;</highlight></codeline>
+<codeline lineno="346"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="structpq__ht3___bin_hdr__t" kindref="compound">pq_ht3_BinHdr_t</ref><sp/>ht3_header_binary;</highlight></codeline>
+<codeline lineno="347"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="structpq__ht3___board_hdr" kindref="compound">pq_ht3_BoardHdr</ref><sp/>ht3_header_board;</highlight></codeline>
+<codeline lineno="348"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="structpq__ht3___t_t_t_r_hdr" kindref="compound">pq_ht3_TTTRHdr</ref><sp/>ht3_header_tttr_mode;</highlight></codeline>
+<codeline lineno="349"><highlight class="normal"></highlight></codeline>
+<codeline lineno="350"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="351"><highlight class="normal"></highlight></codeline>
+<codeline lineno="352"><highlight class="normal"></highlight></codeline>
+<codeline lineno="353"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_PQ_H</highlight></codeline>
+    </programlisting>
+    <location file="PicoQuant.h"/>
+  </compounddef>
+</doxygen>

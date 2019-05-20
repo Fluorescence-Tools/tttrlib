@@ -1,0 +1,303 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="class_axis" kind="class" language="C++" prot="public">
+    <compoundname>Axis</compoundname>
+    <includes refid="_histogram_8h" local="no">Histogram.h</includes>
+    <templateparamlist>
+      <param>
+        <type>class</type>
+        <declname>T</declname>
+        <defname>T</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_axis_1ac931ca790924bd28957500064e608cdb" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string Axis&lt; T &gt;::name</definition>
+        <argsstring></argsstring>
+        <name>name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="105" column="1" bodyfile="Histogram.h" bodystart="105" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1a5512c72826f103fd9924311e468ccc3b" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Axis&lt; T &gt;::begin</definition>
+        <argsstring></argsstring>
+        <name>begin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="106" column="1" bodyfile="Histogram.h" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1ab16337d0f4d0ea04781e3f83c76e3335" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Axis&lt; T &gt;::end</definition>
+        <argsstring></argsstring>
+        <name>end</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="107" column="1" bodyfile="Histogram.h" bodystart="107" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1ac0a634990e8f215733f038ee7617fcc6" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Axis&lt; T &gt;::n_bins</definition>
+        <argsstring></argsstring>
+        <name>n_bins</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="108" column="1" bodyfile="Histogram.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1aa5022b48e19e3da35ec8d58e819be49e" prot="private" static="no" mutable="no">
+        <type>double</type>
+        <definition>double Axis&lt; T &gt;::bin_width</definition>
+        <argsstring></argsstring>
+        <name>bin_width</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="109" column="1" bodyfile="Histogram.h" bodystart="109" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1abb7017e05e126486f82c5870aa2127e6" prot="private" static="no" mutable="no">
+        <type>T *</type>
+        <definition>T* Axis&lt; T &gt;::bin_edges</definition>
+        <argsstring></argsstring>
+        <name>bin_edges</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="110" column="1" bodyfile="Histogram.h" bodystart="110" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_axis_1a4f165b52d60c424a2ebf68fbc2775582" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Axis&lt; T &gt;::axis_type</definition>
+        <argsstring></argsstring>
+        <name>axis_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="111" column="1" bodyfile="Histogram.h" bodystart="111" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_axis_1ae490ee3fdbdfb9a189281f40fc43798c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Axis&lt; T &gt;::update</definition>
+        <argsstring>()</argsstring>
+        <name>update</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Recalculates the bin edges of the axis </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="121" column="1" bodyfile="Histogram.h" bodystart="121" bodyend="136"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1ab770c647c999bc91ec01fd810ba4f17a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Axis&lt; T &gt;::setAxisType</definition>
+        <argsstring>(const std::string &amp;axis_type)</argsstring>
+        <name>setAxisType</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>axis_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="138" column="1" bodyfile="Histogram.h" bodystart="138" bodyend="143"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1a0e7c39c0886672e26fc8f374b2062790" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int Axis&lt; T &gt;::getNumberOfBins</definition>
+        <argsstring>()</argsstring>
+        <name>getNumberOfBins</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="145" column="1" bodyfile="Histogram.h" bodystart="145" bodyend="147"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1ac19c94d0b42cbe7129d0218bcc6156a0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>int Axis&lt; T &gt;::getBinIdx</definition>
+        <argsstring>(T value)</argsstring>
+        <name>getBinIdx</name>
+        <param>
+          <type>T</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="150" column="1" bodyfile="Histogram.h" bodystart="150" bodyend="161"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1a7883af78a19bf5b90e8bd3f01663a1e0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>T *</type>
+        <definition>T* Axis&lt; T &gt;::getBins</definition>
+        <argsstring>()</argsstring>
+        <name>getBins</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="163" column="1" bodyfile="Histogram.h" bodystart="163" bodyend="165"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1ad43663e7353a53557422b5902b4102d0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Axis&lt; T &gt;::getBins</definition>
+        <argsstring>(T *bin_edges, int n_bins)</argsstring>
+        <name>getBins</name>
+        <param>
+          <type>T *</type>
+          <declname>bin_edges</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_bins</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="167" column="1" bodyfile="Histogram.h" bodystart="167" bodyend="171"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1a26c562988320fa30f0bfbbc44c6f4bda" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>const std::string &amp;</type>
+        <definition>const std::string&amp; Axis&lt; T &gt;::getName</definition>
+        <argsstring>() const</argsstring>
+        <name>getName</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="173" column="1" bodyfile="Histogram.h" bodystart="173" bodyend="175"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1acbe541be65dfbd06454a819782330942" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Axis&lt; T &gt;::setName</definition>
+        <argsstring>(const std::string &amp;name)</argsstring>
+        <name>setName</name>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="177" column="1" bodyfile="Histogram.h" bodystart="177" bodyend="179"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1acd2c7884f92d1b2937bb2370d691b0fe" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>Axis&lt; T &gt;::Axis</definition>
+        <argsstring>()=default</argsstring>
+        <name>Axis</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="181" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_axis_1a2c03face6176cce979d869a0dc615a5c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Axis&lt; T &gt;::Axis</definition>
+        <argsstring>(std::string name, T begin, T end, int n_bins, std::string axis_type)</argsstring>
+        <name>Axis</name>
+        <param>
+          <type>std::string</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>T</type>
+          <declname>begin</declname>
+        </param>
+        <param>
+          <type>T</type>
+          <declname>end</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_bins</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>axis_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Histogram.h" line="182" column="1" bodyfile="Histogram.h" bodystart="182" bodyend="203"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="Histogram.h" line="102" column="1" bodyfile="Histogram.h" bodystart="102" bodyend="204"/>
+    <listofallmembers>
+      <member refid="class_axis_1acd2c7884f92d1b2937bb2370d691b0fe" prot="public" virt="non-virtual"><scope>Axis</scope><name>Axis</name></member>
+      <member refid="class_axis_1a2c03face6176cce979d869a0dc615a5c" prot="public" virt="non-virtual"><scope>Axis</scope><name>Axis</name></member>
+      <member refid="class_axis_1a4f165b52d60c424a2ebf68fbc2775582" prot="private" virt="non-virtual"><scope>Axis</scope><name>axis_type</name></member>
+      <member refid="class_axis_1a5512c72826f103fd9924311e468ccc3b" prot="private" virt="non-virtual"><scope>Axis</scope><name>begin</name></member>
+      <member refid="class_axis_1abb7017e05e126486f82c5870aa2127e6" prot="private" virt="non-virtual"><scope>Axis</scope><name>bin_edges</name></member>
+      <member refid="class_axis_1aa5022b48e19e3da35ec8d58e819be49e" prot="private" virt="non-virtual"><scope>Axis</scope><name>bin_width</name></member>
+      <member refid="class_axis_1ab16337d0f4d0ea04781e3f83c76e3335" prot="private" virt="non-virtual"><scope>Axis</scope><name>end</name></member>
+      <member refid="class_axis_1ac19c94d0b42cbe7129d0218bcc6156a0" prot="public" virt="non-virtual"><scope>Axis</scope><name>getBinIdx</name></member>
+      <member refid="class_axis_1a7883af78a19bf5b90e8bd3f01663a1e0" prot="public" virt="non-virtual"><scope>Axis</scope><name>getBins</name></member>
+      <member refid="class_axis_1ad43663e7353a53557422b5902b4102d0" prot="public" virt="non-virtual"><scope>Axis</scope><name>getBins</name></member>
+      <member refid="class_axis_1a26c562988320fa30f0bfbbc44c6f4bda" prot="public" virt="non-virtual"><scope>Axis</scope><name>getName</name></member>
+      <member refid="class_axis_1a0e7c39c0886672e26fc8f374b2062790" prot="public" virt="non-virtual"><scope>Axis</scope><name>getNumberOfBins</name></member>
+      <member refid="class_axis_1ac0a634990e8f215733f038ee7617fcc6" prot="private" virt="non-virtual"><scope>Axis</scope><name>n_bins</name></member>
+      <member refid="class_axis_1ac931ca790924bd28957500064e608cdb" prot="private" virt="non-virtual"><scope>Axis</scope><name>name</name></member>
+      <member refid="class_axis_1ab770c647c999bc91ec01fd810ba4f17a" prot="public" virt="non-virtual"><scope>Axis</scope><name>setAxisType</name></member>
+      <member refid="class_axis_1acbe541be65dfbd06454a819782330942" prot="public" virt="non-virtual"><scope>Axis</scope><name>setName</name></member>
+      <member refid="class_axis_1ae490ee3fdbdfb9a189281f40fc43798c" prot="public" virt="non-virtual"><scope>Axis</scope><name>update</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

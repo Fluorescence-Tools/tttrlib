@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="unionbh__spc130__overflow__t" kind="union" language="C++" prot="public">
+    <compoundname>bh_spc130_overflow_t</compoundname>
+    <includes refid="_becker_hickl_8h" local="no">BeckerHickl.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1aae580fff8ae8ac3f2bfb989756e66bf2" prot="public" static="no" mutable="no">
+        <type>uint32_t</type>
+        <definition>uint32_t bh_spc130_overflow_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="58" column="1" bodyfile="BeckerHickl.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1ab9a2c5fa16b1c0dc6b4f6fbd5c86b72c" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_overflow_t::n_sync</definition>
+        <argsstring></argsstring>
+        <name>n_sync</name>
+        <bitfield> 28</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="60" column="1" bodyfile="BeckerHickl.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1a410b8ceecb7991e594ff4373bf5752fe" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_overflow_t::empty</definition>
+        <argsstring></argsstring>
+        <name>empty</name>
+        <bitfield> 2</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="61" column="1" bodyfile="BeckerHickl.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1ade3c94afd3d41eb2779d4237a8b286b2" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_overflow_t::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="62" column="1" bodyfile="BeckerHickl.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1a367c35dbe2f5c7c3c8ba8f1f0c700340" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc130_overflow_t::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="63" column="1" bodyfile="BeckerHickl.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc130__overflow__t_1a0a5c4c5c095a4a54ad15ed6bf6ca1eb1" prot="public" static="no" mutable="no">
+        <type>struct bh_spc130_overflow_t::@3</type>
+        <definition>struct bh_spc130_overflow_t::@3  bh_spc130_overflow_t::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="64" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-600/630 256 Channel Mode, macro time overflow record. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="BeckerHickl.h" line="57" column="1" bodyfile="BeckerHickl.h" bodystart="57" bodyend="65"/>
+    <listofallmembers>
+      <member refid="unionbh__spc130__overflow__t_1aae580fff8ae8ac3f2bfb989756e66bf2" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>allbits</name></member>
+      <member refid="unionbh__spc130__overflow__t_1a0a5c4c5c095a4a54ad15ed6bf6ca1eb1" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>bits</name></member>
+      <member refid="unionbh__spc130__overflow__t_1a410b8ceecb7991e594ff4373bf5752fe" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>empty</name></member>
+      <member refid="unionbh__spc130__overflow__t_1a367c35dbe2f5c7c3c8ba8f1f0c700340" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>invalid</name></member>
+      <member refid="unionbh__spc130__overflow__t_1ade3c94afd3d41eb2779d4237a8b286b2" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>mtov</name></member>
+      <member refid="unionbh__spc130__overflow__t_1ab9a2c5fa16b1c0dc6b4f6fbd5c86b72c" prot="public" virt="non-virtual"><scope>bh_spc130_overflow_t</scope><name>n_sync</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

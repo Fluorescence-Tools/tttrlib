@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structpq__ht3__ascii__t" kind="struct" language="C++" prot="public">
+    <compoundname>pq_ht3_ascii_t</compoundname>
+    <includes refid="_header_8h" local="no">Header.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1ae3a8c20334e0edc651a1ae9b8cd566aa" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::Ident[16]</definition>
+        <argsstring>[16]</argsstring>
+        <name>Ident</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="103" column="1" bodyfile="Header.h" bodystart="103" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1ab0a74839197fdc3ac0bda27fbcb0cf0e" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::FormatVersion[6]</definition>
+        <argsstring>[6]</argsstring>
+        <name>FormatVersion</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="104" column="1" bodyfile="Header.h" bodystart="104" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1a11584e1305a54189223e2586c2345e32" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::CreatorName[18]</definition>
+        <argsstring>[18]</argsstring>
+        <name>CreatorName</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="105" column="1" bodyfile="Header.h" bodystart="105" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1a6fde2560bb26549cbf7444b0f5836260" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::CreatorVersion[12]</definition>
+        <argsstring>[12]</argsstring>
+        <name>CreatorVersion</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="106" column="1" bodyfile="Header.h" bodystart="106" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1a96b82e042cf5ccf55aadbea72518792e" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::FileTime[18]</definition>
+        <argsstring>[18]</argsstring>
+        <name>FileTime</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="107" column="1" bodyfile="Header.h" bodystart="107" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1ac24c4cf275f92ec8d3d7e44176082c81" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::CRLF[2]</definition>
+        <argsstring>[2]</argsstring>
+        <name>CRLF</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="108" column="1" bodyfile="Header.h" bodystart="108" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__ascii__t_1a0bcb4b7000a27419dbb012c8b5cf55d0" prot="public" static="no" mutable="no">
+        <type>char</type>
+        <definition>char pq_ht3_ascii_t::CommentField[256]</definition>
+        <argsstring>[256]</argsstring>
+        <name>CommentField</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="Header.h" line="109" column="1" bodyfile="Header.h" bodystart="109" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>The following represents the readable ASCII file header portion. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="Header.h" line="102" column="1" bodyfile="Header.h" bodystart="102" bodyend="110"/>
+    <listofallmembers>
+      <member refid="structpq__ht3__ascii__t_1a0bcb4b7000a27419dbb012c8b5cf55d0" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CommentField</name></member>
+      <member refid="structpq__ht3__ascii__t_1a11584e1305a54189223e2586c2345e32" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CreatorName</name></member>
+      <member refid="structpq__ht3__ascii__t_1a6fde2560bb26549cbf7444b0f5836260" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CreatorVersion</name></member>
+      <member refid="structpq__ht3__ascii__t_1ac24c4cf275f92ec8d3d7e44176082c81" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CRLF</name></member>
+      <member refid="structpq__ht3__ascii__t_1a96b82e042cf5ccf55aadbea72518792e" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>FileTime</name></member>
+      <member refid="structpq__ht3__ascii__t_1ab0a74839197fdc3ac0bda27fbcb0cf0e" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>FormatVersion</name></member>
+      <member refid="structpq__ht3__ascii__t_1ae3a8c20334e0edc651a1ae9b8cd566aa" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>Ident</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__from_3_01std_1_1pair_3_01_t_00_01_u_01_4_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_from&lt; std::pair&lt; T, U &gt; &gt;</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class T</type>
+      </param>
+      <param>
+        <type>class U</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__from_3_01std_1_1pair_3_01_t_00_01_u_01_4_01_4_1a8d5dbe4816fb56349947140186869e95" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>PyObject *</type>
+        <definition>static PyObject* swig::traits_from&lt; std::pair&lt; T, U &gt; &gt;::from</definition>
+        <argsstring>(const std::pair&lt; T, U &gt; &amp;val)</argsstring>
+        <name>from</name>
+        <param>
+          <type>const std::pair&lt; T, U &gt; &amp;</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="5079" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5079" bodyend="5084"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="5078" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5078" bodyend="5085"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__from_3_01std_1_1pair_3_01_t_00_01_u_01_4_01_4_1a8d5dbe4816fb56349947140186869e95" prot="public" virt="non-virtual"><scope>swig::traits_from&lt; std::pair&lt; T, U &gt; &gt;</scope><name>from</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

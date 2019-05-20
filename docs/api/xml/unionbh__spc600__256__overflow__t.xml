@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="unionbh__spc600__256__overflow__t" kind="union" language="C++" prot="public">
+    <compoundname>bh_spc600_256_overflow_t</compoundname>
+    <includes refid="_becker_hickl_8h" local="no">BeckerHickl.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1a675db1e6d96c51570bd2a7b98b463b8a" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t bh_spc600_256_overflow_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="31" column="1" bodyfile="BeckerHickl.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1a837122368585c2e6f768519e0f53189d" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_overflow_t::cnt</definition>
+        <argsstring></argsstring>
+        <name>cnt</name>
+        <bitfield> 28</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="33" column="1" bodyfile="BeckerHickl.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1abfc273056e6d21a757ee7234b0b767d7" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_overflow_t::empty</definition>
+        <argsstring></argsstring>
+        <name>empty</name>
+        <bitfield> 2</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="34" column="1" bodyfile="BeckerHickl.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1a1f98ad663ca4547f88683177e0819dd1" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_overflow_t::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="35" column="1" bodyfile="BeckerHickl.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1a285a52d85fd1090399fb923917b1a49a" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_overflow_t::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="36" column="1" bodyfile="BeckerHickl.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__overflow__t_1a11037b8501ffd6502cd6b60b048e101a" prot="public" static="no" mutable="no">
+        <type>struct bh_spc600_256_overflow_t::@1</type>
+        <definition>struct bh_spc600_256_overflow_t::@1  bh_spc600_256_overflow_t::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="BeckerHickl.h" line="37" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-600/630 256 Channel Mode, macro time overflow record. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="BeckerHickl.h" line="30" column="1" bodyfile="BeckerHickl.h" bodystart="30" bodyend="38"/>
+    <listofallmembers>
+      <member refid="unionbh__spc600__256__overflow__t_1a675db1e6d96c51570bd2a7b98b463b8a" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>allbits</name></member>
+      <member refid="unionbh__spc600__256__overflow__t_1a11037b8501ffd6502cd6b60b048e101a" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>bits</name></member>
+      <member refid="unionbh__spc600__256__overflow__t_1a837122368585c2e6f768519e0f53189d" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>cnt</name></member>
+      <member refid="unionbh__spc600__256__overflow__t_1abfc273056e6d21a757ee7234b0b767d7" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>empty</name></member>
+      <member refid="unionbh__spc600__256__overflow__t_1a285a52d85fd1090399fb923917b1a49a" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>invalid</name></member>
+      <member refid="unionbh__spc600__256__overflow__t_1a1f98ad663ca4547f88683177e0819dd1" prot="public" virt="non-virtual"><scope>bh_spc600_256_overflow_t</scope><name>mtov</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

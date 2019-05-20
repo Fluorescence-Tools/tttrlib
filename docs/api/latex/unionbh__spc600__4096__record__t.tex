@@ -1,0 +1,123 @@
+\hypertarget{unionbh__spc600__4096__record__t}{}\section{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t Union Reference}
+\label{unionbh__spc600__4096__record__t}\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+
+
+Becker Hickl S\+P\+C-\/600/630 4096 Channel Mode.  
+
+
+
+
+{\ttfamily \#include $<$Record\+Reader.\+h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+uint64\+\_\+t \hyperlink{unionbh__spc600__4096__record__t_af84e62a389f6ad3392d353153ec4ec0e}{allbits}
+\item 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+struct \{\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_a194b85d5b51f8e9d20b5b0689a0e08f9}{adc}: 12\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_afb29d3c77452caa98e327da57085188c}{invalid}: 1\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_a1c1d4ec75f3c9294e5416647de403ff0}{mtov}: 1\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_ac952583be2fe0e818d8d5c56b5f9b23a}{gap}: 1\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_af9e5f5277d7349038b5e1992d9e9f7bd}{empty}: 1\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_a5d8a9e65eed7f9b60f4445d63fc2499e}{mt3}: 8\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_a191959652c4efa92f40c3515e2b1953e}{rout}: 8\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_a20d7c4974ef00336eb7b05b055a72e9c}{mt1}: 8\\
+\>unsigned \hyperlink{unionbh__spc600__4096__record__t_ae5abb5b9ea7453d7a67e8e52ba6df927}{mt2}: 8\\
+\} \hyperlink{unionbh__spc600__4096__record__t_ae04df6462dc1ca8817185c44b984c055}{bits}\\
+
+\end{tabbing}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Becker Hickl S\+P\+C-\/600/630 4096 Channel Mode. 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_a194b85d5b51f8e9d20b5b0689a0e08f9}\label{unionbh__spc600__4096__record__t_a194b85d5b51f8e9d20b5b0689a0e08f9}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!adc@{adc}}
+\index{adc@{adc}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{adc}{adc}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::adc}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_af84e62a389f6ad3392d353153ec4ec0e}\label{unionbh__spc600__4096__record__t_af84e62a389f6ad3392d353153ec4ec0e}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!allbits@{allbits}}
+\index{allbits@{allbits}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{allbits}{allbits}}
+{\footnotesize\ttfamily uint64\+\_\+t bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::allbits}
+
+The information about the subsequent photons is stored one after another in the measurement data file. For each photon 6 bytes are used. The parameter 
+\begin{DoxyParams}{Parameters}
+{\em adc} & corresponds to the value of the analog to digital converter and related to the micro time (mt) by mt = (4095 -\/ adc) $\ast$ T\+A\+C\+Range / (T\+A\+C\+Gain $\ast$ 4096) \\
+\hline
+{\em invalid} & is true for invalid \hyperlink{class_t_t_t_r}{T\+T\+TR} records. If invalid is true all data in the record except the mtov bit are invalid. \\
+\hline
+{\em mtov} & marks that a macro timer overflows. In case \\
+\hline
+{\em mtov} & is true 2$\ast$$\ast$24 counts should be added to the overflow counter (the overflow counter counts the number of overflows. \\
+\hline
+{\em gap} & marks possible gaps, e.\+g., due to F\+I\+FO overflows. \\
+\hline
+{\em rout} & provides the (inverted) routing number of the \hyperlink{class_t_t_t_r}{T\+T\+TR} record. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_ae04df6462dc1ca8817185c44b984c055}\label{unionbh__spc600__4096__record__t_ae04df6462dc1ca8817185c44b984c055}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!bits@{bits}}
+\index{bits@{bits}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{bits}{bits}}
+{\footnotesize\ttfamily struct \{ ... \}   bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::bits}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_af9e5f5277d7349038b5e1992d9e9f7bd}\label{unionbh__spc600__4096__record__t_af9e5f5277d7349038b5e1992d9e9f7bd}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!empty@{empty}}
+\index{empty@{empty}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{empty}{empty}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::empty}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_ac952583be2fe0e818d8d5c56b5f9b23a}\label{unionbh__spc600__4096__record__t_ac952583be2fe0e818d8d5c56b5f9b23a}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!gap@{gap}}
+\index{gap@{gap}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{gap}{gap}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::gap}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_afb29d3c77452caa98e327da57085188c}\label{unionbh__spc600__4096__record__t_afb29d3c77452caa98e327da57085188c}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!invalid@{invalid}}
+\index{invalid@{invalid}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{invalid}{invalid}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::invalid}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_a20d7c4974ef00336eb7b05b055a72e9c}\label{unionbh__spc600__4096__record__t_a20d7c4974ef00336eb7b05b055a72e9c}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!mt1@{mt1}}
+\index{mt1@{mt1}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{mt1}{mt1}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::mt1}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_ae5abb5b9ea7453d7a67e8e52ba6df927}\label{unionbh__spc600__4096__record__t_ae5abb5b9ea7453d7a67e8e52ba6df927}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!mt2@{mt2}}
+\index{mt2@{mt2}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{mt2}{mt2}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::mt2}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_a5d8a9e65eed7f9b60f4445d63fc2499e}\label{unionbh__spc600__4096__record__t_a5d8a9e65eed7f9b60f4445d63fc2499e}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!mt3@{mt3}}
+\index{mt3@{mt3}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{mt3}{mt3}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::mt3}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_a1c1d4ec75f3c9294e5416647de403ff0}\label{unionbh__spc600__4096__record__t_a1c1d4ec75f3c9294e5416647de403ff0}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!mtov@{mtov}}
+\index{mtov@{mtov}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{mtov}{mtov}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::mtov}
+
+\mbox{\Hypertarget{unionbh__spc600__4096__record__t_a191959652c4efa92f40c3515e2b1953e}\label{unionbh__spc600__4096__record__t_a191959652c4efa92f40c3515e2b1953e}} 
+\index{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}!rout@{rout}}
+\index{rout@{rout}!bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t@{bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t}}
+\subsubsection{\texorpdfstring{rout}{rout}}
+{\footnotesize\ttfamily unsigned bh\+\_\+spc600\+\_\+4096\+\_\+record\+\_\+t\+::rout}
+
+
+
+The documentation for this union was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{_record_reader_8h}{Record\+Reader.\+h}\end{DoxyCompactItemize}

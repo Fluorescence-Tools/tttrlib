@@ -1,0 +1,928 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="class_t_t_t_r" kind="class" language="C++" prot="public">
+    <compoundname>TTTR</compoundname>
+    <includes refid="_t_t_t_r_8h" local="no">TTTR.h</includes>
+      <sectiondef kind="private-type">
+      <memberdef kind="typedef" id="class_t_t_t_r_1abab405302dfd98d51ae1f4bf41acb020" prot="private" static="no">
+        <type>bool(*</type>
+        <definition>typedef bool(* TTTR::processRecord_t) (uint64_t &amp;, uint64_t &amp;, uint64_t &amp;, uint32_t &amp;, int16_t &amp;, int16_t &amp;)</definition>
+        <argsstring>)(uint64_t &amp;, uint64_t &amp;, uint64_t &amp;, uint32_t &amp;, int16_t &amp;, int16_t &amp;)</argsstring>
+        <name>processRecord_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="209" column="1" bodyfile="TTTR.h" bodystart="209" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_t_t_t_r_1acd4cf4ad564875dd457724f9e376860f" prot="private" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* TTTR::filename</definition>
+        <argsstring></argsstring>
+        <name>filename</name>
+        <briefdescription>
+<para>the input file </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="191" column="1" bodyfile="TTTR.h" bodystart="191" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> * &gt;</type>
+        <definition>std::vector&lt;TTTR*&gt; TTTR::children</definition>
+        <argsstring></argsstring>
+        <name>children</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="193" column="1" bodyfile="TTTR.h" bodystart="193" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a61e222632812c94981c8fabeba0e112b" prot="private" static="no" mutable="no">
+        <type><ref refid="class_header" kindref="compound">Header</ref> *</type>
+        <definition>Header* TTTR::header</definition>
+        <argsstring></argsstring>
+        <name>header</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="195" column="1" bodyfile="TTTR.h" bodystart="195" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1abc7c44f533a9ef11094baae7498e5cd8" prot="private" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t TTTR::overflow_counter</definition>
+        <argsstring></argsstring>
+        <name>overflow_counter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="197" column="1" bodyfile="TTTR.h" bodystart="197" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1adc682300566aceacd5b5cc1d28de1d18" prot="private" static="no" mutable="no">
+        <type>std::map&lt; std::string, int &gt;</type>
+        <definition>std::map&lt;std::string, int&gt; TTTR::container_names</definition>
+        <argsstring></argsstring>
+        <name>container_names</name>
+        <initializer>= {
+            {std::string(&quot;PTU&quot;), 0},
+            {std::string(&quot;HT3&quot;), 1},
+            {std::string(&quot;SPC-130&quot;), 2},
+            {std::string(&quot;SPC-600_256&quot;), 3},
+            {std::string(&quot;SPC-600_4096&quot;), 4},
+            {std::string(&quot;PHOTON-HDF5&quot;), 5}
+    }</initializer>
+        <briefdescription>
+<para>map to translates string container types to int container types </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="200" column="1" bodyfile="TTTR.h" bodystart="200" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a0a2c76b4330cf76f2ed378f1bdecb463" prot="private" static="no" mutable="no">
+        <type>std::map&lt; int, processRecord_t &gt;</type>
+        <definition>std::map&lt;int, processRecord_t&gt; TTTR::processRecord_map</definition>
+        <argsstring></argsstring>
+        <name>processRecord_map</name>
+        <initializer>= {
+            {<ref refid="_header_8h_1a27944f5cdc8cc68998f3d57652d67ccf" kindref="member">PQ_RECORD_TYPE_HHT2v1</ref>,      <ref refid="_record_reader_8h_1a7c83927ae75f0b31639440129b48ef2b" kindref="member">ProcessHHT2v1</ref>},
+            {<ref refid="_header_8h_1afff8814f1ce6c1ec6945a450999b5615" kindref="member">PQ_RECORD_TYPE_HHT2v2</ref>,      <ref refid="_record_reader_8h_1a546ff8086bff7209f68cac95a4c416a7" kindref="member">ProcessHHT2v2</ref>},
+            {<ref refid="_header_8h_1a51a3e2a69729b62d7892f1cb6ff7ca35" kindref="member">PQ_RECORD_TYPE_HHT3v1</ref>,      <ref refid="_record_reader_8h_1ae3308f8b3837107a6171f6a86872c8e9" kindref="member">ProcessHHT3v1</ref>},
+            {<ref refid="_header_8h_1a971025b1c4f058c5846407bae0f4e147" kindref="member">PQ_RECORD_TYPE_HHT3v2</ref>,      <ref refid="_record_reader_8h_1aab8b96a0d785b3f691a34d85d0c2da76" kindref="member">ProcessHHT3v2</ref>},
+            {<ref refid="_header_8h_1a4d9e0576a91784a7f451bc4c0e83722a" kindref="member">PQ_RECORD_TYPE_PHT2</ref>,        <ref refid="_record_reader_8h_1a88dec77cba7f3785165d6774c8ec07a2" kindref="member">ProcessPHT2</ref>},
+            {<ref refid="_header_8h_1af56c35330bdb11f4ee781b77c30ed9dd" kindref="member">PQ_RECORD_TYPE_PHT3</ref>,        <ref refid="_record_reader_8h_1ad3ed538072a55bc91d73f45806c9cdd2" kindref="member">ProcessPHT3</ref>},
+            {<ref refid="_header_8h_1a3d39628a83facb60743d4f3208ec8811" kindref="member">BH_RECORD_TYPE_SPC600_256</ref>,  <ref refid="_record_reader_8h_1accc9659cd21fe76853878b72243423ab" kindref="member">ProcessSPC600_256</ref>},
+            {<ref refid="_header_8h_1a8baca534e2d74198b975edb96b3f57c2" kindref="member">BH_RECORD_TYPE_SPC600_4096</ref>, <ref refid="_record_reader_8h_1aeb56e94061994cba32ba92308c1a6d29" kindref="member">ProcessSPC600_4096</ref>},
+            {<ref refid="_header_8h_1ac29e379de1f911017fdf4b41c47f3cdc" kindref="member">BH_RECORD_TYPE_SPC130</ref>,      <ref refid="_record_reader_8h_1a593d01306230048302f8d94189c20344" kindref="member">ProcessSPC130</ref>}
+    }</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="218" column="1" bodyfile="TTTR.h" bodystart="218" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1ab036315ae969ac96ddc9ff0e8da492a2" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int TTTR::tttr_container_type</definition>
+        <argsstring></argsstring>
+        <name>tttr_container_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>The type of the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file.</para><para>Currently the following file types are implemented:</para><para><itemizedlist>
+<listitem><para>PQ_PTU_CONTAINER 0</para></listitem><listitem><para>PQ_HT3_CONTAINER 1</para></listitem><listitem><para>BH_SPC130_CONTAINER 2</para></listitem><listitem><para>BH_SPC600_256_CONTAINER 3</para></listitem><listitem><para>BH_SPC600_4096_CONTAINER 4</para></listitem><listitem><para>PHOTON_HDF5_CONTAINER 5</para></listitem></itemizedlist>
+</para><para>The numbers correspond to the numbers that should be used when initializing the class. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="245" column="1" bodyfile="TTTR.h" bodystart="245" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a4d9262b34b316c922e69b40844f07a77" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int TTTR::tttr_record_type</definition>
+        <argsstring></argsstring>
+        <name>tttr_record_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="246" column="1" bodyfile="TTTR.h" bodystart="246" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a3ec936c86b608f0d18f8d7423e3d5954" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t TTTR::bytes_per_record</definition>
+        <argsstring></argsstring>
+        <name>bytes_per_record</name>
+        <briefdescription>
+<para>The size in bytes per <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> record. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="249" column="1" bodyfile="TTTR.h" bodystart="249" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a3468b73e14d0744f097c7ad5e16d1c58" prot="private" static="no" mutable="no">
+        <type>std::FILE *</type>
+        <definition>std::FILE* TTTR::fpin</definition>
+        <argsstring></argsstring>
+        <name>fpin</name>
+        <briefdescription>
+<para>The input file, i.e., the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file, and the output file for the header. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="252" column="1" bodyfile="TTTR.h" bodystart="252" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a3a012195ce0864b2635d061fed08cac4" prot="private" static="no" mutable="no">
+        <type>hid_t</type>
+        <definition>hid_t TTTR::hdf5_file</definition>
+        <argsstring></argsstring>
+        <name>hdf5_file</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="253" column="1" bodyfile="TTTR.h" bodystart="253" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1af671de6a8f16a86e22a713333a27acef" prot="private" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t TTTR::fp_records_begin</definition>
+        <argsstring></argsstring>
+        <name>fp_records_begin</name>
+        <briefdescription>
+<para>marks the end of the header in the input file (to seek the beginning of the tttr records) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="256" column="1" bodyfile="TTTR.h" bodystart="256" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1aeca22c4f524dbb501b7545d397e8f782" prot="private" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t TTTR::TTTRRecord</definition>
+        <argsstring></argsstring>
+        <name>TTTRRecord</name>
+        <briefdescription>
+<para>the data contained in the current TTTRRecord </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="259" column="1" bodyfile="TTTR.h" bodystart="259" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a06ae021f9898f5444fb56276f499a796" prot="private" static="no" mutable="no">
+        <type>bool(*</type>
+        <definition>bool(* TTTR::processRecord) (uint64_t &amp;, uint64_t &amp;, uint64_t &amp;, uint32_t &amp;, int16_t &amp;, int16_t &amp;)</definition>
+        <argsstring>)(uint64_t &amp;, uint64_t &amp;, uint64_t &amp;, uint32_t &amp;, int16_t &amp;, int16_t &amp;)</argsstring>
+        <name>processRecord</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>The reading routine for a photon accepts as a first argumnet a pointer to a 64bit integer. The integer is processed by the reading routing and writes to the <simplesect kind="return"><para>The return value is true if the record is not an overflow record. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="267" column="1" bodyfile="TTTR.h" bodystart="267" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a3aaf6648f0a2dedd952e4fb4578daaa3" prot="private" static="no" mutable="no">
+        <type>unsigned long long *</type>
+        <definition>unsigned long long* TTTR::macro_times</definition>
+        <argsstring></argsstring>
+        <name>macro_times</name>
+        <briefdescription>
+<para>The number of sync pulses. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="277" column="1" bodyfile="TTTR.h" bodystart="277" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a4c87b0c107f094a992946158166d0c4e" prot="private" static="no" mutable="no">
+        <type>unsigned int *</type>
+        <definition>unsigned int* TTTR::micro_times</definition>
+        <argsstring></argsstring>
+        <name>micro_times</name>
+        <briefdescription>
+<para>Micro time. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="279" column="1" bodyfile="TTTR.h" bodystart="279" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a96b63e819b171462056749a4dde87377" prot="private" static="no" mutable="no">
+        <type>short *</type>
+        <definition>short* TTTR::routing_channels</definition>
+        <argsstring></argsstring>
+        <name>routing_channels</name>
+        <briefdescription>
+<para>The channel number. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="281" column="1" bodyfile="TTTR.h" bodystart="281" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a9b20252cc758f7d8a7610af6258b1f5d" prot="private" static="no" mutable="no">
+        <type>short *</type>
+        <definition>short* TTTR::event_types</definition>
+        <argsstring></argsstring>
+        <name>event_types</name>
+        <briefdescription>
+<para>The event type. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="283" column="1" bodyfile="TTTR.h" bodystart="283" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="class_t_t_t_r_1a019c849293e3d3be29f5f6459bee6181" prot="protected" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t TTTR::n_records_in_file</definition>
+        <argsstring></argsstring>
+        <name>n_records_in_file</name>
+        <briefdescription>
+<para>the number of time tagged data records in the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="307" column="1" bodyfile="TTTR.h" bodystart="307" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a4cc37548f6564c05496d95ca1b25b2d4" prot="protected" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t TTTR::n_records_read</definition>
+        <argsstring></argsstring>
+        <name>n_records_read</name>
+        <briefdescription>
+<para>the number of read time tagged data </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="309" column="1" bodyfile="TTTR.h" bodystart="309" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1aabb647d22bb6cb17ff1b843c93b9de3a" prot="protected" static="no" mutable="no">
+        <type>size_t</type>
+        <definition>size_t TTTR::n_valid_events</definition>
+        <argsstring></argsstring>
+        <name>n_valid_events</name>
+        <briefdescription>
+<para>the number of valid read records (excluded overflow and invalid records) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="311" column="1" bodyfile="TTTR.h" bodystart="311" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_t_t_t_r_1aebb3baed0d184e3f177a279e910bb24a" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int TTTR::read_hdf_file</definition>
+        <argsstring>(char *fn)</argsstring>
+        <name>read_hdf_file</name>
+        <param>
+          <type>char *</type>
+          <declname>fn</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="285" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-func">
+      <memberdef kind="function" id="class_t_t_t_r_1aca21b423928f92dce134c2b98057cc0a" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::allocate_memory_for_records</definition>
+        <argsstring>(size_t n_rec)</argsstring>
+        <name>allocate_memory_for_records</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_rec</declname>
+        </param>
+        <briefdescription>
+<para>allocates memory for the records. </para>        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>n_rec</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>are the number of records. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="290" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1af80300e1fdd7ba618dbb33853c832a22" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::deallocate_memory_of_records</definition>
+        <argsstring>()</argsstring>
+        <name>deallocate_memory_of_records</name>
+        <briefdescription>
+<para>deallocate memory of records </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="293" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a8eb7661d2dc6180a0f69c07810705f4f" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::read_records</definition>
+        <argsstring>(size_t n_rec, bool rewind, size_t chunk)</argsstring>
+        <name>read_records</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_rec</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>rewind</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>chunk</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Reads n_records records of the file (n_records is the number of records) <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>n_rec</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the number of records that are being read. If no number of records to be read is specified all records in the file are being read. If the parameter </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rewind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is true (default behaviour) the file is read from the beginning of the records till the end of the file or till n_red records have been read. If </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rewind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is false the records are being read from the current location of the file pointer till the end of the file. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="302" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a1b4d9a088a0898de13a964bd6aef02fa" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::read_records</definition>
+        <argsstring>(size_t n_rec)</argsstring>
+        <name>read_records</name>
+        <param>
+          <type>size_t</type>
+          <declname>n_rec</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="303" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a202a9bb9bc04ccbb056c1d73893b1c4e" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::read_records</definition>
+        <argsstring>()</argsstring>
+        <name>read_records</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="304" column="1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_t_t_t_r_1abe71172a7c0339f09e336a0dcfb48e94" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::get_macro_time</definition>
+        <argsstring>(unsigned long long **out, int *n_out)</argsstring>
+        <name>get_macro_time</name>
+        <param>
+          <type>unsigned long long **</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n_out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="315" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1af68c9a5a7c3ec01a5097864b4d97975a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::get_micro_time</definition>
+        <argsstring>(unsigned int **out, int *n_out)</argsstring>
+        <name>get_micro_time</name>
+        <param>
+          <type>unsigned int **</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n_out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="316" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a4171e1f0e8a709aae25cedbdd66a2bfb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::get_routing_channel</definition>
+        <argsstring>(short **out, int *n_out)</argsstring>
+        <name>get_routing_channel</name>
+        <param>
+          <type>short **</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n_out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="317" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a449e92c3f30e013991cfdd1449aea609" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::get_event_type</definition>
+        <argsstring>(short **out, int *n_out)</argsstring>
+        <name>get_event_type</name>
+        <param>
+          <type>short **</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n_out</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="318" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a500fa2f0fe263e7e309ed1c2be451114" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int TTTR::get_n_valid_events</definition>
+        <argsstring>()</argsstring>
+        <name>get_n_valid_events</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="319" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1aa9b6d4e201da050bf7ed1112c605ce72" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> *</type>
+        <definition>TTTR* TTTR::select</definition>
+        <argsstring>(unsigned long long *selection, int n_selection)</argsstring>
+        <name>select</name>
+        <param>
+          <type>unsigned long long *</type>
+          <declname>selection</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_selection</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="320" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>()</argsstring>
+        <name>TTTR</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Constructor <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>filename</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is the filename of the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file. </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>container_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>specifies the file type. parent-&gt;children.push_back()</para></parameterdescription>
+</parameteritem>
+</parameterlist>
+PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAINER 3 BH_SPC600_4096_CONTAINER 4 </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="333" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1af6cb99fa270ec32d7cd73211eb9a25eb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>(char *filename, int container_type, bool read_input)</argsstring>
+        <name>TTTR</name>
+        <param>
+          <type>char *</type>
+          <declname>filename</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>container_type</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>read_input</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="336" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1acb25daf91a93eb600520c211d739f829" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>(char *filename, int container_type)</argsstring>
+        <name>TTTR</name>
+        <param>
+          <type>char *</type>
+          <declname>filename</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>container_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="337" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a5ebe9e8b44de5824c4a21e0d78497aba" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>(char *filename, const char *container_type)</argsstring>
+        <name>TTTR</name>
+        <param>
+          <type>char *</type>
+          <declname>filename</declname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <declname>container_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="338" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1aac095c4c7b20a7f682b1b487c9bf9bcd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>(unsigned long long *n_sync_pulses, unsigned int *micro_times, short *routing_channels, short *event_types)</argsstring>
+        <name>TTTR</name>
+        <param>
+          <type>unsigned long long *</type>
+          <declname>n_sync_pulses</declname>
+        </param>
+        <param>
+          <type>unsigned int *</type>
+          <declname>micro_times</declname>
+        </param>
+        <param>
+          <type>short *</type>
+          <declname>routing_channels</declname>
+        </param>
+        <param>
+          <type>short *</type>
+          <declname>event_types</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="342" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a0d329594e9c75d7c5091fa22e41f9cff" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::TTTR</definition>
+        <argsstring>(TTTR *parent, unsigned long long *selection, int n_selection)</argsstring>
+        <name>TTTR</name>
+        <param>
+          <type><ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> *</type>
+          <declname>parent</declname>
+        </param>
+        <param>
+          <type>unsigned long long *</type>
+          <declname>selection</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_selection</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="348" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1ab5fdf04da2517b2cfbfcb279f9e9aee0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TTTR::~TTTR</definition>
+        <argsstring>()</argsstring>
+        <name>~TTTR</name>
+        <briefdescription>
+<para>Destructor. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="355" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a3d856d880c72ad9772de2a774066cced" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>char *</type>
+        <definition>char* TTTR::get_filename</definition>
+        <argsstring>()</argsstring>
+        <name>get_filename</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>getFilename Getter for the filename of the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file</para><para><simplesect kind="return"><para>The filename of the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="362" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a9c96c502be774e60f4bcc3442c7a5011" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void TTTR::get_selection_by_channel</definition>
+        <argsstring>(unsigned long **out, int *n_out, long *in, int n_in)</argsstring>
+        <name>get_selection_by_channel</name>
+        <param>
+          <type>unsigned long **</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>int *</type>
+          <declname>n_out</declname>
+        </param>
+        <param>
+          <type>long *</type>
+          <declname>in</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>n_in</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Returns a vector containing indices of records that <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>in</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>a pointer to an array of int16_tchannel numbers that are used to select indices of photons </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>n_in</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>the length of the channel list. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="367" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a7953fb4f0b1d7ada40d6ff19cec45672" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="class_header" kindref="compound">Header</ref></type>
+        <definition>Header TTTR::get_header</definition>
+        <argsstring>()</argsstring>
+        <name>get_header</name>
+        <briefdescription>
+<para>Get header returns the header (if present) as a map of strings. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="374" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a00b74138ed8a061e30a615dfff328960" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int TTTR::get_n_events</definition>
+        <argsstring>()</argsstring>
+        <name>get_n_events</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Returns the number of events in the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file for cases no selection is specified otherwise the number of selected events is returned. <simplesect kind="return"><para></para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="382" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a499f299893269806ef42cca2227fd75b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int TTTR::read_file</definition>
+        <argsstring>(char *fn, int container_type)</argsstring>
+        <name>read_file</name>
+        <param>
+          <type>char *</type>
+          <declname>fn</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>container_type</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Reads the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> data contained in a file into the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> object</para><para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>fn</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The filename </para></parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>container_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The container type. </para></parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>Returns 1 in case the file was read without errors. Otherwise 0 is returned. </para></simplesect>
+</para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="392" column="1"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a4a8f9c4d510819de9ec7a7151c10a05e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int TTTR::read_file</definition>
+        <argsstring>()</argsstring>
+        <name>read_file</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="TTTR.h" line="393" column="1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="TTTR.h" line="187" column="1" bodyfile="TTTR.h" bodystart="187" bodyend="394"/>
+    <listofallmembers>
+      <member refid="class_t_t_t_r_1aca21b423928f92dce134c2b98057cc0a" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>allocate_memory_for_records</name></member>
+      <member refid="class_t_t_t_r_1a3ec936c86b608f0d18f8d7423e3d5954" prot="private" virt="non-virtual"><scope>TTTR</scope><name>bytes_per_record</name></member>
+      <member refid="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8" prot="private" virt="non-virtual"><scope>TTTR</scope><name>children</name></member>
+      <member refid="class_t_t_t_r_1adc682300566aceacd5b5cc1d28de1d18" prot="private" virt="non-virtual"><scope>TTTR</scope><name>container_names</name></member>
+      <member refid="class_t_t_t_r_1af80300e1fdd7ba618dbb33853c832a22" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>deallocate_memory_of_records</name></member>
+      <member refid="class_t_t_t_r_1a9b20252cc758f7d8a7610af6258b1f5d" prot="private" virt="non-virtual"><scope>TTTR</scope><name>event_types</name></member>
+      <member refid="class_t_t_t_r_1acd4cf4ad564875dd457724f9e376860f" prot="private" virt="non-virtual"><scope>TTTR</scope><name>filename</name></member>
+      <member refid="class_t_t_t_r_1af671de6a8f16a86e22a713333a27acef" prot="private" virt="non-virtual"><scope>TTTR</scope><name>fp_records_begin</name></member>
+      <member refid="class_t_t_t_r_1a3468b73e14d0744f097c7ad5e16d1c58" prot="private" virt="non-virtual"><scope>TTTR</scope><name>fpin</name></member>
+      <member refid="class_t_t_t_r_1a449e92c3f30e013991cfdd1449aea609" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_event_type</name></member>
+      <member refid="class_t_t_t_r_1a3d856d880c72ad9772de2a774066cced" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_filename</name></member>
+      <member refid="class_t_t_t_r_1a7953fb4f0b1d7ada40d6ff19cec45672" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_header</name></member>
+      <member refid="class_t_t_t_r_1abe71172a7c0339f09e336a0dcfb48e94" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_macro_time</name></member>
+      <member refid="class_t_t_t_r_1af68c9a5a7c3ec01a5097864b4d97975a" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_micro_time</name></member>
+      <member refid="class_t_t_t_r_1a00b74138ed8a061e30a615dfff328960" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_n_events</name></member>
+      <member refid="class_t_t_t_r_1a500fa2f0fe263e7e309ed1c2be451114" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_n_valid_events</name></member>
+      <member refid="class_t_t_t_r_1a4171e1f0e8a709aae25cedbdd66a2bfb" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_routing_channel</name></member>
+      <member refid="class_t_t_t_r_1a9c96c502be774e60f4bcc3442c7a5011" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_selection_by_channel</name></member>
+      <member refid="class_t_t_t_r_1a3a012195ce0864b2635d061fed08cac4" prot="private" virt="non-virtual"><scope>TTTR</scope><name>hdf5_file</name></member>
+      <member refid="class_t_t_t_r_1a61e222632812c94981c8fabeba0e112b" prot="private" virt="non-virtual"><scope>TTTR</scope><name>header</name></member>
+      <member refid="class_t_t_t_r_1a3aaf6648f0a2dedd952e4fb4578daaa3" prot="private" virt="non-virtual"><scope>TTTR</scope><name>macro_times</name></member>
+      <member refid="class_t_t_t_r_1a4c87b0c107f094a992946158166d0c4e" prot="private" virt="non-virtual"><scope>TTTR</scope><name>micro_times</name></member>
+      <member refid="class_t_t_t_r_1a019c849293e3d3be29f5f6459bee6181" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>n_records_in_file</name></member>
+      <member refid="class_t_t_t_r_1a4cc37548f6564c05496d95ca1b25b2d4" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>n_records_read</name></member>
+      <member refid="class_t_t_t_r_1aabb647d22bb6cb17ff1b843c93b9de3a" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>n_valid_events</name></member>
+      <member refid="class_t_t_t_r_1abc7c44f533a9ef11094baae7498e5cd8" prot="private" virt="non-virtual"><scope>TTTR</scope><name>overflow_counter</name></member>
+      <member refid="class_t_t_t_r_1a06ae021f9898f5444fb56276f499a796" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord</name></member>
+      <member refid="class_t_t_t_r_1a0a2c76b4330cf76f2ed378f1bdecb463" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord_map</name></member>
+      <member refid="class_t_t_t_r_1abab405302dfd98d51ae1f4bf41acb020" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord_t</name></member>
+      <member refid="class_t_t_t_r_1a499f299893269806ef42cca2227fd75b" prot="public" virt="non-virtual"><scope>TTTR</scope><name>read_file</name></member>
+      <member refid="class_t_t_t_r_1a4a8f9c4d510819de9ec7a7151c10a05e" prot="public" virt="non-virtual"><scope>TTTR</scope><name>read_file</name></member>
+      <member refid="class_t_t_t_r_1aebb3baed0d184e3f177a279e910bb24a" prot="private" virt="non-virtual"><scope>TTTR</scope><name>read_hdf_file</name></member>
+      <member refid="class_t_t_t_r_1a8eb7661d2dc6180a0f69c07810705f4f" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
+      <member refid="class_t_t_t_r_1a1b4d9a088a0898de13a964bd6aef02fa" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
+      <member refid="class_t_t_t_r_1a202a9bb9bc04ccbb056c1d73893b1c4e" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
+      <member refid="class_t_t_t_r_1a96b63e819b171462056749a4dde87377" prot="private" virt="non-virtual"><scope>TTTR</scope><name>routing_channels</name></member>
+      <member refid="class_t_t_t_r_1aa9b6d4e201da050bf7ed1112c605ce72" prot="public" virt="non-virtual"><scope>TTTR</scope><name>select</name></member>
+      <member refid="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1af6cb99fa270ec32d7cd73211eb9a25eb" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1acb25daf91a93eb600520c211d739f829" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1a5ebe9e8b44de5824c4a21e0d78497aba" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1aac095c4c7b20a7f682b1b487c9bf9bcd" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1a0d329594e9c75d7c5091fa22e41f9cff" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1ab036315ae969ac96ddc9ff0e8da492a2" prot="private" virt="non-virtual"><scope>TTTR</scope><name>tttr_container_type</name></member>
+      <member refid="class_t_t_t_r_1a4d9262b34b316c922e69b40844f07a77" prot="private" virt="non-virtual"><scope>TTTR</scope><name>tttr_record_type</name></member>
+      <member refid="class_t_t_t_r_1aeca22c4f524dbb501b7545d397e8f782" prot="private" virt="non-virtual"><scope>TTTR</scope><name>TTTRRecord</name></member>
+      <member refid="class_t_t_t_r_1ab5fdf04da2517b2cfbfcb279f9e9aee0" prot="public" virt="non-virtual"><scope>TTTR</scope><name>~TTTR</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

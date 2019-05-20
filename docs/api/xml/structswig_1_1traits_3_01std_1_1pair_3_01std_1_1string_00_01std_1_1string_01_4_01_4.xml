@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits_3_01std_1_1pair_3_01std_1_1string_00_01std_1_1string_01_4_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits&lt; std::pair&lt; std::string, std::string &gt; &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-type">
+      <memberdef kind="typedef" id="structswig_1_1traits_3_01std_1_1pair_3_01std_1_1string_00_01std_1_1string_01_4_01_4_1a554d795b938a3c16d9da06d08fe3ea39" prot="public" static="no">
+        <type><ref refid="structswig_1_1pointer__category" kindref="compound">pointer_category</ref></type>
+        <definition>typedef pointer_category swig::traits&lt; std::pair&lt; std::string, std::string &gt; &gt;::category</definition>
+        <argsstring></argsstring>
+        <name>category</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="5126" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5126" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits_3_01std_1_1pair_3_01std_1_1string_00_01std_1_1string_01_4_01_4_1a23e51c7a800e60e4893c2c1f47e32d76" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>const char *</type>
+        <definition>static const char* swig::traits&lt; std::pair&lt; std::string, std::string &gt; &gt;::type_name</definition>
+        <argsstring>()</argsstring>
+        <name>type_name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="5127" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5127" bodyend="5129"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="5125" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="5125" bodyend="5130"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits_3_01std_1_1pair_3_01std_1_1string_00_01std_1_1string_01_4_01_4_1a554d795b938a3c16d9da06d08fe3ea39" prot="public" virt="non-virtual"><scope>swig::traits&lt; std::pair&lt; std::string, std::string &gt; &gt;</scope><name>category</name></member>
+      <member refid="structswig_1_1traits_3_01std_1_1pair_3_01std_1_1string_00_01std_1_1string_01_4_01_4_1a23e51c7a800e60e4893c2c1f47e32d76" prot="public" virt="non-virtual"><scope>swig::traits&lt; std::pair&lt; std::string, std::string &gt; &gt;</scope><name>type_name</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1bh__spc600__4096__record__t" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::bh_spc600_4096_record_t</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1af660e4a3271faac341762568c9471ef3" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.bh_spc600_4096_record_t::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="605" column="1" bodyfile="tttrlib.py" bodystart="605" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1ad2368b6b2a7701a3d2f08df09e69eb30" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1bh__spc600__4096__record__t" kindref="compound">bh_spc600_4096_record_t</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="606" column="1" bodyfile="tttrlib.py" bodystart="606" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1acc3b32c41396f2e9a4ed1f91b07bbe2f" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.bh_spc600_4096_record_t::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="607" column="1" bodyfile="tttrlib.py" bodystart="607" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1ad97379867c9a38c3b1b9b1b2466f1082" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1bh__spc600__4096__record__t" kindref="compound">bh_spc600_4096_record_t</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="608" column="1" bodyfile="tttrlib.py" bodystart="608" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1a48d12b8b3c0052d1ad84ba88bc28f998" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="609" column="1" bodyfile="tttrlib.py" bodystart="609" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1a878bbda44e5604322ee558548bb0df67" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_bh_spc600_4096_record_t</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="621" column="1" bodyfile="tttrlib.py" bodystart="621" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1a9d7219ad844a149e606963aae8043475" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <initializer>=  _swig_property(_tttrlib.bh_spc600_4096_record_t_allbits_get, _tttrlib.bh_spc600_4096_record_t_allbits_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="613" column="1" bodyfile="tttrlib.py" bodystart="613" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__4096__record__t_1a24167845647b2247c0b6068edae36ab2" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_4096_record_t::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="620" column="1" bodyfile="tttrlib.py" bodystart="620" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1bh__spc600__4096__record__t_1aa34db3978dda4b559273af039dfd39a1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc600_4096_record_t.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="615" column="1" bodyfile="tttrlib.py" bodystart="615" bodyend="620"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="40">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="39">
+        <label>tttrlib.bh_spc600_4096_record_t</label>
+        <link refid="classtttrlib_1_1bh__spc600__4096__record__t"/>
+        <childnode refid="40" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="42">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="41">
+        <label>tttrlib.bh_spc600_4096_record_t</label>
+        <link refid="classtttrlib_1_1bh__spc600__4096__record__t"/>
+        <childnode refid="42" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="604" column="1" bodyfile="tttrlib.py" bodystart="604" bodyend="623"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1ad97379867c9a38c3b1b9b1b2466f1082" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1aa34db3978dda4b559273af039dfd39a1" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1a48d12b8b3c0052d1ad84ba88bc28f998" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1ad2368b6b2a7701a3d2f08df09e69eb30" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1a878bbda44e5604322ee558548bb0df67" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1acc3b32c41396f2e9a4ed1f91b07bbe2f" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1af660e4a3271faac341762568c9471ef3" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1a9d7219ad844a149e606963aae8043475" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>allbits</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__4096__record__t_1a24167845647b2247c0b6068edae36ab2" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_4096_record_t</scope><name>this</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

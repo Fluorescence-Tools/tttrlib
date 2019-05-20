@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="struct_swig_py_object" kind="struct" language="C++" prot="public">
+    <compoundname>SwigPyObject</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_swig_py_object_1a41b1d569a8ba4fa9b1d87579c144891b" prot="public" static="no" mutable="no">
+        <type>PyObject_HEAD void *</type>
+        <definition>PyObject_HEAD void* SwigPyObject::ptr</definition>
+        <argsstring></argsstring>
+        <name>ptr</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1542" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1542" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_object_1a510b5a6f66a8a33c0a54c3eeb83e5ba5" prot="public" static="no" mutable="no">
+        <type><ref refid="structswig__type__info" kindref="compound">swig_type_info</ref> *</type>
+        <definition>swig_type_info* SwigPyObject::ty</definition>
+        <argsstring></argsstring>
+        <name>ty</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1543" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1543" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_object_1a83cb6489fb1b171467f06c091ae6f283" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int SwigPyObject::own</definition>
+        <argsstring></argsstring>
+        <name>own</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1544" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1544" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_swig_py_object_1af7b93d7ae49a6f3bdf6511043fe8e839" prot="public" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* SwigPyObject::next</definition>
+        <argsstring></argsstring>
+        <name>next</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="1545" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1545" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="226">
+        <label>swig_dycast_func</label>
+        <link refid="structswig__type__info"/>
+        <childnode refid="227" relation="usage">
+          <edgelabel>cast</edgelabel>
+        </childnode>
+      </node>
+      <node id="225">
+        <label>SwigPyObject</label>
+        <link refid="struct_swig_py_object"/>
+        <childnode refid="226" relation="usage">
+          <edgelabel>ty</edgelabel>
+        </childnode>
+      </node>
+      <node id="227">
+        <label>swig_cast_info</label>
+        <link refid="structswig__cast__info"/>
+        <childnode refid="226" relation="usage">
+          <edgelabel>type</edgelabel>
+        </childnode>
+        <childnode refid="227" relation="usage">
+          <edgelabel>prev</edgelabel>
+          <edgelabel>next</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib_wrap.cpp" line="1540" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="1540" bodyend="1549"/>
+    <listofallmembers>
+      <member refid="struct_swig_py_object_1af7b93d7ae49a6f3bdf6511043fe8e839" prot="public" virt="non-virtual"><scope>SwigPyObject</scope><name>next</name></member>
+      <member refid="struct_swig_py_object_1a83cb6489fb1b171467f06c091ae6f283" prot="public" virt="non-virtual"><scope>SwigPyObject</scope><name>own</name></member>
+      <member refid="struct_swig_py_object_1a41b1d569a8ba4fa9b1d87579c144891b" prot="public" virt="non-virtual"><scope>SwigPyObject</scope><name>ptr</name></member>
+      <member refid="struct_swig_py_object_1a510b5a6f66a8a33c0a54c3eeb83e5ba5" prot="public" virt="non-virtual"><scope>SwigPyObject</scope><name>ty</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structstd_1_1less_3_01swig_1_1_swig_var___py_object_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>std::less&lt; swig::SwigVar_PyObject &gt;</compoundname>
+    <templateparamlist>
+    </templateparamlist>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structstd_1_1less_3_01swig_1_1_swig_var___py_object_01_4_1af01d1f1add92ca309f9bf39e55ee18f8" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool std::less&lt; swig::SwigVar_PyObject &gt;::operator()</definition>
+        <argsstring>(const swig::SwigVar_PyObject &amp;v, const swig::SwigVar_PyObject &amp;w) const</argsstring>
+        <name>operator()</name>
+        <param>
+          <type>const <ref refid="structswig_1_1_swig_var___py_object" kindref="compound">swig::SwigVar_PyObject</ref> &amp;</type>
+          <declname>v</declname>
+        </param>
+        <param>
+          <type>const <ref refid="structswig_1_1_swig_var___py_object" kindref="compound">swig::SwigVar_PyObject</ref> &amp;</type>
+          <declname>w</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4019" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4019" bodyend="4022"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="4017" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4016" bodyend="4023"/>
+    <listofallmembers>
+      <member refid="structstd_1_1less_3_01swig_1_1_swig_var___py_object_01_4_1af01d1f1add92ca309f9bf39e55ee18f8" prot="public" virt="non-virtual"><scope>std::less&lt; swig::SwigVar_PyObject &gt;</scope><name>operator()</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

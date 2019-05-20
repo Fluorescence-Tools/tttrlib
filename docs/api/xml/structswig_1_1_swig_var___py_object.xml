@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1_swig_var___py_object" kind="struct" language="C++" prot="public">
+    <compoundname>swig::SwigVar_PyObject</compoundname>
+    <basecompoundref refid="classswig_1_1_swig_ptr___py_object" prot="public" virt="non-virtual">swig::SwigPtr_PyObject</basecompoundref>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structswig_1_1_swig_var___py_object_1a2b61f843215bceaff8ec2ea6e92d46c2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>swig::SwigVar_PyObject::SwigVar_PyObject</definition>
+        <argsstring>(PyObject *obj=0)</argsstring>
+        <name>SwigVar_PyObject</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>obj</declname>
+          <defval>0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="3144" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3144" bodyend="3144"/>
+      </memberdef>
+      <memberdef kind="function" id="structswig_1_1_swig_var___py_object_1a7e6053b64cf6e787b99a67b09cdc6d89" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="structswig_1_1_swig_var___py_object" kindref="compound">SwigVar_PyObject</ref> &amp;</type>
+        <definition>SwigVar_PyObject&amp; swig::SwigVar_PyObject::operator=</definition>
+        <argsstring>(PyObject *obj)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>obj</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="3146" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3146" bodyend="3151"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="241">
+        <label>swig::SwigPtr_PyObject</label>
+        <link refid="classswig_1_1_swig_ptr___py_object"/>
+      </node>
+      <node id="240">
+        <label>swig::SwigVar_PyObject</label>
+        <link refid="structswig_1_1_swig_var___py_object"/>
+        <childnode refid="241" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="243">
+        <label>swig::SwigPtr_PyObject</label>
+        <link refid="classswig_1_1_swig_ptr___py_object"/>
+      </node>
+      <node id="242">
+        <label>swig::SwigVar_PyObject</label>
+        <link refid="structswig_1_1_swig_var___py_object"/>
+        <childnode refid="243" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib_wrap.cpp" line="3143" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3143" bodyend="3152"/>
+    <listofallmembers>
+      <member refid="classswig_1_1_swig_ptr___py_object_1ae617c5726496db423cd19688e3264618" prot="protected" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>_obj</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1a488cefbaa1b44892dca63570d463f926" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>operator PyObject *</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1abcd310284d78ccf1041fb60906bc115e" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>operator-&gt;</name></member>
+      <member refid="structswig_1_1_swig_var___py_object_1a7e6053b64cf6e787b99a67b09cdc6d89" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>operator=</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1a86d8657d6b4a27c8e9e6942bc1ba572c" prot="public" virt="non-virtual" ambiguityscope="swig::SwigPtr_PyObject::"><scope>swig::SwigVar_PyObject</scope><name>operator=</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1abf8e6dbea1c465582b210f732034b3ab" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>SwigPtr_PyObject</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1a4282f20207f8cd22c9b079203c832a04" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>SwigPtr_PyObject</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1a4503d58d577d209f5e1fa67026852505" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>SwigPtr_PyObject</name></member>
+      <member refid="structswig_1_1_swig_var___py_object_1a2b61f843215bceaff8ec2ea6e92d46c2" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>SwigVar_PyObject</name></member>
+      <member refid="classswig_1_1_swig_ptr___py_object_1a3f2d2edd8a4eda4bf8a1243e50aa3849" prot="public" virt="non-virtual"><scope>swig::SwigVar_PyObject</scope><name>~SwigPtr_PyObject</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

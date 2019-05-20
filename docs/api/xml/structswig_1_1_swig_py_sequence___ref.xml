@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1_swig_py_sequence___ref" kind="struct" language="C++" prot="public">
+    <compoundname>swig::SwigPySequence_Ref</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class T</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="structswig_1_1_swig_py_sequence___ref_1a8440593e4d8c94eda5adf2f48a88673f" prot="private" static="no" mutable="no">
+        <type>PyObject *</type>
+        <definition>PyObject* swig::SwigPySequence_Ref&lt; T &gt;::_seq</definition>
+        <argsstring></argsstring>
+        <name>_seq</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4538" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4538" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structswig_1_1_swig_py_sequence___ref_1a771f29f28f7641af3e12e30f6d22d61d" prot="private" static="no" mutable="no">
+        <type>Py_ssize_t</type>
+        <definition>Py_ssize_t swig::SwigPySequence_Ref&lt; T &gt;::_index</definition>
+        <argsstring></argsstring>
+        <name>_index</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4539" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4539" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structswig_1_1_swig_py_sequence___ref_1a54c91c58a08cd1545f4443db3b67598c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>swig::SwigPySequence_Ref&lt; T &gt;::SwigPySequence_Ref</definition>
+        <argsstring>(PyObject *seq, Py_ssize_t index)</argsstring>
+        <name>SwigPySequence_Ref</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>seq</declname>
+        </param>
+        <param>
+          <type>Py_ssize_t</type>
+          <declname>index</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4509" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4509" bodyend="4512"/>
+      </memberdef>
+      <memberdef kind="function" id="structswig_1_1_swig_py_sequence___ref_1a148e950c46eb0a1531513453dfc35482" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>swig::SwigPySequence_Ref&lt; T &gt;::operator T</definition>
+        <argsstring>() const</argsstring>
+        <name>operator T</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4514" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4514" bodyend="4529"/>
+      </memberdef>
+      <memberdef kind="function" id="structswig_1_1_swig_py_sequence___ref_1a71732475dadcaebf7e61bd5377199ee2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="structswig_1_1_swig_py_sequence___ref" kindref="compound">SwigPySequence_Ref</ref> &amp;</type>
+        <definition>SwigPySequence_Ref&amp; swig::SwigPySequence_Ref&lt; T &gt;::operator=</definition>
+        <argsstring>(const T &amp;v)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type>const T &amp;</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4531" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4531" bodyend="4535"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="4508" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4507" bodyend="4540"/>
+    <listofallmembers>
+      <member refid="structswig_1_1_swig_py_sequence___ref_1a771f29f28f7641af3e12e30f6d22d61d" prot="private" virt="non-virtual"><scope>swig::SwigPySequence_Ref</scope><name>_index</name></member>
+      <member refid="structswig_1_1_swig_py_sequence___ref_1a8440593e4d8c94eda5adf2f48a88673f" prot="private" virt="non-virtual"><scope>swig::SwigPySequence_Ref</scope><name>_seq</name></member>
+      <member refid="structswig_1_1_swig_py_sequence___ref_1a148e950c46eb0a1531513453dfc35482" prot="public" virt="non-virtual"><scope>swig::SwigPySequence_Ref</scope><name>operator T</name></member>
+      <member refid="structswig_1_1_swig_py_sequence___ref_1a71732475dadcaebf7e61bd5377199ee2" prot="public" virt="non-virtual"><scope>swig::SwigPySequence_Ref</scope><name>operator=</name></member>
+      <member refid="structswig_1_1_swig_py_sequence___ref_1a54c91c58a08cd1545f4443db3b67598c" prot="public" virt="non-virtual"><scope>swig::SwigPySequence_Ref</scope><name>SwigPySequence_Ref</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

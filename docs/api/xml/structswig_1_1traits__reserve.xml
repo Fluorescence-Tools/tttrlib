@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__reserve" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_reserve</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class Sequence</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__reserve_1ab18d7d0017918873e958b9745c0d2709" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>static void swig::traits_reserve&lt; Sequence &gt;::reserve</definition>
+        <argsstring>(Sequence &amp;, typename Sequence::size_type)</argsstring>
+        <name>reserve</name>
+        <param>
+          <type>Sequence &amp;</type>
+        </param>
+        <param>
+          <type>typename Sequence::size_type</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="4137" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4137" bodyend="4139"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="4136" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="4136" bodyend="4140"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__reserve_1ab18d7d0017918873e958b9745c0d2709" prot="public" virt="non-virtual"><scope>swig::traits_reserve</scope><name>reserve</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

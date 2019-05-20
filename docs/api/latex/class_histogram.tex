@@ -1,0 +1,125 @@
+\hypertarget{class_histogram}{}\section{Histogram$<$ T $>$ Class Template Reference}
+\label{class_histogram}\index{Histogram$<$ T $>$@{Histogram$<$ T $>$}}
+
+
+{\ttfamily \#include $<$Histogram.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t \hyperlink{class_histogram_a7637302e53db8b91576304f663ecc932}{get\+Axis\+Dimensions} ()
+\item 
+void \hyperlink{class_histogram_aab5a07cfc09bfc0d504d58fbd8164ce3}{update} ()
+\item 
+void \hyperlink{class_histogram_ae74962acd836b01d1178b83d9aa99550}{get\+Histogram} (T $\ast$$\ast$hist, int $\ast$dim)
+\item 
+void \hyperlink{class_histogram_a23cf33ed2f5c3d0833d32c7dd0209370}{set\+Axis} (size\+\_\+t data\+\_\+column, \hyperlink{class_axis}{Axis}$<$ T $>$ \&new\+\_\+axis)
+\item 
+void \hyperlink{class_histogram_abb5b7f6edba2b9a99b6c456c23383d87}{set\+Axis} (size\+\_\+t data\+\_\+column, std\+::string name, T begin, T end, int n\+\_\+bins, std\+::string axis\+\_\+type)
+\item 
+\hyperlink{class_axis}{Axis}$<$ T $>$ \hyperlink{class_histogram_a07d57444fc60e412e79137af9d87f0ff}{get\+Axis} (size\+\_\+t axis\+\_\+index)
+\item 
+void \hyperlink{class_histogram_a383443d35829da535f3c049b002928ca}{set\+Weights} (T $\ast$weights, int n\+\_\+rows, int n\+\_\+cols)
+\item 
+void \hyperlink{class_histogram_a991af624b61ad77f0ecab2697565884b}{set\+Data} (T $\ast$data, int n\+\_\+rows, int n\+\_\+cols)
+\item 
+\hyperlink{class_histogram_a28ba263b97aefe4da4c30acfe430bede}{Histogram} ()=default
+\item 
+\hyperlink{class_histogram_aa7885c184150b162950bf75408dafb33}{$\sim$\+Histogram} ()=default
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{class_histogram_aa390028b7e8a06918cfea6b30506d803}{n\+\_\+total\+\_\+bins}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_histogram_a28ba263b97aefe4da4c30acfe430bede}\label{class_histogram_a28ba263b97aefe4da4c30acfe430bede}} 
+\index{Histogram@{Histogram}!Histogram@{Histogram}}
+\index{Histogram@{Histogram}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{Histogram()}{Histogram()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+\hyperlink{class_histogram}{Histogram}$<$ T $>$\+::\hyperlink{class_histogram}{Histogram} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+\mbox{\Hypertarget{class_histogram_aa7885c184150b162950bf75408dafb33}\label{class_histogram_aa7885c184150b162950bf75408dafb33}} 
+\index{Histogram@{Histogram}!````~Histogram@{$\sim$\+Histogram}}
+\index{````~Histogram@{$\sim$\+Histogram}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{$\sim$\+Histogram()}{~Histogram()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+\hyperlink{class_histogram}{Histogram}$<$ T $>$\+::$\sim$\hyperlink{class_histogram}{Histogram} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_histogram_a07d57444fc60e412e79137af9d87f0ff}\label{class_histogram_a07d57444fc60e412e79137af9d87f0ff}} 
+\index{Histogram@{Histogram}!get\+Axis@{get\+Axis}}
+\index{get\+Axis@{get\+Axis}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{get\+Axis()}{getAxis()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+\hyperlink{class_axis}{Axis}$<$T$>$ \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::get\+Axis (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{axis\+\_\+index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_a7637302e53db8b91576304f663ecc932}\label{class_histogram_a7637302e53db8b91576304f663ecc932}} 
+\index{Histogram@{Histogram}!get\+Axis\+Dimensions@{get\+Axis\+Dimensions}}
+\index{get\+Axis\+Dimensions@{get\+Axis\+Dimensions}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{get\+Axis\+Dimensions()}{getAxisDimensions()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+size\+\_\+t \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::get\+Axis\+Dimensions (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_ae74962acd836b01d1178b83d9aa99550}\label{class_histogram_ae74962acd836b01d1178b83d9aa99550}} 
+\index{Histogram@{Histogram}!get\+Histogram@{get\+Histogram}}
+\index{get\+Histogram@{get\+Histogram}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{get\+Histogram()}{getHistogram()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::get\+Histogram (\begin{DoxyParamCaption}\item[{T $\ast$$\ast$}]{hist,  }\item[{int $\ast$}]{dim }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_a23cf33ed2f5c3d0833d32c7dd0209370}\label{class_histogram_a23cf33ed2f5c3d0833d32c7dd0209370}} 
+\index{Histogram@{Histogram}!set\+Axis@{set\+Axis}}
+\index{set\+Axis@{set\+Axis}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{set\+Axis()}{setAxis()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::set\+Axis (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{data\+\_\+column,  }\item[{\hyperlink{class_axis}{Axis}$<$ T $>$ \&}]{new\+\_\+axis }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_abb5b7f6edba2b9a99b6c456c23383d87}\label{class_histogram_abb5b7f6edba2b9a99b6c456c23383d87}} 
+\index{Histogram@{Histogram}!set\+Axis@{set\+Axis}}
+\index{set\+Axis@{set\+Axis}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{set\+Axis()}{setAxis()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::set\+Axis (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{data\+\_\+column,  }\item[{std\+::string}]{name,  }\item[{T}]{begin,  }\item[{T}]{end,  }\item[{int}]{n\+\_\+bins,  }\item[{std\+::string}]{axis\+\_\+type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_a991af624b61ad77f0ecab2697565884b}\label{class_histogram_a991af624b61ad77f0ecab2697565884b}} 
+\index{Histogram@{Histogram}!set\+Data@{set\+Data}}
+\index{set\+Data@{set\+Data}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{set\+Data()}{setData()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::set\+Data (\begin{DoxyParamCaption}\item[{T $\ast$}]{data,  }\item[{int}]{n\+\_\+rows,  }\item[{int}]{n\+\_\+cols }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_a383443d35829da535f3c049b002928ca}\label{class_histogram_a383443d35829da535f3c049b002928ca}} 
+\index{Histogram@{Histogram}!set\+Weights@{set\+Weights}}
+\index{set\+Weights@{set\+Weights}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{set\+Weights()}{setWeights()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::set\+Weights (\begin{DoxyParamCaption}\item[{T $\ast$}]{weights,  }\item[{int}]{n\+\_\+rows,  }\item[{int}]{n\+\_\+cols }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{class_histogram_aab5a07cfc09bfc0d504d58fbd8164ce3}\label{class_histogram_aab5a07cfc09bfc0d504d58fbd8164ce3}} 
+\index{Histogram@{Histogram}!update@{update}}
+\index{update@{update}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{update()}{update()}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+void \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::update (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{class_histogram_aa390028b7e8a06918cfea6b30506d803}\label{class_histogram_aa390028b7e8a06918cfea6b30506d803}} 
+\index{Histogram@{Histogram}!n\+\_\+total\+\_\+bins@{n\+\_\+total\+\_\+bins}}
+\index{n\+\_\+total\+\_\+bins@{n\+\_\+total\+\_\+bins}!Histogram@{Histogram}}
+\subsubsection{\texorpdfstring{n\+\_\+total\+\_\+bins}{n\_total\_bins}}
+{\footnotesize\ttfamily template$<$class T $>$ \\
+int \hyperlink{class_histogram}{Histogram}$<$ T $>$\+::n\+\_\+total\+\_\+bins}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{_histogram_8h}{Histogram.\+h}\end{DoxyCompactItemize}

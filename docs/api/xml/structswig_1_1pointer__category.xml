@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1pointer__category" kind="struct" language="C++" prot="public">
+    <compoundname>swig::pointer_category</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="3718" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3718" bodyend="3718"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

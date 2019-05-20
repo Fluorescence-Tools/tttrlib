@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="structswig_1_1traits__asval" kind="struct" language="C++" prot="public">
+    <compoundname>swig::traits_asval</compoundname>
+    <templateparamlist>
+      <param>
+        <type>class Type</type>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="structswig_1_1traits__asval_1a5d0ee3dd0c23458db2aeae93d8c02bc0" prot="public" static="yes" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>int</type>
+        <definition>static int swig::traits_asval&lt; Type &gt;::asval</definition>
+        <argsstring>(PyObject *obj, Type *val)</argsstring>
+        <name>asval</name>
+        <param>
+          <type>PyObject *</type>
+          <declname>obj</declname>
+        </param>
+        <param>
+          <type>Type *</type>
+          <declname>val</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib_wrap.cpp" line="3848" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3848" bodyend="3867"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="tttrlib_wrap.cpp" line="3847" column="1" bodyfile="tttrlib_wrap.cpp" bodystart="3847" bodyend="3868"/>
+    <listofallmembers>
+      <member refid="structswig_1_1traits__asval_1a5d0ee3dd0c23458db2aeae93d8c02bc0" prot="public" virt="non-virtual"><scope>swig::traits_asval</scope><name>asval</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+  <compounddef id="classtttrlib_1_1bh__spc600__256__overflow__t" kind="class" language="Python" prot="public">
+    <compoundname>tttrlib::bh_spc600_256_overflow_t</compoundname>
+    <basecompoundref refid="classtttrlib_1_1__object" prot="public" virt="non-virtual">tttrlib._object</basecompoundref>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1af4c3da5e5e24d0a7cf52afb77c90f7cb" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.bh_spc600_256_overflow_t::__swig_setmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_setmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="627" column="1" bodyfile="tttrlib.py" bodystart="627" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1a845450af7d941ff06b80815cc7081788" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::__setattr__</definition>
+        <argsstring></argsstring>
+        <name>__setattr__</name>
+        <initializer>=  lambda self, name, value: _swig_setattr(self, <ref refid="classtttrlib_1_1bh__spc600__256__overflow__t" kindref="compound">bh_spc600_256_overflow_t</ref>, name, value)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="628" column="1" bodyfile="tttrlib.py" bodystart="628" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1ae72347bf99ea9bb65d3d280c92d71c13" prot="private" static="yes" mutable="no">
+        <type>dictionary</type>
+        <definition>dictionary tttrlib.bh_spc600_256_overflow_t::__swig_getmethods__</definition>
+        <argsstring></argsstring>
+        <name>__swig_getmethods__</name>
+        <initializer>=  {}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="629" column="1" bodyfile="tttrlib.py" bodystart="629" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1add0e4935ada2828f2f88d9e207ba793e" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::__getattr__</definition>
+        <argsstring></argsstring>
+        <name>__getattr__</name>
+        <initializer>=  lambda self, name: _swig_getattr(self, <ref refid="classtttrlib_1_1bh__spc600__256__overflow__t" kindref="compound">bh_spc600_256_overflow_t</ref>, name)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="630" column="1" bodyfile="tttrlib.py" bodystart="630" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1ae345a9377392b9d5976efab9f121c74a" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::__repr__</definition>
+        <argsstring></argsstring>
+        <name>__repr__</name>
+        <initializer>=  _swig_repr</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="631" column="1" bodyfile="tttrlib.py" bodystart="631" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1aaffb59a79507299de76ad23d96f76d49" prot="private" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::__swig_destroy__</definition>
+        <argsstring></argsstring>
+        <name>__swig_destroy__</name>
+        <initializer>=  _tttrlib.delete_bh_spc600_256_overflow_t</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="643" column="1" bodyfile="tttrlib.py" bodystart="643" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1a8d339f3cf158819e29baf6c095fbf70b" prot="public" static="yes" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <initializer>=  _swig_property(_tttrlib.bh_spc600_256_overflow_t_allbits_get, _tttrlib.bh_spc600_256_overflow_t_allbits_set)</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="635" column="1" bodyfile="tttrlib.py" bodystart="635" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtttrlib_1_1bh__spc600__256__overflow__t_1a7c00e5d05b03ff70719bc8abe3777367" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>tttrlib.bh_spc600_256_overflow_t::this</definition>
+        <argsstring></argsstring>
+        <name>this</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="642" column="1" bodyfile="tttrlib.py" bodystart="642" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtttrlib_1_1bh__spc600__256__overflow__t_1abcca945d9d53ce53ba00ac9b1780ee87" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def tttrlib.bh_spc600_256_overflow_t.__init__</definition>
+        <argsstring>(self)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="tttrlib.py" line="637" column="1" bodyfile="tttrlib.py" bodystart="637" bodyend="642"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="32">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="31">
+        <label>tttrlib.bh_spc600_256_overflow_t</label>
+        <link refid="classtttrlib_1_1bh__spc600__256__overflow__t"/>
+        <childnode refid="32" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="34">
+        <label>tttrlib._object</label>
+        <link refid="classtttrlib_1_1__object"/>
+      </node>
+      <node id="33">
+        <label>tttrlib.bh_spc600_256_overflow_t</label>
+        <link refid="classtttrlib_1_1bh__spc600__256__overflow__t"/>
+        <childnode refid="34" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="tttrlib.py" line="626" column="1" bodyfile="tttrlib.py" bodystart="626" bodyend="645"/>
+    <listofallmembers>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1add0e4935ada2828f2f88d9e207ba793e" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__getattr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1abcca945d9d53ce53ba00ac9b1780ee87" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__init__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1ae345a9377392b9d5976efab9f121c74a" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__repr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1a845450af7d941ff06b80815cc7081788" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__setattr__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1aaffb59a79507299de76ad23d96f76d49" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__swig_destroy__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1ae72347bf99ea9bb65d3d280c92d71c13" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__swig_getmethods__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1af4c3da5e5e24d0a7cf52afb77c90f7cb" prot="private" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>__swig_setmethods__</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1a8d339f3cf158819e29baf6c095fbf70b" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>allbits</name></member>
+      <member refid="classtttrlib_1_1bh__spc600__256__overflow__t_1a7c00e5d05b03ff70719bc8abe3777367" prot="public" virt="non-virtual"><scope>tttrlib::bh_spc600_256_overflow_t</scope><name>this</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
