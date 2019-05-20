@@ -7,6 +7,7 @@
 
 ## General description
 
+
 tttrlib is a file format agnostic low level, high performance API to 
 read and process time-tagged-time resolved (TTTR) data acquired by 
 PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR 
@@ -20,12 +21,13 @@ Generator) for common scripting languages as Python as target languages
 and non-scripting languages such as C# and Java including Octave, 
 Scilab and R.
 
-
 * Multi-dimensional histograms
 * Correlation analysis
 * Time-window analysis
 * Photon distribution anaylsis
 * FLIM image generation and analysis
+
+![LabelLib and other software/libraries][3]
 
 tttrlib is NOT intended as ready-to-use software for specific application 
 purposes.
@@ -126,3 +128,4 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 tttrlib is released under the open source MIT license.
 
+[3]: docs/_build/html/_images/imaging_tutorial.png "LabelLib and other software/libraries"
