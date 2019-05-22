@@ -1,5 +1,9 @@
 var searchData=
 [
-  ['linspace',['linspace',['../_histogram_8h.html#ad90c4602998cb6e984615b0dcbb1a004',1,'Histogram.h']]],
-  ['logspace',['logspace',['../_histogram_8h.html#ac8c07a93dd5d6cfd89a5d2931236cbb8',1,'Histogram.h']]]
+  ['scratch',['scratch',['../namespacescratch.html',1,'']]],
+  ['scratch_2epy',['scratch.py',['../scratch_8py.html',1,'']]],
+  ['setup',['setup',['../namespacesetup.html',1,'']]],
+  ['setup_2epy',['setup.py',['../setup_8py.html',1,'']]],
+  ['shell',['shell',['../namespacesetup.html#a137d6286fb9c1355868a64b6bb41c1a9',1,'setup']]],
+  ['sourcedir',['sourcedir',['../classsetup_1_1_c_make_extension.html#a29a643870fbe57b4181a02fb4d57b9f7',1,'setup::CMakeExtension']]]
 ];

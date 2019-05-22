@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['hardwareident',['HardwareIdent',['../structpq__ht3___board_hdr.html#a141a3f76e03c24ecc0ee8571620400d0',1,'pq_ht3_BoardHdr']]],
-  ['hardwareserial',['HardwareSerial',['../structpq__ht3___board_hdr.html#ab2449f0ae34f6bc9d132e835076fa769',1,'pq_ht3_BoardHdr']]],
-  ['hardwareversion',['HardwareVersion',['../structpq__ht3___board_hdr.html#ae37b0ecf51eefbeb9d1181184e988046',1,'pq_ht3_BoardHdr']]],
-  ['header_5fend',['header_end',['../class_header.html#a8eb66d0a52e07e3176173ea9fc8f4aa2',1,'Header']]]
+  ['n_5fcasc',['n_casc',['../namespacescratch.html#a7498fe509711b1b107c841fd8b798b08',1,'scratch']]],
+  ['name',['name',['../namespacesetup.html#ab3a7a0638d76a01367c5bc3cc699447f',1,'setup']]],
+  ['ncols',['ncols',['../namespacescratch.html#a5fc703694a67e8496d0e0147fdafc34f',1,'scratch']]],
+  ['nrows',['nrows',['../namespacescratch.html#a289fdad80ec98e38c3cbcfb7a0281b57',1,'scratch']]]
 ];

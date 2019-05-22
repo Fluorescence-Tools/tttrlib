@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_5fcrt_5fsecure_5fno_5fdeprecate',['_CRT_SECURE_NO_DEPRECATE',['../_t_t_t_r_8h.html#a411c46599e926f8cdf49c63957255359',1,'TTTR.h']]]
+  ['_5f_5finit_5f_5f',['__init__',['../classsetup_1_1_c_make_extension.html#a2e49eec9170175d7c21d338bad44c6aa',1,'setup::CMakeExtension']]]
 ];

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['offset',['Offset',['../structpq__ht3___bin_hdr__t.html#ad80bb54db19305e38492f0341d232a18',1,'pq_ht3_BinHdr_t']]]
+  ['w1',['w1',['../namespacescratch.html#a62ec0ec5dd40f18b1505d07104d324fe',1,'scratch']]],
+  ['w2',['w2',['../namespacescratch.html#aa48b303f26ddc4b5c2dc6e98af66a533',1,'scratch']]]
 ];
