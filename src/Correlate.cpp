@@ -155,7 +155,7 @@ void Correlator::normalize(){
 void Correlator::run(){
 
     for(size_t i_casc=0; i_casc<n_casc; i_casc++){
-        tf::Taskflow tf;
+        //tf::Taskflow tf;
 
         correlate(
                 0, n_t1,
@@ -165,11 +165,13 @@ void Correlator::run(){
                 t1, w1, n_t1,
                 t2, w2, n_t2
         );
-        auto taskA = tf.emplace([this](){coarsen(t1, w1, n_t1);});
-        auto taskB = tf.emplace([this](){coarsen(t2, w2, n_t2);});
+        //auto taskA = tf.emplace([this](){coarsen(t1, w1, n_t1);});
+        //auto taskB = tf.emplace([this](){coarsen(t2, w2, n_t2);});
+        coarsen(t1, w1, n_t1);
+        coarsen(t2, w2, n_t2);
 
         // this seems to be for small tasks slower than without parallelization
-        tf.wait_for_all();
+        //tf::Executor().run(taskflow).get();  // execute the graph to spawn the subflow
 
     }
     // calculate a normalized correlation
