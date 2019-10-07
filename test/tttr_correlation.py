@@ -108,7 +108,7 @@ import tttrlib
 import numpy as np
 import pylab as p
 
-photons = tttrlib.TTTR('../../examples/BH/BH_SPC132.spc', 2)
+photons = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 2)
 mt = photons.macro_times
 
 tws = tttrlib.get_ranges_time_window(mt, 1000000, -1, 400, -1)

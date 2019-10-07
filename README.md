@@ -1,9 +1,8 @@
 # tttrlib
- 
-[![Linux Build Status](https://travis-ci.org/tpeulen/tttrlib.svg)](https://travis-ci.org/tpeulen/tttrlib)
+ [![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/tpeulen/tttrlib)
 [![Anaconda-Server Version](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Anaconda-Server Downloads](https://anaconda.org/tpeulen/tttrlib/badges/downloads.svg)](https://anaconda.org/tpeulen/tttrlib)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c3895dc4fcaa43c3be7ab91713b9cd61)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tpeulen/tttrlib&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
 
 ## General description
 
@@ -29,8 +28,7 @@ Scilab and R.
 
 ![LabelLib and other software/libraries][3]
 
-tttrlib is NOT intended as ready-to-use software for specific application 
-purposes.
+tttrlib is NOT intended as ready-to-use software for specific application purposes.
 
 
 ## Supported file formats
@@ -56,8 +54,8 @@ purposes.
 *  Generation / analysis of fluorescence decays
 *  Time window analysis
 *  Correlation of time event traces
-*  Filtering of time event traces to generate instrument response functions for fluorescence decays 
-   analysis without the need of independent measurements.. 
+*  Filtering of time event traces to generate instrument response functions for 
+   fluorescence decays analysis without the need of independent measurements.. 
 *  Fast photon distribution analysis
 *  Fast selection of photons from a photon stream
 

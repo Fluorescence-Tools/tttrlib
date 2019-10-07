@@ -59,7 +59,7 @@ def marker_list_to_range(marker_list):
     for i in range(len(marker_list) - 1):
         r.append(marker_list[i])
         r.append(marker_list[i+1] - 1)
-    return np.array(r).reshape(len(r)/2, 2)
+    return np.array(r).reshape(len(r) // 2, 2)
 
 
 count_marker(c, m, 4, 1)

@@ -160,42 +160,39 @@ int TTTR::read_hdf_file(char *fn){
 }
 
 
-int TTTR::read_file(char *fn, int container_type) {
+int TTTR::read_file(
+        char *fn,
+        int container_type
+        ) {
     std::cout << "Reading container type: " << container_type << std::endl;
-
-
-    switch (container_type){
-        case PHOTON_HDF_CONTAINER: // HDF5
-            read_hdf_file(fn);
-            break;
-
-        default:
-            fp = fopen(fn, "rb");
-
-            if (fp != nullptr)
-            {
-                header = new Header(fp, container_type);
-
-                fp_records_begin = header->header_end;
-                bytes_per_record = header->bytes_per_record;
-                tttr_record_type = header->getTTTRRecordType();
-                std::cout << "TTTR record type: " << tttr_record_type << std::endl;
-                processRecord = processRecord_map[tttr_record_type];
-                n_records_in_file = determine_number_of_records_by_file_size(
-                        fp,
-                        header->header_end,
-                        bytes_per_record
-                );
-                std::cout << "Number of records: " << n_records_in_file << std::endl;
-            }
-            else{
-                std::cout << "File: " << filename << " does not exist" << std::endl;
-                return 0;
-            }
-            allocate_memory_for_records(n_records_in_file);
-            read_records();
-            fclose(fp);
-            break;
+    if (container_type == PHOTON_HDF_CONTAINER)
+    {
+        read_hdf_file(fn);
+    }
+    else{
+        fp = fopen(fn, "rb");
+        if (fp != nullptr)
+        {
+            header = new Header(fp, container_type);
+            fp_records_begin = header->header_end;
+            bytes_per_record = header->bytes_per_record;
+            tttr_record_type = header->getTTTRRecordType();
+            std::cout << "TTTR record type: " << tttr_record_type << std::endl;
+            processRecord = processRecord_map[tttr_record_type];
+            n_records_in_file = determine_number_of_records_by_file_size(
+                    fp,
+                    header->header_end,
+                    bytes_per_record
+            );
+            std::cout << "Number of records: " << n_records_in_file << std::endl;
+        }
+        else{
+            std::cout << "File: " << filename << " does not exist" << std::endl;
+            return 0;
+        }
+        allocate_memory_for_records(n_records_in_file);
+        read_records();
+        fclose(fp);
     }
     return 1;
 }
