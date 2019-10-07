@@ -25,7 +25,7 @@ script:
   - cd $(pwd)/test/
   #- nosetests --with-coverage test_*.py
 after_success:
-  - source activate tttr
+  - source activate tttrlib
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
