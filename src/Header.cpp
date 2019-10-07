@@ -298,7 +298,8 @@ size_t read_ptu_header(
                 sprintf(buffer_out, "%E", *(double *) &(TagHead.TagValue));
                 break;
             case tyFloat8Array:
-                sprintf(buffer_out, "<Float Array with %lu Entries>", TagHead.TagValue / sizeof(double));
+                sprintf(buffer_out, "<Float Array with %llu Entries>",
+                        TagHead.TagValue / sizeof(double));
                 // only seek the Data, if one needs the data, it can be loaded here
                 fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
                 break;
@@ -330,7 +331,8 @@ size_t read_ptu_header(
                 free(WideBuffer);
                 break;
             case tyBinaryBlob:
-                sprintf(buffer_out, "<Binary Blob contains %lu Bytes>", TagHead.TagValue);
+                sprintf(buffer_out, "<Binary Blob contains %llu Bytes>",
+                        TagHead.TagValue);
                 // only seek the Data, if one needs the data, it can be loaded here
                 fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
                 break;

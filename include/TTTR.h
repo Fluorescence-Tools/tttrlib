@@ -310,14 +310,16 @@ private:
     std::FILE *fp;
     hid_t      hdf5_file;                        /*HDF5 file handle */
 
-    /// marks the end of the header in the input file (to seek the beginning of the tttr records)
+    /// marks the end of the header in the input file (to seek the
+    /// beginning of the tttr records)
     size_t fp_records_begin;
 
     /// the data contained in the current TTTRRecord
     uint64_t TTTRRecord;
 
     /*!
-    * The reading routine for a photon accepts as a first argumnet a pointer to a 64bit integer.
+    * The reading routine for a photon accepts as a first argumnet a
+    * pointer to a 64bit integer.
     * The integer is processed by the reading routing and writes to the
     * @return The return value is true if the record is not an overflow record.
     */
@@ -369,6 +371,18 @@ protected:
 
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events;
+
+    /*!
+ * Reads the TTTR data contained in a file into the TTTR object
+ *
+ *
+ * @param fn The filename
+ * @param container_type The container type.
+ * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
+ */
+    int read_file(char *fn, int container_type);
+    int read_file();
+
 
 public:
 
@@ -459,17 +473,6 @@ public:
      * @return
      */
     int get_n_events();
-
-    /*!
-     * Reads the TTTR data contained in a file into the TTTR object
-     *
-     *
-     * @param fn The filename
-     * @param container_type The container type.
-     * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
-     */
-    int read_file(char *fn, int container_type);
-    int read_file();
 
     bool write_file(char *fn, int container_type);
 };

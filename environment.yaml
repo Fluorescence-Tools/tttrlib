@@ -12,7 +12,8 @@ dependencies:
   - setuptools
   - numpy
   - swig
-  - hdf5
+  - hdf=1.8.16 # [win]
+  - hdf        # [linux, osx]
   - cmake
   - sphinx
   - openmp
