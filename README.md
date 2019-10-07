@@ -1,5 +1,5 @@
 # tttrlib
- [![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/tpeulen/tttrlib)
+[![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/tpeulen/tttrlib)
 [![Anaconda-Server Version](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Anaconda-Server Downloads](https://anaconda.org/tpeulen/tttrlib/badges/downloads.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
