@@ -1,0 +1,16 @@
+name: tttrlib
+
+channels:
+  - fluorescence-tools
+  - tpeulen
+  - conda-forge
+  - salilab
+  - defaults
+dependencies:
+  - python=3.7
+  - setuptools
+  - numpy
+  - swig
+  - hdf5
+  - cmake
+  - sphinx
