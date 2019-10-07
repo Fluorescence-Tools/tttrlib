@@ -19,7 +19,7 @@ before_install:
 install:
   - python setup.py install
 script:
-  - source activate tttr
+  - source activate tttrlib
   - conda install nose coverage
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
