@@ -13,6 +13,7 @@ dependencies:
   - numpy
   - swig
   - hdf5=1.8.16 [win]
+  - hdf5=1.8.16 [osx]
   - hdf5 [linux]
   - cmake
   - sphinx

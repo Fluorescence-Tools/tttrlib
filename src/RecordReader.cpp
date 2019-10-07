@@ -294,12 +294,11 @@ bool ProcessSPC600_4096(
         ){
     bh_spc600_4096_record_t rec;
     rec.allbits = TTTRRecord;
-    uint32_t mt = 0;
     if(!rec.bits.invalid){
         // normal record
-        mt = rec.bits.mt1 +
-             (rec.bits.mt2 << 8) +
-             (rec.bits.mt3 << 16);
+        uint32_t mt = rec.bits.mt1 +
+                      (rec.bits.mt2 << 8) +
+                      (rec.bits.mt3 << 16);
         true_nsync = mt + overflow_counter * 16777216;
         channel = (int16_t) (255 - rec.bits.rout);
         micro_time = (uint16_t) (4095 - rec.bits.adc);

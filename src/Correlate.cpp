@@ -78,12 +78,10 @@ void normalize_correlation(
 ){
     double cr1 = (double) np1 / (double) dt1;
     double cr2 = (double) np2 / (double) dt2;
-    uint64_t pw;
-    double t_corr;
-
     for(int j=0; j<x_axis.size(); j++){
-        pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
-        t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 - x_axis[j]);
+        uint64_t pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
+        double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 -
+                x_axis[j]);
         corr[j] /= pw;
         corr[j] /= (cr1 * cr2 * t_corr);
         x_axis[j] = x_axis[j] / pw * pw;

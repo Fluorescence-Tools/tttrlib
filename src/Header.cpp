@@ -33,7 +33,8 @@ Header::Header() :
         micro_time_resolution(0),
         macro_time_resolution(0),
         number_of_tac_channels(0),
-        tttr_container_type(0)
+        tttr_container_type(0),
+        bytes_per_record(1)
 {}
 
 
@@ -289,10 +290,10 @@ size_t read_ptu_header(
                 sprintf(buffer_out, "%lu", (unsigned long) TagHead.TagValue);
                 break;
             case tyBitSet64:
-                sprintf(buffer_out, "0x%16.16IX", TagHead.TagValue);
+                sprintf(buffer_out, "0x%16.16X", TagHead.TagValue);
                 break;
             case tyColor8:
-                sprintf(buffer_out, "0x%16.16IX", TagHead.TagValue);
+                sprintf(buffer_out, "0x%16.16X", TagHead.TagValue);
                 break;
             case tyFloat8:
                 sprintf(buffer_out, "%E", *(double *) &(TagHead.TagValue));

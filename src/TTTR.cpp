@@ -31,7 +31,8 @@ TTTR::TTTR() :
         // protected
         n_records_in_file(0),
         n_records_read(0),
-        n_valid_events(0){
+        n_valid_events(0),
+        processRecord(nullptr){
 }
 
 
