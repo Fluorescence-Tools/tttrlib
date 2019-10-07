@@ -13,7 +13,7 @@ dependencies:
   - numpy
   - swig
   - hdf=1.8.16 # [win]
-  - hdf>=1.8.16 # [linux]
+  - hdf>1.8.16 # [linux]
   - cmake
   - sphinx
   - openmp
