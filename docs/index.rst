@@ -19,7 +19,6 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
    - FLIM image generation and analysis
 
 
-
 Contents
 --------
 
