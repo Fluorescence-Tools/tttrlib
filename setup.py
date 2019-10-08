@@ -107,9 +107,9 @@ if 'doc' in sys.argv:
         "doxygen ./include/Doxyfile",
         shell=True
     )
-    os.chdir('../utility/')
+    os.chdir('./utility/')
     subprocess.call(
-        "python doxy2swig.py ../doc2/api/xml/index.xml documentation.i",
+        "python doxy2swig.py ../docs/api/xml/index.xml documentation.i",
         shell=True
     )
     os.chdir(cwd)
@@ -119,7 +119,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.6',
+    version='0.0.7',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

@@ -9,7 +9,6 @@ cmake-build-*
 # Documentation and tools
 doc/_*
 doc/paper*
-utility*
 
 # JetBrains
 # User-specific stuff

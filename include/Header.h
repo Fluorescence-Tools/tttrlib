@@ -188,7 +188,7 @@ typedef struct tag_head {
     char Ident[32];     // Identifier of the tag
     int Idx;            // Index for multiple tags or -1
     uint32_t Typ;       // Type of tag ty..... see const section
-    uint64_t TagValue;   // Value of tag.
+    uint64_t TagValue;  // Value of tag.
 } tag_head_t;
 
 

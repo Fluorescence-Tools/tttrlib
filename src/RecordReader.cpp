@@ -40,7 +40,9 @@ bool ProcessPHT3(
     const int T3WRAPAROUND = 65536;
     pq_ph_t3_record_t rec;
     rec.allbits = TTTRRecord;
-    if ((rec.bits.channel == 0xF) && (rec.bits.dtime == 0)) //this means we have a special record
+    if (
+            (rec.bits.channel == 0xF) && (rec.bits.dtime == 0)
+            ) //this means we have a special record
     {
         overflow_counter += T3WRAPAROUND; // unwrap the time tag overflow
         return false;
@@ -145,7 +147,8 @@ bool ProcessHHT2v2(
     pq_hh_t2_record_t rec;
     rec.allbits = TTTRRecord;
 
-    if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) //an overflow record
+    //an overflow record
+    if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1))
     {
         //number of overflows is stored in timetag
         if (rec.bits.timetag == 0) //if it is zero it is an old style single overflow
@@ -156,6 +159,7 @@ bool ProcessHHT2v2(
         }
         return false;
     }
+    // normal record
     else {
         if(rec.bits.special == 1){
             record_type = RECORD_MARKER;

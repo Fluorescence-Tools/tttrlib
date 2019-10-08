@@ -17,9 +17,18 @@ namespace std {
     //%template(vector4D_uchar) vector<vector<vector<vector<char>>>>;
 }
 
-%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** out, int* dim1, int* dim2, int* dim3)}
-%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** out, int* dim1, int* dim2, int* dim3)}
-%apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** out, int* dim1, int* dim2, int* dim3, int* dim4)}
+%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {
+    (unsigned int** out, int* dim1, int* dim2, int* dim3)
+}
+%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {
+    (double** out, int* dim1, int* dim2, int* dim3)
+}
+%apply (
+        unsigned char** ARGOUTVIEWM_ARRAY4,
+        int* DIM1, int* DIM2, int* DIM3, int* DIM4
+        ) {
+    (unsigned char** out, int* dim1, int* dim2, int* dim3, int* dim4)
+}
 
 
 %include "../include/TTTR.h"

@@ -116,7 +116,7 @@ public:
     unsigned int marker_frame;
     unsigned int marker_line_start;
     unsigned int marker_line_stop;
-    int marker_event;
+    unsigned int marker_event;
 
     unsigned int n_frames;
     unsigned int n_lines;

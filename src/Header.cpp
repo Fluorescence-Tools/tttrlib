@@ -254,12 +254,15 @@ size_t read_ptu_header(
     data["Tag Version"] = buffer_out;
 
     do {
-        // This loop is very generic. It reads all header items and displays the identifier and the
-        // associated value, quite independent of what they mean in detail.
-        // Only some selected items are explicitly retrieved and kept in memory because they are
+        // This loop is very generic. It reads all header items and displays the
+        // identifier and the associated value, quite independent of what
+        // they mean in detail.
+        // Only some selected items are explicitly retrieved and kept in
+        // memory because they are
         // needed to subsequently interpret the TTTR record data.
         Result = fread(&TagHead, 1, sizeof(TagHead), fpin);
-        if (Result != sizeof(TagHead)) throw std::string("Incomplete File.");
+        if (Result != sizeof(TagHead))
+            throw std::string("Incomplete File.");
 
         // Resolution for TCSPC-Decay
         if (strcmp(TagHead.Ident, TTTRTagRes) == 0)
@@ -273,17 +276,25 @@ size_t read_ptu_header(
             file_type = TagHead.TagValue;
 
         strcpy(Buffer, TagHead.Ident);
-        if (TagHead.Idx > -1) sprintf(Buffer, "%s(%d)", TagHead.Ident, TagHead.Idx);
+        if (TagHead.Idx > -1)
+            sprintf(Buffer, "%s(%d)", TagHead.Ident, TagHead.Idx);
 
         switch (TagHead.Typ) {
             case tyEmpty8:
                 sprintf(buffer_out, "<empty Tag>");
                 break;
             case tyBool8:
-                sprintf(buffer_out, "%s", bool(TagHead.TagValue) ? "True" : "False");
+                sprintf(
+                        buffer_out, "%s",
+                        bool(TagHead.TagValue) ? "True" : "False"
+                        );
                 break;
             case tyInt8:
-                sprintf(buffer_out, "%lu", (unsigned long) TagHead.TagValue);
+                sprintf(
+                        buffer_out,
+                        "%lu",
+                        (unsigned long) TagHead.TagValue
+                        );
                 break;
             case tyBitSet64:
                 sprintf(buffer_out, "0x%16.16X", TagHead.TagValue);

@@ -17,6 +17,25 @@ class Tests(unittest.TestCase):
 
     def test_bh132_read(self):
         data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        self.assertEqual(
+            data.get_number_of_tac_channels(),
+            4096
+        )
+        self.assertEqual(
+            np.array_equal(
+                data.get_macro_time()[:10],
+                np.array(
+                    [
+                        56916, 92675,
+                        341107, 371130,
+                        405608, 414113,
+                        496582, 525446,
+                        548846, 582482
+                    ], dtype=np.uint64
+                )
+            ),
+            True
+        )
 
     def test_ht3_read(self):
         data = tttrlib.TTTR("./data/PQ/HT3/PQ_HT3v1.0_HH_T3.ht3", 'HT3')
@@ -90,16 +109,15 @@ class Tests(unittest.TestCase):
 
     def test_time_window_selection(self):
         photons = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 2)
-        mt = photons.macro_times
+        mt = photons.get_macro_time()
 
-        tws = tttrlib.get_ranges_time_window(mt, 1000000, -1, 400, -1)
+        tws = tttrlib.ranges_by_time_window(mt, 1000000, -1, 400, -1)
         tws = tws.reshape([len(tws)/2, 2]) # bring the tws in shape
 
         # convert the tws to photon selections
         phs = list()
         for tw in tws:
             phs += range(tw[0], tw[1])
-
 
         # Use the tw selection for correlation
 
