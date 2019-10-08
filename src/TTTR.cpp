@@ -97,14 +97,6 @@ TTTR::TTTR(char *fn, const char *container_type) :
 
 
 int TTTR::read_hdf_file(char *fn){
-    // there is a problem with the hdf5 build on windows
-    // if a version hdf5 build from conda is used with a
-    // version > 1.8.16 the library does not link as
-    // H5T_NATIVE_INT16 etc. are not found this problem exists
-    // since ~2017 but is not fixed in the conda builds.
-    // https://github.com/conda-forge/hdf5-feedstock/issues/58
-    // the hdf5 reading needs to be changed otherwise I am
-    // locked in hdf=1.8.16
     header = new Header();
 
     /* handles */

@@ -18,14 +18,6 @@ execute_process(
 INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
 LINK_LIBRARIES(${PYTHON_LIBRARY})
 
-# This is the "new" way but it does not work yet
-# There may be fixes
-#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
-#FIND_PACKAGE(Python COMPONENTS Interpreter)
-#LINK_DIRECTORIES(${Python_LIBRARY_DIRS})
-#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
-#LINK_LIBRARIES(${Python_LIBRARIES})
-
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
 SET(SWIG_SRC tttrlib.i)
