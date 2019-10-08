@@ -7,9 +7,6 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs)
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIR})
-LINK_LIBRARIES(${PYTHON_LIBRARY})
-
 execute_process(
         COMMAND python -c
         "from __future__ import print_function\ntry: import numpy; print(numpy.get_include(), end='')\nexcept:pass\n"
@@ -18,7 +15,8 @@ execute_process(
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
+INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
+LINK_LIBRARIES(${PYTHON_LIBRARY})
 
 # This is the "new" way but it does not work yet
 # There may be fixes
