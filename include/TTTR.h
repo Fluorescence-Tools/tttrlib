@@ -18,7 +18,7 @@
 #define TTTRLIB_TTTR_H
 
 
-//#include <cstdint>
+#include <cstdint>
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -29,7 +29,7 @@
 #include <array>
 #include <memory>
 
-//#include "H5Tpublic.h" // not clear if this is needed for HDF5 reading
+#include "H5Tpublic.h"
 #include "hdf5.h"
 
 #include <RecordReader.h>
