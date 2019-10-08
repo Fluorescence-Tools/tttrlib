@@ -1,6 +1,6 @@
 platform:
   - amd64
-image: Visual Studio 2019
+image: Visual Studio 2017
 
 environment:
   matrix:
