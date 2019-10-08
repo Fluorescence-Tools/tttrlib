@@ -75,7 +75,7 @@ analysis of TTTR data.
 The C++ shared library can be installed from source with [cmake](https://cmake.org/):
 
 ```console
-git clone --recursive https://github.com/tpeulen/tttrlib.git
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
 mkdir tttrlib/build; cd tttrlib/build
 cmake ..
 sudo make install
@@ -91,7 +91,7 @@ precompiled distribution for Python anaconda environment.
 The following commands can be used to download and compile the source code:
 
 ```console
-git clone --recursive https://github.com/tpeulen/tttrlib.git
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
 cd tttrlib
 sudo python setup.py install
 ```
@@ -99,7 +99,7 @@ sudo python setup.py install
 In an [anaconda](https://www.anaconda.com/) environment the library can 
 be installed by the following command: 
 ```console
-conda install -c tpeulen tttrlib
+conda install -c fluorescence-tools tttrlib
 ```
 
 For most users the later approach is recommended. Currently, pre-compiled 
