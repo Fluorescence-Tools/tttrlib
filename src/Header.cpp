@@ -17,7 +17,8 @@
 #endif
 
 #include <cstdio>
-#include <string.h>
+#include <string>  // needed for to_string
+#include <string.h> // needed for strcmp
 
 #include <include/Header.h>
 
