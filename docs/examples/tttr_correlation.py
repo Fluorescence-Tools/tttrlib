@@ -85,7 +85,7 @@ y = correlator.get_corr_normalized()
 p.semilogx(x, y)
 p.show()
 
-
+"""
 # Use this to compare noise of the correlation curve (sth. seems to be off in the pycorrelate
 # implementation...
 
@@ -99,7 +99,6 @@ p.semilogx(bins[1:], G)
 p.show()
 
 %time G=pycorrelate.pcorrelate(t1.astype(np.float), t2.astype(np.float), bins, True)
-
 
 #######################################
 # Selection based on time windows
@@ -143,3 +142,4 @@ y = correlator.get_corr_normalized()
 p.semilogx(x, y)
 p.show()
 
+"""
