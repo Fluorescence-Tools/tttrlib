@@ -29,7 +29,7 @@
 #include <array>
 #include <memory>
 
-#include "H5Tpublic.h"
+//#include "H5Tpublic.h" // not clear if this is needed for HDF5 reading
 #include "hdf5.h"
 
 #include <RecordReader.h>
