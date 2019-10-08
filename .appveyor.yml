@@ -6,8 +6,9 @@ environment:
   matrix:
     - PYTHON: "C:\\Miniconda3-x64"
 
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# For debugging uncomment the lines below
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -18,15 +19,16 @@ install:
 
 build: off
 
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# For debugging uncomment the lines below
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
-#test_script:
-#  - conda install nose coverage
-#  - cmd: echo %CD%
-#  - cmd: cd C:\projects\tttrlib\test\
-#  - cmd: echo %CD%
-#  - nosetests
+test_script:
+  - conda install nose coverage
+  - cmd: echo %CD%
+  - cmd: cd C:\projects\tttrlib\test\
+  - cmd: echo %CD%
+  - nosetests
 
 notifications:
   - provider: Email
