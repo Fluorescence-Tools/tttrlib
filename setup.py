@@ -27,8 +27,9 @@ class CMakeBuild(build_ext):
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
             raise RuntimeError(
-                "CMake muinclude_dirs.append(st be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions)
+                "CMake muinclude_dirs.append(st be installed to build the "
+                "following extensions: " + ", ".join(e.name for e in
+                                                     self.extensions)
             )
 
         if platform.system() == "Windows":
@@ -63,14 +64,17 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
+        elif platform.system() == "Darwin":
+            cmake_args += []
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get('CXXFLAGS', ''
-                    ),
+            env.get(
+                'CXXFLAGS', ''
+            ),
             self.distribution.get_version()
         )
         if not os.path.exists(self.build_temp):
@@ -112,6 +116,16 @@ setup(
     cmdclass={
         'build_ext': CMakeBuild
     },
+    install_requires=[
+        'numpy',
+        'matplotlib',
+    ],
+    setup_requires=[
+        "cython",
+        'numpy',
+        'PyYAML',
+        'setuptools'
+    ],
     zip_safe=False,
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

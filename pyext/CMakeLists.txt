@@ -25,8 +25,8 @@ INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
 #INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
 #FIND_PACKAGE(Python COMPONENTS Interpreter)
 #LINK_DIRECTORIES(${Python_LIBRARY_DIRS})
-#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS})
-
+#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
+#LINK_LIBRARIES(${Python_LIBRARIES})
 
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
@@ -53,3 +53,19 @@ TARGET_LINK_LIBRARIES(
         ${HDF5_LIBRARIES}
         ${PYTHON_LIBRARY}
 )
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "INCLUDE_DIRECTORY='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_LIBRARIES)
+foreach(dir ${dirs})
+    message(STATUS "LINK_LIBRARIES='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "LINK_DIRECTORIES='${dir}'")
+endforeach()
+

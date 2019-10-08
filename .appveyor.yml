@@ -1,0 +1,30 @@
+platform:
+  - amd64
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Miniconda3-x64"
+
+install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda env create -f environment.yaml
+  - activate tttrlib
+  - python setup.py install
+
+build: off
+
+#test_script:
+#  - conda install nose coverage
+#  - cmd: echo %CD%
+#  - cmd: cd C:\projects\tttrlib\test\
+#  - cmd: echo %CD%
+#  - nosetests
+
+notifications:
+  - provider: Email
+    to:
+      - thomas.otavio.peulen@gmail.com
+    on_build_success: false
+    on_build_failure: true
+    on_build_status_changed: false

@@ -18,3 +18,5 @@ dependencies:
   - cmake
   - sphinx
   - openmp
+  - ipython
+  - matplotlib
