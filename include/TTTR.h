@@ -18,7 +18,7 @@
 #define TTTRLIB_TTTR_H
 
 
-#include <cstdint>
+//#include <cstdint>
 #include <string>
 #include <cmath>
 #include <algorithm>
