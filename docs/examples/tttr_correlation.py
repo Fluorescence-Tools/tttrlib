@@ -9,7 +9,7 @@ import numpy as np
 import pylab as p
 
 #data = tttrlib.TTTR("../../../examples/BH/m000.spc", 'SPC-130')
-data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
 #data = tttrlib.TTTR("../../../examples/PQ/HT3/1a_1b_Mix.ht3", 'HT3')
 #data = tttrlib.TTTR('../../examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
 
