@@ -19,3 +19,4 @@ dependencies:
   - openmp
   - ipython
   - matplotlib
+  - yaml

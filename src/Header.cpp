@@ -17,7 +17,7 @@
 #endif
 
 #include <cstdio>
-#include <string>
+#include <string.h>
 
 #include <include/Header.h>
 
