@@ -13,7 +13,8 @@
  ****************************************************************************/
 
 #include <include/RecordTypes.h>
-#include "../include/TTTR.h"
+#include <include/TTTR.h>
+
 
 
 TTTR::TTTR() :

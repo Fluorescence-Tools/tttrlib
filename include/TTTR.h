@@ -18,13 +18,13 @@
 #define TTTRLIB_TTTR_H
 
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <vector>
-#include <stdio.h>
+#include <cstdio>
 #include <map>
 #include <array>
 #include <memory>

@@ -16,14 +16,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
-#include <string.h>
-#include <limits.h>
 
-#include "../include/Header.h"
-#include "../include/RecordReader.h"
-
+#include <include/Header.h>
 
 
 

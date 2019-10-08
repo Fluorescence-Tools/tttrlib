@@ -34,7 +34,7 @@
 #define TTTRLIB_CORRELATE_H
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <cmath>
 #include <vector>
 #include <list>
@@ -42,7 +42,7 @@
 #include <functional>
 #include <numeric>
 #include <algorithm>
-#include <limits.h>
+#include <climits>
 //#include <taskflow/taskflow.hpp>
 
 

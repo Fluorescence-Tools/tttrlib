@@ -16,7 +16,7 @@
 #ifndef TTTRLIB_READHEADER_H
 #define TTTRLIB_READHEADER_H
 
-#include <stdint.h>
+#include <cstdint>
 
 /*
 #if defined(_WIN32)
@@ -28,7 +28,7 @@
 #endif
 */
 
- #include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <map>
 

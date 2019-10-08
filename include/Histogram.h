@@ -18,7 +18,7 @@
 
 #include <algorithm>
 #include <vector>   
-#include <stdio.h>
+#include <cstdio>
 #include <string.h>
 #include <string>
 
