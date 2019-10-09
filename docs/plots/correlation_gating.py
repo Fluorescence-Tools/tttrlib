@@ -6,7 +6,7 @@ fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
 
-data = tttrlib.TTTR('../../examples/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 
 # Create correlator
 B = 9
@@ -41,7 +41,6 @@ ax[0].semilogx(x, y)
 
 
 # Mask
-
 t = data.get_macro_time()
 mt = data.get_micro_time()
 

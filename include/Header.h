@@ -16,7 +16,7 @@
 #ifndef TTTRLIB_READHEADER_H
 #define TTTRLIB_READHEADER_H
 
-#include <stdint.h>
+#include <cstdint>
 
 /*
 #if defined(_WIN32)
@@ -28,7 +28,7 @@
 #endif
 */
 
- #include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <map>
 
@@ -188,7 +188,7 @@ typedef struct tag_head {
     char Ident[32];     // Identifier of the tag
     int Idx;            // Index for multiple tags or -1
     uint32_t Typ;       // Type of tag ty..... see const section
-    uint64_t TagValue;   // Value of tag.
+    uint64_t TagValue;  // Value of tag.
 } tag_head_t;
 
 

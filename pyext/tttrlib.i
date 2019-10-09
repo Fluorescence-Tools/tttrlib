@@ -21,9 +21,7 @@
     import_array();
 %}
 
-namespace std {
-    %template(map_string_string) map<string, string>;
-}
+%template(map_string_string) std::map<std::string, std::string>;
 
 %include "tttr.i"
 %include "histogram.i"

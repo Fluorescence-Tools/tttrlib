@@ -7,9 +7,6 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs)
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIR})
-LINK_LIBRARIES(${PYTHON_LIBRARY})
-
 execute_process(
         COMMAND python -c
         "from __future__ import print_function\ntry: import numpy; print(numpy.get_include(), end='')\nexcept:pass\n"
@@ -18,15 +15,8 @@ execute_process(
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
-
-# This is the "new" way but it does not work yet
-# There may be fixes
-#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
-#FIND_PACKAGE(Python COMPONENTS Interpreter)
-#LINK_DIRECTORIES(${Python_LIBRARY_DIRS})
-#INCLUDE_DIRECTORIES(${Python_INCLUDE_DIRS})
-
+INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
+LINK_LIBRARIES(${PYTHON_LIBRARY})
 
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
@@ -53,3 +43,19 @@ TARGET_LINK_LIBRARIES(
         ${HDF5_LIBRARIES}
         ${PYTHON_LIBRARY}
 )
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "INCLUDE_DIRECTORY='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_LIBRARIES)
+foreach(dir ${dirs})
+    message(STATUS "LINK_LIBRARIES='${dir}'")
+endforeach()
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "LINK_DIRECTORIES='${dir}'")
+endforeach()
+

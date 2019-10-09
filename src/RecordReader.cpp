@@ -13,10 +13,7 @@
  ****************************************************************************/
 
 
-#include "../include/TTTR.h"
-#include "../test/tttr_test.h"
-#include <iostream>
-#include <string>
+#include <include/TTTR.h>
 #include <include/RecordReader.h>
 
 
@@ -43,7 +40,9 @@ bool ProcessPHT3(
     const int T3WRAPAROUND = 65536;
     pq_ph_t3_record_t rec;
     rec.allbits = TTTRRecord;
-    if ((rec.bits.channel == 0xF) && (rec.bits.dtime == 0)) //this means we have a special record
+    if (
+            (rec.bits.channel == 0xF) && (rec.bits.dtime == 0)
+            ) //this means we have a special record
     {
         overflow_counter += T3WRAPAROUND; // unwrap the time tag overflow
         return false;
@@ -148,7 +147,8 @@ bool ProcessHHT2v2(
     pq_hh_t2_record_t rec;
     rec.allbits = TTTRRecord;
 
-    if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) //an overflow record
+    //an overflow record
+    if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1))
     {
         //number of overflows is stored in timetag
         if (rec.bits.timetag == 0) //if it is zero it is an old style single overflow
@@ -159,6 +159,7 @@ bool ProcessHHT2v2(
         }
         return false;
     }
+    // normal record
     else {
         if(rec.bits.special == 1){
             record_type = RECORD_MARKER;
@@ -294,12 +295,11 @@ bool ProcessSPC600_4096(
         ){
     bh_spc600_4096_record_t rec;
     rec.allbits = TTTRRecord;
-    uint32_t mt = 0;
     if(!rec.bits.invalid){
         // normal record
-        mt = rec.bits.mt1 +
-             (rec.bits.mt2 << 8) +
-             (rec.bits.mt3 << 16);
+        uint32_t mt = rec.bits.mt1 +
+                      (rec.bits.mt2 << 8) +
+                      (rec.bits.mt3 << 16);
         true_nsync = mt + overflow_counter * 16777216;
         channel = (int16_t) (255 - rec.bits.rout);
         micro_time = (uint16_t) (4095 - rec.bits.adc);

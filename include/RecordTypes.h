@@ -5,7 +5,7 @@
 #ifndef TTTRLIB_RECORDTYPES_H
 #define TTTRLIB_RECORDTYPES_H
 
-#include <stdint.h>
+#include <cstdint>
 
 
 /// HydraHarp/TimeHarp260 T2 record

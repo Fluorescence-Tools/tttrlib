@@ -18,18 +18,19 @@
 #define TTTRLIB_TTTR_H
 
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <vector>
-#include <stdio.h>
+#include <cstdio>
 #include <map>
 #include <array>
 #include <memory>
-#include "hdf5.h"
+
 #include "H5Tpublic.h"
+#include "hdf5.h"
 
 #include <RecordReader.h>
 #include <Header.h>

@@ -34,7 +34,7 @@
 #define TTTRLIB_CORRELATE_H
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <cmath>
 #include <vector>
 #include <list>
@@ -42,7 +42,7 @@
 #include <functional>
 #include <numeric>
 #include <algorithm>
-#include <limits.h>
+#include <climits>
 //#include <taskflow/taskflow.hpp>
 
 
@@ -82,7 +82,7 @@ void normalize_correlation(
  *
  *
  * Changes the time events by adding the micro time to the macro time.
- * The micro times shoudl match the macro time, i.e., the length of
+ * The micro times should match the macro time, i.e., the length of
  * the micro time array should be the at least the same length as the
  * macro time array.
  *
@@ -207,9 +207,11 @@ private:
     /// The maximum the times in the first and second correlation channel, max(t1, t2)
     uint64_t maximum_macro_time;
 
-    /// The time difference between the first and the last event of the first correlation channel
+    /// The time difference between the first and the last event of the first
+    // correlation channel
     uint64_t dt1;
-    /// The time difference between the first and the last event of the second correlation channel
+    /// The time difference between the first and the last event of the
+    /// second correlation channel
     uint64_t dt2;
 
     /// This flag ist true, if the time events were changed to generate a fine time-axis,
@@ -285,7 +287,8 @@ public:
      *
      *
      * @param[out] x_axis a pointer to an array that will contain the x-axis
-     * @param[out] n_out a pointer to the an integer that will contain the number of elements of the x-axis
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements of the x-axis
      */
     void get_x_axis(unsigned long long** x_axis, int* n_out);
 
@@ -295,7 +298,8 @@ public:
      *
      *
      * @param[out] corr a pointer to an array that will contain the correlation
-     * @param[out] n_out a pointer to the an integer that will contain the number of elements of the x-axis
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements of the x-axis
      */
     void get_corr(double** corr, int* n_out);
 
@@ -305,7 +309,8 @@ public:
      *
      *
      * @param[out] x_axis a pointer to an array that will contain the x-axis
-     * @param[out] n_out a pointer to the an integer that will contain the number of elements
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements
      * of the x-axis
      */
     void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
@@ -315,16 +320,18 @@ public:
      * Get the normalized correlation.
      *
      *
-     * @param[out] corr a pointer to an array that will contain the normalized correlation
-     * @param[out] n_out a pointer to the an integer that will contain the number of elements
-     * of the normalized x-axis
+     * @param[out] corr a pointer to an array that will contain the
+     * normalized  correlation
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements of the normalized x-axis
      */
     void get_corr_normalized(double** corr, int* n_out);
 
 
     /*!
     *
-    * @param[in, out] Array t1 of the time events of the first channel (the array is modified in place)
+    * @param[in, out] Array t1 of the time events of the first channel (the
+    * array is modified in place)
     * @param[in] n_t1 The number of time events in the first channel
     * @param w1 A vector of weights for the time events of the first channel
     * @param n_weights_ch1 The number of weights of the first channel
@@ -344,8 +351,9 @@ public:
      * Calculates the normalized correlation amplitudes and x-axis
      *
      *
-     * Makes a copy of the current correlation curve, i.e., the x-axis and and the corresponding
-     * correlation amplitudes and calculates the values of the normalized correlation.
+     * Makes a copy of the current correlation curve, i.e., the x-axis and
+     * and the corresponding correlation amplitudes and calculates the values
+     * of the normalized correlation.
      */
     void normalize();
 

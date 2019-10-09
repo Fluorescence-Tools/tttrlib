@@ -12,8 +12,14 @@ dependencies:
   - setuptools
   - numpy
   - swig
-  - hdf5=1.8.16 [win]
-  - hdf5 [linux]
+  - hdf5
+  - boost
   - cmake
   - sphinx
   - openmp
+  - ipython
+  - matplotlib
+  - yaml
+  - sphinx
+  - sphinxcontrib-bibtex
+  - recommonmark

@@ -17,7 +17,7 @@
 #define TTTRLIB_PQ_H
 
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include "RecordTypes.h"
 
 

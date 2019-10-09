@@ -218,7 +218,9 @@ void CLSMImage::initialize(TTTR* tttr_data){
  *
  * @param channels
  */
-void CLSMImage::fill_pixels(TTTR* tttr_data, std::vector<unsigned int> channels) {
+void CLSMImage::fill_pixels(
+        TTTR* tttr_data, std::vector<unsigned int> channels
+        ) {
     short c;              // routing channel
     short e;              // event type
 
@@ -269,7 +271,12 @@ void CLSMImage::fill_pixels(TTTR* tttr_data, std::vector<unsigned int> channels)
 }
 
 
-void CLSMImage::get_intensity_image(unsigned int**out, int* dim1, int* dim2, int* dim3){
+void CLSMImage::get_intensity_image(
+        unsigned int**out,
+        int* dim1,
+        int* dim2,
+        int* dim3
+        ){
     *dim1 = n_frames;
     *dim2 = n_lines;
     *dim3 = n_pixel;

@@ -12,13 +12,12 @@
  *                                                                          *
  ****************************************************************************/
 
-#include "include/Correlate.h"
+#include <include/Correlate.h>
 
 
 void coarsen(
         unsigned long long * t, double* w, size_t nt
         ){
-
     t[0] /= 2;
     for(size_t i=1; i < nt; i++){
         t[i] /= 2;
@@ -78,12 +77,10 @@ void normalize_correlation(
 ){
     double cr1 = (double) np1 / (double) dt1;
     double cr2 = (double) np2 / (double) dt2;
-    uint64_t pw;
-    double t_corr;
-
     for(int j=0; j<x_axis.size(); j++){
-        pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
-        t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 - x_axis[j]);
+        uint64_t pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
+        double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 -
+                x_axis[j]);
         corr[j] /= pw;
         corr[j] /= (cr1 * cr2 * t_corr);
         x_axis[j] = x_axis[j] / pw * pw;
@@ -91,7 +88,12 @@ void normalize_correlation(
 }
 
 
-void make_fine_times(unsigned long long *t, unsigned int n_times, unsigned int* tac, unsigned int n_tac){
+void make_fine_times(
+        unsigned long long *t,
+        unsigned int n_times,
+        unsigned int* tac,
+        unsigned int n_tac
+        ){
     for(size_t i=0; i < n_times; i++){
         t[i] = t[i] * n_tac + tac[i];
     }
@@ -179,7 +181,10 @@ void Correlator::run(){
 }
 
 
-void Correlator::get_corr_normalized(double** corr, int* n_out){
+void Correlator::get_corr_normalized(
+        double** corr,
+        int* n_out
+        ){
     (*n_out) = (int) corr_normalized.size();
     auto* t = (double *) malloc((*n_out) * sizeof(double));
     for(int i = 0; i < (*n_out); i++){
@@ -189,7 +194,10 @@ void Correlator::get_corr_normalized(double** corr, int* n_out){
 }
 
 
-void Correlator::get_x_axis_normalized(unsigned long long** x_axis, int* n_out){
+void Correlator::get_x_axis_normalized(
+        unsigned long long** x_axis,
+        int* n_out
+        ){
     (*n_out) = (int) x_axis_normalized.size();
     auto* t = (unsigned long long*) malloc((*n_out) * sizeof(unsigned long long));
     for(int i = 0; i<(*n_out); i++){
@@ -199,7 +207,10 @@ void Correlator::get_x_axis_normalized(unsigned long long** x_axis, int* n_out){
 }
 
 
-void Correlator::get_corr(double** corr, int* n_out){
+void Correlator::get_corr(
+        double** corr,
+        int* n_out
+        ){
     (*n_out) = (int) this->corr.size();
     auto* t = (double *) malloc((*n_out) * sizeof(double));
     for(int i = 0; i < (*n_out); i++){

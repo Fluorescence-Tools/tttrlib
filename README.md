@@ -1,5 +1,6 @@
 # tttrlib
-[![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/tpeulen/tttrlib)
+[![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/fluorescence-tools/tttrlib)
+[![Build status](https://ci.appveyor.com/api/projects/status/5vkysayn6chgih0d?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib)
 [![Anaconda-Server Version](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Anaconda-Server Downloads](https://anaconda.org/tpeulen/tttrlib/badges/downloads.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
@@ -20,11 +21,11 @@ Generator) for common scripting languages as Python as target languages
 and non-scripting languages such as C# and Java including Octave, 
 Scilab and R.
 
-*  Multi-dimensional histograms
-*  Correlation analysis
-*  Time-window analysis
-*  Photon distribution anaylsis
-*  FLIM image generation and analysis
+  *  Multi-dimensional histograms
+  *  Correlation analysis
+  *  Time-window analysis
+  *  Photon distribution anaylsis
+  *  FLIM image generation and analysis
 
 ![LabelLib and other software/libraries][3]
 
@@ -34,30 +35,32 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 ## Supported file formats
 
 ### PicoQuant (PQ)
-*  PicoHarp ptu, T2/T3
-*  HydraHarp ptu, T2/T3
-*  HydraHarp ht3, PTU
+
+  *  PicoHarp ptu, T2/T3
+  *  HydraHarp ptu, T2/T3
+  *  HydraHarp ht3, PTU
 
 ### Becker & Hickl (BH)
-*  spc132 
-*  spc630 (256 & 4096 mode)
+
+  *  spc132 
+  *  spc630 (256 & 4096 mode)
 
 ## Design goals
 
-*  Low memory footprint (keep objective large datasets, e.g.  FLIM in memory). 
-   Particulary useful for FLIM.
-*  Platform independent C/C++ library with interfaces for scripting libraries 
+  *  Low memory footprint (keep objective large datasets, e.g.  FLIM in memory). 
+     Particulary useful for FLIM.
+  *  Platform independent C/C++ library with interfaces for scripting libraries 
 
 ## Capabilities
 
-*  Fast (IO limited) Reading TTTR files
-*  Generation / analysis of fluorescence decays
-*  Time window analysis
-*  Correlation of time event traces
-*  Filtering of time event traces to generate instrument response functions for 
-   fluorescence decays analysis without the need of independent measurements.. 
-*  Fast photon distribution analysis
-*  Fast selection of photons from a photon stream
+  *  Fast (IO limited) Reading TTTR files
+  *  Generation / analysis of fluorescence decays
+  *  Time window analysis
+  *  Correlation of time event traces
+  *  Filtering of time event traces to generate instrument response functions for 
+     fluorescence decays analysis without the need of independent measurements.. 
+  *  Fast photon distribution analysis
+  *  Fast selection of photons from a photon stream
 
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
 libraries by a factor of ~40  
@@ -75,7 +78,7 @@ analysis of TTTR data.
 The C++ shared library can be installed from source with [cmake](https://cmake.org/):
 
 ```console
-git clone --recursive https://github.com/tpeulen/tttrlib.git
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
 mkdir tttrlib/build; cd tttrlib/build
 cmake ..
 sudo make install
@@ -91,7 +94,7 @@ precompiled distribution for Python anaconda environment.
 The following commands can be used to download and compile the source code:
 
 ```console
-git clone --recursive https://github.com/tpeulen/tttrlib.git
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
 cd tttrlib
 sudo python setup.py install
 ```
@@ -99,21 +102,22 @@ sudo python setup.py install
 In an [anaconda](https://www.anaconda.com/) environment the library can 
 be installed by the following command: 
 ```console
-conda install -c tpeulen tttrlib
+conda install -c fluorescence-tools tttrlib
 ```
 
 For most users the later approach is recommended. Currently, pre-compiled 
 packages for the anaconda distribution system are available for:
 
-*  Windows: Python 2.7, Python 3.7 (x64)
-*  Linux: Python 2.7, Python 3.7 (x64)
-*  MacOs: Python 2.7 (x64)
+  *  Windows: Python 3.7 (x64)
+  *  Linux: Python 3.7 (x64)
+  *  MacOs: Python 3.7 (x64)
 
 Legacy 32-bit platforms are currently not supported.
 
 # Documentation
 
-The API of tttrlib as well as some use cases are documented on its [web page](https://tpeulen.github.io/tttrlib) 
+The API of tttrlib as well as some use cases are documented 
+on its [web page](https://fluorescence-tools.github.io/tttrlib) 
 
 Note, tttrlib is highly experimental library in current development. In 
 case you notice unusual behaviour do not hesitate to contact the authors. 
