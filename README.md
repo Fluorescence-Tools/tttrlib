@@ -1,5 +1,6 @@
 # tttrlib
 [![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/fluorescence-tools/tttrlib)
+[![Build status](https://ci.appveyor.com/api/projects/status/5vkysayn6chgih0d?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib)
 [![Anaconda-Server Version](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Anaconda-Server Downloads](https://anaconda.org/tpeulen/tttrlib/badges/downloads.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
@@ -34,11 +35,13 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 ## Supported file formats
 
 ### PicoQuant (PQ)
+
   *  PicoHarp ptu, T2/T3
   *  HydraHarp ptu, T2/T3
   *  HydraHarp ht3, PTU
 
 ### Becker & Hickl (BH)
+
   *  spc132 
   *  spc630 (256 & 4096 mode)
 
