@@ -102,7 +102,8 @@ void selection_by_count_rate(
 void histogram_trace(
         int **out, int *n_out,
         unsigned long long *time, int n_time,
-        int time_window);
+        int time_window
+        );
 
 
 /*!

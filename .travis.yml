@@ -19,7 +19,7 @@ install:
   - python setup.py install
 script:
   - source activate tttrlib
-  - conda install nose coverage
+  - conda install nose coverage anaconda-client
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
   #- nosetests --with-coverage test_*.py
@@ -28,3 +28,11 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
+  # Install the command line API for CONDA uploads
+  - |
+    # Only upload builds from tags
+    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == "org/pkgname"
+          && $TRAVIS_BRANCH == $TRAVIS_TAG  && $TRAVIS_TAG != '' ]]; then
+      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
+      anaconda upload bld-dir/**/PACKAGENAME-*.tar.bz2
+    fi
