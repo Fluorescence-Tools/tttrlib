@@ -10,8 +10,7 @@ FIND_PACKAGE(PythonLibs)
 execute_process(
         COMMAND python -c
         "from __future__ import print_function; import numpy; print(numpy.get_include())"
-        RESULT_VARIABLE PYTHON_PREFIX_RESULT
-        OUTPUT_VARIABLE Python_NumPy_PATH
+        RESULT_VARIABLE Python_NumPy_PATH
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
