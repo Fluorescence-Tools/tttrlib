@@ -12,11 +12,18 @@ environment:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
   - conda config --set always_yes yes --set changeps1 no
   - conda env create -f environment.yaml
-  - activate tttrlib
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - python setup.py install
+  - conda config --set channel_priority strict
+  - conda config --add channels conda-forge
+  - conda config --add channels tpeulen
+  - conda update -q conda
+  - conda info -a
+  - conda install conda-build anaconda-client git nose coverage
+  - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
+  - conda build conda-recipes/tttrlib
+  - conda install tttrlib --use-local
 
 build: off
 
