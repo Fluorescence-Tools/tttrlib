@@ -17,6 +17,8 @@ install:
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
   - conda config --add channels tpeulen
+  - conda create -n tttrlib
+  - conda activate tttrlib
   - conda info -a
   - conda install conda-build anaconda-client git nose coverage
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
