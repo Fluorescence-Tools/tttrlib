@@ -6,8 +6,6 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
 
 ## General description
-
-
 tttrlib is a file format agnostic low level, high performance API to 
 read and process time-tagged-time resolved (TTTR) data acquired by 
 PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR 
@@ -33,26 +31,21 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 
 
 ## Supported file formats
-
 ### PicoQuant (PQ)
-
   *  PicoHarp ptu, T2/T3
   *  HydraHarp ptu, T2/T3
   *  HydraHarp ht3, PTU
 
 ### Becker & Hickl (BH)
-
   *  spc132 
   *  spc630 (256 & 4096 mode)
 
 ## Design goals
-
   *  Low memory footprint (keep objective large datasets, e.g.  FLIM in memory). 
      Particulary useful for FLIM.
   *  Platform independent C/C++ library with interfaces for scripting libraries 
 
 ## Capabilities
-
   *  Fast (IO limited) Reading TTTR files
   *  Generation / analysis of fluorescence decays
   *  Time window analysis
@@ -67,13 +60,12 @@ libraries by a factor of ~40
 
 
 ## Implementation
-
 Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive 
 analysis of TTTR data.
 
-# Building and Installation
+## Building and Installation
 
-## C++ shared library
+### C++ shared library
 
 The C++ shared library can be installed from source with [cmake](https://cmake.org/):
 
@@ -86,7 +78,7 @@ sudo make install
 
 On Linux you can build and install a package instead (prefered):
 
-## Python bindings
+### Python bindings
 The Python bindings can be either be installed by downloading and compiling the source code or by using a 
 precompiled distribution for Python anaconda environment.
 
@@ -114,7 +106,7 @@ packages for the anaconda distribution system are available for:
 
 Legacy 32-bit platforms are currently not supported.
 
-# Documentation
+## Documentation
 
 The API of tttrlib as well as some use cases are documented 
 on its [web page](https://fluorescence-tools.github.io/tttrlib) 
@@ -123,7 +115,7 @@ Note, tttrlib is highly experimental library in current development. In
 case you notice unusual behaviour do not hesitate to contact the authors. 
     
 
-# License
+## License
 
 tttrlib is released under the open source MIT license.
 

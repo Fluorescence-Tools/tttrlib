@@ -9,12 +9,12 @@ FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs)
 execute_process(
         COMMAND python -c
-        "from __future__ import print_function\ntry: import numpy; print(numpy.get_include(), end='')\nexcept:pass\n"
-        RESULT_VARIABLE PYTHON_PREFIX_RESULT
+        "from __future__ import print_function; import numpy; print(numpy.get_include())"
         OUTPUT_VARIABLE Python_NumPy_PATH
-        ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
+message(STATUS "PYTHON_INCLUDE_DIR='${PYTHON_INCLUDE_DIR}'")
 INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
 LINK_LIBRARIES(${PYTHON_LIBRARY})
 

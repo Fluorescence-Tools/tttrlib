@@ -74,8 +74,7 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
+            cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         elif platform.system() == "Darwin":
             cmake_args += []
@@ -130,13 +129,9 @@ setup(
         'build_ext': CMakeBuild
     },
     install_requires=[
-        'numpy',
-        'matplotlib',
+        'numpy'
     ],
     setup_requires=[
-        "cython",
-        'numpy',
-        'PyYAML',
         'setuptools'
     ],
     zip_safe=False,
