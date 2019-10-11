@@ -47,7 +47,9 @@ class CMakeBuild(build_ext):
                 ).group(1)
             )
             if cmake_version < '3.13.0':
-                raise RuntimeError("CMake >= 3.13.0 is required on Windows")
+                raise RuntimeError(
+                    "CMake >= 3.13.0 is required on Windows"
+                )
 
         for ext in self.extensions:
             self.build_extension(ext)
@@ -74,7 +76,7 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            #cmake_args += ['-A', 'x64']
+            cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         elif platform.system() == "Darwin":
             cmake_args += []
