@@ -21,7 +21,8 @@ install:
 script:
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
-  #- nosetests --with-coverage test_*.py
+  - echo $PWD
+  - nosetests --with-coverage test_*.py
 after_success:
   - pip install codacy-coverage
   - coverage xml
