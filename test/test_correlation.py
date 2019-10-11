@@ -37,14 +37,21 @@ class Tests(unittest.TestCase):
             True
         )
 
-    def test_ht3_read(self):
-        data = tttrlib.TTTR("./data/PQ/HT3/PQ_HT3v1.0_HH_T3.ht3", 'HT3')
-
-    def test_ptu_read(self):
-        data = tttrlib.TTTR("./data/PQ/PTU/PPQ_PTU_HH_T3.ptu", 'PTU')
+    # def test_ht3_read(self):
+    #     data = tttrlib.TTTR(
+    #         "./data/PQ/HT3/PQ_HT3v1.0_HH_T3.ht3", 'HT3'
+    #     )
+    #
+    # def test_ptu_read(self):
+    #     data = tttrlib.TTTR(
+    #         "./data/PQ/PTU/PPQ_PTU_HH_T3.ptu", 'PTU'
+    #     )
 
     def test_auto_correlation(self):
-        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        data = tttrlib.TTTR(
+            './data/BH/BH_SPC132.spc',
+            'SPC-130'
+        )
         ch1_indeces = data.get_selection_by_channel(np.array([0]))
         ch2_indeces = data.get_selection_by_channel(np.array([8]))
         mt = data.get_macro_time()
