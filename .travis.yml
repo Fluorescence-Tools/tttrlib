@@ -3,6 +3,7 @@ language: python
 sudo: required
 python:
   - "3.7"
+
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-$MINICONDA_OS-x86_64.sh -O miniconda.sh
@@ -11,27 +12,32 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - conda config --set channel_priority strict
+  - conda config --add channels conda-forge
+  - conda config --add channels tpeulen
   - conda info -a
-  - conda env create -f environment.yaml
-  - source activate tttrlib
-  - python setup.py build --force
+  - conda install conda-build anaconda-client git nose coverage
+  - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
+  - conda build conda-recipes/tttrlib
+
 install:
-  - python setup.py install
+  - conda install tttrlib --use-local
+
 script:
-  - source activate tttrlib
-  - conda install nose coverage anaconda-client
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
-  #- nosetests --with-coverage test_*.py
+  - echo $PWD
+  - nosetests --with-coverage test_*.py
+
 after_success:
-  - source activate tttrlib
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  # Install the command line API for CONDA uploads
+ # Install the command line API for CONDA uploads
+ # https://levelup.gitconnected.com/continuous-deployment-with-travis-and-conda-f385fec1a3f
   - |
     # Only upload builds from tags
-    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == "org/pkgname"
+    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == "fluorescence-tools/tttrlib"
           && $TRAVIS_BRANCH == $TRAVIS_TAG  && $TRAVIS_TAG != '' ]]; then
       export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
       anaconda upload bld-dir/**/PACKAGENAME-*.tar.bz2

@@ -1,9 +1,8 @@
 # tttrlib
 [![Linux Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/fluorescence-tools/tttrlib)
 [![Build status](https://ci.appveyor.com/api/projects/status/5vkysayn6chgih0d?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib)
-[![Anaconda-Server Version](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
-[![Anaconda-Server Downloads](https://anaconda.org/tpeulen/tttrlib/badges/downloads.svg)](https://anaconda.org/tpeulen/tttrlib)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d63513d5198347019c3d1c63b0fb1173)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
+[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://conda.anaconda.org/tpeulen)
 
 ## General description
 tttrlib is a file format agnostic low level, high performance API to 
@@ -57,7 +56,6 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
 libraries by a factor of ~40  
-
 
 ## Implementation
 Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive 

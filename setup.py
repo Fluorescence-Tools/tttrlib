@@ -4,7 +4,6 @@ import re
 import sys
 import platform
 import subprocess
-#from sphinx.setup_command import BuildDoc
 
 from setuptools import setup, Extension
 from distutils.command.build_ext import build_ext
@@ -47,7 +46,9 @@ class CMakeBuild(build_ext):
                 ).group(1)
             )
             if cmake_version < '3.13.0':
-                raise RuntimeError("CMake >= 3.13.0 is required on Windows")
+                raise RuntimeError(
+                    "CMake >= 3.13.0 is required on Windows"
+                )
 
         for ext in self.extensions:
             self.build_extension(ext)
@@ -74,7 +75,8 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            cmake_args += ['-A', 'x64']
+            # if sys.maxsize > 2 ** 32:
+            #     cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         elif platform.system() == "Darwin":
             cmake_args += []
@@ -121,7 +123,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.7',
+    version='0.0.8',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],
