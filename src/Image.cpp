@@ -131,7 +131,9 @@ void CLSMImage::initialize_leica_sp8_ptu(TTTR *tttr_data){
                 line->stop = i_event;
                 line->start_time = tttr_data->macro_times[line->start];
                 line->stop_time = tttr_data->macro_times[line->stop];
-                line->pixel_duration = (unsigned int) (line->get_duration() / n_pixel);
+                line->pixel_duration = (unsigned int) (
+                        line->get_duration() / n_pixel
+                        );
                 continue;
             }
             if(tttr_data->micro_times[i_event] == marker_frame){
@@ -154,16 +156,13 @@ void CLSMImage::initialize_leica_sp8_ptu(TTTR *tttr_data){
  */
 void CLSMImage::initialize(TTTR* tttr_data){
 
-    short c;              // routing channel
-    short e;              // event type
-
     // find the frame and line markers
     for(unsigned int i=0; i<tttr_data->n_valid_events; i++){
-        e = tttr_data->event_types[i];
+        short e = tttr_data->event_types[i];
 
         // Identify events
         if(e == marker_event){
-            c = tttr_data->routing_channels[i];
+            short c = tttr_data->routing_channels[i];
             // Frame marker
             if(c == marker_frame){
                 if(frames.size()>1){
@@ -180,7 +179,9 @@ void CLSMImage::initialize(TTTR* tttr_data){
             // Line marker
             if(c == marker_line_start){
                 auto frame = frames.back();
-                auto line = new CLSMLine(i + 1, n_pixel);
+                auto line = new CLSMLine(
+                        i + 1, n_pixel
+                        );
                 frame->push_back(line);
 
                 // Find line end
@@ -194,7 +195,9 @@ void CLSMImage::initialize(TTTR* tttr_data){
                 }
                 line->start_time = tttr_data->macro_times[line->start + 1];
                 line->stop_time = tttr_data->macro_times[line->stop -1];
-                line->pixel_duration = (unsigned int) (line->get_duration() / n_pixel);
+                line->pixel_duration = (unsigned int) (
+                        line->get_duration() / n_pixel
+                        );
             }
         }
     }
@@ -221,22 +224,21 @@ void CLSMImage::initialize(TTTR* tttr_data){
 void CLSMImage::fill_pixels(
         TTTR* tttr_data, std::vector<unsigned int> channels
         ) {
-    short c;              // routing channel
-    short e;              // event type
-
     size_t pixel_nbr;
     for(auto frame : frames){
         for(auto line : frame->lines){
             for(unsigned int i=line->start; i < line->stop; i++){
-                e = tttr_data->event_types[i];
-                c = tttr_data->routing_channels[i];
+                short e = tttr_data->event_types[i];
+                short c = tttr_data->routing_channels[i];
                 if (e == RECORD_PHOTON) {
                     for(auto ci : channels){
                         if(c == ci){
                             if(line->pixel_duration == 0){
                                 break;
                             } else{
-                                pixel_nbr = (tttr_data->macro_times[i] - line->start_time) / line->pixel_duration;
+                                pixel_nbr = (
+                                        tttr_data->macro_times[i] - line->start_time
+                                        ) / line->pixel_duration;
                                 if(pixel_nbr < line->n_pixel){
                                     (line->pixels[pixel_nbr])->append(i);
                                 }
@@ -280,16 +282,17 @@ void CLSMImage::get_intensity_image(
     *dim1 = n_frames;
     *dim2 = n_lines;
     *dim3 = n_pixel;
-    auto* t = (unsigned int*) malloc(sizeof(unsigned int) * n_frames * n_pixel * n_lines);
+    auto* t = (unsigned int*) malloc(
+            sizeof(unsigned int) * n_frames * n_pixel * n_lines
+            );
 
-    size_t i_line, i_pixel, i_frame;
-    i_frame = 0;
+    size_t i_frame = 0;
     for(auto frame : frames){
 
-        i_line = 0;
+        size_t i_line = 0;
         for(auto line : frame->lines){
 
-            i_pixel = 0;
+            size_t i_pixel = 0;
             for(auto pixel : line->pixels){
                 t[i_frame * (n_lines * n_pixel) +
                   i_line * (n_pixel) +

@@ -58,7 +58,6 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
 libraries by a factor of ~40  
 
-
 ## Implementation
 Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive 
 analysis of TTTR data.
