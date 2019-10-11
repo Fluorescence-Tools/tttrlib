@@ -4,7 +4,6 @@ import re
 import sys
 import platform
 import subprocess
-#from sphinx.setup_command import BuildDoc
 
 from setuptools import setup, Extension
 from distutils.command.build_ext import build_ext
@@ -124,7 +123,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.7',
+    version='0.0.8',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],
