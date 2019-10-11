@@ -39,7 +39,8 @@ after_test:
         if [[ $APPVEYOR_REPO_TAG == true && $APPVEYOR_REPO_NAME == "fluorescence-tools/tttrlib"]];
         then
           export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-          anaconda upload bld-dir/**/PACKAGENAME-*.tar.bz2
+          /home/travis/miniconda/conda-bld/linux-64/tttrlib-0.0.9-np111py36_0_gc39180f.tar.bz2
+          anaconda upload bld-dir/**/tttrlib-*.tar.bz2
         fi
 
 build: off
