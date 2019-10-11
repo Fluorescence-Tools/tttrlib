@@ -33,21 +33,20 @@ test_script:
   - nosetests
 
 ## scripts to run after tests
-#after_test:
-#  - |
-#    # Only upload builds from tags
-#    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == "fluorescence-tools/tttrlib"
-#          && $TRAVIS_BRANCH == $TRAVIS_TAG  && $TRAVIS_TAG != '' ]]; then
-#      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-#      anaconda upload bld-dir/**/PACKAGENAME-*.tar.bz2
-#    fi
+after_test:
+  - sh: |
+    # Only upload builds from tags
+    if [[ $APPVEYOR_REPO_TAG == true && $APPVEYOR_REPO_NAME == "fluorescence-tools/tttrlib"]];
+    then
+      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
+      anaconda upload bld-dir/**/PACKAGENAME-*.tar.bz2
+    fi
 
 build: off
 
 # For debugging uncomment the lines below
 on_finish:
   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
 
 notifications:
   - provider: Email
