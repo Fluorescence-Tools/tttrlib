@@ -76,7 +76,8 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            cmake_args += ['-A', 'x64']
+            if sys.maxsize > 2 ** 32:
+                cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         elif platform.system() == "Darwin":
             cmake_args += []
