@@ -13,8 +13,8 @@ environment:
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - conda update -q conda
   - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
   - conda config --add channels tpeulen
