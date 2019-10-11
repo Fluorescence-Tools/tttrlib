@@ -1,3 +1,5 @@
+from __future__ import division
+
 import utils
 import os
 import unittest
@@ -119,7 +121,7 @@ class Tests(unittest.TestCase):
         mt = photons.get_macro_time()
 
         tws = tttrlib.ranges_by_time_window(mt, 1000000, -1, 400, -1)
-        tws = tws.reshape([len(tws)/2, 2]) # bring the tws in shape
+        tws = tws.reshape([len(tws) // 2, 2]) # bring the tws in shape
 
         # convert the tws to photon selections
         phs = list()
