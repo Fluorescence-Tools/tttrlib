@@ -7,23 +7,24 @@ environment:
     - PYTHON: "C:\\Miniconda3-x64"
 
 # For debugging uncomment the lines below
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-    # set PYTHON=C:\Miniconda3-x64
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
   - conda env create -f environment.yaml
   - activate tttrlib
+  - ps: call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
   - python setup.py install
 
 build: off
 
 # For debugging uncomment the lines below
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-#
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
 #test_script:
 #  - conda install nose coverage
 #  - cmd: echo %CD%
