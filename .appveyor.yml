@@ -33,9 +33,13 @@ test_script:
 
 ### scripts to run after tests
 deploy_script:
-  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-  - anaconda upload bld-dir/win-64/tttrlib-*.tar.bz2
+  - if not "%%" == "master" exit 0
+  - sh: |
+        if [[ "$APPVEYOR_REPO_BRANCH" == "master" ]];
+        then
+          export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
+          anaconda upload "bld-dir/win-64/tttrlib-*.tar.bz2"
+        fi
 
 build: off
 
