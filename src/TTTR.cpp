@@ -33,8 +33,7 @@ TTTR::TTTR() :
         n_records_in_file(0),
         n_records_read(0),
         n_valid_events(0),
-        processRecord(nullptr)
-        {
+        processRecord(nullptr){
 }
 
 
@@ -43,8 +42,7 @@ TTTR::TTTR(
         unsigned int *micro_times,
         short *routing_channels,
         int16_t *event_types) :
-        TTTR()
-        {
+        TTTR() {
     TTTR::macro_times = n_sync_pulses;
     TTTR::micro_times = micro_times;
     TTTR::routing_channels = routing_channels;
@@ -55,8 +53,7 @@ TTTR::TTTR(
 TTTR::TTTR(TTTR *parent,
            long long *selection,
            int n_selection) :
-        TTTR()
-        {
+        TTTR() {
     TTTR::n_valid_events = (size_t) n_selection;
 
     if((size_t) n_selection > parent->n_valid_events){

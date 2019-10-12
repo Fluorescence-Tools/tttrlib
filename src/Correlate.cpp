@@ -16,8 +16,7 @@
 
 
 void coarsen(
-        unsigned long long * t,
-        double* w, size_t nt
+        unsigned long long * t, double* w, size_t nt
         ){
     t[0] /= 2;
     for(size_t i=1; i < nt; i++){
@@ -78,16 +77,10 @@ void normalize_correlation(
 ){
     double cr1 = (double) np1 / (double) dt1;
     double cr2 = (double) np2 / (double) dt2;
-    for(size_t j=0; j<x_axis.size(); j++){
-        auto pw = (uint64_t) std::pow(
-                2.0, (int) (float(j-1) / n_bins)
-                );
-        double t_corr;
-        if (dt1 < dt2 - x_axis[j]){
-            t_corr = (double) dt1;
-        } else{
-            t_corr = (double) (dt2 - x_axis[j]);
-        }
+    for(int j=0; j<x_axis.size(); j++){
+        uint64_t pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
+        double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 -
+                x_axis[j]);
         corr[j] /= pw;
         corr[j] /= (cr1 * cr2 * t_corr);
         x_axis[j] = x_axis[j] / pw * pw;
@@ -107,6 +100,7 @@ void make_fine_times(
 }
 
 
+
 void Correlator::update_axis(){
     n_corr = n_casc * n_bins + 1;
 
@@ -118,9 +112,7 @@ void Correlator::update_axis(){
 
     x_axis[0] = 0;
     for(unsigned int j=1; j <= n_casc*n_bins; j++){
-        x_axis[j] = x_axis[j-1] + (uint64_t) std::pow(
-                2, std::floor( (j-1)  / n_bins)
-                );
+        x_axis[j] = x_axis[j-1] + (uint64_t) std::pow(2, std::floor( (j-1)  / n_bins));
         x_axis_normalized[j] = x_axis[j];
         corr[j] = 0;
     }
