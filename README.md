@@ -52,7 +52,7 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
      fluorescence decays analysis without the need of independent measurements.. 
   *  Fast photon distribution analysis
   *  Fast selection of photons from a photon stream
-
+ 
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
 libraries by a factor of ~40  
 
