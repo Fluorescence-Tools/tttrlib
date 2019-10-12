@@ -34,5 +34,6 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER $CONDA_BLD_PATH/$OS/tttrlib-*.tar.bz2 --force; fi
+  - /home/travis/miniconda/conda-bld/linux-64/tttrlib-0.0.6-np111py37_44_g7d0990a.tar.bz2
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2 --force; fi
 

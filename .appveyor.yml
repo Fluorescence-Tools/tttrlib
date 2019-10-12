@@ -34,8 +34,7 @@ test_script:
 ### scripts to run after tests
 deploy_script:
   - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - conda install anaconda-client
-  - anaconda upload -t %$CONDA_UPLOAD_TOKEN% -u %$CONDA_USER% C:\Miniconda3-x64\envs\tttrlib\conda-bld\**\tttrlib-*.tar.bz2 --force
+  - anaconda upload -t %CONDA_UPLOAD_TOKEN% -u %CONDA_USER% C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2 --force
 
 build: off
 
