@@ -18,7 +18,6 @@ install:
   - conda config --add channels conda-forge
   - conda create -n build python=3.7 git conda-build anaconda-client
   - activate build
-  - sh: if [[ "$APPVEYOR_REPO_BRANCH" == "master" ]]; then conda config --set anaconda_upload yes; fi
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
   - conda build conda-recipes/tttrlib
 
@@ -31,10 +30,10 @@ test_script:
   - cmd: echo %CD%
   - nosetests
 
-### scripts to run after tests
-deploy_script:
-  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - anaconda upload -t %CONDA_UPLOAD_TOKEN% -c %CONDA_USER% -u %CONDA_USER% C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
+#### scripts to run after tests
+#deploy_script:
+#  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+#  - anaconda upload -t %CONDA_UPLOAD_TOKEN% -u %CONDA_USER% C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
 
 build: off
 

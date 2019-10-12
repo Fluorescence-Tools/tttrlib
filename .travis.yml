@@ -29,13 +29,14 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
 
-after_success:
-  - OS=$TRAVIS_OS_NAME-64
-  - pip install codacy-coverage
-  - coverage xml
-  - python-codacy-coverage -r coverage.xml
-  - |
-    if [[ "$TRAVIS_BRANCH" == "master" ]];
-    then
-      anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2;
-    fi
+## deploy
+#after_success:
+#  - OS=$TRAVIS_OS_NAME-64
+#  - pip install codacy-coverage
+#  - coverage xml
+#  - python-codacy-coverage -r coverage.xml
+#  - |
+#    if [[ "$TRAVIS_BRANCH" == "master" ]];
+#    then
+#      anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2;
+#    fi
