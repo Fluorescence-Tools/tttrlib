@@ -37,13 +37,5 @@ after_success:
  # Install the command line API for CONDA uploads
  # https://levelup.gitconnected.com/continuous-deployment-with-travis-and-conda-f385fec1a3f
   - |
-    # Only upload builds from tags
-    echo $TRAVIS_PULL_REQUEST
-    echo $TRAVIS_REPO_SLUG
-    echo $TRAVIS_BRANCH
-    echo $TRAVIS_TAG
-    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == "fluorescence-tools/tttrlib"
-          && $TRAVIS_BRANCH == $TRAVIS_TAG  && $TRAVIS_TAG != '' ]]; then
-      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-      anaconda upload bld-dir/**/tttrlib-*.tar.bz2
-    fi
+    - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+    - anaconda --verbose --token %$CONDA_UPLOAD_TOKEN% upload %MINICONDA%\conda-bld\*\*.tar.bz2 --force
