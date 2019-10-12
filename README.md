@@ -28,7 +28,6 @@ Scilab and R.
 
 tttrlib is NOT intended as ready-to-use software for specific application purposes.
 
-
 ## Supported file formats
 ### PicoQuant (PQ)
   *  PicoHarp ptu, T2/T3
@@ -115,6 +114,6 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 ## License
 
-tttrlib is released under the open source MIT license.
+tttrlib is released under the open source MPL 2.0 license.
 
 [3]: docs/_build/html/_images/imaging_tutorial.png "LabelLib and other software/libraries"
