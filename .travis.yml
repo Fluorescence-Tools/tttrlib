@@ -17,10 +17,11 @@ before_install:
   - conda info -a
   - conda install git conda-build anaconda-client
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
-  - conda build conda-recipes/tttrlib
+  - conda build conda-recipes/tttrlib --output-folder bld-dir
+  - conda config --add channels "file://`pwd`/bld-dir"
 
 install:
-  - conda install --use-local tttrlib
+  - conda install tttrlib
 
 script:
   - conda install nose coverage
@@ -29,14 +30,15 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
 
-## deploy
-#after_success:
-#  - OS=$TRAVIS_OS_NAME-64
-#  - pip install codacy-coverage
-#  - coverage xml
-#  - python-codacy-coverage -r coverage.xml
-#  - |
-#    if [[ "$TRAVIS_BRANCH" == "master" ]];
-#    then
-#      anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2;
-#    fi
+# deploy
+after_success:
+  - OS=$TRAVIS_OS_NAME-64
+  - pip install codacy-coverage
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
+  - |
+    if [[ "$TRAVIS_BRANCH" == "master" ]];
+    then
+      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
+      anaconda upload bld-dir/$OS/tttrlib-*.tar.bz2
+    fi
