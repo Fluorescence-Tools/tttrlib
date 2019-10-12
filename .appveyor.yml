@@ -34,7 +34,7 @@ test_script:
 ### scripts to run after tests
 deploy_script:
   - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - anaconda upload --verbose --show-traceback -t %CONDA_UPLOAD_TOKEN% -c %CONDA_USER% C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2 --force
+  - anaconda --verbose --show-traceback upload -t %CONDA_UPLOAD_TOKEN% -c %CONDA_USER% C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2 --force
 
 build: off
 
