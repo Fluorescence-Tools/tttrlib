@@ -11,9 +11,9 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
-  - conda update -q conda
   - conda info -a
   - conda install conda-build git
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
