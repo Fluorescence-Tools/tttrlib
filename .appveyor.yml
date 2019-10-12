@@ -13,21 +13,20 @@ environment:
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
-  - conda config --add channels tpeulen
+  - conda update -q conda
   - conda info -a
-  - conda install conda-build anaconda-client git nose coverage
+  - conda install conda-build git
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
-  - conda build -q conda-recipes/tttrlib --output-folder bld-dir
-  - conda config --add channels "file://`pwd`/bld-dir"
+  - conda build -q conda-recipes/tttrlib
+  - conda create -n tttrlib python=3.7
+  - activate tttrlib
+  - conda install --use-local tttrlib
 
 # to run your custom scripts instead of automatic tests
 test_script:
-  - conda create -n tttrlib
-  - activate tttrlib
-  - conda install tttrlib
+  - conda install nose coverage
   - cmd: echo %CD%
   - cmd: cd C:\projects\tttrlib\test\
   - cmd: echo %CD%
@@ -36,7 +35,8 @@ test_script:
 ## scripts to run after tests
 deploy_script:
   - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - anaconda --verbose --token %$CONDA_UPLOAD_TOKEN% upload bld-dir/**/tttrlib-*.tar.bz2 --force
+  - conda install anaconda-client
+  - anaconda --verbose --token %$CONDA_UPLOAD_TOKEN% upload C:\Miniconda3-x64\envs\tttrlib\conda-bld\**\tttrlib-*.tar.bz2 --force
 
 build: off
 

@@ -1,10 +1,7 @@
 name: tttrlib
 
 channels:
-  - fluorescence-tools
-  - tpeulen
   - conda-forge
-  - salilab
   - defaults
 
 dependencies:
