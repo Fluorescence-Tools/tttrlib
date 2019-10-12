@@ -21,8 +21,6 @@ before_install:
   - conda build conda-recipes/tttrlib
 
 install:
-  - conda create --name tttrlib python=3.7
-  - source activate tttrlib
   - conda install --use-local tttrlib
 
 script:
