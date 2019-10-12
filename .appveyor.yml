@@ -16,7 +16,8 @@ install:
   - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
-  - conda install conda-build git
+  - conda create -n build python=3.7 git conda-build
+  - activate build
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
   - conda build conda-recipes/tttrlib
   - conda create -n tttrlib python=3.7
