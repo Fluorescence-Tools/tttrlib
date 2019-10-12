@@ -37,5 +37,5 @@ after_success:
   - |
     if [[ "$TRAVIS_BRANCH" == "master" ]];
     then
-      anaconda upload -t $CONDA_UPLOAD_TOKEN -c $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2;
+      anaconda upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2;
     fi
