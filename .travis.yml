@@ -21,11 +21,9 @@ before_install:
   - conda build conda-recipes/tttrlib
 
 install:
-  - source activate build
-  - conda install --use-local tttrlib
+  - conda install -c local tttrlib
 
 script:
-  - source activate build
   - conda install nose coverage
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
@@ -36,5 +34,5 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then anaconda --token %$CONDA_UPLOAD_TOKEN% upload /home/travis/miniconda/conda-bld/**/tttrlib-*.tar.bz2 --force; fi
+  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then anaconda -t $CONDA_UPLOAD_TOKEN upload -u $CONDA_USER $CONDA_BLD_PATH/$OS/tttrlib-*.tar.bz2 --force; fi
 
