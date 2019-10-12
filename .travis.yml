@@ -39,6 +39,5 @@ after_success:
   - |
     if [[ "$TRAVIS_BRANCH" == "master" ]];
     then
-      export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-      anaconda upload "bld-dir/$OS/tttrlib-*.tar.bz2"
+      anaconda upload "bld-dir/linux-64/tttrlib-*.tar.bz2"
     fi

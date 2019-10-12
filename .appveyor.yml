@@ -37,8 +37,7 @@ deploy_script:
   - sh: |
         if [[ "$APPVEYOR_REPO_BRANCH" == "master" ]];
         then
-          export ANACONDA_API_TOKEN=$CONDA_UPLOAD_TOKEN
-          anaconda upload "bld-dir/win-64/tttrlib-*.tar.bz2"
+          anaconda upload bld-dir/win-64/tttrlib-*.tar.bz2
         fi
 
 build: off
