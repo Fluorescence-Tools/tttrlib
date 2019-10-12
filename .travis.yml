@@ -18,6 +18,7 @@ before_install:
   - conda install git conda-build anaconda-client
   - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
   - conda build conda-recipes/tttrlib
+  - OS=$TRAVIS_OS_NAME-64
   - if [[ "$TRAVIS_BRANCH" == "master" ]]; then anaconda --verbose --show-traceback upload -t $CONDA_UPLOAD_TOKEN -u $CONDA_USER -c $CONDA_USER /home/travis/miniconda/conda-bld/$OS/tttrlib-*.tar.bz2 --force; fi
 
 install:
@@ -31,7 +32,6 @@ script:
   - nosetests --with-coverage test_*.py
 
 after_success:
-  - OS=$TRAVIS_OS_NAME-64
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
