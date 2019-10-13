@@ -33,7 +33,6 @@ test_script:
 
 ### scripts to run after tests
 deploy_script:
-  - if not "%%" == "master" exit 0
   - sh: |
         if [[ "$APPVEYOR_REPO_BRANCH" == "master" ]];
         then
