@@ -39,7 +39,7 @@ after_success:
   - |
     if [[ "$TRAVIS_BRANCH" == "master" ]];
     then
-      ls bld-dir/linux-64
+      ls bld-dir/linux-64/
       anaconda upload bld-dir/**/tttrlib*.tar.bz2
     fi
 
