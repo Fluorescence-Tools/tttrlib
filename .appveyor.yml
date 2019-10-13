@@ -30,6 +30,7 @@ test_script:
   - cmd: cd C:\projects\tttrlib\test\
   - cmd: echo %CD%
   - nosetests
+  - cd ..
 
 ### scripts to run after tests
 deploy_script:
