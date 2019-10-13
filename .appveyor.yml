@@ -33,11 +33,8 @@ test_script:
 
 ### scripts to run after tests
 deploy_script:
-  - sh: |
-        if [[ "$APPVEYOR_REPO_BRANCH" == "master" ]];
-        then
-          anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
-        fi
+  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+  - anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
 
 build: off
 
