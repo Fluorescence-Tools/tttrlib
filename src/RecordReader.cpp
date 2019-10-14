@@ -40,9 +40,10 @@ bool ProcessPHT3(
     const int T3WRAPAROUND = 65536;
     pq_ph_t3_record_t rec;
     rec.allbits = TTTRRecord;
-    if (
-            (rec.bits.channel == 0xF) && (rec.bits.dtime == 0)
-            ) //this means we have a special record
+    if (    //this means we have a special record
+            (rec.bits.channel == 0xF) &&
+            (rec.bits.dtime == 0)
+            )
     {
         overflow_counter += T3WRAPAROUND; // unwrap the time tag overflow
         return false;

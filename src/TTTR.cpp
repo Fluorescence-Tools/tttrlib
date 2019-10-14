@@ -150,7 +150,6 @@ int TTTR::read_hdf_file(char *fn){
     H5Fclose(hdf5_file);
     H5Sclose(space);
     return 1;
-    // TODO.md: implement proper return that checks if file was successfully read.
 }
 
 
@@ -258,7 +257,10 @@ void TTTR::read_records(
     bool is_valid_record = true;
     // read if possible the data in chunks to speed up the access
     char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
-    while((n_records_read < n_rec) && (fread(tmp, bytes_per_record, chunk, fp) == chunk)){
+    while(
+            (n_records_read < n_rec) &&
+            (fread(tmp, bytes_per_record, chunk, fp) == chunk)
+            ){
 
         for(size_t i=0; i<chunk; i++){
             offset = bytes_per_record * i;
@@ -612,7 +614,7 @@ bool TTTR::write_file(char *fn, int container_type) {
                 record.bits.mtov = false;
 
                 int n = 0;
-                int MT, MT_ov_last;
+                unsigned long MT, MT_ov_last;
                 unsigned long MT_ov = 0;
 
                 while (n < n_valid_events) {

@@ -220,7 +220,10 @@ void Correlator::get_corr(
 }
 
 
-void Correlator::get_x_axis(unsigned long long** x_axis, int* n_out){
+void Correlator::get_x_axis(
+        unsigned long long** x_axis,
+        int* n_out
+        ){
     (*n_out) = (int) this->x_axis.size();
     auto* t = (unsigned long long*) malloc((*n_out) * sizeof(unsigned long long));
     for(int i = 0; i<(*n_out); i++){
@@ -230,7 +233,11 @@ void Correlator::get_x_axis(unsigned long long** x_axis, int* n_out){
 }
 
 
-void Correlator::make_fine(unsigned int* tac_1, unsigned int n_tac_1, unsigned int* tac_2, int unsigned n_tac_2, unsigned int n_tac){
+void Correlator::make_fine(
+        unsigned int* tac_1, unsigned int n_tac_1,
+        unsigned int* tac_2, int unsigned n_tac_2,
+        unsigned int n_tac
+        ){
     if(!is_fine){
         make_fine_times(t1, (unsigned int) n_t1, tac_1, n_tac);
         make_fine_times(t2, (unsigned int) n_t2, tac_2, n_tac);
