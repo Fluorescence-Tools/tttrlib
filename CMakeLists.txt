@@ -12,19 +12,16 @@ if(MSVC)
     add_definitions(-DMS_WIN64)
 endif(MSVC)
 
-# MACOSX_DEPLOYEMENT_TARGET
-# explicit link to libc++ for recent osx versions
-if(APPLE)
-    message(STATUS "Explicitely link to libc++ on modern osx versions")
-    add_definitions(-stdlib=libc++)
-endif(APPLE)
+## MACOSX_DEPLOYEMENT_TARGET
+## explicit link to libc++ for recent osx versions
+#if(APPLE)
+#    message(STATUS "Explicitely link to libc++ on modern osx versions")
+#    add_definitions(-stdlib=libc++)
+#endif(APPLE)
 
 FIND_PACKAGE(HDF5 1.8 REQUIRED COMPONENTS C)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-LINK_LIBRARIES(
-        ${HDF5_LIBRARIES}
-        ${HDF5_HL_LIBRARIES}
-)
+LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 OPTION (USE_OpenMP "Use OpenMP" ON)
@@ -36,11 +33,3 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 ADD_SUBDIRECTORY(pyext)
-
-INSTALL(
-        TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include
-)

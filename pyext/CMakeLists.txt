@@ -20,24 +20,15 @@ LINK_LIBRARIES(${PYTHON_LIBRARY})
 
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
-SET(SWIG_SRC tttrlib.i)
-# The output path is controlled by the setup.py
-#SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/pyext)
 
-SET_PROPERTY(SOURCE tttrlib.i PROPERTY CPLUSPLUS ON)
+SET_SOURCE_FILES_PROPERTIES(tttrlib.i PROPERTIES CPLUSPLUS ON)
 file(GLOB SRC_files "../src/*.cpp")
 SWIG_ADD_LIBRARY(
         ${MODULE_NAME}
+        TYPE MODULE
         LANGUAGE python
-        SOURCES
-        tttrlib.i
-        ${SRC_files}
+        SOURCES tttrlib.i ${SRC_files}
 )
-
-INCLUDE_DIRECTORIES(
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
 TARGET_LINK_LIBRARIES(
         ${MODULE_NAME}
         ${HDF5_LIBRARIES}
