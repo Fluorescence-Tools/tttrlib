@@ -158,7 +158,11 @@ void CLSMImage::initialize(TTTR* tttr_data){
     short e;              // event type
 
     // find the frame and line markers
-    for(unsigned int i=0; i<tttr_data->n_valid_events; i++){
+    for(
+            unsigned int i=0;
+            i < tttr_data->n_valid_events;
+            i++)
+    {
         e = tttr_data->event_types[i];
 
         // Identify events
@@ -201,7 +205,7 @@ void CLSMImage::initialize(TTTR* tttr_data){
     // remove incomplete frames
     n_lines = (unsigned int) frames[0]->lines.size();
 
-    n_frames = 0;
+    n_frames = frames.size();
     size_t i_frame = 0;
     for(auto frame : frames){
         if(frame->lines.size() < n_lines){
@@ -280,7 +284,9 @@ void CLSMImage::get_intensity_image(
     *dim1 = n_frames;
     *dim2 = n_lines;
     *dim3 = n_pixel;
-    auto* t = (unsigned int*) malloc(sizeof(unsigned int) * n_frames * n_pixel * n_lines);
+    auto* t = (unsigned int*) malloc(
+            sizeof(unsigned int) * n_frames * n_pixel * n_lines
+            );
 
     size_t i_line, i_pixel, i_frame;
     i_frame = 0;
