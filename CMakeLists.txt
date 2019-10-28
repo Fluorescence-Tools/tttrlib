@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 11)
 # Windows
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
-    add_definitions(-DMS_WIN64)
 endif(MSVC)
 
 ## MACOSX_DEPLOYEMENT_TARGET
