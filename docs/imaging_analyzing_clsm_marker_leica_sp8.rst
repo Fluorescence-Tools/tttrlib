@@ -103,6 +103,7 @@ channel used to inject the special markers. Next, we inspect the micro time and 
 by the routing channel 15.
 
 .. code-block:: python
+
     m_ch_15 = m[np.where(c == 15)]
     p.plot(m_ch_15)
     p.show()
