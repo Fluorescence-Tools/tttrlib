@@ -4,24 +4,30 @@ SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
 ENABLE_LANGUAGE(CXX)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Windows
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
 endif(MSVC)
 
-## MACOSX_DEPLOYEMENT_TARGET
-## explicit link to libc++ for recent osx versions
-#if(APPLE)
-#    message(STATUS "Explicitely link to libc++ on modern osx versions")
-#    add_definitions(-stdlib=libc++)
-#endif(APPLE)
+# MACOSX_DEPLOYEMENT_TARGET
+# explicit link to libc++ for recent osx versions
+if(APPLE)
+    message(STATUS "Explicitely link to libc++ on modern osx versions")
+    add_definitions(-stdlib=libc++)
+endif(APPLE)
+
+
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
 
 FIND_PACKAGE(HDF5 1.8 REQUIRED COMPONENTS C)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
+
 
 OPTION (USE_OpenMP "Use OpenMP" ON)
 FIND_PACKAGE(OpenMP)

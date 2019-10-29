@@ -33,6 +33,7 @@ TARGET_LINK_LIBRARIES(
         ${MODULE_NAME}
         ${HDF5_LIBRARIES}
         ${PYTHON_LIBRARY}
+        Boost::date_time Boost::filesystem Boost::iostreams
 )
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)

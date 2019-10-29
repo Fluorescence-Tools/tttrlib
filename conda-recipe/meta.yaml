@@ -21,6 +21,7 @@ requirements:
     - numpy >=1.10
     - swig
     - openmp
+    - boost
   host:
     - python {{ python }}
     - setuptools

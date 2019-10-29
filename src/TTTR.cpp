@@ -14,6 +14,7 @@
 
 #include <include/RecordTypes.h>
 #include <include/TTTR.h>
+#include <boost/filesystem.hpp>
 
 
 
@@ -50,13 +51,16 @@ TTTR::TTTR(
 }
 
 
-TTTR::TTTR(TTTR *parent,
-           long long *selection,
-           int n_selection) :
-        TTTR() {
+TTTR::TTTR(
+        TTTR *parent,
+        long long *selection,
+        int n_selection
+) :
+        TTTR()
+        {
     TTTR::n_valid_events = (size_t) n_selection;
 
-    if((size_t) n_selection > parent->n_valid_events){
+    if ((size_t) n_selection > parent->n_valid_events) {
         // the selection does not match the dimension of the parent
         throw std::invalid_argument("The dimension of "
                                     "the selection exceeds "
@@ -73,8 +77,13 @@ TTTR::TTTR(TTTR *parent,
 }
 
 
-TTTR::TTTR(char *fn, int container_type, bool read_input) :
-        TTTR() {
+TTTR::TTTR(
+        char *fn,
+        int container_type,
+        bool read_input
+        ) :
+        TTTR()
+{
     filename = fn;
     tttr_container_type = container_type;
     if(read_input){
@@ -157,36 +166,43 @@ int TTTR::read_file(
         char *fn,
         int container_type
         ) {
-    std::cout << "Reading container type: " << container_type << std::endl;
-    if (container_type == PHOTON_HDF_CONTAINER)
+    std::clog << "Reading container type: " << container_type << std::endl;
+    if(
+            boost::filesystem::exists(fn)
+            )
     {
-        read_hdf_file(fn);
-    }
-    else{
-        fp = fopen(fn, "rb");
-        if (fp != nullptr)
+        if (container_type == PHOTON_HDF_CONTAINER)
         {
-            header = new Header(fp, container_type);
-            fp_records_begin = header->header_end;
-            bytes_per_record = header->bytes_per_record;
-            tttr_record_type = header->getTTTRRecordType();
-            std::cout << "TTTR record type: " << tttr_record_type << std::endl;
-            processRecord = processRecord_map[tttr_record_type];
-            n_records_in_file = determine_number_of_records_by_file_size(
-                    fp,
-                    header->header_end,
-                    bytes_per_record
-            );
-            std::cout << "Number of records: " << n_records_in_file << std::endl;
+            read_hdf_file(fn);
         }
         else{
-            std::cout << "File: " << filename << " does not exist" << std::endl;
-            return 0;
+            fp = fopen(fn, "rb");
+            if (fp != nullptr)
+            {
+                header = new Header(fp, container_type);
+                fp_records_begin = header->header_end;
+                bytes_per_record = header->bytes_per_record;
+                tttr_record_type = header->getTTTRRecordType();
+                std::cout << "TTTR record type: " << tttr_record_type << std::endl;
+                processRecord = processRecord_map[tttr_record_type];
+                n_records_in_file = determine_number_of_records_by_file_size(
+                        fp,
+                        header->header_end,
+                        bytes_per_record
+                );
+                std::cout << "Number of records: " << n_records_in_file << std::endl;
+            }
+            else{
+                std::cout << "File: " << filename << " does not exist" << std::endl;
+                return 0;
+            }
+            allocate_memory_for_records(n_records_in_file);
+            read_records();
+            fclose(fp);
         }
-        allocate_memory_for_records(n_records_in_file);
-        read_records();
-        fclose(fp);
+        return 1;
     }
+    std::cerr << "Could not open file " << fn << std::endl;
     return 1;
 }
 
