@@ -8,15 +8,21 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs)
 execute_process(
-        COMMAND python -c
-        "from __future__ import print_function; import numpy; print(numpy.get_include())"
+        COMMAND python -c "from __future__ import print_function; import numpy; print(numpy.get_include())"
         OUTPUT_VARIABLE Python_NumPy_PATH
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-message(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
-message(STATUS "PYTHON_INCLUDE_DIR='${PYTHON_INCLUDE_DIR}'")
+execute_process(
+        COMMAND python -c "from sysconfig import get_paths as gp; print(gp()['include'])"
+        OUTPUT_VARIABLE Python_INCLUDE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
 LINK_LIBRARIES(${PYTHON_LIBRARY})
+message(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
+message(STATUS "Python_INCLUDE_DIR='${Python_INCLUDE_DIR}'")
+message(STATUS "PYTHON_LIBRARY='${PYTHON_LIBRARY}'")
 
 SET(MODULE_NAME tttrlib)
 SET(CMAKE_SWIG_FLAGS "")
@@ -33,6 +39,7 @@ TARGET_LINK_LIBRARIES(
         ${MODULE_NAME}
         ${HDF5_LIBRARIES}
         ${PYTHON_LIBRARY}
+        ${CMAKE_THREAD_LIBS_INIT}
         Boost::date_time Boost::filesystem Boost::iostreams
 )
 
