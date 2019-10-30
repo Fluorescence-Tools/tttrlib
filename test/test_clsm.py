@@ -21,7 +21,7 @@ class TestCLSM(unittest.TestCase):
         import tttrlib
         import numpy as np
         data = tttrlib.TTTR(
-            './test/data/PQ/HT3/PQ_HT3_CLSM.ht3',
+            './data/PQ/HT3/PQ_HT3_CLSM.ht3',
             'HT3'
         )
         frame_marker = 4
@@ -43,7 +43,7 @@ class TestCLSM(unittest.TestCase):
         )
         intensity_image = clsm_image.get_intensity_image()
         intensity_image_reference = np.load(
-            './test/data/reference/img_ref_intensity.npy',
+            './data/reference/img_ref_intensity.npy',
         )
         self.assertEqual(
             np.allclose(
@@ -57,7 +57,7 @@ class TestCLSM(unittest.TestCase):
             n_ph_min=1
         )
         mean_tac_image_reference = np.load(
-            './test/data/reference/img_ref_mean_tac.npy',
+            './data/reference/img_ref_mean_tac.npy',
         )
         self.assertEqual(
             np.allclose(
