@@ -17,6 +17,8 @@ import numpy as np
 
 class TestCLSM(unittest.TestCase):
 
+    pass
+
     # This test segfaults
     # @unittest.expectedFailure
     # def test_clsm_intensity(self):
@@ -68,11 +70,11 @@ class TestCLSM(unittest.TestCase):
     #         ),
     #         True
     #     )
-
-        #
-        # tac_coarsening = 4
-        # tac_image = clsm_image.get_decay_image(
-        #     tttr_data=data,
-        #     tac_coarsening=tac_coarsening
-        # )
-
+    #
+    #
+    #     tac_coarsening = 4
+    #     tac_image = clsm_image.get_decay_image(
+    #         tttr_data=data,
+    #         tac_coarsening=tac_coarsening
+    #     )
+    #
