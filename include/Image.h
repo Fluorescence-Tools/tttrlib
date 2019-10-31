@@ -128,7 +128,9 @@ public:
         return frames;
     }
 
-    void get_intensity_image(unsigned int** out, int* dim1, int* dim2, int* dim3);
+    void get_intensity_image(
+            unsigned int** out, int* dim1, int* dim2, int* dim3
+    );
 
     void get_decay_image(
             TTTR* tttr_data,
