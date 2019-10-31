@@ -3,20 +3,27 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
+include(${CMAKE_SOURCE_DIR}/cmake/TTTRLibFindPython.cmake)
+tttrlib_find_python()
+
 ENABLE_LANGUAGE(CXX)
-set(CMAKE_CXX_STANDARD 17)
-find_package(Threads)
+SET(CMAKE_CXX_STANDARD 11)
+FIND_PACKAGE(Threads)
 
 # Windows
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
 endif(MSVC)
 
 # MACOSX_DEPLOYEMENT_TARGET
 # explicit link to libc++ for recent osx versions
 if(APPLE)
-    message(STATUS "Explicitely link to libc++ on modern osx versions")
-    add_definitions(-stdlib=libc++)
+    MESSAGE(STATUS "Explicitely link to libc++ on modern osx versions")
+    ADD_DEFINITIONS(-stdlib=libc++)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    # Don't set MACOSX_RPATH by default
+    set(CMAKE_MACOSX_RPATH 0)
 endif(APPLE)
 
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
@@ -28,15 +35,14 @@ INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
-#OPTION (USE_OpenMP "Use OpenMP" ON)
-#FIND_PACKAGE(OpenMP)
+find_package (OPENMP REQUIRED)
 
 FILE(GLOB SRC_files "../src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-ADD_SUBDIRECTORY(pyext)
+ADD_SUBDIRECTORY(swig)
 
 # Add install target
 install(TARGETS ${PROJECT_NAME}
