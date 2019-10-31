@@ -31,7 +31,6 @@ requirements:
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - vs2015_runtime # [win]
     - hdf5 >=1.8.*
 
 test:

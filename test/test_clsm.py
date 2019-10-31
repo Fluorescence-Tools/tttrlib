@@ -49,6 +49,8 @@ class TestCLSM(unittest.TestCase):
     #     intensity_image_reference = np.load(
     #         './data/reference/img_ref_intensity.npy',
     #     )
+    #     import pylab as p
+    #     p.imshow(intensity_image.sum(axis=0))
     #     self.assertEqual(
     #         np.allclose(
     #             intensity_image,
