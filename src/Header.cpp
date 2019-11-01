@@ -124,9 +124,9 @@ size_t read_bh132_header(
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
     bh_spc132_header_t rec;
     fread(&rec, sizeof(rec),1, fpin);
-    macro_time_resolution = (double) rec.bits.macro_time_clock / 10;
+    macro_time_resolution = (double) rec.macro_time_clock / 10;
     data["Resolution"] = std::to_string(macro_time_resolution);
-    data["Invalid"] = std::to_string(rec.bits.invalid);
+    data["Invalid"] = std::to_string(rec.invalid);
     return 4;
 }
 
@@ -322,17 +322,19 @@ size_t read_ptu_header(
                         );
                 break;
             case tyBitSet64:
-                sprintf(buffer_out, "0x%16.16X", TagHead.TagValue);
+                sprintf(buffer_out, "0x0x%llx", TagHead.TagValue);
                 break;
             case tyColor8:
-                sprintf(buffer_out, "0x%16.16X", TagHead.TagValue);
+                sprintf(buffer_out, "0x0x%llx", TagHead.TagValue);
                 break;
             case tyFloat8:
                 sprintf(buffer_out, "%E", *(double *) &(TagHead.TagValue));
                 break;
             case tyFloat8Array:
-                sprintf(buffer_out, "<Float Array with %llu Entries>",
-                        TagHead.TagValue / sizeof(double));
+                sprintf(
+                        buffer_out, "<Float Array with %llu Entries>",
+                        TagHead.TagValue / sizeof(double)
+                        );
                 // only seek the Data, if one needs the data, it can be loaded here
                 fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
                 break;
@@ -401,7 +403,7 @@ size_t read_ptu_header(
             tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
             break;
         default:
-            throw std::string("\nFile type not supported.");
+            std::cerr << "File type not supported.";
     }
 
     return (size_t) ftell(fpin);

@@ -16,7 +16,7 @@
 %include std_string.i
 %include "std_map.i"
 
-%include "numpy.i"
+%include "./include/numpy.i"
 %init %{
 import_array();
 %}

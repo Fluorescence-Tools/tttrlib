@@ -231,15 +231,31 @@ char* TTTR::get_filename() {
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
     if(tttr_container_type == 5) {
-        macro_times = (unsigned long long*) H5allocate_memory(n_rec * sizeof(unsigned long long), false);
-        micro_times = (unsigned int*) H5allocate_memory(n_rec * sizeof(unsigned int), false);
-        routing_channels = (short*) H5allocate_memory(n_rec * sizeof(short), false);
-        event_types = (short*) H5allocate_memory(n_rec * sizeof(short), false);
+        macro_times = (unsigned long long*) H5allocate_memory(
+                n_rec * sizeof(unsigned long long), false
+                );
+        micro_times = (unsigned int*) H5allocate_memory(
+                n_rec * sizeof(unsigned int), false
+                );
+        routing_channels = (short*) H5allocate_memory(
+                n_rec * sizeof(short), false
+                );
+        event_types = (short*) H5allocate_memory(
+                n_rec * sizeof(short), false
+                );
     } else {
-        macro_times = (unsigned long long*) malloc(n_rec * sizeof(unsigned long long));
-        micro_times = (unsigned int*) malloc(n_rec * sizeof(unsigned int));
-        routing_channels = (short*) malloc(n_rec * sizeof(short));
-        event_types = (short*) malloc(n_rec * sizeof(short));
+        macro_times = (unsigned long long*) malloc(
+                n_rec * sizeof(unsigned long long)
+                );
+        micro_times = (unsigned int*) malloc(
+                n_rec * sizeof(unsigned int)
+                );
+        routing_channels = (short*) malloc(
+                n_rec * sizeof(short)
+                );
+        event_types = (short*) malloc(
+                n_rec * sizeof(short)
+                );
     }
 }
 

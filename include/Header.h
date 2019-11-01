@@ -182,13 +182,10 @@ typedef struct {
 
 
 /// Becker&Hickl SPC132 Header
-typedef union bh_spc132_header {
-    uint64_t allbits;
-    struct {
-        unsigned macro_time_clock :24;   // the resolution of the macro time
-        unsigned unused           :7;    // unclear usage
-        bool invalid              :1;    // true if dataset is marked as invalid
-    } bits;
+typedef struct {
+    unsigned macro_time_clock :24;   // the resolution of the macro time
+    unsigned unused           :7;    // unclear usage
+    bool invalid              :1;    // true if dataset is marked as invalid
 } bh_spc132_header_t;
 
 
