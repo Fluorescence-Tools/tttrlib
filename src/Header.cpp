@@ -83,9 +83,15 @@ Header::Header(
             number_of_tac_channels = 4096;
             break;
         case BH_SPC130_CONTAINER:
-            header_end = 0;
+            header_end = read_bh132_header(
+                    fpin,
+                    true,
+                    tttr_record_type,
+                    data,
+                    macro_time_resolution,
+                    micro_time_resolution
+            );
             tttr_record_type = BH_RECORD_TYPE_SPC130;
-            macro_time_resolution = 1.0;
             micro_time_resolution = 1.0;
             bytes_per_record = 4;
             number_of_tac_channels = 4096;
@@ -104,6 +110,24 @@ Header::Header(
 
 int Header::getTTTRRecordType(){
     return this->tttr_record_type;
+}
+
+
+size_t read_bh132_header(
+        std::FILE *fpin,
+        bool rewind,
+        int &tttr_record_type,
+        std::map<std::string, std::string> &data,
+        double &macro_time_resolution,
+        double &micro_time_resolution
+){
+    if(rewind) std::fseek(fpin, 0, SEEK_SET);
+    bh_spc132_header_t rec;
+    fread(&rec, sizeof(rec),1, fpin);
+    macro_time_resolution = (double) rec.bits.macro_time_clock / 10;
+    data["Resolution"] = std::to_string(macro_time_resolution);
+    data["Invalid"] = std::to_string(rec.bits.invalid);
+    return 4;
 }
 
 

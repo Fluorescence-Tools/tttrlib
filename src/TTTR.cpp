@@ -104,6 +104,11 @@ TTTR::TTTR(char *fn, const char *container_type) :
     read_file();
 }
 
+void TTTR::shift_macro_time(unsigned int shift) {
+    for(size_t i=0; i<n_valid_events; i++){
+        macro_times[i] += shift;
+    }
+}
 
 int TTTR::read_hdf_file(char *fn){
     header = new Header();
@@ -133,7 +138,7 @@ int TTTR::read_hdf_file(char *fn){
     n_valid_events = dims[0];
     n_records_in_file = dims[0];
 
-    std::cout << "n_records_in_file: " << n_records_in_file << std::endl;
+    std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
 
     /*
      * Read the data
@@ -183,17 +188,18 @@ int TTTR::read_file(
                 fp_records_begin = header->header_end;
                 bytes_per_record = header->bytes_per_record;
                 tttr_record_type = header->getTTTRRecordType();
-                std::cout << "TTTR record type: " << tttr_record_type << std::endl;
+                std::clog << "TTTR record type: " << tttr_record_type << std::endl;
                 processRecord = processRecord_map[tttr_record_type];
                 n_records_in_file = determine_number_of_records_by_file_size(
                         fp,
                         header->header_end,
                         bytes_per_record
                 );
-                std::cout << "Number of records: " << n_records_in_file << std::endl;
+                std::clog << "Number of records: " << n_records_in_file <<
+                std::endl;
             }
             else{
-                std::cout << "File: " << filename << " does not exist" << std::endl;
+                std::clog << "File: " << filename << " does not exist" << std::endl;
                 return 0;
             }
             allocate_memory_for_records(n_records_in_file);
@@ -270,7 +276,8 @@ void TTTR::read_records(
     overflow_counter = 0;
     n_valid_events = 0;
     size_t offset = 0;
-    bool is_valid_record = true;
+
+    bool is_valid_record;
     // read if possible the data in chunks to speed up the access
     char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
     while(

@@ -107,7 +107,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
         TTTR *tttr_data
 )
 {
-    std::cout << "Initialize Leica SP8 PTU" << std::endl;
+    std::clog << "Initialize Leica SP8 PTU" << std::endl;
 
     // the start and stops are alternating
     unsigned int i_event = 0;

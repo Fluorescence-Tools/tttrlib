@@ -475,7 +475,14 @@ public:
      */
     int get_n_events();
 
-    bool write_file(char *fn, int container_type);
+    bool write_file(
+            char *fn,
+            int container_type
+            );
+
+    void shift_macro_time(
+            unsigned int shift
+            );
 };
 
 

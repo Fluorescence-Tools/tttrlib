@@ -28,11 +28,11 @@ int main(int argc, char *argv[]) {
         switch (arg.at(1)) {
             case 'i':
                 input = argv[++i];
-                std::cout << "Input file: " << input << std::endl;
+                std::clog << "Input file: " << input << std::endl;
                 break;
             case 'n':
                 n_ph = atoi(argv[++i]);
-                std::cout << "Number of photons: " << n_ph << std::endl;
+                std::clog << "Number of photons: " << n_ph << std::endl;
                 break;
             default:
                 show_usage(argv[0]);

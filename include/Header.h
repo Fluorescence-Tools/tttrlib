@@ -148,7 +148,6 @@ typedef struct {
 } pq_ht3_BinHdr_t;
 
 
-
 typedef struct {
     char HardwareIdent[16];
     char HardwareVersion[8];
@@ -180,6 +179,17 @@ typedef struct {
     int32_t NoOfRecords;
     int32_t SpecialHeaderSize;
 } pq_ht3_TTTRHdr;
+
+
+/// Becker&Hickl SPC132 Header
+typedef union bh_spc132_header {
+    uint64_t allbits;
+    struct {
+        unsigned macro_time_clock :24;   // the resolution of the macro time
+        unsigned unused           :7;    // unclear usage
+        bool invalid              :1;    // true if dataset is marked as invalid
+    } bits;
+} bh_spc132_header_t;
 
 
 
@@ -299,5 +309,23 @@ size_t read_ht3_header(
         double &micro_time_resolution
 );
 
+/*! Reads the header of a Becker&Hickel SPC132 file and sets the reading routing
+ * for
+ *
+ * @param fpin
+ * @param rewind
+ * @param tttr_record_type
+ * @param data
+ * @param macro_time_resolution
+ * @param micro_time_resolution
+ */
+size_t read_bh132_header(
+        std::FILE *fpin,
+        bool rewind,
+        int &tttr_record_type,
+        std::map<std::string, std::string> &data,
+        double &macro_time_resolution,
+        double &micro_time_resolution
+);
 
 #endif //TTTRLIB_READHEADER_H
