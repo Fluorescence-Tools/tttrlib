@@ -22,10 +22,6 @@ class TestCLSM(unittest.TestCase):
     filename_irf = './data/leica/sp8/IRF488_20MHz_25_1.ptu'
 
     def test_leica_sp8_image(self):
-        import tttrlib
-        import numpy as np
-        import pylab as p
-
         filename = self.filename_data_da
         data = tttrlib.TTTR(
             filename,
@@ -52,13 +48,11 @@ class TestCLSM(unittest.TestCase):
             channels=[1]
         )
         intensity_image = clsm_image.get_intensity_image()
-        p.imshow(intensity_image.sum(axis=0))
 
         mean_tac_image = clsm_image.get_mean_tac_image(
             tttr_data=data,
             n_ph_min=1
         )
-        p.imshow(mean_tac_image.sum(axis=0))
 
         decay_image = clsm_image.get_decay_image(
             tttr_data=data,
@@ -68,30 +62,24 @@ class TestCLSM(unittest.TestCase):
         for frame in decay_image:
             decay += frame.sum(axis=(0, 1))
 
-    # def test_leica_sp8_histogram(self):
-    #     import numpy as np
-    #     import tttrlib
-    #     import pylab as p
-    #
-    #     filename = self.filename_irf
-    #     data = tttrlib.TTTR(
-    #         filename,
-    #         'PTU'
-    #     )
-    #
-    #     micro_time = data.get_micro_time()
-    #     mt_sel = micro_time
-    #     counts = np.bincount(mt_sel // 4)
-    #     p.semilogy(counts)
-    #     p.show()
-    #     header = data.get_header()
-    #     dt = header.micro_time_resolution
-    #     x_axis = np.arange(counts.shape[0]) * dt
-    #     output_filename = 'test_irf.csv'
-    #     np.savetxt(
-    #         fname=output_filename,
-    #         X=np.vstack([x_axis,counts]).T
-    #     )
+    def test_leica_sp8_histogram(self):
+        filename = self.filename_irf
+        data = tttrlib.TTTR(
+            filename,
+            'PTU'
+        )
+
+        micro_time = data.get_micro_time()
+        mt_sel = micro_time
+        counts = np.bincount(mt_sel // 4)
+        header = data.get_header()
+        dt = header.micro_time_resolution
+        x_axis = np.arange(counts.shape[0]) * dt
+        output_filename = 'test_irf.csv'
+        np.savetxt(
+            fname=output_filename,
+            X=np.vstack([x_axis,counts]).T
+        )
 
     # def test_clsm_intensity(self):
     #     import tttrlib
