@@ -68,30 +68,30 @@ class TestCLSM(unittest.TestCase):
         for frame in decay_image:
             decay += frame.sum(axis=(0, 1))
 
-    def test_leica_sp8_histogram(self):
-        import numpy as np
-        import tttrlib
-        import pylab as p
-
-        filename = self.filename_irf
-        data = tttrlib.TTTR(
-            filename,
-            'PTU'
-        )
-
-        micro_time = data.get_micro_time()
-        mt_sel = micro_time
-        counts = np.bincount(mt_sel // 4)
-        p.semilogy(counts)
-        p.show()
-        header = data.get_header()
-        dt = header.micro_time_resolution
-        x_axis = np.arange(counts.shape[0]) * dt
-        output_filename = 'test_irf.csv'
-        np.savetxt(
-            fname=output_filename,
-            X=np.vstack([x_axis,counts]).T
-        )
+    # def test_leica_sp8_histogram(self):
+    #     import numpy as np
+    #     import tttrlib
+    #     import pylab as p
+    #
+    #     filename = self.filename_irf
+    #     data = tttrlib.TTTR(
+    #         filename,
+    #         'PTU'
+    #     )
+    #
+    #     micro_time = data.get_micro_time()
+    #     mt_sel = micro_time
+    #     counts = np.bincount(mt_sel // 4)
+    #     p.semilogy(counts)
+    #     p.show()
+    #     header = data.get_header()
+    #     dt = header.micro_time_resolution
+    #     x_axis = np.arange(counts.shape[0]) * dt
+    #     output_filename = 'test_irf.csv'
+    #     np.savetxt(
+    #         fname=output_filename,
+    #         X=np.vstack([x_axis,counts]).T
+    #     )
 
     # def test_clsm_intensity(self):
     #     import tttrlib
