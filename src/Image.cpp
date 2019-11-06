@@ -109,8 +109,6 @@ void CLSMImage::initialize_leica_sp8_ptu(
 {
     std::clog << "Initialize Leica SP8 PTU" << std::endl;
 
-    // the start and stops are alternating
-    unsigned int i_event = 0;
     size_t n_events = tttr_data->n_valid_events;
 
     // insert the first frame
@@ -118,7 +116,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
         push_back(new CLSMFrame(0));
     }
 
-    for(i_event=0; i_event < n_events; i_event++){
+    for(size_t i_event=0; i_event < n_events; i_event++){
         auto* frame = frames.back();
         if(tttr_data->routing_channels[i_event] == marker_event){
             if(tttr_data->micro_times[i_event] == marker_line_start){
@@ -127,7 +125,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
                 frame->push_back(line);
                 continue;
             }
-            if(tttr_data->micro_times[i_event] == marker_line_stop){
+            else if(tttr_data->micro_times[i_event] == marker_line_stop){
                 // is new stop is found the line is complete
                 // fill all the line info and break search
                 auto* line = frame->lines.back();
@@ -137,7 +135,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
                 line->pixel_duration = (unsigned int) (line->get_duration() / n_pixel);
                 continue;
             }
-            if(tttr_data->micro_times[i_event] == marker_frame){
+            else if(tttr_data->micro_times[i_event] == marker_frame){
                 // if new frame is found fill the info of the last frame
                 // and create a new frame
                 frame->stop = i_event;
@@ -167,7 +165,6 @@ void CLSMImage::initialize(TTTR* tttr_data){
             i++)
     {
         e = tttr_data->event_types[i];
-
         // Identify events
         if(e == marker_event){
             c = tttr_data->routing_channels[i];
@@ -226,7 +223,8 @@ void CLSMImage::initialize(TTTR* tttr_data){
  * @param channels
  */
 void CLSMImage::fill_pixels(
-        TTTR* tttr_data, std::vector<unsigned int> channels
+        TTTR* tttr_data,
+        std::vector<unsigned int> channels
         ) {
     short c;              // routing channel
     short e;              // event type
@@ -234,7 +232,11 @@ void CLSMImage::fill_pixels(
     size_t pixel_nbr;
     for(auto frame : frames){
         for(auto line : frame->lines){
-            for(unsigned int i=line->start; i < line->stop; i++){
+            for(
+                auto i=line->start;
+                (i < line->stop) and i < tttr_data->n_valid_events;
+                i++
+            ){
                 e = tttr_data->event_types[i];
                 c = tttr_data->routing_channels[i];
                 if (e == RECORD_PHOTON) {
@@ -317,26 +319,28 @@ void CLSMImage::get_intensity_image(
 void CLSMImage::get_decay_image(
         TTTR* tttr_data,
         unsigned char** out, int* dim1, int* dim2, int* dim3, int* dim4,
-        int tac_coarsening
+        int tac_coarsening,
+        bool stack_frames
         ){
+    size_t nf = (stack_frames) ? 1 : n_frames;
     size_t n_tac = tttr_data->header->number_of_tac_channels / tac_coarsening;
-    *dim1 = n_frames;
+    *dim1 = nf;
     *dim2 = n_lines;
     *dim3 = n_pixel;
     *dim4 = (int) n_tac;
 
-    auto* t = (unsigned char*) malloc(sizeof(char) * n_frames * n_lines * n_pixel * n_tac);
+    auto* t = (unsigned char*) malloc(
+            sizeof(unsigned char) * nf * n_lines * n_pixel * n_tac
+            );
 
-    unsigned int i_tac;
     size_t i_frame = 0;
-    size_t i_line, i_pixel;
     for(auto frame : frames){
-        i_line = 0;
+        size_t i_line = 0;
         for(auto line : frame->lines){
-            i_pixel = 0;
+            size_t i_pixel = 0;
             for(auto pixel : line->pixels){
                 for(auto i : pixel->tttr_indices){
-                    i_tac = tttr_data->micro_times[i] / tac_coarsening;
+                    size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
                     if(i_tac < n_tac){
                         t[i_frame * (n_lines * n_pixel * n_tac) +
                           i_line  * (n_pixel * n_tac) +
@@ -349,7 +353,7 @@ void CLSMImage::get_decay_image(
             }
             i_line++;
         }
-        i_frame++;
+        if (!stack_frames) i_frame++;
     }
     *out = t;
 }

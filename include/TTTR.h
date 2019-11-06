@@ -213,11 +213,15 @@ protected:
     unsigned int stop;
     unsigned long long start_time;
     unsigned long long stop_time;
-    bool tttr_filled;
 
 public:
 
-    TTTRRange() = default;
+    TTTRRange():
+    start(0),
+    stop(0),
+    start_time(0),
+    stop_time(0)
+    {};
     ~TTTRRange() = default;
 
     virtual std::vector<unsigned int> get_tttr_indices();
