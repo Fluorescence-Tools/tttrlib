@@ -31,7 +31,9 @@ Header::Header() :
         macro_time_resolution(0),
         number_of_tac_channels(0),
         tttr_container_type(0),
-        bytes_per_record(1)
+        bytes_per_record(1),
+        header_end(0),
+        tttr_record_type(0)
 {}
 
 
@@ -56,6 +58,7 @@ Header::Header(
             break;
         case PQ_HT3_CONTAINER:
             header_end = read_ht3_header(
+
                     fpin,
                     true,
                     tttr_record_type,
