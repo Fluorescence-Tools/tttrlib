@@ -160,7 +160,7 @@ void CLSMImage::initialize(TTTR* tttr_data){
 
     // find the frame and line markers
     for(
-            unsigned int i=0;
+            size_t i=0;
             i < tttr_data->n_valid_events;
             i++)
     {
@@ -188,7 +188,7 @@ void CLSMImage::initialize(TTTR* tttr_data){
                 frame->push_back(line);
 
                 // Find line end
-                for(unsigned j=i + 1; j<tttr_data->n_valid_events; j++){
+                for(size_t j=i + 1; j < tttr_data->n_valid_events; j++){
                     c = tttr_data->routing_channels[j];
                     e = tttr_data->event_types[j];
                     if( (e == marker_event) && (c == marker_line_stop) ){
@@ -234,7 +234,7 @@ void CLSMImage::fill_pixels(
         for(auto line : frame->lines){
             for(
                 auto i=line->start;
-                (i < line->stop) and i < tttr_data->n_valid_events;
+                ((i < line->stop) && (i < tttr_data->n_valid_events));
                 i++
             ){
                 e = tttr_data->event_types[i];
