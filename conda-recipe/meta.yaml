@@ -4,14 +4,13 @@
 package:
   name: "{{ name|lower }}"
   version: "{{ version|lower }}"
-  #version: {{ GIT_DESCRIBE_TAG }}
 
 source:
   path: ..
 
 build:
     number: 0
-    string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
+    #string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
 
 requirements:
   build:
