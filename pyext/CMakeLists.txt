@@ -5,44 +5,43 @@ FIND_PACKAGE(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-FIND_PACKAGE(PythonInterp)
-FIND_PACKAGE(PythonLibs)
-execute_process(
-        COMMAND python -c
-        "from __future__ import print_function; import numpy; print(numpy.get_include())"
-        OUTPUT_VARIABLE Python_NumPy_PATH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
-message(STATUS "PYTHON_INCLUDE_DIR='${PYTHON_INCLUDE_DIR}'")
-INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${PYTHON_INCLUDE_DIR})
-LINK_LIBRARIES(${PYTHON_LIBRARY})
-
 SET(MODULE_NAME tttrlib)
-SET(CMAKE_SWIG_FLAGS "")
-SET(SWIG_SRC tttrlib.i)
-# The output path is controlled by the setup.py
-#SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/pyext)
 
-SET_PROPERTY(SOURCE tttrlib.i PROPERTY CPLUSPLUS ON)
-file(GLOB SRC_files "../src/*.cpp")
+SET_SOURCE_FILES_PROPERTIES(tttrlib.i PROPERTIES CPLUSPLUS ON)
+FILE(GLOB SRC_files "../src/*.cpp")
 SWIG_ADD_LIBRARY(
         ${MODULE_NAME}
         LANGUAGE python
-        SOURCES
-        tttrlib.i
-        ${SRC_files}
+        SOURCES tttrlib.i ${SRC_files}
 )
 
-INCLUDE_DIRECTORIES(
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
+EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"
+        RESULT_VARIABLE PYTHON_CVPY_PROCESS
+        OUTPUT_VARIABLE PYTHON_LDSHARED
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF ("${PYTHON_LDSHARED}" MATCHES "dynamic_lookup")
+    MESSAGE("Using static linking for Python")
+    SET(PYTHON_LINK_LIBRARIES "NO")
+ELSE()
+    SET(PYTHON_LINK_LIBRARIES "${PYTHON_LIBRARIES}")
+ENDIF()
 
 TARGET_LINK_LIBRARIES(
         ${MODULE_NAME}
         ${HDF5_LIBRARIES}
         ${PYTHON_LIBRARY}
+        ${CMAKE_THREAD_LIBS_INIT}
+        Boost::date_time
+        Boost::filesystem
+        Boost::iostreams
 )
+
+IF (NOT PYTHON_LINK_LIBRARIES)
+    IF (APPLE)
+        SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
+    ENDIF()
+ENDIF()
+
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(dir ${dirs})

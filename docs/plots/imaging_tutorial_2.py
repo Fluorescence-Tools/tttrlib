@@ -9,14 +9,17 @@ line_start_marker = 1
 line_stop_marker = 2
 event_type_marker = 1
 pixel_per_line = 256
-image = tttrlib.CLSMImage(data,
-                          frame_marker,
-                          line_start_marker,
-                          line_stop_marker,
-                          event_type_marker,
-                          pixel_per_line)
+image = tttrlib.CLSMImage(
+    data,
+    frame_marker,
+    line_start_marker,
+    line_stop_marker,
+    event_type_marker,
+    pixel_per_line
+)
 
 channels = (0, 1)
+
 image.fill_pixels(data, channels)
 
 image_intensity = image.get_intensity_image()

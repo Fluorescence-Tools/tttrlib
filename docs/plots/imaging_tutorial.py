@@ -36,7 +36,7 @@ def make_image(
     if n_pixel is None:
         n_pixel = n_lines  # assume squared image
 
-    n_tac = n_tac_max / tac_coarsening
+    n_tac = n_tac_max // tac_coarsening
     image = np.zeros((n_frames, n_lines, n_pixel, n_tac))
     # iterate through all photons in a line and add to image
 
@@ -82,7 +82,7 @@ line_start_marker_list = find_marker(c, e, 1)
 line_stop_marker_list = find_marker(c, e, 2)
 n_frames = len(frame_marker_list) - 1 # 41
 n_line_start_marker = len(line_start_marker_list) # 10246
-n_lines = n_line_start_marker / n_frames # 256
+n_lines = n_line_start_marker // n_frames # 256
 line_duration_valid = t[line_stop_marker_list] - t[line_start_marker_list]
 line_duration_total = t[line_start_marker_list[1:]] - t[line_start_marker_list[0:-1]]
 n_pixel = 256

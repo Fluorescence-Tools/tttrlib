@@ -1,0 +1,51 @@
+{% set name = "tttrlib" %}
+{% set version = "0.0.10" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version|lower }}"
+
+source:
+  path: ..
+
+build:
+    number: 0
+    #string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - git
+    - cmake
+    - swig
+    - openmp
+    - boost
+    - python {{ python }}
+    - setuptools
+    - {{ pin_compatible('numpy') }}
+  host:
+    - python {{ python }}
+    - setuptools
+    - {{ pin_compatible('numpy') }}
+    - hdf5 >=1.8.*
+  run:
+    - python {{ python }}
+    - {{ pin_compatible('numpy') }}
+    - hdf5 >=1.8.*
+
+test:
+  imports:
+    - tttrlib
+
+about:
+  home: https://github.com/fluorescence-tools/tttrlib
+  license: MPL 2.0
+  summary: Python bindings for tttrlib
+  description: |
+    tttrlib C++ library including Python wrapper to read time-tagged
+    time resolved data files.
+  doc_url: https://fluorescence-tools.github.io/tttrlib/
+
+extra:
+  recipe-maintainers:
+    - tpeulen

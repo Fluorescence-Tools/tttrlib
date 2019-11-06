@@ -16,10 +16,9 @@ install:
   - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
-  - conda create -n build python=3.7 git conda-build anaconda-client
+  - conda create -n build python=3.7 git conda-build anaconda-client numpy
   - activate build
-  - git clone https://github.com/Fluorescence-Tools/conda-recipes.git
-  - conda build conda-recipes/tttrlib
+  - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
 test_script:
@@ -31,10 +30,10 @@ test_script:
   - nosetests
   - cd ..
 
-### scripts to run after tests
-deploy_script:
-  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
+#### scripts to run after tests
+#deploy_script:
+#  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+#  - anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
 
 build: off
 

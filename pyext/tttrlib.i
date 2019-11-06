@@ -2,11 +2,11 @@
 %include "documentation.i"
 
 %{
-    #define SWIG_FILE_WITH_INIT
-    #include "../include/TTTR.h"
-    #include "../include/Histogram.h"
-    #include "../include/Correlate.h"
-    #include "../include/Image.h"
+#define SWIG_FILE_WITH_INIT
+#include "../include/tttr.h"
+#include "../include/histogram.h"
+#include "../include/correlate.h"
+#include "../include/image.h"
 
 %}
 
@@ -16,9 +16,9 @@
 %include std_string.i
 %include "std_map.i"
 
-%include "numpy.i"
+%include "./include/numpy.i"
 %init %{
-    import_array();
+import_array();
 %}
 
 %template(map_string_string) std::map<std::string, std::string>;
@@ -28,8 +28,8 @@
 %include "correlate.i"
 %include "image.i"
 
-%include "../include/TTTR.h"
-%include "../include/Header.h"
-%include "../include/Histogram.h"
-%include "../include/Correlate.h"
-%include "../include/Image.h"
+%include "../include/tttr.h"
+%include "../include/header.h"
+%include "../include/histogram.h"
+%include "../include/correlate.h"
+%include "../include/image.h"

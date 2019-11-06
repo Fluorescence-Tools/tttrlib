@@ -6,14 +6,14 @@ import platform
 import subprocess
 
 from setuptools import setup, Extension
-from distutils.command.build_ext import build_ext
-from distutils.version import LooseVersion
+from setuptools.command.build_ext import build_ext
 
 
 name = "tttrlib"  # name of the module
 
 
 class CMakeExtension(Extension):
+
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
@@ -22,34 +22,6 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
 
     def run(self):
-        try:
-            out = subprocess.check_output(
-                [
-                    'cmake',
-                    '--version'
-                ]
-            )
-        except OSError:
-            raise RuntimeError(
-                "CMake muinclude_dirs.append(st be installed to build the "
-                "following extensions: " + ", ".join(
-                    e.name for e in
-                    self.extensions
-                )
-            )
-
-        if platform.system() == "Windows":
-            cmake_version = LooseVersion(
-                re.search(
-                    r'version\s*([\d.]+)',
-                    out.decode()
-                ).group(1)
-            )
-            if cmake_version < '3.13.0':
-                raise RuntimeError(
-                    "CMake >= 3.13.0 is required on Windows"
-                )
-
         for ext in self.extensions:
             self.build_extension(ext)
 
@@ -75,11 +47,7 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            # if sys.maxsize > 2 ** 32:
-            #     cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
-        elif platform.system() == "Darwin":
-            cmake_args += []
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
@@ -123,7 +91,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.8',
+    version='0.0.10',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

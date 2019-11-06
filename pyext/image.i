@@ -1,7 +1,7 @@
 %module tttrlib
 %{
-#include "include/Image.h"
-#include "include/TTTR.h"
+#include "include/image.h"
+#include "include/tttr.h"
 %}
 
 
@@ -31,5 +31,5 @@ namespace std {
 }
 
 
-%include "../include/TTTR.h"
-%include "../include/Image.h"
+%include "../include/tttr.h"
+%include "../include/image.h"

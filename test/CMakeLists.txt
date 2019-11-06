@@ -2,9 +2,9 @@
 ADD_EXECUTABLE(
         test_tttrlib
         tttr_test.cpp tttr_test.h
-        ../src/TTTR.cpp ../include/TTTR.h
-        ../include/RecordReader.h ../src/RecordReader.cpp
-        ../src/Header.cpp ../include/Header.h
-        ../src/Histogram.cpp ../include/Histogram.h
+        ../src/tttr.cpp ../include/tttr.h
+        ../include/record_reader.h ../src/record_reader.cpp
+        ../src/header.cpp ../include/header.h
+        ../src/histogram.cpp ../include/histogram.h
         Correlate.cpp Correlate.h
 )
