@@ -18,7 +18,7 @@ install:
   - conda config --add channels conda-forge
   - conda create -n build python=3.7 git conda-build anaconda-client
   - activate build
-  - conda build conda-recipes
+  - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
 test_script:
