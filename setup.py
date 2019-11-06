@@ -47,8 +47,6 @@ class CMakeBuild(build_ext):
                     extdir
                 )
             ]
-            if sys.maxsize > 2 ** 32:
-                cmake_args += ['-DCMAKE_GENERATOR_PLATFORM=x64']
             build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
