@@ -1,24 +1,16 @@
 from __future__ import division
 
-import utils
-import os
 import unittest
-
-TOPDIR = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__),
-        '..')
-)
-utils.set_search_paths(TOPDIR)
-
 import tttrlib
 import numpy as np
 
 
 class Tests(unittest.TestCase):
 
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+
     def test_bh132_read(self):
-        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        data = self.data
         self.assertEqual(
             data.get_number_of_tac_channels(),
             4096
@@ -50,10 +42,7 @@ class Tests(unittest.TestCase):
     #     )
 
     def test_auto_correlation(self):
-        data = tttrlib.TTTR(
-            './data/BH/BH_SPC132.spc',
-            'SPC-130'
-        )
+        data = self.data
         ch1_indeces = data.get_selection_by_channel(np.array([0]))
         ch2_indeces = data.get_selection_by_channel(np.array([8]))
         mt = data.get_macro_time()
@@ -83,14 +72,13 @@ class Tests(unittest.TestCase):
         #self.assertEqual(b2.name, 'B')
 
     def test_cross_correlation(self):
-        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        data = self.data
 
         # make a cross-correlation between the two green channels (ch 0, ch 8)
         ch1_indeces = data.get_selection_by_channel(np.array([0]))
         ch2_indeces = data.get_selection_by_channel(np.array([8]))
         ph1 = tttrlib.TTTR(data, ch1_indeces)
         ph2 = tttrlib.TTTR(data, ch2_indeces)
-
 
         t1 = ph1.get_macro_time()
         w1 = np.ones_like(t1, dtype=np.float)
@@ -117,7 +105,7 @@ class Tests(unittest.TestCase):
         #self.assertEqual(b2.name, 'B')
 
     def test_time_window_selection(self):
-        photons = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 2)
+        photons = self.data
         mt = photons.get_macro_time()
 
         tws = tttrlib.ranges_by_time_window(mt, 1000000, -1, 400, -1)

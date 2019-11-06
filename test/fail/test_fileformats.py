@@ -1,16 +1,7 @@
 from __future__ import division
 
-import utils
 import os
 import unittest
-
-TOPDIR = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__),
-        '..')
-)
-utils.set_search_paths(TOPDIR)
-
 import tttrlib
 
 
