@@ -14,19 +14,19 @@ build:
 
 requirements:
   build:
-    - git
     - {{ compiler('cxx') }}
-    - python {{ python }}
-    - setuptools
+    - git
     - cmake
-    - numpy >=1.10
     - swig
     - openmp
     - boost
+    - python {{ python }}
+    - setuptools
+    - {{ pin_compatible('numpy') }}
   host:
     - python {{ python }}
     - setuptools
-    - numpy >=1.10
+    - {{ pin_compatible('numpy') }}
     - hdf5 >=1.8.*
   run:
     - python {{ python }}
