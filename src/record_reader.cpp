@@ -13,8 +13,8 @@
  ****************************************************************************/
 
 
-#include <include/TTTR.h>
-#include <include/RecordReader.h>
+#include <include/tttr.h>
+#include <include/record_reader.h>
 
 
 /*! Processes PicoHarp T3 Tags

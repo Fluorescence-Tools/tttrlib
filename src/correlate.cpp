@@ -12,7 +12,7 @@
  *                                                                          *
  ****************************************************************************/
 
-#include <include/Correlate.h>
+#include <include/correlate.h>
 
 
 void coarsen(

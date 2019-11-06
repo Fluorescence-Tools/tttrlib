@@ -9,6 +9,6 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include "../include/TTTR.h"
+#include "include/tttr.h"
 
 #endif //TTTRLIB_TTTRTEST_H

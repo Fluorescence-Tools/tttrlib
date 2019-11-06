@@ -12,8 +12,8 @@
  *                                                                          *
  ****************************************************************************/
 
-#include <include/RecordTypes.h>
-#include <include/TTTR.h>
+#include <include/record_types.h>
+#include <include/tttr.h>
 #include <boost/filesystem.hpp>
 
 

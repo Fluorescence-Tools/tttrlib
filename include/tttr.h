@@ -31,8 +31,8 @@
 
 #include "hdf5.h"
 
-#include <RecordReader.h>
-#include <Header.h>
+#include <record_reader.h>
+#include <header.h>
 
 
 #define RECORD_PHOTON               0

@@ -12,7 +12,7 @@
  *                                                                          *
  ****************************************************************************/
 
-#include <include/Histogram.h>
+#include <include/histogram.h>
 
 
 void bincount1D(int* data, int n_data, int* bins, int n_bins){

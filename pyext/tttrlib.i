@@ -3,10 +3,10 @@
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "../include/TTTR.h"
-#include "../include/Histogram.h"
-#include "../include/Correlate.h"
-#include "../include/Image.h"
+#include "../include/tttr.h"
+#include "../include/histogram.h"
+#include "../include/correlate.h"
+#include "../include/image.h"
 
 %}
 

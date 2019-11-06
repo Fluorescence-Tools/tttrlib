@@ -2,8 +2,8 @@
 // Created by thomas on 5/11/19.
 //
 
-#ifndef TTTRLIB_RECORDTYPES_H
-#define TTTRLIB_RECORDTYPES_H
+#ifndef TTTRLIB_RECORD_TYPES_H
+#define TTTRLIB_RECORD_TYPES_H
 
 #include <cstdint>
 
@@ -119,4 +119,4 @@ typedef union bh_overflow{
 
 
 
-#endif //TTTRLIB_RECORDTYPES_H
+#endif //TTTRLIB_RECORD_TYPES_H

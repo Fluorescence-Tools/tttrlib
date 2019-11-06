@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <cstdint>
-#include "RecordTypes.h"
+#include "record_types.h"
 
 
 /*********************************************/

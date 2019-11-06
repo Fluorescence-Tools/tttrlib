@@ -5,7 +5,7 @@
 #ifndef TTTRLIB_IMAGE_H
 #define TTTRLIB_IMAGE_H
 
-#include <TTTR.h>
+#include <tttr.h>
 #include <vector>
 #include <list>
 

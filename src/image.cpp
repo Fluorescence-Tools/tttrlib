@@ -2,7 +2,7 @@
 // Created by thomas on 3/16/19.
 //
 
-#include <include/Image.h>
+#include <include/image.h>
 
 
 CLSMFrame::CLSMFrame():
