@@ -1,5 +1,6 @@
 function(tttrlib_find_python)
-    FIND_PACKAGE(Python COMPONENTS Interpreter Development)
+    FIND_PACKAGE(PythonInterp)
+    FIND_PACKAGE(PythonLibs)
     execute_process(
             COMMAND ${Python_EXECUTABLE} -c "from __future__ import print_function; import numpy; print(numpy.get_include())"
             OUTPUT_VARIABLE Python_NumPy_PATH
@@ -16,9 +17,9 @@ function(tttrlib_find_python)
             OUTPUT_VARIABLE python_full_path
             OUTPUT_STRIP_TRAILING_WHITESPACE)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIR})
-    LINK_LIBRARIES(${Python_LIBRARY})
+    LINK_LIBRARIES(${PYTHON_LIBRARY})
     MESSAGE(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
     MESSAGE(STATUS "Python_INCLUDE_DIR='${Python_INCLUDE_DIR}'")
-    MESSAGE(STATUS "Python_LIBRARY='${Python_LIBRARY}'")
+    MESSAGE(STATUS "PYTHON_LIBRARY='${PYTHON_LIBRARY}'")
 
 endfunction(tttrlib_find_python)
