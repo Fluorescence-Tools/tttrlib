@@ -1,6 +1,6 @@
 %module tttrlib
 %{
-    #include "include/Correlate.h"
+    #include "include/correlate.h"
 
 %}
 
@@ -19,5 +19,5 @@
     (double* weight_ch2, int n_weights_ch2)
 }
 
-%include "../include/Correlate.h"
+%include "../include/correlate.h"
 

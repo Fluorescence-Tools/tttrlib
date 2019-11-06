@@ -28,8 +28,8 @@ import_array();
 %include "correlate.i"
 %include "image.i"
 
-%include "../include/TTTR.h"
-%include "../include/Header.h"
-%include "../include/Histogram.h"
-%include "../include/Correlate.h"
-%include "../include/Image.h"
+%include "../include/tttr.h"
+%include "../include/header.h"
+%include "../include/histogram.h"
+%include "../include/correlate.h"
+%include "../include/image.h"

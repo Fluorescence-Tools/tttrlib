@@ -22,7 +22,7 @@
     (double** hist, int* dim)
 }
 
-%include "../include/Histogram.h"
+%include "../include/histogram.h"
 
 %template(histogram1D_int) histogram1D<int>;
 %template(histogram1D_double) histogram1D<double>;
