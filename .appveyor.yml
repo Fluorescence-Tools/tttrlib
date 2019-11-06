@@ -12,12 +12,12 @@ environment:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - activate base
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
-  - conda create -n build python=3.7 git conda-build anaconda-client numpy
-  - activate build
+  - conda install numpy git conda-build anaconda-client numpy
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
