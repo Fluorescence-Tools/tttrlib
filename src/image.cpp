@@ -289,18 +289,18 @@ void CLSMImage::get_intensity_image(
     *dim1 = n_frames;
     *dim2 = n_lines;
     *dim3 = n_pixel;
+    size_t n_pixel_total = n_frames * n_pixel * n_lines;
     auto* t = (unsigned int*) malloc(
-            sizeof(unsigned int) * n_frames * n_pixel * n_lines
+            sizeof(unsigned int) * n_pixel_total
             );
 
-    size_t i_line, i_pixel, i_frame;
-    i_frame = 0;
+    size_t i_frame = 0;
     for(auto frame : frames){
 
-        i_line = 0;
+        size_t i_line = 0;
         for(auto line : frame->lines){
 
-            i_pixel = 0;
+            size_t i_pixel = 0;
             for(auto pixel : line->pixels){
                 t[i_frame * (n_lines * n_pixel) +
                   i_line * (n_pixel) +
@@ -329,9 +329,9 @@ void CLSMImage::get_decay_image(
     *dim3 = n_pixel;
     *dim4 = (int) n_tac;
 
-    auto* t = (unsigned char*) malloc(
-            sizeof(unsigned char) * nf * n_lines * n_pixel * n_tac
-            );
+    size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
+    auto* t = (unsigned char*) malloc(sizeof(unsigned char) * n_tac_total);
+    memset(t, 0, sizeof(unsigned char) * n_tac_total);
 
     size_t i_frame = 0;
     for(auto frame : frames){
