@@ -1,21 +1,30 @@
-dist: xenial
-language: python
+language: generic
 sudo: required
-python:
-  - "3.7"
+
+os:
+  - osx
+  - linux
+
+env:
+  # Build and test package on all supported python versions
+  - BUILD_TARGET=3.7 MINICONDA_VERSION=latest
+  # To make sure it's still working with conda 4.6
+  # - BUILD_TARGET=3.7 MINICONDA_VERSION=4.6.14
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-$MINICONDA_OS-x86_64.sh -O miniconda.sh
+  - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
   - conda config --set channel_priority strict
   - conda config --add channels conda-forge
+  - conda update -q conda
   - conda info -a
-  - conda install git conda-build anaconda-client
+  - conda create -q -n build-environment python=$BUILD_TARGET conda-build anaconda-client jinja2 git
+  - source activate build-environment
+  - git fetch --unshallow --tags --force
   - conda build conda-recipe --output-folder bld-dir
   - conda config --add channels "file://`pwd`/bld-dir"
 
@@ -31,14 +40,13 @@ script:
   - cd ..
 
 ## deploy
-#after_success:
-#  - OS=$TRAVIS_OS_NAME-64
-#  - pip install codacy-coverage
-#  - coverage xml
-#  - python-codacy-coverage -r coverage.xml
-#  - |
-#    if [[ "$TRAVIS_BRANCH" == "master" ]];
-#    then
-#      anaconda upload bld-dir/**/tttrlib*.tar.bz2
-#    fi
-#
+after_success:
+  - OS=$TRAVIS_OS_NAME-64
+  - pip install codacy-coverage
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
+  - |
+    if [[ "$TRAVIS_BRANCH" == "master" ]];
+    then
+      anaconda upload bld-dir/**/tttrlib*.tar.bz2
+    fi
