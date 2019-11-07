@@ -17,17 +17,6 @@
 #define TTTRLIB_READHEADER_H
 
 #include <cstdint>
-
-/*
-#if defined(_WIN32)
-#include "../thirdparty/stdint.h" // Windows
-    #define _CRT_SECURE_NO_DEPRECATE
-#elif defined(_WIN64)
-#include "../thirdparty/stdint.h" // Windows
-    #define _CRT_SECURE_NO_DEPRECATE
-#endif
-*/
-
 #include <cstdio>
 #include <iostream>
 #include <map>
