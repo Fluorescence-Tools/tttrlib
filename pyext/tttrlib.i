@@ -7,7 +7,7 @@
 #include "../include/histogram.h"
 #include "../include/correlate.h"
 #include "../include/image.h"
-
+#include "../include/pda.h"
 %}
 
 %include <typemaps.i>
@@ -27,9 +27,11 @@ import_array();
 %include "histogram.i"
 %include "correlate.i"
 %include "image.i"
+%include "pda.i"
 
 %include "../include/tttr.h"
 %include "../include/header.h"
 %include "../include/histogram.h"
 %include "../include/correlate.h"
 %include "../include/image.h"
+%include "../include/pda.h"

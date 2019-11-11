@@ -100,7 +100,6 @@ void make_fine_times(
 }
 
 
-
 void Correlator::update_axis(){
     n_corr = n_casc * n_bins + 1;
 
@@ -117,6 +116,7 @@ void Correlator::update_axis(){
         corr[j] = 0;
     }
 }
+
 
 void Correlator::set_events(
         unsigned long long  *t1, int n_t1,
@@ -135,8 +135,8 @@ void Correlator::set_events(
     dt1 = t1[n_t1 - 1] - t1[0];
     dt2 = t2[n_t2 - 1] - t2[0];
     maximum_macro_time = std::max(dt1, dt2);
-
 }
+
 
 void Correlator::normalize(){
     double np1 = std::accumulate(w1, w1+n_t1, 0.0);
