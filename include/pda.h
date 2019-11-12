@@ -30,6 +30,10 @@ public:
 
     // Methods
     void append(double amplitude, double probability_green);
+    void set_probability_green(double *in, int n_in);
+    void clear_probability_green();
+    void get_amplitudes(double**out, int* dim1);
+    void get_probability_green(double**out, int* dim1);
 
     // Getter and Setter
 

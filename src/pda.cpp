@@ -11,35 +11,35 @@ void PdaFunctions::conv_pF(
         double Br
 ) {
 
-    double *tmp = new double[(Nmax + 1) * (Nmax + 1)];
+    auto *tmp = new double[(Nmax + 1) * (Nmax + 1)];
     // green and red background
-    double *bg = new double[Nmax + 1];
+    auto *bg = new double[Nmax + 1];
     poisson_0toN(bg, Bg, Nmax);
     unsigned int Bg_max = 2 * (unsigned int) Bg + 52;
-    double *br = new double[Nmax + 1];
+    auto *br = new double[Nmax + 1];
     poisson_0toN(br, Br, Nmax);
     unsigned int Br_max = 2 * (unsigned int) Br + 52;
 
     // sum
-    double s;
-    unsigned int j, i, i_start, red, green;
-    for (red = 0; red <= Nmax; red++) {
-        red > Br_max ? i_start = red - Br_max : i_start = 0;
-        for (green = 0; green <= Nmax - red; green++) {
-            s = 0.;
-            j = (Nmax + 1) * green;
-            for (i = i_start; i <= red; i++){
+    for (size_t red = 0; red <= Nmax; red++) {
+        size_t i_start = red > Br_max ? red - Br_max : 0;
+        for (size_t green = 0; green <= Nmax - red; green++) {
+            double s = 0.;
+            size_t j = (Nmax + 1) * green;
+            for (size_t i = i_start; i <= red; i++){
                 s += FgFr[j + i] * br[red - i];
-            };
+            }
             tmp[(Nmax + 1) * red + green] = s;
         }
     }
-    for (green = 0; green <= Nmax; green++) {
-        green > Bg_max ? i_start = green - Bg_max : i_start = 0;
-        for (red = 0; red <= Nmax - green; red++) {
-            s = 0.;
-            j = (Nmax + 1) * red;
-            for (i = i_start; i <= green; i++) s += tmp[j + i] * bg[green - i];
+    for (size_t green = 0; green <= Nmax; green++) {
+        size_t i_start = green > Bg_max ? green - Bg_max : 0;
+        for (size_t red = 0; red <= Nmax - green; red++) {
+            double s = 0.;
+            size_t j = (Nmax + 1) * red;
+            for (size_t i = i_start; i <= green; i++){
+                s += tmp[j + i] * bg[green - i];
+            }
             SgSr[(Nmax + 1) * green + red] = s;
         }
     }
@@ -57,10 +57,9 @@ void PdaFunctions::conv_pN(
         double Br,
         double *pN
         ) {
-    double s;
     conv_pF(SgSr, FgFr, Nmax, Bg, Br);
     for (unsigned int i = 0; i <= Nmax; i++) {
-        s = 0.;
+        double s = 0.;
         for (unsigned  int j = 0; j <= i; j++){
             s += SgSr[Nmax * j + i];
         }
@@ -83,17 +82,15 @@ void PdaFunctions::sgsr_pN(
     /*** FgFr: matrix, FgFr(i,j) = p(Fg=i, Fr=j | F=i+j) ***/
     auto *FgFr = new double[(Nmax + 1) * (Nmax + 1)];
     FgFr[0] = 1.;
-    unsigned int red;
-
-    for (unsigned int i = 1; i <= Nmax; i++) {
+    for (size_t i = 1; i <= Nmax; i++) {
         polynom2_conv(FgFr + i * (Nmax + 1), FgFr + (i - 1) * (Nmax + 1), i,
                       pg_theor);
-        for (red = 0; red <= i - 1; red++) {
+        for (size_t red = 0; red <= i - 1; red++) {
             FgFr[(i - 1 - red) * (Nmax + 1) + red] = FgFr[(i - 1) * (Nmax + 1) +
                                                           red];
         }
     }
-    for (unsigned int red = 0; red <= Nmax; red++) {
+    for (size_t red = 0; red <= Nmax; red++) {
         FgFr[(Nmax - red) * (Nmax + 1) + red] = FgFr[Nmax * (Nmax + 1) + red];
     }
     /*** SgSr: matrix, SgSr(i,j) = p(Sg = i, Sr = j) ***/
@@ -311,6 +308,33 @@ void Pda::append(double amplitude, double probability_green) {
     probability_green_theor.push_back(probability_green);
 }
 
+void Pda::set_probability_green(double *in, int n_in) {
+    int n_components = n_in / 2;
+    for(int i=0; i < n_components; i++){
+        double amplitude = in[2 * i];
+        double probability_green = in[(2 * i) + 1];
+        amplitudes.push_back(amplitude);
+        probability_green_theor.push_back(probability_green);
+    }
+}
+
+void Pda::get_amplitudes(double**out, int* dim1) {
+    *dim1 = amplitudes.size();
+    //auto* t = (double*) malloc(sizeof(double) * amplitudes.size());
+    *out = amplitudes.data(); // t;
+}
+
+void Pda::get_probability_green(double**out, int* dim1) {
+    *dim1 = probability_green_theor.size();
+    //auto* t = (double*) malloc(sizeof(double) * probability_green_theor.size());
+    *out = probability_green_theor.data(); //t;
+}
+
+void Pda::clear_probability_green() {
+    amplitudes.clear();
+    probability_green_theor.clear();
+}
+
 void Pda::set_max_number_of_photons(unsigned int nmax) {
     Nmax = nmax;
     SgSr.resize((Nmax + 1) * (Nmax + 1));
@@ -354,6 +378,6 @@ void Pda::get_SgSr_matrix(
         double **out, int *dim1, int *dim2
 ) {
     *out = SgSr.data();
-    *dim1 = Nmax;
-    *dim2 = Nmax;
+    *dim1 = Nmax + 1;
+    *dim2 = Nmax + 1;
 }
