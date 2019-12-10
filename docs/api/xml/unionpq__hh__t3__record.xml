@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
   <compounddef id="unionpq__hh__t3__record" kind="union" language="C++" prot="public">
     <compoundname>pq_hh_t3_record</compoundname>
-    <includes refid="definitions_8h" local="no">definitions.h</includes>
+    <includes refid="record__types_8h" local="no">record_types.h</includes>
       <sectiondef kind="public-attrib">
-      <memberdef kind="variable" id="unionpq__hh__t3__record_1a891301a1345ac4270d377d0d525c570c" prot="public" static="no" mutable="no">
-        <type>uint32_t</type>
-        <definition>uint32_t pq_hh_t3_record::allbits</definition>
+      <memberdef kind="variable" id="unionpq__hh__t3__record_1a8e82d1520cee661bb0640146001e3042" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t pq_hh_t3_record::allbits</definition>
         <argsstring></argsstring>
         <name>allbits</name>
         <briefdescription>
@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="63" column="1" bodyfile="definitions.h" bodystart="63" bodyend="-1"/>
+        <location file="record_types.h" line="23" column="14" bodyfile="record_types.h" bodystart="23" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionpq__hh__t3__record_1aae0b01279fb539e2528365be16cec077" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -29,7 +29,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="65" column="1" bodyfile="definitions.h" bodystart="65" bodyend="-1"/>
+        <location file="record_types.h" line="25" column="18" bodyfile="record_types.h" bodystart="25" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionpq__hh__t3__record_1a449c8fc4b9dd6606c0273008e0a36ccd" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -43,7 +43,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="66" column="1" bodyfile="definitions.h" bodystart="66" bodyend="-1"/>
+        <location file="record_types.h" line="26" column="18" bodyfile="record_types.h" bodystart="26" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionpq__hh__t3__record_1a8886873cd887e5e19b6c24cb305c517a" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -57,7 +57,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="67" column="1" bodyfile="definitions.h" bodystart="67" bodyend="-1"/>
+        <location file="record_types.h" line="27" column="18" bodyfile="record_types.h" bodystart="27" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionpq__hh__t3__record_1a40a8da0f6b244359d54fc002b400edc7" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -71,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="68" column="1" bodyfile="definitions.h" bodystart="68" bodyend="-1"/>
+        <location file="record_types.h" line="28" column="18" bodyfile="record_types.h" bodystart="28" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionpq__hh__t3__record_1aa9ebbd80dc5a109d519ff075d49b3609" prot="public" static="no" mutable="no">
         <type>struct pq_hh_t3_record::@1</type>
@@ -84,16 +84,17 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="definitions.h" line="69" column="1"/>
+        <location file="record_types.h" line="29" column="10"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
-<para>HydraHarp/TimeHarp260 T3 record. </para>    </briefdescription>
+<para>HydraHarp/TimeHarp260 T3 record. </para>
+    </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="definitions.h" line="62" column="1" bodyfile="definitions.h" bodystart="62" bodyend="70"/>
+    <location file="record_types.h" line="22" column="30" bodyfile="record_types.h" bodystart="22" bodyend="30"/>
     <listofallmembers>
-      <member refid="unionpq__hh__t3__record_1a891301a1345ac4270d377d0d525c570c" prot="public" virt="non-virtual"><scope>pq_hh_t3_record</scope><name>allbits</name></member>
+      <member refid="unionpq__hh__t3__record_1a8e82d1520cee661bb0640146001e3042" prot="public" virt="non-virtual"><scope>pq_hh_t3_record</scope><name>allbits</name></member>
       <member refid="unionpq__hh__t3__record_1aa9ebbd80dc5a109d519ff075d49b3609" prot="public" virt="non-virtual"><scope>pq_hh_t3_record</scope><name>bits</name></member>
       <member refid="unionpq__hh__t3__record_1a8886873cd887e5e19b6c24cb305c517a" prot="public" virt="non-virtual"><scope>pq_hh_t3_record</scope><name>channel</name></member>
       <member refid="unionpq__hh__t3__record_1a449c8fc4b9dd6606c0273008e0a36ccd" prot="public" virt="non-virtual"><scope>pq_hh_t3_record</scope><name>dtime</name></member>

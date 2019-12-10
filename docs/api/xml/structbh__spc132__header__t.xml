@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="structbh__spc132__header__t" kind="struct" language="C++" prot="public">
+    <compoundname>bh_spc132_header_t</compoundname>
+    <includes refid="header_8h" local="no">header.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structbh__spc132__header__t_1ab705d293d8cc968c57cd87d211e7b653" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc132_header_t::macro_time_clock</definition>
+        <argsstring></argsstring>
+        <name>macro_time_clock</name>
+        <bitfield>24</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="header.h" line="174" column="14" bodyfile="header.h" bodystart="174" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structbh__spc132__header__t_1aeb9be888046d2dd0ee49f58db527f054" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc132_header_t::unused</definition>
+        <argsstring></argsstring>
+        <name>unused</name>
+        <bitfield>7</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="header.h" line="175" column="14" bodyfile="header.h" bodystart="175" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structbh__spc132__header__t_1a3363ad15e0877ea0ac25f9c2c159e247" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool bh_spc132_header_t::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield>1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="header.h" line="176" column="10" bodyfile="header.h" bodystart="176" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker&amp;Hickl SPC132 <ref refid="class_header" kindref="compound">Header</ref>. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="header.h" line="173" column="15" bodyfile="header.h" bodystart="173" bodyend="177"/>
+    <listofallmembers>
+      <member refid="structbh__spc132__header__t_1a3363ad15e0877ea0ac25f9c2c159e247" prot="public" virt="non-virtual"><scope>bh_spc132_header_t</scope><name>invalid</name></member>
+      <member refid="structbh__spc132__header__t_1ab705d293d8cc968c57cd87d211e7b653" prot="public" virt="non-virtual"><scope>bh_spc132_header_t</scope><name>macro_time_clock</name></member>
+      <member refid="structbh__spc132__header__t_1aeb9be888046d2dd0ee49f58db527f054" prot="public" virt="non-virtual"><scope>bh_spc132_header_t</scope><name>unused</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

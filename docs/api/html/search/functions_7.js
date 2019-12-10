@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['make_5ffine',['make_fine',['../class_correlator.html#a98605e701052a2fefc798424483909b0',1,'Correlator']]],
-  ['make_5ffine_5ftimes',['make_fine_times',['../correlate_8h.html#a7b80656d914f1e4b84b3c5cef46fe5e6',1,'correlate.h']]]
+  ['read_5ffile_113',['read_file',['../class_t_t_t_r.html#a499f299893269806ef42cca2227fd75b',1,'TTTR']]],
+  ['read_5frecords_114',['read_records',['../class_t_t_t_r.html#a8eb7661d2dc6180a0f69c07810705f4f',1,'TTTR']]]
 ];

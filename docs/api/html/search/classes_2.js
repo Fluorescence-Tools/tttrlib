@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['correlator',['Correlator',['../class_correlator.html',1,'']]],
-  ['curvemapping_5ft',['CurveMapping_t',['../struct_curve_mapping__t.html',1,'']]]
+  ['header_75',['Header',['../class_header.html',1,'']]],
+  ['histogram_76',['Histogram',['../class_histogram.html',1,'']]],
+  ['histogramaxis_77',['HistogramAxis',['../class_histogram_axis.html',1,'']]]
 ];

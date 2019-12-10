@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['roadmap',['Roadmap',['../md__t_o_d_o.html',1,'']]],
-  ['readme_2emd',['README.md',['../_r_e_a_d_m_e_8md.html',1,'']]],
-  ['run',['run',['../classsetup_1_1_c_make_build.html#aaeaa47a0e82fe56564dd8cec58f772c9',1,'setup::CMakeBuild']]]
+  ['read_5ffile_54',['read_file',['../class_t_t_t_r.html#a499f299893269806ef42cca2227fd75b',1,'TTTR']]],
+  ['read_5frecords_55',['read_records',['../class_t_t_t_r.html#a8eb7661d2dc6180a0f69c07810705f4f',1,'TTTR']]]
 ];

@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['scratch',['scratch',['../namespacescratch.html',1,'']]],
-  ['scratch_2epy',['scratch.py',['../scratch_8py.html',1,'']]],
-  ['setup',['setup',['../namespacesetup.html',1,'']]],
-  ['setup_2epy',['setup.py',['../setup_8py.html',1,'']]],
-  ['shell',['shell',['../namespacesetup.html#a137d6286fb9c1355868a64b6bb41c1a9',1,'setup']]],
-  ['sourcedir',['sourcedir',['../classsetup_1_1_c_make_extension.html#a29a643870fbe57b4181a02fb4d57b9f7',1,'setup::CMakeExtension']]]
+  ['set_5fevents_56',['set_events',['../class_correlator.html#a57e67409c1784f6582d80ae72b642e5b',1,'Correlator']]],
+  ['set_5fn_5fcasc_57',['set_n_casc',['../class_correlator.html#a8e96a0c2d5235e912965632b280da01b',1,'Correlator']]]
 ];
