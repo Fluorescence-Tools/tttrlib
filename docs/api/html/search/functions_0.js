@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_5f_5finit_5f_5f',['__init__',['../classsetup_1_1_c_make_extension.html#a2e49eec9170175d7c21d338bad44c6aa',1,'setup::CMakeExtension']]]
+  ['allocate_5fmemory_5ffor_5frecords_93',['allocate_memory_for_records',['../class_t_t_t_r.html#aca21b423928f92dce134c2b98057cc0a',1,'TTTR']]]
 ];

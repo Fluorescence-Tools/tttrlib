@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['version',['version',['../namespacesetup.html#a2aa722b36a933088812b50ea79b97a5c',1,'setup']]]
+  ['update_61',['update',['../class_histogram_axis.html#ac2485496e52710e1fa95db5f437ee601',1,'HistogramAxis']]],
+  ['update_5faxis_62',['update_axis',['../class_correlator.html#af4caefcd9465346248a5dc1949846f3e',1,'Correlator']]]
 ];

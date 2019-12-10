@@ -1,6 +1,14 @@
 var searchData=
 [
-  ['deallocate_5fmemory_5fof_5frecords',['deallocate_memory_of_records',['../class_t_t_t_r.html#af80300e1fdd7ba618dbb33853c832a22',1,'TTTR']]],
-  ['determine_5ffile_5fcontainer_5ftype',['determine_file_container_type',['../class_t_t_t_r_reader.html#af64354acc2b4f3890a1b67e7eca1b433',1,'TTTRReader']]],
-  ['determine_5fnumber_5fof_5frecords_5fby_5ffile_5fsize',['determine_number_of_records_by_file_size',['../_t_t_t_r_8h.html#a26b62a26d7be9fc51763e53d6dbdf2ec',1,'TTTR.h']]]
+  ['get_5fcorr_97',['get_corr',['../class_correlator.html#aecdb727bbdb02330f00f7b19564db448',1,'Correlator']]],
+  ['get_5fcorr_5fnormalized_98',['get_corr_normalized',['../class_correlator.html#a1575020c5bc498208ad59e92731dd066',1,'Correlator']]],
+  ['get_5ffilename_99',['get_filename',['../class_t_t_t_r.html#a3d856d880c72ad9772de2a774066cced',1,'TTTR']]],
+  ['get_5fheader_100',['get_header',['../class_t_t_t_r.html#a7953fb4f0b1d7ada40d6ff19cec45672',1,'TTTR']]],
+  ['get_5fn_5fcasc_101',['get_n_casc',['../class_correlator.html#a0240bc7c9704530dcd61cdd2713143b3',1,'Correlator']]],
+  ['get_5fn_5fevents_102',['get_n_events',['../class_t_t_t_r.html#a00b74138ed8a061e30a615dfff328960',1,'TTTR']]],
+  ['get_5fselection_5fby_5fchannel_103',['get_selection_by_channel',['../class_t_t_t_r.html#a3f645cd41dcc69d08f0ab808ae3f39c9',1,'TTTR']]],
+  ['get_5fselection_5fby_5fcount_5frate_104',['get_selection_by_count_rate',['../class_t_t_t_r.html#a7cc2447f565f7484b394e50b963e5e9f',1,'TTTR']]],
+  ['get_5fx_5faxis_105',['get_x_axis',['../class_correlator.html#a277e6652097f81aa1870c4a04485ba41',1,'Correlator']]],
+  ['get_5fx_5faxis_5fnormalized_106',['get_x_axis_normalized',['../class_correlator.html#a8ad9be08f71ef766292bf67145acba99',1,'Correlator']]],
+  ['gettttrrecordtype_107',['getTTTRRecordType',['../class_header.html#ac51d948dc51841e8b593aa80ccee8d8d',1,'Header']]]
 ];

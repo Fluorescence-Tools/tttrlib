@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['run',['run',['../classsetup_1_1_c_make_build.html#aaeaa47a0e82fe56564dd8cec58f772c9',1,'setup::CMakeBuild']]]
+  ['deallocate_5fmemory_5fof_5frecords_96',['deallocate_memory_of_records',['../class_t_t_t_r.html#af80300e1fdd7ba618dbb33853c832a22',1,'TTTR']]]
 ];

@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
   <compounddef id="structpq__ht3___t_t_t_r_hdr" kind="struct" language="C++" prot="public">
     <compoundname>pq_ht3_TTTRHdr</compoundname>
-    <includes refid="_header_8h" local="no">Header.h</includes>
       <sectiondef kind="public-attrib">
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a572a2e6ff812b98f83cfd529be109930" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -15,7 +14,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="169" column="1" bodyfile="Header.h" bodystart="169" bodyend="-1"/>
+        <location file="header.h" line="156" column="13" bodyfile="header.h" bodystart="156" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a41c90a4c31086a040ac75b3d68f59464" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -28,7 +27,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="170" column="1" bodyfile="Header.h" bodystart="170" bodyend="-1"/>
+        <location file="header.h" line="157" column="13" bodyfile="header.h" bodystart="157" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a44cf44e4b5d905308535b5693b3ad210" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -41,7 +40,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="171" column="1" bodyfile="Header.h" bodystart="171" bodyend="-1"/>
+        <location file="header.h" line="158" column="13" bodyfile="header.h" bodystart="158" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a58672117a6913f506c24ae2862aeb1eb" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -54,7 +53,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="172" column="1" bodyfile="Header.h" bodystart="172" bodyend="-1"/>
+        <location file="header.h" line="159" column="13" bodyfile="header.h" bodystart="159" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a3b5cd48d2f04650538044eb53297fed9" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -67,7 +66,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="173" column="1" bodyfile="Header.h" bodystart="173" bodyend="-1"/>
+        <location file="header.h" line="160" column="13" bodyfile="header.h" bodystart="160" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a4234d1405e359316d023988416b47e3d" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -80,7 +79,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="174" column="1" bodyfile="Header.h" bodystart="174" bodyend="-1"/>
+        <location file="header.h" line="161" column="13" bodyfile="header.h" bodystart="161" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1ad4fab4d4a81d08ee63ba336125e8aaa6" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -93,7 +92,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="175" column="1" bodyfile="Header.h" bodystart="175" bodyend="-1"/>
+        <location file="header.h" line="162" column="13" bodyfile="header.h" bodystart="162" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a8e1ec625623e995cbe02ef9b0c49c349" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -106,7 +105,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="176" column="1" bodyfile="Header.h" bodystart="176" bodyend="-1"/>
+        <location file="header.h" line="163" column="13" bodyfile="header.h" bodystart="163" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a3ae0c53b4968b1768b4ec184dafa7110" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -119,7 +118,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="177" column="1" bodyfile="Header.h" bodystart="177" bodyend="-1"/>
+        <location file="header.h" line="164" column="13" bodyfile="header.h" bodystart="164" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a31ece9b68f95d0a0a5872e1c33021d64" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -132,7 +131,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="178" column="1" bodyfile="Header.h" bodystart="178" bodyend="-1"/>
+        <location file="header.h" line="165" column="13" bodyfile="header.h" bodystart="165" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1aba0a61eca829c63423184073408635b0" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -145,7 +144,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="179" column="1" bodyfile="Header.h" bodystart="179" bodyend="-1"/>
+        <location file="header.h" line="166" column="13" bodyfile="header.h" bodystart="166" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a9c7bca4d38ad5ba0384fe13f6ebc534d" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -158,7 +157,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="180" column="1" bodyfile="Header.h" bodystart="180" bodyend="-1"/>
+        <location file="header.h" line="167" column="13" bodyfile="header.h" bodystart="167" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3___t_t_t_r_hdr_1a0d0f4d32b72717c8ae30a2d26967f90e" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -171,14 +170,14 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Header.h" line="181" column="1" bodyfile="Header.h" bodystart="181" bodyend="-1"/>
+        <location file="header.h" line="168" column="13" bodyfile="header.h" bodystart="168" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="Header.h" line="168" column="1" bodyfile="Header.h" bodystart="168" bodyend="182"/>
+    <location file="header.h" line="155" column="15" bodyfile="header.h" bodystart="155" bodyend="169"/>
     <listofallmembers>
       <member refid="structpq__ht3___t_t_t_r_hdr_1a41c90a4c31086a040ac75b3d68f59464" prot="public" virt="non-virtual"><scope>pq_ht3_TTTRHdr</scope><name>ExtDevices</name></member>
       <member refid="structpq__ht3___t_t_t_r_hdr_1a572a2e6ff812b98f83cfd529be109930" prot="public" virt="non-virtual"><scope>pq_ht3_TTTRHdr</scope><name>Globclock</name></member>

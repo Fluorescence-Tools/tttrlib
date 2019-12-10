@@ -456,13 +456,12 @@ void selection_by_channels(
         long long **out, int *n_out,
         long long *in, int n_in,
         short *routing_channels, int n_routing_channels) {
-    int ch;
     size_t n_sel;
     *out = (long long *) malloc(n_routing_channels * sizeof(long long));
 
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
-        ch = routing_channels[i];
+        int ch = routing_channels[i];
         for (int j = 0; j < n_in; j++) {
             if (in[j] == ch) {
                 (*out)[n_sel++] = i;
@@ -501,26 +500,29 @@ void ranges_by_time_window(
 ) {
     *ranges = (int *) malloc(2 * n_time * sizeof(int));
     *n_range = 0;
-    int tw_begin, tw_end, n_ph;
     unsigned long dt;
 
-    tw_begin = 0;
-    while(tw_begin < n_time){
+    size_t tw_begin = 0;
+    while (tw_begin < n_time) {
+        size_t tw_end = 0;
+        for (
+                tw_end = tw_begin;
+                ((time[tw_end] - time[tw_begin]) < tw_min) && (tw_end < n_time);
+                tw_end++
+                );
 
-        for(tw_end = tw_begin; ((time[tw_end] - time[tw_begin]) < tw_min) && (tw_end < n_time); tw_end++);
-
-        n_ph = tw_end - tw_begin;
+        size_t n_ph = tw_end - tw_begin;
         dt = time[tw_begin] - time[tw_end];
 
-        if(
+        if (
                 ((tw_max < 0) || (dt < tw_max)) &&
                 ((n_ph_min < 0) || (n_ph >= n_ph_min)) &&
                 ((n_ph_max < 0) || (n_ph <= n_ph_max))
-                ){
-                    (*ranges)[(*n_range) + 0] = tw_begin;
-                    (*ranges)[(*n_range) + 1] = tw_end;
-                    (*n_range) += 2;
-                }
+                ) {
+            (*ranges)[(*n_range) + 0] = tw_begin;
+            (*ranges)[(*n_range) + 1] = tw_end;
+            (*n_range) += 2;
+        }
         tw_begin = tw_end;
     }
 }
@@ -569,18 +571,17 @@ void histogram_trace(
         int time_window){
     int l, r;
     unsigned long long t_max = in[n_in - 1];
-    int i_bin, n_bin;
 
-    n_bin = (int) (t_max / time_window);
+    int n_bin = (int) (t_max / time_window);
 
     *n_out = n_bin;
     *out = (int*) malloc(n_bin * sizeof(int));
-    for(int i=0; i<n_bin; i++) (*out)[i] = 0;
+    memset(out, 0, n_bin * sizeof(int));
 
     l = 0; r = 0;
     while(r < n_in){
         r++;
-        i_bin = int (in[l] / time_window);
+        int i_bin = int (in[l] / time_window);
         if ((in[r] - in[l]) > time_window){
             l = r;
         } else{
@@ -653,15 +654,12 @@ bool TTTR::write_file(char *fn, int container_type) {
                 record.bits.mtov = false;
 
                 int n = 0;
-                unsigned long MT, MT_ov_last;
                 unsigned long MT_ov = 0;
-
                 while (n < n_valid_events) {
-
-                    MT = macro_times[n] - MT_ov * 4095;
+                    unsigned  long MT = macro_times[n] - MT_ov * 4095;
                     if (MT > 4095) {
                         /* invalid photon */
-                        MT_ov_last = MT / (4096);
+                        unsigned long MT_ov_last = MT / (4096);
                         record_overflow.bits.cnt = MT_ov_last;
                         fwrite(&record_overflow, 4, 1, fp);
                         MT_ov += MT_ov_last;

@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.13">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
   <compounddef id="class_histogram" kind="class" language="C++" prot="public">
     <compoundname>Histogram</compoundname>
-    <includes refid="_histogram_8h" local="no">Histogram.h</includes>
     <templateparamlist>
       <param>
         <type>class T</type>
@@ -20,7 +19,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="211" column="1" bodyfile="Histogram.h" bodystart="211" bodyend="-1"/>
+        <location file="histogram.h" line="211" column="7" bodyfile="histogram.h" bodystart="211" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1a58bec751658a9ac01ed55ad6e924e229" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -33,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="212" column="1" bodyfile="Histogram.h" bodystart="212" bodyend="-1"/>
+        <location file="histogram.h" line="212" column="9" bodyfile="histogram.h" bodystart="212" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1a63e36df19af18228fddb8b86aa41bf97" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -46,7 +45,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="212" column="1" bodyfile="Histogram.h" bodystart="212" bodyend="-1"/>
+        <location file="histogram.h" line="212" column="22" bodyfile="histogram.h" bodystart="212" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1acaed79290c1fec2e59914a60dd69c61a" prot="private" static="no" mutable="no">
         <type>T *</type>
@@ -59,7 +58,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="214" column="1" bodyfile="Histogram.h" bodystart="214" bodyend="-1"/>
+        <location file="histogram.h" line="214" column="7" bodyfile="histogram.h" bodystart="214" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1a28171ff0884bff27c22dfa805828ef67" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -72,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="215" column="1" bodyfile="Histogram.h" bodystart="215" bodyend="-1"/>
+        <location file="histogram.h" line="215" column="9" bodyfile="histogram.h" bodystart="215" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1a0a023fae3a47bcf8330f1a52be138657" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -85,11 +84,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="215" column="1" bodyfile="Histogram.h" bodystart="215" bodyend="-1"/>
+        <location file="histogram.h" line="215" column="25" bodyfile="histogram.h" bodystart="215" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="class_histogram_1a4ab8259948b39ac08a79354398422c0f" prot="private" static="no" mutable="no">
-        <type>std::map&lt; size_t, <ref refid="class_axis" kindref="compound">Axis</ref>&lt; T &gt; &gt;</type>
-        <definition>std::map&lt;size_t , Axis&lt;T&gt; &gt; Histogram&lt; T &gt;::axes</definition>
+      <memberdef kind="variable" id="class_histogram_1a1e484a993cf6e5a30a83502862eb6021" prot="private" static="no" mutable="no">
+        <type>std::map&lt; size_t, <ref refid="class_histogram_axis" kindref="compound">HistogramAxis</ref>&lt; T &gt; &gt;</type>
+        <definition>std::map&lt;size_t , HistogramAxis&lt;T&gt; &gt; Histogram&lt; T &gt;::axes</definition>
         <argsstring></argsstring>
         <name>axes</name>
         <briefdescription>
@@ -98,7 +97,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="217" column="1" bodyfile="Histogram.h" bodystart="217" bodyend="-1"/>
+        <location file="histogram.h" line="217" column="14" bodyfile="histogram.h" bodystart="217" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1ad769c661be6a5aaa242fa7b7e9344657" prot="private" static="no" mutable="no">
         <type>T *</type>
@@ -111,7 +110,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="219" column="1" bodyfile="Histogram.h" bodystart="219" bodyend="-1"/>
+        <location file="histogram.h" line="219" column="7" bodyfile="histogram.h" bodystart="219" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_1a69bd8fa1a2b7f2c53e109c7fad45fb97" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -124,7 +123,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="220" column="1" bodyfile="Histogram.h" bodystart="220" bodyend="-1"/>
+        <location file="histogram.h" line="220" column="9" bodyfile="histogram.h" bodystart="220" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-attrib">
@@ -139,7 +138,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="223" column="1" bodyfile="Histogram.h" bodystart="223" bodyend="-1"/>
+        <location file="histogram.h" line="223" column="9" bodyfile="histogram.h" bodystart="223" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-func">
@@ -154,7 +153,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="225" column="1" bodyfile="Histogram.h" bodystart="225" bodyend="227"/>
+        <location file="histogram.h" line="225" column="12" bodyfile="histogram.h" bodystart="225" bodyend="227"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1aab5a07cfc09bfc0d504d58fbd8164ce3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -167,7 +166,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="229" column="1" bodyfile="Histogram.h" bodystart="229" bodyend="286"/>
+        <location file="histogram.h" line="229" column="10" bodyfile="histogram.h" bodystart="229" bodyend="286"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1ae74962acd836b01d1178b83d9aa99550" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -188,19 +187,19 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="288" column="1" bodyfile="Histogram.h" bodystart="288" bodyend="291"/>
+        <location file="histogram.h" line="288" column="10" bodyfile="histogram.h" bodystart="288" bodyend="291"/>
       </memberdef>
-      <memberdef kind="function" id="class_histogram_1a23cf33ed2f5c3d0833d32c7dd0209370" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+      <memberdef kind="function" id="class_histogram_1a3285fb8015194114c3fd8757c9c6f301" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
         <definition>void Histogram&lt; T &gt;::setAxis</definition>
-        <argsstring>(size_t data_column, Axis&lt; T &gt; &amp;new_axis)</argsstring>
+        <argsstring>(size_t data_column, HistogramAxis&lt; T &gt; &amp;new_axis)</argsstring>
         <name>setAxis</name>
         <param>
           <type>size_t</type>
           <declname>data_column</declname>
         </param>
         <param>
-          <type><ref refid="class_axis" kindref="compound">Axis</ref>&lt; T &gt; &amp;</type>
+          <type><ref refid="class_histogram_axis" kindref="compound">HistogramAxis</ref>&lt; T &gt; &amp;</type>
           <declname>new_axis</declname>
         </param>
         <briefdescription>
@@ -209,7 +208,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="293" column="1" bodyfile="Histogram.h" bodystart="293" bodyend="295"/>
+        <location file="histogram.h" line="293" column="10" bodyfile="histogram.h" bodystart="293" bodyend="295"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1abb5b7f6edba2b9a99b6c456c23383d87" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -246,11 +245,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="297" column="1" bodyfile="Histogram.h" bodystart="297" bodyend="300"/>
+        <location file="histogram.h" line="297" column="10" bodyfile="histogram.h" bodystart="297" bodyend="300"/>
       </memberdef>
-      <memberdef kind="function" id="class_histogram_1a07d57444fc60e412e79137af9d87f0ff" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
-        <type><ref refid="class_axis" kindref="compound">Axis</ref>&lt; T &gt;</type>
-        <definition>Axis&lt;T&gt; Histogram&lt; T &gt;::getAxis</definition>
+      <memberdef kind="function" id="class_histogram_1a7576b39b08cb2f9b7fc4c5414983ca56" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type><ref refid="class_histogram_axis" kindref="compound">HistogramAxis</ref>&lt; T &gt;</type>
+        <definition>HistogramAxis&lt;T&gt; Histogram&lt; T &gt;::getAxis</definition>
         <argsstring>(size_t axis_index)</argsstring>
         <name>getAxis</name>
         <param>
@@ -263,7 +262,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="302" column="1" bodyfile="Histogram.h" bodystart="302" bodyend="304"/>
+        <location file="histogram.h" line="302" column="19" bodyfile="histogram.h" bodystart="302" bodyend="304"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1a383443d35829da535f3c049b002928ca" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -288,7 +287,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="306" column="1" bodyfile="Histogram.h" bodystart="306" bodyend="310"/>
+        <location file="histogram.h" line="306" column="10" bodyfile="histogram.h" bodystart="306" bodyend="310"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1a991af624b61ad77f0ecab2697565884b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -313,7 +312,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="312" column="1" bodyfile="Histogram.h" bodystart="312" bodyend="316"/>
+        <location file="histogram.h" line="312" column="10" bodyfile="histogram.h" bodystart="312" bodyend="316"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1a28ba263b97aefe4da4c30acfe430bede" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -326,7 +325,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="318" column="1"/>
+        <location file="histogram.h" line="318" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_1aa7885c184150b162950bf75408dafb33" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -339,18 +338,18 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="Histogram.h" line="320" column="1"/>
+        <location file="histogram.h" line="320" column="5"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="Histogram.h" line="208" column="1" bodyfile="Histogram.h" bodystart="208" bodyend="321"/>
+    <location file="histogram.h" line="208" column="16" bodyfile="histogram.h" bodystart="208" bodyend="321"/>
     <listofallmembers>
-      <member refid="class_histogram_1a4ab8259948b39ac08a79354398422c0f" prot="private" virt="non-virtual"><scope>Histogram</scope><name>axes</name></member>
+      <member refid="class_histogram_1a1e484a993cf6e5a30a83502862eb6021" prot="private" virt="non-virtual"><scope>Histogram</scope><name>axes</name></member>
       <member refid="class_histogram_1a308c982aada919e938f2a235f015dfb1" prot="private" virt="non-virtual"><scope>Histogram</scope><name>data</name></member>
-      <member refid="class_histogram_1a07d57444fc60e412e79137af9d87f0ff" prot="public" virt="non-virtual"><scope>Histogram</scope><name>getAxis</name></member>
+      <member refid="class_histogram_1a7576b39b08cb2f9b7fc4c5414983ca56" prot="public" virt="non-virtual"><scope>Histogram</scope><name>getAxis</name></member>
       <member refid="class_histogram_1a7637302e53db8b91576304f663ecc932" prot="public" virt="non-virtual"><scope>Histogram</scope><name>getAxisDimensions</name></member>
       <member refid="class_histogram_1ae74962acd836b01d1178b83d9aa99550" prot="public" virt="non-virtual"><scope>Histogram</scope><name>getHistogram</name></member>
       <member refid="class_histogram_1a28ba263b97aefe4da4c30acfe430bede" prot="public" virt="non-virtual"><scope>Histogram</scope><name>Histogram</name></member>
@@ -361,7 +360,7 @@
       <member refid="class_histogram_1a28171ff0884bff27c22dfa805828ef67" prot="private" virt="non-virtual"><scope>Histogram</scope><name>n_rows_weights</name></member>
       <member refid="class_histogram_1aa390028b7e8a06918cfea6b30506d803" prot="public" virt="non-virtual"><scope>Histogram</scope><name>n_total_bins</name></member>
       <member refid="class_histogram_1a69bd8fa1a2b7f2c53e109c7fad45fb97" prot="private" virt="non-virtual"><scope>Histogram</scope><name>number_of_axis</name></member>
-      <member refid="class_histogram_1a23cf33ed2f5c3d0833d32c7dd0209370" prot="public" virt="non-virtual"><scope>Histogram</scope><name>setAxis</name></member>
+      <member refid="class_histogram_1a3285fb8015194114c3fd8757c9c6f301" prot="public" virt="non-virtual"><scope>Histogram</scope><name>setAxis</name></member>
       <member refid="class_histogram_1abb5b7f6edba2b9a99b6c456c23383d87" prot="public" virt="non-virtual"><scope>Histogram</scope><name>setAxis</name></member>
       <member refid="class_histogram_1a991af624b61ad77f0ecab2697565884b" prot="public" virt="non-virtual"><scope>Histogram</scope><name>setData</name></member>
       <member refid="class_histogram_1a383443d35829da535f3c049b002928ca" prot="public" virt="non-virtual"><scope>Histogram</scope><name>setWeights</name></member>

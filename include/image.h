@@ -8,6 +8,8 @@
 #include <tttr.h>
 #include <vector>
 #include <list>
+#include <cstring>
+
 
 
 class CLSMPixel : public TTTRRange{
