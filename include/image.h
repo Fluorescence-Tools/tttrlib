@@ -56,10 +56,10 @@ class CLSMLine : public TTTRRange{
 
 private:
     std::vector<CLSMPixel*> pixels;
-    unsigned int n_pixel;
-    unsigned int pixel_duration;
 
 public:
+    unsigned int n_pixel;
+    unsigned int pixel_duration;
 
     std::vector<CLSMPixel*> get_pixels(){
         return pixels;
@@ -86,10 +86,12 @@ public:
         if(fill){
             for(auto p: old_line.pixels){
                 pixels.push_back(new CLSMPixel(*p));
+                n_pixel++;
             }
         } else{
             for(auto p: old_line.pixels){
                 pixels.push_back(new CLSMPixel());
+                n_pixel++;
             }
         }
     }
@@ -142,6 +144,7 @@ public:
         // private attributes
         for(auto l: old_frame.lines){
             lines.push_back(new CLSMLine(*l, fill));
+            n_lines++;
         }
     }
 

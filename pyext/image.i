@@ -41,20 +41,50 @@ namespace std {
 }
 
 %extend CLSMImage {
-        CLSMFrame* __getitem__(unsigned int i) {
+
+        CLSMFrame* __getitem__(int i) {
+            if (i < 0){
+                i = $self->n_frames + i;
+            }
+            if (i >= $self->n_frames) {
+                return nullptr;
+            }
             return (*($self))[i];
+        }
+        size_t __len__(){
+            return $self->n_frames;
         }
 }
 
 %extend CLSMFrame {
-        CLSMLine* __getitem__(unsigned int i) {
+
+        CLSMLine* __getitem__(int i) {
+            if (i < 0){
+                i = $self->n_lines + i;
+            }
+            if (i >= $self->n_lines) {
+                return nullptr;
+            }
             return (*($self))[i];
+        }
+        size_t __len__(){
+            return $self->n_lines;
         }
 }
 
 %extend CLSMLine {
-        CLSMPixel* __getitem__(unsigned int i) {
+
+        CLSMPixel* __getitem__(int i) {
+            if (i < 0){
+                i = $self->n_pixel + i;
+            }
+            if (i >= $self->n_pixel) {
+                return nullptr;
+            }
             return (*($self))[i];
+        }
+        size_t __len__(){
+            return $self->n_pixel;
         }
 }
 
