@@ -209,8 +209,8 @@ void ranges_by_time_window(
 class TTTRRange {
 
 protected:
-    unsigned long long start;
-    unsigned long long stop;
+    size_t start;
+    size_t stop;
     unsigned long long start_time;
     unsigned long long stop_time;
 

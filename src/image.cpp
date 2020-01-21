@@ -1,4 +1,5 @@
 #include <include/image.h>
+#include <net/if_var.h>
 
 
 CLSMFrame::CLSMFrame():
@@ -326,8 +327,6 @@ void CLSMImage::fill_pixels(
         TTTR* tttr_data,
         std::vector<unsigned int> channels
         ) {
-    short c;              // routing channel
-    short e;              // event type
     std::clog << "Fill pixels with photons" << std::endl;
     size_t pixel_nbr;
     std::clog << "-- Channels: ";
@@ -339,10 +338,9 @@ void CLSMImage::fill_pixels(
     for(auto frame : frames){
         for(auto line : frame->lines){
             auto pixel_duration = line->get_pixel_duration();
-            for(auto i=line->start; i < line->stop; i++){
-                e = tttr_data->event_types[i];
-                c = tttr_data->routing_channels[i];
-                if (e == RECORD_PHOTON) {
+            for(auto i=line->start; (i < line->stop) && (i < tttr_data->n_valid_events); i++){
+                if (tttr_data->event_types[i] == RECORD_PHOTON) {
+                    short c = tttr_data->routing_channels[i];
                     for(auto ci : channels){
                         if(c == ci){
                             if(line->n_pixel == 0){

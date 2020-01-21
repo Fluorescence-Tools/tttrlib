@@ -11,6 +11,12 @@ class TestCLSM(unittest.TestCase):
     sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
     sp8_data = tttrlib.TTTR(sp8_filename, 'PTU')
 
+    ht3_filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
+    ht3_data = tttrlib.TTTR(ht3_filename, 'HT3')
+
+    sp5_filename = './data/leica/sp5/LSM_1.ptu'
+    sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+
     def test_leica_sp8_image_1(self):
         data = self.sp8_data
         frame_marker = [4, 6]
@@ -117,8 +123,7 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_leica_sp5_image(self):
-        filename = './data/leica/sp5/20190918_Khm_Cam-eGFP.sptw/LSM_2.ptu'
-        data = tttrlib.TTTR(filename, 'PTU')
+        data = self.sp5_data
         frame_marker = [4, 6]
         line_start_marker = 1
         line_stop_marker = 2
@@ -142,23 +147,21 @@ class TestCLSM(unittest.TestCase):
         intensity_image = clsm_image.get_intensity_image()
 
     def test_leica_sp8_histogram(self):
-        filename = './data/leica/sp8/IRF488_20MHz_25_1.ptu'
-        data = tttrlib.TTTR(filename, 'PTU')
+        data = self.sp8_data
         micro_time = data.get_micro_time()
         mt_sel = micro_time
         counts = np.bincount(mt_sel // 4)
         header = data.get_header()
         dt = header.micro_time_resolution
         x_axis = np.arange(counts.shape[0]) * dt
-        output_filename = 'test_irf.csv'
+        output_filename = 'test.csv'
         np.savetxt(
             fname=output_filename,
             X=np.vstack([x_axis,counts]).T
         )
 
     def test_clsm_intensity(self):
-        filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
-        data = tttrlib.TTTR(filename, 'HT3')
+        data = self.ht3_data
         frame_marker = [4]
         line_start_marker = 1
         line_stop_marker = 2
