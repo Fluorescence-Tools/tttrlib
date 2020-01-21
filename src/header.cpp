@@ -43,6 +43,7 @@ Header::Header(
         ) :
         Header()
 {
+    int binning_factor = 1;
     switch(tttr_container_type){
         case PQ_PTU_CONTAINER:
             number_of_tac_channels = 32768; //2**15
@@ -55,6 +56,8 @@ Header::Header(
                     micro_time_resolution
                     );
             bytes_per_record = 4;
+            binning_factor = std::stoi(data.at("MeasDesc_BinningFactor"));
+            number_of_tac_channels /= binning_factor;
             break;
         case PQ_HT3_CONTAINER:
             header_end = read_ht3_header(
