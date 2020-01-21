@@ -209,8 +209,8 @@ void ranges_by_time_window(
 class TTTRRange {
 
 protected:
-    unsigned int start;
-    unsigned int stop;
+    unsigned long long start;
+    unsigned long long stop;
     unsigned long long start_time;
     unsigned long long stop_time;
 
@@ -226,8 +226,8 @@ public:
 
     virtual std::vector<unsigned int> get_tttr_indices();
 
-    std::vector<unsigned int> get_start_stop(){
-        std::vector<unsigned int> v = {start, stop};
+    std::vector<unsigned long long> get_start_stop(){
+        std::vector<unsigned long long> v = {start, stop};
         return v;
     }
 
@@ -349,7 +349,17 @@ private:
 
     int read_hdf_file(char *fn);
 
+
 protected:
+
+    /*!
+    * Traverses the routing channel array and lists the used routing channel
+    * numbers in the protected attribute used_routing_channels.
+    */
+    void find_used_routing_channels();
+
+    /// a vector containing the used routing channel numbers in the TTTR file
+    std::vector<short> used_routing_channels;
 
     /// allocates memory for the records. @param n_rec are the number of records.
     void allocate_memory_for_records(size_t n_rec);
@@ -378,25 +388,27 @@ protected:
     size_t n_valid_events;
 
     /*!
- * Reads the TTTR data contained in a file into the TTTR object
- *
- *
- * @param fn The filename
- * @param container_type The container type.
- * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
- */
+     * Reads the TTTR data contained in a file into the TTTR object
+     *
+     *
+     * @param fn The filename
+     * @param container_type The container type.
+     * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
+     */
     int read_file(char *fn, int container_type);
     int read_file();
 
 
 public:
 
+    void get_used_routing_channels(short **out, int *n_out);
     void get_macro_time(unsigned long long **out, int *n_out);
     void get_micro_time(unsigned int **out, int *n_out);
     void get_routing_channel(short ** out, int* n_out);
     void get_event_type(short ** out, int* n_out);
     int get_number_of_tac_channels();
     int get_n_valid_events();
+
     TTTR* select(long long *selection, int n_selection);
 
     /*! Constructor
