@@ -191,7 +191,6 @@ public:
     unsigned int n_frames;
     unsigned int n_lines;
     unsigned int n_pixel;
-    unsigned int binning;
 
     CLSMFrame* operator[](unsigned int i_frame){
         return frames[i_frame];
@@ -314,7 +313,6 @@ public:
         n_frames = old_clsm.n_frames;
         n_lines = old_clsm.n_lines;
         n_pixel = old_clsm.n_pixel;
-        binning = old_clsm.binning;
     }
 
     /*!
@@ -348,8 +346,7 @@ public:
             unsigned int marker_line_stop,
             unsigned int marker_event_type,
             unsigned int n_pixel_per_line,
-            std::string reading_routine,
-            unsigned int binning=2 // currently not used
+            std::string reading_routine
     );
 
     ~CLSMImage(){

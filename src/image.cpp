@@ -58,15 +58,13 @@ CLSMImage::CLSMImage (
         unsigned int marker_line_stop,
         unsigned int marker_event_type,
         unsigned int pixel_per_line,
-        std::string reading_routine,
-        unsigned int binning
+        std::string reading_routine
 ) : CLSMImage() {
     CLSMImage::marker_frame = marker_frame_start;
     CLSMImage::marker_line_start = marker_line_start;
     CLSMImage::marker_line_stop = marker_line_stop;
     CLSMImage::marker_event = marker_event_type;
     CLSMImage::n_pixel = pixel_per_line;
-    CLSMImage::binning = binning;
 
     /// map to translates string container types to int container types
     std::map<std::string, int> image_reading_routines = {

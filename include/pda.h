@@ -36,7 +36,6 @@ public:
     void get_probability_green(double**out, int* dim1);
 
     // Getter and Setter
-
     unsigned int get_max_number_of_photons() const;
 
     void set_max_number_of_photons(unsigned int nmax);
