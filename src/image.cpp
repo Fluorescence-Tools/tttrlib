@@ -1,5 +1,4 @@
 #include <include/image.h>
-#include <net/if_var.h>
 
 
 CLSMFrame::CLSMFrame():
