@@ -126,6 +126,11 @@ void TTTR::find_used_routing_channels(){
             used_routing_channels.push_back(c);
         }
     }
+    std::clog << "-- Used routing channels: ";
+    for(auto c: used_routing_channels){
+        std::clog << c << ", ";
+    }
+    std::clog << std::endl;
 }
 
 int TTTR::read_hdf_file(char *fn){

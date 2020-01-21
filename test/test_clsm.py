@@ -40,6 +40,7 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[1]
         )
+        clsm_image_2 = tttrlib.CLSMImage(clsm_image, True)
         intensity_image = clsm_image.get_intensity_image()
 
         mean_tac_image = clsm_image.get_mean_tac_image(
@@ -157,7 +158,7 @@ class TestCLSM(unittest.TestCase):
         output_filename = 'test.csv'
         np.savetxt(
             fname=output_filename,
-            X=np.vstack([x_axis,counts]).T
+            X=np.vstack([x_axis, counts]).T
         )
 
     def test_clsm_intensity(self):
@@ -166,7 +167,7 @@ class TestCLSM(unittest.TestCase):
         line_start_marker = 1
         line_stop_marker = 2
         event_type_marker = 1
-        pixel_per_line = 256
+        pixel_per_line = 0
         clsm_image_1 = tttrlib.CLSMImage(
             data,
             frame_marker,
@@ -181,6 +182,11 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
         intensity_image_1 = clsm_image_1.get_intensity_image()
+        # np.save(
+        #     './data/reference/img_ref_intensity.npy',
+        #     intensity_image_1
+        # )
+
         intensity_image_reference = np.load(
             './data/reference/img_ref_intensity.npy',
         )
@@ -196,6 +202,10 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             n_ph_min=1
         )
+        # np.save(
+        #     './data/reference/img_ref_mean_tac.npy',
+        #     mean_tac_image
+        # )
         mean_tac_image_reference = np.load(
             './data/reference/img_ref_mean_tac.npy',
         )
@@ -211,10 +221,10 @@ class TestCLSM(unittest.TestCase):
         tac_image = clsm_image_1.get_decay_image(
             tttr_data=data,
             tac_coarsening=tac_coarsening,
-            stack_frames=True
+            stack_frames=False
         )
 
-        clsm_image_2 = tttrlib.CLSMImage(clsm_image_1)
+        clsm_image_2 = tttrlib.CLSMImage(clsm_image_1, False)
         clsm_image_2.fill_pixels(
             tttr_data=data,
             channels=[1]
