@@ -191,23 +191,23 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-        #
-        # mean_tac_image = clsm_image_1.get_mean_tac_image(
-        #     tttr_data=data,
-        #     n_ph_min=1
-        # )
-        # mean_tac_image_reference = np.load(
-        #     './data/reference/img_ref_mean_tac.npy',
-        # )
-        # self.assertEqual(
-        #     np.allclose(
-        #         mean_tac_image,
-        #         mean_tac_image_reference
-        #     ),
-        #     True
-        # )
 
-        tac_coarsening = 64
+        mean_tac_image = clsm_image_1.get_mean_tac_image(
+            tttr_data=data,
+            n_ph_min=1
+        )
+        mean_tac_image_reference = np.load(
+            './data/reference/img_ref_mean_tac.npy',
+        )
+        self.assertEqual(
+            np.allclose(
+                mean_tac_image,
+                mean_tac_image_reference
+            ),
+            True
+        )
+
+        tac_coarsening = 256
         tac_image = clsm_image_1.get_decay_image(
             tttr_data=data,
             tac_coarsening=tac_coarsening,
