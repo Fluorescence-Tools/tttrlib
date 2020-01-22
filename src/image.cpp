@@ -387,7 +387,7 @@ void CLSMImage::get_intensity_image(
     *dim3 = n_pixel;
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
     std::clog << "Get intensity image" << std::endl;
-    std::clog << "-- Frames, lines, pixel: " << n_frames << "," << n_lines << "," << n_pixel << std::endl;
+    std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Total number of pixels: " << n_pixel_total << std::endl;
     auto* t = (unsigned int*) calloc(n_pixel_total+1, sizeof(unsigned int));
     size_t i_frame = 0;
@@ -426,7 +426,7 @@ void CLSMImage::get_decay_image(
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
     auto* t = (unsigned char*) calloc(n_tac_total, sizeof(unsigned char));
 
-    std::clog << "-- Frames, lines, pixel: " << n_frames << "," << n_lines << "," << n_pixel << std::endl;
+    std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Number of micro time channels: " << n_tac << std::endl;
     std::clog << "-- Micro time coarsening factor: " << tac_coarsening << std::endl;
     std::clog << "-- Final number of micro time channels: " << n_tac << std::endl;

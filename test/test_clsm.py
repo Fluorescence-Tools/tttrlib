@@ -41,17 +41,43 @@ class TestCLSM(unittest.TestCase):
             channels=[1]
         )
         clsm_image_2 = tttrlib.CLSMImage(clsm_image, True)
-        intensity_image = clsm_image.get_intensity_image()
+        intensity_image_1 = clsm_image.get_intensity_image()
+        intensity_image_2 = clsm_image_2.get_intensity_image()
+        self.assertEqual(
+            np.allclose(intensity_image_1, intensity_image_2),
+            True
+        )
 
+        # Test mean TAC image
         mean_tac_image = clsm_image.get_mean_tac_image(
             tttr_data=data,
             n_ph_min=1
+        ).sum(axis=0)
+        np.save('./data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
+        self.assertEqual(
+            np.allclose(
+                np.load(
+                    './data/reference/img_ref_mean_tac_sp8.npy',
+                ),
+                mean_tac_image
+            ),
+            True
         )
 
+        # Test decay image
         decay_image = clsm_image.get_decay_image(
             tttr_data=data,
             tac_coarsening=256,
             stack_frames=True
+        )
+        self.assertEqual(
+            np.allclose(
+                np.load(
+                    './data/reference/img_ref_decay_image_sp8.npy',
+                ),
+                decay_image
+            ),
+            True
         )
 
         # Access the pixel
@@ -145,7 +171,17 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[0]
         )
-        intensity_image = clsm_image.get_intensity_image()
+        intensity_image = clsm_image.get_intensity_image().sum(axis=0)
+        np.save('./data/reference/img_intensity_image_sp5.npy', intensity_image)
+        self.assertEqual(
+            np.allclose(
+                np.load(
+                    './data/reference/img_intensity_image_sp5.npy',
+                ),
+                intensity_image
+            ),
+            True
+        )
 
     def test_leica_sp8_histogram(self):
         data = self.sp8_data
@@ -181,19 +217,14 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[0]
         )
-        intensity_image_1 = clsm_image_1.get_intensity_image()
-        # np.save(
-        #     './data/reference/img_ref_intensity.npy',
-        #     intensity_image_1
-        # )
-
-        intensity_image_reference = np.load(
-            './data/reference/img_ref_intensity.npy',
-        )
+        intensity_image_1 = clsm_image_1.get_intensity_image().sum(axis=0)
+        np.save('./data/reference/img_ref_intensity.npy', intensity_image_1)
         self.assertEqual(
             np.allclose(
                 intensity_image_1,
-                intensity_image_reference
+                np.load(
+                    './data/reference/img_ref_intensity.npy',
+                )
             ),
             True
         )
@@ -201,27 +232,31 @@ class TestCLSM(unittest.TestCase):
         mean_tac_image = clsm_image_1.get_mean_tac_image(
             tttr_data=data,
             n_ph_min=1
-        )
-        # np.save(
-        #     './data/reference/img_ref_mean_tac.npy',
-        #     mean_tac_image
-        # )
-        mean_tac_image_reference = np.load(
-            './data/reference/img_ref_mean_tac.npy',
-        )
+        ).sum(axis=0)
         self.assertEqual(
             np.allclose(
                 mean_tac_image,
-                mean_tac_image_reference
+                np.load(
+                    './data/reference/img_ref_mean_tac.npy',
+                )
             ),
             True
         )
 
-        tac_coarsening = 256
+        tac_coarsening = 512
         tac_image = clsm_image_1.get_decay_image(
             tttr_data=data,
             tac_coarsening=tac_coarsening,
-            stack_frames=False
+            stack_frames=True
+        ).sum(axis=1)
+        self.assertEqual(
+            np.allclose(
+                tac_image,
+                np.load(
+                    './data/reference/img_ref_decay_image.npy',
+                )
+            ),
+            True
         )
 
         clsm_image_2 = tttrlib.CLSMImage(clsm_image_1, False)
@@ -229,5 +264,12 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[1]
         )
-        intensity_image_2 = clsm_image_1.get_intensity_image()
+        intensity_image_2 = clsm_image_1.get_intensity_image().sum(axis=0)
+        self.assertEqual(
+            np.allclose(
+                intensity_image_2,
+                intensity_image_1
+            ),
+            True
+        )
 
