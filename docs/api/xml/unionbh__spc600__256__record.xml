@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="unionbh__spc600__256__record" kind="union" language="C++" prot="public">
+    <compoundname>bh_spc600_256_record</compoundname>
+    <includes refid="record__types_8h" local="no">record_types.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a83f85ae8c6030580ac1ce6da0a6cf734" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t bh_spc600_256_record::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="55" column="14" bodyfile="include/record_types.h" bodystart="55" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a6ccab2c298b961634e4881e6c95ad7e8" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::adc</definition>
+        <argsstring></argsstring>
+        <name>adc</name>
+        <bitfield> 8</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="57" column="18" bodyfile="include/record_types.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a7ee654e16d2358e8951f0ebc7395e825" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::mt</definition>
+        <argsstring></argsstring>
+        <name>mt</name>
+        <bitfield> 17</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="58" column="18" bodyfile="include/record_types.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a80a4f8403a2c4aa9d296f8d690ce81ca" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::rout</definition>
+        <argsstring></argsstring>
+        <name>rout</name>
+        <bitfield> 3</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="59" column="18" bodyfile="include/record_types.h" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a39919612d6502ad0334049fb2535cc83" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::empty</definition>
+        <argsstring></argsstring>
+        <name>empty</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="60" column="18" bodyfile="include/record_types.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a4f25142abb7655a59d486cb81107e9a2" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::gap</definition>
+        <argsstring></argsstring>
+        <name>gap</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="61" column="18" bodyfile="include/record_types.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1ae54665a9affd2fdd90c8a37b91d9a009" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="62" column="18" bodyfile="include/record_types.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1aa097daa8922acb8321e5dad1f83176f3" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_256_record::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="63" column="18" bodyfile="include/record_types.h" bodystart="63" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__256__record_1a10ebd80549b484f7c7e487481c6e98bb" prot="public" static="no" mutable="no">
+        <type>struct bh_spc600_256_record::@4</type>
+        <definition>struct bh_spc600_256_record::@4  bh_spc600_256_record::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="64" column="10"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-600/630 256 Channel Mode, regular record. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/record_types.h" line="54" column="35" bodyfile="include/record_types.h" bodystart="54" bodyend="65"/>
+    <listofallmembers>
+      <member refid="unionbh__spc600__256__record_1a6ccab2c298b961634e4881e6c95ad7e8" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>adc</name></member>
+      <member refid="unionbh__spc600__256__record_1a83f85ae8c6030580ac1ce6da0a6cf734" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>allbits</name></member>
+      <member refid="unionbh__spc600__256__record_1a10ebd80549b484f7c7e487481c6e98bb" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>bits</name></member>
+      <member refid="unionbh__spc600__256__record_1a39919612d6502ad0334049fb2535cc83" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>empty</name></member>
+      <member refid="unionbh__spc600__256__record_1a4f25142abb7655a59d486cb81107e9a2" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>gap</name></member>
+      <member refid="unionbh__spc600__256__record_1aa097daa8922acb8321e5dad1f83176f3" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>invalid</name></member>
+      <member refid="unionbh__spc600__256__record_1a7ee654e16d2358e8951f0ebc7395e825" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>mt</name></member>
+      <member refid="unionbh__spc600__256__record_1ae54665a9affd2fdd90c8a37b91d9a009" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>mtov</name></member>
+      <member refid="unionbh__spc600__256__record_1a80a4f8403a2c4aa9d296f8d690ce81ca" prot="public" virt="non-virtual"><scope>bh_spc600_256_record</scope><name>rout</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

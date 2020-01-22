@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="md__r_e_a_d_m_e" kind="page">
+    <compoundname>md_README</compoundname>
+    <title>tttrlib</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para><ulink url="https://travis-ci.org/fluorescence-tools/tttrlib"><image type="html" name="tttrlib.svg" inline="yes"></image>
+</ulink> <ulink url="https://ci.appveyor.com/project/tpeulen/tttrlib/branch/master"><image type="html" name="master?svg=true" inline="yes"></image>
+</ulink> <ulink url="https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade"><image type="html" name="1f727cbedb48433ea256cc81cca58fb2" inline="yes"></image>
+</ulink> <ulink url="https://conda.anaconda.org/tpeulen"><image type="html" name="conda.svg" inline="yes"></image>
+</ulink></para>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md1">
+<title>General description</title>
+<para>tttrlib is a file format agnostic low level, high performance API to read and process time-tagged-time resolved (<ref refid="class_t_t_t_r" kindref="compound">TTTR</ref>) data acquired by PicoQuant (PQ) and Becker&amp;Hickl measurement devices/cards or <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> files in the open Photon-HDF format.</para>
+<para>The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing a vendor independent C++ application programming interface (API) for <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> files that is wrapped by SWIG (Simplified Wrapper and Interface Generator) for common scripting languages as Python as target languages and non-scripting languages such as C# and Java including Octave, Scilab and R.</para>
+<para><itemizedlist>
+<listitem><para>Multi-dimensional histograms</para>
+</listitem><listitem><para>Correlation analysis</para>
+</listitem><listitem><para>Time-window analysis</para>
+</listitem><listitem><para>Photon distribution anaylsis</para>
+</listitem><listitem><para>FLIM image generation and analysis</para>
+</listitem></itemizedlist>
+</para>
+<para><image type="html" name="imaging_tutorial.png" inline="yes"></image>
+</para>
+<para>tttrlib is NOT intended as ready-to-use software for specific application purposes.</para>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md2">
+<title>Supported file formats</title>
+<sect2 id="md__r_e_a_d_m_e_1autotoc_md3">
+<title>PicoQuant (PQ)</title>
+<para><itemizedlist>
+<listitem><para>PicoHarp ptu, T2/T3</para>
+</listitem><listitem><para>HydraHarp ptu, T2/T3</para>
+</listitem><listitem><para>HydraHarp ht3, PTU</para>
+</listitem></itemizedlist>
+</para>
+</sect2>
+<sect2 id="md__r_e_a_d_m_e_1autotoc_md4">
+<title>Becker &amp; Hickl (BH)</title>
+<para><itemizedlist>
+<listitem><para>spc132</para>
+</listitem><listitem><para>spc630 (256 &amp; 4096 mode)</para>
+</listitem></itemizedlist>
+</para>
+</sect2>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md5">
+<title>Design goals</title>
+<para><itemizedlist>
+<listitem><para>Low memory footprint (keep objective large datasets, e.g. FLIM in memory). Particulary useful for FLIM.</para>
+</listitem><listitem><para>Platform independent C/C++ library with interfaces for scripting libraries</para>
+</listitem></itemizedlist>
+</para>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md6">
+<title>Capabilities</title>
+<para><itemizedlist>
+<listitem><para>Fast (IO limited) Reading <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> files</para>
+</listitem><listitem><para>Generation / analysis of fluorescence decays</para>
+</listitem><listitem><para>Time window analysis</para>
+</listitem><listitem><para>Correlation of time event traces</para>
+</listitem><listitem><para>Filtering of time event traces to generate instrument response functions for fluorescence decays analysis without the need of independent measurements..</para>
+</listitem><listitem><para>Fast photon distribution analysis</para>
+</listitem><listitem><para>Fast selection of photons from a photon stream</para>
+</listitem></itemizedlist>
+</para>
+<para>Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based libraries by a factor of ~40 <linebreak/>
+</para>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md7">
+<title>Implementation</title>
+<para>Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive analysis of <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> data.</para>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md8">
+<title>Building and Installation</title>
+<sect2 id="md__r_e_a_d_m_e_1autotoc_md9">
+<title>C++ shared library</title>
+<para>The C++ shared library can be installed from source with <ulink url="https://cmake.org/">cmake</ulink>:</para>
+<para><programlisting filename=".console"><codeline><highlight class="normal">git<sp/>clone<sp/>--recursive<sp/>https://github.com/fluorescence-tools/tttrlib.git</highlight></codeline>
+<codeline><highlight class="normal">mkdir<sp/>tttrlib/build;<sp/>cd<sp/>tttrlib/build</highlight></codeline>
+<codeline><highlight class="normal">cmake<sp/>..</highlight></codeline>
+<codeline><highlight class="normal">sudo<sp/>make<sp/>install</highlight></codeline>
+</programlisting></para>
+<para>On Linux you can build and install a package instead (prefered):</para>
+</sect2>
+<sect2 id="md__r_e_a_d_m_e_1autotoc_md10">
+<title>Python bindings</title>
+<para>The Python bindings can be either be installed by downloading and compiling the source code or by using a precompiled distribution for Python anaconda environment.</para>
+<para>The following commands can be used to download and compile the source code:</para>
+<para><programlisting filename=".console"><codeline><highlight class="normal">git<sp/>clone<sp/>--recursive<sp/>https://github.com/fluorescence-tools/tttrlib.git</highlight></codeline>
+<codeline><highlight class="normal">cd<sp/>tttrlib</highlight></codeline>
+<codeline><highlight class="normal">sudo<sp/>python<sp/>setup.py<sp/>install</highlight></codeline>
+</programlisting></para>
+<para>In an <ulink url="https://www.anaconda.com/">anaconda</ulink> environment the library can be installed by the following command: <programlisting filename=".console"><codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>fluorescence-tools<sp/>tttrlib</highlight></codeline>
+</programlisting></para>
+<para>For most users the later approach is recommended. Currently, pre-compiled packages for the anaconda distribution system are available for:</para>
+<para><itemizedlist>
+<listitem><para>Windows: Python 3.7 (x64)</para>
+</listitem><listitem><para>Linux: Python 3.7 (x64)</para>
+</listitem><listitem><para>MacOs: Python 3.7 (x64)</para>
+</listitem></itemizedlist>
+</para>
+<para>Legacy 32-bit platforms are currently not supported.</para>
+</sect2>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md11">
+<title>Documentation</title>
+<para>The API of tttrlib as well as some use cases are documented on its <ulink url="https://fluorescence-tools.github.io/tttrlib">web page</ulink></para>
+<para>Note, tttrlib is highly experimental library in current development. In case you notice unusual behaviour do not hesitate to contact the authors.</para>
+</sect1>
+<sect1 id="md__r_e_a_d_m_e_1autotoc_md12">
+<title>License</title>
+<para>tttrlib is released under the open source MPL 2.0 license. </para>
+</sect1>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,246 @@
+\hypertarget{class_c_l_s_m_image}{}\doxysection{C\+L\+S\+M\+Image Class Reference}
+\label{class_c_l_s_m_image}\index{CLSMImage@{CLSMImage}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a42ea11ffa9e08231d8b35fbf84ea5e98}\label{class_c_l_s_m_image_a42ea11ffa9e08231d8b35fbf84ea5e98}} 
+\mbox{\hyperlink{class_c_l_s_m_frame}{C\+L\+S\+M\+Frame}} $\ast$ {\bfseries operator\mbox{[}$\,$\mbox{]}} (unsigned int i\+\_\+frame)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a9c59983242f48299a837bd1051f24579}{fill\+\_\+pixels}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, std\+::vector$<$ unsigned int $>$ channels)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a687d91cb51ea90e2533620011373a2a9}{clear\+\_\+pixels}} ()
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_aea9302e2ac4fe2d323b58fd1607a1131}\label{class_c_l_s_m_image_aea9302e2ac4fe2d323b58fd1607a1131}} 
+std\+::vector$<$ \mbox{\hyperlink{class_c_l_s_m_frame}{C\+L\+S\+M\+Frame}} $\ast$ $>$ {\bfseries get\+\_\+frames} ()
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a92b36d5e5b8284619abcc75f0c1556ec}\label{class_c_l_s_m_image_a92b36d5e5b8284619abcc75f0c1556ec}} 
+void {\bfseries get\+\_\+intensity\+\_\+image} (unsigned int $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}{get\+\_\+decay\+\_\+image}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, unsigned char $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3, int $\ast$dim4, int tac\+\_\+coarsening, bool stack\+\_\+frames)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a026a4dee86eb25d064c5d04792d57166}{get\+\_\+decays}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, short $\ast$selection, int d\+\_\+selection\+\_\+1, int d\+\_\+selection\+\_\+2, int d\+\_\+selection\+\_\+3, unsigned int $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int tac\+\_\+coarsening, bool stack\+\_\+frames)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_aa333925d1173f44eae06f09c9964bbdf}{get\+\_\+mean\+\_\+tac\+\_\+image}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, double $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3, int n\+\_\+ph\+\_\+min)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_ae3808dc0b1194defe3dc09db29f4508f}{append}} (\mbox{\hyperlink{class_c_l_s_m_frame}{C\+L\+S\+M\+Frame}} $\ast$frame)
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_ad021faf428cb640f93a18cb0ab2471b2}\label{class_c_l_s_m_image_ad021faf428cb640f93a18cb0ab2471b2}} 
+{\bfseries C\+L\+S\+M\+Image} (const \mbox{\hyperlink{class_c_l_s_m_image}{C\+L\+S\+M\+Image}} \&old\+\_\+clsm, bool fill=false)
+\item 
+\mbox{\hyperlink{class_c_l_s_m_image_a643701c7585934479d0236b27a8c3bc6}{C\+L\+S\+M\+Image}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, std\+::vector$<$ unsigned int $>$ marker\+\_\+frame\+\_\+start, unsigned int marker\+\_\+line\+\_\+start, unsigned int marker\+\_\+line\+\_\+stop, unsigned int marker\+\_\+event\+\_\+type, unsigned int n\+\_\+pixel\+\_\+per\+\_\+line, std\+::string reading\+\_\+routine)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_ab94be14f27a9a83ff2d8b5c03df378c2}\label{class_c_l_s_m_image_ab94be14f27a9a83ff2d8b5c03df378c2}} 
+std\+::vector$<$ unsigned int $>$ {\bfseries marker\+\_\+frame}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a574a688bc019eec1639214151b206088}\label{class_c_l_s_m_image_a574a688bc019eec1639214151b206088}} 
+unsigned int {\bfseries marker\+\_\+line\+\_\+start}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a9b1266611a9b0515fca914bc1419862d}\label{class_c_l_s_m_image_a9b1266611a9b0515fca914bc1419862d}} 
+unsigned int {\bfseries marker\+\_\+line\+\_\+stop}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_accde3e92fd7edb05d4b854f67c9fc63e}\label{class_c_l_s_m_image_accde3e92fd7edb05d4b854f67c9fc63e}} 
+unsigned int {\bfseries marker\+\_\+event}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a979e019613060e092989aa523df9e02c}\label{class_c_l_s_m_image_a979e019613060e092989aa523df9e02c}} 
+unsigned int {\bfseries n\+\_\+frames}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_a0ed178353e0af44330528f16ef03ffab}\label{class_c_l_s_m_image_a0ed178353e0af44330528f16ef03ffab}} 
+unsigned int {\bfseries n\+\_\+lines}
+\item 
+\mbox{\Hypertarget{class_c_l_s_m_image_ade64fa3f76bb41fdd0b83cf7026c4cc4}\label{class_c_l_s_m_image_ade64fa3f76bb41fdd0b83cf7026c4cc4}} 
+unsigned int {\bfseries n\+\_\+pixel}
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a71c594888ce3588540f100a4f953d32e}{initialize\+\_\+default}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a77e27d6498b540737950a2fd32695be7}{initialize\+\_\+leica\+\_\+sp5\+\_\+ptu}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data)
+\item 
+void \mbox{\hyperlink{class_c_l_s_m_image_a7fae0594644aef9e33ffe77e7b29dea4}{initialize\+\_\+leica\+\_\+sp8\+\_\+ptu}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{class_c_l_s_m_image_a643701c7585934479d0236b27a8c3bc6}\label{class_c_l_s_m_image_a643701c7585934479d0236b27a8c3bc6}} 
+\index{CLSMImage@{CLSMImage}!CLSMImage@{CLSMImage}}
+\index{CLSMImage@{CLSMImage}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{CLSMImage()}{CLSMImage()}}
+{\footnotesize\ttfamily C\+L\+S\+M\+Image\+::\+C\+L\+S\+M\+Image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{std\+::vector$<$ unsigned int $>$}]{marker\+\_\+frame\+\_\+start,  }\item[{unsigned int}]{marker\+\_\+line\+\_\+start,  }\item[{unsigned int}]{marker\+\_\+line\+\_\+stop,  }\item[{unsigned int}]{marker\+\_\+event\+\_\+type,  }\item[{unsigned int}]{n\+\_\+pixel\+\_\+per\+\_\+line,  }\item[{std\+::string}]{reading\+\_\+routine }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & pointer to \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} object \\
+\hline
+{\em marker\+\_\+frame\+\_\+start} & routing channel numbers (default reading routine) or micro time channel number (S\+P8 reading routine) that serves as a marker informing on a new frame in the \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} data stream. \\
+\hline
+{\em marker\+\_\+line\+\_\+start} & routing channel number (default reading routine) or micro time channel number (S\+P8 reading routine) that serves as a marker informing on the start of a new line in a frame within the \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} data stream \\
+\hline
+{\em marker\+\_\+line\+\_\+stop} & routing channel number (default reading routine) or micro time channel number (S\+P8 reading routine) that serves as a marker informing on the stop of a new line in a frame within the \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} data stream \\
+\hline
+{\em marker\+\_\+event\+\_\+type} & event types that are interpreted as markers for frames and lines. \\
+\hline
+{\em n\+\_\+pixel\+\_\+per\+\_\+line} & number of pixels into which each line is separated. If the number of pixels per line is set to zero. The number of pixels per line will correspond to the number of lines in the first frame. \\
+\hline
+{\em reading\+\_\+routine} & an integer that specifies the reading routine used to read a C\+L\+SM image out of a \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} data stream. A C\+L\+SM image can be encoded by several ways in a \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} stream. Leica encodes frame and line markers in micro time channel numbers. Pico\+Quant and others use a more \textquotesingle{}traditional\textquotesingle{} encoding for frame and line markers marking \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} events as marker events and using the channel number to differentiate the different marker types. \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_c_l_s_m_image_ae3808dc0b1194defe3dc09db29f4508f}\label{class_c_l_s_m_image_ae3808dc0b1194defe3dc09db29f4508f}} 
+\index{CLSMImage@{CLSMImage}!append@{append}}
+\index{append@{append}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{append()}{append()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::append (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_c_l_s_m_frame}{C\+L\+S\+M\+Frame}} $\ast$}]{frame }\end{DoxyParamCaption})}
+
+Append a frame to the C\+L\+SM image.
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_a687d91cb51ea90e2533620011373a2a9}\label{class_c_l_s_m_image_a687d91cb51ea90e2533620011373a2a9}} 
+\index{CLSMImage@{CLSMImage}!clear\_pixels@{clear\_pixels}}
+\index{clear\_pixels@{clear\_pixels}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{clear\_pixels()}{clear\_pixels()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::clear\+\_\+pixels (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Clear tttr\+\_\+indices stored in the pixels
+
+
+\begin{DoxyParams}{Parameters}
+{\em channels} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_a9c59983242f48299a837bd1051f24579}\label{class_c_l_s_m_image_a9c59983242f48299a837bd1051f24579}} 
+\index{CLSMImage@{CLSMImage}!fill\_pixels@{fill\_pixels}}
+\index{fill\_pixels@{fill\_pixels}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{fill\_pixels()}{fill\_pixels()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::fill\+\_\+pixels (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{std\+::vector$<$ unsigned int $>$}]{channels }\end{DoxyParamCaption})}
+
+Fill the tttr\+\_\+indices of the pixels with the indices of the channels that are within a pixel
+
+
+\begin{DoxyParams}{Parameters}
+{\em channels} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}\label{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}} 
+\index{CLSMImage@{CLSMImage}!get\_decay\_image@{get\_decay\_image}}
+\index{get\_decay\_image@{get\_decay\_image}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{get\_decay\_image()}{get\_decay\_image()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::get\+\_\+decay\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{unsigned char $\ast$$\ast$}]{out,  }\item[{int $\ast$}]{dim1,  }\item[{int $\ast$}]{dim2,  }\item[{int $\ast$}]{dim3,  }\item[{int $\ast$}]{dim4,  }\item[{int}]{tac\+\_\+coarsening,  }\item[{bool}]{stack\+\_\+frames }\end{DoxyParamCaption})}
+
+Computes an image stack where the value of each pixel corresponds to a histogram of micro times in each pixel. The micro times can be coarsened by integer numbers.
+
+
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & pointer to a \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} object \\
+\hline
+{\em out} & pointer to output array of unsigned chars that will contain the image stack \\
+\hline
+{\em dim1} & number of frames \\
+\hline
+{\em dim2} & number of lines \\
+\hline
+{\em dim3} & number of pixels \\
+\hline
+{\em dim4} & number of micro time channels in the histogram \\
+\hline
+{\em tac\+\_\+coarsening} & constant used to coarsen the micro times \\
+\hline
+{\em stack\+\_\+frames} & if True the frames are stacked. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_a026a4dee86eb25d064c5d04792d57166}\label{class_c_l_s_m_image_a026a4dee86eb25d064c5d04792d57166}} 
+\index{CLSMImage@{CLSMImage}!get\_decays@{get\_decays}}
+\index{get\_decays@{get\_decays}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{get\_decays()}{get\_decays()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::get\+\_\+decays (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{short $\ast$}]{selection,  }\item[{int}]{d\+\_\+selection\+\_\+1,  }\item[{int}]{d\+\_\+selection\+\_\+2,  }\item[{int}]{d\+\_\+selection\+\_\+3,  }\item[{unsigned int $\ast$$\ast$}]{out,  }\item[{int $\ast$}]{dim1,  }\item[{int $\ast$}]{dim2,  }\item[{int}]{tac\+\_\+coarsening,  }\item[{bool}]{stack\+\_\+frames }\end{DoxyParamCaption})}
+
+Computes micro time histograms for the stacks of images and a selection of pixels. Photons in pixels that are selected by the selection array contribute to the returned array of micro time histograms.
+
+
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & pointer to a \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} object \\
+\hline
+{\em selection} & a stack of images used to select pixels \\
+\hline
+{\em d\+\_\+selection\+\_\+1} & number of frames \\
+\hline
+{\em d\+\_\+selection\+\_\+2} & number of lines \\
+\hline
+{\em d\+\_\+selection\+\_\+3} & number of pixels per line \\
+\hline
+{\em out} & pointer to output array of unsigned int contains the micro time histograms \\
+\hline
+{\em dim1} & dimension of the output array, i.\+e., the number of stacks \\
+\hline
+{\em dim1} & dimension the number of micro time channels \\
+\hline
+{\em tac\+\_\+coarsening} & constant used to coarsen the micro times \\
+\hline
+{\em stack\+\_\+frames} & if True the frames are stacked. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_aa333925d1173f44eae06f09c9964bbdf}\label{class_c_l_s_m_image_aa333925d1173f44eae06f09c9964bbdf}} 
+\index{CLSMImage@{CLSMImage}!get\_mean\_tac\_image@{get\_mean\_tac\_image}}
+\index{get\_mean\_tac\_image@{get\_mean\_tac\_image}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{get\_mean\_tac\_image()}{get\_mean\_tac\_image()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::get\+\_\+mean\+\_\+tac\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{double $\ast$$\ast$}]{out,  }\item[{int $\ast$}]{dim1,  }\item[{int $\ast$}]{dim2,  }\item[{int $\ast$}]{dim3,  }\item[{int}]{n\+\_\+ph\+\_\+min }\end{DoxyParamCaption})}
+
+Calculates an image stack where the value of each pixel corresponds to the mean micro times per pixel discriminating micro time channels with few counts
+
+
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & pointer to a \mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} object \\
+\hline
+{\em out} & pointer to output array that will contain the image stack \\
+\hline
+{\em dim1} & returns the number of frames \\
+\hline
+{\em dim2} & returns the number of lines \\
+\hline
+{\em dim3} & returns the number of pixels per line \\
+\hline
+{\em n\+\_\+ph\+\_\+min} & the minimum number of photons in a micro time channel to be considered \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_a71c594888ce3588540f100a4f953d32e}\label{class_c_l_s_m_image_a71c594888ce3588540f100a4f953d32e}} 
+\index{CLSMImage@{CLSMImage}!initialize\_default@{initialize\_default}}
+\index{initialize\_default@{initialize\_default}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{initialize\_default()}{initialize\_default()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::initialize\+\_\+default (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Initializes the frames, lines, and pixels of a \mbox{\hyperlink{class_c_l_s_m_image}{C\+L\+S\+M\+Image}}. \mbox{\Hypertarget{class_c_l_s_m_image_a77e27d6498b540737950a2fd32695be7}\label{class_c_l_s_m_image_a77e27d6498b540737950a2fd32695be7}} 
+\index{CLSMImage@{CLSMImage}!initialize\_leica\_sp5\_ptu@{initialize\_leica\_sp5\_ptu}}
+\index{initialize\_leica\_sp5\_ptu@{initialize\_leica\_sp5\_ptu}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{initialize\_leica\_sp5\_ptu()}{initialize\_leica\_sp5\_ptu()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::initialize\+\_\+leica\+\_\+sp5\+\_\+ptu (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Leica S\+P5 
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{class_c_l_s_m_image_a7fae0594644aef9e33ffe77e7b29dea4}\label{class_c_l_s_m_image_a7fae0594644aef9e33ffe77e7b29dea4}} 
+\index{CLSMImage@{CLSMImage}!initialize\_leica\_sp8\_ptu@{initialize\_leica\_sp8\_ptu}}
+\index{initialize\_leica\_sp8\_ptu@{initialize\_leica\_sp8\_ptu}!CLSMImage@{CLSMImage}}
+\doxysubsubsection{\texorpdfstring{initialize\_leica\_sp8\_ptu()}{initialize\_leica\_sp8\_ptu()}}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::initialize\+\_\+leica\+\_\+sp8\+\_\+ptu (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+Leica S\+P8 
+\begin{DoxyParams}{Parameters}
+{\em tttr\+\_\+data} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/image.\+h\end{DoxyCompactItemize}

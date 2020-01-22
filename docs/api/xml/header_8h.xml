@@ -1,0 +1,1076 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="header_8h" kind="file" language="C++">
+    <compoundname>header.h</compoundname>
+    <includes local="no">cstdint</includes>
+    <includes local="no">cstdio</includes>
+    <includes local="no">iostream</includes>
+    <includes local="no">map</includes>
+    <includedby refid="tttr_8h" local="no">include/tttr.h</includedby>
+    <incdepgraph>
+      <node id="1">
+        <label>include/header.h</label>
+        <link refid="header_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>cstdint</label>
+      </node>
+      <node id="5">
+        <label>map</label>
+      </node>
+      <node id="3">
+        <label>cstdio</label>
+      </node>
+      <node id="4">
+        <label>iostream</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>include/header.h</label>
+        <link refid="header_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>include/image.h</label>
+        <link refid="image_8h_source"/>
+      </node>
+      <node id="2">
+        <label>include/tttr.h</label>
+        <link refid="tttr_8h_source"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="struct_curve_mapping__t" prot="public">CurveMapping_t</innerclass>
+    <innerclass refid="struct_param_struct__t" prot="public">ParamStruct_t</innerclass>
+    <innerclass refid="structpq__ht3__ascii__t" prot="public">pq_ht3_ascii_t</innerclass>
+    <innerclass refid="structpq__ht3___bin_hdr__t" prot="public">pq_ht3_BinHdr_t</innerclass>
+    <innerclass refid="structpq__ht3___board_hdr" prot="public">pq_ht3_BoardHdr</innerclass>
+    <innerclass refid="structpq__ht3__board__settings__t" prot="public">pq_ht3_board_settings_t</innerclass>
+    <innerclass refid="structpq__ht3___t_t_t_r_hdr" prot="public">pq_ht3_TTTRHdr</innerclass>
+    <innerclass refid="structbh__spc132__header__t" prot="public">bh_spc132_header_t</innerclass>
+    <innerclass refid="structtag__head" prot="public">tag_head</innerclass>
+    <innerclass refid="class_header" prot="public">Header</innerclass>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="header_8h_1a09c6aa7dcc114b54592791e12fd64110" prot="public" static="no">
+        <name>TTTRTagTTTRRecType</name>
+        <initializer>&quot;TTResultFormat_TTTRRecType&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="27" column="9" bodyfile="include/header.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a2bc56fc0ab030e8f35498d3e3b0581a4" prot="public" static="no">
+        <name>TTTRTagRes</name>
+        <initializer>&quot;MeasDesc_Resolution&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="28" column="9" bodyfile="include/header.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ad5b1b7cf9a08e02898e70d6d64dee335" prot="public" static="no">
+        <name>TTTRTagGlobRes</name>
+        <initializer>&quot;MeasDesc_GlobalResolution&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="29" column="9" bodyfile="include/header.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a070e24386ebc3bce69b53299ff5d3d29" prot="public" static="no">
+        <name>FileTagEnd</name>
+        <initializer>&quot;Header_End&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="30" column="9" bodyfile="include/header.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a3d9b94b4c01d4eb434d0b868d98e1e01" prot="public" static="no">
+        <name>tyEmpty8</name>
+        <initializer>0xFFFF0008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="32" column="9" bodyfile="include/header.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ae6864513577f29254198788d7a2a1c7b" prot="public" static="no">
+        <name>tyBool8</name>
+        <initializer>0x00000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="33" column="9" bodyfile="include/header.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a5230275aa8a99786c7fca4ef4fa179c7" prot="public" static="no">
+        <name>tyInt8</name>
+        <initializer>0x10000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="34" column="9" bodyfile="include/header.h" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ad015bd3aa9944c5c2bb7857238f569d2" prot="public" static="no">
+        <name>tyBitSet64</name>
+        <initializer>0x11000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="35" column="9" bodyfile="include/header.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a4f820b59ee0c8e04da8197e33d5f09b1" prot="public" static="no">
+        <name>tyColor8</name>
+        <initializer>0x12000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="36" column="9" bodyfile="include/header.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a0174ccddd5f32890fed0f09274469e15" prot="public" static="no">
+        <name>tyFloat8</name>
+        <initializer>0x20000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="37" column="9" bodyfile="include/header.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ab2737469c39445c391463c78134c9415" prot="public" static="no">
+        <name>tyTDateTime</name>
+        <initializer>0x21000008</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="38" column="9" bodyfile="include/header.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a1faba2a9e3fa7d90d78802a73f326367" prot="public" static="no">
+        <name>tyFloat8Array</name>
+        <initializer>0x2001FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="39" column="9" bodyfile="include/header.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a50fb6700d648a1fc5b6add0683f2b795" prot="public" static="no">
+        <name>tyAnsiString</name>
+        <initializer>0x4001FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="40" column="9" bodyfile="include/header.h" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a29468958d802901e4fda64621c2feb4b" prot="public" static="no">
+        <name>tyWideString</name>
+        <initializer>0x4002FFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="41" column="9" bodyfile="include/header.h" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a51476cec225bad0ea86d7f71f55a42ad" prot="public" static="no">
+        <name>tyBinaryBlob</name>
+        <initializer>0xFFFFFFFF</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="42" column="9" bodyfile="include/header.h" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ada5234f48c10a2a466b71d3a287d0e59" prot="public" static="no">
+        <name>rtPicoHarpT3</name>
+        <initializer>0x00010303</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="44" column="9" bodyfile="include/header.h" bodystart="43" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a8f96a7a5b8e13bd3649cb5c2766bfcee" prot="public" static="no">
+        <name>rtPicoHarpT2</name>
+        <initializer>0x00010203</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="45" column="9" bodyfile="include/header.h" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1afdaebb98ab8c22b611a2e2dda08adcc8" prot="public" static="no">
+        <name>rtHydraHarpT3</name>
+        <initializer>0x00010304</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="46" column="9" bodyfile="include/header.h" bodystart="45" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a2bcd27de9c0694fb5db874c27875f334" prot="public" static="no">
+        <name>rtHydraHarpT2</name>
+        <initializer>0x00010204</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="47" column="9" bodyfile="include/header.h" bodystart="46" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a28a61d29cf3e1ef65588a2a3119ece45" prot="public" static="no">
+        <name>rtHydraHarp2T3</name>
+        <initializer>0x01010304</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="48" column="9" bodyfile="include/header.h" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a492772501b2cc02b0e3bcee5d00a3c3a" prot="public" static="no">
+        <name>rtHydraHarp2T2</name>
+        <initializer>0x01010204</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="49" column="9" bodyfile="include/header.h" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1aca1874fc22de9deef63db4651ebd3e36" prot="public" static="no">
+        <name>rtTimeHarp260NT3</name>
+        <initializer>0x00010305</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="50" column="9" bodyfile="include/header.h" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ac05ba3eb6ce9513c8731336e5b1efbe0" prot="public" static="no">
+        <name>rtTimeHarp260NT2</name>
+        <initializer>0x00010205</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="51" column="9" bodyfile="include/header.h" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a817ec0fd0fff3665b16741248e7e735d" prot="public" static="no">
+        <name>rtTimeHarp260PT3</name>
+        <initializer>0x00010306</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="52" column="9" bodyfile="include/header.h" bodystart="51" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a531d30dbcf4fc23b629d3cf54352127f" prot="public" static="no">
+        <name>rtTimeHarp260PT2</name>
+        <initializer>0x00010206</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="53" column="9" bodyfile="include/header.h" bodystart="52" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a5dab14981723e1c305c85066a71d8899" prot="public" static="no">
+        <name>rtMultiHarpNT3</name>
+        <initializer>0x00010307</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="54" column="9" bodyfile="include/header.h" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1af8c1410c0b91d05c7731592f32b5d6d7" prot="public" static="no">
+        <name>rtMultiHarpNT2</name>
+        <initializer>0x00010207</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="55" column="9" bodyfile="include/header.h" bodystart="54" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1af93323fa2d4133d8afa8d2e18a382e9b" prot="public" static="no">
+        <name>PQ_PTU_CONTAINER</name>
+        <initializer>0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="58" column="9" bodyfile="include/header.h" bodystart="57" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ace8e3584c92d6e66f09a0a0377e56eaf" prot="public" static="no">
+        <name>PQ_HT3_CONTAINER</name>
+        <initializer>1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="59" column="9" bodyfile="include/header.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a733c991c687c46eef25194e3708f2303" prot="public" static="no">
+        <name>BH_SPC130_CONTAINER</name>
+        <initializer>2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="60" column="9" bodyfile="include/header.h" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a1cf3526bf11eb28ceab658578a68a71d" prot="public" static="no">
+        <name>BH_SPC600_256_CONTAINER</name>
+        <initializer>3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="61" column="9" bodyfile="include/header.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a17222425f2c9ed000d5f4d6e7db58d95" prot="public" static="no">
+        <name>BH_SPC600_4096_CONTAINER</name>
+        <initializer>4</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="62" column="9" bodyfile="include/header.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a572218dc1d5da25f0a01cdc26de10894" prot="public" static="no">
+        <name>PHOTON_HDF_CONTAINER</name>
+        <initializer>5</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="63" column="9" bodyfile="include/header.h" bodystart="62" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1afff8814f1ce6c1ec6945a450999b5615" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_HHT2v2</name>
+        <initializer>1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="66" column="9" bodyfile="include/header.h" bodystart="65" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a27944f5cdc8cc68998f3d57652d67ccf" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_HHT2v1</name>
+        <initializer>2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="67" column="9" bodyfile="include/header.h" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a51a3e2a69729b62d7892f1cb6ff7ca35" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_HHT3v1</name>
+        <initializer>3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="68" column="9" bodyfile="include/header.h" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a971025b1c4f058c5846407bae0f4e147" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_HHT3v2</name>
+        <initializer>4</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="69" column="9" bodyfile="include/header.h" bodystart="68" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1af56c35330bdb11f4ee781b77c30ed9dd" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_PHT3</name>
+        <initializer>5</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="70" column="9" bodyfile="include/header.h" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a4d9e0576a91784a7f451bc4c0e83722a" prot="public" static="no">
+        <name>PQ_RECORD_TYPE_PHT2</name>
+        <initializer>6</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="71" column="9" bodyfile="include/header.h" bodystart="70" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1ac29e379de1f911017fdf4b41c47f3cdc" prot="public" static="no">
+        <name>BH_RECORD_TYPE_SPC130</name>
+        <initializer>7</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="72" column="9" bodyfile="include/header.h" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a3d39628a83facb60743d4f3208ec8811" prot="public" static="no">
+        <name>BH_RECORD_TYPE_SPC600_256</name>
+        <initializer>8</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="73" column="9" bodyfile="include/header.h" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="header_8h_1a8baca534e2d74198b975edb96b3f57c2" prot="public" static="no">
+        <name>BH_RECORD_TYPE_SPC600_4096</name>
+        <initializer>9</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="74" column="9" bodyfile="include/header.h" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="header_8h_1ad56e034871bc7c2a301c8b7db2166f40" prot="public" static="no">
+        <type>struct <ref refid="structtag__head" kindref="compound">tag_head</ref></type>
+        <definition>typedef struct tag_head  tag_head_t</definition>
+        <argsstring></argsstring>
+        <name>tag_head_t</name>
+        <briefdescription>
+<para>A <ref refid="class_header" kindref="compound">Header</ref> Tag entry of a PTU file. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="187" column="12"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="header_8h_1a33702184ddbd7dcdffd91ecb2b0f0ce2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t read_ptu_header</definition>
+        <argsstring>(std::FILE *fpin, bool rewind, int &amp;tttr_record_type, std::map&lt; std::string, std::string &gt; &amp;data, double &amp;macro_time_resolution, double &amp;micro_time_resolution)</argsstring>
+        <name>read_ptu_header</name>
+        <param>
+          <type>std::FILE *</type>
+          <declname>fpin</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>rewind</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>tttr_record_type</declname>
+        </param>
+        <param>
+          <type>std::map&lt; std::string, std::string &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>macro_time_resolution</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>micro_time_resolution</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Reads the header of a ptu file and sets the reading routing for</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>fpin</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rewind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tttr_record_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>data</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>macro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>micro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The position of the file pointer at the end of the header </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="268" column="8" declfile="include/header.h" declline="268" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="header_8h_1a565725a783ef69193e6bcc0f231ba558" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t read_ht3_header</definition>
+        <argsstring>(std::FILE *fpin, bool rewind, int &amp;tttr_record_type, std::map&lt; std::string, std::string &gt; &amp;data, double &amp;macro_time_resolution, double &amp;micro_time_resolution)</argsstring>
+        <name>read_ht3_header</name>
+        <param>
+          <type>std::FILE *</type>
+          <declname>fpin</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>rewind</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>tttr_record_type</declname>
+        </param>
+        <param>
+          <type>std::map&lt; std::string, std::string &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>macro_time_resolution</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>micro_time_resolution</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Reads the header of a ht3 file and sets the reading routing for</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>fpin</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rewind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tttr_record_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>data</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>macro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>micro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>The position of the file pointer at the end of the header </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="288" column="8" declfile="include/header.h" declline="288" declcolumn="8"/>
+      </memberdef>
+      <memberdef kind="function" id="header_8h_1a36b35da3ac808e5fe78297137e68fa8a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>size_t</type>
+        <definition>size_t read_bh132_header</definition>
+        <argsstring>(std::FILE *fpin, bool rewind, int &amp;tttr_record_type, std::map&lt; std::string, std::string &gt; &amp;data, double &amp;macro_time_resolution, double &amp;micro_time_resolution)</argsstring>
+        <name>read_bh132_header</name>
+        <param>
+          <type>std::FILE *</type>
+          <declname>fpin</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>rewind</declname>
+        </param>
+        <param>
+          <type>int &amp;</type>
+          <declname>tttr_record_type</declname>
+        </param>
+        <param>
+          <type>std::map&lt; std::string, std::string &gt; &amp;</type>
+          <declname>data</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>macro_time_resolution</declname>
+        </param>
+        <param>
+          <type>double &amp;</type>
+          <declname>micro_time_resolution</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Reads the header of a Becker&amp;Hickel SPC132 file and sets the reading routing for</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>fpin</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rewind</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>tttr_record_type</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>data</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>macro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>micro_time_resolution</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="307" column="8" declfile="include/header.h" declline="307" declcolumn="8"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/****************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2019<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>This<sp/>file<sp/>is<sp/>part<sp/>of<sp/>the<sp/>library<sp/>tttrlib.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/>*<sp/><sp/><sp/>tttrlib<sp/>is<sp/>free<sp/>software:<sp/>you<sp/>can<sp/>redistribute<sp/>it<sp/>and/or<sp/>modify<sp/>it<sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/>*<sp/><sp/><sp/>under<sp/>the<sp/>terms<sp/>of<sp/>the<sp/>MIT<sp/>License.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="9"><highlight class="comment"><sp/>*<sp/><sp/><sp/>tttrlib<sp/>is<sp/>distributed<sp/>in<sp/>the<sp/>hope<sp/>that<sp/>it<sp/>will<sp/>be<sp/>useful,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment"><sp/>*<sp/><sp/><sp/>but<sp/>WITHOUT<sp/>ANY<sp/>WARRANTY;<sp/>without<sp/>even<sp/>the<sp/>implied<sp/>warranty<sp/>of<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="11"><highlight class="comment"><sp/>*<sp/><sp/><sp/>MERCHANTABILITY<sp/>or<sp/>FITNESS<sp/>FOR<sp/>A<sp/>PARTICULAR<sp/>PURPOSE.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="12"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"><sp/>****************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>TTTRLIB_READHEADER_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRLIB_READHEADER_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstdint&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstdio&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;map&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="comment">//<sp/>some<sp/>important<sp/>Tag<sp/>Idents<sp/>(TTagHead.Ident)<sp/>that<sp/>we<sp/>will<sp/>need<sp/>to<sp/>read<sp/>the<sp/>most<sp/>common<sp/>content<sp/>of<sp/>a<sp/>PTU<sp/>file</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="comment">//<sp/>check<sp/>the<sp/>output<sp/>of<sp/>this<sp/>program<sp/>and<sp/>consult<sp/>the<sp/>tag<sp/>dictionary<sp/>if<sp/>you<sp/>need<sp/>more</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagTTTRRecType<sp/>&quot;TTResultFormat_TTTRRecType&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagRes<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;MeasDesc_Resolution&quot;<sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>Resolution<sp/>for<sp/>the<sp/>Dtime<sp/>(T3<sp/>Only)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRTagGlobRes<sp/><sp/><sp/><sp/><sp/>&quot;MeasDesc_GlobalResolution&quot;<sp/>//<sp/>Global<sp/>Resolution<sp/>of<sp/>TimeTag(T2)<sp/>/NSync<sp/>(T3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>FileTagEnd<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;Header_End&quot;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>Always<sp/>appended<sp/>as<sp/>last<sp/>tag<sp/>(BLOCKEND)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyEmpty8<sp/><sp/><sp/><sp/><sp/><sp/>0xFFFF0008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBool8<sp/><sp/><sp/><sp/><sp/><sp/><sp/>0x00000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyInt8<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>0x10000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBitSet64<sp/><sp/><sp/><sp/>0x11000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyColor8<sp/><sp/><sp/><sp/><sp/><sp/>0x12000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyFloat8<sp/><sp/><sp/><sp/><sp/><sp/>0x20000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyTDateTime<sp/><sp/><sp/>0x21000008</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyFloat8Array<sp/>0x2001FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyAnsiString<sp/><sp/>0x4001FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyWideString<sp/><sp/>0x4002FFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>tyBinaryBlob<sp/><sp/>0xFFFFFFFF</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtPicoHarpT3<sp/><sp/><sp/><sp/><sp/>0x00010303<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$03<sp/>(PicoHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtPicoHarpT2<sp/><sp/><sp/><sp/><sp/>0x00010203<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$03<sp/>(PicoHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarpT3<sp/><sp/><sp/><sp/>0x00010304<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarpT2<sp/><sp/><sp/><sp/>0x00010204<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarp2T3<sp/><sp/><sp/>0x01010304<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$01<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtHydraHarp2T2<sp/><sp/><sp/>0x01010204<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$01<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$04<sp/>(HydraHarp)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260NT3<sp/>0x00010305<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$03<sp/>(T3),<sp/>HW:<sp/>$05<sp/>(TimeHarp260N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260NT2<sp/>0x00010205<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V2),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$05<sp/>(TimeHarp260N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260PT3<sp/>0x00010306<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T3),<sp/>HW:<sp/>$06<sp/>(TimeHarp260P)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtTimeHarp260PT2<sp/>0x00010206<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$06<sp/>(TimeHarp260P)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtMultiHarpNT3<sp/><sp/><sp/>0x00010307<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T3),<sp/>HW:<sp/>$07<sp/>(MultiHarp150N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>rtMultiHarpNT2<sp/><sp/><sp/>0x00010207<sp/><sp/><sp/><sp/>//<sp/>(SubID<sp/>=<sp/>$00<sp/>,RecFmt:<sp/>$01)<sp/>(V1),<sp/>T-Mode:<sp/>$02<sp/>(T2),<sp/>HW:<sp/>$07<sp/>(MultiHarp150N)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_PTU_CONTAINER<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>0</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_HT3_CONTAINER<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_SPC130_CONTAINER<sp/><sp/><sp/><sp/><sp/><sp/><sp/>2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_SPC600_256_CONTAINER<sp/><sp/><sp/>3</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_SPC600_4096_CONTAINER<sp/><sp/>4</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PHOTON_HDF_CONTAINER<sp/><sp/><sp/><sp/><sp/><sp/>5</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_HHT2v2<sp/><sp/><sp/><sp/><sp/><sp/><sp/>1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_HHT2v1<sp/><sp/><sp/><sp/><sp/><sp/><sp/>2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_HHT3v1<sp/><sp/><sp/><sp/><sp/><sp/><sp/>3</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_HHT3v2<sp/><sp/><sp/><sp/><sp/><sp/><sp/>4</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_PHT3<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>5</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PQ_RECORD_TYPE_PHT2<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>6</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_RECORD_TYPE_SPC130<sp/><sp/><sp/><sp/><sp/><sp/><sp/>7</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_RECORD_TYPE_SPC600_256<sp/><sp/><sp/>8</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>BH_RECORD_TYPE_SPC600_4096<sp/><sp/>9</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"></highlight></codeline>
+<codeline lineno="77" refid="struct_curve_mapping__t" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>MapTo;</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Show;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal">}<sp/><ref refid="struct_curve_mapping__t" kindref="compound">CurveMapping_t</ref>;</highlight></codeline>
+<codeline lineno="82" refid="struct_param_struct__t" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>Start;</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>Step;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">float</highlight><highlight class="normal"><sp/>End;</highlight></codeline>
+<codeline lineno="87"><highlight class="normal">}<sp/><ref refid="struct_param_struct__t" kindref="compound">ParamStruct_t</ref>;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"></highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>Ident[16];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//&quot;PicoHarp<sp/>300&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>FormatVersion[6];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//file<sp/>format<sp/>version</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CreatorName[18];<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//name<sp/>of<sp/>creating<sp/>software</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CreatorVersion[12];<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//version<sp/>of<sp/>creating<sp/>software</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>FileTime[18];</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CRLF[2];</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>CommentField[256];</highlight></codeline>
+<codeline lineno="99"><highlight class="normal">}<sp/><ref refid="structpq__ht3__ascii__t" kindref="compound">pq_ht3_ascii_t</ref>;</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"></highlight></codeline>
+<codeline lineno="102"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Curves;</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>BitsPerChannel;</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RoutingChannels;</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>NumberOfBoards;</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>ActiveCurve;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>MeasMode;</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SubMode;</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RangeNo;</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Offset;</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>AquisitionTime;</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>StopAt;</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>StopOnOvfl;</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Restart;</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"></highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispLinLog;</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispTimeFrom;</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispTimeTo;</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispCountsFrom;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>DispCountsTo;</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_curve_mapping__t" kindref="compound">CurveMapping_t</ref><sp/>DispCurves[8];</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="struct_param_struct__t" kindref="compound">ParamStruct_t</ref><sp/>Params[3];</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatMode;</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatsPerCurve;</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatTime;</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>RepeatWaitTime;</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>ScriptName[20];</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"></highlight></codeline>
+<codeline lineno="136"><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal">}<sp/><ref refid="structpq__ht3___bin_hdr__t" kindref="compound">pq_ht3_BinHdr_t</ref>;</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight></codeline>
+<codeline lineno="139" refid="structpq__ht3___board_hdr" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="140"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>HardwareIdent[16];</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>HardwareVersion[8];</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>HardwareSerial;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>in<sp/>ms<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>SyncDivider;</highlight></codeline>
+<codeline lineno="145"><highlight class="normal">}<sp/><ref refid="structpq__ht3___board_hdr" kindref="compound">pq_ht3_BoardHdr</ref>;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight></codeline>
+<codeline lineno="147" refid="structpq__ht3__board__settings__t" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct</highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>BoardSerial;</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SyncDivider;</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>CFDZeroCross;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>CFDZeroLevel;</highlight></codeline>
+<codeline lineno="153"><highlight class="normal">}<sp/><ref refid="structpq__ht3__board__settings__t" kindref="compound">pq_ht3_board_settings_t</ref>;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"></highlight></codeline>
+<codeline lineno="155" refid="structpq__ht3___t_t_t_r_hdr" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Globclock;</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>ExtDevices;</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved1;</highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved2;</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved3;</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved4;</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>Reserved5;</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SyncRate;</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRCFDRate;</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRStopAfter;</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>TTTRStopReason;</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>NoOfRecords;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/>int32_t<sp/>SpecialHeaderSize;</highlight></codeline>
+<codeline lineno="170"><highlight class="normal">}<sp/><ref refid="structpq__ht3___t_t_t_r_hdr" kindref="compound">pq_ht3_TTTRHdr</ref>;</highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>macro_time_clock<sp/>:24;<sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>the<sp/>resolution<sp/>of<sp/>the<sp/>macro<sp/>time</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/>unused<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>:7;<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>unclear<sp/>usage</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>invalid<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>:1;<sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>true<sp/>if<sp/>dataset<sp/>is<sp/>marked<sp/>as<sp/>invalid</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal">}<sp/><ref refid="structbh__spc132__header__t" kindref="compound">bh_spc132_header_t</ref>;</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"></highlight></codeline>
+<codeline lineno="180"><highlight class="normal"></highlight></codeline>
+<codeline lineno="181"><highlight class="normal"></highlight></codeline>
+<codeline lineno="183"><highlight class="keyword">typedef</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">struct<sp/></highlight><highlight class="normal"><ref refid="structtag__head" kindref="compound">tag_head</ref><sp/>{</highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>Ident[32];<sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Identifier<sp/>of<sp/>the<sp/>tag</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>Idx;<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Index<sp/>for<sp/>multiple<sp/>tags<sp/>or<sp/>-1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/><sp/><sp/>uint32_t<sp/>Typ;<sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Type<sp/>of<sp/>tag<sp/>ty.....<sp/>see<sp/>const<sp/>section</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>TagValue;<sp/><sp/></highlight><highlight class="comment">//<sp/>Value<sp/>of<sp/>tag.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="188"><highlight class="normal">}<sp/><ref refid="structtag__head" kindref="compound">tag_head_t</ref>;</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight></codeline>
+<codeline lineno="190" refid="class_header" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="191"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_header" kindref="compound">Header</ref><sp/>{</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"></highlight></codeline>
+<codeline lineno="193"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/><sp/><sp/>std::FILE<sp/>*fpin;</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"></highlight></codeline>
+<codeline lineno="196"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>tttr_container_type;</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"></highlight></codeline>
+<codeline lineno="200"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"></highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>tttr_record_type;</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>number_of_tac_channels;</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"></highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/><ref refid="class_header_1a8eb66d0a52e07e3176173ea9fc8f4aa2" kindref="member">header_end</ref>;</highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"></highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/><ref refid="class_header_1aa56d9a3159e45e4baa326b6b360e2c2d" kindref="member">bytes_per_record</ref>;</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"></highlight></codeline>
+<codeline lineno="217"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_header_1a8fa62f3387498cc02299aa4b469b61c8" kindref="member">micro_time_resolution</ref>;</highlight></codeline>
+<codeline lineno="218"><highlight class="normal"></highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/><ref refid="class_header_1ab35b96124528a2a4970f9a091eaea1e0" kindref="member">macro_time_resolution</ref>;</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"></highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="class_header_1ac51d948dc51841e8b593aa80ccee8d8d" kindref="member">getTTTRRecordType</ref>();</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"></highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_header_1ab20eba80063f6fa6a74c474f09bca886" kindref="member">Header</ref>();</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"></highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_header_1ab20eba80063f6fa6a74c474f09bca886" kindref="member">Header</ref>(</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::FILE<sp/>*fpin,</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>tttr_container_type</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>);</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_header" kindref="compound">Header</ref>();</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"></highlight></codeline>
+<codeline lineno="251"></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/><ref refid="class_header_1a4a13dbd471798b9dcc7eba5a8ffcfd98" kindref="member">data</ref>;</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"></highlight></codeline>
+<codeline lineno="256"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"></highlight></codeline>
+<codeline lineno="258"><highlight class="normal"></highlight></codeline>
+<codeline lineno="269"><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>read_ptu_header(</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::FILE<sp/>*fpin,</highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>rewind,</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>&amp;tttr_record_type,</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/>&amp;data,</highlight></codeline>
+<codeline lineno="274"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;macro_time_resolution,</highlight></codeline>
+<codeline lineno="275"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;micro_time_resolution</highlight></codeline>
+<codeline lineno="276"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="277"><highlight class="normal"></highlight></codeline>
+<codeline lineno="278"><highlight class="normal"></highlight></codeline>
+<codeline lineno="289"><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>read_ht3_header(</highlight></codeline>
+<codeline lineno="290"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::FILE<sp/>*fpin,</highlight></codeline>
+<codeline lineno="291"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>rewind,</highlight></codeline>
+<codeline lineno="292"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>&amp;tttr_record_type,</highlight></codeline>
+<codeline lineno="293"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/>&amp;data,</highlight></codeline>
+<codeline lineno="294"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;macro_time_resolution,</highlight></codeline>
+<codeline lineno="295"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;micro_time_resolution</highlight></codeline>
+<codeline lineno="296"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="297"><highlight class="normal"></highlight></codeline>
+<codeline lineno="308"><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>read_bh132_header(</highlight></codeline>
+<codeline lineno="309"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::FILE<sp/>*fpin,</highlight></codeline>
+<codeline lineno="310"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>rewind,</highlight></codeline>
+<codeline lineno="311"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>&amp;tttr_record_type,</highlight></codeline>
+<codeline lineno="312"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::map&lt;std::string,<sp/>std::string&gt;<sp/>&amp;data,</highlight></codeline>
+<codeline lineno="313"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;macro_time_resolution,</highlight></codeline>
+<codeline lineno="314"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>&amp;micro_time_resolution</highlight></codeline>
+<codeline lineno="315"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="316"><highlight class="normal"></highlight></codeline>
+<codeline lineno="317"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_READHEADER_H</highlight></codeline>
+    </programlisting>
+    <location file="include/header.h"/>
+  </compounddef>
+</doxygen>

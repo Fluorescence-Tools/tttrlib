@@ -1,0 +1,699 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="correlate_8h" kind="file" language="C++">
+    <compoundname>correlate.h</compoundname>
+    <includes local="no">iostream</includes>
+    <includes local="no">cstdio</includes>
+    <includes local="no">cmath</includes>
+    <includes local="no">vector</includes>
+    <includes local="no">list</includes>
+    <includes local="no">iterator</includes>
+    <includes local="no">functional</includes>
+    <includes local="no">numeric</includes>
+    <includes local="no">algorithm</includes>
+    <includes local="no">climits</includes>
+    <incdepgraph>
+      <node id="6">
+        <label>list</label>
+      </node>
+      <node id="8">
+        <label>functional</label>
+      </node>
+      <node id="7">
+        <label>iterator</label>
+      </node>
+      <node id="4">
+        <label>cmath</label>
+      </node>
+      <node id="9">
+        <label>numeric</label>
+      </node>
+      <node id="3">
+        <label>cstdio</label>
+      </node>
+      <node id="5">
+        <label>vector</label>
+      </node>
+      <node id="2">
+        <label>iostream</label>
+      </node>
+      <node id="11">
+        <label>climits</label>
+      </node>
+      <node id="10">
+        <label>algorithm</label>
+      </node>
+      <node id="1">
+        <label>include/correlate.h</label>
+        <link refid="correlate_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+    </incdepgraph>
+    <innerclass refid="class_correlator" prot="public">Correlator</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="correlate_8h_1aa27083c37224da35557ece07b1166b8e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void normalize_correlation</definition>
+        <argsstring>(double np1, uint64_t dt1, double np2, uint64_t dt2, std::vector&lt; unsigned long long &gt; &amp;x_axis, std::vector&lt; double &gt; &amp;corr, size_t n_bins)</argsstring>
+        <name>normalize_correlation</name>
+        <param>
+          <type>double</type>
+          <declname>np1</declname>
+        </param>
+        <param>
+          <type>uint64_t</type>
+          <declname>dt1</declname>
+        </param>
+        <param>
+          <type>double</type>
+          <declname>np2</declname>
+        </param>
+        <param>
+          <type>uint64_t</type>
+          <declname>dt2</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; unsigned long long &gt; &amp;</type>
+          <declname>x_axis</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; double &gt; &amp;</type>
+          <declname>corr</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>n_bins</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Normalizes a correlation curve.</para>
+<para>This normalization applied to correlation curves that were calculated using a linear/logrithmic binning as described in</para>
+<para><itemizedlist>
+<listitem><para>Fast calculation of fluorescence correlation data with asynchronous time-correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383</para>
+</listitem></itemizedlist>
+</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">np1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The sum of the weights in the first correlation channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">dt1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The time difference between the first event and the last event in the first correlation channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">np2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The sum of the weights in the second correlation channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">dt2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The time difference between the first event and the last event in the second correlation channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">x_axis</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The x-axis of the correlation </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">corr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The array that contains the original correlation that is modified in place. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">n_bins</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of bins per cascade of the correlation </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/correlate.h" line="70" column="6" declfile="include/correlate.h" declline="70" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="correlate_8h_1a05e3bd27257b65b0d7ddb939bfe893f8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void make_fine_times</definition>
+        <argsstring>(unsigned long long *t, unsigned int n_times, unsigned int *tac, unsigned int n_tac)</argsstring>
+        <name>make_fine_times</name>
+        <param>
+          <type>unsigned long long *</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>unsigned int</type>
+          <declname>n_times</declname>
+        </param>
+        <param>
+          <type>unsigned int *</type>
+          <declname>tac</declname>
+        </param>
+        <param>
+          <type>unsigned int</type>
+          <declname>n_tac</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Changes the time events by adding the micro time to the macro time</para>
+<para>Changes the time events by adding the micro time to the macro time. The micro times should match the macro time, i.e., the length of the micro time array should be the at least the same length as the macro time array.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="inout">t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>An array containing the time events (macro times) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">n_times</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of macro times. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">tac</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>An array containing the micro times of the corresponding macro times </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">tac</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of micro time channels (TAC channels) </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/correlate.h" line="94" column="6" declfile="include/correlate.h" declline="94" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="correlate_8h_1aee529d65974dcd19bc1bd9e88e53f528" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void correlate</definition>
+        <argsstring>(size_t start_1, size_t end_1, size_t start_2, size_t end_2, size_t i_casc, size_t n_bins, std::vector&lt; unsigned long long &gt; &amp;taus, std::vector&lt; double &gt; &amp;corr, const unsigned long long *t1, const double *w1, size_t nt1, const unsigned long long *t2, const double *w2, size_t nt2)</argsstring>
+        <name>correlate</name>
+        <param>
+          <type>size_t</type>
+          <declname>start_1</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>end_1</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>start_2</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>end_2</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>i_casc</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>n_bins</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; unsigned long long &gt; &amp;</type>
+          <declname>taus</declname>
+        </param>
+        <param>
+          <type>std::vector&lt; double &gt; &amp;</type>
+          <declname>corr</declname>
+        </param>
+        <param>
+          <type>const unsigned long long *</type>
+          <declname>t1</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>w1</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>nt1</declname>
+        </param>
+        <param>
+          <type>const unsigned long long *</type>
+          <declname>t2</declname>
+        </param>
+        <param>
+          <type>const double *</type>
+          <declname>w2</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>nt2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Calculates the cross-correlation between two arrays containing time events.</para>
+<para>Cross-correlates two weighted arrays of events using an approach that utilizes a linear spacing of the bins within a cascade and a logarithmic spacing of the cascades. The function works inplace on the input times, i.e, during the correlation the values of the input times and weights are changed to coarsen the times and weights for every correlation cascade.</para>
+<para>The start position parameters<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>start_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>and</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>start_2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>and the end position parameters</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>end_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>and</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>end_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>define which part of the time array of the first and second correlation channel are used for the correlation analysis.</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+The correlation algorithm combines approaches of the following papers:</para>
+<para><itemizedlist>
+<listitem><para>Fast calculation of fluorescence correlation data with asynchronous time-correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383</para>
+</listitem><listitem><para>Fast, flexible algorithm for calculating photon correlations, Ted A. Laurence, Samantha Fore, Thomas Huser, Optics Express Vol. 31 No. 6, p.829</para>
+</listitem></itemizedlist>
+</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">start_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The start position on the time event array of the first channel. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">end_1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The end position on the time event array of the first channel. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">start_2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The start position on the time event array of the second channel. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">end_2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The end position on the time event array of the second channel. </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">i_casc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of the current cascade </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">n_bins</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of bins per cascase </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">taus</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector containing the correlation times of all cascades </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">corr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector to that the correlation is written by the function </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">t1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of the time events of the first channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">w1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of weights for the time events of the first channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">nt1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of time events in the first channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">t2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of the time events of the second channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">w2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of weights for the time events of the second channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">nt2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of time events in the second channel </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/correlate.h" line="141" column="6" declfile="include/correlate.h" declline="141" declcolumn="6"/>
+      </memberdef>
+      <memberdef kind="function" id="correlate_8h_1a6dddd7ef2ed085b6788c321adc5457ca" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void coarsen</definition>
+        <argsstring>(unsigned long long *t, double *w, size_t nt)</argsstring>
+        <name>coarsen</name>
+        <param>
+          <type>unsigned long long *</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>double *</type>
+          <declname>w</declname>
+        </param>
+        <param>
+          <type>size_t</type>
+          <declname>nt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Coarsens the time events</para>
+<para>This function coarsens a set of time events by dividing the times by two. In case two consecutive time events in the array have the same time, the weights of the two events are added to the following weight element and the value of the previous weight is set to zero.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="inout">t</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of the time events of the first channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="inout">w</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>A vector of weights for the time events of the first channel </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="in">nt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>The number of time events in the first channel </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/correlate.h" line="165" column="6" declfile="include/correlate.h" declline="165" declcolumn="6"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>File containing example of doxygen usage for quick reference. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><simplesect kind="author"><para>Thomas-Otavio Peulen </para>
+</simplesect>
+<simplesect kind="date"><para>20 Feb 2019 Here typically goes a more extensive explanation of what the header defines. Doxygens tags are words preceeded by either a backslash \ or by an at symbol @. </para>
+</simplesect>
+<simplesect kind="see"><para><ulink url="http://www.stack.nl/~dimitri/doxygen/docblocks.html">http://www.stack.nl/~dimitri/doxygen/docblocks.html</ulink> </para>
+</simplesect>
+<simplesect kind="see"><para><ulink url="http://www.stack.nl/~dimitri/doxygen/commands.html">http://www.stack.nl/~dimitri/doxygen/commands.html</ulink> </para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/****************************************************************************</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2019<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/>*<sp/>This<sp/>file<sp/>is<sp/>part<sp/>of<sp/>the<sp/>library<sp/>tttrlib.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/>*<sp/><sp/><sp/>tttrlib<sp/>is<sp/>free<sp/>software:<sp/>you<sp/>can<sp/>redistribute<sp/>it<sp/>and/or<sp/>modify<sp/>it<sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/>*<sp/><sp/><sp/>under<sp/>the<sp/>terms<sp/>of<sp/>the<sp/>MIT<sp/>License.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="8"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="9"><highlight class="comment"><sp/>*<sp/><sp/><sp/>tttrlib<sp/>is<sp/>distributed<sp/>in<sp/>the<sp/>hope<sp/>that<sp/>it<sp/>will<sp/>be<sp/>useful,<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="10"><highlight class="comment"><sp/>*<sp/><sp/><sp/>but<sp/>WITHOUT<sp/>ANY<sp/>WARRANTY;<sp/>without<sp/>even<sp/>the<sp/>implied<sp/>warranty<sp/>of<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="11"><highlight class="comment"><sp/>*<sp/><sp/><sp/>MERCHANTABILITY<sp/>or<sp/>FITNESS<sp/>FOR<sp/>A<sp/>PARTICULAR<sp/>PURPOSE.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="12"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"><sp/>****************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Created<sp/>by<sp/>thomas<sp/>on<sp/>2/18/19.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="comment">//</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>TTTRLIB_CORRELATE_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>TTTRLIB_CORRELATE_H</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iostream&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cstdio&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;cmath&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;list&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;iterator&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;functional&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;numeric&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="44"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;algorithm&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;climits&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="comment">//#include<sp/>&lt;taskflow/taskflow.hpp&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="correlate_8h_1aa27083c37224da35557ece07b1166b8e" kindref="member">normalize_correlation</ref>(</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>np1,<sp/>uint64_t<sp/>dt1,</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>np2,<sp/>uint64_t<sp/>dt2,</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::vector&lt;unsigned<sp/>long<sp/>long&gt;<sp/>&amp;x_axis,<sp/>std::vector&lt;double&gt;<sp/>&amp;corr,</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_bins</highlight></codeline>
+<codeline lineno="76"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"></highlight></codeline>
+<codeline lineno="78"><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="correlate_8h_1a05e3bd27257b65b0d7ddb939bfe893f8" kindref="member">make_fine_times</ref>(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>*t,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_times,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>tac,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_tac);</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"></highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="142"><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="correlate_8h_1aee529d65974dcd19bc1bd9e88e53f528" kindref="member">correlate</ref>(</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>start_1,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>end_1,</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>start_2,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>end_2,</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i_casc,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_bins,</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::vector&lt;unsigned<sp/>long<sp/>long&gt;<sp/>&amp;taus,<sp/>std::vector&lt;double&gt;<sp/>&amp;corr,</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><sp/>*t1,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*w1,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>nt1,</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><sp/>*t2,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>*w2,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>nt2</highlight></codeline>
+<codeline lineno="149"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"></highlight></codeline>
+<codeline lineno="166"><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="correlate_8h_1a6dddd7ef2ed085b6788c321adc5457ca" kindref="member">coarsen</ref>(</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>*<sp/>t,<sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>w,<sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>nt</highlight></codeline>
+<codeline lineno="168"><highlight class="normal">);</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight></codeline>
+<codeline lineno="171" refid="class_correlator" refkind="compound"><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="class_correlator" kindref="compound">Correlator</ref><sp/>{</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="175"><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_casc;</highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_bins;</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_corr;</highlight></codeline>
+<codeline lineno="182"><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">*<sp/>t1;</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>w1;</highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_t1;</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"></highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>*<sp/>t2;</highlight></codeline>
+<codeline lineno="193"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>w2;</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>n_t2;</highlight></codeline>
+<codeline lineno="196"><highlight class="normal"></highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;unsigned<sp/>long<sp/>long&gt;<sp/>x_axis;</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;double&gt;<sp/>corr;</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"></highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;unsigned<sp/>long<sp/>long&gt;<sp/>x_axis_normalized;</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;double&gt;<sp/>corr_normalized;</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"></highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>maximum_macro_time;</highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>correlation<sp/>channel</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>dt1;</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/><sp/><sp/>uint64_t<sp/>dt2;</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"></highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>is_fine;</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"></highlight></codeline>
+<codeline lineno="221"><highlight class="normal"></highlight></codeline>
+<codeline lineno="222"><highlight class="normal"></highlight><highlight class="keyword">protected</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="223"><highlight class="normal"></highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1af4caefcd9465346248a5dc1949846f3e" kindref="member">update_axis</ref>();</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"></highlight></codeline>
+<codeline lineno="234"><highlight class="normal"></highlight></codeline>
+<codeline lineno="235"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"></highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="class_correlator" kindref="compound">Correlator</ref>()<sp/>:</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>n_casc(1),</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>n_bins(1),</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>is_fine(</highlight><highlight class="keyword">false</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/>{};</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/>~<ref refid="class_correlator" kindref="compound">Correlator</ref>()<sp/>=<sp/></highlight><highlight class="keywordflow">default</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"></highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a8e96a0c2d5235e912965632b280da01b" kindref="member">set_n_casc</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_casc){</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Correlator::n_casc<sp/>=<sp/>(size_t)<sp/>n_casc;</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="class_correlator_1af4caefcd9465346248a5dc1949846f3e" kindref="member">update_axis</ref>();</highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"></highlight></codeline>
+<codeline lineno="258"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a0240bc7c9704530dcd61cdd2713143b3" kindref="member">get_n_casc</ref>(){</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>n_casc;</highlight></codeline>
+<codeline lineno="260"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="261"><highlight class="normal"></highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>set_n_bins(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_bins){</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>Correlator::n_bins<sp/>=<sp/>(size_t)<sp/>n_bins;</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="class_correlator_1af4caefcd9465346248a5dc1949846f3e" kindref="member">update_axis</ref>();</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"></highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>get_n_bins(){</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>n_bins;</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"></highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>get_n_corr(){</highlight></codeline>
+<codeline lineno="272"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>n_corr;</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="274"><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1ac5dda2b00fa0d3faabe63e24aab451cb" kindref="member">make_fine</ref>(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>tac_1,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_tac_1,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>tac_2,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_tac_2,<sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_tac);</highlight></codeline>
+<codeline lineno="284"><highlight class="normal"></highlight></codeline>
+<codeline lineno="293"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a277e6652097f81aa1870c4a04485ba41" kindref="member">get_x_axis</ref>(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">**<sp/>x_axis,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>n_out);</highlight></codeline>
+<codeline lineno="294"><highlight class="normal"></highlight></codeline>
+<codeline lineno="295"><highlight class="normal"></highlight></codeline>
+<codeline lineno="304"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1aecdb727bbdb02330f00f7b19564db448" kindref="member">get_corr</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">**<sp/>corr,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>n_out);</highlight></codeline>
+<codeline lineno="305"><highlight class="normal"></highlight></codeline>
+<codeline lineno="306"><highlight class="normal"></highlight></codeline>
+<codeline lineno="316"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a8ad9be08f71ef766292bf67145acba99" kindref="member">get_x_axis_normalized</ref>(</highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal">**<sp/>x_axis,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>n_out);</highlight></codeline>
+<codeline lineno="317"><highlight class="normal"></highlight></codeline>
+<codeline lineno="318"><highlight class="normal"></highlight></codeline>
+<codeline lineno="328"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a1575020c5bc498208ad59e92731dd066" kindref="member">get_corr_normalized</ref>(</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">**<sp/>corr,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal">*<sp/>n_out);</highlight></codeline>
+<codeline lineno="329"><highlight class="normal"></highlight></codeline>
+<codeline lineno="330"><highlight class="normal"></highlight></codeline>
+<codeline lineno="343"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a57e67409c1784f6582d80ae72b642e5b" kindref="member">set_events</ref>(</highlight></codeline>
+<codeline lineno="344"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><sp/>*t1,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_t1,</highlight></codeline>
+<codeline lineno="345"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>weight_ch1,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_weights_ch1,</highlight></codeline>
+<codeline lineno="346"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/><sp/>*t2,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_t2,</highlight></codeline>
+<codeline lineno="347"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal">*<sp/>weight_ch2,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_weights_ch2</highlight></codeline>
+<codeline lineno="348"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>);</highlight></codeline>
+<codeline lineno="349"><highlight class="normal"></highlight></codeline>
+<codeline lineno="358"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="class_correlator_1a0d904b7fc2724287c646aad5909b8671" kindref="member">normalize</ref>();</highlight></codeline>
+<codeline lineno="359"><highlight class="normal"></highlight></codeline>
+<codeline lineno="360"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>run();</highlight></codeline>
+<codeline lineno="361"><highlight class="normal"></highlight></codeline>
+<codeline lineno="362"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="363"><highlight class="normal"></highlight></codeline>
+<codeline lineno="364"><highlight class="normal"></highlight></codeline>
+<codeline lineno="365"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_CORRELATE_H</highlight></codeline>
+    </programlisting>
+    <location file="include/correlate.h"/>
+  </compounddef>
+</doxygen>
