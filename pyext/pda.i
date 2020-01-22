@@ -1,7 +1,6 @@
-%module chinet
+%module tttrlib
 %{
-#include "../include/pda.h"
-
+    #include "../include/pda.h"
 %}
 
 %apply (double* IN_ARRAY1, int DIM1) {(double *in, int n_in)}

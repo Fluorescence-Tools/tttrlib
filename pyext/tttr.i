@@ -1,8 +1,7 @@
 %module tttrlib
 %{
     #include "../include/tttr.h"
-#include "../include/header.h"
-
+    #include "../include/header.h"
 %}
 
 %import std_vector.i

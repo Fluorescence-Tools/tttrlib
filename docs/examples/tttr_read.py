@@ -30,20 +30,21 @@ spc600_256 = tttrlib.TTTR('./data/BH/BH_SPC630_256.spc', 3)
 photon_hdf5 = tttrlib.TTTR('./data/HDF/1a_1b_Mix.hdf5', 5)
 
 # Compare speed to phconvert
+benchmark_file = './data/PQ/PTU/PQ_PTU_HH_T3.ptu'
 n_test_runs = 10
 time_phconvert = timeit.timeit(
-    'phconvert.pqreader.load_ht3("./data/PQ/HT3/1a_1b_Mix.ht3", ovcfunc=None)',
+    'phconvert.pqreader.load_ptu("%s", ovcfunc=None)' % benchmark_file,
     number=n_test_runs,
     setup="from __main__ import phconvert"
 )
 time_tttrlib = timeit.timeit(
-    'tttrlib.TTTR("./data/PQ/HT3/1a_1b_Mix.ht3", 1)',
+    'tttrlib.TTTR("%s", "PTU")' % benchmark_file,
     number=n_test_runs,
     setup="from __main__ import tttrlib"
 )
 
-print("time(phconvert) = %s" % (time_phconvert / n_test_runs))
-print("time(tttrlib) = %s" % (time_tttrlib / n_test_runs))
+print("time(phconvert) = %s s" % (time_phconvert / n_test_runs))
+print("time(tttrlib) = %s s" % (time_tttrlib / n_test_runs))
 print("tttrlib speedup: %.2f" % (time_phconvert / time_tttrlib))
 
 # time(phconvert) = 5054 ms (without numba)
