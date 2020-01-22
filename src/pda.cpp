@@ -378,6 +378,6 @@ void Pda::get_SgSr_matrix(
         double **out, int *dim1, int *dim2
 ) {
     *out = SgSr.data();
-    *dim1 = Nmax + 1;
-    *dim2 = Nmax + 1;
+    *dim1 = Nmax;
+    *dim2 = Nmax;
 }

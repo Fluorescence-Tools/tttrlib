@@ -41,13 +41,7 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg]
 
         if platform.system() == "Windows":
-            cmake_args += [
-                '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
-                    cfg.upper(),
-                    extdir
-                )
-            ]
-            build_args += ['--', '/m']
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
@@ -91,7 +85,7 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.10',
+    version='0.0.11',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

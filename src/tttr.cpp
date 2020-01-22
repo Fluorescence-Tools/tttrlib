@@ -89,6 +89,7 @@ TTTR::TTTR(
     if(read_input){
         read_file();
     }
+    find_used_routing_channels();
 }
 
 
@@ -102,12 +103,34 @@ TTTR::TTTR(char *fn, const char *container_type) :
     tttr_container_type = container_names[std::string(container_type)];
     filename = fn;
     read_file();
+    find_used_routing_channels();
 }
 
 void TTTR::shift_macro_time(unsigned int shift) {
     for(size_t i=0; i<n_valid_events; i++){
         macro_times[i] += shift;
     }
+}
+
+void TTTR::find_used_routing_channels(){
+    for(size_t i = 0; i < n_valid_events; i++){
+        short c = routing_channels[i];
+        bool new_channel = true;
+        for(auto l: used_routing_channels){
+            if(c == l){
+                new_channel = false;
+                break;
+            }
+        }
+        if(new_channel){
+            used_routing_channels.push_back(c);
+        }
+    }
+    std::clog << "-- Used routing channels: ";
+    for(auto c: used_routing_channels){
+        std::clog << c << ", ";
+    }
+    std::clog << std::endl;
 }
 
 int TTTR::read_hdf_file(char *fn){
@@ -171,10 +194,10 @@ int TTTR::read_file(
         char *fn,
         int container_type
         ) {
-    std::clog << "Reading container type: " << container_type << std::endl;
-    if(
-            boost::filesystem::exists(fn)
-            )
+    std::clog << "Reading TTTR file" << std::endl;
+    std::clog << "-- Filename: " << fn << std::endl;
+    std::clog << "-- Container type: " << container_type << std::endl;
+    if(boost::filesystem::exists(fn))
     {
         if (container_type == PHOTON_HDF_CONTAINER)
         {
@@ -188,18 +211,18 @@ int TTTR::read_file(
                 fp_records_begin = header->header_end;
                 bytes_per_record = header->bytes_per_record;
                 tttr_record_type = header->getTTTRRecordType();
-                std::clog << "TTTR record type: " << tttr_record_type << std::endl;
+                std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
                 processRecord = processRecord_map[tttr_record_type];
                 n_records_in_file = determine_number_of_records_by_file_size(
                         fp,
                         header->header_end,
                         bytes_per_record
                 );
-                std::clog << "Number of records: " << n_records_in_file <<
+                std::clog << "-- Number of records: " << n_records_in_file <<
                 std::endl;
             }
             else{
-                std::clog << "File: " << filename << " does not exist" << std::endl;
+                std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
                 return 0;
             }
             allocate_memory_for_records(n_records_in_file);
@@ -208,7 +231,7 @@ int TTTR::read_file(
         }
         return 1;
     }
-    std::cerr << "Could not open file " << fn << std::endl;
+    std::cerr << "-- WARNING: Could not open file " << fn << std::endl;
     return 1;
 }
 
@@ -380,6 +403,15 @@ void TTTR::get_routing_channel(int16_t** out, int* n_out){
     get_array(
             n_valid_events,
             routing_channels,
+            out,
+            n_out
+    );
+}
+
+void TTTR::get_used_routing_channels(int16_t** out, int* n_out){
+    get_array(
+            used_routing_channels.size(),
+            used_routing_channels.data(),
             out,
             n_out
     );
@@ -638,8 +670,11 @@ std::vector<unsigned int> TTTRRange::get_tttr_indices() {
 }
 
 
-bool TTTR::write_file(char *fn, int container_type) {
-    switch (container_type) {
+bool TTTR::write_file(
+        char *fn,
+        const char* container_type
+        ) {
+    switch(container_names[container_type]) {
         case BH_SPC130_CONTAINER:
             fp = fopen(fn, "wb");
             if (fp != nullptr) {
@@ -656,7 +691,7 @@ bool TTTR::write_file(char *fn, int container_type) {
                 int n = 0;
                 unsigned long MT_ov = 0;
                 while (n < n_valid_events) {
-                    unsigned  long MT = macro_times[n] - MT_ov * 4095;
+                    unsigned long MT = macro_times[n] - MT_ov * 4095;
                     if (MT > 4095) {
                         /* invalid photon */
                         unsigned long MT_ov_last = MT / (4096);
@@ -677,7 +712,6 @@ bool TTTR::write_file(char *fn, int container_type) {
                 std::cerr << "Cannot write to file: " << filename <<  std::endl;
                 return false;
             }
-
             break;
     }
     return true;

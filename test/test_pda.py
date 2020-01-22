@@ -13,8 +13,6 @@ class Tests(unittest.TestCase):
         setter and getter methods
         :return:
         """
-        import tttrlib
-        import numpy as np
 
         pda = tttrlib.Pda()
         green_background = 1.5
@@ -48,8 +46,6 @@ class Tests(unittest.TestCase):
         sgsr_matrix = pda.get_SgSr_matrix()
 
     def test_pda_2(self):
-        import tttrlib
-        import numpy as np
 
         pda = tttrlib.Pda()
         green_background = 1.5
