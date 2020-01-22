@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="classsetup_1_1_c_make_extension" kind="class" language="Python" prot="public">
+    <compoundname>setup::CMakeExtension</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">Extension</basecompoundref>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classsetup_1_1_c_make_extension_1a29a643870fbe57b4181a02fb4d57b9f7" prot="public" static="no" mutable="no">
+        <type></type>
+        <definition>setup.CMakeExtension::sourcedir</definition>
+        <argsstring></argsstring>
+        <name>sourcedir</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="19" column="1" bodyfile="setup.py" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classsetup_1_1_c_make_extension_1a2e49eec9170175d7c21d338bad44c6aa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>def</type>
+        <definition>def setup.CMakeExtension.__init__</definition>
+        <argsstring>(self, name, sourcedir=&apos;&apos;)</argsstring>
+        <name>__init__</name>
+        <param>
+          <type>self</type>
+          <defname>self</defname>
+        </param>
+        <param>
+          <type>name</type>
+          <defname>name</defname>
+        </param>
+        <param>
+          <type>sourcedir</type>
+          <defname>sourcedir</defname>
+          <defval>&apos;&apos;</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="setup.py" line="17" column="1" bodyfile="setup.py" bodystart="17" bodyend="21"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>setup.CMakeExtension</label>
+        <link refid="classsetup_1_1_c_make_extension"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>Extension</label>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>setup.CMakeExtension</label>
+        <link refid="classsetup_1_1_c_make_extension"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>Extension</label>
+      </node>
+    </collaborationgraph>
+    <location file="setup.py" line="15" column="1" bodyfile="setup.py" bodystart="15" bodyend="22"/>
+    <listofallmembers>
+      <member refid="classsetup_1_1_c_make_extension_1a2e49eec9170175d7c21d338bad44c6aa" prot="public" virt="non-virtual"><scope>setup::CMakeExtension</scope><name>__init__</name></member>
+      <member refid="classsetup_1_1_c_make_extension_1a29a643870fbe57b4181a02fb4d57b9f7" prot="public" virt="non-virtual"><scope>setup::CMakeExtension</scope><name>sourcedir</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

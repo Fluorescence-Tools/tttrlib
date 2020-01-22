@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="class_c_l_s_m_pixel" kind="class" language="C++" prot="public">
+    <compoundname>CLSMPixel</compoundname>
+    <basecompoundref refid="class_t_t_t_r_range" prot="public" virt="non-virtual">TTTRRange</basecompoundref>
+      <sectiondef kind="friend">
+      <memberdef kind="friend" id="class_c_l_s_m_pixel_1a1e4d674b52d52ae0d7249f764164c95a" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>friend class</type>
+        <definition>friend class CLSMLine</definition>
+        <argsstring></argsstring>
+        <name>CLSMLine</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="19" column="5" bodyfile="include/image.h" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="friend" id="class_c_l_s_m_pixel_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>friend class</type>
+        <definition>friend class CLSMImage</definition>
+        <argsstring></argsstring>
+        <name>CLSMImage</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="20" column="5" bodyfile="include/image.h" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="protected-attrib">
+      <memberdef kind="variable" id="class_c_l_s_m_pixel_1ac7bd6c3fcf81a9e7fd2b80f4f18cb8ec" prot="protected" static="no" mutable="no">
+        <type>std::vector&lt; unsigned int &gt;</type>
+        <definition>std::vector&lt;unsigned int&gt; CLSMPixel::tttr_indices</definition>
+        <argsstring></argsstring>
+        <name>tttr_indices</name>
+        <briefdescription>
+<para>Stores the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> indices of the pixel. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="24" column="17" bodyfile="include/image.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_c_l_s_m_pixel_1ad32bf1832c8b445f3a7fe0eff5000739" prot="protected" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool CLSMPixel::filled</definition>
+        <argsstring></argsstring>
+        <name>filled</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="25" column="10" bodyfile="include/image.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_c_l_s_m_pixel_1a3a0ff485dfee67f858011123d32a2bdd" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>std::vector&lt; unsigned int &gt;</type>
+        <definition>std::vector&lt;unsigned int&gt; CLSMPixel::get_tttr_indices</definition>
+        <argsstring>()</argsstring>
+        <name>get_tttr_indices</name>
+        <reimplements refid="class_t_t_t_r_range_1a33fb1c2bdf2ee61ae3f3317ae6c1c4e2">get_tttr_indices</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="29" column="17" bodyfile="include/image.h" bodystart="29" bodyend="31"/>
+      </memberdef>
+      <memberdef kind="function" id="class_c_l_s_m_pixel_1a1fd0a3531ebd8d786ec632eb054e5757" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void CLSMPixel::append</definition>
+        <argsstring>(unsigned int v)</argsstring>
+        <name>append</name>
+        <param>
+          <type>unsigned int</type>
+          <declname>v</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="33" column="10" bodyfile="include/image.h" bodystart="33" bodyend="35"/>
+      </memberdef>
+      <memberdef kind="function" id="class_c_l_s_m_pixel_1ab325778698ed7e07d1264e04cc3de065" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>CLSMPixel::CLSMPixel</definition>
+        <argsstring>()</argsstring>
+        <name>CLSMPixel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="37" column="5" bodyfile="include/image.h" bodystart="37" bodyend="40"/>
+      </memberdef>
+      <memberdef kind="function" id="class_c_l_s_m_pixel_1abea32934b162680aeb3d9b3b610a905d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>CLSMPixel::CLSMPixel</definition>
+        <argsstring>(const CLSMPixel &amp;old_pixel)</argsstring>
+        <name>CLSMPixel</name>
+        <param>
+          <type>const <ref refid="class_c_l_s_m_pixel" kindref="compound">CLSMPixel</ref> &amp;</type>
+          <declname>old_pixel</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="42" column="5" bodyfile="include/image.h" bodystart="42" bodyend="44"/>
+      </memberdef>
+      <memberdef kind="function" id="class_c_l_s_m_pixel_1aa175fe98f93b77c5dbf720927356870e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>CLSMPixel::~CLSMPixel</definition>
+        <argsstring>()</argsstring>
+        <name>~CLSMPixel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/image.h" line="46" column="5" bodyfile="include/image.h" bodystart="46" bodyend="47"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>CLSMPixel</label>
+        <link refid="class_c_l_s_m_pixel"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>TTTRRange</label>
+        <link refid="class_t_t_t_r_range"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>CLSMPixel</label>
+        <link refid="class_c_l_s_m_pixel"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>TTTRRange</label>
+        <link refid="class_t_t_t_r_range"/>
+      </node>
+    </collaborationgraph>
+    <location file="include/image.h" line="17" column="33" bodyfile="include/image.h" bodystart="17" bodyend="49"/>
+    <listofallmembers>
+      <member refid="class_c_l_s_m_pixel_1a1fd0a3531ebd8d786ec632eb054e5757" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>append</name></member>
+      <member refid="class_c_l_s_m_pixel_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" prot="private" virt="non-virtual"><scope>CLSMPixel</scope><name>CLSMImage</name></member>
+      <member refid="class_c_l_s_m_pixel_1a1e4d674b52d52ae0d7249f764164c95a" prot="private" virt="non-virtual"><scope>CLSMPixel</scope><name>CLSMLine</name></member>
+      <member refid="class_c_l_s_m_pixel_1ab325778698ed7e07d1264e04cc3de065" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>CLSMPixel</name></member>
+      <member refid="class_c_l_s_m_pixel_1abea32934b162680aeb3d9b3b610a905d" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>CLSMPixel</name></member>
+      <member refid="class_c_l_s_m_pixel_1ad32bf1832c8b445f3a7fe0eff5000739" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>filled</name></member>
+      <member refid="class_t_t_t_r_range_1aabf4759d39e37d3ef18c6a5b8b75cdac" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>get_duration</name></member>
+      <member refid="class_t_t_t_r_range_1afb72671ef1a0e60ac212f8b57eed1a9b" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>get_start_stop</name></member>
+      <member refid="class_t_t_t_r_range_1a85d36a66c32d033d0ee5e7f08b222e24" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>get_start_stop_time</name></member>
+      <member refid="class_c_l_s_m_pixel_1a3a0ff485dfee67f858011123d32a2bdd" prot="public" virt="virtual"><scope>CLSMPixel</scope><name>get_tttr_indices</name></member>
+      <member refid="class_t_t_t_r_range_1a45092c46a5b81bb96b857e2dce85c104" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>start</name></member>
+      <member refid="class_t_t_t_r_range_1a803b7d5419eb43fc935c9d8a2ecbe345" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>start_time</name></member>
+      <member refid="class_t_t_t_r_range_1abaffc73cbe7bd8f7ab4dcfbd57de2b55" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>stop</name></member>
+      <member refid="class_t_t_t_r_range_1a71827bd72a07057a4952846e7618588f" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>stop_time</name></member>
+      <member refid="class_c_l_s_m_pixel_1ac7bd6c3fcf81a9e7fd2b80f4f18cb8ec" prot="protected" virt="non-virtual"><scope>CLSMPixel</scope><name>tttr_indices</name></member>
+      <member refid="class_t_t_t_r_range_1a052686e1349c5e8c8dcb471e024bc500" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>TTTRRange</name></member>
+      <member refid="class_c_l_s_m_pixel_1aa175fe98f93b77c5dbf720927356870e" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>~CLSMPixel</name></member>
+      <member refid="class_t_t_t_r_range_1a14c2e6270e12596a11974e31e53f4132" prot="public" virt="non-virtual"><scope>CLSMPixel</scope><name>~TTTRRange</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

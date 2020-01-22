@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="struct_curve_mapping__t" kind="struct" language="C++" prot="public">
+    <compoundname>CurveMapping_t</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_curve_mapping__t_1a9297faa73e4f0682e80cc96bfb2fad5a" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t CurveMapping_t::MapTo</definition>
+        <argsstring></argsstring>
+        <name>MapTo</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="78" column="13" bodyfile="include/header.h" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="struct_curve_mapping__t_1a37f717372240c8fd4c4dfacfcfe33234" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t CurveMapping_t::Show</definition>
+        <argsstring></argsstring>
+        <name>Show</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="79" column="13" bodyfile="include/header.h" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/header.h" line="77" column="15" bodyfile="include/header.h" bodystart="77" bodyend="80"/>
+    <listofallmembers>
+      <member refid="struct_curve_mapping__t_1a9297faa73e4f0682e80cc96bfb2fad5a" prot="public" virt="non-virtual"><scope>CurveMapping_t</scope><name>MapTo</name></member>
+      <member refid="struct_curve_mapping__t_1a37f717372240c8fd4c4dfacfcfe33234" prot="public" virt="non-virtual"><scope>CurveMapping_t</scope><name>Show</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
