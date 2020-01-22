@@ -401,12 +401,59 @@ protected:
 
 public:
 
+    /*!
+     * Returns an array containing the routing channel numbers
+     * that are contained (used) in the TTTR file.
+     *
+     * @param out Pointer to the output array
+     * @param n_out Pointer to the number of elements in the output array
+     */
     void get_used_routing_channels(short **out, int *n_out);
+
+    /*!
+     * Returns an array containing the macro times of the valid TTTR
+     * events.
+     *
+     * @param out Pointer to the output array
+     * @param n_out Pointer to the number of elements in the output array
+     */
     void get_macro_time(unsigned long long **out, int *n_out);
+
+    /*!
+     * Returns an array containing the micro times of the valid TTTR
+     * events.
+     *
+     * @param out Pointer to the output array
+     * @param n_out Pointer to the number of elements in the output array
+     */
     void get_micro_time(unsigned int **out, int *n_out);
+
+    /*!
+     * Returns an array containing the routing channel numbers of the
+     * valid TTTR events.
+     *
+     * @param out Pointer to the output array
+     * @param n_out Pointer to the number of elements in the output array
+     */
     void get_routing_channel(short ** out, int* n_out);
+
+    /*!
+     *
+     * @param out Pointer to the output array
+     * @param n_out Pointer to the number of elements in the output array
+     */
     void get_event_type(short ** out, int* n_out);
+
+    /*!
+     *
+     * @return maximum valid number of micro time channels
+     */
     int get_number_of_tac_channels();
+
+    /*!
+     *
+     * @return number of valid events in the TTTR file
+     */
     int get_n_valid_events();
 
     TTTR* select(long long *selection, int n_selection);
@@ -424,9 +471,29 @@ public:
      */
     TTTR();
 
-    // Constructors are to read files
+    /*!
+     *
+     * @param filename TTTR filename
+     * @param container_type container type as int (0 = PTU; 1 = HT3;
+     * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
+     * @param read_input if true reads the content of the file
+     */
     TTTR(char *filename, int container_type, bool read_input);
+
+    /*!
+     *
+     * @param filename TTTR filename
+     * @param container_type container type as int (0 = PTU; 1 = HT3;
+     * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
+     */
     TTTR(char *filename, int container_type);
+
+    /*!
+     *
+     * @param filename TTTR filename
+     * @param container_type container type as string (PTU; HT3;
+     * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+     */
     TTTR(char *filename, const char* container_type);
 
 
@@ -455,7 +522,8 @@ public:
 
     /*!
      * Returns a vector containing indices of records that
-     * @param in a pointer to an array of int16_tchannel numbers that are used to select indices of photons
+     * @param in a pointer to an array of int16_tchannel numbers that are
+     * used to select indices of photons
      * @param n_in the length of the channel list.
      */
     void get_selection_by_channel(
@@ -485,17 +553,30 @@ public:
     Header get_header();
 
     /*!
-     * Returns the number of events in the TTTR file for cases no selection is specified
-     * otherwise the number of selected events is returned.
+     * Returns the number of events in the TTTR file for cases no selection
+     * is specified otherwise the number of selected events is returned.
      * @return
      */
     int get_n_events();
 
+    /*!
+     * Write the contents of a opened TTTR file to a new
+     * TTTR file.
+     *
+     * @param fn filename
+     * @param container_type container type (PTU; HT3;
+     * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+     * @return
+     */
     bool write_file(
             char *fn,
             const char* container_type
             );
 
+    /*!
+     * Shift the macro time by a constant
+     * @param shift
+     */
     void shift_macro_time(
             unsigned int shift
             );

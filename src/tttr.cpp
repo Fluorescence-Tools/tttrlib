@@ -166,7 +166,6 @@ int TTTR::read_hdf_file(char *fn){
     /*
      * Read the data
      */
-
     H5Dread(
             ds_microtime,
             H5T_NATIVE_UINT32, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -334,9 +333,10 @@ void TTTR::read_records(
                     *(int16_t *)&routing_channels[n_valid_events],
                     *(int16_t *)&event_types[n_valid_events]
                     );
-            if(is_valid_record){
-                n_valid_events++;
-            }
+            n_valid_events += is_valid_record;
+//            if(is_valid_record){
+//                n_valid_events++;
+//            }
         }
         n_records_read += chunk;
     }
@@ -355,9 +355,10 @@ void TTTR::read_records(
                 *(int16_t *)&routing_channels[n_valid_events],
                 *(int16_t *)&event_types[n_valid_events]
         );
-        if(is_valid_record){
-            n_valid_events++;
-        }
+//        if(is_valid_record){
+//            n_valid_events++;
+//        }
+        n_valid_events += is_valid_record;
         n_records_read += 1;
     }
     free(tmp);
@@ -664,7 +665,7 @@ void get_ranges_channel(
 std::vector<unsigned int> TTTRRange::get_tttr_indices() {
     std::vector<unsigned int> v;
     for(unsigned int i=start; i<stop; i++){
-        v.push_back(i);
+        v.emplace_back(i);
     }
     return v;
 }

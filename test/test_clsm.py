@@ -128,7 +128,7 @@ class TestCLSM(unittest.TestCase):
                 clsm_image.n_lines,
                 clsm_image.n_pixel,
             ),
-            dtype=np.short
+            dtype=np.uint8
         )
         decays = clsm_image.get_decays(
             tttr_data=data,
@@ -145,7 +145,10 @@ class TestCLSM(unittest.TestCase):
         )
 
         self.assertEqual(
-            np.sum(decays.sum(axis=0) - decay) == 0,
+            np.allclose(
+                decays.sum(axis=0),
+                decay
+            ),
             True
         )
 
@@ -172,7 +175,6 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
         intensity_image = clsm_image.get_intensity_image().sum(axis=0)
-        np.save('./data/reference/img_intensity_image_sp5.npy', intensity_image)
         self.assertEqual(
             np.allclose(
                 np.load(
@@ -218,7 +220,6 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
         intensity_image_1 = clsm_image_1.get_intensity_image().sum(axis=0)
-        np.save('./data/reference/img_ref_intensity.npy', intensity_image_1)
         self.assertEqual(
             np.allclose(
                 intensity_image_1,

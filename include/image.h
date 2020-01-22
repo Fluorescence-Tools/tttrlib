@@ -265,7 +265,7 @@ public:
      */
     void get_decays(
             TTTR* tttr_data,
-            short* selection, int d_selection_1, int d_selection_2, int d_selection_3,
+            uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3,
             unsigned int** out, int* dim1, int* dim2,
             int tac_coarsening,
             bool stack_frames

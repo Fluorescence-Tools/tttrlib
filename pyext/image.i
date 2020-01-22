@@ -1,7 +1,7 @@
 %module(directors="1") tttrlib
 %{
-#include "include/image.h"
-#include "include/tttr.h"
+    #include "include/image.h"
+    #include "include/tttr.h"
 %}
 
 
@@ -35,9 +35,9 @@ namespace std {
 }
 
 %apply (
-        short* IN_ARRAY3, int DIM1, int DIM2, int DIM3
+        uint8_t* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3
 ) {
-    (short* selection, int d_selection_1, int d_selection_2, int d_selection_3)
+    (uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3)
 }
 
 %extend CLSMImage {

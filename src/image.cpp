@@ -20,14 +20,6 @@ CLSMFrame()
     CLSMFrame::start = frame_start;
 }
 
-
-void CLSMLine::append(CLSMPixel * pixel){
-    pixels.emplace_back(pixel);
-    n_pixel++;
-    pixel_duration = (unsigned int) (get_duration() / n_pixel);
-}
-
-
 void CLSMFrame::append(CLSMLine * line){
     lines.emplace_back(line);
     n_lines++;
@@ -38,6 +30,12 @@ std::vector<CLSMLine*> CLSMFrame::get_lines(){
     return lines;
 };
 
+
+void CLSMLine::append(CLSMPixel * pixel){
+    pixels.emplace_back(pixel);
+    n_pixel++;
+    pixel_duration = (unsigned int) (get_duration() / n_pixel);
+}
 
 CLSMImage::CLSMImage():
 marker_frame(0),
@@ -339,22 +337,23 @@ void CLSMImage::fill_pixels(
     std::clog << "-- Assign photons to pixels" << std::endl;
     for(auto frame : frames){
         for(auto line : frame->lines){
+            if(line->pixels.empty()){
+                std::clog << "WARNING: Line without pixel." << std::endl;
+                continue;
+            }
             auto pixel_duration = line->get_pixel_duration();
-            for(auto i=line->start; i < line->stop; i++){
-                if (tttr_data->event_types[i] == RECORD_PHOTON) {
-                    short c = tttr_data->routing_channels[i];
+            // iterate though events in the line
+            for(auto event_i=line->start; event_i < line->stop; event_i++){
+                if (tttr_data->event_types[event_i] == RECORD_PHOTON)
+                {
+                    short c = tttr_data->routing_channels[event_i];
                     for(auto ci : channels){
                         if(c == ci){
-                            if(line->pixels.size() == 0){
-                                std::clog << "WARNING: Line without pixel." << std::endl;
-                                break;
-                            } else{
-                                pixel_nbr = (tttr_data->macro_times[i] - line->start_time) / pixel_duration;
-                                if(pixel_nbr < line->pixels.size()){
-                                    line->pixels[pixel_nbr]->append(i);
-                                }
-                                break;
+                            pixel_nbr = (tttr_data->macro_times[event_i] - line->start_time) / pixel_duration;
+                            if(pixel_nbr < line->pixels.size()){
+                                line->pixels[pixel_nbr]->append(event_i);
                             }
+                            break;
                         }
                     }
                 }
@@ -377,10 +376,7 @@ void CLSMImage::fill_pixels(
 
 
 void CLSMImage::get_intensity_image(
-        unsigned int**out,
-        int* dim1,
-        int* dim2,
-        int* dim3
+        unsigned int**out, int* dim1, int* dim2, int* dim3
         ){
     *dim1 = n_frames;
     *dim2 = n_lines;
@@ -439,19 +435,20 @@ void CLSMImage::get_decay_image(
             for(auto pixel : line->pixels){
                 for(auto i : pixel->tttr_indices){
                     size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
-                    if(i_tac < n_tac){
+                    //if(i_tac < n_tac){
                         t[i_frame * (n_lines * n_pixel * n_tac) +
                           i_line  * (n_pixel * n_tac) +
                           i_pixel * (n_tac) +
                           i_tac
                         ] += 1;
-                    }
+                    //}
                 }
                 i_pixel++;
             }
             i_line++;
         }
-        if (!stack_frames) i_frame++;
+        i_frame += !stack_frames;
+        //if (!stack_frames) i_frame++;
     }
     *out = t;
 }
@@ -459,7 +456,7 @@ void CLSMImage::get_decay_image(
 
 void CLSMImage::get_decays(
         TTTR* tttr_data,
-        short* selection, int d_selection_1, int d_selection_2, int d_selection_3,
+        uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3,
         unsigned int** out, int* dim1, int* dim2,
         int tac_coarsening,
         bool stack_frames
@@ -478,31 +475,30 @@ void CLSMImage::get_decays(
     *dim1 = (int) n_decays;
     *dim2 = (int) n_tac;
     size_t n_tac_total = n_decays * n_tac;
+    size_t w_frame = 0;
     auto* t = (unsigned int*) calloc(n_tac_total, sizeof(unsigned int));
-    if((d_selection_1 == n_frames) && (d_selection_2 == n_lines) && (d_selection_3 == n_pixel)){
+    if((d_selection_1 != n_frames) || (d_selection_2 != n_lines) || (d_selection_3 != n_pixel)){
+        std::cerr
+                << "Error: the dimensions of the selection ("
+                << n_frames << ", " << n_lines << ", " << n_pixel
+                << ") does not match the CLSM image dimensions.";
+    } else{
         for(size_t i_frame=0; i_frame < n_frames; i_frame++) {
             auto frame = frames[i_frame];
             for (size_t i_line = 0; i_line < n_lines; i_line++) {
                 auto line = frame->lines[i_line];
                 for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
-                    if (selection[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel]) {
-                        auto pixel = line->pixels[i_pixel];
-                        size_t w_frame = stack_frames ? 0 : i_frame;
-                        for (auto i : pixel->tttr_indices) {
-                            size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
-                            if (i_tac < n_tac) {
-                                t[w_frame * n_tac + i_tac] += 1;
-                            }
-                        }
+                    auto pixel = line->pixels[i_pixel];
+                    if (!selection[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel])
+                        continue;
+                    for (auto i : pixel->tttr_indices) {
+                        size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
+                        t[w_frame * n_tac + i_tac] += 1;
                     }
                 }
             }
+            w_frame += !stack_frames;
         }
-    } else{
-        std::cerr
-        << "Error: the dimensions of the selection ("
-        << n_frames << ", " << n_lines << ", " << n_pixel
-        << ") does not match the CLSM image dimensions.";
     }
     *out = t;
 }
@@ -513,25 +509,29 @@ void CLSMImage::get_mean_tac_image(
         double** out, int* dim1, int* dim2, int* dim3,
         int n_ph_min
 ){
-    auto* t = (double *) calloc(n_frames * n_lines * n_pixel, sizeof(double));
+    double dt = tttr_data->header->micro_time_resolution;
+    std::clog << "Get mean micro time image" << std::endl;
+    std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
+    std::clog << "-- Minimum number of photos: " << n_ph_min << std::endl;
+    std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
+    auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
     for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
-        CLSMFrame frame = *(frames[i_frame]);
         for(size_t i_line = 0; i_line < n_lines; i_line++){
-            CLSMLine line = *(frame[i_line]);
             for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
-                CLSMPixel* pixel = line[i_pixel];
-                auto v = pixel->tttr_indices;
-                if(v.size() > n_ph_min){
-                    t[i_frame * (n_lines * n_pixel) +
-                      i_line  * (n_pixel) +
-                      i_pixel
-                    ] = (float) std::accumulate(v.begin(), v.end(), 0) / v.size();
+                size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
+                auto v = frames[i_frame]->lines[i_line]->pixels[i_pixel]->tttr_indices;
+                // calculate the mean iteratively
+                double value = 0.0;
+                if (v.size() > n_ph_min){
+                    double i = 1.0;
+                    for(auto event_i: v){
+                        value = value + 1. / (i + 1.) * (double) (tttr_data->micro_times[event_i] - value);
+                        i++;
+                    }
                 }
-                i_pixel++;
+                t[pixel_nbr] = value * dt;
             }
-            i_line++;
         }
-        i_frame++;
     }
     *dim1 = n_frames;
     *dim2 = n_lines;
