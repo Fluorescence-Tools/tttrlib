@@ -475,7 +475,6 @@ void CLSMImage::get_decays(
     *dim1 = (int) n_decays;
     *dim2 = (int) n_tac;
     size_t n_tac_total = n_decays * n_tac;
-    size_t w_frame = 0;
     auto* t = (unsigned int*) calloc(n_tac_total, sizeof(unsigned int));
     if((d_selection_1 != n_frames) || (d_selection_2 != n_lines) || (d_selection_3 != n_pixel)){
         std::cerr
@@ -483,6 +482,7 @@ void CLSMImage::get_decays(
                 << n_frames << ", " << n_lines << ", " << n_pixel
                 << ") does not match the CLSM image dimensions.";
     } else{
+        size_t w_frame = 0;
         for(size_t i_frame=0; i_frame < n_frames; i_frame++) {
             auto frame = frames[i_frame];
             for (size_t i_line = 0; i_line < n_lines; i_line++) {

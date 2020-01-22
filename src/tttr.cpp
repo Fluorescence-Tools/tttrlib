@@ -533,19 +533,19 @@ void ranges_by_time_window(
 ) {
     *ranges = (int *) malloc(2 * n_time * sizeof(int));
     *n_range = 0;
-    unsigned long dt;
 
     size_t tw_begin = 0;
     while (tw_begin < n_time) {
-        size_t tw_end = 0;
-        for (
-                tw_end = tw_begin;
-                ((time[tw_end] - time[tw_begin]) < tw_min) && (tw_end < n_time);
-                tw_end++
-                );
 
+        // search for the end of a time window
+        size_t tw_end = 0;
+        for (tw_end = tw_begin; (tw_end < n_time); tw_end++){
+            if((time[tw_end] - time[tw_begin]) >= tw_min){
+                break;
+            }
+        }
         size_t n_ph = tw_end - tw_begin;
-        dt = time[tw_begin] - time[tw_end];
+        unsigned long long dt = time[tw_begin] - time[tw_end];
 
         if (
                 ((tw_max < 0) || (dt < tw_max)) &&
@@ -566,13 +566,12 @@ void selection_by_count_rate(
         unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 ){
-    *out = (long long*) malloc(n_time * sizeof(long long));
-    int r, n_ph;
+    *out = (long long*) calloc(sizeof(long long), n_time);
+    int r;
     int i = 0;
-
     *n_out = 0;
     while (i < (n_time - 1)){
-
+        int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
         r = i;
         n_ph = 0;
@@ -593,7 +592,7 @@ void selection_by_count_rate(
 }
 
 
-int TTTR::get_number_of_tac_channels(){
+unsigned int TTTR::get_number_of_tac_channels(){
     return header->number_of_tac_channels;
 }
 

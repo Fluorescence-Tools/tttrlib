@@ -448,7 +448,7 @@ public:
      *
      * @return maximum valid number of micro time channels
      */
-    int get_number_of_tac_channels();
+    unsigned int get_number_of_tac_channels();
 
     /*!
      *

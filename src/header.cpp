@@ -266,7 +266,6 @@ size_t read_ptu_header(
     wchar_t *WideBuffer;
     std::string strFromChar;
     tag_head_t TagHead;
-    uint64_t Result;
     uint64_t file_type = 0;
     // read the header
 
@@ -285,6 +284,7 @@ size_t read_ptu_header(
     data["Tag Version"] = buffer_out;
 
     do {
+        uint64_t Result;
         // This loop is very generic. It reads all header items and displays the
         // identifier and the associated value, quite independent of what
         // they mean in detail.
