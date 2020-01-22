@@ -670,8 +670,11 @@ std::vector<unsigned int> TTTRRange::get_tttr_indices() {
 }
 
 
-bool TTTR::write_file(char *fn, int container_type) {
-    switch (container_type) {
+bool TTTR::write_file(
+        char *fn,
+        const char* container_type
+        ) {
+    switch(container_names[container_type]) {
         case BH_SPC130_CONTAINER:
             fp = fopen(fn, "wb");
             if (fp != nullptr) {
@@ -709,7 +712,6 @@ bool TTTR::write_file(char *fn, int container_type) {
                 std::cerr << "Cannot write to file: " << filename <<  std::endl;
                 return false;
             }
-
             break;
     }
     return true;

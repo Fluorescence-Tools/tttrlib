@@ -493,7 +493,7 @@ public:
 
     bool write_file(
             char *fn,
-            int container_type
+            const char* container_type
             );
 
     void shift_macro_time(
