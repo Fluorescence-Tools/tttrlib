@@ -11,6 +11,7 @@
 #include <list>
 #include <cstring>
 #include <numeric>      // std::accumulate
+#include <algorithm>
 
 
 
@@ -282,12 +283,15 @@ public:
      * @param dim2 returns the number of lines
      * @param dim3 returns the number of pixels per line
      * @param n_ph_min the minimum number of photons in a micro time
-     * channel to be considered
+     * @param stack_frames if true the frames are stacked and a single the
+     * frame containing the photon count weighted average arrival time is
+     * returned
      */
     void get_mean_tac_image(
             TTTR* tttr_data,
             double** out, int* dim1, int* dim2, int* dim3,
-            int n_ph_min
+            int n_ph_min,
+            bool stack_frames= false
     );
 
     /*!

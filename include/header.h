@@ -90,14 +90,13 @@ typedef struct {
 /// The following represents the readable ASCII file header portion
 typedef struct {
     char Ident[16];                //"PicoHarp 300"
-    char FormatVersion[6];        //file format version
-    char CreatorName[18];        //name of creating software
-    char CreatorVersion[12];    //version of creating software
+    char FormatVersion[6];         //file format version
+    char CreatorName[18];          //name of creating software
+    char CreatorVersion[12];       //version of creating software
     char FileTime[18];
     char CRLF[2];
     char CommentField[256];
 } pq_ht3_ascii_t;
-
 
 
 /// The following is binary file header information

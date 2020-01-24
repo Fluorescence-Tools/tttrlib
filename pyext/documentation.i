@@ -148,7 +148,10 @@ Parameters
 * `dim3` :  
     returns the number of pixels per line  
 * `n_ph_min` :  
-    the minimum number of photons in a micro time channel to be considered  
+    the minimum number of photons in a micro time  
+* `stack_frames` :  
+    if true the frames are stacked and a single the frame containing the photon
+    count weighted average arrival time is returned  
 ";
 
 %feature("docstring") CLSMImage::append "
@@ -1321,7 +1324,7 @@ Parameters
 
 %feature("docstring") determine_number_of_records_by_file_size "
 
-Determines the number of records in a TTTR files (for use with not HDF5)  
+Determines the number of records in a TTTR files (not for use with HDF5)  
 
 Calculates the number of records in the file based on the file size. if  
 

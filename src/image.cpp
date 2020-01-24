@@ -123,8 +123,8 @@ void CLSMImage::initialize_leica_sp8_ptu(
 )
 {
     std::clog << "-- Routine: Leica SP8 PTU" << std::endl;
+    std::clog << "-- Number of events: " << tttr_data->n_valid_events << std::endl;
     size_t n_events = tttr_data->n_valid_events;
-
     // find the first frame
     frames.clear();
     size_t i_event=0;
@@ -507,20 +507,22 @@ void CLSMImage::get_decays(
 void CLSMImage::get_mean_tac_image(
         TTTR* tttr_data,
         double** out, int* dim1, int* dim2, int* dim3,
-        int n_ph_min
+        int n_ph_min,
+        bool stack_frames
 ){
     double dt = tttr_data->header->micro_time_resolution;
     std::clog << "Get mean micro time image" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << n_ph_min << std::endl;
     std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
+    std::clog << "-- Computing stack of mean micro times " << std::endl;
     auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
     for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
         for(size_t i_line = 0; i_line < n_lines; i_line++){
             for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
                 auto v = frames[i_frame]->lines[i_line]->pixels[i_pixel]->tttr_indices;
-                // calculate the mean iteratively
+                // calculate the mean arrival time iteratively
                 double value = 0.0;
                 if (v.size() > n_ph_min){
                     double i = 1.0;
@@ -533,9 +535,37 @@ void CLSMImage::get_mean_tac_image(
             }
         }
     }
-    *dim1 = n_frames;
-    *dim2 = n_lines;
-    *dim3 = n_pixel;
-    *out = t;
+    if(!stack_frames) {
+        *dim1 = (int) n_frames;
+        *dim2 = (int) n_lines;
+        *dim3 = (int) n_pixel;
+        *out = t;
+    } else{
+        // average over the arrival times
+        int w_frame = 1;
+        std::clog << "-- Compute photon weighted average over frames" << std::endl;
+        auto* r = (double *) malloc(sizeof(double) * w_frame * n_lines * n_pixel);
+        for(size_t i_line = 0; i_line < n_lines; i_line++){
+            for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
+                size_t pixel_nbr = i_line  * n_pixel + i_pixel;
+                // average the arrival times over the frames
+                r[pixel_nbr] = 0.0;
+                int n_photons_total = 0;
+                for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
+                    auto n_photons = frames[i_frame]->lines[i_line]->pixels[i_pixel]->tttr_indices.size();
+                    n_photons_total += n_photons;
+                    r[pixel_nbr] += n_photons * t[i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel];
+                }
+                r[pixel_nbr] /= std::max(1, n_photons_total);
+                //if(n_photons_total > 0)
+                //    r[pixel_nbr] /= n_photons_total;
+            }
+        }
+        *dim1 = (int) w_frame;
+        *dim2 = (int) n_lines;
+        *dim3 = (int) n_pixel;
+        *out = r;
+        free(t);
+    }
 }
 

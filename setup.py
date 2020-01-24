@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import os
-import re
 import sys
 import platform
 import subprocess
@@ -66,19 +65,20 @@ class CMakeBuild(build_ext):
         )
 
 
-if 'doc' in sys.argv:
-    cwd = os.getcwd()
-    #os.chdir('./include/')
-    subprocess.call(
-        "doxygen ./include/Doxyfile",
-        shell=True
-    )
-    os.chdir('./utility/')
-    subprocess.call(
-        "python doxy2swig.py ../docs/api/xml/index.xml documentation.i",
-        shell=True
-    )
-    os.chdir(cwd)
+cwd = os.getcwd()
+#os.chdir('./include/')
+subprocess.call(
+    "doxygen ./include/Doxyfile",
+    shell=True
+)
+os.chdir('./utility/')
+subprocess.call(
+    "python doxy2swig.py ../docs/_build/api/xml/index.xml "
+    "../pyext/documentation.i",
+    shell=True
+)
+os.chdir(cwd)
+
 
 setup(
     name=name,

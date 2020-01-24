@@ -567,20 +567,18 @@ void selection_by_count_rate(
         unsigned long tw, int n_ph_max
 ){
     *out = (long long*) calloc(sizeof(long long), n_time);
-    int r;
     int i = 0;
     *n_out = 0;
     while (i < (n_time - 1)){
         int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
-        r = i;
+        int r = i;
         n_ph = 0;
         while( ((time[r] - time[i]) < tw) && (r < (n_time - 1))){
             r++;
             n_ph++;
         }
         // the right side of the TW is the start for the next time record
-
         if(n_ph < n_ph_max){
             for(int k=i; k < r; k++){
                 (*n_out)++;

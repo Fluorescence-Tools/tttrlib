@@ -162,7 +162,6 @@ size_t read_ht3_header(
     //fread(&ht3_header_tttr_mode, 1, sizeof(ht3_header_tttr_mode), fpin);
 
     data["Ident"] = std::string(ht3_header_ascii.Ident);
-
     data["FormatVersion"] = std::string(ht3_header_ascii.FormatVersion);
     data["CreatorName"] = std::string(ht3_header_ascii.CreatorName);
     data["CreatorVersion"] = std::string(ht3_header_ascii.CreatorVersion);
@@ -225,8 +224,8 @@ size_t read_ht3_header(
         data["Resolution"] = std::string("1");
     }
 
-    macro_time_resolution = 1.0;
-    micro_time_resolution = 1.0;
+    macro_time_resolution = resolution;
+    micro_time_resolution = 0.001;
 
     // Todo: add identification of HydraHarp HHT3v1 files
     if (data["Ident"] == "HydraHarp")

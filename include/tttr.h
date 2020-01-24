@@ -40,7 +40,7 @@
 
 
 /*!
- * Determines the number of records in a TTTR files (for use with not HDF5)
+ * Determines the number of records in a TTTR files (not for use with HDF5)
  *
  * Calculates the number of records in the file based on the file size.
  * if @param offset is passed the number of records is calculated by the file size
