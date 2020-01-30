@@ -3,8 +3,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
-include(${CMAKE_SOURCE_DIR}/cmake/TTTRLibFindPython.cmake)
-tttrlib_find_python()
+OPTION(BUILD_DOC "Build documentation" OFF)
+OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" OFF)
+OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 ENABLE_LANGUAGE(CXX)
 SET(CMAKE_CXX_STANDARD 11)
@@ -44,6 +47,15 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 ADD_SUBDIRECTORY(pyext)
+
+# Build documentation with doxygen
+IF(BUILD_DOC)
+    find_package(Doxygen REQUIRED)
+    IF (DOXYGEN_FOUND)
+    ELSE (DOXYGEN_FOUND)
+        message("Doxygen need to be installed to generate the doxygen documentation")
+    ENDIF (DOXYGEN_FOUND)
+ENDIF()
 
 # Add install target
 install(TARGETS ${PROJECT_NAME}

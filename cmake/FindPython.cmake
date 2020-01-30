@@ -1,4 +1,7 @@
-function(tttrlib_find_python)
+
+find_program(python_command python "python executable.")
+
+IF(python_command)
     FIND_PACKAGE(PythonInterp)
     FIND_PACKAGE(PythonLibs)
     execute_process(
@@ -21,5 +24,6 @@ function(tttrlib_find_python)
     MESSAGE(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
     MESSAGE(STATUS "Python_INCLUDE_DIR='${Python_INCLUDE_DIR}'")
     MESSAGE(STATUS "PYTHON_LIBRARIES='${PYTHON_LIBRARIES}'")
-
-endfunction(tttrlib_find_python)
+ELSE()
+    message(SEND_ERROR "FindPython.cmake requires the following variables to be set: python_command")
+ENDIF()

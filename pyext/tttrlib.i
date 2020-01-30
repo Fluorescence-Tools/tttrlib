@@ -12,13 +12,12 @@
 
 %include <typemaps.i>
 %include "stl.i"
-%include "std_wstring.i"
+//%include "std_wstring.i"
 %include std_string.i
 %include "std_map.i"
-
 %include "./include/numpy.i"
 %init %{
-import_array();
+    import_array();
 %}
 
 %template(map_string_string) std::map<std::string, std::string>;

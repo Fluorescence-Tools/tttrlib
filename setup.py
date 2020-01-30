@@ -33,7 +33,8 @@ class CMakeBuild(build_ext):
 
         cmake_args = [
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-            '-DCMAKE_SWIG_OUTDIR=' + extdir
+            '-DCMAKE_SWIG_OUTDIR=' + extdir,
+            '-DBUILD_PYTHON_INTERFACE=ON'
         ]
 
         cfg = 'Debug' if self.debug else 'Release'
@@ -66,7 +67,6 @@ class CMakeBuild(build_ext):
 
 
 cwd = os.getcwd()
-#os.chdir('./include/')
 subprocess.call(
     "doxygen ./include/Doxyfile",
     shell=True
