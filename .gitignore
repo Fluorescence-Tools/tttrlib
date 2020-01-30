@@ -5,6 +5,8 @@ scratch.py
 CMakeLists.txt.user
 CMakeLists.txt.user.*
 cmake-build-*
+playground
+temp
 
 # Documentation and tools
 doc/_*
