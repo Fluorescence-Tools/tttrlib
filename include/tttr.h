@@ -223,7 +223,7 @@ public:
     stop_time(0)
     {};
 
-    virtual std::vector<size_t > get_tttr_indices();
+    virtual std::vector<unsigned long > get_tttr_indices();
 
     std::vector<unsigned long long> get_start_stop(){
         std::vector<unsigned long long> v = {start, stop};

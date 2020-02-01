@@ -659,7 +659,7 @@ void get_ranges_channel(
 }
 
 
-std::vector<size_t > TTTRRange::get_tttr_indices() {
+std::vector<unsigned long > TTTRRange::get_tttr_indices() {
     std::vector<size_t > v;
     for(size_t i=start; i<stop; i++){
         v.emplace_back(i);

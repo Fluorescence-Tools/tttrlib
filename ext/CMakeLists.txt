@@ -11,7 +11,7 @@ SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
 FILE(GLOB SRC_files "../src/*.cpp")
 
 IF(BUILD_PYTHON_INTERFACE)
-    FIND_PACKAGE(python)
+    FIND_PACKAGE(Python)
     MESSAGE("Building Python interface")
     INCLUDE_DIRECTORIES(${Python_INCLUDE_DIR})
     INCLUDE_DIRECTORIES(${Python_NumPy_PATH})

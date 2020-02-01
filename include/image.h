@@ -26,7 +26,7 @@ protected:
 
 public:
 
-    std::vector<size_t > get_tttr_indices(){
+    std::vector<unsigned long > get_tttr_indices(){
         return tttr_indices;
     }
 
