@@ -2,12 +2,12 @@
 %include "documentation.i"
 
 %{
-#define SWIG_FILE_WITH_INIT
-#include "../include/tttr.h"
-#include "../include/histogram.h"
-#include "../include/correlate.h"
-#include "../include/image.h"
-#include "../include/pda.h"
+    #define SWIG_FILE_WITH_INIT
+    #include "../include/tttr.h"
+    #include "../include/histogram.h"
+    #include "../include/correlate.h"
+    #include "../include/image.h"
+    #include "../include/pda.h"
 %}
 
 %include <typemaps.i>
@@ -15,7 +15,7 @@
 //%include "std_wstring.i"
 %include std_string.i
 %include "std_map.i"
-%include "./include/numpy.i"
+%include "include/numpy.i"
 %init %{
     import_array();
 %}

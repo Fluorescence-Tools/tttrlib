@@ -1,7 +1,7 @@
 %module(directors="1") tttrlib
 %{
-    #include "include/image.h"
-    #include "include/tttr.h"
+    #include "../include/image.h"
+    #include "../include/tttr.h"
 %}
 
 
@@ -13,6 +13,7 @@ namespace std {
     %template(vector_CLSMPixel) vector<CLSMPixel*>;
     %template(vector_uint) vector<unsigned int>;
     %template(vector_ulonglong) vector<unsigned long long>;
+    %template(vector_size_t) vector<size_t>;
     %template(vector3D_uint) vector<vector<vector<unsigned int>>>;
     //%template(vector4D_uchar) vector<vector<vector<vector<char>>>>;
 }

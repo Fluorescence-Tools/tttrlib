@@ -74,7 +74,7 @@ subprocess.call(
 os.chdir('./utility/')
 subprocess.call(
     "python doxy2swig.py ../docs/_build/api/xml/index.xml "
-    "../pyext/documentation.i",
+    "../ext/python/documentation.i",
     shell=True
 )
 os.chdir(cwd)

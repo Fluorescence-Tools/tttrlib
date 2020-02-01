@@ -3,22 +3,22 @@ cmake_policy(SET CMP0086 OLD)
 
 FIND_PACKAGE(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(.)
 
 SET(MODULE_NAME tttrlib)
 
-SET_SOURCE_FILES_PROPERTIES(tttrlib.i PROPERTIES CPLUSPLUS ON)
+SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
 FILE(GLOB SRC_files "../src/*.cpp")
 
 IF(BUILD_PYTHON_INTERFACE)
-    FIND_PACKAGE(Python)
+    FIND_PACKAGE(python)
     MESSAGE("Building Python interface")
     INCLUDE_DIRECTORIES(${Python_INCLUDE_DIR})
     INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
     SWIG_ADD_LIBRARY(
             ${MODULE_NAME}
             LANGUAGE python
-            SOURCES tttrlib.i ${SRC_files}
+            SOURCES python/tttrlib.i ${SRC_files}
     )
 
     EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"
@@ -58,7 +58,7 @@ IF(BUILD_R_INTERFACE)
     SWIG_ADD_LIBRARY(
             ${MODULE_NAME}
             LANGUAGE r
-            SOURCES tttrlib.i ${SRC_files}
+            SOURCES python/tttrlib.i ${SRC_files}
     )
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
@@ -72,17 +72,17 @@ IF(BUILD_R_INTERFACE)
 ENDIF()
 
 
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+get_property(dirs DIRECTORY . PROPERTY INCLUDE_DIRECTORIES)
 foreach(dir ${dirs})
     message(STATUS "INCLUDE_DIRECTORY='${dir}'")
 endforeach()
 
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_LIBRARIES)
+get_property(dirs DIRECTORY . PROPERTY LINK_LIBRARIES)
 foreach(dir ${dirs})
     message(STATUS "LINK_LIBRARIES='${dir}'")
 endforeach()
 
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+get_property(dirs DIRECTORY . PROPERTY LINK_DIRECTORIES)
 foreach(dir ${dirs})
     message(STATUS "LINK_DIRECTORIES='${dir}'")
 endforeach()

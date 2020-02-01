@@ -1,6 +1,6 @@
 %module tttrlib
 %{
-    #include "include/correlate.h"
+    #include "../include/correlate.h"
 %}
 
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {
