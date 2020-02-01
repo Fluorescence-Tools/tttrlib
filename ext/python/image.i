@@ -14,6 +14,7 @@ namespace std {
     %template(vector_uint) vector<unsigned int>;
     %template(vector_ulonglong) vector<unsigned long long>;
     %template(vector3D_uint) vector<vector<vector<unsigned int>>>;
+    // %template(VecSize) vector<size_t>;
     //%template(vector4D_uchar) vector<vector<vector<vector<char>>>>;
 }
 

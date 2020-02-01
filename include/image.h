@@ -1,6 +1,17 @@
-//
-// Created by thomas on 3/16/19.
-//
+/****************************************************************************
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
+ *                                                                          *
+ * This file is part of the library tttrlib.                                *
+ *                                                                          *
+ *   tttrlib is free software: you can redistribute it and/or modify it     *
+ *   under the terms of the MIT License.                                    *
+ *                                                                          *
+ *   tttrlib is distributed in the hope that it will be useful,             *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
+ *                                                                          *
+ ****************************************************************************/
+
 
 #ifndef TTTRLIB_IMAGE_H
 #define TTTRLIB_IMAGE_H
@@ -21,12 +32,12 @@ class CLSMPixel : public TTTRRange{
 
 protected:
     /// Stores the TTTR indices of the pixel
-    std::vector<size_t> tttr_indices;
+    std::vector<unsigned int > tttr_indices;
     bool filled;
 
 public:
 
-    std::vector<unsigned long > get_tttr_indices(){
+    std::vector<unsigned int > get_tttr_indices(){
         return tttr_indices;
     }
 

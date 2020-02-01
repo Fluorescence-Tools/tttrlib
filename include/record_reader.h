@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2019 by Thomas-Otavio Peulen                               *
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
  *                                                                          *
  * This file is part of the library tttrlib.                                *
  *                                                                          *

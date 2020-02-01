@@ -15,6 +15,7 @@
 //%include "std_wstring.i"
 %include std_string.i
 %include "std_map.i"
+%include "stdint.i"
 %include "include/numpy.i"
 %init %{
     import_array();

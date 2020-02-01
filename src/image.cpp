@@ -1,3 +1,17 @@
+/****************************************************************************
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
+ *                                                                          *
+ * This file is part of the library tttrlib.                                *
+ *                                                                          *
+ *   tttrlib is free software: you can redistribute it and/or modify it     *
+ *   under the terms of the MIT License.                                    *
+ *                                                                          *
+ *   tttrlib is distributed in the hope that it will be useful,             *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
+ *                                                                          *
+ ****************************************************************************/
+
 #include <include/image.h>
 
 
@@ -429,7 +443,6 @@ void CLSMImage::get_decay_image(
             i_line++;
         }
         i_frame += !stack_frames;
-        //if (!stack_frames) i_frame++;
     }
     *out = t;
 }

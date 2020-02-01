@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2019 by Thomas-Otavio Peulen                               *
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
  *                                                                          *
  * This file is part of the library tttrlib.                                *
  *                                                                          *
@@ -656,15 +656,6 @@ void get_ranges_channel(
         }
     }
 
-}
-
-
-std::vector<unsigned long > TTTRRange::get_tttr_indices() {
-    std::vector<size_t > v;
-    for(size_t i=start; i<stop; i++){
-        v.emplace_back(i);
-    }
-    return v;
 }
 
 

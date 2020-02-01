@@ -18,18 +18,18 @@ requirements:
     - git
     - cmake
     - swig
-    - openmp
     - boost
     - doxygen
     - python {{ python }}
     - setuptools
   host:
     - python {{ python }}
+    - numpy
     - setuptools
     - hdf5
   run:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy
     - hdf5
 
 test:

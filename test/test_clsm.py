@@ -40,13 +40,6 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[1]
         )
-        clsm_image_2 = tttrlib.CLSMImage(clsm_image, True)
-        intensity_image_1 = clsm_image.get_intensity_image()
-        intensity_image_2 = clsm_image_2.get_intensity_image()
-        self.assertEqual(
-            np.allclose(intensity_image_1, intensity_image_2),
-            True
-        )
 
         # Test mean TAC image
         mean_tac_image = clsm_image.get_mean_tac_image(
@@ -122,6 +115,7 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[1]
         )
+
         selection = np.ones(
             (
                 clsm_image.n_frames,
@@ -174,13 +168,21 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[0]
         )
-        intensity_image = clsm_image.get_intensity_image().sum(axis=0)
+
+        clsm_image_2 = tttrlib.CLSMImage(clsm_image, True)
+        intensity_image_1 = clsm_image.get_intensity_image().sum(axis=0)
+        intensity_image_2 = clsm_image_2.get_intensity_image().sum(axis=0)
+        self.assertEqual(
+            np.allclose(intensity_image_1, intensity_image_2),
+            True
+        )
+
         self.assertEqual(
             np.allclose(
                 np.load(
                     './data/reference/img_intensity_image_sp5.npy',
                 ),
-                intensity_image
+                intensity_image_1
             ),
             True
         )
