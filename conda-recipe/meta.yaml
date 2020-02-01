@@ -20,13 +20,12 @@ requirements:
     - swig
     - openmp
     - boost
+    - doxygen
     - python {{ python }}
     - setuptools
-    - {{ pin_compatible('numpy') }}
   host:
     - python {{ python }}
     - setuptools
-    - {{ pin_compatible('numpy') }}
     - hdf5
   run:
     - python {{ python }}
