@@ -27,11 +27,11 @@ requirements:
     - python {{ python }}
     - setuptools
     - {{ pin_compatible('numpy') }}
-    - hdf5 >=1.8.*
+    - hdf5
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - hdf5 >=1.8.*
+    - hdf5
 
 test:
   imports:
