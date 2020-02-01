@@ -28,11 +28,11 @@ Header::~Header(){};
 
 Header::Header() :
         micro_time_resolution(0),
-        macro_time_resolution(0),
         number_of_tac_channels(0),
+        macro_time_resolution(0),
         tttr_container_type(0),
-        bytes_per_record(1),
         header_end(0),
+        bytes_per_record(1),
         tttr_record_type(0)
 {}
 

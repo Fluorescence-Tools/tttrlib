@@ -14,7 +14,6 @@
 #include <algorithm>
 
 
-
 class CLSMPixel : public TTTRRange{
 
     friend class CLSMLine;
@@ -22,12 +21,12 @@ class CLSMPixel : public TTTRRange{
 
 protected:
     /// Stores the TTTR indices of the pixel
-    std::vector<unsigned int> tttr_indices;
+    std::vector<size_t> tttr_indices;
     bool filled;
 
 public:
 
-    std::vector<unsigned int> get_tttr_indices(){
+    std::vector<size_t > get_tttr_indices(){
         return tttr_indices;
     }
 
@@ -43,9 +42,6 @@ public:
     CLSMPixel(const CLSMPixel& old_pixel) :
     tttr_indices(old_pixel.tttr_indices)
     {}
-
-    ~CLSMPixel(){
-    };
 
 };
 
@@ -66,16 +62,16 @@ public:
         return pixels;
     }
 
-    unsigned int get_pixel_duration(){
-        return (unsigned int) (get_duration() / n_pixel);
+    unsigned long long get_pixel_duration(){
+        return (size_t) (get_duration() / n_pixel);
     }
 
     CLSMLine()
     {}
 
     ~CLSMLine(){
-        for(auto pixel : pixels){
-            delete(pixel);
+        for(auto p: pixels){
+            delete(p);
         }
     }
 
@@ -85,13 +81,13 @@ public:
             ){
         // private attributes
         if(fill){
-            for(auto p: old_line.pixels){
-                pixels.push_back(new CLSMPixel(*p));
+            for(auto &p: old_line.pixels){
+                pixels.emplace_back(new CLSMPixel(*p));
                 n_pixel++;
             }
         } else{
-            for(auto p: old_line.pixels){
-                pixels.push_back(new CLSMPixel());
+            for(auto &p: old_line.pixels){
+                pixels.emplace_back(new CLSMPixel());
                 n_pixel++;
             }
         }
@@ -111,11 +107,15 @@ public:
         CLSMLine::n_pixel = n_pixel;
         for(unsigned int i=0; i<n_pixel; i++){
             auto* pixel = new CLSMPixel();
-            pixels.push_back(pixel);
+            pixels.emplace_back(pixel);
         }
     }
 
-    void append(CLSMPixel* pixel);
+    void append(CLSMPixel* pixel){
+        pixels.emplace_back(pixel);
+        n_pixel++;
+        pixel_duration = (unsigned int) (get_duration() / n_pixel);
+    }
 
     CLSMPixel* operator[](unsigned int i_pixel){
         return pixels[i_pixel];
@@ -134,7 +134,9 @@ private:
 public:
     unsigned int n_lines;
 
-    std::vector<CLSMLine*> get_lines();
+    std::vector<CLSMLine*> get_lines(){
+        return lines;
+    }
 
     CLSMFrame();
 
@@ -144,12 +146,16 @@ public:
             ){
         // private attributes
         for(auto l: old_frame.lines){
-            lines.push_back(new CLSMLine(*l, fill));
+            lines.emplace_back(new CLSMLine(*l, fill));
             n_lines++;
         }
     }
 
-    ~CLSMFrame();
+    ~CLSMFrame(){
+        for(auto l: lines){
+            delete(l);
+        }
+    }
 
     CLSMFrame(size_t frame_start);
 
@@ -192,9 +198,9 @@ public:
     unsigned int marker_line_stop;
     unsigned int marker_event;
 
-    unsigned int n_frames;
-    unsigned int n_lines;
-    unsigned int n_pixel;
+    size_t n_frames;
+    size_t n_lines;
+    size_t n_pixel;
 
     CLSMFrame* operator[](unsigned int i_frame){
         return frames[i_frame];
@@ -310,7 +316,7 @@ public:
             ){
         // private attributes
         for(auto f: old_clsm.frames){
-            frames.push_back(new CLSMFrame(*f, fill));
+            frames.emplace_back(new CLSMFrame(*f, fill));
         }
         // public attributes
         marker_frame = old_clsm.marker_frame;

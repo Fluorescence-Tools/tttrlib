@@ -222,9 +222,8 @@ public:
     start_time(0),
     stop_time(0)
     {};
-    ~TTTRRange() = default;
 
-    virtual std::vector<unsigned int> get_tttr_indices();
+    virtual std::vector<size_t > get_tttr_indices();
 
     std::vector<unsigned long long> get_start_stop(){
         std::vector<unsigned long long> v = {start, stop};
@@ -241,8 +240,6 @@ public:
     }
 
 };
-
-
 
 
 class TTTR {
@@ -323,7 +320,7 @@ private:
     uint64_t TTTRRecord;
 
     /*!
-    * The reading routine for a photon accepts as a first argumnet a
+    * The reading routine for a photon accepts as a first argument a
     * pointer to a 64bit integer.
     * The integer is processed by the reading routing and writes to the
     * @return The return value is true if the record is not an overflow record.

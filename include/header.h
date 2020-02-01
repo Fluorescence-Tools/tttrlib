@@ -189,8 +189,9 @@ typedef struct tag_head {
 
 class Header {
 
-private:
-    std::FILE *fpin;
+// seems to be unused - delete
+//private:
+//    std::FILE *fpin;
 
 protected:
 

@@ -7,35 +7,18 @@ n_lines(0)
 {}
 
 
-CLSMFrame::~CLSMFrame(){
-    for(auto line : lines){
-        delete(line);
-    }
-}
-
-
 CLSMFrame::CLSMFrame(size_t frame_start) :
 CLSMFrame()
 {
     CLSMFrame::start = frame_start;
 }
 
+
 void CLSMFrame::append(CLSMLine * line){
     lines.emplace_back(line);
     n_lines++;
 }
 
-
-std::vector<CLSMLine*> CLSMFrame::get_lines(){
-    return lines;
-};
-
-
-void CLSMLine::append(CLSMPixel * pixel){
-    pixels.emplace_back(pixel);
-    n_pixel++;
-    pixel_duration = (unsigned int) (get_duration() / n_pixel);
-}
 
 CLSMImage::CLSMImage():
 marker_frame(0),
@@ -99,7 +82,7 @@ void CLSMImage::define_pixels_in_lines() {
     }
     for(auto f: frames){
         for(auto l: f->lines){
-            for(unsigned int i=0; i<n_pixel; i++){
+            for(size_t i=0; i<n_pixel; i++){
                 auto* pixel = new CLSMPixel();
                 l->pixels.emplace_back(pixel);
             }
@@ -328,7 +311,6 @@ void CLSMImage::fill_pixels(
         std::vector<unsigned int> channels
         ) {
     std::clog << "Fill pixels with photons" << std::endl;
-    size_t pixel_nbr;
     std::clog << "-- Channels: ";
     for(auto ch: channels){
         std::clog << ch << " ";
@@ -346,10 +328,11 @@ void CLSMImage::fill_pixels(
             for(auto event_i=line->start; event_i < line->stop; event_i++){
                 if (tttr_data->event_types[event_i] == RECORD_PHOTON)
                 {
-                    short c = tttr_data->routing_channels[event_i];
+                    auto c = tttr_data->routing_channels[event_i];
                     for(auto ci : channels){
                         if(c == ci){
-                            pixel_nbr = (tttr_data->macro_times[event_i] - line->start_time) / pixel_duration;
+                            auto line_time = (tttr_data->macro_times[event_i] - line->start_time);
+                            auto pixel_nbr = line_time / pixel_duration;
                             if(pixel_nbr < line->pixels.size()){
                                 line->pixels[pixel_nbr]->append(event_i);
                             }
@@ -435,13 +418,11 @@ void CLSMImage::get_decay_image(
             for(auto pixel : line->pixels){
                 for(auto i : pixel->tttr_indices){
                     size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
-                    //if(i_tac < n_tac){
-                        t[i_frame * (n_lines * n_pixel * n_tac) +
-                          i_line  * (n_pixel * n_tac) +
-                          i_pixel * (n_tac) +
-                          i_tac
-                        ] += 1;
-                    //}
+                    t[i_frame * (n_lines * n_pixel * n_tac) +
+                      i_line  * (n_pixel * n_tac) +
+                      i_pixel * (n_tac) +
+                      i_tac
+                    ] += 1;
                 }
                 i_pixel++;
             }
@@ -489,11 +470,11 @@ void CLSMImage::get_decays(
                 auto line = frame->lines[i_line];
                 for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                     auto pixel = line->pixels[i_pixel];
-                    if (!selection[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel])
-                        continue;
-                    for (auto i : pixel->tttr_indices) {
-                        size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
-                        t[w_frame * n_tac + i_tac] += 1;
+                    if (selection[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel]){
+                        for (auto i : pixel->tttr_indices) {
+                            size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
+                            t[w_frame * n_tac + i_tac] += 1;
+                        }
                     }
                 }
             }
