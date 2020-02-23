@@ -9,7 +9,7 @@ dependencies:
   - setuptools
   - numpy
   - swig
-  - hdf5
+  - hdf5=1.10.5
   - boost
   - cmake
   - sphinx
@@ -20,9 +20,7 @@ dependencies:
   - sphinx
   - sphinxcontrib-bibtex
   - recommonmark
-  - clang_osx-64 [osx]
-  - clangxx_osx-64 [osx]
-  - gcc_linux-64 [linux]
-  - gxx_linux-64 [linux]
   - nose
-
+  - conda-build
+  - nose
+  - anaconda-client

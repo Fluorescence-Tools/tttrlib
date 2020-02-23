@@ -1,4 +1,6 @@
-%module tttrlib
+%module(directors="1", package="tttrlib") tttrlib
+%feature("kwargs", 1);
+
 %include "documentation.i"
 
 %{

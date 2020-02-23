@@ -1,37 +1,39 @@
 {% set name = "tttrlib" %}
-{% set version = "0.0.11" %}
+#{% set version = "0.0.11" %}
+{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
 
 package:
   name: "{{ name|lower }}"
-  version: "{{ version|lower }}"
+  version: {{ data.get('version')|lower }}
+  #  version: "{{ version|lower }}"
 
 source:
   path: ..
 
 build:
     number: 0
-    #string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
+    string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
 
 requirements:
   build:
     - {{ compiler('cxx') }}
+    - python {{ python }}
+    - {{ pin_compatible('numpy') }}
     - git
     - cmake
     - swig
-    - boost
     - doxygen
-    - python {{ python }}
     - setuptools
+    - hdf5=1.10.5
+    - boost
   host:
     - python {{ python }}
-    - numpy
+    - {{ pin_compatible('numpy') }}
     - setuptools
-    - hdf5
   run:
     - python {{ python }}
-    - numpy
-    - hdf5
-    - boost
+    - {{ pin_compatible('numpy') }}
+    - hdf5=1.10.*
 
 test:
   imports:
