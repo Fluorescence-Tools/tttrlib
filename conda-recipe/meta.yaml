@@ -33,7 +33,7 @@ requirements:
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - hdf5=1.10.*
+    - hdf5=1.10.5
     - boost
 
 test:
