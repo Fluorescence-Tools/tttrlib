@@ -45,8 +45,8 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  - |
-    if [[ "$TRAVIS_BRANCH" == "master" ]];
-    then
-      anaconda upload bld-dir/**/tttrlib*.tar.bz2
-    fi
+#  - |
+#    if [[ "$TRAVIS_BRANCH" == "master" ]];
+#    then
+#      anaconda upload bld-dir/**/tttrlib*.tar.bz2
+#    fi
