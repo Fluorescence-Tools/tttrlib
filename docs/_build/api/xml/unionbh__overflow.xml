@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="unionbh__overflow" kind="union" language="C++" prot="public">
+    <compoundname>bh_overflow</compoundname>
+    <includes refid="record__types_8h" local="no">record_types.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__overflow_1a6c60ea4881760905a1ae0aaf18304471" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t bh_overflow::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="111" column="14" bodyfile="include/record_types.h" bodystart="111" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__overflow_1ae96b252c812d56da779f2a7255bd31cd" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_overflow::cnt</definition>
+        <argsstring></argsstring>
+        <name>cnt</name>
+        <bitfield> 28</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="113" column="18" bodyfile="include/record_types.h" bodystart="113" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__overflow_1a31396848f97b8aee2c88abaf0f3e7b01" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_overflow::empty</definition>
+        <argsstring></argsstring>
+        <name>empty</name>
+        <bitfield> 6</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="114" column="18" bodyfile="include/record_types.h" bodystart="114" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__overflow_1a7098a1426812f839a946d56201633374" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_overflow::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="115" column="18" bodyfile="include/record_types.h" bodystart="115" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__overflow_1a01470a70f808896a7ec25dc871b2f161" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_overflow::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="116" column="18" bodyfile="include/record_types.h" bodystart="116" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__overflow_1a2248ec73992e7b2b672b926895d85375" prot="public" static="no" mutable="no">
+        <type>struct bh_overflow::@7</type>
+        <definition>struct bh_overflow::@7  bh_overflow::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="117" column="10"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-130/600 macro time overflow record. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/record_types.h" line="110" column="26" bodyfile="include/record_types.h" bodystart="110" bodyend="118"/>
+    <listofallmembers>
+      <member refid="unionbh__overflow_1a6c60ea4881760905a1ae0aaf18304471" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>allbits</name></member>
+      <member refid="unionbh__overflow_1a2248ec73992e7b2b672b926895d85375" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>bits</name></member>
+      <member refid="unionbh__overflow_1ae96b252c812d56da779f2a7255bd31cd" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>cnt</name></member>
+      <member refid="unionbh__overflow_1a31396848f97b8aee2c88abaf0f3e7b01" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>empty</name></member>
+      <member refid="unionbh__overflow_1a01470a70f808896a7ec25dc871b2f161" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>invalid</name></member>
+      <member refid="unionbh__overflow_1a7098a1426812f839a946d56201633374" prot="public" virt="non-virtual"><scope>bh_overflow</scope><name>mtov</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,230 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="unionbh__spc600__4096__record" kind="union" language="C++" prot="public">
+    <compoundname>bh_spc600_4096_record</compoundname>
+    <includes refid="record__types_8h" local="no">record_types.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1acaa4d7a662c925cf0060cb6dcfeba40f" prot="public" static="no" mutable="no">
+        <type>uint64_t</type>
+        <definition>uint64_t bh_spc600_4096_record::allbits</definition>
+        <argsstring></argsstring>
+        <name>allbits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>The information about the subsequent photons is stored one after another in the measurement data file. For each photon 6 bytes are used. The parameter<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>adc</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>corresponds to the value of the analog to digital converter and related to the micro time (mt) by mt = (4095 - adc) * TACRange / (TACGain * 4096) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>invalid</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is true for invalid <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> records. If invalid is true all data in the record except the mtov bit are invalid.</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mtov</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>marks that a macro timer overflows. In case</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mtov</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>is true 2**24 counts should be added to the overflow counter (the overflow counter counts the number of overflows.</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>gap</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>marks possible gaps, e.g., due to FIFO overflows.</para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rout</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>provides the (inverted) routing number of the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> record. </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="79" column="14" bodyfile="include/record_types.h" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a2f44524da17e69fcdc554787962506bd" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::adc</definition>
+        <argsstring></argsstring>
+        <name>adc</name>
+        <bitfield> 12</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="81" column="18" bodyfile="include/record_types.h" bodystart="81" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a8337a75c06e3b6d55a92b467c49b3d22" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::invalid</definition>
+        <argsstring></argsstring>
+        <name>invalid</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="82" column="18" bodyfile="include/record_types.h" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1aa574084f3647f5910c572678d128806b" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::mtov</definition>
+        <argsstring></argsstring>
+        <name>mtov</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="83" column="18" bodyfile="include/record_types.h" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a7d9538859c1b43cde2cbcd79a775e7cd" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::gap</definition>
+        <argsstring></argsstring>
+        <name>gap</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="84" column="18" bodyfile="include/record_types.h" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a367926289c67ccf5f947f34eb17c30c4" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::empty</definition>
+        <argsstring></argsstring>
+        <name>empty</name>
+        <bitfield> 1</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="85" column="18" bodyfile="include/record_types.h" bodystart="85" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a3090595d5e2a820ded5533c5bea2cc59" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::mt3</definition>
+        <argsstring></argsstring>
+        <name>mt3</name>
+        <bitfield> 8</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="86" column="18" bodyfile="include/record_types.h" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a3fd7463d8f63a4f80fd3cae0b59a3e9e" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::rout</definition>
+        <argsstring></argsstring>
+        <name>rout</name>
+        <bitfield> 8</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="87" column="18" bodyfile="include/record_types.h" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a7479095fce5e527aa3285a44ae1c03d4" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::mt1</definition>
+        <argsstring></argsstring>
+        <name>mt1</name>
+        <bitfield> 8</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="88" column="18" bodyfile="include/record_types.h" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a55446b271b4c4ae01b2e3d816d2aa495" prot="public" static="no" mutable="no">
+        <type>unsigned</type>
+        <definition>unsigned bh_spc600_4096_record::mt2</definition>
+        <argsstring></argsstring>
+        <name>mt2</name>
+        <bitfield> 8</bitfield>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="89" column="18" bodyfile="include/record_types.h" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="unionbh__spc600__4096__record_1a2968327b58907f3750ca27be757ced0e" prot="public" static="no" mutable="no">
+        <type>struct bh_spc600_4096_record::@5</type>
+        <definition>struct bh_spc600_4096_record::@5  bh_spc600_4096_record::bits</definition>
+        <argsstring></argsstring>
+        <name>bits</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/record_types.h" line="90" column="10"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Becker Hickl SPC-600/630 4096 Channel Mode. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/record_types.h" line="69" column="36" bodyfile="include/record_types.h" bodystart="69" bodyend="91"/>
+    <listofallmembers>
+      <member refid="unionbh__spc600__4096__record_1a2f44524da17e69fcdc554787962506bd" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>adc</name></member>
+      <member refid="unionbh__spc600__4096__record_1acaa4d7a662c925cf0060cb6dcfeba40f" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>allbits</name></member>
+      <member refid="unionbh__spc600__4096__record_1a2968327b58907f3750ca27be757ced0e" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>bits</name></member>
+      <member refid="unionbh__spc600__4096__record_1a367926289c67ccf5f947f34eb17c30c4" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>empty</name></member>
+      <member refid="unionbh__spc600__4096__record_1a7d9538859c1b43cde2cbcd79a775e7cd" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>gap</name></member>
+      <member refid="unionbh__spc600__4096__record_1a8337a75c06e3b6d55a92b467c49b3d22" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>invalid</name></member>
+      <member refid="unionbh__spc600__4096__record_1a7479095fce5e527aa3285a44ae1c03d4" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>mt1</name></member>
+      <member refid="unionbh__spc600__4096__record_1a55446b271b4c4ae01b2e3d816d2aa495" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>mt2</name></member>
+      <member refid="unionbh__spc600__4096__record_1a3090595d5e2a820ded5533c5bea2cc59" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>mt3</name></member>
+      <member refid="unionbh__spc600__4096__record_1aa574084f3647f5910c572678d128806b" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>mtov</name></member>
+      <member refid="unionbh__spc600__4096__record_1a3fd7463d8f63a4f80fd3cae0b59a3e9e" prot="public" virt="non-virtual"><scope>bh_spc600_4096_record</scope><name>rout</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
