@@ -187,7 +187,7 @@ void CLSMImage::initialize_leica_sp5_ptu(
         TTTR *tttr_data
 )
 {
-#if
+#if VERBOSE
     std::clog << "-- Routine: Leica SP5 PTU" << std::endl;
 #endif
     size_t n_events = tttr_data->get_n_events();
@@ -199,7 +199,7 @@ void CLSMImage::initialize_leica_sp5_ptu(
         bool found_frame = false;
         for (auto f: marker_frame){
             if(f == tttr_data->routing_channels[i_event]){
-#if
+#if VERBOSE
                 std::clog << "-- Found first frame at event: "  << i_event << std::endl;
 #endif
                 found_frame = true;
@@ -261,7 +261,7 @@ void CLSMImage::initialize_default(TTTR* tttr_data){
             bool found_frame = false;
             for (auto f: marker_frame){
                 if(f == tttr_data->routing_channels[i_event]){
-#if
+#if VERBOSE
                     std::clog << "-- Found first frame at event: "  << i_event << std::endl;
 #endif
                     found_frame = true;

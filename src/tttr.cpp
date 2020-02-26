@@ -225,12 +225,11 @@ int TTTR::read_file(
                         bytes_per_record
                 );
 #if VERBOSE
-                std::clog << "-- Number of records: " << n_records_in_file <<
+                std::clog << "-- Number of records: " << n_records_in_file << std::endl;
 #endif
-                std::endl;
             }
             else{
-#if
+#if VERBOSE
                 std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
 #endif
                 return 0;
