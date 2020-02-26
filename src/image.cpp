@@ -67,7 +67,9 @@ CLSMImage::CLSMImage (
             {std::string("SP8"), 1},
             {std::string("SP5"), 2}
     };
+#if VERBOSE
     std::clog << "Initializing CLSM image" << std::endl;
+#endif
     switch (image_reading_routines[reading_routine]){
         case 0:
             initialize_default(tttr_data);
@@ -83,8 +85,10 @@ CLSMImage::CLSMImage (
             break;
     }
     n_lines = (unsigned int) frames[0]->lines.size();
+#if VERBOSE
     std::clog << "-- Initial number of frames: " << n_frames << std::endl;
     std::clog << "-- Lines per frame: " << n_lines << std::endl;
+#endif
     remove_incomplete_frames();
     define_pixels_in_lines();
 }
@@ -119,8 +123,10 @@ void CLSMImage::initialize_leica_sp8_ptu(
         TTTR *tttr_data
 )
 {
+#if VERBOSE
     std::clog << "-- Routine: Leica SP8 PTU" << std::endl;
     std::clog << "-- Number of events: " << tttr_data->n_valid_events << std::endl;
+#endif
     size_t n_events = tttr_data->n_valid_events;
     // find the first frame
     frames.clear();
@@ -131,7 +137,9 @@ void CLSMImage::initialize_leica_sp8_ptu(
             for(auto f: marker_frame){
                 if(f == tttr_data->micro_times[i_event])
                 {
+#if VERBOSE
                     std::clog << "-- Found first frame at event: "  << i_event << std::endl;
+#endif
                     found_frame = true;
                     break;
                 }
@@ -179,7 +187,9 @@ void CLSMImage::initialize_leica_sp5_ptu(
         TTTR *tttr_data
 )
 {
+#if
     std::clog << "-- Routine: Leica SP5 PTU" << std::endl;
+#endif
     size_t n_events = tttr_data->get_n_events();
 
     // search first frame
@@ -189,7 +199,9 @@ void CLSMImage::initialize_leica_sp5_ptu(
         bool found_frame = false;
         for (auto f: marker_frame){
             if(f == tttr_data->routing_channels[i_event]){
+#if
                 std::clog << "-- Found first frame at event: "  << i_event << std::endl;
+#endif
                 found_frame = true;
                 break;
             }
@@ -236,7 +248,9 @@ void CLSMImage::initialize_leica_sp5_ptu(
 
 
 void CLSMImage::initialize_default(TTTR* tttr_data){
+#if VERBOSE
     std::clog << "-- Routine: default" << std::endl;
+#endif
     size_t n_events = tttr_data->get_n_events();
 
     // search first frame
@@ -247,7 +261,9 @@ void CLSMImage::initialize_default(TTTR* tttr_data){
             bool found_frame = false;
             for (auto f: marker_frame){
                 if(f == tttr_data->routing_channels[i_event]){
+#if
                     std::clog << "-- Found first frame at event: "  << i_event << std::endl;
+#endif
                     found_frame = true;
                     break;
                 }
@@ -292,12 +308,16 @@ void CLSMImage::initialize_default(TTTR* tttr_data){
 
 void CLSMImage::remove_incomplete_frames(){
     // remove incomplete frames
+#if VERBOSE
     std::clog << "-- Removing incomplete frames" << std::endl;
+#endif
     n_frames = frames.size();
     size_t i_frame = 0;
     for(auto frame : frames){
         if(frame->lines.size() < n_lines){
+#if VERBOSE
             std::clog << "WARNING: Incomplete frame with " << frame->lines.size() << " lines." << std::endl;
+#endif
             frames.erase(frames.begin() + i_frame);
             n_frames--;
         }
@@ -309,7 +329,9 @@ void CLSMImage::remove_incomplete_frames(){
 
 
 void CLSMImage::clear_pixels() {
+#if VERBOSE
     std::clog << "Clear pixels of photons" << std::endl;
+#endif
     for(auto frame : frames){
         for(auto line : frame->lines){
             for(auto pixel: line->pixels){
@@ -324,13 +346,17 @@ void CLSMImage::fill_pixels(
         TTTR* tttr_data,
         std::vector<unsigned int> channels
         ) {
+#if VERBOSE
     std::clog << "Fill pixels with photons" << std::endl;
     std::clog << "-- Channels: ";
+#endif
     for(auto ch: channels){
         std::clog << ch << " ";
     }
     std::clog << std::endl;
+#if VERBOSE
     std::clog << "-- Assign photons to pixels" << std::endl;
+#endif
     for(auto frame : frames){
         for(auto line : frame->lines){
             if(line->pixels.empty()){
@@ -379,9 +405,11 @@ void CLSMImage::get_intensity_image(
     *dim2 = n_lines;
     *dim3 = n_pixel;
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
+#if VERBOSE
     std::clog << "Get intensity image" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Total number of pixels: " << n_pixel_total << std::endl;
+#endif
     auto* t = (unsigned int*) calloc(n_pixel_total+1, sizeof(unsigned int));
     size_t i_frame = 0;
     size_t t_pixel = 0;
@@ -408,7 +436,9 @@ void CLSMImage::get_decay_image(
         int tac_coarsening,
         bool stack_frames
         ){
+#if VERBOSE
     std::clog << "Get decay image" << std::endl;
+#endif
     size_t nf = (stack_frames) ? 1 : n_frames;
     size_t n_tac = tttr_data->header->number_of_tac_channels / tac_coarsening;
     *dim1 = nf;
@@ -418,12 +448,12 @@ void CLSMImage::get_decay_image(
 
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
     auto* t = (unsigned char*) calloc(n_tac_total, sizeof(unsigned char));
-
+#if VERBOSE
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Number of micro time channels: " << n_tac << std::endl;
     std::clog << "-- Micro time coarsening factor: " << tac_coarsening << std::endl;
     std::clog << "-- Final number of micro time channels: " << n_tac << std::endl;
-
+#endif
     size_t i_frame = 0;
     for(auto frame : frames){
         size_t i_line = 0;
@@ -505,11 +535,13 @@ void CLSMImage::get_mean_tac_image(
         bool stack_frames
 ){
     double dt = tttr_data->header->micro_time_resolution;
+#if VERBOSE
     std::clog << "Get mean micro time image" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << n_ph_min << std::endl;
     std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
     std::clog << "-- Computing stack of mean micro times " << std::endl;
+#endif
     auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
     for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
         for(size_t i_line = 0; i_line < n_lines; i_line++){
@@ -537,7 +569,9 @@ void CLSMImage::get_mean_tac_image(
     } else{
         // average over the arrival times
         int w_frame = 1;
+#if VERBOSE
         std::clog << "-- Compute photon weighted average over frames" << std::endl;
+#endif
         auto* r = (double *) malloc(sizeof(double) * w_frame * n_lines * n_pixel);
         for(size_t i_line = 0; i_line < n_lines; i_line++){
             for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){

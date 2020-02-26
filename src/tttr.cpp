@@ -126,11 +126,13 @@ void TTTR::find_used_routing_channels(){
             used_routing_channels.push_back(c);
         }
     }
+#if VERBOSE
     std::clog << "-- Used routing channels: ";
     for(auto c: used_routing_channels){
         std::clog << c << ", ";
     }
     std::clog << std::endl;
+#endif
 }
 
 int TTTR::read_hdf_file(char *fn){
@@ -160,8 +162,9 @@ int TTTR::read_hdf_file(char *fn){
      * before storing the hdf5 file. */
     n_valid_events = dims[0];
     n_records_in_file = dims[0];
-
+#if VERBOSE
     std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
+#endif
 
     /*
      * Read the data
@@ -193,9 +196,11 @@ int TTTR::read_file(
         char *fn,
         int container_type
         ) {
-    std::clog << "Reading TTTR file" << std::endl;
+#if VERBOSE
+    std::clog << "READING TTTR FILE" << std::endl;
     std::clog << "-- Filename: " << fn << std::endl;
     std::clog << "-- Container type: " << container_type << std::endl;
+#endif
     if(boost::filesystem::exists(fn))
     {
         if (container_type == PHOTON_HDF_CONTAINER)
@@ -210,18 +215,24 @@ int TTTR::read_file(
                 fp_records_begin = header->header_end;
                 bytes_per_record = header->bytes_per_record;
                 tttr_record_type = header->getTTTRRecordType();
+#if VERBOSE
                 std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+#endif
                 processRecord = processRecord_map[tttr_record_type];
                 n_records_in_file = determine_number_of_records_by_file_size(
                         fp,
                         header->header_end,
                         bytes_per_record
                 );
+#if VERBOSE
                 std::clog << "-- Number of records: " << n_records_in_file <<
+#endif
                 std::endl;
             }
             else{
+#if
                 std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
+#endif
                 return 0;
             }
             allocate_memory_for_records(n_records_in_file);

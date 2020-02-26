@@ -35,6 +35,7 @@
 #include <header.h>
 
 
+#define VERBOSE 0
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
 

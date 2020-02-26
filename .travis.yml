@@ -50,3 +50,10 @@ after_success:
 #    then
 #      anaconda upload bld-dir/**/tttrlib*.tar.bz2
 #    fi
+
+notifications:
+  email:
+    recipients:
+      - thomas.otavio.peulen@gmail.com
+    on_success: never # default: change
+    on_failure: always # default: always
