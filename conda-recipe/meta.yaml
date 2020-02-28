@@ -24,8 +24,8 @@ requirements:
     - swig
     - doxygen
     - setuptools
-    - hdf5=1.10.5
-    - boost
+    - hdf5=1.10.2.*
+    - boost=1.67.0.*
   host:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
@@ -33,8 +33,9 @@ requirements:
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - hdf5=1.10.5
-    - boost
+    - hdf5=1.10.2.*
+    - boost=1.67.0.* [win]
+    - libboost=1.67.0.* [not win]
 
 test:
   imports:
