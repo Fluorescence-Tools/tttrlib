@@ -31,6 +31,7 @@ requirements:
     - setuptools
     - hdf5 1.10.2.*
     - boost 1.67.0.*
+    - libboost 1.67.0.*
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}

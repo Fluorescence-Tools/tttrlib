@@ -30,10 +30,10 @@ if(APPLE)
     set(CMAKE_MACOSX_RPATH 0)
 endif(APPLE)
 
+## Boost
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
-
 # use static Boost in Windows
 if(WIN32)
     set(Boost_USE_STATIC_LIBS ON)
