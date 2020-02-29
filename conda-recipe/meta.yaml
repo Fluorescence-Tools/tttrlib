@@ -30,9 +30,7 @@ requirements:
     - doxygen
     - setuptools
     - hdf5 1.10.2.*
-    - boost 1.61.0.* [win and py27]
-    - boost 1.67.0.* [win and not py27]
-    - boost 1.67.0.* [not win]
+    - boost 1.67.0.*
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
