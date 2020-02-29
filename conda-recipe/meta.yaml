@@ -15,28 +15,31 @@ build:
     string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ GIT_BUILD_STR }}
 
 requirements:
-  build:
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - python {{ python }}
-    - {{ pin_compatible('numpy') }}
-    - git
-    - cmake
-    - swig
-    - doxygen
-    - setuptools
-    - hdf5=1.10.2.*
-    - boost=1.67.0.*
   host:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - setuptools
+    - git
+  build:
+    - python {{ python }}
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - {{ pin_compatible('numpy') }}
+    - cmake
+    - swig
+    - doxygen
+    - setuptools
+    - hdf5 1.10.2.*
+    - boost 1.61.0.* [win and py27]
+    - boost 1.67.0.* [win and not py27]
+    - boost 1.67.0.* [not win]
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - hdf5=1.10.2.*
-    - boost=1.67.0.* [win]
-    - libboost=1.67.0.* [not win]
+    - hdf5 1.10.2.*
+    - boost 1.61.0.* [win and py27]
+    - boost 1.67.0.* [win and not py27]
+    - libboost 1.67.0.* [not win]
 
 test:
   imports:
