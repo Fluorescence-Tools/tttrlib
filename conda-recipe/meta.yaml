@@ -37,9 +37,7 @@ requirements:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - hdf5 1.10.2.*
-    - boost 1.61.0.* [win and py27]
-    - boost 1.67.0.* [win and not py27]
-    - libboost 1.67.0.* [not win]
+    - libboost 1.67.0.*
 
 test:
   imports:
