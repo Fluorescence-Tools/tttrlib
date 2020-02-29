@@ -14,7 +14,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda config --set channel_priority strict
+  - conda config --set channel_priority flexible
   - conda config --add channels conda-forge
   - conda create -n build python=3.7 git conda-build anaconda-client numpy
   - activate build
