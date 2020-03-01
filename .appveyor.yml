@@ -16,7 +16,7 @@ install:
   - conda update -q conda
   - conda config --set channel_priority flexible
   - conda config --add channels conda-forge
-  - conda create -f environment.yml
+  - conda env update --file environment.yml
   - activate tttrlib
   - conda build conda-recipe
 
