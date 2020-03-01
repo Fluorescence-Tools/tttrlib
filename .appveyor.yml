@@ -15,7 +15,8 @@ install:
   # SET PATH=C:\\Miniconda3-x64;C:\\Miniconda3-x64\\Scripts;%PATH%"
   - activate tttrlib
   - conda config --set always_yes yes --set changeps1 no
-  - conda env update --file environment.yml
+  - conda update -q conda
+  - conda install conda-build nose coverage
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
