@@ -16,8 +16,8 @@ install:
   - conda update -q conda
   - conda config --set channel_priority flexible
   - conda config --add channels conda-forge
-  - conda create -n build python=3.7 git conda-build anaconda-client numpy
-  - activate build
+  - conda create -f environment.yml
+  - activate tttrlib
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
