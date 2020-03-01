@@ -1,6 +1,6 @@
 platform:
   - amd64
-image: Visual Studio 2017
+image: Visual Studio 2015
 
 environment:
   matrix:
@@ -12,11 +12,12 @@ init:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  # SET PATH=C:\\Miniconda3-x64;C:\\Miniconda3-x64\\Scripts;%PATH%"
+  - activate tttrlib
   - conda config --set always_yes yes --set changeps1 no
   - conda config --set channel_priority flexible
   - conda config --add channels conda-forge
   - conda env update --file environment.yml
-  - activate tttrlib
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
