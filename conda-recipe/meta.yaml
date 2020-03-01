@@ -22,12 +22,9 @@ requirements:
     - git
   build:
     - python {{ python }}
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
     - {{ pin_compatible('numpy') }}
     - cmake
     - swig
-    - intel-openmp
     - hdf5 1.10.2.*
     - boost 1.67.0.*
   run:

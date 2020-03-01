@@ -5,7 +5,7 @@ c_compiler:
   - clang                      # [osx]
   - vs2015                     # [win]
 c_compiler_version:            # [unix]
-  - 9                          # [osx]
+  - 4                          # [osx]
   - 7                          # [linux64 or aarch64]
   - 8                          # [ppc64le or armv7l]
 cxx_compiler:
@@ -13,9 +13,8 @@ cxx_compiler:
   - clangxx                    # [osx]
   - vs2015                     # [win]
 cxx_compiler_version:          # [unix]
-  - 9                          # [osx]
+  - 4                          # [osx]
   - 7                          # [linux64 or aarch64]
   - 8                          # [ppc64le or armv7l]
 CMAKE_GENERATOR:               # [win]
   - NMake Makefiles            # [win]
-
