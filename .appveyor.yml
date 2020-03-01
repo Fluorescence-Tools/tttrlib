@@ -23,9 +23,7 @@ install:
 test_script:
   - conda install --use-local tttrlib
   - conda install nose coverage
-  - cmd: echo %CD%
   - cmd: cd C:\projects\tttrlib\test\
-  - cmd: echo %CD%
   - nosetests
   - cd ..
 
