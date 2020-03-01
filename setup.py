@@ -33,28 +33,30 @@ class CMakeBuild(build_ext):
 
         cmake_args = [
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-            '-DCMAKE_SWIG_OUTDIR=' + extdir,
-            '-DBUILD_PYTHON_INTERFACE=ON'
+            '-DCMAKE_SWIG_OUTDIR=' + extdir
         ]
-
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
-
         if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            cmake_args += [
+                '-DBUILD_PYTHON_INTERFACE=ON',
+                '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)
+            ]
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j8']
-
+            cmake_args += [
+                '-DCMAKE_BUILD_TYPE=' + cfg,
+                '--',
+                '-j8'
+            ]
         env = os.environ.copy()
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get(
                 'CXXFLAGS', ''
             ),
             self.distribution.get_version()
         )
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
         subprocess.check_call(
             ['cmake', ext.sourcedir] + cmake_args,
             cwd=self.build_temp,
@@ -64,20 +66,6 @@ class CMakeBuild(build_ext):
             ['cmake', '--build', '.'] + build_args,
             cwd=self.build_temp
         )
-
-
-cwd = os.getcwd()
-subprocess.call(
-    "doxygen ./include/Doxyfile",
-    shell=True
-)
-os.chdir('./utility/')
-subprocess.call(
-    "python doxy2swig.py ../docs/_build/api/xml/index.xml "
-    "../ext/python/documentation.i",
-    shell=True
-)
-os.chdir(cwd)
 
 
 setup(

@@ -10,3 +10,5 @@ cxx_compiler:
   - gxx                        # [linux]
   - clangxx                    # [osx]
   - vs2015                     # [win]
+CMAKE_GENERATOR:               # [win]
+  - NMake Makefiles            # [win]
