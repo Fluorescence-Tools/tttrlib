@@ -43,20 +43,18 @@ class CMakeBuild(build_ext):
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)
             ]
         else:
-            cmake_args += [
-                '-DCMAKE_BUILD_TYPE=' + cfg,
-                '--',
-                '-j8'
-            ]
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+            build_args += ['--', '-j8']
+
         env = os.environ.copy()
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get(
                 'CXXFLAGS', ''
             ),
             self.distribution.get_version()
         )
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
         subprocess.check_call(
             ['cmake', ext.sourcedir] + cmake_args,
             cwd=self.build_temp,
