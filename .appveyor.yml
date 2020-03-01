@@ -15,8 +15,6 @@ install:
   # SET PATH=C:\\Miniconda3-x64;C:\\Miniconda3-x64\\Scripts;%PATH%"
   - activate tttrlib
   - conda config --set always_yes yes --set changeps1 no
-  - conda config --set channel_priority flexible
-  - conda config --add channels conda-forge
   - conda env update --file environment.yml
   - conda build conda-recipe
 
