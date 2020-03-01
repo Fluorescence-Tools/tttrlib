@@ -6,22 +6,16 @@ channels:
 
 dependencies:
   - python 3.7.*
+  - cmake
+  - swig
+  - doxygen
   - setuptools
   - numpy
-  - swig
   - hdf5 1.10.2.*
   - boost 1.67.0.*
   - libboost 1.67.0.*
-  - cmake
-  - sphinx
   - openmp
-  - ipython
-  - matplotlib
   - yaml
-  - sphinx
-  - sphinxcontrib-bibtex
-  - recommonmark
-  - nose
   - conda-build
   - nose
   - anaconda-client
