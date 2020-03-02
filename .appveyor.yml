@@ -22,7 +22,6 @@ install:
 # to run your custom scripts instead of automatic tests
 test_script:
   - conda install --use-local tttrlib
-  - conda install nose coverage
   - cmd: cd C:\projects\tttrlib\test\
   - nosetests
   - cd ..

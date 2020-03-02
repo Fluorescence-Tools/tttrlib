@@ -7,7 +7,6 @@ c_compiler:
 c_compiler_version:            # [unix]
   - 4                          # [osx]
   - 7                          # [linux64 or aarch64]
-  - 8                          # [ppc64le or armv7l]
 cxx_compiler:
   - gxx                        # [linux]
   - clangxx                    # [osx]
@@ -15,6 +14,3 @@ cxx_compiler:
 cxx_compiler_version:          # [unix]
   - 4                          # [osx]
   - 7                          # [linux64 or aarch64]
-  - 8                          # [ppc64le or armv7l]
-CMAKE_GENERATOR:               # [win]
-  - NMake Makefiles            # [win]

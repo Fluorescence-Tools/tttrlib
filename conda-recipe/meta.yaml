@@ -24,13 +24,14 @@ requirements:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - cmake
-    - swig
+    - swig 3.0.12.*
     - hdf5 1.10.2.*
     - boost 1.67.0.*
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - hdf5 1.10.2.*
+    - boost 1.67.0.* [win]
     - libboost 1.67.0.* [not win]
 
 test:

@@ -1,14 +1,12 @@
 name: tttrlib
 
 channels:
-  - conda-forge
   - defaults
 
 dependencies:
   - python 3.7.*
   - cmake
   - swig
-  - doxygen
   - setuptools
   - numpy
   - hdf5 1.10.2.*

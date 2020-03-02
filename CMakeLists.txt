@@ -31,7 +31,7 @@ if(APPLE)
 endif(APPLE)
 
 ## Boost
-# use static Boost in Windows
+# use static Boost in Windows -
 if(WIN32)
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_STATIC ON)
