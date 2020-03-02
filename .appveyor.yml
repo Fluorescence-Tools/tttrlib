@@ -12,17 +12,16 @@ environment:
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  # SET PATH=C:\\Miniconda3-x64;C:\\Miniconda3-x64\\Scripts;%PATH%"
-  - activate tttrlib
   - conda config --set always_yes yes --set changeps1 no
-  - conda install nose coverage
-  - conda create -n build python=3.7 git conda-build anaconda-client numpy
+  - conda update -q conda
+  - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep
   - activate build
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
 test_script:
   - conda install --use-local tttrlib
+  - conda install nose coverage
   - cmd: echo %CD%
   - cmd: cd C:\projects\tttrlib\test\
   - cmd: echo %CD%
