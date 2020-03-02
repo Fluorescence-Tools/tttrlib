@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2019 by Thomas-Otavio Peulen                               *
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
  *                                                                          *
  * This file is part of the library tttrlib.                                *
  *                                                                          *
@@ -126,11 +126,13 @@ void TTTR::find_used_routing_channels(){
             used_routing_channels.push_back(c);
         }
     }
+#if VERBOSE
     std::clog << "-- Used routing channels: ";
     for(auto c: used_routing_channels){
         std::clog << c << ", ";
     }
     std::clog << std::endl;
+#endif
 }
 
 int TTTR::read_hdf_file(char *fn){
@@ -160,13 +162,13 @@ int TTTR::read_hdf_file(char *fn){
      * before storing the hdf5 file. */
     n_valid_events = dims[0];
     n_records_in_file = dims[0];
-
+#if VERBOSE
     std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
+#endif
 
     /*
      * Read the data
      */
-
     H5Dread(
             ds_microtime,
             H5T_NATIVE_UINT32, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -194,9 +196,11 @@ int TTTR::read_file(
         char *fn,
         int container_type
         ) {
-    std::clog << "Reading TTTR file" << std::endl;
+#if VERBOSE
+    std::clog << "READING TTTR FILE" << std::endl;
     std::clog << "-- Filename: " << fn << std::endl;
     std::clog << "-- Container type: " << container_type << std::endl;
+#endif
     if(boost::filesystem::exists(fn))
     {
         if (container_type == PHOTON_HDF_CONTAINER)
@@ -211,18 +215,23 @@ int TTTR::read_file(
                 fp_records_begin = header->header_end;
                 bytes_per_record = header->bytes_per_record;
                 tttr_record_type = header->getTTTRRecordType();
+#if VERBOSE
                 std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+#endif
                 processRecord = processRecord_map[tttr_record_type];
                 n_records_in_file = determine_number_of_records_by_file_size(
                         fp,
                         header->header_end,
                         bytes_per_record
                 );
-                std::clog << "-- Number of records: " << n_records_in_file <<
-                std::endl;
+#if VERBOSE
+                std::clog << "-- Number of records: " << n_records_in_file << std::endl;
+#endif
             }
             else{
+#if VERBOSE
                 std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
+#endif
                 return 0;
             }
             allocate_memory_for_records(n_records_in_file);
@@ -334,9 +343,10 @@ void TTTR::read_records(
                     *(int16_t *)&routing_channels[n_valid_events],
                     *(int16_t *)&event_types[n_valid_events]
                     );
-            if(is_valid_record){
-                n_valid_events++;
-            }
+            n_valid_events += is_valid_record;
+//            if(is_valid_record){
+//                n_valid_events++;
+//            }
         }
         n_records_read += chunk;
     }
@@ -355,9 +365,10 @@ void TTTR::read_records(
                 *(int16_t *)&routing_channels[n_valid_events],
                 *(int16_t *)&event_types[n_valid_events]
         );
-        if(is_valid_record){
-            n_valid_events++;
-        }
+//        if(is_valid_record){
+//            n_valid_events++;
+//        }
+        n_valid_events += is_valid_record;
         n_records_read += 1;
     }
     free(tmp);
@@ -532,19 +543,19 @@ void ranges_by_time_window(
 ) {
     *ranges = (int *) malloc(2 * n_time * sizeof(int));
     *n_range = 0;
-    unsigned long dt;
 
     size_t tw_begin = 0;
     while (tw_begin < n_time) {
-        size_t tw_end = 0;
-        for (
-                tw_end = tw_begin;
-                ((time[tw_end] - time[tw_begin]) < tw_min) && (tw_end < n_time);
-                tw_end++
-                );
 
+        // search for the end of a time window
+        size_t tw_end = 0;
+        for (tw_end = tw_begin; (tw_end < n_time); tw_end++){
+            if((time[tw_end] - time[tw_begin]) >= tw_min){
+                break;
+            }
+        }
         size_t n_ph = tw_end - tw_begin;
-        dt = time[tw_begin] - time[tw_end];
+        unsigned long long dt = time[tw_begin] - time[tw_end];
 
         if (
                 ((tw_max < 0) || (dt < tw_max)) &&
@@ -565,22 +576,19 @@ void selection_by_count_rate(
         unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 ){
-    *out = (long long*) malloc(n_time * sizeof(long long));
-    int r, n_ph;
+    *out = (long long*) calloc(sizeof(long long), n_time);
     int i = 0;
-
     *n_out = 0;
     while (i < (n_time - 1)){
-
+        int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
-        r = i;
+        int r = i;
         n_ph = 0;
         while( ((time[r] - time[i]) < tw) && (r < (n_time - 1))){
             r++;
             n_ph++;
         }
         // the right side of the TW is the start for the next time record
-
         if(n_ph < n_ph_max){
             for(int k=i; k < r; k++){
                 (*n_out)++;
@@ -592,7 +600,7 @@ void selection_by_count_rate(
 }
 
 
-int TTTR::get_number_of_tac_channels(){
+unsigned int TTTR::get_number_of_tac_channels(){
     return header->number_of_tac_channels;
 }
 
@@ -658,15 +666,6 @@ void get_ranges_channel(
         }
     }
 
-}
-
-
-std::vector<unsigned int> TTTRRange::get_tttr_indices() {
-    std::vector<unsigned int> v;
-    for(unsigned int i=start; i<stop; i++){
-        v.push_back(i);
-    }
-    return v;
 }
 
 

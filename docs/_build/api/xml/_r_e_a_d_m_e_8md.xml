@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="_r_e_a_d_m_e_8md" kind="file" language="Markdown">
+    <compoundname>README.md</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline><highlight class="normal">#<sp/>tttrlib</highlight></codeline>
+<codeline><highlight class="normal">[![Linux<sp/>Build<sp/>Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg?branch=master)](https://travis-ci.org/fluorescence-tools/tttrlib)</highlight></codeline>
+<codeline><highlight class="normal">[![Build<sp/>status](https://ci.appveyor.com/api/projects/status/wi1t2tlchmyaxxol/branch/master?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib/branch/master)</highlight></codeline>
+<codeline><highlight class="normal">[![Codacy<sp/>Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;amp;utm_medium=referral&amp;amp;utm_content=Fluorescence-Tools/tttrlib&amp;amp;utm_campaign=Badge_Grade)</highlight></codeline>
+<codeline><highlight class="normal">[![Anaconda-Server<sp/>Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://conda.anaconda.org/tpeulen)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>General<sp/>description</highlight></codeline>
+<codeline><highlight class="normal">tttrlib<sp/>is<sp/>a<sp/>file<sp/>format<sp/>agnostic<sp/>low<sp/>level,<sp/>high<sp/>performance<sp/>API<sp/>to<sp/></highlight></codeline>
+<codeline><highlight class="normal">read<sp/>and<sp/>process<sp/>time-tagged-time<sp/>resolved<sp/>(TTTR)<sp/>data<sp/>acquired<sp/>by<sp/></highlight></codeline>
+<codeline><highlight class="normal">PicoQuant<sp/>(PQ)<sp/>and<sp/>Becker&amp;Hickl<sp/>measurement<sp/>devices/cards<sp/>or<sp/>TTTR<sp/></highlight></codeline>
+<codeline><highlight class="normal">files<sp/>in<sp/>the<sp/>open<sp/>Photon-HDF<sp/>format.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>library<sp/>tttrlib<sp/>facilitates<sp/>the<sp/>work<sp/>with<sp/>files<sp/>containing<sp/></highlight></codeline>
+<codeline><highlight class="normal">time-tagged<sp/>time<sp/>resolved<sp/>photon<sp/>streams<sp/>by<sp/>providing<sp/></highlight></codeline>
+<codeline><highlight class="normal">a<sp/>vendor<sp/>independent<sp/>C++<sp/>application<sp/>programming<sp/>interface<sp/>(API)<sp/></highlight></codeline>
+<codeline><highlight class="normal">for<sp/>TTTR<sp/>files<sp/>that<sp/>is<sp/>wrapped<sp/>by<sp/>SWIG<sp/>(Simplified<sp/>Wrapper<sp/>and<sp/>Interface<sp/></highlight></codeline>
+<codeline><highlight class="normal">Generator)<sp/>for<sp/>common<sp/>scripting<sp/>languages<sp/>as<sp/>Python<sp/>as<sp/>target<sp/>languages<sp/></highlight></codeline>
+<codeline><highlight class="normal">and<sp/>non-scripting<sp/>languages<sp/>such<sp/>as<sp/>C#<sp/>and<sp/>Java<sp/>including<sp/>Octave,<sp/></highlight></codeline>
+<codeline><highlight class="normal">Scilab<sp/>and<sp/>R.<sp/>Currently,<sp/>tttrlib<sp/>is<sp/>wrapped<sp/>for<sp/>the<sp/>use<sp/>in<sp/>Python.<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Multi-dimensional<sp/>histograms</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Correlation<sp/>analysis</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Time-window<sp/>analysis</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Photon<sp/>distribution<sp/>anaylsis</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>FLIM<sp/>image<sp/>generation<sp/>and<sp/>analysis</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">![tttrlib<sp/>FLIM][3]</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">tttrlib<sp/>is<sp/>NOT<sp/>intended<sp/>as<sp/>ready-to-use<sp/>software<sp/>for<sp/>specific<sp/>application<sp/></highlight></codeline>
+<codeline><highlight class="normal">purposes.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Supported<sp/>file<sp/>formats</highlight></codeline>
+<codeline><highlight class="normal">###<sp/>PicoQuant<sp/>(PQ)</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>PicoHarp<sp/>ptu,<sp/>T2/T3</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>HydraHarp<sp/>ptu,<sp/>T2/T3</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>HydraHarp<sp/>ht3,<sp/>PTU</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Becker<sp/>&amp;<sp/>Hickl<sp/>(BH)</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>spc132<sp/></highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>spc630<sp/>(256<sp/>&amp;<sp/>4096<sp/>mode)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Design<sp/>goals</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Low<sp/>memory<sp/>footprint<sp/>(keep<sp/>objective<sp/>large<sp/>datasets,<sp/>e.g.<sp/><sp/>FLIM<sp/>in<sp/>memory).</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Platform<sp/>independent<sp/>C/C++<sp/>library<sp/>with<sp/>interfaces<sp/>for<sp/>scripting<sp/>libraries<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Capabilities</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Fast<sp/>(IO<sp/>limited)<sp/>Reading<sp/>TTTR<sp/>files<sp/></highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Generation<sp/>/<sp/>analysis<sp/>of<sp/>fluorescence<sp/>decays</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Time<sp/>window<sp/>analysis</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Correlation<sp/>of<sp/>time<sp/>event<sp/>traces</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Filtering<sp/>of<sp/>time<sp/>event<sp/>traces<sp/>to<sp/>generate<sp/>instrument<sp/>response<sp/>functions<sp/>for<sp/>fluorescence<sp/>decays<sp/>analysis<sp/>without<sp/>the<sp/>need<sp/>of<sp/>independent<sp/>measurements..<sp/></highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Fast<sp/>photon<sp/>distribution<sp/>analysis</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Fast<sp/>selection<sp/>of<sp/>photons<sp/>from<sp/>a<sp/>photon<sp/>stream</highlight></codeline>
+<codeline><highlight class="normal"><sp/></highlight></codeline>
+<codeline><highlight class="normal">Generation<sp/>of<sp/>fluorescence<sp/>decay<sp/>histograms<sp/>tttrlib<sp/>outperforms<sp/>pure<sp/>numpy<sp/>and<sp/>Python<sp/>based</highlight></codeline>
+<codeline><highlight class="normal">libraries<sp/>by<sp/>a<sp/>factor<sp/>of<sp/>~40.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Implementation</highlight></codeline>
+<codeline><highlight class="normal">Pure<sp/>pure<sp/>C/C++<sp/>and<sp/>CUDA<sp/>based<sp/>high<sp/>performance<sp/>algorithms<sp/>for<sp/>real-time<sp/>and<sp/>interactive<sp/></highlight></codeline>
+<codeline><highlight class="normal">analysis<sp/>of<sp/>TTTR<sp/>data.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Building<sp/>and<sp/>Installation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>C++<sp/>shared<sp/>library</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>C++<sp/>shared<sp/>library<sp/>can<sp/>be<sp/>installed<sp/>from<sp/>source<sp/>with<sp/>[cmake](https://cmake.org/):</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```console</highlight></codeline>
+<codeline><highlight class="normal">git<sp/>clone<sp/>--recursive<sp/>https://github.com/fluorescence-tools/tttrlib.git</highlight></codeline>
+<codeline><highlight class="normal">mkdir<sp/>tttrlib/build;<sp/>cd<sp/>tttrlib/build</highlight></codeline>
+<codeline><highlight class="normal">cmake<sp/>..</highlight></codeline>
+<codeline><highlight class="normal">sudo<sp/>make<sp/>install</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">On<sp/>Linux<sp/>you<sp/>can<sp/>build<sp/>and<sp/>install<sp/>a<sp/>package<sp/>instead<sp/>(prefered):</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">###<sp/>Python<sp/>bindings</highlight></codeline>
+<codeline><highlight class="normal">The<sp/>Python<sp/>bindings<sp/>can<sp/>be<sp/>either<sp/>be<sp/>installed<sp/>by<sp/>downloading<sp/>and<sp/>compiling<sp/>the<sp/>source<sp/>code<sp/>or<sp/>by<sp/>using<sp/>a<sp/></highlight></codeline>
+<codeline><highlight class="normal">precompiled<sp/>distribution<sp/>for<sp/>Python<sp/>anaconda<sp/>environment.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>following<sp/>commands<sp/>can<sp/>be<sp/>used<sp/>to<sp/>download<sp/>and<sp/>compile<sp/>the<sp/>source<sp/>code:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">```console</highlight></codeline>
+<codeline><highlight class="normal">git<sp/>clone<sp/>--recursive<sp/>https://github.com/fluorescence-tools/tttrlib.git</highlight></codeline>
+<codeline><highlight class="normal">cd<sp/>tttrlib</highlight></codeline>
+<codeline><highlight class="normal">sudo<sp/>python<sp/>setup.py<sp/>install</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">In<sp/>an<sp/>[anaconda](https://www.anaconda.com/)<sp/>environment<sp/>the<sp/>library<sp/>can<sp/></highlight></codeline>
+<codeline><highlight class="normal">be<sp/>installed<sp/>by<sp/>the<sp/>following<sp/>command:<sp/></highlight></codeline>
+<codeline><highlight class="normal">```console</highlight></codeline>
+<codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>fluorescence-tools<sp/>tttrlib</highlight></codeline>
+<codeline><highlight class="normal">```</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">For<sp/>most<sp/>users<sp/>the<sp/>later<sp/>approach<sp/>is<sp/>recommended.<sp/>Currently,<sp/>pre-compiled<sp/></highlight></codeline>
+<codeline><highlight class="normal">packages<sp/>for<sp/>the<sp/>anaconda<sp/>distribution<sp/>system<sp/>are<sp/>available<sp/>for:</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Windows:<sp/>Python<sp/>3.7<sp/>(x64)</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>Linux:<sp/>Python<sp/>3.7<sp/>(x64)</highlight></codeline>
+<codeline><highlight class="normal">*<sp/><sp/><sp/>MacOs:<sp/>Python<sp/>3.7<sp/>(x64)</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Legacy<sp/>32-bit<sp/>platforms<sp/>and<sp/>versions<sp/>of<sp/>programming<sp/>languages,<sp/>e.g,<sp/>Python<sp/>2.7<sp/></highlight></codeline>
+<codeline><highlight class="normal">are<sp/>not<sp/>supported.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">##<sp/>Documentation</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">The<sp/>API<sp/>of<sp/>tttrlib<sp/>as<sp/>well<sp/>as<sp/>some<sp/>use<sp/>cases<sp/>are<sp/>documented<sp/></highlight></codeline>
+<codeline><highlight class="normal">on<sp/>its<sp/>[web<sp/>page](https://fluorescence-tools.github.io/tttrlib)<sp/></highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">Note,<sp/>tttrlib<sp/>is<sp/>highly<sp/>experimental<sp/>library<sp/>in<sp/>current<sp/>development.<sp/>In<sp/></highlight></codeline>
+<codeline><highlight class="normal">case<sp/>you<sp/>notice<sp/>unusual<sp/>behaviour<sp/>do<sp/>not<sp/>hesitate<sp/>to<sp/>contact<sp/>the<sp/>authors.<sp/></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal">##<sp/>License</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">tttrlib<sp/>is<sp/>released<sp/>under<sp/>the<sp/>open<sp/>source<sp/>MPL<sp/>2.0<sp/>license.</highlight></codeline>
+<codeline></codeline>
+<codeline><highlight class="normal">[3]:<sp/>docs/_build/html/_images/imaging_tutorial.png<sp/>&quot;tttrlib<sp/>FLIM&quot;</highlight></codeline>
+    </programlisting>
+    <location file="README.md"/>
+  </compounddef>
+</doxygen>

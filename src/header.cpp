@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2019 by Thomas-Otavio Peulen                               *
+ * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
  *                                                                          *
  * This file is part of the library tttrlib.                                *
  *                                                                          *
@@ -28,11 +28,11 @@ Header::~Header(){};
 
 Header::Header() :
         micro_time_resolution(0),
-        macro_time_resolution(0),
         number_of_tac_channels(0),
+        macro_time_resolution(0),
         tttr_container_type(0),
-        bytes_per_record(1),
         header_end(0),
+        bytes_per_record(1),
         tttr_record_type(0)
 {}
 
@@ -162,7 +162,6 @@ size_t read_ht3_header(
     //fread(&ht3_header_tttr_mode, 1, sizeof(ht3_header_tttr_mode), fpin);
 
     data["Ident"] = std::string(ht3_header_ascii.Ident);
-
     data["FormatVersion"] = std::string(ht3_header_ascii.FormatVersion);
     data["CreatorName"] = std::string(ht3_header_ascii.CreatorName);
     data["CreatorVersion"] = std::string(ht3_header_ascii.CreatorVersion);
@@ -225,8 +224,8 @@ size_t read_ht3_header(
         data["Resolution"] = std::string("1");
     }
 
-    macro_time_resolution = 1.0;
-    micro_time_resolution = 1.0;
+    macro_time_resolution = resolution;
+    micro_time_resolution = 0.001;
 
     // Todo: add identification of HydraHarp HHT3v1 files
     if (data["Ident"] == "HydraHarp")
@@ -266,7 +265,6 @@ size_t read_ptu_header(
     wchar_t *WideBuffer;
     std::string strFromChar;
     tag_head_t TagHead;
-    uint64_t Result;
     uint64_t file_type = 0;
     // read the header
 
@@ -285,6 +283,7 @@ size_t read_ptu_header(
     data["Tag Version"] = buffer_out;
 
     do {
+        uint64_t Result;
         // This loop is very generic. It reads all header items and displays the
         // identifier and the associated value, quite independent of what
         // they mean in detail.

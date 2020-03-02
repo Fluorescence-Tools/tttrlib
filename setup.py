@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 import os
-import re
-import sys
 import platform
 import subprocess
 
@@ -36,12 +34,14 @@ class CMakeBuild(build_ext):
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
             '-DCMAKE_SWIG_OUTDIR=' + extdir
         ]
-
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
-
         if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            cmake_args += [
+                '-DBUILD_PYTHON_INTERFACE=ON',
+                '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
+                '-GVisual Studio 14 2015 Win64'
+            ]
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
@@ -55,6 +55,9 @@ class CMakeBuild(build_ext):
         )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+        print(
+            "cmake building: " + " ".join(cmake_args)
+        )
         subprocess.check_call(
             ['cmake', ext.sourcedir] + cmake_args,
             cwd=self.build_temp,
@@ -66,26 +69,12 @@ class CMakeBuild(build_ext):
         )
 
 
-if 'doc' in sys.argv:
-    cwd = os.getcwd()
-    #os.chdir('./include/')
-    subprocess.call(
-        "doxygen ./include/Doxyfile",
-        shell=True
-    )
-    os.chdir('./utility/')
-    subprocess.call(
-        "python doxy2swig.py ../docs/api/xml/index.xml documentation.i",
-        shell=True
-    )
-    os.chdir(cwd)
-
 setup(
     name=name,
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.11',
+    version='0.0.12',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

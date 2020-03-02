@@ -1,0 +1,19 @@
+name: tttrlib
+
+channels:
+  - defaults
+
+dependencies:
+  - python 3.7.*
+  - cmake
+  - swig
+  - setuptools
+  - numpy
+  - hdf5 1.10.2.*
+  - boost 1.67.0.*
+  - libboost 1.67.0.*
+  - intel-openmp
+  - yaml
+  - conda-build
+  - nose
+  - anaconda-client

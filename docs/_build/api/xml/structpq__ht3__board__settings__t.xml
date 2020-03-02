@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.16">
+  <compounddef id="structpq__ht3__board__settings__t" kind="struct" language="C++" prot="public">
+    <compoundname>pq_ht3_board_settings_t</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structpq__ht3__board__settings__t_1a7f3eda5eebde8ff61dc9eabd187dc359" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t pq_ht3_board_settings_t::BoardSerial</definition>
+        <argsstring></argsstring>
+        <name>BoardSerial</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="147" column="13" bodyfile="include/header.h" bodystart="147" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__board__settings__t_1af106b3dcfe836a2df68033929c7c0d27" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t pq_ht3_board_settings_t::SyncDivider</definition>
+        <argsstring></argsstring>
+        <name>SyncDivider</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="148" column="13" bodyfile="include/header.h" bodystart="148" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__board__settings__t_1a6825d115d96985ab64f39aca3162466c" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t pq_ht3_board_settings_t::CFDZeroCross</definition>
+        <argsstring></argsstring>
+        <name>CFDZeroCross</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="149" column="13" bodyfile="include/header.h" bodystart="149" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structpq__ht3__board__settings__t_1a8101b4213a3f2ed58c39bf11a429399f" prot="public" static="no" mutable="no">
+        <type>int32_t</type>
+        <definition>int32_t pq_ht3_board_settings_t::CFDZeroLevel</definition>
+        <argsstring></argsstring>
+        <name>CFDZeroLevel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="include/header.h" line="150" column="13" bodyfile="include/header.h" bodystart="150" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="include/header.h" line="146" column="16" bodyfile="include/header.h" bodystart="146" bodyend="151"/>
+    <listofallmembers>
+      <member refid="structpq__ht3__board__settings__t_1a7f3eda5eebde8ff61dc9eabd187dc359" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>BoardSerial</name></member>
+      <member refid="structpq__ht3__board__settings__t_1a6825d115d96985ab64f39aca3162466c" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>CFDZeroCross</name></member>
+      <member refid="structpq__ht3__board__settings__t_1a8101b4213a3f2ed58c39bf11a429399f" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>CFDZeroLevel</name></member>
+      <member refid="structpq__ht3__board__settings__t_1af106b3dcfe836a2df68033929c7c0d27" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>SyncDivider</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

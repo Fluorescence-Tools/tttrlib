@@ -1,6 +1,6 @@
 platform:
   - amd64
-image: Visual Studio 2017
+image: Visual Studio 2015
 
 environment:
   matrix:
@@ -14,9 +14,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda config --set channel_priority strict
-  - conda config --add channels conda-forge
-  - conda create -n build python=3.7 git conda-build anaconda-client numpy
+  - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep
   - activate build
   - conda build conda-recipe
 

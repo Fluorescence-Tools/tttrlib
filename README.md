@@ -16,7 +16,7 @@ a vendor independent C++ application programming interface (API)
 for TTTR files that is wrapped by SWIG (Simplified Wrapper and Interface 
 Generator) for common scripting languages as Python as target languages 
 and non-scripting languages such as C# and Java including Octave, 
-Scilab and R.
+Scilab and R. Currently, tttrlib is wrapped for the use in Python. 
 
 *   Multi-dimensional histograms
 *   Correlation analysis
@@ -24,9 +24,10 @@ Scilab and R.
 *   Photon distribution anaylsis
 *   FLIM image generation and analysis
 
-![LabelLib and other software/libraries][3]
+![tttrlib FLIM][3]
 
-tttrlib is NOT intended as ready-to-use software for specific application purposes.
+tttrlib is NOT intended as ready-to-use software for specific application 
+purposes.
 
 ## Supported file formats
 ### PicoQuant (PQ)
@@ -39,7 +40,7 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 *   spc630 (256 & 4096 mode)
 
 ## Design goals
-*   Low memory footprint (keep objective large datasets, e.g.  FLIM in memory). Particulary useful for FLIM.
+*   Low memory footprint (keep objective large datasets, e.g.  FLIM in memory).
 *   Platform independent C/C++ library with interfaces for scripting libraries 
 
 ## Capabilities
@@ -52,7 +53,7 @@ tttrlib is NOT intended as ready-to-use software for specific application purpos
 *   Fast selection of photons from a photon stream
  
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
-libraries by a factor of ~40  
+libraries by a factor of ~40.
 
 ## Implementation
 Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive 
@@ -98,7 +99,8 @@ packages for the anaconda distribution system are available for:
 *   Linux: Python 3.7 (x64)
 *   MacOs: Python 3.7 (x64)
 
-Legacy 32-bit platforms are currently not supported.
+Legacy 32-bit platforms and versions of programming languages, e.g, Python 2.7 
+are not supported.
 
 ## Documentation
 
@@ -112,4 +114,4 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 tttrlib is released under the open source MPL 2.0 license.
 
-[3]: docs/_build/html/_images/imaging_tutorial.png "LabelLib and other software/libraries"
+[3]: docs/_build/html/_images/imaging_tutorial.png "tttrlib FLIM"
