@@ -324,7 +324,9 @@ void CLSMImage::remove_incomplete_frames(){
         i_frame++;
     }
     frames.resize(n_frames);
+#if VERBOSE
     std::clog << "-- Final number of frames: " << n_frames << std::endl;
+#endif
 }
 
 

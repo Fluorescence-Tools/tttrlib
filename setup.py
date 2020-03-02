@@ -7,7 +7,8 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
-name = "tttrlib"  # name of the module
+# name of the module
+name = "tttrlib"
 
 
 class CMakeExtension(Extension):
@@ -74,7 +75,6 @@ setup(
     license='MPL v2.0',
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.12',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

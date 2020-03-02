@@ -1,5 +1,4 @@
 {% set name = "tttrlib" %}
-#{% set version = "0.0.11" %}
 {% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
 
 package:
