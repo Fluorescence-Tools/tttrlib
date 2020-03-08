@@ -11,6 +11,16 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
+# Debug build detection
+###########################
+IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+    MESSAGE("Release build")
+    ADD_DEFINITIONS("-DVERBOSE=0")
+ELSE(CMAKE_BUILD_TYPE STREQUAL "Release")
+    MESSAGE("Debug build")
+    ADD_DEFINITIONS("-DVERBOSE=1")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
+
 # Windows
 if(MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
