@@ -1,10 +1,8 @@
-{% set name = "tttrlib" %}
 {% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
 
 package:
-  name: "{{ name|lower }}"
+  name: {{ data.get('name')|lower }}
   version: {{ data.get('version')|lower }}
-  #  version: "{{ version|lower }}"
 
 source:
   path: ..
@@ -39,7 +37,7 @@ test:
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
-  license: MPL 2.0
+  license: {{ data.get('license') }}
   summary: Python bindings for tttrlib
   description: |
     tttrlib C++ library including Python wrapper to read time-tagged
