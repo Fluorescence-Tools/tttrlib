@@ -38,6 +38,7 @@ class CMakeBuild(build_ext):
         ]
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         if platform.system() == "Windows":
             cmake_args += [
                 '-DBUILD_PYTHON_INTERFACE=ON',
@@ -45,7 +46,6 @@ class CMakeBuild(build_ext):
                 '-GVisual Studio 14 2015 Win64'
             ]
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
 
         env = os.environ.copy()
