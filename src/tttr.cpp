@@ -20,8 +20,9 @@
 
 TTTR::TTTR() :
         // private
-        filename(nullptr),
+        filename(),
         header(nullptr),
+        tttr_container_type_str(),
         overflow_counter(0),
         bytes_per_record(4),
         fp_records_begin(0),
@@ -35,6 +36,12 @@ TTTR::TTTR() :
         n_records_read(0),
         n_valid_events(0),
         processRecord(nullptr){
+    container_names.insert({std::string("PTU"), 0});
+    container_names.insert({std::string("HT3"), 1});
+    container_names.insert({std::string("SPC-130"), 2});
+    container_names.insert({std::string("SPC-600_256"), 3});
+    container_names.insert({std::string("SPC-600_4096"), 4});
+    container_names.insert({std::string("PHOTON-HDF5"), 5});
 }
 
 
@@ -59,14 +66,12 @@ TTTR::TTTR(
         TTTR()
         {
     TTTR::n_valid_events = (size_t) n_selection;
-
     if ((size_t) n_selection > parent->n_valid_events) {
         // the selection does not match the dimension of the parent
         throw std::invalid_argument("The dimension of "
                                     "the selection exceeds "
                                     "the parents dimension.");
     }
-
     allocate_memory_for_records(n_valid_events);
     for(size_t i=0; i<n_valid_events; i++){
         TTTR::macro_times[i] = parent->macro_times[selection[i]];
@@ -78,13 +83,16 @@ TTTR::TTTR(
 
 
 TTTR::TTTR(
-        char *fn,
+        const char *fn,
         int container_type,
         bool read_input
         ) :
         TTTR()
 {
-    filename = fn;
+    boost::filesystem::path p = fn;
+    filename.assign(
+            boost::filesystem::canonical(boost::filesystem::absolute(p)).c_str()
+            );
     tttr_container_type = container_type;
     if(read_input){
         read_file();
@@ -93,15 +101,22 @@ TTTR::TTTR(
 }
 
 
-TTTR::TTTR(char *fn, int container_type) :
+TTTR::TTTR(const char *fn, int container_type) :
     TTTR(fn, container_type, true) {
+    tttr_container_type_str.assign(
+            container_names.right.at(container_type)
+            );
 }
 
 
-TTTR::TTTR(char *fn, const char *container_type) :
+TTTR::TTTR(const char *fn, const char *container_type) :
         TTTR() {
-    tttr_container_type = container_names[std::string(container_type)];
-    filename = fn;
+    tttr_container_type_str.assign(container_type);
+    tttr_container_type = container_names.left.at(std::string(container_type));
+    boost::filesystem::path p = fn;
+    filename.assign(
+            boost::filesystem::canonical(boost::filesystem::absolute(p)).c_str()
+    );
     read_file();
     find_used_routing_channels();
 }
@@ -135,7 +150,7 @@ void TTTR::find_used_routing_channels(){
 #endif
 }
 
-int TTTR::read_hdf_file(char *fn){
+int TTTR::read_hdf_file(const char *fn){
     header = new Header();
 
     /* handles */
@@ -193,7 +208,7 @@ int TTTR::read_hdf_file(char *fn){
 
 
 int TTTR::read_file(
-        char *fn,
+        const char *fn,
         int container_type
         ) {
 #if VERBOSE
@@ -246,7 +261,7 @@ int TTTR::read_file(
 
 
 int TTTR::read_file(){
-    return read_file(filename, tttr_container_type);
+    return read_file(filename.c_str(), tttr_container_type);
 }
 
 
@@ -256,8 +271,8 @@ TTTR::~TTTR() {
 }
 
 
-char* TTTR::get_filename() {
-    return filename;
+std::string TTTR::get_filename() {
+    return std::string(filename);
 }
 
 
@@ -670,10 +685,10 @@ void get_ranges_channel(
 
 
 bool TTTR::write_file(
-        char *fn,
+        const char *fn,
         const char* container_type
         ) {
-    switch(container_names[container_type]) {
+    switch(container_names.left.at(container_type)) {
         case BH_SPC130_CONTAINER:
             fp = fopen(fn, "wb");
             if (fp != nullptr) {

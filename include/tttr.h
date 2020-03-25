@@ -29,6 +29,9 @@
 #include <array>
 #include <memory>
 
+#include <boost/filesystem.hpp>
+#include <boost/bimap.hpp>
+
 #include "hdf5.h"
 
 #include <record_reader.h>
@@ -254,7 +257,7 @@ class TTTR {
 
 private:
     /// the input file
-    char* filename;
+    std::string filename;
 
     std::vector<TTTR*> children;
 
@@ -263,14 +266,7 @@ private:
     uint64_t overflow_counter;
 
     /// map to translates string container types to int container types
-    std::map<std::string, int> container_names = {
-            {std::string("PTU"), 0},
-            {std::string("HT3"), 1},
-            {std::string("SPC-130"), 2},
-            {std::string("SPC-600_256"), 3},
-            {std::string("SPC-600_4096"), 4},
-            {std::string("PHOTON-HDF5"), 5}
-    };
+    boost::bimap<std::string, int> container_names;
 
     typedef bool (*processRecord_t)(
             uint64_t&,  // input
@@ -309,6 +305,7 @@ private:
      * initializing the class.
     */
     int tttr_container_type; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
+    std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
     int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
     /// The size in bytes per TTTR record
@@ -350,7 +347,7 @@ private:
     /// The event type
     short *event_types;
 
-    int read_hdf_file(char *fn);
+    int read_hdf_file(const char *fn);
 
 
 protected:
@@ -398,7 +395,7 @@ protected:
      * @param container_type The container type.
      * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
      */
-    int read_file(char *fn, int container_type);
+    int read_file(const char *fn, int container_type);
     int read_file();
 
 
@@ -459,6 +456,14 @@ public:
      */
     int get_n_valid_events();
 
+    /*!
+     *
+     * @return the container type that was used to open the file
+     */
+    std::string get_tttr_container_type(){
+        return tttr_container_type_str;
+    }
+
     TTTR* select(long long *selection, int n_selection);
 
     /*! Constructor
@@ -481,7 +486,7 @@ public:
      * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
      * @param read_input if true reads the content of the file
      */
-    TTTR(char *filename, int container_type, bool read_input);
+    TTTR(const char *filename, int container_type, bool read_input);
 
     /*!
      *
@@ -489,7 +494,7 @@ public:
      * @param container_type container type as int (0 = PTU; 1 = HT3;
      * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
      */
-    TTTR(char *filename, int container_type);
+    TTTR(const char *filename, int container_type);
 
     /*!
      *
@@ -497,7 +502,7 @@ public:
      * @param container_type container type as string (PTU; HT3;
      * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
      */
-    TTTR(char *filename, const char* container_type);
+    TTTR(const char *filename, const char* container_type);
 
 
     // Constructors for in memory data
@@ -521,7 +526,7 @@ public:
      *
      * @return The filename of the TTTR file
      */
-    char* get_filename();
+    std::string get_filename();
 
     /*!
      * Returns a vector containing indices of records that
@@ -572,7 +577,7 @@ public:
      * @return
      */
     bool write_file(
-            char *fn,
+            const char *fn,
             const char* container_type
             );
 

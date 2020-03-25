@@ -8,7 +8,7 @@ from setuptools.command.build_ext import build_ext
 
 
 __name__ = "tttrlib"
-__version__ = "0.0.12"
+__version__ = "0.0.13"
 __license__ = 'MPL v2.0'
 
 

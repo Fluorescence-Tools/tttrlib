@@ -4,7 +4,11 @@
     #include "../include/header.h"
 %}
 
-%import std_vector.i
+%pythonbegin "./ext/python/python_imports.py"
+
+%include "std_vector.i";
+%include "std_wstring.i";
+%include "std_string.i";
 
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {
     (unsigned long long *time, int n_time)
@@ -46,3 +50,7 @@
     (int** out, int* n_out)
 }
 
+%extend TTTR{
+
+    %pythoncode "./ext/python/tttr_extension.py"
+}
