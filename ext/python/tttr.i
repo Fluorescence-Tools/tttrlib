@@ -1,4 +1,5 @@
-%module tttrlib
+%module(directors="1", package="tttrlib") tttrlib
+%feature("kwargs", 1);
 %{
     #include "../include/tttr.h"
     #include "../include/header.h"

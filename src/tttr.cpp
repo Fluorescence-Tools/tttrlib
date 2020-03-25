@@ -89,10 +89,7 @@ TTTR::TTTR(
         ) :
         TTTR()
 {
-    boost::filesystem::path p = fn;
-    filename.assign(
-            boost::filesystem::canonical(boost::filesystem::absolute(p)).c_str()
-            );
+    filename.assign(fn);
     tttr_container_type = container_type;
     if(read_input){
         read_file();
@@ -113,10 +110,7 @@ TTTR::TTTR(const char *fn, const char *container_type) :
         TTTR() {
     tttr_container_type_str.assign(container_type);
     tttr_container_type = container_names.left.at(std::string(container_type));
-    boost::filesystem::path p = fn;
-    filename.assign(
-            boost::filesystem::canonical(boost::filesystem::absolute(p)).c_str()
-    );
+    filename.assign(fn);
     read_file();
     find_used_routing_channels();
 }
@@ -213,11 +207,17 @@ int TTTR::read_file(
         ) {
 #if VERBOSE
     std::clog << "READING TTTR FILE" << std::endl;
-    std::clog << "-- Filename: " << fn << std::endl;
-    std::clog << "-- Container type: " << container_type << std::endl;
 #endif
     if(boost::filesystem::exists(fn))
     {
+#if VERBOSE
+        std::clog << "-- Filename: " << fn << std::endl;
+        std::clog << "-- Container type: " << container_type << std::endl;
+#endif
+        // clean up filename
+        boost::filesystem::path p = fn;
+        filename = boost::filesystem::canonical(boost::filesystem::absolute(p)).generic_string();
+        fn = filename.c_str();
         if (container_type == PHOTON_HDF_CONTAINER)
         {
             read_hdf_file(fn);
@@ -245,7 +245,7 @@ int TTTR::read_file(
             }
             else{
 #if VERBOSE
-                std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
+                std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
 #endif
                 return 0;
             }

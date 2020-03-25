@@ -14,17 +14,6 @@ def macro_times(self):
     return self.get_macro_time()
 
 
-def __init__(
-        self,
-        *args, **kwargs
-):
-    this = _tttrlib.new_TTTR(*args, **kwargs)
-    try:
-        self.this.append(this)
-    except:
-        self.this = this
-
-
 def __repr__(self):
     return 'tttrlib.TTTR("%s", "%s")' % (
         self.get_filename(),
