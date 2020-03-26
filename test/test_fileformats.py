@@ -67,11 +67,11 @@ class Tests(unittest.TestCase):
             )
 
             # test __rep__
-            file_path = os.path.abspath(file_type[0])
+            file_path = os.path.abspath(file_type[0]).replace('\\', '/')
             container_type = file_type[1]
             ref = 'tttrlib.TTTR("%s", "%s")' % (
                 file_path,
-                container_type
+                container_type.replace('\\', '/')
             )
             self.assertEqual(
                 ref,
