@@ -75,7 +75,7 @@ class Tests(unittest.TestCase):
             )
             self.assertEqual(
                 ref,
-                data.__rep__()
+                data.__repr__()
             )
 
     # def test_open_non_existing_file(self):
