@@ -66,6 +66,18 @@ class Tests(unittest.TestCase):
                 True
             )
 
+            # test __rep__
+            file_path = os.path.abspath(file_type[0])
+            container_type = file_type[1]
+            ref = 'tttrlib.TTTR("%s", "%s")' % (
+                file_path,
+                container_type
+            )
+            self.assertEqual(
+                ref,
+                data.__rep__()
+            )
+
     # def test_open_non_existing_file(self):
     #     # make sure that opening an non-exisitng file does not crash
     #     d = tttrlib.TTTR('NOFILE', 'PTU')
