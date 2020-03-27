@@ -41,6 +41,7 @@ script:
   # Use Sphinx to make the html docs
   - cd docs
   # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
+  - conda config --add channels conda-forge
   - conda install -y sphinx_bootstrap_theme sphinx sphinx_rtd_theme numpydoc sphinx-autodoc-typehints matplotlib=2.2.3 sphinxcontrib-bibtex recommonmark
   - make html
   # Tell GitHub not to use jekyll to compile the docs
