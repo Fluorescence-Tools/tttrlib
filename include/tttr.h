@@ -85,7 +85,7 @@ size_t determine_number_of_records_by_file_size(
  * @param n_ph_max
  */
 void selection_by_count_rate(
-        long long **out, int *n_out,
+        long long **output, int *n_output,
         unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 );
@@ -95,14 +95,14 @@ void selection_by_count_rate(
  * Splits the time trace into bins that are at least of the length specified by @param time_window and
  * counts the number of photons in each time interval
  *
- * @param out array of counts
- * @param n_out number of elements in @param out
+ * @param output array of counts
+ * @param n_output number of elements in @param output
  * @param time array of detection times
  * @param n_time number of elements in the @param time array
  * @param time_window The size of the
  */
 void histogram_trace(
-        int **out, int *n_out,
+        int **output, int *n_output,
         unsigned long long *time, int n_time,
         int time_window
         );
@@ -127,16 +127,16 @@ void get_ranges_channel(
 
 /*!
  *
- * @param out
- * @param n_out
- * @param in
- * @param n_in
+ * @param output
+ * @param n_output
+ * @param input
+ * @param n_input
  * @param routing_channels
  * @param n_routing_channels
  */
 void selection_by_channels(
-        long long **out, int *n_out,
-        long long *in, int n_in,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels);
 
 
@@ -405,44 +405,44 @@ public:
      * Returns an array containing the routing channel numbers
      * that are contained (used) in the TTTR file.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_used_routing_channels(short **out, int *n_out);
+    void get_used_routing_channels(short **output, int *n_output);
 
     /*!
      * Returns an array containing the macro times of the valid TTTR
      * events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_macro_time(unsigned long long **out, int *n_out);
+    void get_macro_time(unsigned long long **output, int *n_output);
 
     /*!
      * Returns an array containing the micro times of the valid TTTR
      * events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_micro_time(unsigned int **out, int *n_out);
+    void get_micro_time(unsigned int **output, int *n_output);
 
     /*!
      * Returns an array containing the routing channel numbers of the
      * valid TTTR events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_routing_channel(short ** out, int* n_out);
+    void get_routing_channel(short ** output, int* n_output);
 
     /*!
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_event_type(short ** out, int* n_out);
+    void get_event_type(short ** output, int* n_output);
 
     /*!
      *
@@ -530,29 +530,29 @@ public:
 
     /*!
      * Returns a vector containing indices of records that
-     * @param in a pointer to an array of int16_tchannel numbers that are
+     * @param input a pointer to an array of int16_tchannel numbers that are
      * used to select indices of photons
-     * @param n_in the length of the channel list.
+     * @param n_input the length of the channel list.
      */
     void get_selection_by_channel(
-            long long **out, int *n_out,
-            long long *in, int n_in
+            long long **output, int *n_output,
+            long long *input, int n_input
             );
 
     /*!
      *
-     * @param out
-     * @param n_out
+     * @param output
+     * @param n_output
      * @param tw
      * @param n_ph_max
      */
     void get_selection_by_count_rate(
-            long long **out, int *n_out,
+            long long **output, int *n_output,
             unsigned long tw, int n_ph_max
             );
 
     void get_ranges_by_count_rate(
-            int **out, int *n_out,
+            int **output, int *n_output,
             int tw_min, int tw_max,
             int n_ph_min, int n_ph_max
             );

@@ -89,7 +89,7 @@ sudo python setup.py install
 In an [anaconda](https://www.anaconda.com/) environment the library can 
 be installed by the following command: 
 ```console
-conda install -c fluorescence-tools tttrlib
+conda install -c tpeulen tttrlib
 ```
 
 For most users the later approach is recommended. Currently, pre-compiled 

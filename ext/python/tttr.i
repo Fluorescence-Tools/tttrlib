@@ -24,31 +24,31 @@
     (int **selection, int *n_selection)
 }
 %apply (int* IN_ARRAY1, int DIM1) {
-    (int* in, int n_in)
+    (int* in, int n_input)
 }
 %apply (long long* IN_ARRAY1, int DIM1) {
-    (long long *in, int n_in)
+    (long long *input, int n_input)
 }
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {
-    (unsigned long long *in, int n_in)
+    (unsigned long long *input, int n_input)
 }
 %apply (int** ARGOUTVIEWM_ARRAY1, int* DIM1) {
     (int **ranges, int *n_range)
 }
 %apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (unsigned long long** out, int* n_out)
+    (unsigned long long** output, int* n_output)
 }
 %apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (long long **out, int *n_out)
+    (long long **output, int *n_output)
 }
 %apply (unsigned int** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (unsigned int** out, int* n_out)
+    (unsigned int** output, int* n_output)
 }
 %apply (short** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (short** out, int* n_out)
+    (short** output, int* n_output)
 }
 %apply (int** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (int** out, int* n_out)
+    (int** output, int* n_output)
 }
 
 %extend TTTR{

@@ -22,7 +22,9 @@ TTTR::TTTR() :
         // private
         filename(),
         header(nullptr),
+        tttr_container_type(-1),
         tttr_container_type_str(),
+        tttr_record_type(-1),
         overflow_counter(0),
         bytes_per_record(4),
         fp_records_begin(0),
@@ -164,7 +166,7 @@ int TTTR::read_hdf_file(const char *fn){
      * Get dataspace and allocate memory for read buffer.
      */
     space = H5Dget_space(ds_microtime);
-    H5Sget_simple_extent_dims(space, dims, NULL);
+    H5Sget_simple_extent_dims(space, dims, nullptr);
     allocate_memory_for_records(dims[0]);
     /* All records are assumed to be valid.
      * Invalid records are usually sorted out
@@ -405,51 +407,51 @@ Header TTTR::get_header() {
 }
 
 
-void TTTR::get_macro_time(unsigned long long** out, int* n_out){
+void TTTR::get_macro_time(unsigned long long** output, int* n_output){
     get_array(
             n_valid_events,
             macro_times,
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
 
-void TTTR::get_micro_time(uint32_t** out, int* n_out){
+void TTTR::get_micro_time(uint32_t** output, int* n_output){
     get_array(
             n_valid_events,
             micro_times,
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
 
-void TTTR::get_routing_channel(int16_t** out, int* n_out){
+void TTTR::get_routing_channel(int16_t** output, int* n_output){
     get_array(
             n_valid_events,
             routing_channels,
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
-void TTTR::get_used_routing_channels(int16_t** out, int* n_out){
+void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
     get_array(
             used_routing_channels.size(),
             used_routing_channels.data(),
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
 
-void TTTR::get_event_type(int16_t** out, int* n_out){
+void TTTR::get_event_type(int16_t** output, int* n_output){
     get_array(
             n_valid_events,
             event_types,
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
@@ -467,23 +469,23 @@ int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        long long **out, int *n_out,
-        long long *in, int n_in
+        long long **output, int *n_output,
+        long long *input, int n_input
 ){
     ::selection_by_channels(
-            out, n_out,
-            in, n_in,
+            output, n_output,
+            input, n_input,
             routing_channels, get_n_events()
     );
 }
 
 
 void TTTR::get_selection_by_count_rate(
-        long long **out, int *n_out,
+        long long **output, int *n_output,
         unsigned long tw, int n_ph_max
 ){
     selection_by_count_rate(
-            out, n_out,
+            output, n_output,
             macro_times, (int) n_valid_events,
             tw, n_ph_max
             );
@@ -491,12 +493,12 @@ void TTTR::get_selection_by_count_rate(
 
 
 void TTTR::get_ranges_by_count_rate(
-        int **out, int *n_out,
+        int **output, int *n_output,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max){
 
     ranges_by_time_window(
-            out, n_out,
+            output, n_output,
             macro_times, (int) n_valid_events,
             tw_min, tw_max,
             n_ph_min, n_ph_max
@@ -511,22 +513,22 @@ TTTR* TTTR::select(long long *selection, int n_selection) {
 
 
 void selection_by_channels(
-        long long **out, int *n_out,
-        long long *in, int n_in,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
-    *out = (long long *) malloc(n_routing_channels * sizeof(long long));
+    *output = (long long *) malloc(n_routing_channels * sizeof(long long));
 
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
         int ch = routing_channels[i];
-        for (int j = 0; j < n_in; j++) {
-            if (in[j] == ch) {
-                (*out)[n_sel++] = i;
+        for (int j = 0; j < n_input; j++) {
+            if (input[j] == ch) {
+                (*output)[n_sel++] = i;
             }
         }
     }
-    *n_out = (int) n_sel;
+    *n_output = (int) n_sel;
 }
 
 
@@ -587,13 +589,13 @@ void ranges_by_time_window(
 
 
 void selection_by_count_rate(
-        long long **out, int *n_out,
+        long long **output, int *n_output,
         unsigned long long *time, int n_time,
         unsigned long tw, int n_ph_max
 ){
-    *out = (long long*) calloc(sizeof(long long), n_time);
+    *output = (long long*) calloc(sizeof(long long), n_time);
     int i = 0;
-    *n_out = 0;
+    *n_output = 0;
     while (i < (n_time - 1)){
         int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
@@ -606,8 +608,8 @@ void selection_by_count_rate(
         // the right side of the TW is the start for the next time record
         if(n_ph < n_ph_max){
             for(int k=i; k < r; k++){
-                (*n_out)++;
-                (*out)[(*n_out) - 1] = k;
+                (*n_output)++;
+                (*output)[(*n_output) - 1] = k;
             }
         }
         i = r;
@@ -621,7 +623,7 @@ unsigned int TTTR::get_number_of_tac_channels(){
 
 
 void histogram_trace(
-        int **out, int *n_out,
+        int **output, int *n_output,
         unsigned long long *in, int n_in,
         int time_window){
     int l, r;
@@ -629,9 +631,9 @@ void histogram_trace(
 
     int n_bin = (int) (t_max / time_window);
 
-    *n_out = n_bin;
-    *out = (int*) malloc(n_bin * sizeof(int));
-    memset(out, 0, n_bin * sizeof(int));
+    *n_output = n_bin;
+    *output = (int*) malloc(n_bin * sizeof(int));
+    memset(output, 0, n_bin * sizeof(int));
 
     l = 0; r = 0;
     while(r < n_in){
@@ -640,7 +642,7 @@ void histogram_trace(
         if ((in[r] - in[l]) > time_window){
             l = r;
         } else{
-            (*out)[i_bin] += 1;
+            (*output)[i_bin] += 1;
         }
     }
 }
