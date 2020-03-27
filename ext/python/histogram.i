@@ -30,7 +30,7 @@
     (int* hist, int n_hist)
 }
 %apply (double* IN_ARRAY2, int DIM1, int DIM2) {
-    (double *data, int n_rows, int n_cols)
+    (double *data, int n_rows_data, int n_cols_data)
 }
 %apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1 ) {
     (double** hist, int* dim)

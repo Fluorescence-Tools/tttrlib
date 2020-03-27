@@ -8,8 +8,7 @@ def histogram2d(data, bins):
     h = tttrlib.doubleHistogram()
     h.setAxis(0, "x", -3, 3, bins, 'lin')
     h.setAxis(1, "y", -3, 3, bins, 'lin')
-    h.setData(data.T)
-    h.update()
+    h.update(data.T)
     return h.getHistogram().reshape((bins, bins))
 
 

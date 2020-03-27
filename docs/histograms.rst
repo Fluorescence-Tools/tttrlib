@@ -72,5 +72,6 @@ optimized for general use cases.
     rarely used case of arbitrarily spaced histograms primarily optimized for \
     performance (with room for improvements). The routines are internally used.
     For other purposes than the applications tested for in ``tttrlib`` other libraries, e.g.
-    `Boost histogram <https://github.com/boostorg/histogram>`_ are a better choice.
+    `Boost histogram <https://github.com/boostorg/histogram>`_ are a better
+    choice.
 
