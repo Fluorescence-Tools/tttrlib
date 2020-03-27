@@ -1,20 +1,18 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Single Molecule &#8212; tttrlib  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Imaging" href="imaging.html" />
@@ -42,34 +40,31 @@
 <p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.histogram_trace</span></code> can be applied to a event time trace to calculate the time-dependent counts
 for a given time window size. In single-molecule FRET experiments such traces are particularly useful to illustrate
 single-molecule bursts.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">p</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">tttrlib</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">mt</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
 
 <span class="n">green_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">]))</span>
 <span class="n">red_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">]))</span>
 
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="n">p</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">green_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span>
 
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">red_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
 
-<span class="n">p</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>(<a class="reference external" href="./plots/single_molecule_mcs.py">Source code</a>, <a class="reference external" href="./plots/single_molecule_mcs.png">png</a>, <a class="reference external" href="./plots/single_molecule_mcs.hires.png">hires.png</a>, <a class="reference external" href="./plots/single_molecule_mcs.pdf">pdf</a>)</p>
-<div class="figure">
-<img alt="_images/single_molecule_mcs.png" src="_images/single_molecule_mcs.png" />
-</div>
+<p>(<a class="reference external" href="./plots/single_molecule_mcs.py">Source code</a>)</p>
 <p>Above, for a donor and acceptor detection channel a histogram trace for is shown in green and red.</p>
 </div>
 <div class="section" id="burst-selection">
@@ -79,15 +74,15 @@ and a minimum number of photons within the time windows. The function has two ma
 selection of the ranges besides the stream of time events provided by the parameter <code class="docutils literal notranslate"><span class="pre">time</span></code>:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li>The minimum time window size <code class="docutils literal notranslate"><span class="pre">tw_min</span></code></li>
-<li>The minimum number of photons per time window <code class="docutils literal notranslate"><span class="pre">n_ph_min</span></code></li>
+<li><p>The minimum time window size <code class="docutils literal notranslate"><span class="pre">tw_min</span></code></p></li>
+<li><p>The minimum number of photons per time window <code class="docutils literal notranslate"><span class="pre">n_ph_min</span></code></p></li>
 </ol>
 </div></blockquote>
 <p>Additional parameters to discriminate bursts are:</p>
 <blockquote>
 <div><ol class="arabic simple" start="3">
-<li>The maximum allowed time window <code class="docutils literal notranslate"><span class="pre">tw_max</span></code></li>
-<li>The maximum number of photons per time windows <code class="docutils literal notranslate"><span class="pre">n_ph_max</span></code></li>
+<li><p>The maximum allowed time window <code class="docutils literal notranslate"><span class="pre">tw_max</span></code></p></li>
+<li><p>The maximum number of photons per time windows <code class="docutils literal notranslate"><span class="pre">n_ph_max</span></code></p></li>
 </ol>
 </div></blockquote>
 <p>The the parameters of the C function and the function header are shown below
@@ -103,11 +98,11 @@ selection of the ranges besides the stream of time events provided by the parame
 <p>For a given TTTR object the functionality is provided by the TTTR object’s method <code class="docutils literal notranslate"><span class="pre">get_ranges_by_time_window</span></code>. A
 typical use case of this function is to select single molecule events confocal single-molecule FRET experiments as
 shown below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">p</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">mt</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
 <span class="n">tw_ranges</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_ranges_by_count_rate</span><span class="p">(</span><span class="mi">50000</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
@@ -120,9 +115,9 @@ shown below.</p>
 <span class="n">green_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">]))</span>
 <span class="n">red_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">]))</span>
 
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="n">p</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">green_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span>
 
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">red_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
@@ -132,15 +127,12 @@ shown below.</p>
 <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">red_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">histogram_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">sel</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
 
-<span class="n">p</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>(<a class="reference external" href="./plots/single_molecule_burst_selection.py">Source code</a>, <a class="reference external" href="./plots/single_molecule_burst_selection.png">png</a>, <a class="reference external" href="./plots/single_molecule_burst_selection.hires.png">hires.png</a>, <a class="reference external" href="./plots/single_molecule_burst_selection.pdf">pdf</a>)</p>
-<div class="figure">
-<img alt="_images/single_molecule_burst_selection.png" src="_images/single_molecule_burst_selection.png" />
-</div>
+<p>(<a class="reference external" href="./plots/single_molecule_burst_selection.py">Source code</a>)</p>
 <p>Above, for a donor and acceptor detection channel a histogram trace for is shown in green and red. In blue the
 range based selection is shown.</p>
 </div>
@@ -165,9 +157,12 @@ range based selection is shown.</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tttr_objects.html">TTTR objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr_objects.html">Anatomy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr_objects.html#create-tttr-objects">Create TTTR objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr_objects.html#images">Images</a></li>
 <li class="toctree-l1"><a class="reference internal" href="header_data.html">TTTR Header</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imaging.html">Imaging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 </ul>
@@ -184,17 +179,15 @@ range based selection is shown.</p>
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -211,7 +204,7 @@ range based selection is shown.</p>
       &copy;2019, Thomas-Otavio Peulen.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

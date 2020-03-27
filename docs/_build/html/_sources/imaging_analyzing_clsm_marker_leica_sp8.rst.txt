@@ -103,6 +103,7 @@ channel used to inject the special markers. Next, we inspect the micro time and 
 by the routing channel 15.
 
 .. code-block:: python
+
     m_ch_15 = m[np.where(c == 15)]
     p.plot(m_ch_15)
     p.show()
@@ -128,186 +129,19 @@ This means, that the micro time encodes the frame marker and the line start/stop
 .. note::
     The first frame does not have a frame start.
 
-Next, the macro time of the events where the routing channel number equals 15 is inspected.
+Next, the macro time of the events where the routing channel number equals 15 is inspected. As anticipated, the macro
+time increases on first glance continuously. On closer inspection, however, steps in the macro time are visible.
 
 .. image:: ./images/imaging_analyzing_clsm_marker_4.png
 
-As anticipated, the macro time increases on first glance continuously. On closer inspection, however, steps in the
-macro time are visible.
+To sum up, in the Leica SP8 PTU files
 
-.. image:: ./images/imaging_analyzing_clsm_marker_4_1.png
+    1. line and frame markers are treated as regular photons.
+    2. the line and frame markers are identified by the routing channel number 15
+    3. the type of a marker is encoded in the micro time of channels with a channel number 15
 
+.. note::
 
-# check micro times
-m_ch_1 = m[np.where(c == 1)]
-m_ch_2 = m[np.where(c == 2)]
-m_ch_3 = m[np.where(c == 3)]
-m_ch_15 = m[np.where(c == 15)]
-
-
-y = np.bincount(m_ch_15)
-p.plot(m_ch_15)
-p.show()
-# Channel 15 is no detection channel
-bc = np.bincount(m_ch_15.astype(np.int64))
-
-
-
-p.plot(t[np.where(c == 15)])
-p.show()
-
-p.plot(m[np.where(c == 15)])
-p.show()
-# it looks like ch15 occurs periodic
-# there are three "slow time" peaks and
-# many repeated oscilating times.
-# Supprisingly the macro time does not increase constantly.
-# It seems that Leica encodes the line start, line stop and the frame markers
-# in the marcro time of the channel 15. make bincounts to test how many
-# of the macro times are there
-## Maybe ther so something encoded for chanell 15, dtime, nsync
-
-index_15 = np.where(c == 15)[0]
-t_15 = t[index_15]
-m_15 = m[index_15]
-p.plot(t_15[np.where(m_15 == 2)] - t_15[np.where(m_15 == 1)][1:])
-p.show()
-
-p.plot(t_15[np.where(m_15 == 1)][:-1] - t_15[np.where(m_15 == 2)])
-p.show()
-## 1 - is stop 2 is start
-t_15_ranges = t_15.reshape(len(t_15)/2, 2)
-
-index_15_ranges = index_15.reshape(len(index_15)/2, 2) # these inces mark the lines
-
-
-'''
-content of t_15_ranges
-array([[         0,     314368],
-       [    314368,     628736],
-       [    628736,     943104],
-       ...,
-       [1286708224, 1286708224],
-       [1287022592, 1287022592],
-       [1287336960, 1287336960]], dtype=uint64)
-'''
-
-# seems like the enteries in the array come always as start-stop pairs
-# this means that the micro time just informs wether or not a new frame, line
-# begins and the ranges are always set by the photons in ch 15
-
-p.plot(m[index_15_ranges[:, 0]])
-p.plot(m[index_15_ranges[:, 1]])
-p.show()
-
-i15d = index_15_ranges[:, 1] - index_15_ranges[:, 0]
-p.plot(i15d)
-p.show()
-
-i15d = t[index_15_ranges[:, 1]] - t[index_15_ranges[:, 0]]
-p.plot(i15d)
-p.show()
-# The macro time saves the line line_durations
-
-
-i15d = m[index_15_ranges[1025]]
-p.plot(i15d)
-p.show()
-# The macro time saves the line line_durations
-
-
-# This looks like that there are only two images
-# The indices between the markers have to vary due to varying
-# number of photons in each line
-# Maybe the extra (non photon filled range contain other information?)
-
-
-# Conculsion
-# the bincounts if ch 15 show that likely
-# micro time == 1:  is a line stop (binbount 4096)
-# micro time == 2:  is a line start (bincount 4095)
-# micro time == 4: is a frame start (bincout 3)
-
-# In the file are overall 3 frame starts -> there are 4 frames
-# each frame has 1023 line starts -> 1024 lines per frame
-
-
-
-import tttrlib
-import pylab as p
-import numpy as np
-
-frame_marker = 4
-line_start_marker = 1
-line_stop_marker = 2
-# 2 seems not to be a stop marker time between start and stop
-# very irregular
-pixel_per_line = 1024
-event_type_marker = 15
-
-data = tttrlib.TTTR('./examples/Leica/11-2_z3.ptu', 'PTU')
-e = data.get_event_type()
-c = data.get_routing_channel()
-t = data.get_macro_time()
-m = data.get_micro_time()
-
-image = tttrlib.CLSMImage(data,
-                          frame_marker,
-                          line_start_marker,
-                          line_stop_marker,
-                          event_type_marker,
-                          pixel_per_line,
-                          1)
-
-frame = image.get_frames()[0]
-line_durations = np.array([line.get_duration() for line in frame.get_lines()])
-
-channels = (1, 2, 3)
-image.fill_pixels(data, channels)
-image_intensity = image.get_intensity_image()
-p.imshow(np.log(image_intensity.sum(axis=0)))
-p.show()
-
-# Does not give an nice image
-# is there some additional encoding?!
-
-# Probably 1 marks the line start
-# and 2 marks a region in the stream that encodes for
-# the laser scanning the position
-
-import tttrlib
-import pylab as p
-import numpy as np
-
-frame_marker = 4
-line_start_marker = 1
-line_stop_marker = 2
-# 2 seems not to be a stop marker time between start and stop
-# very irregular
-pixel_per_line = 1024
-event_type_marker = 15
-
-data = tttrlib.TTTR('./examples/Leica/11-2_z3.ptu', 'PTU')
-e = data.get_event_type()
-c = data.get_routing_channel()
-t = data.get_macro_time()
-m = data.get_micro_time()
-
-image = tttrlib.CLSMImage(data,
-                          frame_marker,
-                          line_start_marker,
-                          line_stop_marker,
-                          event_type_marker,
-                          pixel_per_line,
-                          1)
-
-frame = image.get_frames()[0]
-line_durations = np.array([line.get_duration() for line in frame.get_lines()])
-
-channels = (1,)
-image.fill_pixels(data, channels)
-image_intensity = image.get_intensity_image()
-p.imshow(np.log(image_intensity.sum(axis=0)))
-p.show()
-
-
+    Usually, the TTTR records utilize the event type to distinguish markers from photons. Here, Leica decided to use
+    the routing channel number to identify markers. When opening an image in ``tttrlib`` this special case is considered
+    by specifying the reading routine.

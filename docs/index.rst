@@ -29,6 +29,7 @@ Contents
    tttr_objects
    header_data
    applications
+   imaging
    glossary
    references
 

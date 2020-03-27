@@ -2,7 +2,7 @@ import tttrlib
 import numpy as np
 import pylab as p
 
-events = tttrlib.TTTR('../../data/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
+events = tttrlib.TTTR('../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
 # select special events
 e = events.get_event_type()
 c = events.get_routing_channel()

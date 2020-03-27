@@ -41,7 +41,6 @@ ax[0].semilogx(x, y)
 
 
 # Mask
-
 t = data.get_macro_time()
 mt = data.get_micro_time()
 

@@ -19,7 +19,6 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
    - FLIM image generation and analysis
 
 
-
 Contents
 --------
 
@@ -30,6 +29,7 @@ Contents
    tttr_objects
    header_data
    applications
+   imaging
    glossary
    references
 
@@ -37,7 +37,7 @@ Contents
 Indices and tables
 ------------------
 
-* `API <../../api/html/index.html>`_
+* `API <../api/html/index.html>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

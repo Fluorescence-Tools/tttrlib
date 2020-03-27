@@ -31,13 +31,33 @@ install:
 
 script:
   - conda install nose coverage
+  # create a link from nosetests in test to make sure
+  # that the correct nosetests is used
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
   - echo $PWD
   - nosetests --with-coverage test_*.py
   - cd ..
+  # Use Sphinx to make the html docs
+  - cd docs
+  # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
+  - conda install -y sphinx_bootstrap_theme sphinx sphinx_rtd_theme numpydoc sphinx-autodoc-typehints matplotlib=2.2.3 sphinxcontrib-bibtex recommonmark
+  - make html
+  # Tell GitHub not to use jekyll to compile the docs
+  - touch _build/html/.nojekyll
+  - cd ..
 
-## deploy
+# Tell Travis CI to copy the documentation to the gh-pages branch of
+# your GitHub repository.
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  keep-history: true
+  on:
+    branch: development
+  local_dir: docs/_build/html/
+
 after_success:
   - OS=$TRAVIS_OS_NAME-64
   - pip install codacy-coverage
