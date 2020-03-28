@@ -9,6 +9,7 @@ cmake-build-*
 playground
 temp
 *.egg-info
+docs/_build
 
 # Documentation and tools
 doc/_*
