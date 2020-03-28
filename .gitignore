@@ -8,6 +8,7 @@ CMakeLists.txt.user.*
 cmake-build-*
 playground
 temp
+*.egg-info
 
 # Documentation and tools
 doc/_*

@@ -38,11 +38,15 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
   - cd ..
-  # Use Sphinx to make the html docs
+  # Use Sphinx and doxygen to make the html docs
   - cd docs
   # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
   - conda config --add channels conda-forge
-  - conda install -y sphinx_bootstrap_theme sphinx sphinx_rtd_theme numpydoc sphinx-autodoc-typehints matplotlib=2.2.3 sphinxcontrib-bibtex recommonmark
+  - conda install -y sphinx_bootstrap_theme sphinx sphinx_rtd_theme numpydoc sphinx-autodoc-typehints matplotlib=2.2.3 sphinxcontrib-bibtex recommonmark numba doxygen
+  # Use doxygen to build the C++ API documentation.
+  # Here, the value in tttrlib.__version__ is passed to PROJECT_NUMBER in
+  # so that there is only a single version number to manage.
+  - (cat Doxyfile ; echo "PROJECT_NUMBER=$(python -c 'from __future__ import print_function; import tttrlib; print(tttrlib.__version__)')" ) | doxygen -
   - make html
   # Tell GitHub not to use jekyll to compile the docs
   - touch _build/html/.nojekyll
