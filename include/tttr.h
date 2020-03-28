@@ -28,6 +28,7 @@
 #include <map>
 #include <array>
 #include <memory>
+#include <stdlib.h>     /* calloc, exit, free */
 
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
@@ -40,6 +41,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
+#define VERSION                     "0.0.13"
 
 
 /*!
@@ -97,13 +99,13 @@ void selection_by_count_rate(
  *
  * @param output array of counts
  * @param n_output number of elements in @param output
- * @param time array of detection times
- * @param n_time number of elements in the @param time array
+ * @param input array of detection times
+ * @param n_input number of elements in the @param input array
  * @param time_window The size of the
  */
 void histogram_trace(
         int **output, int *n_output,
-        unsigned long long *time, int n_time,
+        unsigned long long *input, int n_input,
         int time_window
         );
 

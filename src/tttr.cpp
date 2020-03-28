@@ -624,22 +624,21 @@ unsigned int TTTR::get_number_of_tac_channels(){
 
 void histogram_trace(
         int **output, int *n_output,
-        unsigned long long *in, int n_in,
+        unsigned long long *input, int n_input,
         int time_window){
     int l, r;
-    unsigned long long t_max = in[n_in - 1];
+    unsigned long long t_max = input[n_input - 1];
 
     int n_bin = (int) (t_max / time_window);
 
     *n_output = n_bin;
-    *output = (int*) malloc(n_bin * sizeof(int));
-    memset(output, 0, n_bin * sizeof(int));
+    *output = (int*) calloc(n_bin, sizeof(int));
 
     l = 0; r = 0;
-    while(r < n_in){
+    while(r < n_input){
         r++;
-        int i_bin = int (in[l] / time_window);
-        if ((in[r] - in[l]) > time_window){
+        int i_bin = int (input[l] / time_window);
+        if ((input[r] - input[l]) > time_window){
             l = r;
         } else{
             (*output)[i_bin] += 1;
