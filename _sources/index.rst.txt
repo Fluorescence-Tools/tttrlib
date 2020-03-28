@@ -39,7 +39,7 @@ Contents
 Indices and tables
 ------------------
 
-* `API <../api/html/index.html>`_
+* `API <./api/index.html>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
