@@ -16,7 +16,7 @@ std\+::vector$<$ \mbox{\hyperlink{class_c_l_s_m_frame}{C\+L\+S\+M\+Frame}} $\ast
 \mbox{\Hypertarget{class_c_l_s_m_image_a92b36d5e5b8284619abcc75f0c1556ec}\label{class_c_l_s_m_image_a92b36d5e5b8284619abcc75f0c1556ec}} 
 void {\bfseries get\+\_\+intensity\+\_\+image} (unsigned int $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3)
 \item 
-void \mbox{\hyperlink{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}{get\+\_\+decay\+\_\+image}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, unsigned char $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3, int $\ast$dim4, int tac\+\_\+coarsening, bool stack\+\_\+frames)
+void \mbox{\hyperlink{class_c_l_s_m_image_a545c42649a406a624496ef8a978bf451}{get\+\_\+decay\+\_\+image}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, unsigned char $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int $\ast$dim3, int $\ast$dim4, int tac\+\_\+coarsening, bool stack\+\_\+frames=false)
 \item 
 void \mbox{\hyperlink{class_c_l_s_m_image_a9b149ca1fc77b4987a32879c7de8da02}{get\+\_\+decays}} (\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$tttr\+\_\+data, uint8\+\_\+t $\ast$selection, int d\+\_\+selection\+\_\+1, int d\+\_\+selection\+\_\+2, int d\+\_\+selection\+\_\+3, unsigned int $\ast$$\ast$out, int $\ast$dim1, int $\ast$dim2, int tac\+\_\+coarsening, bool stack\+\_\+frames)
 \item 
@@ -130,11 +130,11 @@ Fill the tttr\+\_\+indices of the pixels with the indices of the channels that a
 {\em channels} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}\label{class_c_l_s_m_image_aa148bce4ca38c2e66f4ba11def3cb6d1}} 
+\mbox{\Hypertarget{class_c_l_s_m_image_a545c42649a406a624496ef8a978bf451}\label{class_c_l_s_m_image_a545c42649a406a624496ef8a978bf451}} 
 \index{CLSMImage@{CLSMImage}!get\_decay\_image@{get\_decay\_image}}
 \index{get\_decay\_image@{get\_decay\_image}!CLSMImage@{CLSMImage}}
 \doxysubsubsection{\texorpdfstring{get\_decay\_image()}{get\_decay\_image()}}
-{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::get\+\_\+decay\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{unsigned char $\ast$$\ast$}]{out,  }\item[{int $\ast$}]{dim1,  }\item[{int $\ast$}]{dim2,  }\item[{int $\ast$}]{dim3,  }\item[{int $\ast$}]{dim4,  }\item[{int}]{tac\+\_\+coarsening,  }\item[{bool}]{stack\+\_\+frames }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void C\+L\+S\+M\+Image\+::get\+\_\+decay\+\_\+image (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{class_t_t_t_r}{T\+T\+TR}} $\ast$}]{tttr\+\_\+data,  }\item[{unsigned char $\ast$$\ast$}]{out,  }\item[{int $\ast$}]{dim1,  }\item[{int $\ast$}]{dim2,  }\item[{int $\ast$}]{dim3,  }\item[{int $\ast$}]{dim4,  }\item[{int}]{tac\+\_\+coarsening,  }\item[{bool}]{stack\+\_\+frames = {\ttfamily false} }\end{DoxyParamCaption})}
 
 Computes an image stack where the value of each pixel corresponds to a histogram of micro times in each pixel. The micro times can be coarsened by integer numbers.
 
@@ -245,4 +245,4 @@ Leica S\+P8
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-include/image.\+h\end{DoxyCompactItemize}
+/\+Users/tpeulen/development/fluorescence-\/tools/tttrlib/include/image.\+h\end{DoxyCompactItemize}

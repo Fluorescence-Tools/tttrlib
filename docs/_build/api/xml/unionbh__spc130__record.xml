@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="96" column="14" bodyfile="include/record_types.h" bodystart="96" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="106" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="106" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a075c2b819788e81673ca4cff0d6178a4" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -29,7 +29,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="98" column="18" bodyfile="include/record_types.h" bodystart="98" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="108" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="108" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1af162eb1cbbdd258a39b0e38535379468" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -43,7 +43,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="99" column="18" bodyfile="include/record_types.h" bodystart="99" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="109" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="109" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a800c5c692c57ec28f0cc3825294648f7" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -57,7 +57,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="100" column="18" bodyfile="include/record_types.h" bodystart="100" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="110" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="110" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a586dccbd8819b4fde88e8f8f13e3b606" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -71,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="101" column="18" bodyfile="include/record_types.h" bodystart="101" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="111" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="111" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a73c4c184b024a0d35d304f73546d01eb" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -85,7 +85,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="102" column="18" bodyfile="include/record_types.h" bodystart="102" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="112" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="112" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1adb14cc9419a2817f3bbc4310f2f2d8d6" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -99,7 +99,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="103" column="18" bodyfile="include/record_types.h" bodystart="103" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="113" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="113" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a3b8c5ff055bd5f2a6f2fe0149c088228" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -113,7 +113,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="104" column="18" bodyfile="include/record_types.h" bodystart="104" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="114" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="114" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionbh__spc130__record_1a11087b01c6601b62363fa3514279ca8f" prot="public" static="no" mutable="no">
         <type>struct bh_spc130_record::@6</type>
@@ -126,7 +126,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="105" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="115" column="10"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -134,7 +134,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/record_types.h" line="95" column="31" bodyfile="include/record_types.h" bodystart="95" bodyend="106"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="105" column="31" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="105" bodyend="116"/>
     <listofallmembers>
       <member refid="unionbh__spc130__record_1a800c5c692c57ec28f0cc3825294648f7" prot="public" virt="non-virtual"><scope>bh_spc130_record</scope><name>adc</name></member>
       <member refid="unionbh__spc130__record_1a7a8f722f2ffbab486c2f5176ee14acc6" prot="public" virt="non-virtual"><scope>bh_spc130_record</scope><name>allbits</name></member>

@@ -108,24 +108,31 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>(<a class="reference external" href="./plots/correlation_normal.py">Source code</a>)</p>
+<p>(<a class="reference external" href="./plots/correlation_normal.py">Source code</a>, <a class="reference external" href="./plots/correlation_normal.png">png</a>, <a class="reference external" href="./plots/correlation_normal.hires.png">hires.png</a>, <a class="reference external" href="./plots/correlation_normal.pdf">pdf</a>)</p>
+<div class="figure align-default">
+<img alt="_images/correlation_normal.png" src="_images/correlation_normal.png" />
+</div>
 </div>
 <div class="section" id="estimating-the-noise-of-the-correlation-curves">
 <h3>Estimating the noise of the correlation curves<a class="headerlink" href="#estimating-the-noise-of-the-correlation-curves" title="Permalink to this headline">¶</a></h3>
-<p>There are many approaches to calculate the noise in correlation functions (see: <a class="bibtex reference internal" href="references.html#wohland2001" id="id3">[WRV01]</a>, <a class="bibtex reference internal" href="references.html#qian1990" id="id4">[Qia90]</a>,
-<a class="bibtex reference internal" href="references.html#starchev2001" id="id5">[SRB01]</a>). An analytical calculation of the noise is not possible because it involves diverging integrals
-for the correlations decaying functions <a class="bibtex reference internal" href="references.html#wohland2001" id="id6">[WRV01]</a>. For TTTR data an analytical solution of the noise in
-the correlation is however not necessary, as the data contained in the photon stream can be split to yield a set
-of correlation functions that is used to yield an estimate for the expected correlation function and the associated
-noise by the mean and the standard deviation.</p>
+<p>There are many approaches to calculate the noise in correlation functions
+(see: <a class="bibtex reference internal" href="references.html#wohland2001" id="id3">[WRV01]</a>, <a class="bibtex reference internal" href="references.html#qian1990" id="id4">[Qia90]</a>, <a class="bibtex reference internal" href="references.html#starchev2001" id="id5">[SRB01]</a>). An
+analytical calculation of the noise is not possible because it involves diverging
+integrals for the correlations decaying functions <a class="bibtex reference internal" href="references.html#wohland2001" id="id6">[WRV01]</a>. For TTTR
+data an analytical solution of the noise in the correlation is however not
+necessary, as the data contained in the photon stream can be split to yield a set
+of correlation functions that is used to yield an estimate for the expected
+correlation function and the associated noise by the mean and the standard
+deviation.</p>
 <p>TODO:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>   <span class="kn">import</span> <span class="nn">tttrlib</span>
-
-<span class="n">The</span> <span class="n">data</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">the</span> <span class="n">correlator</span> <span class="ow">is</span> <span class="n">splitted</span> <span class="n">into</span> <span class="nd">@param</span> <span class="n">n_split</span> <span class="n">pieces</span><span class="o">.</span> <span class="n">The</span> <span class="n">individual</span> <span class="n">correlations</span>
-<span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">calculate</span> <span class="n">a</span> <span class="nb">set</span> <span class="n">of</span> <span class="n">correlation</span> <span class="n">curves</span><span class="o">.</span> <span class="n">In</span> <span class="n">subsequent</span> <span class="n">processing</span> <span class="n">steps</span><span class="p">,</span> <span class="n">the</span> <span class="nb">set</span> <span class="n">of</span> <span class="n">correlation</span>
-<span class="n">curves</span> <span class="n">can</span> <span class="n">be</span> <span class="n">used</span> <span class="n">to</span> <span class="n">estimate</span> <span class="n">the</span> <span class="n">the</span> <span class="n">mean</span> <span class="n">correlation</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">standard</span> <span class="n">deviation</span> <span class="n">of</span> <span class="n">the</span> <span class="n">correlation</span> <span class="n">curves</span><span class="o">.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
 </pre></div>
 </div>
+<p>The data passed to the correlator is splitted into &#64;param n_split pieces. The
+individual correlations are used to calculate a set of correlation curves. In
+subsequent processing steps, the set of correlation curves can be used to
+estimate the the mean correlation and the standard deviation of the correlation
+curves.</p>
 </div>
 <div class="section" id="count-rate-filer">
 <h3>Count rate filer<a class="headerlink" href="#count-rate-filer" title="Permalink to this headline">¶</a></h3>
@@ -201,7 +208,10 @@ noise by the mean and the standard deviation.</p>
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>(<a class="reference external" href="./plots/correlation_cr_filter.py">Source code</a>)</p>
+<p>(<a class="reference external" href="./plots/correlation_cr_filter.py">Source code</a>, <a class="reference external" href="./plots/correlation_cr_filter.png">png</a>, <a class="reference external" href="./plots/correlation_cr_filter.hires.png">hires.png</a>, <a class="reference external" href="./plots/correlation_cr_filter.pdf">pdf</a>)</p>
+<div class="figure align-default">
+<img alt="_images/correlation_cr_filter.png" src="_images/correlation_cr_filter.png" />
+</div>
 </div>
 <div class="section" id="tac-gating">
 <h3>TAC gating<a class="headerlink" href="#tac-gating" title="Permalink to this headline">¶</a></h3>
@@ -274,7 +284,10 @@ noise by the mean and the standard deviation.</p>
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>(<a class="reference external" href="./plots/correlation_gating.py">Source code</a>)</p>
+<p>(<a class="reference external" href="./plots/correlation_gating.py">Source code</a>, <a class="reference external" href="./plots/correlation_gating.png">png</a>, <a class="reference external" href="./plots/correlation_gating.hires.png">hires.png</a>, <a class="reference external" href="./plots/correlation_gating.pdf">pdf</a>)</p>
+<div class="figure align-default">
+<img alt="_images/correlation_gating.png" src="_images/correlation_gating.png" />
+</div>
 </div>
 <div class="section" id="full-and-fine-correlations">
 <h3>Full and fine correlations<a class="headerlink" href="#full-and-fine-correlations" title="Permalink to this headline">¶</a></h3>

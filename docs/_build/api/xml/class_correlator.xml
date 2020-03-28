@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="176" column="12" bodyfile="include/correlate.h" bodystart="176" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="176" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="176" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a877e0198b4f35fbba09a644cbd8512ec" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -29,7 +29,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="178" column="12" bodyfile="include/correlate.h" bodystart="178" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="178" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="178" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1acc1d0a563adeb3b2052b4aa97d0e34b9" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -43,7 +43,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="180" column="12" bodyfile="include/correlate.h" bodystart="180" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="180" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="180" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a7d15c22836a71df548fa88b032dcf7e6" prot="private" static="no" mutable="no">
         <type>unsigned long long *</type>
@@ -57,7 +57,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="183" column="24" bodyfile="include/correlate.h" bodystart="183" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="183" column="24" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="183" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a3fb1b77bda24d2bf98ab7ebd3b9e57be" prot="private" static="no" mutable="no">
         <type>double *</type>
@@ -71,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="185" column="12" bodyfile="include/correlate.h" bodystart="185" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="185" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="185" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a42b1b09eb4db85d7d45fb544d9d88af4" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -85,7 +85,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="187" column="12" bodyfile="include/correlate.h" bodystart="187" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="187" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="187" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a5495d6723fe016d970493427e7151ed8" prot="private" static="no" mutable="no">
         <type>unsigned long long *</type>
@@ -99,7 +99,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="190" column="25" bodyfile="include/correlate.h" bodystart="190" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="190" column="25" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="190" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a101d83ffbfa644abd0966e5bbc56a041" prot="private" static="no" mutable="no">
         <type>double *</type>
@@ -113,7 +113,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="192" column="12" bodyfile="include/correlate.h" bodystart="192" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="192" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="192" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1ac6f1e6940693d03b30e05c0fad89fab3" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -127,7 +127,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="194" column="12" bodyfile="include/correlate.h" bodystart="194" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="194" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="194" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1af080a24d77a83d5eb29a96d5abd2c0bb" prot="private" static="no" mutable="no">
         <type>std::vector&lt; unsigned long long &gt;</type>
@@ -141,7 +141,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="197" column="17" bodyfile="include/correlate.h" bodystart="197" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="197" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="197" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a06064028da44954fecece2440e4bf539" prot="private" static="no" mutable="no">
         <type>std::vector&lt; double &gt;</type>
@@ -155,7 +155,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="199" column="17" bodyfile="include/correlate.h" bodystart="199" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="199" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="199" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1acdc2af6099c9159523d3bbf96fd5b33b" prot="private" static="no" mutable="no">
         <type>std::vector&lt; unsigned long long &gt;</type>
@@ -169,7 +169,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="202" column="17" bodyfile="include/correlate.h" bodystart="202" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="202" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="202" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a73470b9f7bfdfd4f65670868b3be94b2" prot="private" static="no" mutable="no">
         <type>std::vector&lt; double &gt;</type>
@@ -183,7 +183,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="204" column="17" bodyfile="include/correlate.h" bodystart="204" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="204" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="204" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1ac0701b6ef118afd87e18053ca255eb83" prot="private" static="no" mutable="no">
         <type>uint64_t</type>
@@ -197,7 +197,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="207" column="14" bodyfile="include/correlate.h" bodystart="207" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="207" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="207" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1ade6bdb1d3f83a9d4e761e35218c8cff4" prot="private" static="no" mutable="no">
         <type>uint64_t</type>
@@ -211,7 +211,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="211" column="14" bodyfile="include/correlate.h" bodystart="211" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="211" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="211" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a0b7cd7892a39c676d0e426293c29a518" prot="private" static="no" mutable="no">
         <type>uint64_t</type>
@@ -225,7 +225,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="214" column="14" bodyfile="include/correlate.h" bodystart="214" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="214" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="214" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_correlator_1a1c54ab07f025f067318c0e769d6baeae" prot="private" static="no" mutable="no">
         <type>bool</type>
@@ -239,7 +239,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="218" column="10" bodyfile="include/correlate.h" bodystart="218" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="218" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="218" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="protected-func">
@@ -274,7 +274,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="231" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="231" column="10"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-func">
@@ -289,7 +289,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="236" column="5" bodyfile="include/correlate.h" bodystart="236" bodyend="240"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="236" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="236" bodyend="240"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a85102747d6ae6ff216218a001683b942" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -302,7 +302,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="241" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="241" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a8e96a0c2d5235e912965632b280da01b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -329,7 +329,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="248" column="10" bodyfile="include/correlate.h" bodystart="248" bodyend="251"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="248" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="248" bodyend="251"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a0240bc7c9704530dcd61cdd2713143b3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>size_t</type>
@@ -345,7 +345,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="257" column="12" bodyfile="include/correlate.h" bodystart="257" bodyend="259"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="257" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="257" bodyend="259"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1adbce9483839ba3985398176a5cf1822e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -362,7 +362,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="261" column="10" bodyfile="include/correlate.h" bodystart="261" bodyend="264"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="261" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="261" bodyend="264"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a0f11555de3ab1c568f2c849e849a513e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>size_t</type>
@@ -375,7 +375,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="266" column="12" bodyfile="include/correlate.h" bodystart="266" bodyend="268"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="266" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="266" bodyend="268"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a657815ec6b5c96624826bdbe0ec8d4d9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>size_t</type>
@@ -388,7 +388,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="270" column="12" bodyfile="include/correlate.h" bodystart="270" bodyend="272"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="270" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="270" bodyend="272"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1ac5dda2b00fa0d3faabe63e24aab451cb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -463,7 +463,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="282" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="282" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a277e6652097f81aa1870c4a04485ba41" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -503,7 +503,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="292" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="292" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1aecdb727bbdb02330f00f7b19564db448" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -543,7 +543,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="303" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="303" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a8ad9be08f71ef766292bf67145acba99" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -583,7 +583,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="315" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="315" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a1575020c5bc498208ad59e92731dd066" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -623,7 +623,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="327" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="327" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a57e67409c1784f6582d80ae72b642e5b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -734,7 +734,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="342" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="342" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a0d904b7fc2724287c646aad5909b8671" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -749,7 +749,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="357" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="357" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_correlator_1a5ed562f28f104690743a9c053b4ca1a9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -762,14 +762,14 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="359" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="359" column="10"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/correlate.h" line="171" column="17" bodyfile="include/correlate.h" bodystart="171" bodyend="361"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="171" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" bodystart="171" bodyend="361"/>
     <listofallmembers>
       <member refid="class_correlator_1a06064028da44954fecece2440e4bf539" prot="private" virt="non-virtual"><scope>Correlator</scope><name>corr</name></member>
       <member refid="class_correlator_1a73470b9f7bfdfd4f65670868b3be94b2" prot="private" virt="non-virtual"><scope>Correlator</scope><name>corr_normalized</name></member>

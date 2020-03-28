@@ -44,7 +44,7 @@
         <label>algorithm</label>
       </node>
       <node id="1">
-        <label>include/correlate.h</label>
+        <label>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h</label>
         <link refid="correlate_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
@@ -173,7 +173,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="70" column="6" declfile="include/correlate.h" declline="70" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="70" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" declline="70" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="correlate_8h_1a05e3bd27257b65b0d7ddb939bfe893f8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -238,7 +238,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="94" column="6" declfile="include/correlate.h" declline="94" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="94" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" declline="94" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="correlate_8h_1aee529d65974dcd19bc1bd9e88e53f528" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -462,7 +462,7 @@ The correlation algorithm combines approaches of the following papers:</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="141" column="6" declfile="include/correlate.h" declline="141" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="141" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" declline="141" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="correlate_8h_1a6dddd7ef2ed085b6788c321adc5457ca" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -515,7 +515,7 @@ The correlation algorithm combines approaches of the following papers:</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/correlate.h" line="165" column="6" declfile="include/correlate.h" declline="165" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" line="165" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h" declline="165" declcolumn="6"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -534,7 +534,7 @@ The correlation algorithm combines approaches of the following papers:</para>
     </detaileddescription>
     <programlisting>
 <codeline lineno="1"><highlight class="comment">/****************************************************************************</highlight></codeline>
-<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2019<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2020<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="3"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="4"><highlight class="comment"><sp/>*<sp/>This<sp/>file<sp/>is<sp/>part<sp/>of<sp/>the<sp/>library<sp/>tttrlib.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="5"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
@@ -694,6 +694,6 @@ The correlation algorithm combines approaches of the following papers:</para>
 <codeline lineno="364"><highlight class="normal"></highlight></codeline>
 <codeline lineno="365"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_CORRELATE_H</highlight></codeline>
     </programlisting>
-    <location file="include/correlate.h"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/correlate.h"/>
   </compounddef>
 </doxygen>

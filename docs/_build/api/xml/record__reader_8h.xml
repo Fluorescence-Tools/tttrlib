@@ -5,7 +5,7 @@
     <includes local="no">iostream</includes>
     <includes local="no">cstdint</includes>
     <includes refid="record__types_8h" local="yes">record_types.h</includes>
-    <includedby refid="tttr_8h" local="no">include/tttr.h</includedby>
+    <includedby refid="tttr_8h" local="no">/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h</includedby>
     <incdepgraph>
       <node id="3">
         <label>cstdint</label>
@@ -14,7 +14,7 @@
         <label>iostream</label>
       </node>
       <node id="1">
-        <label>include/record_reader.h</label>
+        <label>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h</label>
         <link refid="record__reader_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
@@ -32,17 +32,17 @@
     </incdepgraph>
     <invincdepgraph>
       <node id="3">
-        <label>include/image.h</label>
+        <label>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h</label>
         <link refid="image_8h_source"/>
       </node>
       <node id="1">
-        <label>include/record_reader.h</label>
+        <label>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h</label>
         <link refid="record__reader_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
       </node>
       <node id="2">
-        <label>include/tttr.h</label>
+        <label>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h</label>
         <link refid="tttr_8h_source"/>
         <childnode refid="3" relation="include">
         </childnode>
@@ -84,7 +84,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="31" column="6" declfile="include/record_reader.h" declline="31" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="31" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="31" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1aeb56e94061994cba32ba92308c1a6d29" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -121,7 +121,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="40" column="6" declfile="include/record_reader.h" declline="40" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="40" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="40" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1accc9659cd21fe76853878b72243423ab" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -158,7 +158,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="49" column="6" declfile="include/record_reader.h" declline="49" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="49" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="49" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1a546ff8086bff7209f68cac95a4c416a7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -195,7 +195,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="58" column="6" declfile="include/record_reader.h" declline="58" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="58" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="58" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1a7c83927ae75f0b31639440129b48ef2b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -232,7 +232,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="67" column="6" declfile="include/record_reader.h" declline="67" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="67" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="67" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1aab8b96a0d785b3f691a34d85d0c2da76" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -269,7 +269,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="76" column="6" declfile="include/record_reader.h" declline="76" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="76" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="76" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1ae3308f8b3837107a6171f6a86872c8e9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -306,7 +306,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="86" column="6" declfile="include/record_reader.h" declline="86" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="86" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="86" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1ad3ed538072a55bc91d73f45806c9cdd2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -343,7 +343,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="95" column="6" declfile="include/record_reader.h" declline="95" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="95" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="95" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="record__reader_8h_1a88dec77cba7f3785165d6774c8ec07a2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
@@ -380,7 +380,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_reader.h" line="104" column="6" declfile="include/record_reader.h" declline="104" declcolumn="6"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" line="104" column="6" declfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h" declline="104" declcolumn="6"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -389,7 +389,7 @@
     </detaileddescription>
     <programlisting>
 <codeline lineno="1"><highlight class="comment">/****************************************************************************</highlight></codeline>
-<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2019<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>Copyright<sp/>(C)<sp/>2020<sp/>by<sp/>Thomas-Otavio<sp/>Peulen<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="3"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="4"><highlight class="comment"><sp/>*<sp/>This<sp/>file<sp/>is<sp/>part<sp/>of<sp/>the<sp/>library<sp/>tttrlib.<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
 <codeline lineno="5"><highlight class="comment"><sp/>*<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>*</highlight></codeline>
@@ -502,6 +502,6 @@
 <codeline lineno="112"><highlight class="normal"></highlight></codeline>
 <codeline lineno="113"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/>//TTTRLIB_PQ_H</highlight></codeline>
     </programlisting>
-    <location file="include/record_reader.h"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_reader.h"/>
   </compounddef>
 </doxygen>

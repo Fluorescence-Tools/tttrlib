@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">tttrlib
-   &#160;<span id="projectnumber">0.0.11</span>
+   &#160;<span id="projectnumber">0.0.13</span>
    </div>
    <div id="projectbrief">A tttr library for single-molecule and imaging data</div>
   </td>
@@ -88,8 +88,8 @@ std::vector&lt; <a class="el" href="class_c_l_s_m_frame.html">CLSMFrame</a> * &g
 <tr class="memitem:a92b36d5e5b8284619abcc75f0c1556ec"><td class="memItemLeft" align="right" valign="top"><a id="a92b36d5e5b8284619abcc75f0c1556ec"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>get_intensity_image</b> (unsigned int **out, int *dim1, int *dim2, int *dim3)</td></tr>
 <tr class="separator:a92b36d5e5b8284619abcc75f0c1556ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa148bce4ca38c2e66f4ba11def3cb6d1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_l_s_m_image.html#aa148bce4ca38c2e66f4ba11def3cb6d1">get_decay_image</a> (<a class="el" href="class_t_t_t_r.html">TTTR</a> *tttr_data, unsigned char **out, int *dim1, int *dim2, int *dim3, int *dim4, int tac_coarsening, bool stack_frames)</td></tr>
-<tr class="separator:aa148bce4ca38c2e66f4ba11def3cb6d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a545c42649a406a624496ef8a978bf451"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_l_s_m_image.html#a545c42649a406a624496ef8a978bf451">get_decay_image</a> (<a class="el" href="class_t_t_t_r.html">TTTR</a> *tttr_data, unsigned char **out, int *dim1, int *dim2, int *dim3, int *dim4, int tac_coarsening, bool stack_frames=false)</td></tr>
+<tr class="separator:a545c42649a406a624496ef8a978bf451"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b149ca1fc77b4987a32879c7de8da02"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_l_s_m_image.html#a9b149ca1fc77b4987a32879c7de8da02">get_decays</a> (<a class="el" href="class_t_t_t_r.html">TTTR</a> *tttr_data, uint8_t *selection, int d_selection_1, int d_selection_2, int d_selection_3, unsigned int **out, int *dim1, int *dim2, int tac_coarsening, bool stack_frames)</td></tr>
 <tr class="separator:a9b149ca1fc77b4987a32879c7de8da02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0ecd7ac932ca2488b599a8bf4530241"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_c_l_s_m_image.html#ac0ecd7ac932ca2488b599a8bf4530241">get_mean_tac_image</a> (<a class="el" href="class_t_t_t_r.html">TTTR</a> *tttr_data, double **out, int *dim1, int *dim2, int *dim3, int n_ph_min, bool stack_frames=false)</td></tr>
@@ -291,8 +291,8 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa148bce4ca38c2e66f4ba11def3cb6d1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa148bce4ca38c2e66f4ba11def3cb6d1">&#9670;&nbsp;</a></span>get_decay_image()</h2>
+<a id="a545c42649a406a624496ef8a978bf451"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a545c42649a406a624496ef8a978bf451">&#9670;&nbsp;</a></span>get_decay_image()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -343,7 +343,7 @@ Protected Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>stack_frames</em>&#160;</td>
+          <td class="paramname"><em>stack_frames</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -624,7 +624,7 @@ Protected Member Functions</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/<a class="el" href="image_8h_source.html">image.h</a></li>
+<li>/Users/tpeulen/development/fluorescence-tools/tttrlib/include/<a class="el" href="image_8h_source.html">image.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

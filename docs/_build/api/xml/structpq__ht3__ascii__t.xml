@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="91" column="10" bodyfile="include/header.h" bodystart="91" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="91" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="91" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1ab0a74839197fdc3ac0bda27fbcb0cf0e" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -28,7 +28,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="92" column="10" bodyfile="include/header.h" bodystart="92" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="92" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="92" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1a11584e1305a54189223e2586c2345e32" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -41,7 +41,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="93" column="10" bodyfile="include/header.h" bodystart="93" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="93" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="93" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1a6fde2560bb26549cbf7444b0f5836260" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -54,7 +54,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="94" column="10" bodyfile="include/header.h" bodystart="94" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="94" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="94" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1a96b82e042cf5ccf55aadbea72518792e" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -67,7 +67,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="95" column="10" bodyfile="include/header.h" bodystart="95" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="95" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="95" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1ac24c4cf275f92ec8d3d7e44176082c81" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -80,7 +80,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="96" column="10" bodyfile="include/header.h" bodystart="96" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="96" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="96" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__ascii__t_1a0bcb4b7000a27419dbb012c8b5cf55d0" prot="public" static="no" mutable="no">
         <type>char</type>
@@ -93,7 +93,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="97" column="10" bodyfile="include/header.h" bodystart="97" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="97" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="97" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -101,7 +101,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/header.h" line="90" column="15" bodyfile="include/header.h" bodystart="90" bodyend="98"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="90" column="15" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="90" bodyend="98"/>
     <listofallmembers>
       <member refid="structpq__ht3__ascii__t_1a0bcb4b7000a27419dbb012c8b5cf55d0" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CommentField</name></member>
       <member refid="structpq__ht3__ascii__t_1a11584e1305a54189223e2586c2345e32" prot="public" virt="non-virtual"><scope>pq_ht3_ascii_t</scope><name>CreatorName</name></member>

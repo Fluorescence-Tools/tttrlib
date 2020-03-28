@@ -79,7 +79,7 @@
     <member refid="class_c_l_s_m_image_1a687d91cb51ea90e2533620011373a2a9" kind="function"><name>clear_pixels</name></member>
     <member refid="class_c_l_s_m_image_1aea9302e2ac4fe2d323b58fd1607a1131" kind="function"><name>get_frames</name></member>
     <member refid="class_c_l_s_m_image_1a92b36d5e5b8284619abcc75f0c1556ec" kind="function"><name>get_intensity_image</name></member>
-    <member refid="class_c_l_s_m_image_1aa148bce4ca38c2e66f4ba11def3cb6d1" kind="function"><name>get_decay_image</name></member>
+    <member refid="class_c_l_s_m_image_1a545c42649a406a624496ef8a978bf451" kind="function"><name>get_decay_image</name></member>
     <member refid="class_c_l_s_m_image_1a9b149ca1fc77b4987a32879c7de8da02" kind="function"><name>get_decays</name></member>
     <member refid="class_c_l_s_m_image_1ac0ecd7ac932ca2488b599a8bf4530241" kind="function"><name>get_mean_tac_image</name></member>
     <member refid="class_c_l_s_m_image_1ae3808dc0b1194defe3dc09db29f4508f" kind="function"><name>append</name></member>
@@ -107,20 +107,12 @@
   <compound refid="class_c_l_s_m_pixel" kind="class"><name>CLSMPixel</name>
     <member refid="class_c_l_s_m_pixel_1a1e4d674b52d52ae0d7249f764164c95a" kind="friend"><name>CLSMLine</name></member>
     <member refid="class_c_l_s_m_pixel_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" kind="friend"><name>CLSMImage</name></member>
-    <member refid="class_c_l_s_m_pixel_1aee98579e6332cf432843936f451f1a80" kind="variable"><name>tttr_indices</name></member>
+    <member refid="class_c_l_s_m_pixel_1ac3efed46a69e835ad17b924ca024729d" kind="variable"><name>tttr_indices</name></member>
     <member refid="class_c_l_s_m_pixel_1ad32bf1832c8b445f3a7fe0eff5000739" kind="variable"><name>filled</name></member>
-    <member refid="class_c_l_s_m_pixel_1a938f9c5b6d204fdae541e2af579daa4d" kind="function"><name>get_tttr_indices</name></member>
+    <member refid="class_c_l_s_m_pixel_1a9310f3052f758c3b76cb6eeb6d174020" kind="function"><name>get_tttr_indices</name></member>
     <member refid="class_c_l_s_m_pixel_1a1fd0a3531ebd8d786ec632eb054e5757" kind="function"><name>append</name></member>
     <member refid="class_c_l_s_m_pixel_1ab325778698ed7e07d1264e04cc3de065" kind="function"><name>CLSMPixel</name></member>
     <member refid="class_c_l_s_m_pixel_1abea32934b162680aeb3d9b3b610a905d" kind="function"><name>CLSMPixel</name></member>
-  </compound>
-  <compound refid="classsetup_1_1_c_make_build" kind="class"><name>setup::CMakeBuild</name>
-    <member refid="classsetup_1_1_c_make_build_1aaeaa47a0e82fe56564dd8cec58f772c9" kind="function"><name>run</name></member>
-    <member refid="classsetup_1_1_c_make_build_1a7b078d0cd6b68f830254e3d96a9e96b1" kind="function"><name>build_extension</name></member>
-  </compound>
-  <compound refid="classsetup_1_1_c_make_extension" kind="class"><name>setup::CMakeExtension</name>
-    <member refid="classsetup_1_1_c_make_extension_1a29a643870fbe57b4181a02fb4d57b9f7" kind="variable"><name>sourcedir</name></member>
-    <member refid="classsetup_1_1_c_make_extension_1a2e49eec9170175d7c21d338bad44c6aa" kind="function"><name>__init__</name></member>
   </compound>
   <compound refid="class_correlator" kind="class"><name>Correlator</name>
     <member refid="class_correlator_1aad38475c585d277e4472c36a46095df3" kind="variable"><name>n_casc</name></member>
@@ -176,24 +168,16 @@
     <member refid="class_header_1a035f03005e0534c058d61c04fa5e3c9e" kind="function"><name>~Header</name></member>
   </compound>
   <compound refid="class_histogram" kind="class"><name>Histogram</name>
-    <member refid="class_histogram_1a308c982aada919e938f2a235f015dfb1" kind="variable"><name>data</name></member>
-    <member refid="class_histogram_1a58bec751658a9ac01ed55ad6e924e229" kind="variable"><name>n_rows_data</name></member>
-    <member refid="class_histogram_1a63e36df19af18228fddb8b86aa41bf97" kind="variable"><name>n_cols_data</name></member>
-    <member refid="class_histogram_1acaed79290c1fec2e59914a60dd69c61a" kind="variable"><name>weights</name></member>
-    <member refid="class_histogram_1a28171ff0884bff27c22dfa805828ef67" kind="variable"><name>n_rows_weights</name></member>
-    <member refid="class_histogram_1a0a023fae3a47bcf8330f1a52be138657" kind="variable"><name>n_cols_weights</name></member>
     <member refid="class_histogram_1a1e484a993cf6e5a30a83502862eb6021" kind="variable"><name>axes</name></member>
     <member refid="class_histogram_1ad769c661be6a5aaa242fa7b7e9344657" kind="variable"><name>histogram</name></member>
     <member refid="class_histogram_1a69bd8fa1a2b7f2c53e109c7fad45fb97" kind="variable"><name>number_of_axis</name></member>
     <member refid="class_histogram_1aa390028b7e8a06918cfea6b30506d803" kind="variable"><name>n_total_bins</name></member>
     <member refid="class_histogram_1a7637302e53db8b91576304f663ecc932" kind="function"><name>getAxisDimensions</name></member>
-    <member refid="class_histogram_1aab5a07cfc09bfc0d504d58fbd8164ce3" kind="function"><name>update</name></member>
+    <member refid="class_histogram_1ac8b3289abaed2703f66123c349a906aa" kind="function"><name>update</name></member>
     <member refid="class_histogram_1ae74962acd836b01d1178b83d9aa99550" kind="function"><name>getHistogram</name></member>
     <member refid="class_histogram_1a3285fb8015194114c3fd8757c9c6f301" kind="function"><name>setAxis</name></member>
     <member refid="class_histogram_1abb5b7f6edba2b9a99b6c456c23383d87" kind="function"><name>setAxis</name></member>
     <member refid="class_histogram_1a7576b39b08cb2f9b7fc4c5414983ca56" kind="function"><name>getAxis</name></member>
-    <member refid="class_histogram_1a383443d35829da535f3c049b002928ca" kind="function"><name>setWeights</name></member>
-    <member refid="class_histogram_1a991af624b61ad77f0ecab2697565884b" kind="function"><name>setData</name></member>
     <member refid="class_histogram_1a28ba263b97aefe4da4c30acfe430bede" kind="function"><name>Histogram</name></member>
     <member refid="class_histogram_1aa7885c184150b162950bf75408dafb33" kind="function"><name>~Histogram</name></member>
   </compound>
@@ -203,7 +187,7 @@
     <member refid="class_histogram_axis_1a630c4b94dc2c1793996c6bb475ae5669" kind="variable"><name>end</name></member>
     <member refid="class_histogram_axis_1a4aff5d8122d7c66cc9d89a00c32f3f61" kind="variable"><name>n_bins</name></member>
     <member refid="class_histogram_axis_1afbb716b825ebacce80b35870b49afc87" kind="variable"><name>bin_width</name></member>
-    <member refid="class_histogram_axis_1afda16ddefbec433ace8a145c8debac1e" kind="variable"><name>bin_edges</name></member>
+    <member refid="class_histogram_axis_1ad0c080ea32eaf655ca114291c2fe12f1" kind="variable"><name>bin_edges</name></member>
     <member refid="class_histogram_axis_1a02881a3a4403717e28e62b0cb9673290" kind="variable"><name>axis_type</name></member>
     <member refid="class_histogram_axis_1ac2485496e52710e1fa95db5f437ee601" kind="function"><name>update</name></member>
     <member refid="class_histogram_axis_1a0a25652f07b17f678074233bf014a9fe" kind="function"><name>setAxisType</name></member>
@@ -345,13 +329,14 @@
   <compound refid="class_t_t_t_r" kind="class"><name>TTTR</name>
     <member refid="class_t_t_t_r_1abab405302dfd98d51ae1f4bf41acb020" kind="typedef"><name>processRecord_t</name></member>
     <member refid="class_t_t_t_r_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" kind="friend"><name>CLSMImage</name></member>
-    <member refid="class_t_t_t_r_1acd4cf4ad564875dd457724f9e376860f" kind="variable"><name>filename</name></member>
+    <member refid="class_t_t_t_r_1a4392d5cf18141e408ff44dfe4dfa62e3" kind="variable"><name>filename</name></member>
     <member refid="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8" kind="variable"><name>children</name></member>
     <member refid="class_t_t_t_r_1a61e222632812c94981c8fabeba0e112b" kind="variable"><name>header</name></member>
     <member refid="class_t_t_t_r_1abc7c44f533a9ef11094baae7498e5cd8" kind="variable"><name>overflow_counter</name></member>
-    <member refid="class_t_t_t_r_1adc682300566aceacd5b5cc1d28de1d18" kind="variable"><name>container_names</name></member>
+    <member refid="class_t_t_t_r_1a2726b108db1dc5da6e970767edf59abb" kind="variable"><name>container_names</name></member>
     <member refid="class_t_t_t_r_1a0a2c76b4330cf76f2ed378f1bdecb463" kind="variable"><name>processRecord_map</name></member>
     <member refid="class_t_t_t_r_1ab036315ae969ac96ddc9ff0e8da492a2" kind="variable"><name>tttr_container_type</name></member>
+    <member refid="class_t_t_t_r_1a0de899370e22f8154c95084e7160b2f8" kind="variable"><name>tttr_container_type_str</name></member>
     <member refid="class_t_t_t_r_1a4d9262b34b316c922e69b40844f07a77" kind="variable"><name>tttr_record_type</name></member>
     <member refid="class_t_t_t_r_1a3ec936c86b608f0d18f8d7423e3d5954" kind="variable"><name>bytes_per_record</name></member>
     <member refid="class_t_t_t_r_1ac47b30b4d7750f18d7435bdf10966328" kind="variable"><name>fp</name></member>
@@ -367,37 +352,38 @@
     <member refid="class_t_t_t_r_1a019c849293e3d3be29f5f6459bee6181" kind="variable"><name>n_records_in_file</name></member>
     <member refid="class_t_t_t_r_1a4cc37548f6564c05496d95ca1b25b2d4" kind="variable"><name>n_records_read</name></member>
     <member refid="class_t_t_t_r_1aabb647d22bb6cb17ff1b843c93b9de3a" kind="variable"><name>n_valid_events</name></member>
-    <member refid="class_t_t_t_r_1aebb3baed0d184e3f177a279e910bb24a" kind="function"><name>read_hdf_file</name></member>
+    <member refid="class_t_t_t_r_1a9180e849936419d7daa5ad15d4a93d64" kind="function"><name>read_hdf_file</name></member>
     <member refid="class_t_t_t_r_1aa8bb53fa708d3f054bcd27024d1589b1" kind="function"><name>find_used_routing_channels</name></member>
     <member refid="class_t_t_t_r_1aca21b423928f92dce134c2b98057cc0a" kind="function"><name>allocate_memory_for_records</name></member>
     <member refid="class_t_t_t_r_1af80300e1fdd7ba618dbb33853c832a22" kind="function"><name>deallocate_memory_of_records</name></member>
     <member refid="class_t_t_t_r_1a8eb7661d2dc6180a0f69c07810705f4f" kind="function"><name>read_records</name></member>
     <member refid="class_t_t_t_r_1a1b4d9a088a0898de13a964bd6aef02fa" kind="function"><name>read_records</name></member>
     <member refid="class_t_t_t_r_1a202a9bb9bc04ccbb056c1d73893b1c4e" kind="function"><name>read_records</name></member>
-    <member refid="class_t_t_t_r_1a499f299893269806ef42cca2227fd75b" kind="function"><name>read_file</name></member>
+    <member refid="class_t_t_t_r_1a7e04d512571e961e5443d2287da8cec8" kind="function"><name>read_file</name></member>
     <member refid="class_t_t_t_r_1a4a8f9c4d510819de9ec7a7151c10a05e" kind="function"><name>read_file</name></member>
-    <member refid="class_t_t_t_r_1adcf4f5c91d0ad1fb5116e96cb152b9c9" kind="function"><name>get_used_routing_channels</name></member>
-    <member refid="class_t_t_t_r_1abe71172a7c0339f09e336a0dcfb48e94" kind="function"><name>get_macro_time</name></member>
-    <member refid="class_t_t_t_r_1af68c9a5a7c3ec01a5097864b4d97975a" kind="function"><name>get_micro_time</name></member>
-    <member refid="class_t_t_t_r_1a4171e1f0e8a709aae25cedbdd66a2bfb" kind="function"><name>get_routing_channel</name></member>
-    <member refid="class_t_t_t_r_1a449e92c3f30e013991cfdd1449aea609" kind="function"><name>get_event_type</name></member>
+    <member refid="class_t_t_t_r_1aee219c4ebc4e3896f5dbd164fe55df53" kind="function"><name>get_used_routing_channels</name></member>
+    <member refid="class_t_t_t_r_1acd55be3c13bebe1b144b5335fcc3b941" kind="function"><name>get_macro_time</name></member>
+    <member refid="class_t_t_t_r_1a3355b2d7534bb8bd746c682f57b1035a" kind="function"><name>get_micro_time</name></member>
+    <member refid="class_t_t_t_r_1ae5ebc99b307b6071a68306653d3eab2a" kind="function"><name>get_routing_channel</name></member>
+    <member refid="class_t_t_t_r_1a351a2a20c6fdb2bc1f0ee344d3afc1f4" kind="function"><name>get_event_type</name></member>
     <member refid="class_t_t_t_r_1a436a3b536905651664cb7cfb3c3dc729" kind="function"><name>get_number_of_tac_channels</name></member>
     <member refid="class_t_t_t_r_1a500fa2f0fe263e7e309ed1c2be451114" kind="function"><name>get_n_valid_events</name></member>
+    <member refid="class_t_t_t_r_1a746481c484ca7b7a98c02da0bb99eebf" kind="function"><name>get_tttr_container_type</name></member>
     <member refid="class_t_t_t_r_1a665b2b758b544534e0978374879860a9" kind="function"><name>select</name></member>
     <member refid="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" kind="function"><name>TTTR</name></member>
-    <member refid="class_t_t_t_r_1af6cb99fa270ec32d7cd73211eb9a25eb" kind="function"><name>TTTR</name></member>
-    <member refid="class_t_t_t_r_1acb25daf91a93eb600520c211d739f829" kind="function"><name>TTTR</name></member>
-    <member refid="class_t_t_t_r_1a5ebe9e8b44de5824c4a21e0d78497aba" kind="function"><name>TTTR</name></member>
+    <member refid="class_t_t_t_r_1a6bd4217bf4d00d3841cfff5fcdd07295" kind="function"><name>TTTR</name></member>
+    <member refid="class_t_t_t_r_1a040a557b8ea06301b6658a0fea4a8434" kind="function"><name>TTTR</name></member>
+    <member refid="class_t_t_t_r_1af3d59c6c66cd75f0b0cd17306449a92d" kind="function"><name>TTTR</name></member>
     <member refid="class_t_t_t_r_1aac095c4c7b20a7f682b1b487c9bf9bcd" kind="function"><name>TTTR</name></member>
     <member refid="class_t_t_t_r_1a7b2baca8a4c3e0a4a8f067691d68e798" kind="function"><name>TTTR</name></member>
     <member refid="class_t_t_t_r_1ab5fdf04da2517b2cfbfcb279f9e9aee0" kind="function"><name>~TTTR</name></member>
-    <member refid="class_t_t_t_r_1a3d856d880c72ad9772de2a774066cced" kind="function"><name>get_filename</name></member>
-    <member refid="class_t_t_t_r_1a3f645cd41dcc69d08f0ab808ae3f39c9" kind="function"><name>get_selection_by_channel</name></member>
-    <member refid="class_t_t_t_r_1a7cc2447f565f7484b394e50b963e5e9f" kind="function"><name>get_selection_by_count_rate</name></member>
-    <member refid="class_t_t_t_r_1af63189ce123cc60c8c6dd316dcb53d12" kind="function"><name>get_ranges_by_count_rate</name></member>
+    <member refid="class_t_t_t_r_1a6c7c062ade6778ebeb4d899f7926276f" kind="function"><name>get_filename</name></member>
+    <member refid="class_t_t_t_r_1a2610ebd9ad3c1552b10e12bd9ecbd92c" kind="function"><name>get_selection_by_channel</name></member>
+    <member refid="class_t_t_t_r_1adc5dec021c1df2a5ef683fcff5ac83c1" kind="function"><name>get_selection_by_count_rate</name></member>
+    <member refid="class_t_t_t_r_1ac14af962fe4e49c7f01c277b9cec5054" kind="function"><name>get_ranges_by_count_rate</name></member>
     <member refid="class_t_t_t_r_1a7953fb4f0b1d7ada40d6ff19cec45672" kind="function"><name>get_header</name></member>
     <member refid="class_t_t_t_r_1a00b74138ed8a061e30a615dfff328960" kind="function"><name>get_n_events</name></member>
-    <member refid="class_t_t_t_r_1a85c50b6dba91824c7fc405162dcbd2c0" kind="function"><name>write_file</name></member>
+    <member refid="class_t_t_t_r_1a2311240a75e812b04acf2139d5eae498" kind="function"><name>write_file</name></member>
     <member refid="class_t_t_t_r_1a67543ddb26bd179461e4b52322883d6e" kind="function"><name>shift_macro_time</name></member>
   </compound>
   <compound refid="class_t_t_t_r_range" kind="class"><name>TTTRRange</name>
@@ -406,7 +392,7 @@
     <member refid="class_t_t_t_r_range_1a803b7d5419eb43fc935c9d8a2ecbe345" kind="variable"><name>start_time</name></member>
     <member refid="class_t_t_t_r_range_1a71827bd72a07057a4952846e7618588f" kind="variable"><name>stop_time</name></member>
     <member refid="class_t_t_t_r_range_1a052686e1349c5e8c8dcb471e024bc500" kind="function"><name>TTTRRange</name></member>
-    <member refid="class_t_t_t_r_range_1ab5181d34f60ae721cf30cf83d1ae532a" kind="function"><name>get_tttr_indices</name></member>
+    <member refid="class_t_t_t_r_range_1a655f6ec483a558c99c2d88fe0405fbdc" kind="function"><name>get_tttr_indices</name></member>
     <member refid="class_t_t_t_r_range_1afb72671ef1a0e60ac212f8b57eed1a9b" kind="function"><name>get_start_stop</name></member>
     <member refid="class_t_t_t_r_range_1a85d36a66c32d033d0ee5e7f08b222e24" kind="function"><name>get_start_stop_time</name></member>
     <member refid="class_t_t_t_r_range_1aabf4759d39e37d3ef18c6a5b8b75cdac" kind="function"><name>get_duration</name></member>
@@ -422,21 +408,6 @@
     <member refid="pda_8h_1ac9409faa9ab0ab98c2a659bcd5fa3071" kind="function"><name>poisson_0toN</name></member>
     <member refid="pda_8h_1ab0ca4731a72ebdcd2253c60f2de5747e" kind="function"><name>poisson_0toN_multi</name></member>
     <member refid="pda_8h_1a91097b4e0e8dc8a283430fc3ad3c9acf" kind="function"><name>polynom2_conv</name></member>
-  </compound>
-  <compound refid="namespacesetup" kind="namespace"><name>setup</name>
-    <member refid="setup_8py_1ab3a7a0638d76a01367c5bc3cc699447f" kind="variable"><name>name</name></member>
-    <member refid="setup_8py_1add074bfbabb8fa153de4bf5daf941063" kind="variable"><name>cwd</name></member>
-    <member refid="setup_8py_1a137d6286fb9c1355868a64b6bb41c1a9" kind="variable"><name>shell</name></member>
-    <member refid="setup_8py_1a8ed6f50a28bd6a8794f8e1153baa6de9" kind="variable"><name>license</name></member>
-    <member refid="setup_8py_1a3a57a4772d418a06835249cbade0d86a" kind="variable"><name>author</name></member>
-    <member refid="setup_8py_1a5b08034343aa2be607722a8b315f3625" kind="variable"><name>author_email</name></member>
-    <member refid="setup_8py_1a2aa722b36a933088812b50ea79b97a5c" kind="variable"><name>version</name></member>
-    <member refid="setup_8py_1a1bf56ea61d1e9865f316116dca2fbfea" kind="variable"><name>ext_modules</name></member>
-    <member refid="setup_8py_1aa128e9ba397a7b5b03bb964c4d14268d" kind="variable"><name>cmdclass</name></member>
-    <member refid="setup_8py_1abead4f26b530856f858f0d44c7cf2588" kind="variable"><name>install_requires</name></member>
-    <member refid="setup_8py_1a2367b2951475f615fb78d9b5d9d07e50" kind="variable"><name>setup_requires</name></member>
-    <member refid="setup_8py_1a13510753661cb74083a0c664db11dde9" kind="variable"><name>zip_safe</name></member>
-    <member refid="setup_8py_1abe96a9c38c1c61f9f0fdb002c482f785" kind="variable"><name>classifiers</name></member>
   </compound>
   <compound refid="correlate_8h" kind="file"><name>correlate.h</name>
     <member refid="correlate_8h_1aa27083c37224da35557ece07b1166b8e" kind="function"><name>normalize_correlation</name></member>
@@ -530,19 +501,18 @@
     <member refid="tttr_8h_1a4997b4a679c7559512d50124247a298b" kind="define"><name>TTTRLIB_TTTR_H</name></member>
     <member refid="tttr_8h_1a90037217092a28ba55d4a120857c9920" kind="define"><name>RECORD_PHOTON</name></member>
     <member refid="tttr_8h_1aa545ae3a9b7315dc05d654f72394873b" kind="define"><name>RECORD_MARKER</name></member>
+    <member refid="tttr_8h_1a1c6d5de492ac61ad29aec7aa9a436bbf" kind="define"><name>VERSION</name></member>
     <member refid="tttr_8h_1a6c15277959ee2b85385cdf0b3dced0cd" kind="function"><name>determine_number_of_records_by_file_size</name></member>
-    <member refid="tttr_8h_1a5d1d5e79efb27b271b26b6602dcafc11" kind="function"><name>selection_by_count_rate</name></member>
-    <member refid="tttr_8h_1a0f3b9d4c9a9f5b2acc5b075f5c10bb11" kind="function"><name>histogram_trace</name></member>
+    <member refid="tttr_8h_1a8a47753da9ccdfac8e89e5d0a8acefdb" kind="function"><name>selection_by_count_rate</name></member>
+    <member refid="tttr_8h_1a74f3aa124ba664fb2e9b843c3f7006ae" kind="function"><name>histogram_trace</name></member>
     <member refid="tttr_8h_1a1407532c07ea37bb757ae0af51994667" kind="function"><name>get_ranges_channel</name></member>
-    <member refid="tttr_8h_1a5419a52ba53c456231f726ea58f3db56" kind="function"><name>selection_by_channels</name></member>
+    <member refid="tttr_8h_1ad5614fb67fe9fe21fa32b36af96bcb58" kind="function"><name>selection_by_channels</name></member>
     <member refid="tttr_8h_1a8a796064eedb4b1bac8022ec564fa830" kind="function"><name>get_array</name></member>
     <member refid="tttr_8h_1a29a064b529ef928e6756923dfc877226" kind="function"><name>ranges_by_time_window</name></member>
   </compound>
   <compound refid="_r_e_a_d_m_e_8md" kind="file"><name>README.md</name>
   </compound>
-  <compound refid="setup_8py" kind="file"><name>setup.py</name>
-  </compound>
-  <compound refid="dir_d44c64559bbebec7f509842c48db8b23" kind="dir"><name>include</name>
+  <compound refid="dir_d44c64559bbebec7f509842c48db8b23" kind="dir"><name>/Users/tpeulen/development/fluorescence-tools/tttrlib/include</name>
   </compound>
   <compound refid="indexpage" kind="page"><name>index</name>
   </compound>

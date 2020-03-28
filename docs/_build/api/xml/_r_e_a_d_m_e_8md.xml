@@ -98,7 +98,7 @@
 <codeline><highlight class="normal">In<sp/>an<sp/>[anaconda](https://www.anaconda.com/)<sp/>environment<sp/>the<sp/>library<sp/>can<sp/></highlight></codeline>
 <codeline><highlight class="normal">be<sp/>installed<sp/>by<sp/>the<sp/>following<sp/>command:<sp/></highlight></codeline>
 <codeline><highlight class="normal">```console</highlight></codeline>
-<codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>fluorescence-tools<sp/>tttrlib</highlight></codeline>
+<codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>tpeulen<sp/>tttrlib</highlight></codeline>
 <codeline><highlight class="normal">```</highlight></codeline>
 <codeline></codeline>
 <codeline><highlight class="normal">For<sp/>most<sp/>users<sp/>the<sp/>later<sp/>approach<sp/>is<sp/>recommended.<sp/>Currently,<sp/>pre-compiled<sp/></highlight></codeline>
@@ -125,6 +125,6 @@
 <codeline></codeline>
 <codeline><highlight class="normal">[3]:<sp/>docs/_build/html/_images/imaging_tutorial.png<sp/>&quot;tttrlib<sp/>FLIM&quot;</highlight></codeline>
     </programlisting>
-    <location file="README.md"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/README.md"/>
   </compounddef>
 </doxygen>

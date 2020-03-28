@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="34" column="14" bodyfile="include/record_types.h" bodystart="34" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="44" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="44" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionph__ph__t2__record_1a52c2edcca4902075e9e06afd15d087af" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -29,7 +29,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="36" column="18" bodyfile="include/record_types.h" bodystart="36" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="46" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="46" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionph__ph__t2__record_1af76ccc9d950f5c4b2de3920fe2f0ac9f" prot="public" static="no" mutable="no">
         <type>unsigned</type>
@@ -43,7 +43,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="37" column="18" bodyfile="include/record_types.h" bodystart="37" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="47" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="47" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="unionph__ph__t2__record_1a35b47a885391216fb04f4a7710463030" prot="public" static="no" mutable="no">
         <type>struct ph_ph_t2_record::@2</type>
@@ -56,7 +56,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/record_types.h" line="38" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="48" column="10"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -64,7 +64,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/record_types.h" line="33" column="30" bodyfile="include/record_types.h" bodystart="33" bodyend="40"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" line="43" column="30" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/record_types.h" bodystart="43" bodyend="50"/>
     <listofallmembers>
       <member refid="unionph__ph__t2__record_1a7d8d9e76038b7ff6fdb005352fd0ebb2" prot="public" virt="non-virtual"><scope>ph_ph_t2_record</scope><name>allbits</name></member>
       <member refid="unionph__ph__t2__record_1a35b47a885391216fb04f4a7710463030" prot="public" virt="non-virtual"><scope>ph_ph_t2_record</scope><name>bits</name></member>

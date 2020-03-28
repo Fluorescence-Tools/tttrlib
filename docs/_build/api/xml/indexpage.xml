@@ -93,7 +93,7 @@
 <codeline><highlight class="normal">cd<sp/>tttrlib</highlight></codeline>
 <codeline><highlight class="normal">sudo<sp/>python<sp/>setup.py<sp/>install</highlight></codeline>
 </programlisting></para>
-<para>In an <ulink url="https://www.anaconda.com/">anaconda</ulink> environment the library can be installed by the following command: <programlisting filename=".console"><codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>fluorescence-tools<sp/>tttrlib</highlight></codeline>
+<para>In an <ulink url="https://www.anaconda.com/">anaconda</ulink> environment the library can be installed by the following command: <programlisting filename=".console"><codeline><highlight class="normal">conda<sp/>install<sp/>-c<sp/>tpeulen<sp/>tttrlib</highlight></codeline>
 </programlisting></para>
 <para>For most users the later approach is recommended. Currently, pre-compiled packages for the anaconda distribution system are available for:</para>
 <para><itemizedlist>

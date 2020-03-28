@@ -28,7 +28,9 @@ Contents
    installation
    tttr_objects
    header_data
-   applications
+   histograms
+   correlation
+   single_molecule
    imaging
    glossary
    references

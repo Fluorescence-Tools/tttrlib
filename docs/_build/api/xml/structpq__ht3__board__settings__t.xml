@@ -14,7 +14,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="147" column="13" bodyfile="include/header.h" bodystart="147" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="147" column="13" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="147" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__board__settings__t_1af106b3dcfe836a2df68033929c7c0d27" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -27,7 +27,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="148" column="13" bodyfile="include/header.h" bodystart="148" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="148" column="13" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="148" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__board__settings__t_1a6825d115d96985ab64f39aca3162466c" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -40,7 +40,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="149" column="13" bodyfile="include/header.h" bodystart="149" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="149" column="13" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="149" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structpq__ht3__board__settings__t_1a8101b4213a3f2ed58c39bf11a429399f" prot="public" static="no" mutable="no">
         <type>int32_t</type>
@@ -53,14 +53,14 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/header.h" line="150" column="13" bodyfile="include/header.h" bodystart="150" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="150" column="13" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="150" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/header.h" line="146" column="16" bodyfile="include/header.h" bodystart="146" bodyend="151"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" line="146" column="16" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/header.h" bodystart="146" bodyend="151"/>
     <listofallmembers>
       <member refid="structpq__ht3__board__settings__t_1a7f3eda5eebde8ff61dc9eabd187dc359" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>BoardSerial</name></member>
       <member refid="structpq__ht3__board__settings__t_1a6825d115d96985ab64f39aca3162466c" prot="public" virt="non-virtual"><scope>pq_ht3_board_settings_t</scope><name>CFDZeroCross</name></member>

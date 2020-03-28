@@ -15,7 +15,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="52" column="5" bodyfile="include/image.h" bodystart="52" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="61" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="61" bodyend="-1"/>
       </memberdef>
       <memberdef kind="friend" id="class_c_l_s_m_line_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>friend class</type>
@@ -28,7 +28,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="53" column="5" bodyfile="include/image.h" bodystart="53" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="62" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="62" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="private-attrib">
@@ -43,7 +43,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="56" column="17" bodyfile="include/image.h" bodystart="56" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="65" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="65" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-attrib">
@@ -58,7 +58,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="59" column="18" bodyfile="include/image.h" bodystart="59" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="68" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="68" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_c_l_s_m_line_1a4ea075a1b2269a5409c7b681f1a682b6" prot="public" static="no" mutable="no">
         <type>unsigned int</type>
@@ -71,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="60" column="18" bodyfile="include/image.h" bodystart="60" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="69" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="69" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-func">
@@ -86,7 +86,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="62" column="17" bodyfile="include/image.h" bodystart="62" bodyend="64"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="71" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="71" bodyend="73"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1a97aa1b50668c954e62c547d81b484820" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>unsigned long long</type>
@@ -99,7 +99,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="66" column="24" bodyfile="include/image.h" bodystart="66" bodyend="68"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="75" column="24" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="75" bodyend="77"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1a6e33732781ed8134bef6501afc4e4da1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -112,7 +112,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="70" column="5" bodyfile="include/image.h" bodystart="70" bodyend="71"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="79" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="79" bodyend="80"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1a6a19274622b3608d800d09bc0330d840" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -125,7 +125,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="73" column="5" bodyfile="include/image.h" bodystart="73" bodyend="77"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="82" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="82" bodyend="86"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1aa02716ca9390aac0dc8d1a388808c1b0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -147,7 +147,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="79" column="5" bodyfile="include/image.h" bodystart="79" bodyend="95"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="88" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="88" bodyend="104"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1ae146c12226d64791df46ee07185f7a70" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -164,7 +164,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="97" column="5" bodyfile="include/image.h" bodystart="97" bodyend="101"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="106" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="106" bodyend="110"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1acf35216e71f36f2509213051e35dfbc4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -185,7 +185,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="103" column="5" bodyfile="include/image.h" bodystart="103" bodyend="113"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="112" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="112" bodyend="122"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1a1918df9839519738383f97da2d313fe0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -202,7 +202,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="115" column="10" bodyfile="include/image.h" bodystart="115" bodyend="119"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="124" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="124" bodyend="128"/>
       </memberdef>
       <memberdef kind="function" id="class_c_l_s_m_line_1a1540fd01eec0e2a3814cd32b6383cc1c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type><ref refid="class_c_l_s_m_pixel" kindref="compound">CLSMPixel</ref> *</type>
@@ -219,7 +219,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/image.h" line="121" column="15" bodyfile="include/image.h" bodystart="121" bodyend="123"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="130" column="15" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="130" bodyend="132"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -250,7 +250,7 @@
         <link refid="class_t_t_t_r_range"/>
       </node>
     </collaborationgraph>
-    <location file="include/image.h" line="50" column="32" bodyfile="include/image.h" bodystart="50" bodyend="125"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" line="59" column="32" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/image.h" bodystart="59" bodyend="134"/>
     <listofallmembers>
       <member refid="class_c_l_s_m_line_1a1918df9839519738383f97da2d313fe0" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>append</name></member>
       <member refid="class_c_l_s_m_line_1ac517b687bf3de6e76c3422bc2875e470" prot="private" virt="non-virtual"><scope>CLSMLine</scope><name>CLSMFrame</name></member>
@@ -264,7 +264,7 @@
       <member refid="class_c_l_s_m_line_1aaefb5b076e2f106c3c481315d78aab5c" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>get_pixels</name></member>
       <member refid="class_t_t_t_r_range_1afb72671ef1a0e60ac212f8b57eed1a9b" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>get_start_stop</name></member>
       <member refid="class_t_t_t_r_range_1a85d36a66c32d033d0ee5e7f08b222e24" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>get_start_stop_time</name></member>
-      <member refid="class_t_t_t_r_range_1ab5181d34f60ae721cf30cf83d1ae532a" prot="public" virt="virtual"><scope>CLSMLine</scope><name>get_tttr_indices</name></member>
+      <member refid="class_t_t_t_r_range_1a655f6ec483a558c99c2d88fe0405fbdc" prot="public" virt="virtual"><scope>CLSMLine</scope><name>get_tttr_indices</name></member>
       <member refid="class_c_l_s_m_line_1ad530d8d1bfc16d266f3c4d5bf7f773ee" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>n_pixel</name></member>
       <member refid="class_c_l_s_m_line_1a1540fd01eec0e2a3814cd32b6383cc1c" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>operator[]</name></member>
       <member refid="class_c_l_s_m_line_1a4ea075a1b2269a5409c7b681f1a682b6" prot="public" virt="non-virtual"><scope>CLSMLine</scope><name>pixel_duration</name></member>

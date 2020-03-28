@@ -233,10 +233,3 @@ Ranges by count rate
 The function :py:function:``get_ranges_by_count_rate``
 
 
-Images
-------
-
-
-
-.. code-block:: python
-

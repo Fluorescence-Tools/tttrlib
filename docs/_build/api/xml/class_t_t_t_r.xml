@@ -14,7 +14,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="268" column="13" bodyfile="include/tttr.h" bodystart="268" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="272" column="13" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="272" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="friend">
@@ -29,13 +29,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="246" column="5" bodyfile="include/tttr.h" bodystart="246" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="257" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="257" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="private-attrib">
-      <memberdef kind="variable" id="class_t_t_t_r_1acd4cf4ad564875dd457724f9e376860f" prot="private" static="no" mutable="no">
-        <type>char *</type>
-        <definition>char* TTTR::filename</definition>
+      <memberdef kind="variable" id="class_t_t_t_r_1a4392d5cf18141e408ff44dfe4dfa62e3" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string TTTR::filename</definition>
         <argsstring></argsstring>
         <name>filename</name>
         <briefdescription>
@@ -45,7 +45,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="250" column="10" bodyfile="include/tttr.h" bodystart="250" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="261" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="261" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8" prot="private" static="no" mutable="no">
         <type>std::vector&lt; <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> * &gt;</type>
@@ -58,7 +58,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="252" column="17" bodyfile="include/tttr.h" bodystart="252" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="263" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="263" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a61e222632812c94981c8fabeba0e112b" prot="private" static="no" mutable="no">
         <type><ref refid="class_header" kindref="compound">Header</ref> *</type>
@@ -71,7 +71,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="254" column="12" bodyfile="include/tttr.h" bodystart="254" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="265" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="265" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1abc7c44f533a9ef11094baae7498e5cd8" prot="private" static="no" mutable="no">
         <type>uint64_t</type>
@@ -84,21 +84,13 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="256" column="14" bodyfile="include/tttr.h" bodystart="256" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="267" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="267" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="class_t_t_t_r_1adc682300566aceacd5b5cc1d28de1d18" prot="private" static="no" mutable="no">
-        <type>std::map&lt; std::string, int &gt;</type>
-        <definition>std::map&lt;std::string, int&gt; TTTR::container_names</definition>
+      <memberdef kind="variable" id="class_t_t_t_r_1a2726b108db1dc5da6e970767edf59abb" prot="private" static="no" mutable="no">
+        <type>boost::bimap&lt; std::string, int &gt;</type>
+        <definition>boost::bimap&lt;std::string, int&gt; TTTR::container_names</definition>
         <argsstring></argsstring>
         <name>container_names</name>
-        <initializer>= {
-            {std::string(&quot;PTU&quot;), 0},
-            {std::string(&quot;HT3&quot;), 1},
-            {std::string(&quot;SPC-130&quot;), 2},
-            {std::string(&quot;SPC-600_256&quot;), 3},
-            {std::string(&quot;SPC-600_4096&quot;), 4},
-            {std::string(&quot;PHOTON-HDF5&quot;), 5}
-    }</initializer>
         <briefdescription>
 <para>map to translates string container types to int container types </para>
         </briefdescription>
@@ -106,7 +98,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="259" column="14" bodyfile="include/tttr.h" bodystart="259" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="270" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="270" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a0a2c76b4330cf76f2ed378f1bdecb463" prot="private" static="no" mutable="no">
         <type>std::map&lt; int, processRecord_t &gt;</type>
@@ -130,7 +122,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="277" column="14" bodyfile="include/tttr.h" bodystart="277" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="281" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="281" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1ab036315ae969ac96ddc9ff0e8da492a2" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -155,7 +147,20 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="304" column="9" bodyfile="include/tttr.h" bodystart="304" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="308" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="308" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="class_t_t_t_r_1a0de899370e22f8154c95084e7160b2f8" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string TTTR::tttr_container_type_str</definition>
+        <argsstring></argsstring>
+        <name>tttr_container_type_str</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="309" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="309" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a4d9262b34b316c922e69b40844f07a77" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -168,7 +173,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="305" column="9" bodyfile="include/tttr.h" bodystart="305" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="310" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="310" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a3ec936c86b608f0d18f8d7423e3d5954" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -182,7 +187,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="308" column="12" bodyfile="include/tttr.h" bodystart="308" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="313" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="313" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1ac47b30b4d7750f18d7435bdf10966328" prot="private" static="no" mutable="no">
         <type>std::FILE *</type>
@@ -196,7 +201,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="311" column="15" bodyfile="include/tttr.h" bodystart="311" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="316" column="15" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="316" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a3a012195ce0864b2635d061fed08cac4" prot="private" static="no" mutable="no">
         <type>hid_t</type>
@@ -209,7 +214,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="312" column="16" bodyfile="include/tttr.h" bodystart="312" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="317" column="16" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="317" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1af671de6a8f16a86e22a713333a27acef" prot="private" static="no" mutable="no">
         <type>size_t</type>
@@ -223,7 +228,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="316" column="12" bodyfile="include/tttr.h" bodystart="316" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="321" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="321" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1aeca22c4f524dbb501b7545d397e8f782" prot="private" static="no" mutable="no">
         <type>uint64_t</type>
@@ -237,7 +242,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="319" column="14" bodyfile="include/tttr.h" bodystart="319" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="324" column="14" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="324" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a06ae021f9898f5444fb56276f499a796" prot="private" static="no" mutable="no">
         <type>bool(*</type>
@@ -247,13 +252,13 @@
         <briefdescription>
         </briefdescription>
         <detaileddescription>
-<para>The reading routine for a photon accepts as a first argumnet a pointer to a 64bit integer. The integer is processed by the reading routing and writes to the <simplesect kind="return"><para>The return value is true if the record is not an overflow record. </para>
+<para>The reading routine for a photon accepts as a first argument a pointer to a 64bit integer. The integer is processed by the reading routing and writes to the <simplesect kind="return"><para>The return value is true if the record is not an overflow record. </para>
 </simplesect>
 </para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="328" column="5" bodyfile="include/tttr.h" bodystart="328" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="333" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="333" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a3aaf6648f0a2dedd952e4fb4578daaa3" prot="private" static="no" mutable="no">
         <type>unsigned long long *</type>
@@ -267,7 +272,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="338" column="24" bodyfile="include/tttr.h" bodystart="338" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="343" column="24" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="343" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a4c87b0c107f094a992946158166d0c4e" prot="private" static="no" mutable="no">
         <type>unsigned int *</type>
@@ -281,7 +286,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="340" column="18" bodyfile="include/tttr.h" bodystart="340" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="345" column="18" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="345" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a96b63e819b171462056749a4dde87377" prot="private" static="no" mutable="no">
         <type>short *</type>
@@ -295,7 +300,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="342" column="11" bodyfile="include/tttr.h" bodystart="342" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="347" column="11" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="347" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a9b20252cc758f7d8a7610af6258b1f5d" prot="private" static="no" mutable="no">
         <type>short *</type>
@@ -309,7 +314,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="344" column="11" bodyfile="include/tttr.h" bodystart="344" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="349" column="11" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="349" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="protected-attrib">
@@ -325,7 +330,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="358" column="17" bodyfile="include/tttr.h" bodystart="358" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="363" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="363" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a019c849293e3d3be29f5f6459bee6181" prot="protected" static="no" mutable="no">
         <type>size_t</type>
@@ -339,7 +344,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="378" column="12" bodyfile="include/tttr.h" bodystart="378" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="383" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="383" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1a4cc37548f6564c05496d95ca1b25b2d4" prot="protected" static="no" mutable="no">
         <type>size_t</type>
@@ -353,7 +358,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="381" column="12" bodyfile="include/tttr.h" bodystart="381" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="386" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="386" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_t_t_t_r_1aabb647d22bb6cb17ff1b843c93b9de3a" prot="protected" static="no" mutable="no">
         <type>size_t</type>
@@ -367,17 +372,17 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="384" column="12" bodyfile="include/tttr.h" bodystart="384" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="389" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="389" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="private-func">
-      <memberdef kind="function" id="class_t_t_t_r_1aebb3baed0d184e3f177a279e910bb24a" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a9180e849936419d7daa5ad15d4a93d64" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>int</type>
         <definition>int TTTR::read_hdf_file</definition>
-        <argsstring>(char *fn)</argsstring>
+        <argsstring>(const char *fn)</argsstring>
         <name>read_hdf_file</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>fn</declname>
         </param>
         <briefdescription>
@@ -386,7 +391,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="346" column="9"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="351" column="9"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="protected-func">
@@ -402,7 +407,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="355" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="360" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1aca21b423928f92dce134c2b98057cc0a" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -430,7 +435,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="361" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="366" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1af80300e1fdd7ba618dbb33853c832a22" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -444,7 +449,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="364" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="369" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a8eb7661d2dc6180a0f69c07810705f4f" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -495,7 +500,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="373" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="378" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a1b4d9a088a0898de13a964bd6aef02fa" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -512,7 +517,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="374" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="379" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a202a9bb9bc04ccbb056c1d73893b1c4e" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -525,15 +530,15 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="375" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="380" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a499f299893269806ef42cca2227fd75b" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a7e04d512571e961e5443d2287da8cec8" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>int</type>
         <definition>int TTTR::read_file</definition>
-        <argsstring>(char *fn, int container_type)</argsstring>
+        <argsstring>(const char *fn, int container_type)</argsstring>
         <name>read_file</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>fn</declname>
         </param>
         <param>
@@ -567,7 +572,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="394" column="9"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="399" column="9"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a4a8f9c4d510819de9ec7a7151c10a05e" prot="protected" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>int</type>
@@ -580,22 +585,22 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="395" column="9"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="400" column="9"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-func">
-      <memberdef kind="function" id="class_t_t_t_r_1adcf4f5c91d0ad1fb5116e96cb152b9c9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1aee219c4ebc4e3896f5dbd164fe55df53" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_used_routing_channels</definition>
-        <argsstring>(short **out, int *n_out)</argsstring>
+        <argsstring>(short **output, int *n_output)</argsstring>
         <name>get_used_routing_channels</name>
         <param>
           <type>short **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <briefdescription>
         </briefdescription>
@@ -603,7 +608,7 @@
 <para>Returns an array containing the routing channel numbers that are contained (used) in the <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> file.</para>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the output array </para>
@@ -611,7 +616,7 @@
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the number of elements in the output array </para>
@@ -622,20 +627,20 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="407" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="412" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1abe71172a7c0339f09e336a0dcfb48e94" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1acd55be3c13bebe1b144b5335fcc3b941" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_macro_time</definition>
-        <argsstring>(unsigned long long **out, int *n_out)</argsstring>
+        <argsstring>(unsigned long long **output, int *n_output)</argsstring>
         <name>get_macro_time</name>
         <param>
           <type>unsigned long long **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <briefdescription>
         </briefdescription>
@@ -643,7 +648,7 @@
 <para>Returns an array containing the macro times of the valid <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> events.</para>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the output array </para>
@@ -651,7 +656,7 @@
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the number of elements in the output array </para>
@@ -662,20 +667,20 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="416" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="421" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1af68c9a5a7c3ec01a5097864b4d97975a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a3355b2d7534bb8bd746c682f57b1035a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_micro_time</definition>
-        <argsstring>(unsigned int **out, int *n_out)</argsstring>
+        <argsstring>(unsigned int **output, int *n_output)</argsstring>
         <name>get_micro_time</name>
         <param>
           <type>unsigned int **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <briefdescription>
         </briefdescription>
@@ -683,7 +688,7 @@
 <para>Returns an array containing the micro times of the valid <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> events.</para>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the output array </para>
@@ -691,7 +696,7 @@
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the number of elements in the output array </para>
@@ -702,20 +707,20 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="425" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="430" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a4171e1f0e8a709aae25cedbdd66a2bfb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1ae5ebc99b307b6071a68306653d3eab2a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_routing_channel</definition>
-        <argsstring>(short **out, int *n_out)</argsstring>
+        <argsstring>(short **output, int *n_output)</argsstring>
         <name>get_routing_channel</name>
         <param>
           <type>short **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <briefdescription>
         </briefdescription>
@@ -723,7 +728,7 @@
 <para>Returns an array containing the routing channel numbers of the valid <ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> events.</para>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the output array </para>
@@ -731,7 +736,7 @@
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the number of elements in the output array </para>
@@ -742,27 +747,27 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="434" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="439" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a449e92c3f30e013991cfdd1449aea609" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a351a2a20c6fdb2bc1f0ee344d3afc1f4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_event_type</definition>
-        <argsstring>(short **out, int *n_out)</argsstring>
+        <argsstring>(short **output, int *n_output)</argsstring>
         <name>get_event_type</name>
         <param>
           <type>short **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <briefdescription>
         </briefdescription>
         <detaileddescription>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the output array </para>
@@ -770,7 +775,7 @@
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>Pointer to the number of elements in the output array </para>
@@ -781,7 +786,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="441" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="446" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a436a3b536905651664cb7cfb3c3dc729" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>unsigned int</type>
@@ -797,7 +802,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="447" column="18"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="452" column="18"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a500fa2f0fe263e7e309ed1c2be451114" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>int</type>
@@ -813,7 +818,23 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="453" column="9"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="458" column="9"/>
+      </memberdef>
+      <memberdef kind="function" id="class_t_t_t_r_1a746481c484ca7b7a98c02da0bb99eebf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string TTTR::get_tttr_container_type</definition>
+        <argsstring>()</argsstring>
+        <name>get_tttr_container_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para><simplesect kind="return"><para>the container type that was used to open the file </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="464" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="464" bodyend="466"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a665b2b758b544534e0978374879860a9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type><ref refid="class_t_t_t_r" kindref="compound">TTTR</ref> *</type>
@@ -834,7 +855,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="455" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="468" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -865,15 +886,15 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="468" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="481" column="5"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1af6cb99fa270ec32d7cd73211eb9a25eb" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a6bd4217bf4d00d3841cfff5fcdd07295" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
         <definition>TTTR::TTTR</definition>
-        <argsstring>(char *filename, int container_type, bool read_input)</argsstring>
+        <argsstring>(const char *filename, int container_type, bool read_input)</argsstring>
         <name>TTTR</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>filename</declname>
         </param>
         <param>
@@ -916,15 +937,15 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="477" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="490" column="5"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1acb25daf91a93eb600520c211d739f829" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a040a557b8ea06301b6658a0fea4a8434" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
         <definition>TTTR::TTTR</definition>
-        <argsstring>(char *filename, int container_type)</argsstring>
+        <argsstring>(const char *filename, int container_type)</argsstring>
         <name>TTTR</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>filename</declname>
         </param>
         <param>
@@ -955,15 +976,15 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="485" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="498" column="5"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a5ebe9e8b44de5824c4a21e0d78497aba" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1af3d59c6c66cd75f0b0cd17306449a92d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
         <definition>TTTR::TTTR</definition>
-        <argsstring>(char *filename, const char *container_type)</argsstring>
+        <argsstring>(const char *filename, const char *container_type)</argsstring>
         <name>TTTR</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>filename</declname>
         </param>
         <param>
@@ -994,7 +1015,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="493" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="506" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1aac095c4c7b20a7f682b1b487c9bf9bcd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -1023,7 +1044,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="497" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="510" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a7b2baca8a4c3e0a4a8f067691d68e798" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -1048,7 +1069,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="503" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="516" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1ab5fdf04da2517b2cfbfcb279f9e9aee0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -1062,11 +1083,11 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="510" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="523" column="5"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a3d856d880c72ad9772de2a774066cced" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
-        <type>char *</type>
-        <definition>char* TTTR::get_filename</definition>
+      <memberdef kind="function" id="class_t_t_t_r_1a6c7c062ade6778ebeb4d899f7926276f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string TTTR::get_filename</definition>
         <argsstring>()</argsstring>
         <name>get_filename</name>
         <briefdescription>
@@ -1079,35 +1100,35 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="517" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="530" column="17"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a3f645cd41dcc69d08f0ab808ae3f39c9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a2610ebd9ad3c1552b10e12bd9ecbd92c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_selection_by_channel</definition>
-        <argsstring>(long long **out, int *n_out, long long *in, int n_in)</argsstring>
+        <argsstring>(long long **output, int *n_output, long long *input, int n_input)</argsstring>
         <name>get_selection_by_channel</name>
         <param>
           <type>long long **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <param>
           <type>long long *</type>
-          <declname>in</declname>
+          <declname>input</declname>
         </param>
         <param>
           <type>int</type>
-          <declname>n_in</declname>
+          <declname>n_input</declname>
         </param>
         <briefdescription>
         </briefdescription>
         <detaileddescription>
 <para>Returns a vector containing indices of records that <parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>in</parametername>
+<parametername>input</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>a pointer to an array of int16_tchannel numbers that are used to select indices of photons </para>
@@ -1115,7 +1136,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_in</parametername>
+<parametername>n_input</parametername>
 </parameternamelist>
 <parameterdescription>
 <para>the length of the channel list. </para>
@@ -1126,20 +1147,20 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="525" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="538" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a7cc2447f565f7484b394e50b963e5e9f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1adc5dec021c1df2a5ef683fcff5ac83c1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_selection_by_count_rate</definition>
-        <argsstring>(long long **out, int *n_out, unsigned long tw, int n_ph_max)</argsstring>
+        <argsstring>(long long **output, int *n_output, unsigned long tw, int n_ph_max)</argsstring>
         <name>get_selection_by_count_rate</name>
         <param>
           <type>long long **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <param>
           <type>unsigned long</type>
@@ -1154,7 +1175,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         <detaileddescription>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
-<parametername>out</parametername>
+<parametername>output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para></para>
@@ -1162,7 +1183,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
 </parameteritem>
 <parameteritem>
 <parameternamelist>
-<parametername>n_out</parametername>
+<parametername>n_output</parametername>
 </parameternamelist>
 <parameterdescription>
 <para></para>
@@ -1189,20 +1210,20 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="537" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="550" column="10"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1af63189ce123cc60c8c6dd316dcb53d12" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1ac14af962fe4e49c7f01c277b9cec5054" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
         <definition>void TTTR::get_ranges_by_count_rate</definition>
-        <argsstring>(int **out, int *n_out, int tw_min, int tw_max, int n_ph_min, int n_ph_max)</argsstring>
+        <argsstring>(int **output, int *n_output, int tw_min, int tw_max, int n_ph_min, int n_ph_max)</argsstring>
         <name>get_ranges_by_count_rate</name>
         <param>
           <type>int **</type>
-          <declname>out</declname>
+          <declname>output</declname>
         </param>
         <param>
           <type>int *</type>
-          <declname>n_out</declname>
+          <declname>n_output</declname>
         </param>
         <param>
           <type>int</type>
@@ -1226,7 +1247,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="542" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="555" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a7953fb4f0b1d7ada40d6ff19cec45672" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type><ref refid="class_header" kindref="compound">Header</ref></type>
@@ -1240,7 +1261,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="549" column="12"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="562" column="12"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a00b74138ed8a061e30a615dfff328960" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>int</type>
@@ -1256,15 +1277,15 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="556" column="9"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="569" column="9"/>
       </memberdef>
-      <memberdef kind="function" id="class_t_t_t_r_1a85c50b6dba91824c7fc405162dcbd2c0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+      <memberdef kind="function" id="class_t_t_t_r_1a2311240a75e812b04acf2139d5eae498" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>
         <definition>bool TTTR::write_file</definition>
-        <argsstring>(char *fn, const char *container_type)</argsstring>
+        <argsstring>(const char *fn, const char *container_type)</argsstring>
         <name>write_file</name>
         <param>
-          <type>char *</type>
+          <type>const char *</type>
           <declname>fn</declname>
         </param>
         <param>
@@ -1298,7 +1319,7 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="567" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="580" column="10"/>
       </memberdef>
       <memberdef kind="function" id="class_t_t_t_r_1a67543ddb26bd179461e4b52322883d6e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -1325,39 +1346,40 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/tttr.h" line="576" column="10"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="589" column="10"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/tttr.h" line="244" column="11" bodyfile="include/tttr.h" bodystart="244" bodyend="579"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" line="255" column="11" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/tttr.h" bodystart="255" bodyend="592"/>
     <listofallmembers>
       <member refid="class_t_t_t_r_1aca21b423928f92dce134c2b98057cc0a" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>allocate_memory_for_records</name></member>
       <member refid="class_t_t_t_r_1a3ec936c86b608f0d18f8d7423e3d5954" prot="private" virt="non-virtual"><scope>TTTR</scope><name>bytes_per_record</name></member>
       <member refid="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8" prot="private" virt="non-virtual"><scope>TTTR</scope><name>children</name></member>
       <member refid="class_t_t_t_r_1ac6b9ce89b40eddabb8d3d0f7ac26cd95" prot="private" virt="non-virtual"><scope>TTTR</scope><name>CLSMImage</name></member>
-      <member refid="class_t_t_t_r_1adc682300566aceacd5b5cc1d28de1d18" prot="private" virt="non-virtual"><scope>TTTR</scope><name>container_names</name></member>
+      <member refid="class_t_t_t_r_1a2726b108db1dc5da6e970767edf59abb" prot="private" virt="non-virtual"><scope>TTTR</scope><name>container_names</name></member>
       <member refid="class_t_t_t_r_1af80300e1fdd7ba618dbb33853c832a22" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>deallocate_memory_of_records</name></member>
       <member refid="class_t_t_t_r_1a9b20252cc758f7d8a7610af6258b1f5d" prot="private" virt="non-virtual"><scope>TTTR</scope><name>event_types</name></member>
-      <member refid="class_t_t_t_r_1acd4cf4ad564875dd457724f9e376860f" prot="private" virt="non-virtual"><scope>TTTR</scope><name>filename</name></member>
+      <member refid="class_t_t_t_r_1a4392d5cf18141e408ff44dfe4dfa62e3" prot="private" virt="non-virtual"><scope>TTTR</scope><name>filename</name></member>
       <member refid="class_t_t_t_r_1aa8bb53fa708d3f054bcd27024d1589b1" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>find_used_routing_channels</name></member>
       <member refid="class_t_t_t_r_1ac47b30b4d7750f18d7435bdf10966328" prot="private" virt="non-virtual"><scope>TTTR</scope><name>fp</name></member>
       <member refid="class_t_t_t_r_1af671de6a8f16a86e22a713333a27acef" prot="private" virt="non-virtual"><scope>TTTR</scope><name>fp_records_begin</name></member>
-      <member refid="class_t_t_t_r_1a449e92c3f30e013991cfdd1449aea609" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_event_type</name></member>
-      <member refid="class_t_t_t_r_1a3d856d880c72ad9772de2a774066cced" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_filename</name></member>
+      <member refid="class_t_t_t_r_1a351a2a20c6fdb2bc1f0ee344d3afc1f4" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_event_type</name></member>
+      <member refid="class_t_t_t_r_1a6c7c062ade6778ebeb4d899f7926276f" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_filename</name></member>
       <member refid="class_t_t_t_r_1a7953fb4f0b1d7ada40d6ff19cec45672" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_header</name></member>
-      <member refid="class_t_t_t_r_1abe71172a7c0339f09e336a0dcfb48e94" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_macro_time</name></member>
-      <member refid="class_t_t_t_r_1af68c9a5a7c3ec01a5097864b4d97975a" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_micro_time</name></member>
+      <member refid="class_t_t_t_r_1acd55be3c13bebe1b144b5335fcc3b941" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_macro_time</name></member>
+      <member refid="class_t_t_t_r_1a3355b2d7534bb8bd746c682f57b1035a" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_micro_time</name></member>
       <member refid="class_t_t_t_r_1a00b74138ed8a061e30a615dfff328960" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_n_events</name></member>
       <member refid="class_t_t_t_r_1a500fa2f0fe263e7e309ed1c2be451114" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_n_valid_events</name></member>
       <member refid="class_t_t_t_r_1a436a3b536905651664cb7cfb3c3dc729" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_number_of_tac_channels</name></member>
-      <member refid="class_t_t_t_r_1af63189ce123cc60c8c6dd316dcb53d12" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_ranges_by_count_rate</name></member>
-      <member refid="class_t_t_t_r_1a4171e1f0e8a709aae25cedbdd66a2bfb" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_routing_channel</name></member>
-      <member refid="class_t_t_t_r_1a3f645cd41dcc69d08f0ab808ae3f39c9" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_selection_by_channel</name></member>
-      <member refid="class_t_t_t_r_1a7cc2447f565f7484b394e50b963e5e9f" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_selection_by_count_rate</name></member>
-      <member refid="class_t_t_t_r_1adcf4f5c91d0ad1fb5116e96cb152b9c9" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_used_routing_channels</name></member>
+      <member refid="class_t_t_t_r_1ac14af962fe4e49c7f01c277b9cec5054" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_ranges_by_count_rate</name></member>
+      <member refid="class_t_t_t_r_1ae5ebc99b307b6071a68306653d3eab2a" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_routing_channel</name></member>
+      <member refid="class_t_t_t_r_1a2610ebd9ad3c1552b10e12bd9ecbd92c" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_selection_by_channel</name></member>
+      <member refid="class_t_t_t_r_1adc5dec021c1df2a5ef683fcff5ac83c1" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_selection_by_count_rate</name></member>
+      <member refid="class_t_t_t_r_1a746481c484ca7b7a98c02da0bb99eebf" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_tttr_container_type</name></member>
+      <member refid="class_t_t_t_r_1aee219c4ebc4e3896f5dbd164fe55df53" prot="public" virt="non-virtual"><scope>TTTR</scope><name>get_used_routing_channels</name></member>
       <member refid="class_t_t_t_r_1a3a012195ce0864b2635d061fed08cac4" prot="private" virt="non-virtual"><scope>TTTR</scope><name>hdf5_file</name></member>
       <member refid="class_t_t_t_r_1a61e222632812c94981c8fabeba0e112b" prot="private" virt="non-virtual"><scope>TTTR</scope><name>header</name></member>
       <member refid="class_t_t_t_r_1a3aaf6648f0a2dedd952e4fb4578daaa3" prot="private" virt="non-virtual"><scope>TTTR</scope><name>macro_times</name></member>
@@ -1369,9 +1391,9 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
       <member refid="class_t_t_t_r_1a06ae021f9898f5444fb56276f499a796" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord</name></member>
       <member refid="class_t_t_t_r_1a0a2c76b4330cf76f2ed378f1bdecb463" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord_map</name></member>
       <member refid="class_t_t_t_r_1abab405302dfd98d51ae1f4bf41acb020" prot="private" virt="non-virtual"><scope>TTTR</scope><name>processRecord_t</name></member>
-      <member refid="class_t_t_t_r_1a499f299893269806ef42cca2227fd75b" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_file</name></member>
+      <member refid="class_t_t_t_r_1a7e04d512571e961e5443d2287da8cec8" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_file</name></member>
       <member refid="class_t_t_t_r_1a4a8f9c4d510819de9ec7a7151c10a05e" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_file</name></member>
-      <member refid="class_t_t_t_r_1aebb3baed0d184e3f177a279e910bb24a" prot="private" virt="non-virtual"><scope>TTTR</scope><name>read_hdf_file</name></member>
+      <member refid="class_t_t_t_r_1a9180e849936419d7daa5ad15d4a93d64" prot="private" virt="non-virtual"><scope>TTTR</scope><name>read_hdf_file</name></member>
       <member refid="class_t_t_t_r_1a8eb7661d2dc6180a0f69c07810705f4f" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
       <member refid="class_t_t_t_r_1a1b4d9a088a0898de13a964bd6aef02fa" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
       <member refid="class_t_t_t_r_1a202a9bb9bc04ccbb056c1d73893b1c4e" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>read_records</name></member>
@@ -1379,16 +1401,17 @@ PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2 BH_SPC600_256_CONTAI
       <member refid="class_t_t_t_r_1a665b2b758b544534e0978374879860a9" prot="public" virt="non-virtual"><scope>TTTR</scope><name>select</name></member>
       <member refid="class_t_t_t_r_1a67543ddb26bd179461e4b52322883d6e" prot="public" virt="non-virtual"><scope>TTTR</scope><name>shift_macro_time</name></member>
       <member refid="class_t_t_t_r_1ad5537ce07845c94629ca3b88008a7597" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
-      <member refid="class_t_t_t_r_1af6cb99fa270ec32d7cd73211eb9a25eb" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
-      <member refid="class_t_t_t_r_1acb25daf91a93eb600520c211d739f829" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
-      <member refid="class_t_t_t_r_1a5ebe9e8b44de5824c4a21e0d78497aba" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1a6bd4217bf4d00d3841cfff5fcdd07295" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1a040a557b8ea06301b6658a0fea4a8434" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
+      <member refid="class_t_t_t_r_1af3d59c6c66cd75f0b0cd17306449a92d" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
       <member refid="class_t_t_t_r_1aac095c4c7b20a7f682b1b487c9bf9bcd" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
       <member refid="class_t_t_t_r_1a7b2baca8a4c3e0a4a8f067691d68e798" prot="public" virt="non-virtual"><scope>TTTR</scope><name>TTTR</name></member>
       <member refid="class_t_t_t_r_1ab036315ae969ac96ddc9ff0e8da492a2" prot="private" virt="non-virtual"><scope>TTTR</scope><name>tttr_container_type</name></member>
+      <member refid="class_t_t_t_r_1a0de899370e22f8154c95084e7160b2f8" prot="private" virt="non-virtual"><scope>TTTR</scope><name>tttr_container_type_str</name></member>
       <member refid="class_t_t_t_r_1a4d9262b34b316c922e69b40844f07a77" prot="private" virt="non-virtual"><scope>TTTR</scope><name>tttr_record_type</name></member>
       <member refid="class_t_t_t_r_1aeca22c4f524dbb501b7545d397e8f782" prot="private" virt="non-virtual"><scope>TTTR</scope><name>TTTRRecord</name></member>
       <member refid="class_t_t_t_r_1a0926f9e45d0541f4e682622801e94ba6" prot="protected" virt="non-virtual"><scope>TTTR</scope><name>used_routing_channels</name></member>
-      <member refid="class_t_t_t_r_1a85c50b6dba91824c7fc405162dcbd2c0" prot="public" virt="non-virtual"><scope>TTTR</scope><name>write_file</name></member>
+      <member refid="class_t_t_t_r_1a2311240a75e812b04acf2139d5eae498" prot="public" virt="non-virtual"><scope>TTTR</scope><name>write_file</name></member>
       <member refid="class_t_t_t_r_1ab5fdf04da2517b2cfbfcb279f9e9aee0" prot="public" virt="non-virtual"><scope>TTTR</scope><name>~TTTR</name></member>
     </listofallmembers>
   </compounddef>

@@ -21,7 +21,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="105" column="17" bodyfile="include/histogram.h" bodystart="105" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="105" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="105" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_axis_1af33a51faee0686d4ae2adb675a6a8c17" prot="private" static="no" mutable="no">
         <type>double</type>
@@ -34,7 +34,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="106" column="12" bodyfile="include/histogram.h" bodystart="106" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="106" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="106" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_axis_1a630c4b94dc2c1793996c6bb475ae5669" prot="private" static="no" mutable="no">
         <type>double</type>
@@ -47,7 +47,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="107" column="12" bodyfile="include/histogram.h" bodystart="107" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="107" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="107" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_axis_1a4aff5d8122d7c66cc9d89a00c32f3f61" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -60,7 +60,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="108" column="9" bodyfile="include/histogram.h" bodystart="108" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="108" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="108" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_axis_1afbb716b825ebacce80b35870b49afc87" prot="private" static="no" mutable="no">
         <type>double</type>
@@ -73,11 +73,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="109" column="12" bodyfile="include/histogram.h" bodystart="109" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="109" column="12" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="109" bodyend="-1"/>
       </memberdef>
-      <memberdef kind="variable" id="class_histogram_axis_1afda16ddefbec433ace8a145c8debac1e" prot="private" static="no" mutable="no">
-        <type>T *</type>
-        <definition>T* HistogramAxis&lt; T &gt;::bin_edges</definition>
+      <memberdef kind="variable" id="class_histogram_axis_1ad0c080ea32eaf655ca114291c2fe12f1" prot="private" static="no" mutable="no">
+        <type>std::vector&lt; T &gt;</type>
+        <definition>std::vector&lt;T&gt; HistogramAxis&lt; T &gt;::bin_edges</definition>
         <argsstring></argsstring>
         <name>bin_edges</name>
         <briefdescription>
@@ -86,7 +86,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="110" column="7" bodyfile="include/histogram.h" bodystart="110" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="110" column="17" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="110" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="class_histogram_axis_1a02881a3a4403717e28e62b0cb9673290" prot="private" static="no" mutable="no">
         <type>int</type>
@@ -99,7 +99,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="111" column="9" bodyfile="include/histogram.h" bodystart="111" bodyend="-1"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="111" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="111" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="public-func">
@@ -115,7 +115,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="121" column="10" bodyfile="include/histogram.h" bodystart="121" bodyend="136"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="121" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="121" bodyend="135"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a0a25652f07b17f678074233bf014a9fe" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -132,7 +132,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="138" column="10" bodyfile="include/histogram.h" bodystart="138" bodyend="143"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="137" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="137" bodyend="142"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a54f164a9ac91a7b974019b0240907ce6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>int</type>
@@ -145,7 +145,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="145" column="9" bodyfile="include/histogram.h" bodystart="145" bodyend="147"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="144" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="144" bodyend="146"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1afa70653093dd1b2c6a488a8e39e6bdda" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>int</type>
@@ -162,7 +162,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="150" column="9" bodyfile="include/histogram.h" bodystart="150" bodyend="161"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="148" column="9" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="148" bodyend="159"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a1e3c61dbb1ba09410573369cd12f99a4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>T *</type>
@@ -175,7 +175,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="163" column="7" bodyfile="include/histogram.h" bodystart="163" bodyend="165"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="161" column="7" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="161" bodyend="163"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a94be00a93100dd88980efbf251bcadc8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -196,7 +196,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="167" column="10" bodyfile="include/histogram.h" bodystart="167" bodyend="171"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="165" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="165" bodyend="169"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a5e0e05adf121b216f50bd4bc7bcedbd2" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="non-virtual">
         <type>const std::string &amp;</type>
@@ -209,7 +209,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="173" column="23" bodyfile="include/histogram.h" bodystart="173" bodyend="175"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="171" column="23" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="171" bodyend="173"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a9818450e24dcbcad1b9fb154c009ab58" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type>void</type>
@@ -226,7 +226,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="177" column="10" bodyfile="include/histogram.h" bodystart="177" bodyend="179"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="175" column="10" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="175" bodyend="177"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1adede188c99599b89d2ce691eacdf7b3d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type></type>
@@ -239,7 +239,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="181" column="5"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="179" column="5"/>
       </memberdef>
       <memberdef kind="function" id="class_histogram_axis_1a7d06d271dbc8716232e1bf6522a1f420" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
         <type></type>
@@ -272,18 +272,18 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="include/histogram.h" line="182" column="5" bodyfile="include/histogram.h" bodystart="182" bodyend="203"/>
+        <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="180" column="5" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="180" bodyend="201"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="include/histogram.h" line="102" column="20" bodyfile="include/histogram.h" bodystart="102" bodyend="204"/>
+    <location file="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" line="102" column="20" bodyfile="/Users/tpeulen/development/fluorescence-tools/tttrlib/include/histogram.h" bodystart="102" bodyend="202"/>
     <listofallmembers>
       <member refid="class_histogram_axis_1a02881a3a4403717e28e62b0cb9673290" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>axis_type</name></member>
       <member refid="class_histogram_axis_1af33a51faee0686d4ae2adb675a6a8c17" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>begin</name></member>
-      <member refid="class_histogram_axis_1afda16ddefbec433ace8a145c8debac1e" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>bin_edges</name></member>
+      <member refid="class_histogram_axis_1ad0c080ea32eaf655ca114291c2fe12f1" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>bin_edges</name></member>
       <member refid="class_histogram_axis_1afbb716b825ebacce80b35870b49afc87" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>bin_width</name></member>
       <member refid="class_histogram_axis_1a630c4b94dc2c1793996c6bb475ae5669" prot="private" virt="non-virtual"><scope>HistogramAxis</scope><name>end</name></member>
       <member refid="class_histogram_axis_1afa70653093dd1b2c6a488a8e39e6bdda" prot="public" virt="non-virtual"><scope>HistogramAxis</scope><name>getBinIdx</name></member>
