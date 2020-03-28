@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 import os
 import platform
 import subprocess
@@ -7,8 +8,19 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
+def read_version(
+        header_file='./include/tttr.h'
+):
+    version = "0.0.0"
+    with open(header_file, "r") as fp:
+        for line in fp.readlines():
+            if "#define" in line and "VERSION" in line:
+                version = line.split()[-1]
+    return version
+
+
 __name__ = "tttrlib"
-__version__ = "0.0.13"
+__version__ = read_version()
 __license__ = 'MPL v2.0'
 
 

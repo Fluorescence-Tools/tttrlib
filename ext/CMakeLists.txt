@@ -41,7 +41,6 @@ IF(BUILD_PYTHON_INTERFACE)
             Boost::filesystem
             Boost::iostreams
     )
-
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)
             SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
