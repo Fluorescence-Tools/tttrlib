@@ -1,0 +1,179 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installation &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="TTTR objects" href="tttr_objects.html" />
+    <link rel="prev" title="tttrlib" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can either be installed from prebuilt binaries or from the source code. For most users it is recommended
+to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> using the prebuilt binaries. Below the installation using prebuilt binaries and the
+prerequisites to compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> are briefly outlined.</p>
+<div class="section" id="prebuilt-binaries">
+<h2>Prebuilt binaries<a class="headerlink" href="#prebuilt-binaries" title="Permalink to this headline">¶</a></h2>
+<p>It is recommended to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> for Python environments via <code class="docutils literal notranslate"><span class="pre">conda</span></code> by.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">tpeulen</span> <span class="n">tttrlib</span>
+</pre></div>
+</div>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">tttrlib</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compliation">
+<h2>Compliation<a class="headerlink" href="#compliation" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be compiled and installed using the source code provided in the git repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">tpeulen</span><span class="o">/</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">tttrlib</span>
+<span class="n">sudo</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>To compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> a set of prerequisites need to be fulfilled:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>An installed compiler.</li>
+<li>The <a class="reference external" href="https://www.hdfgroup.org/">HDF5</a> library with C/C++ include files.</li>
+<li>A recent 64bit <a class="reference external" href="https://www.python.org/">Python</a> installation with include files.</li>
+<li><a class="reference external" href="https://cmake.org/">cmake</a></li>
+<li><a class="reference external" href="http://www.swig.org/">SWIG</a></li>
+</ol>
+</div></blockquote>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>On windows <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is best compiled with the <a class="reference external" href="https://visualstudio.microsoft.com/">Visual Studio 2017</a>. For
+compilation the Visual Studion Community edition is sufficient. In addition to Visual Studio the libraries and the
+include files as listed above need to be installed. The prebuilt binaries are compiled on Windows 10 with using
+64bit anaconda Python environments <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a> using the conda
+build recipe that is provided with the source code in the <code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code> folder.</p>
+</div>
+<div class="section" id="macos">
+<h3>MacOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h3>
+<p>For MacOS the prebuilt binaries are compiled on MacOS 10.13 with the Apple clang compiler using a anaconda
+distribution and the provided <code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code>.</p>
+</div>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>The Linux prebuilt binaries are compiled on Ubuntu 18.04 in an anaconda distribution and the provided
+<code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code>.</p>
+</div>
+<div class="section" id="conda">
+<h3>Conda<a class="headerlink" href="#conda" title="Permalink to this headline">¶</a></h3>
+<p>A conda recipe is provided in the folder ‘conda-recipe’ to build the tttrlib library with the
+<a class="reference external" href="https://docs.conda.io/projects/conda-build/en/latest/">conda build</a> environment.</p>
+<p>To build the library download the recipe, install the conda build package and use the provided
+recipe to build the library.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install conda-build
+conda build conda-recipe
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">tttrlib</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr_objects.html">TTTR objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="header_data.html">TTTR Header</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">tttrlib</a></li>
+      <li>Next: <a href="tttr_objects.html" title="next chapter">TTTR objects</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Thomas-Otavio Peulen.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
