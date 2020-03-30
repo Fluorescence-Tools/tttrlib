@@ -41,8 +41,9 @@ script:
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
-      conda env create -f environment.yml; conda activate docs_env
       cd docs
+      conda env create -f environment.yml
+      conda activate docs_env
       # Use Sphinx and doxygen to make the html docs
       make html
       # Use doxygen to build the C++ API documentation.

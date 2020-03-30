@@ -1,22 +1,19 @@
 name: docs_env
-
 channels:
+  - tpeulen
+  - salilab
   - defaults
   - conda-forge
-
 dependencies:
   - python 3.7.*
-  - numpy
-  - hdf5 1.10.2.*
-  - libboost 1.67.0.*
+  - tttrlib
+  - numba
+  # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
+  - matplotlib=2.2.3
   - sphinx=1.8.5
   - sphinx_bootstrap_theme
   - sphinx_rtd_theme
   - sphinx-autodoc-typehints
   - sphinxcontrib-bibtex
   - numpydoc
-  # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
-  - matplotlib=2.2.3
   - recommonmark
-  - numba
-  - tttrlib
