@@ -35,6 +35,17 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
   - cd ..
+
+after_success:
+  - OS=$TRAVIS_OS_NAME-64
+  - pip install codacy-coverage
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
+  # upload the library to anaconda cloud
+  - |
+    conda activate build-environment
+    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/tttrlib*.tar.bz2 --force
+  # build the documentation
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
@@ -56,6 +67,7 @@ script:
       conda deactivate
     fi
 
+
 # Tell Travis CI to copy the documentation to the gh-pages branch of
 # your GitHub repository.
 deploy:
@@ -68,14 +80,6 @@ deploy:
     condition: $TRAVIS_OS_NAME = linux
   local_dir: docs/_build/html/
 
-after_success:
-  - OS=$TRAVIS_OS_NAME-64
-  - pip install codacy-coverage
-  - coverage xml
-  - python-codacy-coverage -r coverage.xml
-  - |
-    conda activate build-environment
-    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/tttrlib*.tar.bz2 --force
 
 notifications:
   email:
