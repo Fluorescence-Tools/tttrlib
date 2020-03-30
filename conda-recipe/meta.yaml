@@ -17,6 +17,8 @@ requirements:
     - {{ pin_compatible('numpy') }}
     - setuptools
     - git
+    - boost 1.67.0.*
+    - libboost 1.67.0.* [not win]
   build:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
