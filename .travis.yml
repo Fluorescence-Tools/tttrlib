@@ -44,6 +44,9 @@ script:
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
+      # install requirements via pip due to memory limitations in RTD
+      # build server (to have a common build environment)
+      pip install -r requirements.txt
       # Use Sphinx and doxygen to make the html docs
       make html
       # Use doxygen to build the C++ API documentation.
@@ -72,11 +75,8 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-#  - |
-#    if [[ "$TRAVIS_BRANCH" == "master" ]];
-#    then
-#      anaconda upload bld-dir/**/tttrlib*.tar.bz2
-#    fi
+  - |
+    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly $CONDA_BLD_PATH/$OS/$PKG_NAME-`date +%Y.%m.%d`-0.tar.bz2 --force
 
 notifications:
   email:
