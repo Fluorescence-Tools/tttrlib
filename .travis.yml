@@ -38,17 +38,19 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
   - cd ..
-  # Use Sphinx and doxygen to make the html docs
-  - cd docs
-  - conda env create -f environment.yml; conda activate docs_env
-  # Use doxygen to build the C++ API documentation.
-  # Here, the value in tttrlib.__version__ is passed to PROJECT_NUMBER in
-  # so that there is only a single version number to manage.
-  - make html
-  - (cat Doxyfile ; echo "PROJECT_NUMBER=$(python -c 'from __future__ import print_function; import tttrlib; print(tttrlib.__version__)')" ) | doxygen -
-  # Tell GitHub not to use jekyll to compile the docs
-  - touch _build/html/.nojekyll
-  - cd ..
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]];
+    conda env create -f environment.yml; conda activate docs_env
+    cd docs
+    # Use Sphinx and doxygen to make the html docs
+    make html
+    # Use doxygen to build the C++ API documentation.
+    # Here, the value in tttrlib.__version__ is passed to PROJECT_NUMBER in
+    # so that there is only a single version number to manage.
+    (cat Doxyfile ; echo "PROJECT_NUMBER=$(python -c 'from __future__ import print_function; import tttrlib; print(tttrlib.__version__)')" ) | doxygen -
+    # Tell GitHub not to use jekyll to compile the docs
+    touch _build/html/.nojekyll
+    cd ..
+    fi
 
 # Tell Travis CI to copy the documentation to the gh-pages branch of
 # your GitHub repository.
@@ -59,6 +61,7 @@ deploy:
   keep-history: true
   on:
     branch: development
+    condition: $TRAVIS_OS_NAME = linux
   local_dir: docs/_build/html/
 
 after_success:
