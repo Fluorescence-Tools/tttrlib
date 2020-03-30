@@ -15,7 +15,7 @@ env:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
   # uninstall homebrew so that is does not interfere with the build process
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ruby -e -f -q "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"; fi
   - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
