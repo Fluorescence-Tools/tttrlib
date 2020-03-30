@@ -43,7 +43,7 @@ script:
       conda activate docs_env
       # install requirements via pip due to memory limitations in RTD
       # build server (to have a common build environment)
-      pip install -r requirements.txt
+      # pip install -r requirements.txt
       # Use Sphinx and doxygen to make the html docs
       make html
       # Use doxygen to build the C++ API documentation.
