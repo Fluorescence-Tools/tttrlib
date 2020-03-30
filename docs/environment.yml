@@ -1,5 +1,18 @@
 name: docs_env
 channels:
   - tpeulen
+  - conda-forge
+
 dependencies:
-  - tttrlib
+  - cmake
+  - swig 3.0.12.*
+  - doxygen
+  - sphinx_bootstrap_theme
+  - sphinx=1.8.5
+  - sphinx_rtd_theme
+  - numpydoc
+  - sphinx-autodoc-typehints
+  # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
+  - matplotlib=2.2.3
+  - sphinxcontrib-bibtex
+  - recommonmark
