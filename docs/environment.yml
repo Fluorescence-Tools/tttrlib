@@ -2,6 +2,7 @@ name: docs_env
 
 channels:
   - defaults
+  - conda-forge
 
 dependencies:
   - python 3.7.*
@@ -15,6 +16,7 @@ dependencies:
   - sphinx sphinx_rtd_theme
   - numpydoc
   - sphinx-autodoc-typehints
+  # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
   - matplotlib=2.2.3
   - sphinxcontrib-bibtex
   - recommonmark
