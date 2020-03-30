@@ -12,13 +12,14 @@ dependencies:
   - libboost 1.67.0.*
   - yaml
   - nose
+  - sphinx=1.8.5
   - sphinx_bootstrap_theme
-  - sphinx sphinx_rtd_theme
-  - numpydoc
+  - sphinx_rtd_theme
   - sphinx-autodoc-typehints
+  - sphinxcontrib-bibtex
+  - numpydoc
   # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
   - matplotlib=2.2.3
-  - sphinxcontrib-bibtex
   - recommonmark
   - numba
   - doxygen
