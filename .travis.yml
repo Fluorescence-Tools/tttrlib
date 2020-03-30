@@ -1,9 +1,12 @@
 language: generic
 sudo: required
 
-os:
-  - osx
-  - linux
+matrix:
+  include:
+    - os: linux
+      dist: bionic
+    - os: osx
+      osx_image: xcode9.4
 
 env:
   # Build and test package on all supported python versions
@@ -11,13 +14,15 @@ env:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
+  # uninstall homebrew so that is does not interfere with the build process
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"; else MINICONDA_OS=MacOSX; fi
   - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - export BOOST_ROOT="$HOME/miniconda/lib"
+  - export BOOST_ROOT="$HOME/miniconda"
   - export CMAKE_PREFIX_PATH=$CONDA_PREFIX
   - export CMAKE_LIBRARY_PATH=$CONDA_PREFIX/lib
-  - export CMAKE_LIBRARY_PATH=$CONDA_PREFIX/include
+  - export CMAKE_INCLUDE_PATH=$CONDA_PREFIX/include
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
