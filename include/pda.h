@@ -186,13 +186,13 @@ namespace PdaFunctions{
 
 
     /*!
-    * generates Poisson distribution witn average= lambda, for 0..N
+    * generates Poisson distribution witn average= lam, for 0..N
     *
     * @param return_p
-    * @param lambda
+    * @param lam
     * @param return_dim
     */
-    void poisson_0toN(double *return_p, double lambda, unsigned int return_dim);
+    void poisson_0toN(double *return_p, double lam, unsigned int return_dim);
 
 
     /*!

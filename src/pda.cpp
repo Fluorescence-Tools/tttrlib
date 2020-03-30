@@ -278,12 +278,12 @@ void PdaFunctions::sgsr_manypF(
 }
 
 
-void PdaFunctions::poisson_0toN(double *return_p, double lambda,
+void PdaFunctions::poisson_0toN(double *return_p, double lam,
                                 unsigned int return_dim) {
     unsigned int i;
-    return_p[0] = exp(-lambda);
+    return_p[0] = exp(-lam);
     for (i = 1; i <= return_dim; i++) {
-        return_p[i] = return_p[i - 1] * lambda / (double) i;
+        return_p[i] = return_p[i - 1] * lam / (double) i;
     }
 }
 
