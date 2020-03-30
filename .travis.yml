@@ -7,7 +7,10 @@ os:
 
 env:
   # Build and test package on all supported python versions
-  - BUILD_TARGET=3.7 MINICONDA_VERSION=latest
+  - BUILD_TARGET=3.7
+  - MINICONDA_VERSION=latest
+  - BOOST_ROOT=$HOME/miniconda/lib
+  - CMAKE_PREFIX_PATH=$HOME/miniconda
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
@@ -18,8 +21,8 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n build-environment python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client
-  - source activate build-environment
+  - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client
+  - source activate base
   - git fetch --unshallow --tags --force
   - conda build conda-recipe --output-folder bld-dir
   - conda config --add channels "file://`pwd`/bld-dir"
@@ -43,7 +46,7 @@ after_success:
   - python-codacy-coverage -r coverage.xml
   # upload the library to anaconda cloud
   - |
-    conda activate build-environment
+    conda activate base
     anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/tttrlib*.tar.bz2 --force
   # build the documentation
   - |
