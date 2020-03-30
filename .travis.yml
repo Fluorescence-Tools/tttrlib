@@ -8,8 +8,6 @@ os:
 env:
   # Build and test package on all supported python versions
   - BUILD_TARGET=3.7 MINICONDA_VERSION=latest
-  # To make sure it's still working with conda 4.6
-  # - BUILD_TARGET=3.7 MINICONDA_VERSION=4.6.14
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
@@ -20,7 +18,7 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n build-environment python=$BUILD_TARGET conda-build anaconda-client jinja2 git
+  - conda create -q -n build-environment python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client
   - source activate build-environment
   - git fetch --unshallow --tags --force
   - conda build conda-recipe --output-folder bld-dir
@@ -30,7 +28,6 @@ install:
   - conda install tttrlib
 
 script:
-  - conda install nose coverage
   # create a link from nosetests in test to make sure
   # that the correct nosetests is used
   - ln -sf $(which nosetests) $(pwd)/test/
@@ -56,6 +53,7 @@ script:
       # Tell GitHub not to use jekyll to compile the docs
       touch _build/html/.nojekyll
       cd ..
+      conda deactivate
     fi
 
 # Tell Travis CI to copy the documentation to the gh-pages branch of
@@ -76,6 +74,7 @@ after_success:
   - coverage xml
   - python-codacy-coverage -r coverage.xml
   - |
+    conda activate build-environment
     anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly $CONDA_BLD_PATH/$OS/$PKG_NAME-`date +%Y.%m.%d`-0.tar.bz2 --force
 
 notifications:
