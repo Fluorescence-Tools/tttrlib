@@ -1,0 +1,23 @@
+name: docs_env
+
+channels:
+  - defaults
+
+dependencies:
+  - python 3.7.*
+  - numpy
+  - hdf5 1.10.2.*
+  - boost 1.67.0.*
+  - libboost 1.67.0.*
+  - yaml
+  - nose
+  - sphinx_bootstrap_theme
+  - sphinx sphinx_rtd_theme
+  - numpydoc
+  - sphinx-autodoc-typehints
+  - matplotlib=2.2.3
+  - sphinxcontrib-bibtex
+  - recommonmark
+  - numba
+  - doxygen
+  - tttrlib
