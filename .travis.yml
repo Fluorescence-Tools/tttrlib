@@ -38,7 +38,8 @@ script:
   - echo $PWD
   - nosetests --with-coverage test_*.py
   - cd ..
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]];
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]];
     conda env create -f environment.yml; conda activate docs_env
     cd docs
     # Use Sphinx and doxygen to make the html docs
