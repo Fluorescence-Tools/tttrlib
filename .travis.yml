@@ -42,7 +42,7 @@ script:
   - cd docs
   # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
   - conda config --add channels conda-forge
-  - conda env create -f environment.yml; conda activate docs_env
+  - conda env create -f environment.yml -c conda-forge; conda activate docs_env
   # Use doxygen to build the C++ API documentation.
   # Here, the value in tttrlib.__version__ is passed to PROJECT_NUMBER in
   # so that there is only a single version number to manage.
