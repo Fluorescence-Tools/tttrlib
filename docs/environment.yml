@@ -8,10 +8,7 @@ dependencies:
   - python 3.7.*
   - numpy
   - hdf5 1.10.2.*
-  - boost 1.67.0.*
   - libboost 1.67.0.*
-  - yaml
-  - nose
   - sphinx=1.8.5
   - sphinx_bootstrap_theme
   - sphinx_rtd_theme
@@ -22,5 +19,4 @@ dependencies:
   - matplotlib=2.2.3
   - recommonmark
   - numba
-  - doxygen
   - tttrlib
