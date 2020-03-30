@@ -99,7 +99,8 @@ setup(
         'numpy'
     ],
     setup_requires=[
-        'setuptools'
+        'setuptools',
+        'PyYAML'
     ],
     zip_safe=False,
     classifiers=[
