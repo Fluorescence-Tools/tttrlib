@@ -1,11 +1,11 @@
 name: docs_env
 channels:
   - tpeulen
+  - defaults
   - conda-forge
 
 dependencies:
-  - cmake
-  - swig 3.0.12.*
+  - tttrlib
   - doxygen
   - sphinx_bootstrap_theme
   - sphinx=1.8.5
