@@ -347,8 +347,8 @@ certain amount of photons (below 3 photons). As can be seen by this analysis, th
 detection of fluorescence is fairly constant over the cell, while the intensity varies in this particular sample.
 
 For more detailed analysis the fluorescence decays contained in the 4D image (frame, x, y, fluorescence decay) returned
-by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. The fluorescence decay containing
-all photons of frame 30 is shown to the bottom right.
+by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a
+fluorescence decay containing all photons of the 30 frames is shown below.
 
 .. literalinclude:: plots/imaging_tutorial_2.py
 
