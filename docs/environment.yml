@@ -24,6 +24,7 @@ dependencies:
     - mkl_fft=1.0.15=py37h5e564d8_0
     - mkl_random=1.1.0=py37ha771720_0
     - ncurses=6.2=h0a44026_0
+    - numpy=1.18.1=py37h7241aed_0
     - numpy-base=1.18.1=py37h6575580_1
     - openssl=1.1.1e=h1de35cc_0
     - pip=20.0.2=py37_1
