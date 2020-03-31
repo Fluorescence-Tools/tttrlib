@@ -45,14 +45,14 @@ after_success:
   - pip install codacy-coverage
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  # upload the library to anaconda cloud
-  - |
-    conda activate base
-    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/*.tar.bz2 --force
-  # build the documentation only on linux not osx
+  # build the documentation only on linux and upload build
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
+      # The documentation is only build using the linux conda dist
+      # Hence only upload linux nightly
+      conda activate base
+      anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/*.tar.bz2 --force
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
