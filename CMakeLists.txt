@@ -44,11 +44,12 @@ if(WIN32)
     # use static Boost in Windows
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_STATIC ON)
-    set(Boost_USE_MULTITHREAD )
+    set(Boost_USE_MULTITHREAD)
 endif(WIN32)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
+MESSAGE(${Boost_INCLUDE_DIRS})
 
 ## HDF5
 FIND_PACKAGE(HDF5 1.10 REQUIRED COMPONENTS C)
