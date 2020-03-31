@@ -30,11 +30,10 @@ before_install:
   - conda config --add channels "file://`pwd`/bld-dir"
 
 install:
-  - conda install tttrlib
+  - conda install tttrlib -c "file://`pwd`/bld-dir"
 
 script:
-  # create a link from nosetests in test to make sure
-  # that the correct nosetests is used
+  # create a link from nosetests in test to make sure that the correct nosetests is used
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
   - echo $PWD
@@ -49,22 +48,21 @@ after_success:
   # upload the library to anaconda cloud
   - |
     conda activate base
-    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/tttrlib*.tar.bz2 --force
-  # build the documentation
+    anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/*.tar.bz2 --force
+  # build the documentation only on linux not osx
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
-      # install requirements via pip due to memory limitations in RTD
-      # build server (to have a common build environment)
-      # pip install -r requirements.txt
-      # Use Sphinx and doxygen to make the html docs
+      # Use Sphinx to make the html docs
+      make clean
       make html
       # Use doxygen to build the C++ API documentation.
       # Here, the value in tttrlib.__version__ is passed to PROJECT_NUMBER in
       # so that there is only a single version number to manage.
+      conda install doxygen -c conda-forge
       (cat Doxyfile ; echo "PROJECT_NUMBER=$(python -c 'from __future__ import print_function; import tttrlib; print(tttrlib.__version__)')" ) | doxygen -
       # Tell GitHub not to use jekyll to compile the docs
       touch _build/html/.nojekyll
