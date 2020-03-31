@@ -38,7 +38,7 @@ image_mean_tac = image.get_mean_tac_image(data, 3)
 im = ax[1, 0].imshow(image_mean_tac[30] / 1000)
 #p.colorbar(im, ax=ax[2])
 
-image_decay = image.get_decay_image(data, 32)
+image_decay = image.get_decay_image(data, 256)
 
 im = ax[1, 1].semilogy(image_decay[30].sum(axis=(0, 1)))
 

@@ -103,7 +103,7 @@ image = make_image(
     n_lines,
     pixel_duration,
     channels=np.array([0, 1]),
-    tac_coarsening=128
+    tac_coarsening=256
 )
 
 fig, ax = p.subplots(1, 2)
