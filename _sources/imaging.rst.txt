@@ -350,6 +350,6 @@ For more detailed analysis the fluorescence decays contained in the 4D image (fr
 by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. The fluorescence decay containing
 all photons of frame 30 is shown to the bottom right.
 
+.. literalinclude:: plots/imaging_tutorial_2.py
 
-.. plot:: plots/imaging_tutorial_2.py
 
