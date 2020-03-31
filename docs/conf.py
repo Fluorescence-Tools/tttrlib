@@ -83,7 +83,8 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -145,7 +146,7 @@ latex_documents = [
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
+# (source start file, name, description, authors, manual section).ƒre
 man_pages = [
     (master_doc, 'tttrlib', u'tttrlib Documentation',
      [author], 1)
