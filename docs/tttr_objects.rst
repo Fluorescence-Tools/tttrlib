@@ -1,6 +1,8 @@
+TTTR-Objects
+============
 
-Anatomy
--------
+General features
+----------------
 
 The library tttrlib facilitates the work with files containing time-tagged time resolved photon streams by providing 
 a vendor independent C++ application programming interface (API) for TTTR files that is wrapped by `SWIG <http://swig.org/>`_
@@ -79,7 +81,6 @@ data is presented in the the :ref:`Imaging:Confocal laser scanning` section.
 
 .. note::
     The units of the macro time and the micro time *depend* on the specific instrument settings.
-
 
 
 Create TTTR objects
