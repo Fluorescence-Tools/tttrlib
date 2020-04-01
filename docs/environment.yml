@@ -1,7 +1,6 @@
 name: docs_env
 channels:
     - tpeulen/label/nightly
-    - salilab
     - defaults
 dependencies:
     - tttrlib

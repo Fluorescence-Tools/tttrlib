@@ -29,10 +29,6 @@ author = u'Thomas-Otavio Peulen'
 # release = u''
 
 
-
-
-
-
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -107,16 +103,15 @@ if not on_rtd:
     import sphinx_bootstrap_theme
     # Activate the theme.
     html_theme = 'bootstrap'
-    html_theme_path = [sphinx_bootstrap_theme.get_html_theme_path()]
+    html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 else:
     try:
         import sphinx_rtd_theme
     except ImportError:
         pass  # assume we have sphinx >= 1.3
     else:
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+        html_theme_path = sphinx_rtd_theme.get_html_theme_path()
     html_theme = 'sphinx_rtd_theme'
-
 
 def setup(app):
     app.add_stylesheet("fix_rtd.css")
