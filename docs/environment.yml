@@ -37,7 +37,7 @@ dependencies:
     - xz=5.2.4
     - zlib=1.2.11
     - pip:
-      - alabaster==0.7.12
+      - sphinx-bootstrap-theme==0.7.1
       - babel==2.8.0
       - chardet==3.0.4
       - commonmark==0.9.1
