@@ -56,6 +56,7 @@ after_success:
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
+      conda install doxygen -c conda-forge
       # Use Sphinx to make the html docs the doxygen docs are build with breathe
       make clean
       make html
