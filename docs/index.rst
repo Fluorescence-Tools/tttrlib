@@ -32,6 +32,7 @@ Contents
    correlation
    single_molecule
    imaging
+   cpp_api
    glossary
    references
 
@@ -39,7 +40,6 @@ Contents
 Indices and tables
 ------------------
 
-* `API <./api/index.html>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

@@ -12,10 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
+import subprocess
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -24,9 +24,17 @@ copyright = u'2019, Thomas-Otavio Peulen'
 author = u'Thomas-Otavio Peulen'
 
 # The short X.Y version
-version = u''
+# version = tttrlib.__version__
 # The full version, including alpha/beta/rc tags
-release = u''
+# release = u''
+
+
+# Check if we're running on Read the Docs' servers
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+breathe_projects = {}
+subprocess.call('doxygen', shell=True)
+breathe_projects['tttrlib'] = './_build/xml'
+breathe_default_project = "tttrlib"
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,7 +53,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex',
     'recommonmark',
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    'breathe'
 ]
 autosectionlabel_prefix_document = True
 
