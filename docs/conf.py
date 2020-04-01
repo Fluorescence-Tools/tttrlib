@@ -31,6 +31,7 @@ author = u'Thomas-Otavio Peulen'
 
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+
 breathe_projects = {}
 subprocess.call('doxygen', shell=True)
 breathe_projects['tttrlib'] = './_build/xml'
@@ -147,7 +148,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'tttrlib.tex', u'tttrlib Documentation',
+    (master_doc, u'tttrlib Documentation',
      u'Thomas-Otavio Peulen', 'manual'),
 ]
 
