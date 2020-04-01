@@ -70,4 +70,4 @@ dependencies:
       - sphinxcontrib-bibtex==1.0.0
       - sphinxcontrib-websupport==1.2.1
       - urllib3==1.25.8
-      - breathe
+      - breathe==4.14.1
