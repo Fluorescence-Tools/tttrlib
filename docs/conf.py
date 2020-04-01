@@ -53,12 +53,17 @@ extensions = [
     'sphinx.ext.autosectionlabel'
 ]
 
+
 breathe_projects = {}
-if 'html' in sys.argv:
+# latex and breathe do not play very well together. Therefore
+# breathe is only used for the webpage.
+# compatible with readthedocs online builder and local builder
+if sys.argv[0].endswith('sphinx-build') and ('html' in sys.argv or sys.argv[-1] == '_build/html'):
     subprocess.call('doxygen', shell=True)
     breathe_projects['tttrlib'] = './_build/xml'
     breathe_default_project = "tttrlib"
     extensions += ['breathe']
+
 
 autosectionlabel_prefix_document = True
 # Add any paths that contain templates here, relative to this directory.
@@ -95,8 +100,23 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'alabaster'
+# html_theme = 'sphinx_rtd_theme'
+
+# Read the docs style:
+if os.environ.get('READTHEDOCS') != 'True':
+    try:
+        import sphinx_rtd_theme
+    except ImportError:
+        pass  # assume we have sphinx >= 1.3
+    else:
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    html_theme = 'sphinx_rtd_theme'
+
+
+def setup(app):
+    app.add_stylesheet("fix_rtd.css")
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
