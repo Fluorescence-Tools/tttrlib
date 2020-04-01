@@ -9,7 +9,7 @@ from setuptools.command.build_ext import build_ext
 
 
 def read_version(
-        header_file='./include/CNode.h'
+        header_file='./include/tttr.h'
 ):
     version = "0.0.0"
     with open(header_file, "r") as fp:
