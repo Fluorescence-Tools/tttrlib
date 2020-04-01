@@ -48,6 +48,7 @@ breathe_default_project = "tttrlib"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.mathbase',
     'matplotlib.sphinxext.only_directives',
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.mathjax',
@@ -148,8 +149,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, u'tttrlib Documentation',
-     u'Thomas-Otavio Peulen', 'manual'),
+    (master_doc, 'tttrlib.tex', u'tttrlib Documentation', u'Thomas-Otavio Peulen', 'manual'),
 ]
 
 
