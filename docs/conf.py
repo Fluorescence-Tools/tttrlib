@@ -14,7 +14,7 @@
 #
 import os
 import subprocess
-# import sys
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
@@ -29,13 +29,8 @@ author = u'Thomas-Otavio Peulen'
 # release = u''
 
 
-# Check if we're running on Read the Docs' servers
-read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 
-breathe_projects = {}
-subprocess.call('doxygen', shell=True)
-breathe_projects['tttrlib'] = './_build/xml'
-breathe_default_project = "tttrlib"
+
 
 
 # -- General configuration ---------------------------------------------------
@@ -55,11 +50,17 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex',
     'recommonmark',
-    'sphinx.ext.autosectionlabel',
-    'breathe'
+    'sphinx.ext.autosectionlabel'
 ]
-autosectionlabel_prefix_document = True
 
+breathe_projects = {}
+if 'html' in sys.argv:
+    subprocess.call('doxygen', shell=True)
+    breathe_projects['tttrlib'] = './_build/xml'
+    breathe_default_project = "tttrlib"
+    extensions += ['breathe']
+
+autosectionlabel_prefix_document = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
