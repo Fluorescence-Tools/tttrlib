@@ -133,6 +133,8 @@ Becker&Hickl SPC-130 and the PicoQuant PTU file supplied in the example folder i
 Beyond opening files and processing the content contained in a TTTR file TTTR objects can be created that contain
 initially no data. Moreover, TTTR objects can be created based on existing files and selection.
 
+Selections
+----------
 
 Using selections
 ++++++++++++++++
@@ -169,11 +171,8 @@ Depending on the specific application either ranges or selections are more usefu
 are usually defined by *ranges*, while detection channels are usually selected by *selections*.
 
 
-Selections
-+++++++++
-
-Channels
-^^^^^^^^
+Channel selections
+++++++++++++++++++
 
 A very typical use case in TCSPC experiments (either in fluorescence lifetime microscopy (FLIM) or multiparameteric
 fluorescence detection (MFD)) is to select a subset of the registered events based on the detection channel. The
@@ -198,8 +197,8 @@ are saved in the variables ``green_indices``  and ``red_indices``, respectively.
 
 This examples needs to be adapted to the channel assignment dependent on the actual experimental setup.
 
-Count rate
-^^^^^^^^^^
+Count rate selections
++++++++++++++++++++++
 
 Another very common selection is based on the count rate. The count rate is determined by the number of
 detected events within a given time window. The selection by the method ``get_selection_by_count_rate`` returns all
@@ -216,21 +215,5 @@ of macro time steps.
 In the example shown above, the time window is 1200000 and 30 is the maximum number of photons within that is
 permitted in a time window.
 
-
-Ranges
-++++++
-
-Ranges by count rate
-^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-    import numpy as np
-    import tttrlib
-    import pylab as p
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
-    tw_ranges = data.get_ranges_by_count_rate(10000, -1, 30, -1)
-
-The function :py:function:``get_ranges_by_count_rate``
 
 
