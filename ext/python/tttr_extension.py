@@ -14,6 +14,11 @@ def macro_times(self):
     return self.get_macro_time()
 
 
+@property
+def header(self):
+    return self.get_header()
+
+
 def __repr__(self):
     return 'tttrlib.TTTR("%s", "%s")' % (
         self.get_filename(),
