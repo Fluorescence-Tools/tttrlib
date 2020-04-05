@@ -25,12 +25,14 @@ requirements:
     - hdf5 1.10.2.*
     - boost 1.67.0.*
     - libboost 1.67.0.* [not win]
+    - fftw
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - hdf5 1.10.2.*
     - boost 1.67.0.* [win]
     - libboost 1.67.0.* [not win]
+    - fftw
 
 test:
   imports:
