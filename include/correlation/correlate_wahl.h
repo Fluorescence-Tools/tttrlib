@@ -15,6 +15,8 @@
 #include <numeric>
 #include <algorithm>
 #include <climits>
+#include <cstring> // memcpy
+
 
 namespace correlate_wahl{
 

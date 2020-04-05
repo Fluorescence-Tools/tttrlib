@@ -8,6 +8,8 @@
 #include <cstring>
 #include <cmath>
 #include <stdlib.h>
+#include <cstring> // memcpy
+
 
 
 namespace seidel_lab{

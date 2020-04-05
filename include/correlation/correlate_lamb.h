@@ -15,6 +15,7 @@
 #include <numeric>
 #include <algorithm>
 #include <climits>
+#include <cstring> // memcpy
 
 namespace lamb_lab{
     /*!

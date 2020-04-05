@@ -56,6 +56,17 @@ purposes.
 Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
 libraries by a factor of ~40.
 
+## Examples
+Show images for with link to examples
+Correlation and Antibunching 
+Lifetime
+Single molecule (traces)
+Image
+
+## Benchmark
+
+
+
 ## Implementation
 Pure pure C/C++ and CUDA based high performance algorithms for real-time and interactive 
 analysis of TTTR data.
