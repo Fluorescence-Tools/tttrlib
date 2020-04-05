@@ -14,7 +14,7 @@
 
 %module tttrlib
 %{
-    #include "../include/correlate.h"
+    #include "../include/correlation.h"
 %}
 
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {
@@ -32,5 +32,12 @@
     (double* weight_ch2, int n_weights_ch2)
 }
 
-%include "../include/correlate.h"
+%include attribute.i
+%attribute(Correlator, int, n_bins, get_n_bins, set_n_bins);
+%attribute(Correlator, int, n_casc, get_n_casc, set_n_casc);
 
+%include "../include/correlation.h"
+
+%extend Correlator{
+    %pythoncode "../ext/python/correlator_extension.py"
+}

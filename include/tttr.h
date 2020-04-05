@@ -41,7 +41,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.13"
+#define VERSION                     "0.0.14"
 
 
 /*!

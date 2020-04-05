@@ -12,92 +12,10 @@
  *                                                                          *
  ****************************************************************************/
 
-#include <include/correlate.h>
+#include <include/correlation.h>
 
-
-void coarsen(
-        unsigned long long * t, double* w, size_t nt
-        ){
-    t[0] /= 2;
-    for(size_t i=1; i < nt; i++){
-        t[i] /= 2;
-        if(t[i] == t[i-1]){
-            w[i] += w[i-1];
-            w[i-1] = 0;
-        }
-    }
-}
-
-
-void correlate(
-        size_t start_1, size_t end_1,
-        size_t start_2, size_t end_2,
-        size_t i_casc, size_t n_bins,
-        std::vector<unsigned long long> &taus, std::vector<double> &corr,
-        const unsigned long long *t1, const double *w1, size_t nt1,
-        const unsigned long long *t2, const double *w2, size_t nt2
-){
-
-    size_t i1, i2, p, index;
-    size_t edge_l, edge_r;
-
-    start_1 = (start_1 > 0) ? start_1 : 0;
-    end_1 = std::min(nt1, end_1);
-
-    start_2 = (start_2 > 0) ? start_2 : 0;
-    end_2 = std::min(nt2, end_2);
-
-    auto scale = (unsigned long long) std::pow(2.0, i_casc);
-
-    p = start_2;
-    for (i1 = start_1; i1 < end_1; i1++) {
-        if (w1[i1] != 0) {
-            edge_l = t1[i1] + taus[i_casc * n_bins] / scale;
-            edge_r = edge_l + n_bins;
-            for(i2 = p; (i2 < end_2) && (t2[i2] <= edge_r); i2++) {
-                if(w2[i2] != 0){
-                    if (t2[i2] > edge_l) {
-                        index = t2[i2] - edge_l + i_casc * n_bins;
-                        corr[index] += (w1[i1] * w2[i2]);
-                    } else{
-                        p++;
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-void normalize_correlation(
-        double np1, uint64_t dt1,
-        double np2, uint64_t dt2,
-        std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
-        size_t n_bins
-){
-    double cr1 = (double) np1 / (double) dt1;
-    double cr2 = (double) np2 / (double) dt2;
-    for(int j=0; j<x_axis.size(); j++){
-        uint64_t pw = (uint64_t) std::pow(2.0, (int) (float(j-1) / n_bins));
-        double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 -
-                x_axis[j]);
-        corr[j] /= pw;
-        corr[j] /= (cr1 * cr2 * t_corr);
-        x_axis[j] = x_axis[j] / pw * pw;
-    }
-}
-
-
-void make_fine_times(
-        unsigned long long *t,
-        unsigned int n_times,
-        unsigned int* tac,
-        unsigned int n_tac
-        ){
-    for(size_t i=0; i < n_times; i++){
-        t[i] = t[i] * n_tac + tac[i];
-    }
-}
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
 void Correlator::update_axis(){
@@ -138,46 +56,105 @@ void Correlator::set_events(
 }
 
 
-void Correlator::normalize(){
+void Correlator::normalize(
+        std::string correlation_method
+        ){
+#if VERBOSE
+    std::clog << "-- Normalizing correlation curve" << std::endl;
+#endif
     double np1 = std::accumulate(w1, w1+n_t1, 0.0);
     double np2 = std::accumulate(w2, w2+n_t2, 0.0);
+#if VERBOSE
+    std::clog << "-- Number of photons or sum of weights channel 1: " << np1 << std::endl;
+    std::clog << "-- Number of photons or sum of weights channel 2: " << np2 << std::endl;
+#endif
+
+#if VERBOSE
+    std::clog << "-- Maximum time in correlation channel 1: " << dt1 << std::endl;
+    std::clog << "-- Maximum time in correlation channel 2: " << dt2 << std::endl;
+    std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;
+#endif
+    // compute count rates for normalization
+    double cr1 = (double) np1 / dt1;
+    double cr2 = (double) np2 / dt2;
+#if VERBOSE
+    std::clog << "-- Count rate in correlation channel 1: " << cr1 << std::endl;
+    std::clog << "-- Count rate in correlation channel 2: " << cr2 << std::endl;
+#endif
+
     for(size_t i=0; i<x_axis_normalized.size(); i++) x_axis_normalized[i] = x_axis[i];
     for(size_t i=0; i<corr_normalized.size(); i++) corr_normalized[i] = corr[i];
 
-    normalize_correlation(
-            np1, dt1,
-            np2, dt2,
-            x_axis_normalized,
-            corr_normalized,
-            n_bins
-    );
+    if(correlation_method == "wahl"){
+        correlate_wahl::correlation_normalize_wahl(
+                np1, dt1,
+                np2, dt2,
+                x_axis_normalized,
+                corr_normalized,
+                n_bins
+        );
+    } else if (correlation_method == "lamb") {
+        lamb_lab::normalize(
+                x_axis, corr,
+                x_axis_normalized, corr_normalized,
+                cr1, cr2,
+                n_bins, n_casc, maximum_macro_time
+                );
+    } else if (correlation_method == "seidel") {
+        lamb_lab::normalize(
+                x_axis, corr,
+                x_axis_normalized, corr_normalized,
+                cr1, cr2,
+                n_bins, n_casc, maximum_macro_time
+        );
+//        seidel_lab::correlation_normalization(
+//                n_casc, n_bins,
+//                corr.data(), x_axis.data(),
+//                np1, np2,
+//                maximum_macro_time
+//        );
+    }
 }
 
 
-void Correlator::run(){
-
-    for(size_t i_casc=0; i_casc<n_casc; i_casc++){
-        //tf::Taskflow tf;
-
-        correlate(
-                0, n_t1,
-                0, n_t2,
-                i_casc, n_bins,
+void Correlator::run(
+        std::string correlation_method
+        ){
+#if VERBOSE
+    std::clog << "CORRELATOR::RUN" << std::endl;
+    std::clog << "-- Correlation mode: " << correlation_method << std::endl;
+    std::clog << "-- Filling correlation vectors with zero: " << correlation_method << std::endl;
+#endif
+    std::fill(corr.begin(), corr.end(), 0.0);
+    if (correlation_method == "wahl"){
+        correlate_wahl::correlation_full(
+                n_casc, n_bins,
                 x_axis, corr,
                 t1, w1, n_t1,
                 t2, w2, n_t2
         );
-        //auto taskA = tf.emplace([this](){coarsen(t1, w1, n_t1);});
-        //auto taskB = tf.emplace([this](){coarsen(t2, w2, n_t2);});
-        coarsen(t1, w1, n_t1);
-        coarsen(t2, w2, n_t2);
-
-        // this seems to be for small tasks slower than without parallelization
-        //tf::Executor().run(taskflow).get();  // execute the graph to spawn the subflow
-
+    } else if (correlation_method == "lamb") {
+        lamb_lab::CCF(
+            t1, t2, w1, w2,
+            (unsigned int) n_bins, (unsigned int) n_casc,
+            (unsigned int) n_t1, (unsigned int) n_t2,
+            x_axis.data(), corr.data()
+        );
+    } else if (correlation_method == "seidel"){
+        seidel_lab::correlation_fast_full(
+                t1, t2,
+                nullptr, nullptr,
+                0,
+                w1, w2,
+                n_casc, n_bins,
+                n_t1, n_t2,
+                corr.data(), x_axis.data(),
+                false
+        );
+    } else{
+        std::cerr << "WARNING: Correlation mode not recognized!" << std::endl;
     }
-    // calculate a normalized correlation
-    normalize();
+    normalize(correlation_method);
 }
 
 
@@ -239,8 +216,8 @@ void Correlator::make_fine(
         unsigned int n_tac
         ){
     if(!is_fine){
-        make_fine_times(t1, (unsigned int) n_t1, tac_1, n_tac);
-        make_fine_times(t2, (unsigned int) n_t2, tac_2, n_tac);
+        correlate_wahl::make_fine_times(t1, (unsigned int) n_t1, tac_1, n_tac);
+        correlate_wahl::make_fine_times(t2, (unsigned int) n_t2, tac_2, n_tac);
         is_fine = true;
     }
 }

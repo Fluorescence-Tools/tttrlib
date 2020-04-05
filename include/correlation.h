@@ -13,7 +13,7 @@
  ****************************************************************************/
 
 /**
- * @file correlate.h
+ * @file correlation.h
  * @author Thomas-Otavio Peulen
  * @date 20 Feb 2019
  * @brief File containing example of doxygen usage for quick reference.
@@ -30,8 +30,8 @@
 // Created by thomas on 2/18/19.
 //
 
-#ifndef TTTRLIB_CORRELATE_H
-#define TTTRLIB_CORRELATE_H
+#ifndef TTTRLIB_CORRELATION_H
+#define TTTRLIB_CORRELATION_H
 
 #include <iostream>
 #include <cstdio>
@@ -45,131 +45,12 @@
 #include <climits>
 //#include <taskflow/taskflow.hpp>
 
-
-/*!
- * Normalizes a correlation curve.
- *
- *
- * This normalization applied to correlation curves that were calculated using a
- * linear/logrithmic binning as described in
- *
- *  - Fast calculation of fluorescence correlation data with asynchronous time-correlated
- *  single-photon counting, Michael Wahl, Ingo Gregor, Matthias Patting, Joerg Enderlein,
- *  Optics Express Vol. 11, No. 26, p. 3383
- *
- * @param[in] np1 The sum of the weights in the first correlation channel
- * @param[in] dt1 The time difference between the first event and the last event in the
- * first correlation channel
- * @param[in] np2 The sum of the weights in the second correlation channel
- * @param[in] dt2 The time difference between the first event and the last event in the
- * second correlation channel
- * @param[in,out] x_axis The x-axis of the correlation
- * @param[in,out] corr The array that contains the original correlation that is modified
- * in place.
- * @param[in] n_bins The number of bins per cascade of the correlation
- */
-void normalize_correlation(
-        double np1, uint64_t dt1,
-        double np2, uint64_t dt2,
-        std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
-        size_t n_bins
-);
+#include <include/correlation/correlate_wahl.h>
+#include <include/correlation/correlate_lamb.h>
+#include <include/correlation/correlate_seidel.h>
 
 
-
-/*!
- * Changes the time events by adding the micro time to the macro time
- *
- *
- * Changes the time events by adding the micro time to the macro time.
- * The micro times should match the macro time, i.e., the length of
- * the micro time array should be the at least the same length as the
- * macro time array.
- *
- * @param[in,out] t An array containing the time events (macro times)
- * @param[in] n_times The number of macro times.
- * @param[in] tac An array containing the micro times of the corresponding macro times
- * @param[in] tac The number of micro time channels (TAC channels)
-
- */
-void make_fine_times(unsigned long long *t, unsigned int n_times, unsigned int* tac, unsigned int n_tac);
-
-
-
-/*!
- * Calculates the cross-correlation between two arrays containing time
- * events.
- *
- *
- * Cross-correlates two weighted arrays of events using an approach that
- * utilizes a linear spacing of the bins within a cascade and a logarithmic
- * spacing of the cascades. The function works inplace on the input times, i.e,
- * during the correlation the values of the input times and weights are
- * changed to coarsen the times and weights for every correlation cascade.
- *
- * The start position parameters @param start_1 and @param start_2 and the
- * end position parameters @param end_1 and @param end_1 define which part
- * of the time array of the first and second correlation channel are used
- * for the correlation analysis.
- *
- * The correlation algorithm combines approaches of the following papers:
- *
- *  - Fast calculation of fluorescence correlation data with asynchronous
- *  time-correlated single-photon counting, Michael Wahl, Ingo Gregor,
- *  Matthias Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383
- *
- *  - Fast, flexible algorithm for calculating photon correlations, Ted A.
- *  Laurence, Samantha Fore, Thomas Huser, Optics Express Vol. 31 No. 6, p.829
- *
- *
- * @param[in] start_1 The start position on the time event array of the first channel.
- * @param[in] end_1  The end position on the time event array of the first channel.
- * @param[in] start_2 The start position on the time event array of the second channel.
- * @param[in] end_2  The end position on the time event array of the second channel.
- * @param[in] i_casc The number of the current cascade
- * @param[in] n_bins The number of bins per cascase
- * @param[in] taus A vector containing the correlation times of all cascades
- * @param[out] corr A vector to that the correlation is written by the function
- * @param[in,out] t1 A vector of the time events of the first channel
- * @param[in,out] w1 A vector of weights for the time events of the first channel
- * @param[in] nt1 The number of time events in the first channel
- * @param[in,out] t2 A vector of the time events of the second channel
- * @param[in,out] w2 A vector of weights for the time events of the second channel
- * @param[in] nt2 The number of time events in the second channel
- *
- *
- */
-void correlate(
-        size_t start_1, size_t end_1,
-        size_t start_2, size_t end_2,
-        size_t i_casc, size_t n_bins,
-        std::vector<unsigned long long> &taus, std::vector<double> &corr,
-        const unsigned long long  *t1, const double *w1, size_t nt1,
-        const unsigned long long  *t2, const double *w2, size_t nt2
-);
-
-
-
-/*!
- * Coarsens the time events
- *
- *
- * This function coarsens a set of time events by dividing the times by two.
- * In case two consecutive time events in the array have the same time, the
- * weights of the two events are added to the following weight element and the
- * value of the previous weight is set to zero.
- *
- * @param[in,out] t A vector of the time events of the first channel
- * @param[in,out] w A vector of weights for the time events of the first channel
- * @param[in] nt The number of time events in the first channel
- */
-void coarsen(
-        unsigned long long * t, double* w, size_t nt
-);
-
-
-
-class Correlator {
+class Correlator{
 
 private:
 
@@ -292,7 +173,6 @@ public:
      */
     void get_x_axis(unsigned long long** x_axis, int* n_out);
 
-
     /*!
      * Get the correlation.
      *
@@ -302,7 +182,6 @@ public:
      * number of elements of the x-axis
      */
     void get_corr(double** corr, int* n_out);
-
 
     /*!
      * Get the normalized x-axis of the correlation
@@ -315,7 +194,6 @@ public:
      */
     void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
 
-
     /*!
      * Get the normalized correlation.
      *
@@ -326,7 +204,6 @@ public:
      * number of elements of the normalized x-axis
      */
     void get_corr_normalized(double** corr, int* n_out);
-
 
     /*!
     *
@@ -355,11 +232,18 @@ public:
      * and the corresponding correlation amplitudes and calculates the values
      * of the normalized correlation.
      */
-    void normalize();
+    void normalize(
+            std::string correlation_method ="wahl"
+            );
 
-    void run();
+    /*!
+     * Compute the correlation function
+     *
+     * @param correlation_method either "wahl" or "lamb", "seidel"
+     */
+    void run(std::string correlation_method = "wahl");
 
 };
 
 
-#endif //TTTRLIB_CORRELATE_H
+#endif //TTTRLIB_CORRELATION_H

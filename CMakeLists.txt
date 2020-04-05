@@ -9,7 +9,7 @@ OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 # Debug build detection
 ###########################
@@ -38,6 +38,12 @@ if(APPLE)
     # Don't set MACOSX_RPATH by default
     set(CMAKE_MACOSX_RPATH 0)
 endif(APPLE)
+
+## FFTW
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/findFFTW;${CMAKE_MODULE_PATH}")
+FIND_PACKAGE(FFTW REQUIRED)
+LINK_LIBRARIES(${FFTW_LIBRARIES})
+INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
 ## Boost
 if(WIN32)
@@ -69,7 +75,12 @@ IF(BUILD_DOC)
     ENDIF (DOXYGEN_FOUND)
 ENDIF()
 
-FILE(GLOB SRC_files "../src/*.cpp")
+FILE(
+        GLOB
+        SRC_files
+        "../src/*.cpp"
+        "../src/correlation/*.cpp"
+)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
