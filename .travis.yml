@@ -23,7 +23,8 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client
+  # scipy is used in some tests
+  - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client scipy
   - source activate base
   - git fetch --unshallow --tags --force
   - conda build conda-recipe --output-folder bld-dir
