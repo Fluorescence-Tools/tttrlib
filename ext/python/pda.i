@@ -4,9 +4,9 @@
 
 %}
 
-%apply (double* IN_ARRAY1, int DIM1) {(double *in, int n_in)}
-%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** out, int* dim1)}
-%apply (double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** out, int* dim1, int* dim2)}
+%apply (double* IN_ARRAY1, int DIM1) {(double *input, int n_input)}
+%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
+%apply (double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
 
 %include "../include/pda.h"
 

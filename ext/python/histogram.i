@@ -15,7 +15,6 @@
 %module tttrlib
 %{
     #include "../include/histogram.h"
-
 %}
 
 %apply (double* IN_ARRAY1, int DIM1) {

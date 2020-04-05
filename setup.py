@@ -74,7 +74,6 @@ class CMakeBuild(build_ext):
                     '-DBoost_DETAILED_FAILURE_MESSAGE=ON'
                 ]
 
-
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get(

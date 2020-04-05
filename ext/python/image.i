@@ -1,9 +1,7 @@
 %module(directors="1") tttrlib
 %{
-    #include "../include/image.h"
-    #include "../include/tttr.h"
+#include "../include/image.h"
 %}
-
 
 %include "std_vector.i";
 %include "std_list.i";

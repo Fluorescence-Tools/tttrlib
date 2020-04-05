@@ -6,11 +6,6 @@
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "../include/tttr.h"
-#include "../include/histogram.h"
-#include "../include/correlate.h"
-#include "../include/image.h"
-#include "../include/pda.h"
 %}
 
 %include <typemaps.i>
@@ -27,13 +22,13 @@
 
 %include "tttr.i"
 %include "histogram.i"
-%include "correlate.i"
+%include "correlation.i"
 %include "image.i"
 %include "pda.i"
 
 %include "../include/tttr.h"
 %include "../include/header.h"
 %include "../include/histogram.h"
-%include "../include/correlate.h"
+%include "../include/correlation.h"
 %include "../include/image.h"
 %include "../include/pda.h"
