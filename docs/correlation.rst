@@ -44,6 +44,8 @@ curves.
 Count rate filer
 ++++++++++++++++
 
+Low count rate parts of a TTTR file can be discrimiated (see below)
+
 .. plot:: plots/correlation_cr_filter.py
    :include-source:
 
@@ -58,10 +60,6 @@ TAC gating
 Full and fine correlations
 ++++++++++++++++++++++++++
 
-To consider the micro time in the correlation, the micro time can be
-
-Filtering background
---------------------
 
 Filtering aggregates
 --------------------

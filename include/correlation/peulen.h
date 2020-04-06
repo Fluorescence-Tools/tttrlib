@@ -2,8 +2,8 @@
 // Created by Thomas-Otavio Peulen on 4/2/20.
 //
 
-#ifndef TTTRLIB_CORRELATE_WAHL_H
-#define TTTRLIB_CORRELATE_WAHL_H
+#ifndef TTTRLIB_PEULEN_H
+#define TTTRLIB_PEULEN_H
 
 #include <iostream>
 #include <cstdio>
@@ -18,7 +18,33 @@
 #include <cstring> // memcpy
 
 
-namespace correlate_wahl{
+namespace peulen{
+
+
+    inline void correlation_shell(unsigned long n, unsigned long long *a) {
+        unsigned long i, j, inc;
+        unsigned long long v;
+        inc = 1; //Determine the starting increment.
+        do {
+            inc *= 3;
+            inc++;
+        } while (inc <= n);
+        do { //Loop over the partial sorts.
+            inc /= 3;
+            for (i = inc + 1; i <= n; i++) //Outer loop of straight insertion.
+            {
+                v = a[i];
+                j = i;
+                while (a[j - inc] > v) //Inner loop of straight insertion.
+                {
+                    a[j] = a[j - inc];
+                    j -= inc;
+                    if (j <= inc) break;
+                }
+                a[j] = v;
+            }
+        } while (inc > 1);
+    }
 
     /*!
      * This function implements a correlation algorithm as described by Wahl 2003
@@ -59,7 +85,7 @@ namespace correlate_wahl{
      * @param[in,out] w A vector of weights for the time events of the first channel
      * @param[in] nt The number of time events in the first channel
      */
-    void correlation_coarsen(
+    inline void correlation_coarsen(
             unsigned long long * t, double* w, size_t nt
     );
 
@@ -106,7 +132,7 @@ namespace correlate_wahl{
      *
      *
      */
-    void correlation_wahl(
+    void correlation(
             size_t start_1, size_t end_1,
             size_t start_2, size_t end_2,
             size_t i_casc, size_t n_bins,
@@ -138,7 +164,7 @@ namespace correlate_wahl{
      * in place.
      * @param[in] n_bins The number of bins per cascade of the correlation
      */
-    void correlation_normalize_wahl(
+    void correlation_normalize(
             double np1, uint64_t dt1,
             double np2, uint64_t dt2,
             std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
@@ -170,4 +196,4 @@ namespace correlate_wahl{
 }
 
 
-#endif //TTTRLIB_CORRELATE_WAHL_H
+#endif //TTTRLIB_PEULEN_H

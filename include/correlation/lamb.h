@@ -2,8 +2,8 @@
 // Created by Thomas-Otavio Peulen on 4/2/20.
 //
 
-#ifndef TTTRLIB_CORRELATE_LAMB_H
-#define TTTRLIB_CORRELATE_LAMB_H
+#ifndef TTTRLIB_LAMB_H
+#define TTTRLIB_LAMB_H
 
 #include <iostream>
 #include <cstdio>
@@ -17,7 +17,7 @@
 #include <climits>
 #include <cstring> // memcpy
 
-namespace lamb_lab{
+namespace lamb{
     /*!
      *
      * CAUTION: the arrays t1 and t2 are modified inplace by this function!!
@@ -63,9 +63,9 @@ namespace lamb_lab{
             std::vector<double> &corr,
             std::vector<unsigned long long> &x_axis_normalized,
             std::vector<double> &corr_normalized,
-            float cr1, float cr2,
+            double cr1, double cr2,
             int n_bins, int n_casc, unsigned long long maximum_macro_time
     );
 }
 
-#endif //TTTRLIB_CORRELATE_LAMB_H
+#endif //TTTRLIB_LAMB_H

@@ -44,6 +44,7 @@ class Tests(unittest.TestCase):
 
     def test_auto_correlation(self):
         data = self.data
+
         ch1_indeces = data.get_selection_by_channel(np.array([8]))
         ch2_indeces = data.get_selection_by_channel(np.array([0]))
         mt = data.macro_times
@@ -55,22 +56,29 @@ class Tests(unittest.TestCase):
         w2 = np.ones_like(t2, dtype=np.float)
 
         correlator = tttrlib.Correlator()
-        correlator.n_bins = 9
+        correlator.n_bins = 17
         correlator.n_casc = 25
-        correlator.set_events(t1, w1, t2, w2)
+        correlator.set_macrotimes(t1, t2)
+        correlator.set_weights(w1, w2)
+        x_peulen = correlator.x_axis
+        y_peulen = correlator.correlation
 
-        correlator.run("wahl")
-        x_wahl = correlator.x_axis
-        y_wahl = correlator.correlation
+        d = {
+            'n_bins': 17,
+            'n_casc': 25,
+            'macro_times': (t1, t2),
+            'weights': (w1, w2)
+        }
+        correlator2 = tttrlib.Correlator(**d)
 
-        correlator.run("lamb")
+        correlator.method = "lamb"
         x_lamb = correlator.x_axis
         y_lamb = correlator.correlation
 
-        n_min = min(len(x_wahl), len(x_lamb))
+        n_min = min(len(x_peulen), len(x_lamb))
         d = scipy.spatial.distance.directed_hausdorff(
             u=(
-                np.vstack([y_wahl, x_wahl]).T[0:n_min]
+                np.vstack([y_peulen, x_peulen]).T[0:n_min]
             ),
             v=(
                 np.vstack([y_lamb, x_lamb]).T[0:n_min]
@@ -78,6 +86,10 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(
             d[0] < 3.6,
+            True
+        )
+        self.assertEqual(
+            np.allclose(correlator2.correlation, y_peulen),
             True
         )
 
@@ -104,6 +116,7 @@ class Tests(unittest.TestCase):
 
     def test_auto_correlation(self):
         data = self.data
+
         ch1_indeces = data.get_selection_by_channel(np.array([0]))
         ch2_indeces = data.get_selection_by_channel(np.array([8]))
         mt = data.get_macro_time()
@@ -124,8 +137,8 @@ class Tests(unittest.TestCase):
         correlator = tttrlib.Correlator()
         correlator.n_bins = B
         correlator.n_casc = n_casc
-        correlator.set_events(t1, w1, t2, w2)
-        correlator.run()
+        correlator.set_macrotimes(t1, t2)
+        correlator.set_weights(w1, w2)
 
         x = correlator.x_axis
         y = correlator.correlation
@@ -166,8 +179,8 @@ class Tests(unittest.TestCase):
         correlator = tttrlib.Correlator()
         correlator.n_bins = B
         correlator.n_casc = n_casc
-        correlator.set_events(t1, w1, t2, w2)
-        correlator.run()
+        correlator.set_macrotimes(t1, t2)
+        correlator.set_weights(w1, w2)
 
         x = correlator.x_axis
         y = correlator.correlation
@@ -201,7 +214,6 @@ class Tests(unittest.TestCase):
         correlator.n_bins = B
         correlator.n_casc = n_casc
         correlator.set_events(t1, w1, t2, w2)
-        correlator.run()
 
         x = correlator.x_axis
         y = correlator.correlation

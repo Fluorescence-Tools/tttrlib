@@ -45,14 +45,22 @@
 #include <climits>
 //#include <taskflow/taskflow.hpp>
 
-#include <include/correlation/correlate_wahl.h>
-#include <include/correlation/correlate_lamb.h>
-#include <include/correlation/correlate_seidel.h>
+#include <include/correlation/peulen.h>
+#include <include/correlation/lamb.h>
 
 
 class Correlator{
 
+
 private:
+
+    /// The used correlation method. Currently either "peulen" or
+    /// "lamb".
+    std::string correlation_method = "peulen";
+
+    /// This is set to true if the output of the correlator is valid, i.e.,
+    /// if the correlation function corresponds to the input
+    bool is_valid = false;
 
     /// The number of cascades that coarsen the data
     size_t n_casc;
@@ -112,6 +120,36 @@ protected:
      */
     void update_axis();
 
+    /*!
+     * Get the correlation.
+     *
+    *
+    * @param[out] corr a pointer to an array that will contain the correlation
+    * @param[out] n_out a pointer to the an integer that will contain the
+    * number of elements of the x-axis
+    */
+    void get_corr(double **corr, int *n_out);
+
+    /*!
+     * Get the x-axis of the correlation
+     *
+     *
+     * @param[out] x_axis a pointer to an array that will contain the x-axis
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements of the x-axis
+     */
+    void get_x_axis(unsigned long long** x_axis, int* n_out);
+
+    /*!
+     * Calculates the normalized correlation amplitudes and x-axis
+     *
+     *
+     * Makes a copy of the current correlation curve, i.e., the x-axis and
+     * and the corresponding correlation amplitudes and calculates the values
+     * of the normalized correlation.
+     */
+    void normalize();
+
 
 public:
 
@@ -128,6 +166,7 @@ public:
      * @param[in] n_casc
      */
     void set_n_casc(int n_casc){
+        is_valid = false;
         Correlator::n_casc = (size_t) n_casc;
         update_axis();
     }
@@ -141,6 +180,7 @@ public:
     }
 
     void set_n_bins(int n_bins){
+        is_valid = false;
         Correlator::n_bins = (size_t) n_bins;
         update_axis();
     }
@@ -153,6 +193,15 @@ public:
         return n_corr;
     }
 
+    void set_correlation_method(std::string cm){
+        is_valid = false;
+        correlation_method = cm;
+    }
+
+    std::string get_correlation_method(){
+        return correlation_method;
+    }
+
     /*!
      * Changes the time axis to consider the micro times.
      * @param[in] tac_1 The micro times of the first correlation channel
@@ -161,49 +210,25 @@ public:
      * @param[in] n_tac_2 The number of events in the second correlation channel
      * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
-    void make_fine(unsigned int* tac_1, unsigned int n_tac_1, unsigned int* tac_2, unsigned int n_tac_2, unsigned int n_tac);
+    void set_microtimes(
+            unsigned int* tac_1,
+            unsigned int n_tac_1,
+            unsigned int* tac_2,
+            unsigned int n_tac_2,
+            unsigned int n_tac
+            );
 
     /*!
-     * Get the x-axis of the correlation
-     *
-     *
-     * @param[out] x_axis a pointer to an array that will contain the x-axis
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements of the x-axis
-     */
-    void get_x_axis(unsigned long long** x_axis, int* n_out);
-
-    /*!
-     * Get the correlation.
-     *
-     *
-     * @param[out] corr a pointer to an array that will contain the correlation
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements of the x-axis
-     */
-    void get_corr(double** corr, int* n_out);
-
-    /*!
-     * Get the normalized x-axis of the correlation
-     *
-     *
-     * @param[out] x_axis a pointer to an array that will contain the x-axis
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements
-     * of the x-axis
-     */
-    void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
-
-    /*!
-     * Get the normalized correlation.
-     *
-     *
-     * @param[out] corr a pointer to an array that will contain the
-     * normalized  correlation
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements of the normalized x-axis
-     */
-    void get_corr_normalized(double** corr, int* n_out);
+    *
+    * @param[in, out] Array t1 of the time events of the first channel
+    * @param[in] n_t1 The number of time events in the first channel
+    * @param t2 A vector of the time events of the second channel
+    * @param n_t2 The number of time events in the second channel
+    */
+    void set_macrotimes(
+            unsigned long long  *t1, int n_t1,
+            unsigned long long  *t2, int n_t2
+    );
 
     /*!
     *
@@ -222,26 +247,48 @@ public:
             double* weight_ch1, int n_weights_ch1,
             unsigned long long  *t2, int n_t2,
             double* weight_ch2, int n_weights_ch2
-            );
+    );
 
     /*!
-     * Calculates the normalized correlation amplitudes and x-axis
+     * Get the normalized x-axis of the correlation
      *
      *
-     * Makes a copy of the current correlation curve, i.e., the x-axis and
-     * and the corresponding correlation amplitudes and calculates the values
-     * of the normalized correlation.
+     * @param[out] x_axis a pointer to an array that will contain the x-axis
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements
+     * of the x-axis
      */
-    void normalize(
-            std::string correlation_method ="wahl"
-            );
+    void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
+
+    /*!
+    *
+    * @param w1 A vector of weights for the time events of the first channel
+    * @param n_weights_ch1 The number of weights of the first channel
+    * @param w2 A vector of weights for the time events of the second channel
+    * @param n_weights_ch2 The number of weights of the second channel
+    */
+    void set_weights(
+            double* weight_ch1, int n_weights_ch1,
+            double* weight_ch2, int n_weights_ch2
+    );
+
+    /*!
+     * Get the normalized correlation.
+     *
+     * @param[out] corr a pointer to an array that will contain the
+     * normalized  correlation
+     * @param[out] n_out a pointer to the an integer that will contain the
+     * number of elements of the normalized x-axis
+     */
+    void get_corr_normalized(double** corr, int* n_out);
 
     /*!
      * Compute the correlation function
      *
-     * @param correlation_method either "wahl" or "lamb", "seidel"
+     * @param correlation_method either "peulen" or "lamb"
      */
-    void run(std::string correlation_method = "wahl");
+    void run();
+
 
 };
 

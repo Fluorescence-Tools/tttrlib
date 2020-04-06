@@ -1,16 +1,12 @@
-//
-// Created by Thomas-Otavio Peulen on 4/2/20.
-//
-
-#include "include/correlation/correlate_lamb.h"
+#include "include/correlation/lamb.h"
 
 
-void lamb_lab::normalize(
+void lamb::normalize(
         std::vector<unsigned long long> &x_axis,
         std::vector<double> &corr,
         std::vector<unsigned long long> &x_axis_normalized,
         std::vector<double> &corr_normalized,
-        float cr1, float cr2,
+        double cr1, double cr2,
         int n_bins, int n_casc, unsigned long long maximum_macro_time
 ){
     std::vector<double> divisor;
@@ -32,7 +28,7 @@ void lamb_lab::normalize(
     std::cout << std::endl;
 }
 
-void lamb_lab::CCF(
+void lamb::CCF(
         const unsigned long long *t1,
         const unsigned long long *t2,
         const double *weights1,

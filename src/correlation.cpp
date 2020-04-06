@@ -36,6 +36,24 @@ void Correlator::update_axis(){
 }
 
 
+void Correlator::set_macrotimes(
+        unsigned long long  *t1, int n_t1,
+        unsigned long long  *t2, int n_t2
+){
+    is_valid = false;
+
+    Correlator::t1 = t1;
+    Correlator::n_t1 = (size_t) n_t1;
+
+    Correlator::t2 = t2;
+    Correlator::n_t2 = (size_t) n_t2;
+
+    dt1 = t1[n_t1 - 1] - t1[0];
+    dt2 = t2[n_t2 - 1] - t2[0];
+    maximum_macro_time = std::max(dt1, dt2);
+}
+
+
 void Correlator::set_events(
         unsigned long long  *t1, int n_t1,
         double* weight_ch1, int n_weights_ch1,
@@ -56,22 +74,36 @@ void Correlator::set_events(
 }
 
 
-void Correlator::normalize(
-        std::string correlation_method
-        ){
+void Correlator::set_weights(
+        double* weight_ch1, int n_weights_ch1,
+        double* weight_ch2, int n_weights_ch2
+){
+    is_valid = false;
+
+    Correlator::w1 = weight_ch1;
+    Correlator::n_t1 = (size_t) n_t1;
+
+    Correlator::w2 = weight_ch2;
+    Correlator::n_t2 = (size_t) n_t2;
+
+}
+
+
+
+void Correlator::normalize(){
 #if VERBOSE
-    std::clog << "-- Normalizing correlation curve" << std::endl;
+    std::clog << "-- Normalizing correlation curve..." << std::endl;
 #endif
     double np1 = std::accumulate(w1, w1+n_t1, 0.0);
     double np2 = std::accumulate(w2, w2+n_t2, 0.0);
 #if VERBOSE
-    std::clog << "-- Number of photons or sum of weights channel 1: " << np1 << std::endl;
-    std::clog << "-- Number of photons or sum of weights channel 2: " << np2 << std::endl;
+    std::clog << "-- Number sum of weights (Ch1): " << np1 << std::endl;
+    std::clog << "-- Number sum of weights (Ch2): " << np2 << std::endl;
 #endif
 
 #if VERBOSE
-    std::clog << "-- Maximum time in correlation channel 1: " << dt1 << std::endl;
-    std::clog << "-- Maximum time in correlation channel 2: " << dt2 << std::endl;
+    std::clog << "-- Maximum time (Ch1): " << dt1 << std::endl;
+    std::clog << "-- Maximum time (Ch2): " << dt2 << std::endl;
     std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;
 #endif
     // compute count rates for normalization
@@ -85,8 +117,8 @@ void Correlator::normalize(
     for(size_t i=0; i<x_axis_normalized.size(); i++) x_axis_normalized[i] = x_axis[i];
     for(size_t i=0; i<corr_normalized.size(); i++) corr_normalized[i] = corr[i];
 
-    if(correlation_method == "wahl"){
-        correlate_wahl::correlation_normalize_wahl(
+    if(correlation_method == "peulen"){
+        peulen::correlation_normalize(
                 np1, dt1,
                 np2, dt2,
                 x_axis_normalized,
@@ -94,67 +126,52 @@ void Correlator::normalize(
                 n_bins
         );
     } else if (correlation_method == "lamb") {
-        lamb_lab::normalize(
+        lamb::normalize(
                 x_axis, corr,
                 x_axis_normalized, corr_normalized,
                 cr1, cr2,
                 n_bins, n_casc, maximum_macro_time
                 );
-    } else if (correlation_method == "seidel") {
-        lamb_lab::normalize(
-                x_axis, corr,
-                x_axis_normalized, corr_normalized,
-                cr1, cr2,
-                n_bins, n_casc, maximum_macro_time
-        );
-//        seidel_lab::correlation_normalization(
-//                n_casc, n_bins,
-//                corr.data(), x_axis.data(),
-//                np1, np2,
-//                maximum_macro_time
-//        );
     }
 }
 
 
-void Correlator::run(
-        std::string correlation_method
-        ){
+void Correlator::run(){
 #if VERBOSE
     std::clog << "CORRELATOR::RUN" << std::endl;
     std::clog << "-- Correlation mode: " << correlation_method << std::endl;
     std::clog << "-- Filling correlation vectors with zero: " << correlation_method << std::endl;
 #endif
+    if(is_valid){
+#if VERBOSE
+        std::clog << "CORRELATOR::RUN" << std::endl;
+        std::clog << "-- results are already valid." << std::endl;
+#endif
+        return;
+    }
     std::fill(corr.begin(), corr.end(), 0.0);
-    if (correlation_method == "wahl"){
-        correlate_wahl::correlation_full(
+    if (correlation_method == "peulen"){
+        peulen::correlation_full(
                 n_casc, n_bins,
                 x_axis, corr,
                 t1, w1, n_t1,
                 t2, w2, n_t2
         );
     } else if (correlation_method == "lamb") {
-        lamb_lab::CCF(
-            t1, t2, w1, w2,
-            (unsigned int) n_bins, (unsigned int) n_casc,
-            (unsigned int) n_t1, (unsigned int) n_t2,
-            x_axis.data(), corr.data()
-        );
-    } else if (correlation_method == "seidel"){
-        seidel_lab::correlation_fast_full(
-                t1, t2,
-                nullptr, nullptr,
-                0,
-                w1, w2,
-                n_casc, n_bins,
-                n_t1, n_t2,
-                corr.data(), x_axis.data(),
-                false
+        lamb::CCF(
+                (const unsigned long long*) t1,
+                (const unsigned long long*) t2, w1, w2,
+                (unsigned int) n_bins,
+                (unsigned int) n_casc,
+                (unsigned int) n_t1,
+                (unsigned int) n_t2,
+                x_axis.data(),
+            corr.data()
         );
     } else{
         std::cerr << "WARNING: Correlation mode not recognized!" << std::endl;
     }
-    normalize(correlation_method);
+    normalize();
 }
 
 
@@ -162,6 +179,9 @@ void Correlator::get_corr_normalized(
         double** corr,
         int* n_out
         ){
+    if(!is_valid){
+        run();
+    }
     (*n_out) = (int) corr_normalized.size();
     auto* t = (double *) malloc((*n_out) * sizeof(double));
     for(int i = 0; i < (*n_out); i++){
@@ -210,14 +230,15 @@ void Correlator::get_x_axis(
 }
 
 
-void Correlator::make_fine(
+void Correlator::set_microtimes(
         unsigned int* tac_1, unsigned int n_tac_1,
         unsigned int* tac_2, int unsigned n_tac_2,
         unsigned int n_tac
         ){
+    is_valid = false;
     if(!is_fine){
-        correlate_wahl::make_fine_times(t1, (unsigned int) n_t1, tac_1, n_tac);
-        correlate_wahl::make_fine_times(t2, (unsigned int) n_t2, tac_2, n_tac);
+        peulen::make_fine_times(t1, (unsigned int) n_t1, tac_1, n_tac);
+        peulen::make_fine_times(t2, (unsigned int) n_t2, tac_2, n_tac);
         is_fine = true;
     }
 }

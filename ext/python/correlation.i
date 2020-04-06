@@ -32,9 +32,11 @@
     (double* weight_ch2, int n_weights_ch2)
 }
 
+%include <std_string.i>
 %include attribute.i
 %attribute(Correlator, int, n_bins, get_n_bins, set_n_bins);
 %attribute(Correlator, int, n_casc, get_n_casc, set_n_casc);
+%attributestring(Correlator, std::string, method, get_correlation_method, set_correlation_method);
 
 %include "../include/correlation.h"
 
