@@ -38,6 +38,12 @@ To compile ``tttrlib`` a set of prerequisites need to be fulfilled:
     4. `cmake <https://cmake.org/>`_
     5. `SWIG <http://www.swig.org/>`_
 
+To debug and analyze the ouput of ``tttrlib`` in more detail it can be useful to
+build the library in Debug mode that outputs additional information to the standard
+standard logging stream. tttrlib can be build in debugging mode by. ::
+
+    python setup.py build_ext --debug
+
 
 Windows
 ^^^^^^^
