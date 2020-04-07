@@ -258,6 +258,16 @@ class TTTR {
     friend class CLSMImage;
 
 private:
+
+    /*!
+     * Copy the information from another TTTR object
+     *
+     * @param p2 the TTTR object which which the information is copied from
+     * @param include_big_data if this is true also the macro time, micro time
+     * etc. are copied. Otherwise all other is copied
+     */
+    void copy_from(const TTTR &p2, bool include_big_data=true);
+
     /// the input file
     std::string filename;
 
@@ -481,6 +491,10 @@ public:
      */
     TTTR();
 
+    /// Copy constructor
+    TTTR(const TTTR &p2);
+
+
     /*!
      *
      * @param filename TTTR filename
@@ -507,18 +521,41 @@ public:
     TTTR(const char *filename, const char* container_type);
 
 
-    // Constructors for in memory data
-    TTTR(unsigned long long *n_sync_pulses,
-         unsigned int *micro_times,
-         short *routing_channels,
-         short *event_types
+    /*!
+     * Constructor of TTTR object using arrays of the TTTR events
+     *
+     * If arrays of different size are used to initialize a TTTR object
+     * the shortest array of all provided arrays is used to construct the
+     * TTTR object.
+     *
+     * @param macro_times input array containing the macro times
+     * @param n_macrotimes  number of macro times
+     * @param micro_times input array containing the microtimes
+     * @param n_microtimes length of the of micro time array
+     * @param routing_channels routing channel array
+     * @param n_routing_channels length of the routing channel array
+     * @param event_types array of event types
+     * @param n_event_types number of elements in the event type array
+     */
+    TTTR(unsigned long long *macro_times, int n_macrotimes,
+         unsigned int *micro_times, int n_microtimes,
+         short *routing_channels, int n_routing_channels,
+         short *event_types, int n_event_types
     );
 
-    TTTR(TTTR *parent,
-         long long *selection,
-         int n_selection
-    );
-
+    /*!
+     * This constructor can be used to create a new TTTR object that only
+     * contains records that are specified in the selection array.
+     *
+     * The selection array is an array of indices. The events with indices
+     * in the selection array are copied in the order of the selection array
+     * to a new TTTR object.
+     *
+     * @param parent
+     * @param selection
+     * @param n_selection
+     */
+    TTTR(const TTTR &parent, long long *selection, int n_selection);
 
     /// Destructor
     ~TTTR();

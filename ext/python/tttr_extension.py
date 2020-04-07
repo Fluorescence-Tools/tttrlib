@@ -15,6 +15,11 @@ def macro_times(self):
 
 
 @property
+def event_types(self):
+    return self.get_event_type()
+
+
+@property
 def header(self):
     return self.get_header()
 

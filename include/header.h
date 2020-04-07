@@ -229,7 +229,7 @@ public:
      */
     Header();
 
-    // Copy constructor
+    /// Copy constructor
     Header(const Header &p2);
 
     /*!

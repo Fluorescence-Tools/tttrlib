@@ -47,40 +47,88 @@ TTTR::TTTR() :
 }
 
 
-TTTR::TTTR(
-        unsigned long long *n_sync_pulses,
-        unsigned int *micro_times,
-        short *routing_channels,
-        int16_t *event_types) :
-        TTTR() {
-    TTTR::macro_times = n_sync_pulses;
-    TTTR::micro_times = micro_times;
-    TTTR::routing_channels = routing_channels;
-    TTTR::event_types = event_types;
+TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
+           unsigned int *micro_times, int n_microtimes,
+           short *routing_channels, int n_routing_channels,
+           short *event_types, int n_event_types
+): TTTR() {
+#if VERBOSE
+    std::clog << "INITIALIZING FROM VECTORS" << std::endl;
+#endif
+    this->filename = "NA";
+    size_t n_elements = 0;
+    if (!(n_macrotimes == n_microtimes &&
+          n_macrotimes == n_routing_channels &&
+          n_macrotimes == n_event_types)
+    ) {
+        // the selection does not match the dimension of the parent
+        n_elements = std::min(n_macrotimes, std::min(
+                n_microtimes, std::min(
+                        n_routing_channels, n_event_types
+                )));
+        std::cerr << "WARNING: The input vectors differ in size. Using " << std::endl;
+    } else{
+        n_elements = n_macrotimes;
+    }
+    allocate_memory_for_records(n_elements);
+    n_valid_events = n_elements;
+    for(size_t i=0; i<n_elements; i++){
+        this->macro_times[i] = macro_times[i];
+        this->micro_times[i] = micro_times[i];
+        this->event_types[i] = event_types[i];
+        this->routing_channels[i] = routing_channels[i];
+    }
+    find_used_routing_channels();
 }
 
 
-TTTR::TTTR(
-        TTTR *parent,
-        long long *selection,
-        int n_selection
-) :
-        TTTR()
+TTTR::TTTR(const TTTR &parent, long long *selection, int n_selection) :  TTTR()
         {
-    TTTR::n_valid_events = (size_t) n_selection;
-    if ((size_t) n_selection > parent->n_valid_events) {
-        // the selection does not match the dimension of the parent
-        throw std::invalid_argument("The dimension of "
-                                    "the selection exceeds "
-                                    "the parents dimension.");
+#if VERBOSE
+    std::clog << "INITIALIZING FROM SELECTION" << std::endl;
+#endif
+    copy_from(parent, false);
+    this->n_valid_events = (size_t) n_selection;
+    if ((size_t) n_selection > parent.n_valid_events) {
+        std::cerr << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
     }
-    allocate_memory_for_records(n_valid_events);
+    allocate_memory_for_records(n_selection);
     for(size_t i=0; i<n_valid_events; i++){
-        TTTR::macro_times[i] = parent->macro_times[selection[i]];
-        TTTR::micro_times[i] = parent->micro_times[selection[i]];
-        TTTR::event_types[i] = parent->event_types[selection[i]];
-        TTTR::routing_channels[i] = parent->routing_channels[selection[i]];
+        TTTR::macro_times[i] = parent.macro_times[selection[i]];
+        TTTR::micro_times[i] = parent.micro_times[selection[i]];
+        TTTR::event_types[i] = parent.event_types[selection[i]];
+        TTTR::routing_channels[i] = parent.routing_channels[selection[i]];
     }
+    find_used_routing_channels();
+}
+
+void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
+    filename = p2.filename;
+    header = new Header(*p2.header);
+    tttr_container_type = p2.tttr_container_type;
+    tttr_container_type_str = p2.tttr_container_type_str;
+    bytes_per_record = p2.bytes_per_record;
+    fp_records_begin = p2.fp_records_begin;
+
+    used_routing_channels = p2.used_routing_channels;
+    n_records_in_file = p2.n_records_in_file;
+    n_records_read = p2.n_records_read;
+    n_valid_events = p2.n_valid_events;
+    fp_records_begin = p2.fp_records_begin;
+    if (include_big_data){
+        allocate_memory_for_records(p2.n_valid_events);
+        for (size_t i = 0; i < p2.n_valid_events; i++) {
+            macro_times[i] = p2.macro_times[i];
+            micro_times[i] = p2.micro_times[i];
+            routing_channels[i] = p2.routing_channels[i];
+            event_types[i] = p2.event_types[i];
+        }
+    }
+}
+
+
+TTTR::TTTR(const TTTR &p2){
+    copy_from(p2, true);
 }
 
 
@@ -254,6 +302,9 @@ int TTTR::read_file(
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
+#if VERBOSE
+            std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
+#endif
         }
         return 1;
     }
@@ -279,6 +330,9 @@ std::string TTTR::get_filename() {
 
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
+#if VERBOSE
+    std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
+#endif
     if(tttr_container_type == 5) {
         macro_times = (unsigned long long*) H5allocate_memory(
                 n_rec * sizeof(unsigned long long), false
@@ -408,32 +462,17 @@ Header TTTR::get_header() {
 
 
 void TTTR::get_macro_time(unsigned long long** output, int* n_output){
-    get_array(
-            n_valid_events,
-            macro_times,
-            output,
-            n_output
-    );
+    get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
 }
 
 
 void TTTR::get_micro_time(uint32_t** output, int* n_output){
-    get_array(
-            n_valid_events,
-            micro_times,
-            output,
-            n_output
-    );
+    get_array<uint32_t>(n_valid_events, micro_times, output, n_output);
 }
 
 
 void TTTR::get_routing_channel(int16_t** output, int* n_output){
-    get_array(
-            n_valid_events,
-            routing_channels,
-            output,
-            n_output
-    );
+    get_array<int16_t>(n_valid_events, routing_channels, output, n_output);
 }
 
 void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
@@ -508,7 +547,7 @@ void TTTR::get_ranges_by_count_rate(
 
 
 TTTR* TTTR::select(long long *selection, int n_selection) {
-    return new TTTR(this, selection, n_selection);
+    return new TTTR(*this, selection, n_selection);
 }
 
 
