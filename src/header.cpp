@@ -32,8 +32,8 @@ Header::Header() :
         macro_time_resolution(0),
         tttr_container_type(0),
         header_end(0),
-        bytes_per_record(1),
-        tttr_record_type(0)
+        bytes_per_record(0),
+        tttr_record_type(-1)
 {}
 
 Header::Header(const Header &p2) {
