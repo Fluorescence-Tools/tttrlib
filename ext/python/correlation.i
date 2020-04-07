@@ -17,20 +17,13 @@
     #include "../include/correlation.h"
 %}
 
-%apply (unsigned long long* IN_ARRAY1, int DIM1) {
-    (unsigned long long *t1, int n_t1),
-    (unsigned long long *t2, int n_t2)
-}
-%apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (unsigned long long** x_axis, int* n_out)
-}
-%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {
-    (double** corr, int* n_out)
-}
-%apply (double* IN_ARRAY1, int DIM1) {
-    (double* weight_ch1, int n_weights_ch1),
-    (double* weight_ch2, int n_weights_ch2)
-}
+%apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *t1, int n_t1),(unsigned long long *t2, int n_t2)}
+%apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** output, int* n_output)}
+%apply (double* IN_ARRAY1, int DIM1) {(double* weight_ch1, int n_weights_ch1)}
+%apply (double* IN_ARRAY1, int DIM1) {(double* weight_ch2, int n_weights_ch2)}
+%apply (unsigned int* IN_ARRAY1, int DIM1) {(unsigned int* tac_1, unsigned int n_tac_1)}
+%apply (unsigned int* IN_ARRAY1, int DIM1) {(unsigned int* tac_2, unsigned int n_tac_2)}
 
 %include <std_string.i>
 %include attribute.i

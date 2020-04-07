@@ -45,8 +45,12 @@
 #include <climits>
 //#include <taskflow/taskflow.hpp>
 
+#include <include/tttr.h>
 #include <include/correlation/peulen.h>
 #include <include/correlation/lamb.h>
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
 class Correlator{
@@ -54,34 +58,41 @@ class Correlator{
 
 private:
 
+    TTTR* tttr;
+
     /// The used correlation method. Currently either "peulen" or
     /// "lamb".
-    std::string correlation_method = "peulen";
+    std::string correlation_method = "default";
+
+    /// Time axis calibration is a factor that converts the time axsis
+    /// of the time events to milliseconds. By default this value is set
+    /// to 1.0 and the returned time axis is in units of the time events.
+    double time_axis_calibration = 1.0;
 
     /// This is set to true if the output of the correlator is valid, i.e.,
     /// if the correlation function corresponds to the input
     bool is_valid = false;
 
     /// The number of cascades that coarsen the data
-    size_t n_casc;
+    int n_casc;
     /// The number of bins (correlation channels) per cascade
-    size_t n_bins;
+    int n_bins;
     /// The total number of correlation channels
-    size_t n_corr;
+    int n_corr = 0;
 
     /// The array containing the times points of the first correlation channel
-    unsigned long long* t1;
+    unsigned long long* t1 = nullptr;
     /// The array containing the weights of the first correlation channel
-    double* w1;
+    double* w1 = nullptr;
     /// The number of time points in the first correlation channel
-    size_t n_t1;
+    size_t n_t1 = 0;
 
     /// The array containing the times points of the second correlation channel
-    unsigned long long * t2;
+    unsigned long long * t2 = nullptr;
     /// The array containing the weights of the second correlation channel
-    double* w2;
+    double* w2 = nullptr;
     /// The number of time points in the second correlation channel
-    size_t n_t2;
+    size_t n_t2 = 0;
 
     /// The x-axis (the time axis) of the correlation
     std::vector<unsigned long long> x_axis;
@@ -104,11 +115,17 @@ private:
     uint64_t dt2;
 
     /// This flag ist true, if the time events were changed to generate a fine time-axis,
-    /// i.e., consider the TAC channels for correlation.
+    /// i.e., consider the TAC channels for a full correlation.
     bool is_fine;
 
 
 protected:
+
+    /*!
+     * Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t
+     * is the difference between the first and the last photon.
+     */
+    void compute_dt();
 
     /*!
      *
@@ -138,7 +155,7 @@ protected:
      * @param[out] n_out a pointer to the an integer that will contain the
      * number of elements of the x-axis
      */
-    void get_x_axis(unsigned long long** x_axis, int* n_out);
+    void get_x_axis(unsigned long long** output, int* n_output);
 
     /*!
      * Calculates the normalized correlation amplitudes and x-axis
@@ -152,22 +169,34 @@ protected:
 
 
 public:
+    void set_time_axis_calibration(double v){
+#if VERBOSE
+        std::clog << "-- Time axis calibration [ms/bin]: " << v << std::endl;
+#endif
+        time_axis_calibration = v;
+        is_valid = false;
+    }
 
-    Correlator() :
-        n_casc(1),
-        n_bins(1),
-        is_fine(false)
-    {};
-    ~Correlator() = default;
+    Correlator(TTTR *tttr = nullptr,
+               std::string method = "default",
+               int n_bins = 17,
+               int n_casc = 25
+    );
+
+    ~Correlator(){
+        free(t1); free(t2);
+        free(w1); free(w2);
+    };
+
 
     /*!
      * Sets the number of cascades of the correlation curve and
      * updates the correlation axis.
      * @param[in] n_casc
      */
-    void set_n_casc(int n_casc){
+    void set_n_casc(int v){
         is_valid = false;
-        Correlator::n_casc = (size_t) n_casc;
+        n_casc = MAX(1, v);
         update_axis();
     }
 
@@ -175,17 +204,17 @@ public:
      *
      * @return
      */
-    size_t get_n_casc(){
+    int get_n_casc(){
         return n_casc;
     }
 
-    void set_n_bins(int n_bins){
+    void set_n_bins(int v){
         is_valid = false;
-        Correlator::n_bins = (size_t) n_bins;
+        n_bins = MAX(1, v);
         update_axis();
     }
 
-    size_t get_n_bins(){
+    int get_n_bins(){
         return n_bins;
     }
 
@@ -258,7 +287,7 @@ public:
      * number of elements
      * of the x-axis
      */
-    void get_x_axis_normalized(unsigned long long** x_axis, int* n_out);
+    void get_x_axis_normalized(double** output, int* n_output);
 
     /*!
     *
@@ -280,15 +309,28 @@ public:
      * @param[out] n_out a pointer to the an integer that will contain the
      * number of elements of the normalized x-axis
      */
-    void get_corr_normalized(double** corr, int* n_out);
+    void get_corr_normalized(double** output, int* n_output);
 
     /*!
-     * Compute the correlation function
+     * Compute the correlation function. Usually calling this method is
+     * not necessary the the validity of the correlation function is tracked
+     * by the attribute is_valid.
      *
-     * @param correlation_method either "peulen" or "lamb"
      */
     void run();
 
+    /*!
+     * This method sets the time and the weights using TTTR objects.
+     *
+     * The header of the first TTTR object is used for calibration. Both TTTR
+     * objects should have the same calibration (this is not checked).
+     *
+     * @param tttr_1
+     * @param tttr_2
+     * @param make_fine if true a full correlation is computed that uses the
+     * micro time in the TTTR objects (default is false).
+     */
+    void set_tttr(TTTR* tttr_1, TTTR* tttr_2, bool make_fine=false);
 
 };
 

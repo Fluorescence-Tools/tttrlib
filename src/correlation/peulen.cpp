@@ -112,6 +112,9 @@ void peulen::make_fine_times(
         unsigned int *tac,
         unsigned int n_tac
 ) {
+#if VERBOSE
+    std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;
+#endif
     for (size_t i = 0; i < n_times; i++) {
         t[i] = t[i] * n_tac + tac[i];
     }
