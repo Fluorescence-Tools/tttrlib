@@ -184,3 +184,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             len(d.macro_times), 0
         )
+        header = d.header
+        self.assertEqual(
+            header.getTTTRRecordType(), -1
+        )

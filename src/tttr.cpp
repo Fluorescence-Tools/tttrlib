@@ -44,6 +44,7 @@ TTTR::TTTR() :
     container_names.insert({std::string("SPC-600_256"), 3});
     container_names.insert({std::string("SPC-600_4096"), 4});
     container_names.insert({std::string("PHOTON-HDF5"), 5});
+    header = new Header();
 }
 
 
@@ -165,7 +166,7 @@ TTTR::TTTR(const char *fn, const char *container_type) :
     find_used_routing_channels();
 }
 
-void TTTR::shift_macro_time(unsigned int shift) {
+void TTTR::shift_macro_time(int shift) {
     for(size_t i=0; i<n_valid_events; i++){
         macro_times[i] += shift;
     }
@@ -268,48 +269,40 @@ int TTTR::read_file(
         boost::filesystem::path p = fn;
         filename = boost::filesystem::canonical(boost::filesystem::absolute(p)).generic_string();
         fn = filename.c_str();
-        if (container_type == PHOTON_HDF_CONTAINER)
-        {
+        if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
-        }
-        else{
+        } else{
             fp = fopen(fn, "rb");
-            if (fp != nullptr)
-            {
-                header = new Header(fp, container_type);
-                fp_records_begin = header->header_end;
-                bytes_per_record = header->bytes_per_record;
-                tttr_record_type = header->getTTTRRecordType();
+            header = new Header(fp, container_type);
+            fp_records_begin = header->header_end;
+            bytes_per_record = header->bytes_per_record;
+            tttr_record_type = header->getTTTRRecordType();
 #if VERBOSE
-                std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
-                processRecord = processRecord_map[tttr_record_type];
-                n_records_in_file = determine_number_of_records_by_file_size(
-                        fp,
-                        header->header_end,
-                        bytes_per_record
-                );
+            processRecord = processRecord_map[tttr_record_type];
+            n_records_in_file = determine_number_of_records_by_file_size(
+                    fp,
+                    header->header_end,
+                    bytes_per_record
+            );
 #if VERBOSE
-                std::clog << "-- Number of records: " << n_records_in_file << std::endl;
+            std::clog << "-- Number of records: " << n_records_in_file << std::endl;
 #endif
-            }
-            else{
-#if VERBOSE
-                std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
-#endif
-                return 0;
-            }
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
+        }
 #if VERBOSE
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
 #endif
-        }
-        return 1;
+            return 1;
+    } else{
+#if VERBOSE
+        std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
+#endif
+        return 0;
     }
-    std::cerr << "-- WARNING: Could not open file " << fn << std::endl;
-    return 1;
 }
 
 
@@ -457,7 +450,17 @@ void TTTR::read_records() {
 
 
 Header TTTR::get_header() {
-    return *header;
+#if VERBOSE
+    std::clog << "-- TTTR::get_header" << std::endl;
+#endif
+    if(header != nullptr){
+        return *header;
+    } else{
+#if VERBOSE
+        std::cerr << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
+#endif
+        return Header();
+    }
 }
 
 

@@ -273,7 +273,7 @@ private:
 
     std::vector<TTTR*> children;
 
-    Header *header;
+    Header *header = nullptr;
 
     uint64_t overflow_counter;
 
@@ -391,13 +391,13 @@ protected:
     void read_records();
 
     /// the number of time tagged data records in the TTTR file
-    size_t n_records_in_file;
+    size_t n_records_in_file = 0;
 
     /// the number of read time tagged data
-    size_t n_records_read;
+    size_t n_records_read = 0;
 
     /// the number of valid read records (excluded overflow and invalid records)
-    size_t n_valid_events;
+    size_t n_valid_events = 0;
 
     /*!
      * Reads the TTTR data contained in a file into the TTTR object
@@ -624,9 +624,7 @@ public:
      * Shift the macro time by a constant
      * @param shift
      */
-    void shift_macro_time(
-            unsigned int shift
-            );
+    void shift_macro_time(int shift);
 };
 
 
