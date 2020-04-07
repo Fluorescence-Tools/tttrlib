@@ -36,6 +36,18 @@ Header::Header() :
         tttr_record_type(0)
 {}
 
+Header::Header(const Header &p2) {
+    macro_time_resolution = p2.macro_time_resolution;
+    bytes_per_record = p2.bytes_per_record;
+    micro_time_resolution = p2.micro_time_resolution;
+    header_end = p2.header_end;
+    tttr_record_type = p2.tttr_record_type;
+    number_of_tac_channels = p2.number_of_tac_channels;
+    tttr_container_type = p2.tttr_container_type;
+    data = p2.data;
+}
+
+
 
 Header::Header(
         std::FILE *fpin,

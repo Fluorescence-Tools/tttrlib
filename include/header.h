@@ -229,6 +229,9 @@ public:
      */
     Header();
 
+    // Copy constructor
+    Header(const Header &p2);
+
     /*!
      * Constructor for the @class Header that takes a file pointer and the container type of the
      * file represented by the file pointer. The container type refers either to a PicoQuant (PQ) PTU or
