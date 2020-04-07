@@ -1,20 +1,14 @@
 %module(directors="1") tttrlib
 %{
-#include "../include/image.h"
+    #include "../include/image.h"
+    #include "../include/tttr.h"
 %}
 
 %include "std_vector.i";
 %include "std_list.i";
-namespace std {
-    %template(vector_CLSMFrame) vector<CLSMFrame*>;
-    %template(vector_CLSMLine) vector<CLSMLine*>;
-    %template(vector_CLSMPixel) vector<CLSMPixel*>;
-    %template(vector_uint) vector<unsigned int>;
-    %template(vector_ulonglong) vector<unsigned long long>;
-    %template(vector3D_uint) vector<vector<vector<unsigned int>>>;
-    // %template(VecSize) vector<size_t>;
-    //%template(vector4D_uchar) vector<vector<vector<vector<char>>>>;
-}
+%template(vector_CLSMFrame) std::vector<CLSMFrame*>;
+%template(vector_CLSMLine) std::vector<CLSMLine*>;
+%template(vector_CLSMPixel) std::vector<CLSMPixel*>;
 
 %apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {
     (unsigned int** out, int* dim1, int* dim2)
