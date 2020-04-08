@@ -62,39 +62,46 @@ class Tests(unittest.TestCase):
             True
         )
 
-    # def compare_to_kristine(self):
-    #     import tttrlib
-    #     import pylab as p
-    #     data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-    #
-    #     correlator = tttrlib.Correlator(
-    #         method='default',
-    #         n_casc=35,
-    #         n_bins=6,
-    #         tttr=(
-    #             tttrlib.TTTR(data, data.get_selection_by_channel([0])),
-    #             tttrlib.TTTR(data, data.get_selection_by_channel([8]))
-    #         ),
-    #         make_fine=False
-    #     )
-    #     x = correlator.x_axis
-    #     y = correlator.correlation
-    #     p.semilogx(x, y)
-    #
-    #     # load a file correlated using Kristine as a reference
-    #     ref = np.loadtxt("./data/BH/correlator_references/BH_SPC132/08/MCSg_s--g_p.cor").T
-    #     x_kristine, y_kristine, cr, err = ref
-    #     p.semilogx(x_kristine, y_kristine)
-    #
-    #     n_min = min(len(x_kristine), len(x))
-    #     d = scipy.spatial.distance.directed_hausdorff(
-    #         u=(
-    #             np.vstack([y, x]).T[0:n_min-1]
-    #         ),
-    #         v=(
-    #             np.vstack([y_kristine, x_kristine]).T[0:n_min-1]
-    #         )
-    #     )
+    def compare_to_kristine(self):
+        # This test compares tttrlib correlations to the
+        # correlations performed by the Seidel software Kristine
+
+        # import tttrlib
+        # import pylab as p
+        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+
+        correlator = tttrlib.Correlator(
+            method='default',
+            n_casc=20,
+            n_bins=10,
+            tttr=(
+                tttrlib.TTTR(data, data.get_selection_by_channel([0])),
+                tttrlib.TTTR(data, data.get_selection_by_channel([8]))
+            ),
+            make_fine=False
+        )
+        x = correlator.x_axis
+        y = correlator.correlation
+
+        # load a file correlated using Kristine as a reference
+        ref = np.loadtxt("./data/BH/correlator_references/BH_SPC132/08/MCSg_s--g_p.cor").T
+        x_kristine, y_kristine, cr, err = ref
+        # p.semilogx(x, y)
+        # p.semilogx(x_kristine, y_kristine)
+
+        n_min = min(len(x_kristine), len(x))
+        d = scipy.spatial.distance.directed_hausdorff(
+            u=(
+                np.vstack([y, x]).T[0:n_min-1]
+            ),
+            v=(
+                np.vstack([y_kristine, x_kristine]).T[0:n_min-1]
+            )
+        )
+        self.assertEqual(
+            d[0] < 6.3,
+            True
+        )
 
     def test_correlation(self):
         # correlations providing macro times and weights
@@ -221,7 +228,7 @@ class Tests(unittest.TestCase):
         w2 = np.ones_like(t2, dtype=np.float)
         correlator_ref.set_macrotimes(t1, t2)
         correlator_ref.set_weights(w1, w2)
-        n_microtime_channels = data.get_number_of_tac_channels()
+        n_microtime_channels = data.get_number_of_micro_time_channels()
         correlator_ref.set_microtimes(mt1, mt2, n_microtime_channels)
         x_ref = correlator_ref.x_axis
         y_ref = correlator_ref.correlation
