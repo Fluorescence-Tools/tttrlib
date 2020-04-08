@@ -5,7 +5,7 @@ import numpy as np
 fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
-data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 
 # Plot the raw/unfiltered correlations
 
