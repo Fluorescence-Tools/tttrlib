@@ -90,10 +90,6 @@ class Tests(unittest.TestCase):
             p2.macro_time_resolution
         )
         self.assertEqual(
-            p1.bytes_per_record,
-            p2.bytes_per_record
-        )
-        self.assertEqual(
             p1.micro_time_resolution,
             p2.micro_time_resolution
         )
