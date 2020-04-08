@@ -313,8 +313,8 @@ void Correlator::set_tttr(
     compute_dt();
     if(make_fine){
         int n_tac = MIN(
-                tttr_1->get_number_of_tac_channels(),
-                tttr_2->get_number_of_tac_channels()
+                tttr_1->get_number_of_micro_time_channels(),
+                tttr_2->get_number_of_micro_time_channels()
                 );
         unsigned int* tac_1; int n_tac1;
         tttr_1->get_micro_time(&tac_1, &n_tac1);

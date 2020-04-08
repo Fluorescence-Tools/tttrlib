@@ -34,7 +34,7 @@ def __repr__(self):
 def __str__(self):
     s = "Filename: %s \n" % self.get_filename()
     s += "Number of valid events: %d \n" % self.get_n_events()
-    s += "Number of micro time channels: %d \n" % self.get_number_of_tac_channels()
+    s += "Number of micro time channels: %d \n" % self.get_number_of_micro_time_channels()
     s += "Used routing channels: %s " % self.get_used_routing_channels()
     return s
 

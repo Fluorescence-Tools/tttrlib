@@ -169,7 +169,7 @@ namespace peulen{
             double np2, uint64_t dt2,
             std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
             size_t n_bins,
-            bool correct_x_axis = false
+            bool correct_x_axis = true
     );
 
     /*!
