@@ -396,10 +396,9 @@ void TTTR::read_records(
             (n_records_read < n_rec) &&
             (fread(tmp, bytes_per_record, chunk, fp) == chunk)
             ){
-
         for(size_t i=0; i<chunk; i++){
             offset = bytes_per_record * i;
-            is_valid_record = processRecord(
+            n_valid_events += processRecord(
                     *(uint64_t *)&tmp[offset],
                     overflow_counter,
                     *(uint64_t *)&macro_times[n_valid_events],
@@ -407,21 +406,16 @@ void TTTR::read_records(
                     *(int16_t *)&routing_channels[n_valid_events],
                     *(int16_t *)&event_types[n_valid_events]
                     );
-            n_valid_events += is_valid_record;
-//            if(is_valid_record){
-//                n_valid_events++;
-//            }
         }
         n_records_read += chunk;
     }
-
     // records that do not fit in chunks are read one by one (slower)
     while (
             (n_records_read < n_rec) &&
             fread(&TTTRRecord, (size_t) bytes_per_record, 1, fp)
             )
     {
-        is_valid_record = processRecord(
+        n_valid_events += processRecord(
                 *(uint64_t *)&tmp[offset],
                 overflow_counter,
                 *(uint64_t *)&macro_times[n_valid_events],
@@ -429,10 +423,6 @@ void TTTR::read_records(
                 *(int16_t *)&routing_channels[n_valid_events],
                 *(int16_t *)&event_types[n_valid_events]
         );
-//        if(is_valid_record){
-//            n_valid_events++;
-//        }
-        n_valid_events += is_valid_record;
         n_records_read += 1;
     }
     free(tmp);
@@ -524,13 +514,16 @@ void TTTR::get_selection_by_channel(
 
 void TTTR::get_selection_by_count_rate(
         long long **output, int *n_output,
-        unsigned long tw, int n_ph_max
+        double time_window, int n_ph_max,
+        bool invert
 ){
     selection_by_count_rate(
             output, n_output,
             macro_times, (int) n_valid_events,
-            tw, n_ph_max
-            );
+            time_window, n_ph_max,
+            header->macro_time_resolution,
+            invert
+    );
 }
 
 
@@ -633,8 +626,11 @@ void ranges_by_time_window(
 void selection_by_count_rate(
         long long **output, int *n_output,
         unsigned long long *time, int n_time,
-        unsigned long tw, int n_ph_max
+        double time_window, int n_ph_max,
+        double macro_time_calibration,
+        bool invert
 ){
+    auto tw = (unsigned long) (time_window / macro_time_calibration);
     *output = (long long*) calloc(sizeof(long long), n_time);
     int i = 0;
     *n_output = 0;
@@ -648,7 +644,8 @@ void selection_by_count_rate(
             n_ph++;
         }
         // the right side of the TW is the start for the next time record
-        if(n_ph < n_ph_max){
+        bool select = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
+        if(select){
             for(int k=i; k < r; k++){
                 (*n_output)++;
                 (*output)[(*n_output) - 1] = k;
@@ -659,8 +656,8 @@ void selection_by_count_rate(
 }
 
 
-unsigned int TTTR::get_number_of_tac_channels(){
-    return header->number_of_tac_channels;
+unsigned int TTTR::get_number_of_micro_time_channels(){
+    return header->get_effective_number_of_micro_time_channels();
 }
 
 

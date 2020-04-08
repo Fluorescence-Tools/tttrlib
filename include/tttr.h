@@ -79,17 +79,22 @@ size_t determine_number_of_records_by_file_size(
  * @param n_ph_max, the time events within the tw are added to the selection.
  *
  *
- * @param selection
- * @param n_selected
- * @param time
- * @param n_time
- * @param tw
- * @param n_ph_max
+ * @param selection output array
+ * @param n_selected number of elements in output array
+ * @param time array of times
+ * @param n_time number of times
+ * @param time_window length of the time window
+ * @param n_ph_max maximum number of photons in a time window
+ * @param macro_time_calibration
+ * @param invert if invert is true (default false) only indices where the number
+ * of photons exceeds n_ph_max are selected
  */
 void selection_by_count_rate(
         long long **output, int *n_output,
         unsigned long long *time, int n_time,
-        unsigned long tw, int n_ph_max
+        double time_window, int n_ph_max,
+        double macro_time_calibration,
+        bool invert
 );
 
 
@@ -457,10 +462,12 @@ public:
     void get_event_type(short ** output, int* n_output);
 
     /*!
+     * Returns the number of micro time channels that fit between two
+     * macro time clocks.
      *
      * @return maximum valid number of micro time channels
      */
-    unsigned int get_number_of_tac_channels();
+    unsigned int get_number_of_micro_time_channels();
 
     /*!
      *
@@ -579,15 +586,21 @@ public:
             );
 
     /*!
+     * List of indices where the count rate is smaller than a maximum count
+     * rate
      *
-     * @param output
-     * @param n_output
-     * @param tw
-     * @param n_ph_max
+     * The count rate is specified by providing a time window that slides over
+     * the time array and the maximum number of photons within the time window.
+     *
+     * @param output the output array that will contain the selected indices
+     * @param n_output the number of elements in the output array
+     * @param time_window the length of the time window
+     * @param n_ph_max the maximum number of photons within a time window
      */
     void get_selection_by_count_rate(
             long long **output, int *n_output,
-            unsigned long tw, int n_ph_max
+            double time_window, int n_ph_max,
+            bool invert=false
             );
 
     void get_ranges_by_count_rate(
