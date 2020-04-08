@@ -94,16 +94,12 @@ class Tests(unittest.TestCase):
             p2.micro_time_resolution
         )
         self.assertEqual(
-            p1.header_end,
-            p2.header_end
-        )
-        self.assertEqual(
             p1.tttr_record_type,
             p2.tttr_record_type
         )
         self.assertEqual(
-            p1.number_of_tac_channels,
-            p2.number_of_tac_channels
+            p1.number_of_micro_time_channels,
+            p2.number_of_micro_time_channels
         )
 
     def test_tttr_copy_constructor(self):

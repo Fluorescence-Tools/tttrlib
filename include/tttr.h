@@ -93,7 +93,7 @@ void selection_by_count_rate(
         long long **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
-        double macro_time_calibration,
+        double macro_time_calibration=1.0,
         bool invert=false
 );
 

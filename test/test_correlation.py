@@ -115,7 +115,9 @@ class Tests(unittest.TestCase):
         t2 = mt[ch2_indeces]
         w2 = np.ones_like(t2, dtype=np.float)
         # zero low count rate regions
-        cr_selection = tttrlib.selection_by_count_rate(t1, 1200000, 30)
+        cr_selection = tttrlib.selection_by_count_rate(
+            t1, 1200000, 30
+        )
         w1[cr_selection] *= 0.0
         cr_selection = tttrlib.selection_by_count_rate(t2, 1200000, 30)
         w2[cr_selection] *= 0.0
@@ -160,12 +162,16 @@ class Tests(unittest.TestCase):
         # this tests the direct use of tttr objects
         data = self.data
 
+        # import tttrlib
+        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+
         # if a correlator is initialized with a TTTR object the
         # correlation corresponds to the macro time correlation of all events
         correlator = tttrlib.Correlator(tttr=data)
         # the correlation is computed when the attributes are accessed
         x = correlator.x_axis
         y = correlator.correlation
+        # p.semilogx(x, y)
 
         correlator_2 = tttrlib.Correlator(data)
         t1 = data.macro_times
@@ -174,6 +180,9 @@ class Tests(unittest.TestCase):
         w2 = np.ones_like(t2, dtype=np.float)
         correlator_2.set_macrotimes(t1, t2)
         correlator_2.set_weights(w1, w2)
+
+        # p.semilogx(correlator.x_axis, correlator_2.correlation)
+
         self.assertEqual(
             np.allclose(correlator_2.correlation, y),
             True
