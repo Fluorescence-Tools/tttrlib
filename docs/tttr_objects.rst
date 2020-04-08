@@ -1,5 +1,6 @@
+############
 TTTR-Objects
-============
+############
 
 General features
 ----------------
@@ -171,7 +172,7 @@ objects can be created that contain initially no data. Moreover, TTTR objects ca
 be created based on existing files and selection.
 
 TTTR-Header
-===========
+-----------
 
 Accessing header data
 ---------------------

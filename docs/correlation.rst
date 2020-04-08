@@ -148,7 +148,6 @@ As described previously there are several analogous possibilities to compute
 correlations. Two possibilities are shown in the example below.
 
 .. plot:: plots/correlation_normal.py
-   :include-source:
 
 Count rate filer
 ++++++++++++++++
@@ -160,14 +159,12 @@ function. The example uses a sliding time-window (TW). TWs with less than a
 certain amount of photons are discriminated by the selection.
 
 .. plot:: plots/correlation_cr_filter.py
-   :include-source:
 
 
 Micro time gating
 +++++++++++++++++
 
 .. plot:: plots/correlation_gating.py
-   :include-source:
 
 .. note::
     The micro time gating example can be easily modified to correlate
@@ -179,7 +176,6 @@ Full correlation
 ++++++++++++++++
 
 .. plot:: plots/correlation_gating.py
-   :include-source:
 
 
 Filtering aggregates

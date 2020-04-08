@@ -1,7 +1,7 @@
 .. _installation::
-
+############
 Installation
-============
+############
 
 ``tttrlib`` can either be installed from prebuilt binaries or from the source code. For most users it is recommended
 to install ``tttrlib`` using the prebuilt binaries. Below the installation using prebuilt binaries and the
