@@ -21,7 +21,8 @@ install:
 # to run your custom scripts instead of automatic tests
 test_script:
   - conda install --use-local tttrlib
-  - conda install nose coverage
+  # scipy is used in some tests
+  - conda install nose coverage scipy
   - cmd: echo %CD%
   - cmd: cd C:\projects\tttrlib\test\
   - cmd: echo %CD%
@@ -45,4 +46,4 @@ notifications:
       - thomas.otavio.peulen@gmail.com
     on_build_success: false
     on_build_failure: true
-    on_build_status_changed: false
+    on_build_status_changed: true

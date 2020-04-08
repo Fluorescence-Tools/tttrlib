@@ -108,7 +108,7 @@ private:
     double end;
     int n_bins;
     double bin_width; // for logarithmic spacing the bin_width in logarithms
-    T* bin_edges;
+    std::vector<T> bin_edges;
     int axis_type;
 
 protected:
@@ -120,18 +120,17 @@ public:
      * Recalculates the bin edges of the axis
     */
     void update(){
-        free(bin_edges);
-        bin_edges = (T*) malloc(n_bins * sizeof(T));
+        bin_edges.resize(n_bins);
         switch (HistogramAxis::axis_type){
             case 0:
                 // linear axis
                 bin_width = (end - begin) / n_bins;
-                linspace(begin, end, bin_edges, n_bins);
+                linspace(begin, end, bin_edges.data(), bin_edges.size());
                 break;
             case 1:
                 // logarithmic axis
                 bin_width = (std::log(end) - std::log(begin)) / n_bins;
-                logspace(begin, end, bin_edges, n_bins);
+                logspace(begin, end, bin_edges.data(), bin_edges.size());
                 break;
         }
     }
@@ -147,7 +146,6 @@ public:
         return n_bins;
     }
 
-
     int getBinIdx(T value){
         switch (axis_type){
             case 0:
@@ -157,12 +155,12 @@ public:
                 // logarithm
                 return calc_bin_idx(begin, bin_width, std::log10(value));
             default:
-                return search_bin_idx(value, bin_edges, n_bins);
+                return search_bin_idx(value, bin_edges.data(), bin_edges.size());
         }
     }
 
     T* getBins(){
-        return bin_edges;
+        return bin_edges.data();
     }
 
     void getBins(T* bin_edges, int n_bins){
@@ -209,11 +207,6 @@ template<class T>
 class Histogram {
 
 private:
-    T* data;
-    int n_rows_data,  n_cols_data;
-
-    T* weights;
-    int n_rows_weights,  n_cols_weights;
 
     std::map<size_t , HistogramAxis<T>> axes;
 
@@ -227,7 +220,9 @@ public:
         return axes.size();
     }
 
-    void update(){
+    void update(
+            T *data, int n_rows_data, int n_cols_data
+            ){
         int axis_index;
         int global_bin_idx;
         int global_bin_offset;
@@ -295,25 +290,18 @@ public:
         axes[data_column] = new_axis;
     }
 
-    void setAxis(size_t data_column, std::string name, T begin, T end, int n_bins, std::string axis_type){
+    void setAxis(
+            size_t data_column,
+            std::string name,
+            T begin, T end, int n_bins,
+            std::string axis_type
+            ){
         HistogramAxis<T> new_axis(name, begin, end, n_bins, axis_type);
         setAxis(data_column, new_axis);
     }
 
     HistogramAxis<T> getAxis(size_t axis_index){
         return axes[axis_index];
-    }
-
-    void setWeights(T *weights, int n_rows, int n_cols) {
-        Histogram::weights = weights;
-        Histogram::n_rows_weights = n_rows;
-        Histogram::n_rows_weights = n_cols;
-    }
-
-    void setData(T *data, int n_rows, int n_cols) {
-        Histogram::data = data;
-        Histogram::n_rows_data = n_rows;
-        Histogram::n_cols_data = n_cols;
     }
 
     Histogram() = default;

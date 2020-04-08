@@ -8,7 +8,12 @@ INCLUDE_DIRECTORIES(.)
 SET(MODULE_NAME tttrlib)
 
 SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
-FILE(GLOB SRC_files "../src/*.cpp")
+FILE(
+        GLOB
+        SRC_files
+        "../src/*.cpp"
+        "../src/correlation/*.cpp"
+)
 
 IF(BUILD_PYTHON_INTERFACE)
     FIND_PACKAGE(Python)
@@ -41,7 +46,6 @@ IF(BUILD_PYTHON_INTERFACE)
             Boost::filesystem
             Boost::iostreams
     )
-
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)
             SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")

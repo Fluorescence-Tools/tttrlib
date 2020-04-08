@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 import os
 import platform
 import subprocess
@@ -7,7 +8,20 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
-name = "tttrlib"  # name of the module
+def read_version(
+        header_file='./include/tttr.h'
+):
+    version = "0.0.0"
+    with open(header_file, "r") as fp:
+        for line in fp.readlines():
+            if "#define" in line and "VERSION" in line:
+                version = line.split()[-1]
+    return version.replace('"', '')
+
+
+__name__ = "tttrlib"
+__version__ = read_version()
+__license__ = 'MPL v2.0'
 
 
 class CMakeExtension(Extension):
@@ -34,8 +48,10 @@ class CMakeBuild(build_ext):
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
             '-DCMAKE_SWIG_OUTDIR=' + extdir
         ]
+
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         if platform.system() == "Windows":
             cmake_args += [
                 '-DBUILD_PYTHON_INTERFACE=ON',
@@ -43,8 +59,20 @@ class CMakeBuild(build_ext):
                 '-GVisual Studio 14 2015 Win64'
             ]
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j8']
+            # When using conda try to convince cmake to use
+            # the conda boost
+            CONDA_PREFIX = os.getenv('CONDA_PREFIX')
+            if CONDA_PREFIX is not None:
+                print("Conda prefix is: ", CONDA_PREFIX)
+                print("Convincing cmake to use the conda boost")
+                cmake_args += [
+                    '-DCMAKE_PREFIX_PATH=' + CONDA_PREFIX,
+                    '-DBOOST_ROOT=' + CONDA_PREFIX,
+                    '-DBoost_NO_SYSTEM_PATHS=ON',
+                    '-DBoost_DEBUG=ON',
+                    '-DBoost_DETAILED_FAILURE_MESSAGE=ON'
+                ]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
@@ -70,11 +98,11 @@ class CMakeBuild(build_ext):
 
 
 setup(
-    name=name,
-    license='MPL v2.0',
+    name=__name__,
+    version=__version__,
+    license=__license__,
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
-    version='0.0.12',
     ext_modules=[
         CMakeExtension('tttrlib')
     ],

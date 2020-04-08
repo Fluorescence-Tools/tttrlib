@@ -8,6 +8,8 @@ CMakeLists.txt.user.*
 cmake-build-*
 playground
 temp
+*.egg-info
+docs/_build
 
 # Documentation and tools
 doc/_*
@@ -15,6 +17,7 @@ doc/paper*
 
 # JetBrains
 # User-specific stuff
+.idea
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml

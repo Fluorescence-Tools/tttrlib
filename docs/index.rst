@@ -27,8 +27,11 @@ Contents
 
    installation
    tttr_objects
-   header_data
-   applications
+   histograms
+   correlation
+   single_molecule
+   imaging
+   cpp_api
    glossary
    references
 
@@ -36,9 +39,7 @@ Contents
 Indices and tables
 ------------------
 
-* `API <../api/html/index.html>`_
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 

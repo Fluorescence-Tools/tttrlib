@@ -262,7 +262,7 @@ public:
             TTTR* tttr_data,
             unsigned char** out, int* dim1, int* dim2, int* dim3, int* dim4,
             int tac_coarsening,
-            bool stack_frames
+            bool stack_frames=false
     );
 
     /*!

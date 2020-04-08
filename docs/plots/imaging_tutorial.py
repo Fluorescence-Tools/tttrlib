@@ -4,7 +4,7 @@ import pylab as p
 import numba as nb
 
 
-@nb.jit
+@nb.jit(nopython=True)
 def count_marker(channels, event_types, marker, event_type):
     n = 0
     for i, ci in enumerate(channels):
@@ -13,7 +13,7 @@ def count_marker(channels, event_types, marker, event_type):
     return n
 
 
-@nb.jit
+@nb.jit(nopython=True)
 def find_marker(channels, event_types, maker, event_type=1):
     r = list()
     for i, ci in enumerate(channels):
@@ -22,7 +22,7 @@ def find_marker(channels, event_types, maker, event_type=1):
     return np.array(r)
 
 
-@nb.jit
+@nb.jit(nopython=True)
 def make_image(
         c, m, t, e,
         n_frames, n_lines, pixel_duration,
@@ -36,8 +36,11 @@ def make_image(
     if n_pixel is None:
         n_pixel = n_lines  # assume squared image
 
-    n_tac = n_tac_max // tac_coarsening
-    image = np.zeros((n_frames, n_lines, n_pixel, n_tac))
+    n_tac = int(n_tac_max // tac_coarsening)
+    image = np.zeros(
+        (int(n_frames), int(n_lines), int(n_pixel), int(n_tac)),
+        dtype=np.uint16
+    )
     # iterate through all photons in a line and add to image
 
     frame = -1
@@ -45,7 +48,8 @@ def make_image(
     time_start_line = 0
     invalid_range = True
     mask_invalid = True
-    for ci, mi, ti, ei in zip(c, m, t, e):
+    for i in range(len(c)):
+        ci, mi, ti, ei = c[i], m[i], t[i], e[i]
         if ei == 1:  # marker
             if ci == frame_marker:
                 frame += 1
@@ -63,7 +67,11 @@ def make_image(
                 current_line += 1
                 continue
         elif ei == 0:  # photon
-            if ci in channels and (not invalid_range or not mask_invalid):
+            in_channels = False
+            for v in channels:
+                if v == ci:
+                    in_channels = True
+            if in_channels and (not invalid_range or not mask_invalid):
                 pixel = int((ti - time_start_line) // pixel_duration[current_line])
                 if pixel < n_pixel:
                     tac = mi // tac_coarsening
@@ -95,7 +103,7 @@ image = make_image(
     n_lines,
     pixel_duration,
     channels=np.array([0, 1]),
-    tac_coarsening=128
+    tac_coarsening=256
 )
 
 fig, ax = p.subplots(1, 2)

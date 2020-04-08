@@ -1,11 +1,8 @@
-{% set name = "tttrlib" %}
-#{% set version = "0.0.11" %}
 {% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
 
 package:
-  name: "{{ name|lower }}"
+  name: {{ data.get('name')|lower }}
   version: {{ data.get('version')|lower }}
-  #  version: "{{ version|lower }}"
 
 source:
   path: ..
@@ -27,12 +24,15 @@ requirements:
     - swig 3.0.12.*
     - hdf5 1.10.2.*
     - boost 1.67.0.*
+    - libboost 1.67.0.* [not win]
+    - fftw
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - hdf5 1.10.2.*
     - boost 1.67.0.* [win]
     - libboost 1.67.0.* [not win]
+    - fftw
 
 test:
   imports:
@@ -40,7 +40,7 @@ test:
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
-  license: MPL 2.0
+  license: {{ data.get('license') }}
   summary: Python bindings for tttrlib
   description: |
     tttrlib C++ library including Python wrapper to read time-tagged

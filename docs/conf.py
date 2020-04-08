@@ -12,10 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import subprocess
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -24,9 +24,9 @@ copyright = u'2019, Thomas-Otavio Peulen'
 author = u'Thomas-Otavio Peulen'
 
 # The short X.Y version
-version = u''
+# version = tttrlib.__version__
 # The full version, including alpha/beta/rc tags
-release = u''
+# release = u''
 
 
 # -- General configuration ---------------------------------------------------
@@ -39,6 +39,7 @@ release = u''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.mathbase',
     'matplotlib.sphinxext.only_directives',
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.mathjax',
@@ -47,8 +48,20 @@ extensions = [
     'recommonmark',
     'sphinx.ext.autosectionlabel'
 ]
-autosectionlabel_prefix_document = True
 
+
+breathe_projects = {}
+# latex and breathe do not play very well together. Therefore
+# breathe is only used for the webpage.
+# compatible with readthedocs online builder and local builder
+if sys.argv[0].endswith('sphinx-build') and ('html' in sys.argv or sys.argv[-1] == '_build/html'):
+    subprocess.call('doxygen', shell=True)
+    breathe_projects['tttrlib'] = './_build/xml'
+    breathe_default_project = "tttrlib"
+    extensions += ['breathe']
+
+
+autosectionlabel_prefix_document = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -83,7 +96,26 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+
+# Read the docs style:
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if not on_rtd:
+    import sphinx_bootstrap_theme
+    # Activate the theme.
+    html_theme = 'bootstrap'
+    html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+else:
+    try:
+        import sphinx_rtd_theme
+    except ImportError:
+        pass  # assume we have sphinx >= 1.3
+    else:
+        html_theme_path = sphinx_rtd_theme.get_html_theme_path()
+    html_theme = 'sphinx_rtd_theme'
+
+def setup(app):
+    app.add_stylesheet("fix_rtd.css")
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -94,7 +126,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -137,15 +169,14 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'tttrlib.tex', u'tttrlib Documentation',
-     u'Thomas-Otavio Peulen', 'manual'),
+    (master_doc, 'tttrlib.tex', u'tttrlib Documentation', u'Thomas-Otavio Peulen', 'manual'),
 ]
 
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
+# (source start file, name, description, authors, manual section).ƒre
 man_pages = [
     (master_doc, 'tttrlib', u'tttrlib Documentation',
      [author], 1)

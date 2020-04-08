@@ -278,12 +278,12 @@ void PdaFunctions::sgsr_manypF(
 }
 
 
-void PdaFunctions::poisson_0toN(double *return_p, double lambda,
+void PdaFunctions::poisson_0toN(double *return_p, double lam,
                                 unsigned int return_dim) {
     unsigned int i;
-    return_p[0] = exp(-lambda);
+    return_p[0] = exp(-lam);
     for (i = 1; i <= return_dim; i++) {
-        return_p[i] = return_p[i - 1] * lambda / (double) i;
+        return_p[i] = return_p[i - 1] * lam / (double) i;
     }
 }
 
@@ -318,15 +318,17 @@ unsigned int Pda::get_max_number_of_photons() const {
 }
 
 void Pda::append(double amplitude, double probability_green) {
+    sgsr_valid = false;
     amplitudes.push_back(amplitude);
     probability_green_theor.push_back(probability_green);
 }
 
-void Pda::set_probability_green(double *in, int n_in) {
-    int n_components = n_in / 2;
+void Pda::set_probability_green(double *input, int n_input) {
+    sgsr_valid = false;
+    int n_components = n_input / 2;
     for(int i=0; i < n_components; i++){
-        double amplitude = in[2 * i];
-        double probability_green = in[(2 * i) + 1];
+        double amplitude = input[2 * i];
+        double probability_green = input[(2 * i) + 1];
         amplitudes.push_back(amplitude);
         probability_green_theor.push_back(probability_green);
     }
@@ -345,14 +347,16 @@ void Pda::get_probability_green(double**out, int* dim1) {
 }
 
 void Pda::clear_probability_green() {
+    sgsr_valid = false;
     amplitudes.clear();
     probability_green_theor.clear();
 }
 
 void Pda::set_max_number_of_photons(unsigned int nmax) {
+    sgsr_valid = false;
     Nmax = nmax;
     SgSr.resize((Nmax + 1) * (Nmax + 1));
-    memset(SgSr.data(), 0.0, SgSr.size());
+    std::fill(SgSr.begin(), SgSr.end(), 0);
 }
 
 void Pda::evaluate() {
@@ -373,6 +377,7 @@ double Pda::get_green_background() const {
 }
 
 void Pda::set_green_background(double bg) {
+    sgsr_valid = false;
     Bg = bg;
 }
 
@@ -381,16 +386,19 @@ double Pda::get_red_background() const {
 }
 
 void Pda::set_red_background(double br) {
+    sgsr_valid = false;
     Br = br;
 }
 
 void Pda::setPF(double *in1D, int in_nbr) {
+    sgsr_valid = false;
     pF.assign(in1D, in1D + in_nbr);
 }
 
 void Pda::get_SgSr_matrix(
         double **out, int *dim1, int *dim2
 ) {
+    if(!sgsr_valid) evaluate();
     *out = SgSr.data();
     *dim1 = Nmax;
     *dim2 = Nmax;

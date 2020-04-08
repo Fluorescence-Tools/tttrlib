@@ -1,7 +1,0 @@
-
-# Reading TTTR files
-
-# Creating Histograms
-
-# Correlation analysis
-

@@ -1,7 +1,7 @@
 .. _installation::
-
+############
 Installation
-============
+############
 
 ``tttrlib`` can either be installed from prebuilt binaries or from the source code. For most users it is recommended
 to install ``tttrlib`` using the prebuilt binaries. Below the installation using prebuilt binaries and the
@@ -37,6 +37,12 @@ To compile ``tttrlib`` a set of prerequisites need to be fulfilled:
     3. A recent 64bit `Python <https://www.python.org/>`_ installation with include files.
     4. `cmake <https://cmake.org/>`_
     5. `SWIG <http://www.swig.org/>`_
+
+To debug and analyze the ouput of ``tttrlib`` in more detail it can be useful to
+build the library in Debug mode that outputs additional information to the standard
+standard logging stream. tttrlib can be build in debugging mode by. ::
+
+    python setup.py build_ext --debug
 
 
 Windows

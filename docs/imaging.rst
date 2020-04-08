@@ -7,10 +7,11 @@ Confocal laser scanning
 Theory
 ++++++
 
-In confocal microscopy the laser beam scans over the sample either by moving the sample over a parked (fixed) laser
-beam (stage scanning) or by deflecting the laser and moving the position of the exciting on a fixed sample (laser
-scanning). In both cases, the position of the detection volume within the sample needs to be saved in the recorded
-TTTR event stream.
+In confocal microscopy the laser beam scans over the sample either by moving
+the sample over a parked (fixed) laser beam (stage scanning) or by deflecting
+the laser and moving the position of the exciting on a fixed sample (laser
+scanning). In both cases, the position of the detection volume within the sample
+needs to be saved in the recorded TTTR event stream.
 
 The position of the laser in the TTTR event stream is encoded by injecting markers into the event stream the report
 on the laser position. Some manufactures present these markers as special ""events"" that are distinguished from
@@ -347,9 +348,9 @@ certain amount of photons (below 3 photons). As can be seen by this analysis, th
 detection of fluorescence is fairly constant over the cell, while the intensity varies in this particular sample.
 
 For more detailed analysis the fluorescence decays contained in the 4D image (frame, x, y, fluorescence decay) returned
-by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. The fluorescence decay containing
-all photons of frame 30 is shown to the bottom right.
+by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a
+fluorescence decay containing all photons of the 30 frames is shown below.
 
+.. literalinclude:: plots/imaging_tutorial_2.py
 
-.. plot:: plots/imaging_tutorial_2.py
 

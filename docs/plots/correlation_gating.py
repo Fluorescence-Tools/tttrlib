@@ -13,13 +13,13 @@ B = 9
 n_casc = 25
 
 correlator = tttrlib.Correlator()
-correlator.set_n_bins(B)
-correlator.set_n_casc(n_casc)
+correlator.n_bins = B
+correlator.n_casc = n_casc
 
 # Select the green channels (channel number 0 and 8)
 
-ch1_indeces = data.get_selection_by_channel(np.array([0]))
-ch2_indeces = data.get_selection_by_channel(np.array([8]))
+ch1_indeces = data.get_selection_by_channel([0])
+ch2_indeces = data.get_selection_by_channel([8])
 
 # green-red cross-correlation
 

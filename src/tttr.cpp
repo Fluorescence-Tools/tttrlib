@@ -20,8 +20,11 @@
 
 TTTR::TTTR() :
         // private
-        filename(nullptr),
+        filename(),
         header(nullptr),
+        tttr_container_type(-1),
+        tttr_container_type_str(),
+        tttr_record_type(-1),
         overflow_counter(0),
         bytes_per_record(4),
         fp_records_begin(0),
@@ -35,56 +38,109 @@ TTTR::TTTR() :
         n_records_read(0),
         n_valid_events(0),
         processRecord(nullptr){
+    container_names.insert({std::string("PTU"), 0});
+    container_names.insert({std::string("HT3"), 1});
+    container_names.insert({std::string("SPC-130"), 2});
+    container_names.insert({std::string("SPC-600_256"), 3});
+    container_names.insert({std::string("SPC-600_4096"), 4});
+    container_names.insert({std::string("PHOTON-HDF5"), 5});
+    header = new Header();
 }
 
 
-TTTR::TTTR(
-        unsigned long long *n_sync_pulses,
-        unsigned int *micro_times,
-        short *routing_channels,
-        int16_t *event_types) :
-        TTTR() {
-    TTTR::macro_times = n_sync_pulses;
-    TTTR::micro_times = micro_times;
-    TTTR::routing_channels = routing_channels;
-    TTTR::event_types = event_types;
-}
-
-
-TTTR::TTTR(
-        TTTR *parent,
-        long long *selection,
-        int n_selection
-) :
-        TTTR()
-        {
-    TTTR::n_valid_events = (size_t) n_selection;
-
-    if ((size_t) n_selection > parent->n_valid_events) {
+TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
+           unsigned int *micro_times, int n_microtimes,
+           short *routing_channels, int n_routing_channels,
+           short *event_types, int n_event_types
+): TTTR() {
+#if VERBOSE
+    std::clog << "INITIALIZING FROM VECTORS" << std::endl;
+#endif
+    this->filename = "NA";
+    size_t n_elements = 0;
+    if (!(n_macrotimes == n_microtimes &&
+          n_macrotimes == n_routing_channels &&
+          n_macrotimes == n_event_types)
+    ) {
         // the selection does not match the dimension of the parent
-        throw std::invalid_argument("The dimension of "
-                                    "the selection exceeds "
-                                    "the parents dimension.");
+        n_elements = std::min(n_macrotimes, std::min(
+                n_microtimes, std::min(
+                        n_routing_channels, n_event_types
+                )));
+        std::cerr << "WARNING: The input vectors differ in size. Using " << std::endl;
+    } else{
+        n_elements = n_macrotimes;
     }
+    allocate_memory_for_records(n_elements);
+    n_valid_events = n_elements;
+    for(size_t i=0; i<n_elements; i++){
+        this->macro_times[i] = macro_times[i];
+        this->micro_times[i] = micro_times[i];
+        this->event_types[i] = event_types[i];
+        this->routing_channels[i] = routing_channels[i];
+    }
+    find_used_routing_channels();
+}
 
-    allocate_memory_for_records(n_valid_events);
+
+TTTR::TTTR(const TTTR &parent, long long *selection, int n_selection) :  TTTR()
+        {
+#if VERBOSE
+    std::clog << "INITIALIZING FROM SELECTION" << std::endl;
+#endif
+    copy_from(parent, false);
+    this->n_valid_events = (size_t) n_selection;
+    if ((size_t) n_selection > parent.n_valid_events) {
+        std::cerr << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
+    }
+    allocate_memory_for_records(n_selection);
     for(size_t i=0; i<n_valid_events; i++){
-        TTTR::macro_times[i] = parent->macro_times[selection[i]];
-        TTTR::micro_times[i] = parent->micro_times[selection[i]];
-        TTTR::event_types[i] = parent->event_types[selection[i]];
-        TTTR::routing_channels[i] = parent->routing_channels[selection[i]];
+        TTTR::macro_times[i] = parent.macro_times[selection[i]];
+        TTTR::micro_times[i] = parent.micro_times[selection[i]];
+        TTTR::event_types[i] = parent.event_types[selection[i]];
+        TTTR::routing_channels[i] = parent.routing_channels[selection[i]];
+    }
+    find_used_routing_channels();
+}
+
+void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
+    filename = p2.filename;
+    header = new Header(*p2.header);
+    tttr_container_type = p2.tttr_container_type;
+    tttr_container_type_str = p2.tttr_container_type_str;
+    bytes_per_record = p2.bytes_per_record;
+    fp_records_begin = p2.fp_records_begin;
+
+    used_routing_channels = p2.used_routing_channels;
+    n_records_in_file = p2.n_records_in_file;
+    n_records_read = p2.n_records_read;
+    n_valid_events = p2.n_valid_events;
+    fp_records_begin = p2.fp_records_begin;
+    if (include_big_data){
+        allocate_memory_for_records(p2.n_valid_events);
+        for (size_t i = 0; i < p2.n_valid_events; i++) {
+            macro_times[i] = p2.macro_times[i];
+            micro_times[i] = p2.micro_times[i];
+            routing_channels[i] = p2.routing_channels[i];
+            event_types[i] = p2.event_types[i];
+        }
     }
 }
 
 
+TTTR::TTTR(const TTTR &p2){
+    copy_from(p2, true);
+}
+
+
 TTTR::TTTR(
-        char *fn,
+        const char *fn,
         int container_type,
         bool read_input
         ) :
         TTTR()
 {
-    filename = fn;
+    filename.assign(fn);
     tttr_container_type = container_type;
     if(read_input){
         read_file();
@@ -93,20 +149,24 @@ TTTR::TTTR(
 }
 
 
-TTTR::TTTR(char *fn, int container_type) :
+TTTR::TTTR(const char *fn, int container_type) :
     TTTR(fn, container_type, true) {
+    tttr_container_type_str.assign(
+            container_names.right.at(container_type)
+            );
 }
 
 
-TTTR::TTTR(char *fn, const char *container_type) :
+TTTR::TTTR(const char *fn, const char *container_type) :
         TTTR() {
-    tttr_container_type = container_names[std::string(container_type)];
-    filename = fn;
+    tttr_container_type_str.assign(container_type);
+    tttr_container_type = container_names.left.at(std::string(container_type));
+    filename.assign(fn);
     read_file();
     find_used_routing_channels();
 }
 
-void TTTR::shift_macro_time(unsigned int shift) {
+void TTTR::shift_macro_time(int shift) {
     for(size_t i=0; i<n_valid_events; i++){
         macro_times[i] += shift;
     }
@@ -135,7 +195,7 @@ void TTTR::find_used_routing_channels(){
 #endif
 }
 
-int TTTR::read_hdf_file(char *fn){
+int TTTR::read_hdf_file(const char *fn){
     header = new Header();
 
     /* handles */
@@ -155,7 +215,7 @@ int TTTR::read_hdf_file(char *fn){
      * Get dataspace and allocate memory for read buffer.
      */
     space = H5Dget_space(ds_microtime);
-    H5Sget_simple_extent_dims(space, dims, NULL);
+    H5Sget_simple_extent_dims(space, dims, nullptr);
     allocate_memory_for_records(dims[0]);
     /* All records are assumed to be valid.
      * Invalid records are usually sorted out
@@ -193,60 +253,61 @@ int TTTR::read_hdf_file(char *fn){
 
 
 int TTTR::read_file(
-        char *fn,
+        const char *fn,
         int container_type
         ) {
 #if VERBOSE
     std::clog << "READING TTTR FILE" << std::endl;
-    std::clog << "-- Filename: " << fn << std::endl;
-    std::clog << "-- Container type: " << container_type << std::endl;
 #endif
     if(boost::filesystem::exists(fn))
     {
-        if (container_type == PHOTON_HDF_CONTAINER)
-        {
+#if VERBOSE
+        std::clog << "-- Filename: " << fn << std::endl;
+        std::clog << "-- Container type: " << container_type << std::endl;
+#endif
+        // clean up filename
+        boost::filesystem::path p = fn;
+        filename = boost::filesystem::canonical(boost::filesystem::absolute(p)).generic_string();
+        fn = filename.c_str();
+        if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
-        }
-        else{
+        } else{
             fp = fopen(fn, "rb");
-            if (fp != nullptr)
-            {
-                header = new Header(fp, container_type);
-                fp_records_begin = header->header_end;
-                bytes_per_record = header->bytes_per_record;
-                tttr_record_type = header->getTTTRRecordType();
+            header = new Header(fp, container_type);
+            fp_records_begin = header->header_end;
+            bytes_per_record = header->bytes_per_record;
+            tttr_record_type = header->getTTTRRecordType();
 #if VERBOSE
-                std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
-                processRecord = processRecord_map[tttr_record_type];
-                n_records_in_file = determine_number_of_records_by_file_size(
-                        fp,
-                        header->header_end,
-                        bytes_per_record
-                );
+            processRecord = processRecord_map[tttr_record_type];
+            n_records_in_file = determine_number_of_records_by_file_size(
+                    fp,
+                    header->header_end,
+                    bytes_per_record
+            );
 #if VERBOSE
-                std::clog << "-- Number of records: " << n_records_in_file << std::endl;
+            std::clog << "-- Number of records: " << n_records_in_file << std::endl;
 #endif
-            }
-            else{
-#if VERBOSE
-                std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
-#endif
-                return 0;
-            }
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
         }
-        return 1;
+#if VERBOSE
+            std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
+#endif
+            return 1;
+    } else{
+#if VERBOSE
+        std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
+#endif
+        return 0;
     }
-    std::cerr << "-- WARNING: Could not open file " << fn << std::endl;
-    return 1;
 }
 
 
 int TTTR::read_file(){
-    return read_file(filename, tttr_container_type);
+    return read_file(filename.c_str(), tttr_container_type);
 }
 
 
@@ -256,12 +317,15 @@ TTTR::~TTTR() {
 }
 
 
-char* TTTR::get_filename() {
-    return filename;
+std::string TTTR::get_filename() {
+    return std::string(filename);
 }
 
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
+#if VERBOSE
+    std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
+#endif
     if(tttr_container_type == 5) {
         macro_times = (unsigned long long*) H5allocate_memory(
                 n_rec * sizeof(unsigned long long), false
@@ -332,10 +396,9 @@ void TTTR::read_records(
             (n_records_read < n_rec) &&
             (fread(tmp, bytes_per_record, chunk, fp) == chunk)
             ){
-
         for(size_t i=0; i<chunk; i++){
             offset = bytes_per_record * i;
-            is_valid_record = processRecord(
+            n_valid_events += processRecord(
                     *(uint64_t *)&tmp[offset],
                     overflow_counter,
                     *(uint64_t *)&macro_times[n_valid_events],
@@ -343,21 +406,16 @@ void TTTR::read_records(
                     *(int16_t *)&routing_channels[n_valid_events],
                     *(int16_t *)&event_types[n_valid_events]
                     );
-            n_valid_events += is_valid_record;
-//            if(is_valid_record){
-//                n_valid_events++;
-//            }
         }
         n_records_read += chunk;
     }
-
     // records that do not fit in chunks are read one by one (slower)
     while (
             (n_records_read < n_rec) &&
             fread(&TTTRRecord, (size_t) bytes_per_record, 1, fp)
             )
     {
-        is_valid_record = processRecord(
+        n_valid_events += processRecord(
                 *(uint64_t *)&tmp[offset],
                 overflow_counter,
                 *(uint64_t *)&macro_times[n_valid_events],
@@ -365,10 +423,6 @@ void TTTR::read_records(
                 *(int16_t *)&routing_channels[n_valid_events],
                 *(int16_t *)&event_types[n_valid_events]
         );
-//        if(is_valid_record){
-//            n_valid_events++;
-//        }
-        n_valid_events += is_valid_record;
         n_records_read += 1;
     }
     free(tmp);
@@ -386,55 +440,50 @@ void TTTR::read_records() {
 
 
 Header TTTR::get_header() {
-    return *header;
+#if VERBOSE
+    std::clog << "-- TTTR::get_header" << std::endl;
+#endif
+    if(header != nullptr){
+        return *header;
+    } else{
+#if VERBOSE
+        std::cerr << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
+#endif
+        return Header();
+    }
 }
 
 
-void TTTR::get_macro_time(unsigned long long** out, int* n_out){
-    get_array(
-            n_valid_events,
-            macro_times,
-            out,
-            n_out
-    );
+void TTTR::get_macro_time(unsigned long long** output, int* n_output){
+    get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
 }
 
 
-void TTTR::get_micro_time(uint32_t** out, int* n_out){
-    get_array(
-            n_valid_events,
-            micro_times,
-            out,
-            n_out
-    );
+void TTTR::get_micro_time(uint32_t** output, int* n_output){
+    get_array<uint32_t>(n_valid_events, micro_times, output, n_output);
 }
 
 
-void TTTR::get_routing_channel(int16_t** out, int* n_out){
-    get_array(
-            n_valid_events,
-            routing_channels,
-            out,
-            n_out
-    );
+void TTTR::get_routing_channel(int16_t** output, int* n_output){
+    get_array<int16_t>(n_valid_events, routing_channels, output, n_output);
 }
 
-void TTTR::get_used_routing_channels(int16_t** out, int* n_out){
+void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
     get_array(
             used_routing_channels.size(),
             used_routing_channels.data(),
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
 
-void TTTR::get_event_type(int16_t** out, int* n_out){
+void TTTR::get_event_type(int16_t** output, int* n_output){
     get_array(
             n_valid_events,
             event_types,
-            out,
-            n_out
+            output,
+            n_output
     );
 }
 
@@ -452,36 +501,39 @@ int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        long long **out, int *n_out,
-        long long *in, int n_in
+        long long **output, int *n_output,
+        long long *input, int n_input
 ){
     ::selection_by_channels(
-            out, n_out,
-            in, n_in,
+            output, n_output,
+            input, n_input,
             routing_channels, get_n_events()
     );
 }
 
 
 void TTTR::get_selection_by_count_rate(
-        long long **out, int *n_out,
-        unsigned long tw, int n_ph_max
+        long long **output, int *n_output,
+        double time_window, int n_ph_max,
+        bool invert
 ){
     selection_by_count_rate(
-            out, n_out,
+            output, n_output,
             macro_times, (int) n_valid_events,
-            tw, n_ph_max
-            );
+            time_window, n_ph_max,
+            header->macro_time_resolution,
+            invert
+    );
 }
 
 
 void TTTR::get_ranges_by_count_rate(
-        int **out, int *n_out,
+        int **output, int *n_output,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max){
 
     ranges_by_time_window(
-            out, n_out,
+            output, n_output,
             macro_times, (int) n_valid_events,
             tw_min, tw_max,
             n_ph_min, n_ph_max
@@ -491,27 +543,27 @@ void TTTR::get_ranges_by_count_rate(
 
 
 TTTR* TTTR::select(long long *selection, int n_selection) {
-    return new TTTR(this, selection, n_selection);
+    return new TTTR(*this, selection, n_selection);
 }
 
 
 void selection_by_channels(
-        long long **out, int *n_out,
-        long long *in, int n_in,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
-    *out = (long long *) malloc(n_routing_channels * sizeof(long long));
+    *output = (long long *) malloc(n_routing_channels * sizeof(long long));
 
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
         int ch = routing_channels[i];
-        for (int j = 0; j < n_in; j++) {
-            if (in[j] == ch) {
-                (*out)[n_sel++] = i;
+        for (int j = 0; j < n_input; j++) {
+            if (input[j] == ch) {
+                (*output)[n_sel++] = i;
             }
         }
     }
-    *n_out = (int) n_sel;
+    *n_output = (int) n_sel;
 }
 
 
@@ -572,13 +624,16 @@ void ranges_by_time_window(
 
 
 void selection_by_count_rate(
-        long long **out, int *n_out,
+        long long **output, int *n_output,
         unsigned long long *time, int n_time,
-        unsigned long tw, int n_ph_max
+        double time_window, int n_ph_max,
+        double macro_time_calibration,
+        bool invert
 ){
-    *out = (long long*) calloc(sizeof(long long), n_time);
+    auto tw = (unsigned long) (time_window / macro_time_calibration);
+    *output = (long long*) calloc(sizeof(long long), n_time);
     int i = 0;
-    *n_out = 0;
+    *n_output = 0;
     while (i < (n_time - 1)){
         int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
@@ -589,10 +644,11 @@ void selection_by_count_rate(
             n_ph++;
         }
         // the right side of the TW is the start for the next time record
-        if(n_ph < n_ph_max){
+        bool select = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
+        if(select){
             for(int k=i; k < r; k++){
-                (*n_out)++;
-                (*out)[(*n_out) - 1] = k;
+                (*n_output)++;
+                (*output)[(*n_output) - 1] = k;
             }
         }
         i = r;
@@ -600,32 +656,31 @@ void selection_by_count_rate(
 }
 
 
-unsigned int TTTR::get_number_of_tac_channels(){
-    return header->number_of_tac_channels;
+unsigned int TTTR::get_number_of_micro_time_channels(){
+    return header->get_effective_number_of_micro_time_channels();
 }
 
 
 void histogram_trace(
-        int **out, int *n_out,
-        unsigned long long *in, int n_in,
+        int **output, int *n_output,
+        unsigned long long *input, int n_input,
         int time_window){
     int l, r;
-    unsigned long long t_max = in[n_in - 1];
+    unsigned long long t_max = input[n_input - 1];
 
     int n_bin = (int) (t_max / time_window);
 
-    *n_out = n_bin;
-    *out = (int*) malloc(n_bin * sizeof(int));
-    memset(out, 0, n_bin * sizeof(int));
+    *n_output = n_bin;
+    *output = (int*) calloc(n_bin, sizeof(int));
 
     l = 0; r = 0;
-    while(r < n_in){
+    while(r < n_input){
         r++;
-        int i_bin = int (in[l] / time_window);
-        if ((in[r] - in[l]) > time_window){
+        int i_bin = int (input[l] / time_window);
+        if ((input[r] - input[l]) > time_window){
             l = r;
         } else{
-            (*out)[i_bin] += 1;
+            (*output)[i_bin] += 1;
         }
     }
 }
@@ -670,10 +725,10 @@ void get_ranges_channel(
 
 
 bool TTTR::write_file(
-        char *fn,
+        const char *fn,
         const char* container_type
         ) {
-    switch(container_names[container_type]) {
+    switch(container_names.left.at(container_type)) {
         case BH_SPC130_CONTAINER:
             fp = fopen(fn, "wb");
             if (fp != nullptr) {

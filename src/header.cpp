@@ -28,13 +28,25 @@ Header::~Header(){};
 
 Header::Header() :
         micro_time_resolution(0),
-        number_of_tac_channels(0),
+        number_of_micro_time_channels(0),
         macro_time_resolution(0),
         tttr_container_type(0),
         header_end(0),
-        bytes_per_record(1),
-        tttr_record_type(0)
+        bytes_per_record(0),
+        tttr_record_type(-1)
 {}
+
+Header::Header(const Header &p2) {
+    macro_time_resolution = p2.macro_time_resolution;
+    bytes_per_record = p2.bytes_per_record;
+    micro_time_resolution = p2.micro_time_resolution;
+    header_end = p2.header_end;
+    tttr_record_type = p2.tttr_record_type;
+    number_of_micro_time_channels = p2.number_of_micro_time_channels;
+    tttr_container_type = p2.tttr_container_type;
+    data = p2.data;
+}
+
 
 
 Header::Header(
@@ -46,7 +58,7 @@ Header::Header(
     int binning_factor = 1;
     switch(tttr_container_type){
         case PQ_PTU_CONTAINER:
-            number_of_tac_channels = 32768; //2**15
+            number_of_micro_time_channels = 32768; //2**15
             header_end = read_ptu_header(
                     fpin,
                     true,
@@ -57,7 +69,7 @@ Header::Header(
                     );
             bytes_per_record = 4;
             binning_factor = std::stoi(data.at("MeasDesc_BinningFactor"));
-            number_of_tac_channels /= binning_factor;
+            number_of_micro_time_channels /= binning_factor;
             break;
         case PQ_HT3_CONTAINER:
             header_end = read_ht3_header(
@@ -70,23 +82,23 @@ Header::Header(
                     micro_time_resolution
                     );
             bytes_per_record = 4;
-            number_of_tac_channels =     32768; //2**15
+            number_of_micro_time_channels =     32768; //2**15
             break;
         case BH_SPC600_256_CONTAINER:
             header_end = 0;
             tttr_record_type = BH_RECORD_TYPE_SPC600_256;
             macro_time_resolution = 1.0;
-            micro_time_resolution = 1.0;
             bytes_per_record = 4;
-            number_of_tac_channels = 256;
+            number_of_micro_time_channels = 256;
+            micro_time_resolution = macro_time_resolution / number_of_micro_time_channels;
             break;
         case BH_SPC600_4096_CONTAINER:
             header_end = 0;
             tttr_record_type = BH_RECORD_TYPE_SPC600_4096;
             macro_time_resolution = 1.0;
-            micro_time_resolution = 1.0;
             bytes_per_record = 6;
-            number_of_tac_channels = 4096;
+            number_of_micro_time_channels = 4096;
+            micro_time_resolution = macro_time_resolution / number_of_micro_time_channels;
             break;
         case BH_SPC130_CONTAINER:
             header_end = read_bh132_header(
@@ -98,17 +110,17 @@ Header::Header(
                     micro_time_resolution
             );
             tttr_record_type = BH_RECORD_TYPE_SPC130;
-            micro_time_resolution = 1.0;
             bytes_per_record = 4;
-            number_of_tac_channels = 4096;
+            number_of_micro_time_channels = 4096;
+            micro_time_resolution = macro_time_resolution / number_of_micro_time_channels;
             break;
         default:
             header_end = 0;
             tttr_record_type = BH_RECORD_TYPE_SPC130;
             macro_time_resolution = 1.0;
-            micro_time_resolution = 1.0;
+            number_of_micro_time_channels = 4096;
             bytes_per_record = 4;
-            number_of_tac_channels = 4096;
+            micro_time_resolution = macro_time_resolution / number_of_micro_time_channels;
             break;
     }
 }
@@ -133,6 +145,11 @@ size_t read_bh132_header(
     macro_time_resolution = (double) rec.macro_time_clock / 10;
     data["Resolution"] = std::to_string(macro_time_resolution);
     data["Invalid"] = std::to_string(rec.invalid);
+#if VERBOSE
+    std::clog << "-- BH132 header reader " << std::endl;
+    std::clog << "-- macro_time_resolution: " << macro_time_resolution << std::endl;
+    std::clog << "-- micro_time_resolution: " << micro_time_resolution << std::endl;
+#endif
     return 4;
 }
 

@@ -324,7 +324,9 @@ void CLSMImage::remove_incomplete_frames(){
         i_frame++;
     }
     frames.resize(n_frames);
+#if VERBOSE
     std::clog << "-- Final number of frames: " << n_frames << std::endl;
+#endif
 }
 
 
@@ -440,7 +442,7 @@ void CLSMImage::get_decay_image(
     std::clog << "Get decay image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
-    size_t n_tac = tttr_data->header->number_of_tac_channels / tac_coarsening;
+    size_t n_tac = tttr_data->header->number_of_micro_time_channels / tac_coarsening;
     *dim1 = nf;
     *dim2 = n_lines;
     *dim3 = n_pixel;
@@ -486,13 +488,13 @@ void CLSMImage::get_decays(
         bool stack_frames
 ){
     size_t n_decays = stack_frames ? 1 : n_frames;
-    size_t n_tac = tttr_data->header->number_of_tac_channels / tac_coarsening;
+    size_t n_tac = tttr_data->header->number_of_micro_time_channels / tac_coarsening;
 #ifdef DEBUG
     std::clog << "Get decays:" << std::endl;
     std::clog << "-- Number of frames: " << n_frames << std::endl;
     std::clog << "-- Stack frames (true/false): " << stack_frames << std::endl;
     std::clog << "-- Number of decays: " << n_decays << std::endl;
-    std::clog << "-- Number of micro time channels: " << tttr_data->header->number_of_tac_channels << std::endl;
+    std::clog << "-- Number of micro time channels: " << tttr_data->header->number_of_micro_time_channels << std::endl;
     std::clog << "-- Micro time coarsening: " << tac_coarsening << std::endl;
     std::clog << "-- Resulting number of micro time channels: " << n_tac << std::endl;
 #endif

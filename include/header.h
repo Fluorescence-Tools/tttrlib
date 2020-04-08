@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <iostream>
 #include <map>
+#include <cmath> // floor
 
 
 // some important Tag Idents (TTagHead.Ident) that we will need to read the most common content of a PTU file
@@ -188,30 +189,49 @@ typedef struct tag_head {
 
 
 class Header {
-
-// seems to be unused - delete
-//private:
-//    std::FILE *fpin;
+    friend class TTTR;
 
 protected:
 
     int tttr_container_type;
-
-public:
-
-    int tttr_record_type;
-    unsigned int number_of_tac_channels;
 
     /*!
      * Marks the end of the header in the file
      */
     size_t header_end;
 
-
     /*!
      * Stores the bytes per TTTR record of the associated TTTR file
-     */
+    */
     size_t bytes_per_record;
+
+
+public:
+
+    int tttr_record_type;
+
+    /*!
+     * The total (possible) number of micro time channels.
+     *
+     * The number of TAC channels (TAC - Time to analog converter) refers to
+     * the number of micro time channels.
+     */
+    unsigned int number_of_micro_time_channels;
+
+    /*!
+     * The number of micro time channels that fit between two macro times.
+     *
+     * The total (possible) number of TAC channels can exceed the number
+     * that fit between two macro time channels. This function returns the
+     * effective number, i.e., the number of micro time channels between two
+     * macro times. The micro time channels that are outside of this bound should
+     * (usually) not be filled.
+     *
+     * @return effective_tac_channels (that fit between to macro times)
+     */
+    unsigned int get_effective_number_of_micro_time_channels(){
+        return (unsigned int) std::floor(macro_time_resolution / micro_time_resolution);
+    }
 
     /// Resolution for the micro time in nanoseconds
     double micro_time_resolution;
@@ -228,6 +248,9 @@ public:
      * Default constructor
      */
     Header();
+
+    /// Copy constructor
+    Header(const Header &p2);
 
     /*!
      * Constructor for the @class Header that takes a file pointer and the container type of the

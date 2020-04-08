@@ -24,6 +24,8 @@ class Pda {
 
 private:
 
+    // This is set to true if the content of SgSr is valid for the inputs
+    bool sgsr_valid = false;
     double Bg;
     double Br;
     unsigned int Nmax;
@@ -32,45 +34,35 @@ private:
     std::vector<double> amplitudes;
     std::vector<double> probability_green_theor;
 
+    void evaluate();
+
 public:
 
     // Constructor and Destructor
-    ~Pda(){
-    }
+    Pda() = default;
+    ~Pda() = default;
 
     // Methods
     void append(double amplitude, double probability_green);
-    void set_probability_green(double *in, int n_in);
+    void set_probability_green(double *input, int n_input);
     void clear_probability_green();
-    void get_amplitudes(double**out, int* dim1);
-    void get_probability_green(double**out, int* dim1);
+    void get_amplitudes(double **output, int *n_output);
+    void get_probability_green(double **output, int *n_output);
 
     // Getter and Setter
     unsigned int get_max_number_of_photons() const;
-
     void set_max_number_of_photons(unsigned int nmax);
-
     double get_green_background() const;
-
     void set_green_background(double bg);
-
     double get_red_background() const;
-
     void set_red_background(double br);
-
-    void setPF(double *in, int n_in);
-
-    void get_SgSr_matrix(
-            double** out, int* dim1, int* dim2
-    );
-
-
-    void evaluate();
+    void setPF(double *input, int n_input);
+    void get_SgSr_matrix(double **output, int *n_output1, int *n_output2);
 
 };
 
 
-namespace PdaFunctions{
+namespace PdaFunctions {
 
     /*!
      *
@@ -111,7 +103,6 @@ namespace PdaFunctions{
             double pg_theor
     );
 
-
     /*!
      *
      * calculating p(G,R), several ratios, same P(N)
@@ -133,8 +124,8 @@ namespace PdaFunctions{
             double Br,
             unsigned int N_pg,
             double *pg_theor,
-            double *a);
-
+            double *a
+    );
 
     /*!
      *
@@ -159,8 +150,16 @@ namespace PdaFunctions{
             double *pg_theor,
             double *a);
 
-    void sgsr_manypF(double *, double *, unsigned int, double, double, unsigned int, double *, double *);
-
+    void sgsr_manypF(
+            double *SgSr,        // see sgsr_pN
+            double *pF,        // input: p(F); size = (Nmax+1)xN_pg
+            unsigned int Nmax,
+            double Bg,
+            double Br,
+            unsigned int N_pg,        // size of pg_theor
+            double *pg_theor,
+            double *a            // corresponding amplitudes
+    );
 
     /*!
      *
@@ -186,13 +185,13 @@ namespace PdaFunctions{
 
 
     /*!
-    * generates Poisson distribution witn average= lambda, for 0..N
+    * generates Poisson distribution witn average= lam, for 0..N
     *
     * @param return_p
-    * @param lambda
+    * @param lam
     * @param return_dim
     */
-    void poisson_0toN(double *return_p, double lambda, unsigned int return_dim);
+    void poisson_0toN(double *return_p, double lam, unsigned int return_dim);
 
 
     /*!

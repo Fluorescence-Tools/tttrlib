@@ -272,7 +272,7 @@ bool ProcessSPC130(
             true_nsync = rec.bits.mt + overflow_counter * 4096; // 4096 = 2**12 (12 bits for macro time counter)
             micro_time = (uint16_t) (4095 - rec.bits.adc);
             channel = (uint16_t) (rec.bits.rout);
-            return false;
+            return true;
         } else{
             if(rec.bits.invalid && rec.bits.mtov){
                 bh_overflow_t overflow_record;

@@ -28,6 +28,10 @@
 #include <map>
 #include <array>
 #include <memory>
+#include <stdlib.h>     /* calloc, exit, free */
+
+#include <boost/filesystem.hpp>
+#include <boost/bimap.hpp>
 
 #include "hdf5.h"
 
@@ -35,9 +39,9 @@
 #include <header.h>
 
 
-#define VERBOSE 0
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
+#define VERSION                     "0.0.14"
 
 
 /*!
@@ -75,17 +79,22 @@ size_t determine_number_of_records_by_file_size(
  * @param n_ph_max, the time events within the tw are added to the selection.
  *
  *
- * @param selection
- * @param n_selected
- * @param time
- * @param n_time
- * @param tw
- * @param n_ph_max
+ * @param selection output array
+ * @param n_selected number of elements in output array
+ * @param time array of times
+ * @param n_time number of times
+ * @param time_window length of the time window
+ * @param n_ph_max maximum number of photons in a time window
+ * @param macro_time_calibration
+ * @param invert if invert is true (default false) only indices where the number
+ * of photons exceeds n_ph_max are selected
  */
 void selection_by_count_rate(
-        long long **out, int *n_out,
+        long long **output, int *n_output,
         unsigned long long *time, int n_time,
-        unsigned long tw, int n_ph_max
+        double time_window, int n_ph_max,
+        double macro_time_calibration=1.0,
+        bool invert=false
 );
 
 
@@ -93,15 +102,15 @@ void selection_by_count_rate(
  * Splits the time trace into bins that are at least of the length specified by @param time_window and
  * counts the number of photons in each time interval
  *
- * @param out array of counts
- * @param n_out number of elements in @param out
- * @param time array of detection times
- * @param n_time number of elements in the @param time array
+ * @param output array of counts
+ * @param n_output number of elements in @param output
+ * @param input array of detection times
+ * @param n_input number of elements in the @param input array
  * @param time_window The size of the
  */
 void histogram_trace(
-        int **out, int *n_out,
-        unsigned long long *time, int n_time,
+        int **output, int *n_output,
+        unsigned long long *input, int n_input,
         int time_window
         );
 
@@ -125,16 +134,16 @@ void get_ranges_channel(
 
 /*!
  *
- * @param out
- * @param n_out
- * @param in
- * @param n_in
+ * @param output
+ * @param n_output
+ * @param input
+ * @param n_input
  * @param routing_channels
  * @param n_routing_channels
  */
 void selection_by_channels(
-        long long **out, int *n_out,
-        long long *in, int n_in,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels);
 
 
@@ -254,24 +263,27 @@ class TTTR {
     friend class CLSMImage;
 
 private:
+
+    /*!
+     * Copy the information from another TTTR object
+     *
+     * @param p2 the TTTR object which which the information is copied from
+     * @param include_big_data if this is true also the macro time, micro time
+     * etc. are copied. Otherwise all other is copied
+     */
+    void copy_from(const TTTR &p2, bool include_big_data=true);
+
     /// the input file
-    char* filename;
+    std::string filename;
 
     std::vector<TTTR*> children;
 
-    Header *header;
+    Header *header = nullptr;
 
     uint64_t overflow_counter;
 
     /// map to translates string container types to int container types
-    std::map<std::string, int> container_names = {
-            {std::string("PTU"), 0},
-            {std::string("HT3"), 1},
-            {std::string("SPC-130"), 2},
-            {std::string("SPC-600_256"), 3},
-            {std::string("SPC-600_4096"), 4},
-            {std::string("PHOTON-HDF5"), 5}
-    };
+    boost::bimap<std::string, int> container_names;
 
     typedef bool (*processRecord_t)(
             uint64_t&,  // input
@@ -310,6 +322,7 @@ private:
      * initializing the class.
     */
     int tttr_container_type; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
+    std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
     int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
     /// The size in bytes per TTTR record
@@ -351,7 +364,7 @@ private:
     /// The event type
     short *event_types;
 
-    int read_hdf_file(char *fn);
+    int read_hdf_file(const char *fn);
 
 
 protected:
@@ -383,13 +396,13 @@ protected:
     void read_records();
 
     /// the number of time tagged data records in the TTTR file
-    size_t n_records_in_file;
+    size_t n_records_in_file = 0;
 
     /// the number of read time tagged data
-    size_t n_records_read;
+    size_t n_records_read = 0;
 
     /// the number of valid read records (excluded overflow and invalid records)
-    size_t n_valid_events;
+    size_t n_valid_events = 0;
 
     /*!
      * Reads the TTTR data contained in a file into the TTTR object
@@ -399,7 +412,7 @@ protected:
      * @param container_type The container type.
      * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
      */
-    int read_file(char *fn, int container_type);
+    int read_file(const char *fn, int container_type);
     int read_file();
 
 
@@ -409,56 +422,66 @@ public:
      * Returns an array containing the routing channel numbers
      * that are contained (used) in the TTTR file.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_used_routing_channels(short **out, int *n_out);
+    void get_used_routing_channels(short **output, int *n_output);
 
     /*!
      * Returns an array containing the macro times of the valid TTTR
      * events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_macro_time(unsigned long long **out, int *n_out);
+    void get_macro_time(unsigned long long **output, int *n_output);
 
     /*!
      * Returns an array containing the micro times of the valid TTTR
      * events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_micro_time(unsigned int **out, int *n_out);
+    void get_micro_time(unsigned int **output, int *n_output);
 
     /*!
      * Returns an array containing the routing channel numbers of the
      * valid TTTR events.
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_routing_channel(short ** out, int* n_out);
+    void get_routing_channel(short ** output, int* n_output);
 
     /*!
      *
-     * @param out Pointer to the output array
-     * @param n_out Pointer to the number of elements in the output array
+     * @param output Pointer to the output array
+     * @param n_output Pointer to the number of elements in the output array
      */
-    void get_event_type(short ** out, int* n_out);
+    void get_event_type(short ** output, int* n_output);
 
     /*!
+     * Returns the number of micro time channels that fit between two
+     * macro time clocks.
      *
      * @return maximum valid number of micro time channels
      */
-    unsigned int get_number_of_tac_channels();
+    unsigned int get_number_of_micro_time_channels();
 
     /*!
      *
      * @return number of valid events in the TTTR file
      */
     int get_n_valid_events();
+
+    /*!
+     *
+     * @return the container type that was used to open the file
+     */
+    std::string get_tttr_container_type(){
+        return tttr_container_type_str;
+    }
 
     TTTR* select(long long *selection, int n_selection);
 
@@ -475,6 +498,10 @@ public:
      */
     TTTR();
 
+    /// Copy constructor
+    TTTR(const TTTR &p2);
+
+
     /*!
      *
      * @param filename TTTR filename
@@ -482,7 +509,7 @@ public:
      * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
      * @param read_input if true reads the content of the file
      */
-    TTTR(char *filename, int container_type, bool read_input);
+    TTTR(const char *filename, int container_type, bool read_input);
 
     /*!
      *
@@ -490,7 +517,7 @@ public:
      * @param container_type container type as int (0 = PTU; 1 = HT3;
      * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
      */
-    TTTR(char *filename, int container_type);
+    TTTR(const char *filename, int container_type);
 
     /*!
      *
@@ -498,21 +525,44 @@ public:
      * @param container_type container type as string (PTU; HT3;
      * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
      */
-    TTTR(char *filename, const char* container_type);
+    TTTR(const char *filename, const char* container_type);
 
 
-    // Constructors for in memory data
-    TTTR(unsigned long long *n_sync_pulses,
-         unsigned int *micro_times,
-         short *routing_channels,
-         short *event_types
+    /*!
+     * Constructor of TTTR object using arrays of the TTTR events
+     *
+     * If arrays of different size are used to initialize a TTTR object
+     * the shortest array of all provided arrays is used to construct the
+     * TTTR object.
+     *
+     * @param macro_times input array containing the macro times
+     * @param n_macrotimes  number of macro times
+     * @param micro_times input array containing the microtimes
+     * @param n_microtimes length of the of micro time array
+     * @param routing_channels routing channel array
+     * @param n_routing_channels length of the routing channel array
+     * @param event_types array of event types
+     * @param n_event_types number of elements in the event type array
+     */
+    TTTR(unsigned long long *macro_times, int n_macrotimes,
+         unsigned int *micro_times, int n_microtimes,
+         short *routing_channels, int n_routing_channels,
+         short *event_types, int n_event_types
     );
 
-    TTTR(TTTR *parent,
-         long long *selection,
-         int n_selection
-    );
-
+    /*!
+     * This constructor can be used to create a new TTTR object that only
+     * contains records that are specified in the selection array.
+     *
+     * The selection array is an array of indices. The events with indices
+     * in the selection array are copied in the order of the selection array
+     * to a new TTTR object.
+     *
+     * @param parent
+     * @param selection
+     * @param n_selection
+     */
+    TTTR(const TTTR &parent, long long *selection, int n_selection);
 
     /// Destructor
     ~TTTR();
@@ -522,33 +572,39 @@ public:
      *
      * @return The filename of the TTTR file
      */
-    char* get_filename();
+    std::string get_filename();
 
     /*!
      * Returns a vector containing indices of records that
-     * @param in a pointer to an array of int16_tchannel numbers that are
+     * @param input a pointer to an array of int16_tchannel numbers that are
      * used to select indices of photons
-     * @param n_in the length of the channel list.
+     * @param n_input the length of the channel list.
      */
     void get_selection_by_channel(
-            long long **out, int *n_out,
-            long long *in, int n_in
+            long long **output, int *n_output,
+            long long *input, int n_input
             );
 
     /*!
+     * List of indices where the count rate is smaller than a maximum count
+     * rate
      *
-     * @param out
-     * @param n_out
-     * @param tw
-     * @param n_ph_max
+     * The count rate is specified by providing a time window that slides over
+     * the time array and the maximum number of photons within the time window.
+     *
+     * @param output the output array that will contain the selected indices
+     * @param n_output the number of elements in the output array
+     * @param time_window the length of the time window
+     * @param n_ph_max the maximum number of photons within a time window
      */
     void get_selection_by_count_rate(
-            long long **out, int *n_out,
-            unsigned long tw, int n_ph_max
+            long long **output, int *n_output,
+            double time_window, int n_ph_max,
+            bool invert=false
             );
 
     void get_ranges_by_count_rate(
-            int **out, int *n_out,
+            int **output, int *n_output,
             int tw_min, int tw_max,
             int n_ph_min, int n_ph_max
             );
@@ -573,7 +629,7 @@ public:
      * @return
      */
     bool write_file(
-            char *fn,
+            const char *fn,
             const char* container_type
             );
 
@@ -581,9 +637,7 @@ public:
      * Shift the macro time by a constant
      * @param shift
      */
-    void shift_macro_time(
-            unsigned int shift
-            );
+    void shift_macro_time(int shift);
 };
 
 

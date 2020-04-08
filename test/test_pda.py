@@ -42,7 +42,6 @@ class Tests(unittest.TestCase):
         )
         pF = np.ones(max_number_of_photons, dtype=np.float)
         pda.setPF(pF)
-        pda.evaluate()
         sgsr_matrix = pda.get_SgSr_matrix()
 
     def test_pda_2(self):
@@ -66,5 +65,4 @@ class Tests(unittest.TestCase):
         pda.set_probability_green(pg)
         pF = np.ones(max_number_of_photons, dtype=np.float)
         pda.setPF(pF)
-        pda.evaluate()
         sgsr_matrix = pda.get_SgSr_matrix()
