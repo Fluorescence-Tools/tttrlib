@@ -11,7 +11,7 @@ data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
 
 class Tests(unittest.TestCase):
 
-    make_references = True
+    make_references = False
 
     test_files = [
         ('./data/BH/BH_SPC132.spc', 'SPC-130'),
