@@ -94,7 +94,7 @@ void selection_by_count_rate(
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration,
-        bool invert
+        bool invert=false
 );
 
 
