@@ -160,15 +160,96 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.
 .. code-block:: python
 
     import tttrlib
-    ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
-    ptu = tttrlib.TTTR('./examples/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
+    ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
+    ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
 
-    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 2)
-    spc132 = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+    spc132 = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 2)
+    spc132 = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
 
 Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
+
+TTTR-Header
+===========
+
+Accessing header data
+---------------------
+
+Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
+For that, a ``TTTR`` object provides a header attribute. The header attribute is
+of the type :class:`.Header`.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
+    # the header can be accesses by the method get_header or as an property
+    header = data.get_header()
+
+The most important attributes of the header are the :py:attr:`micro_time_resolution`
+and :py:attr:`macro_time_resolution`. Becker&Hickl Spc132 files files contain
+only a limited amount of information in the first record (32 bit).
+
+PicoQuant PTU and HT3 files provide more extensive information in their header
+that can be accessed via the :py:attr:`data` attribute of a header object. The
+data attribute of a header object is a map that can be accesses like a normal
+Python dictionary.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.PTU', 'PTU')
+    # the header can be accesses by the method get_header or as an property
+    header = data.get_header()
+    header_data = header.data
+    print(header.data.keys())
+
+The last statement prints the keys of the map.
+
+
+Time calibration data
+---------------------
+
+Essential for the analysis of TTTR data is the time calibration (time resolution)
+of the macro and the micro times in addition to the number of possible micro time
+channels. In many functions the micro and macro time calibration are transparently
+handeled, meaning there is no need to worry. The ``macro_time`` and the
+``micro_time`` TTTR attributes correspond the to raw uncalibrated data.
+
+The macro and micro time resolution is accessed as follows.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/PQ/PTU/PQ_PTU_HH_T3.PTU', 'PTU')
+    macro_time_resolution = data.header.macro_time_resolution
+    micro_time_resolution = data.header.micro_time_resolution
+
+The number of micro time channels can be accessed as displayed below.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/PQ/PTU/PQ_PTU_HH_T3.PTU', 'PTU')
+    # the header can be accesses by the method get_header or as an property
+    header = data.get_header()
+    macro_time_resolution = data.header.macro_time_resolution
+    # macro_time_resolution = 12.5 ns
+    micro_time_resolution = data.header.micro_time_resolution
+    # micro_time_resolution = 4 ps
+    data.header.number_of_micro_time_channels
+    # will return 8129
+    data.get_number_of_micro_time_channels()
+    # will return 3125
+
+
+.. note::
+    The effective number of micro time channels, i.e., the number of micro time
+    channels can be smaller than the actual number of micro time channels. For instance
+    at a micro time channel resolution of 4 ps and macro time resolution of 12.5 ns
+    effectively only 3125 micro time channels will be filled with photons.
+
 
 Selections
 ----------

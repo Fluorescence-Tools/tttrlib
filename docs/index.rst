@@ -27,7 +27,6 @@ Contents
 
    installation
    tttr_objects
-   header_data
    histograms
    correlation
    single_molecule

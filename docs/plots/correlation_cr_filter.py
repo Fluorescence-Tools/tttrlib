@@ -5,66 +5,57 @@ import numpy as np
 fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
+data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
 
-data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+# Plot the raw/unfiltered correlations
 
-# Create correlator
-B = 9
-n_casc = 25
+correlator = tttrlib.Correlator(
+    tttr=data,
+    channels=([0], [8]),  # green correlation
+)
+ax[0].semilogx(
+    correlator.x_axis,
+    correlator.correlation
+)
+correlator = tttrlib.Correlator(
+    tttr=data,
+    channels=([0, 8], [1, 9]),  # green-red correlation
+)
+ax[0].semilogx(
+    correlator.x_axis,
+    correlator.correlation
+)
 
-correlator = tttrlib.Correlator()
-correlator.set_n_bins(B)
-correlator.set_n_casc(n_casc)
-
-
-# Select the green channels (channel number 0 and 8)
-
-ch1_indeces = data.get_selection_by_channel(np.array([0]))
-ch2_indeces = data.get_selection_by_channel(np.array([8]))
-
-mt = data.get_macro_time()
-
-t1 = mt[ch1_indeces]
-w1 = np.ones_like(t1, dtype=np.float)
-cr_selection = tttrlib.selection_by_count_rate(t1, 1200000, 30)
-w1[cr_selection] *= 0.0
-
-t2 = mt[ch2_indeces]
-w2 = np.ones_like(t2, dtype=np.float)
-cr_selection = tttrlib.selection_by_count_rate(t2, 1200000, 30)
-w2[cr_selection] *= 0.0
-
-correlator.set_events(t1, w1, t2, w2)
-correlator.run()
-
-x = correlator.get_x_axis_normalized()
-y = correlator.get_corr_normalized()
-
-ax[0].semilogx(x, y)
-
+# This is a selection where at most 60 photons in any time window of
+# 10 ms are allowed
+filter_options = {
+    'n_ph_max': 60,
+    'time_window': 10.0e6,  # = 10 ms (macro_time_resolution is in ns)
+    'time': data.macro_times,
+    'macro_time_calibration': data.header.macro_time_resolution,
+    'invert': True  # set invert to True to select TW with more than 60 ph
+}
+data_selection = tttrlib.TTTR(
+    data,
+    tttrlib.selection_by_count_rate(**filter_options)
+)
+correlator = tttrlib.Correlator(
+    channels=([0], [8]),
+    tttr=data_selection
+)
+ax[1].semilogx(
+    correlator.x_axis,
+    correlator.correlation
+)
 
 # green-red cross-correlation
-
-mt = data.get_macro_time()
-
-t1 = mt[ch1_indeces]
-w1 = np.ones_like(t1, dtype=np.float)
-cr_selection = tttrlib.selection_by_count_rate(t1, 1200000, 30)
-w1[cr_selection] *= 0.0
-
-t2 = mt[ch2_indeces]
-w2 = np.ones_like(t2, dtype=np.float)
-cr_selection = tttrlib.selection_by_count_rate(t2, 1200000, 30)
-w2[cr_selection] *= 0.0
-
-correlator.set_events(t1, w1, t2, w2)
-correlator.run()
-
-x = correlator.get_x_axis_normalized()
-y = correlator.get_corr_normalized()
-
-ax[1].semilogx(x, y)
-
-
+correlator = tttrlib.Correlator(
+    channels=([0, 8], [9, 1]),
+    tttr=data_selection
+)
+ax[1].semilogx(
+    correlator.x_axis,
+    correlator.correlation
+)
 
 p.show()
