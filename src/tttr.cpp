@@ -16,6 +16,8 @@
 #include <include/tttr.h>
 #include <boost/filesystem.hpp>
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
 TTTR::TTTR() :
@@ -83,7 +85,11 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
 }
 
 
-TTTR::TTTR(const TTTR &parent, long long *selection, int n_selection) :  TTTR()
+TTTR::TTTR(
+        const TTTR &parent,
+        unsigned long long *selection,
+        int n_selection
+        ) :  TTTR()
         {
 #if VERBOSE
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
@@ -95,10 +101,10 @@ TTTR::TTTR(const TTTR &parent, long long *selection, int n_selection) :  TTTR()
     }
     allocate_memory_for_records(n_selection);
     for(size_t i=0; i<n_valid_events; i++){
-        TTTR::macro_times[i] = parent.macro_times[selection[i]];
-        TTTR::micro_times[i] = parent.micro_times[selection[i]];
-        TTTR::event_types[i] = parent.event_types[selection[i]];
-        TTTR::routing_channels[i] = parent.routing_channels[selection[i]];
+        macro_times[i] = parent.macro_times[selection[i]];
+        micro_times[i] = parent.micro_times[selection[i]];
+        event_types[i] = parent.event_types[selection[i]];
+        routing_channels[i] = parent.routing_channels[selection[i]];
     }
     find_used_routing_channels();
 }
@@ -468,6 +474,7 @@ void TTTR::get_routing_channel(int16_t** output, int* n_output){
     get_array<int16_t>(n_valid_events, routing_channels, output, n_output);
 }
 
+
 void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
     get_array(
             used_routing_channels.size(),
@@ -488,13 +495,13 @@ void TTTR::get_event_type(int16_t** output, int* n_output){
 }
 
 
-int TTTR::get_n_valid_events(){
+unsigned int TTTR::get_n_valid_events(){
     return (int) n_valid_events;
 }
 
 
 
-int TTTR::get_n_events(){
+unsigned int TTTR::get_n_events(){
     return (int) n_valid_events;
 }
 
@@ -542,7 +549,7 @@ void TTTR::get_ranges_by_count_rate(
 }
 
 
-TTTR* TTTR::select(long long *selection, int n_selection) {
+TTTR* TTTR::select(unsigned long long *selection, int n_selection) {
     return new TTTR(*this, selection, n_selection);
 }
 
@@ -724,7 +731,7 @@ void get_ranges_channel(
 }
 
 
-bool TTTR::write_file(
+bool TTTR::write(
         const char *fn,
         const char* container_type
         ) {
@@ -732,36 +739,52 @@ bool TTTR::write_file(
         case BH_SPC130_CONTAINER:
             fp = fopen(fn, "wb");
             if (fp != nullptr) {
+                // write header
+                bh_spc132_header_t head;
+                head.invalid = true;
+                head.macro_time_clock = (unsigned) (header->macro_time_resolution * 10.0);
+                fwrite(&head, 4, 1, fp);
 
-                bh_overflow_t record_overflow;
-                record_overflow.bits.invalid = true;
-                record_overflow.bits.mtov = true;
-                record_overflow.bits.empty = 0;
+                bh_overflow_t overflow;
+                overflow.bits.empty = 0;
+                overflow.bits.mtov = 1;
+                overflow.bits.invalid = 1;
 
                 bh_spc130_record_t record;
-                record.bits.invalid = false;
-                record.bits.mtov = false;
-
-                int n = 0;
+                unsigned long long dMT;
+                unsigned long long MT_ov_last = 0;
                 unsigned long MT_ov = 0;
-                while (n < n_valid_events) {
-                    unsigned long MT = macro_times[n] - MT_ov * 4095;
-                    if (MT > 4095) {
-                        /* invalid photon */
-                        unsigned long MT_ov_last = MT / (4096);
-                        record_overflow.bits.cnt = MT_ov_last;
-                        fwrite(&record_overflow, 4, 1, fp);
-                        MT_ov += MT_ov_last;
-                    } else {
-                        /* valid photon */
+                for(size_t n = 0; n < get_n_valid_events();){
+                    // time since last macro_time record
+                    dMT = macro_times[n] - MT_ov * 4096;
+                    // Count the number of MT overflows
+                    MT_ov_last = dMT / 4096;
+                    // increment the global overflow counter
+                    MT_ov += MT_ov_last;
+
+                    // write overflows
+                    while(MT_ov_last>1){
+                        std::cout << MT_ov_last << std::endl;
+                        // we fit 65536 = 2**16 in each overflow record
+                        overflow.bits.cnt = MIN(65536, MT_ov_last);
+                        fwrite(&overflow, 4, 1, fp);
+                        MT_ov_last -= overflow.bits.cnt;
+                    }
+                    {
+                        // we wrote all macro time overflows that do not fit
+                        // in the record. Hence we have a valid photon
+                        record.bits.mt = dMT;
                         record.bits.adc = 4095 - micro_times[n];
                         record.bits.rout = routing_channels[n];
-                        record.bits.mt = MT;
-                        fwrite(&record, 1, 4, fp);
+                        // If there is a overflow set mtov
+                        record.bits.mtov = (MT_ov_last == 1);
+                        record.bits.invalid = 0;
+                        fwrite(&record, 4, 1, fp);
                         n++;
                     }
                 }
-            fclose(fp);
+                fflush(fp);
+                fclose(fp);
             } else {
                 std::cerr << "Cannot write to file: " << filename <<  std::endl;
                 return false;

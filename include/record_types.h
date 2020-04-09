@@ -122,7 +122,7 @@ typedef union bh_overflow{
     uint64_t allbits;
     struct {
         unsigned cnt        : 28;
-        unsigned empty      : 6;
+        unsigned empty      : 2;
         unsigned mtov       : 1;
         unsigned invalid    : 1;
     } bits;

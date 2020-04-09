@@ -473,7 +473,7 @@ public:
      *
      * @return number of valid events in the TTTR file
      */
-    int get_n_valid_events();
+    unsigned int get_n_valid_events();
 
     /*!
      *
@@ -483,7 +483,7 @@ public:
         return tttr_container_type_str;
     }
 
-    TTTR* select(long long *selection, int n_selection);
+    TTTR* select(unsigned long long *selection, int n_selection);
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
@@ -561,8 +561,13 @@ public:
      * @param parent
      * @param selection
      * @param n_selection
+     *
      */
-    TTTR(const TTTR &parent, long long *selection, int n_selection);
+    TTTR(
+            const TTTR &parent,
+            unsigned long long *selection,
+            int n_selection
+            );
 
     /// Destructor
     ~TTTR();
@@ -617,7 +622,7 @@ public:
      * is specified otherwise the number of selected events is returned.
      * @return
      */
-    int get_n_events();
+    unsigned int get_n_events();
 
     /*!
      * Write the contents of a opened TTTR file to a new
@@ -628,7 +633,7 @@ public:
      * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
      * @return
      */
-    bool write_file(
+    bool write(
             const char *fn,
             const char* container_type
             );
