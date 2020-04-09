@@ -1,6 +1,7 @@
 from __future__ import division
 
 import os
+import tempfile
 import unittest
 import numpy as np
 
@@ -80,6 +81,28 @@ class Tests(unittest.TestCase):
                 data.__repr__()
             )
 
+    def test_slicing(self):
+        # single element
+        d = data[0]
+        self.assertEqual(d.routing_channels, data.routing_channels[0])
+        self.assertEqual(d.event_types, data.event_types[0])
+        self.assertEqual(d.micro_times, data.micro_times[0])
+        self.assertEqual(d.macro_times, data.macro_times[0])
+
+        # steps of two
+        d = data[:10:2]
+        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:2]), True)
+        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:2]), True)
+        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:2]), True)
+        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:2]), True)
+
+        # reverse oder
+        d = data[:10:-1]
+        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:-1]), True)
+        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:-1]), True)
+        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:-1]), True)
+        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:-1]), True)
+
     def test_header_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
@@ -141,7 +164,7 @@ class Tests(unittest.TestCase):
 
     def test_constructor_with_selection(self):
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-        ch1_indeces = data.get_selection_by_channel(np.array([8]))
+        ch1_indeces = data.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data, ch1_indeces)
         self.assertEqual(
             np.allclose(
@@ -180,3 +203,11 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             header.getTTTRRecordType(), -1
         )
+
+    def test_write_spc(self):
+        fp = tempfile.TemporaryFile()
+        data = tttrlib.TTTR(fp.name, 'SPC-130')
+        d2 = tttrlib.TTTR(fp.name, 'SPC-130')
+        self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
+        self.assertEqual(np.allclose(d2.macro_times, data.micro_times), True)
+        self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)

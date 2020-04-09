@@ -171,6 +171,18 @@ Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
 
+Slicing / subsets
++++++++++++++++++
+
+TTTR objects can be sliced, if you are interested a subset of
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data_sliced = data[:10]
+
+
 TTTR-Header
 -----------
 
@@ -319,7 +331,7 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
 
     data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
 
-    green_indices = data.get_selection_by_channel(np.array([0, 8]))
+    green_indices = data.get_selection_by_channel([0, 8])
     red_indices = data.get_selection_by_channel(np.array([1, 9]))
 
 This examples needs to be adapted to the channel assignment dependent on the actual
@@ -331,8 +343,10 @@ be created.
 .. code-block:: python
 
         data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-        ch1_indeces = data.get_selection_by_channel(np.array([8]))
+        ch1_indeces = data.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data, ch1_indeces)
+        # alternatively
+        data_ch1 = data[ch1_indeces]
 
 The `TTTR` object can be operated on normally.
 
