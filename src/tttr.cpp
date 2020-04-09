@@ -292,9 +292,6 @@ int TTTR::read_file(
                     header->header_end,
                     bytes_per_record
             );
-#if VERBOSE
-            std::clog << "-- Number of records: " << n_records_in_file << std::endl;
-#endif
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
@@ -385,6 +382,9 @@ void TTTR::read_records(
         size_t chunk
         ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
+#if VERBOSE
+    std::cout << "-- Records that will be read : " << n_rec << std::endl;
+#endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
@@ -395,13 +395,10 @@ void TTTR::read_records(
     n_valid_events = 0;
     size_t offset = 0;
 
-    bool is_valid_record;
     // read if possible the data in chunks to speed up the access
-    char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
-    while(
-            (n_records_read < n_rec) &&
-            (fread(tmp, bytes_per_record, chunk, fp) == chunk)
-            ){
+    while(n_records_read < n_rec){
+        char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
+        if(fread(tmp, bytes_per_record, chunk, fp) != chunk) break;
         for(size_t i=0; i<chunk; i++){
             offset = bytes_per_record * i;
             n_valid_events += processRecord(
@@ -416,20 +413,17 @@ void TTTR::read_records(
         n_records_read += chunk;
     }
     // records that do not fit in chunks are read one by one (slower)
-    while (
-            (n_records_read < n_rec) &&
-            fread(&TTTRRecord, (size_t) bytes_per_record, 1, fp)
-            )
-    {
+    char* tmp = (char*) malloc(bytes_per_record);
+    for(size_t j = n_records_read; j < n_rec; j++){
+        fread(tmp, bytes_per_record, 1, fp);
         n_valid_events += processRecord(
-                *(uint64_t *)&tmp[offset],
+                *(uint64_t *)&tmp[0],
                 overflow_counter,
                 *(uint64_t *)&macro_times[n_valid_events],
                 *(uint32_t *)&micro_times[n_valid_events],
                 *(int16_t *)&routing_channels[n_valid_events],
                 *(int16_t *)&event_types[n_valid_events]
         );
-        n_records_read += 1;
     }
     free(tmp);
 }
@@ -590,6 +584,9 @@ size_t determine_number_of_records_by_file_size(
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
     fseek(fp, (long) current_position, SEEK_SET);
+#if VERBOSE
+    std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
+#endif
     return n_records_in_file;
 }
 
@@ -730,7 +727,6 @@ void get_ranges_channel(
 
 }
 
-
 bool TTTR::write(
         const char *fn,
         const char* container_type
@@ -751,9 +747,9 @@ bool TTTR::write(
                 overflow.bits.invalid = 1;
 
                 bh_spc130_record_t record;
-                unsigned long long dMT;
+                unsigned dMT;
                 unsigned long long MT_ov_last = 0;
-                unsigned long MT_ov = 0;
+                unsigned long long MT_ov = 0;
                 for(size_t n = 0; n < get_n_valid_events();){
                     // time since last macro_time record
                     dMT = macro_times[n] - MT_ov * 4096;
@@ -782,7 +778,9 @@ bool TTTR::write(
                         fwrite(&record, 4, 1, fp);
                         n++;
                     }
+                    std::cout << n << " " << std::endl;
                 }
+                std::cout << std::endl;
                 fflush(fp);
                 fclose(fp);
             } else {
