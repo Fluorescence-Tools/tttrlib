@@ -9,8 +9,11 @@ ch1_indeces = data.get_selection_by_channel([8])
 ch2_indeces = data.get_selection_by_channel([0])
 
 # use the indices to create new TTTR objects
+# either by creating a new object and providing a selection
 tttr_ch1 = tttrlib.TTTR(data, ch1_indeces)
-tttr_ch2 = tttrlib.TTTR(data, ch2_indeces)
+# or by slicing
+tttr_ch2 = data[ch2_indeces]
+
 # correlate with the new TTTR objects
 correlator = tttrlib.Correlator(
     method='default',
@@ -19,8 +22,6 @@ correlator = tttrlib.Correlator(
     tttr=(tttr_ch1, tttr_ch2),
     make_fine=True
 )
-# Alternatively instead of the constructor use method below
-# correlator.set_tttr(data_ch1, data_ch2, make_fine=True)
 x = correlator.x_axis
 y = correlator.correlation
 
@@ -28,7 +29,7 @@ y = correlator.correlation
 p.semilogx(x, y)
 # p.show()
 
-# the above should produce the same result as the code below
+# the above is equivalent to the following
 correlator_ref = tttrlib.Correlator(
     tttr=data,
     n_casc=35,
