@@ -508,8 +508,8 @@ unsigned int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        long long **output, int *n_output,
-        long long *input, int n_input
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input
 ){
     ::selection_by_channels(
             output, n_output,
@@ -520,7 +520,7 @@ void TTTR::get_selection_by_channel(
 
 
 void TTTR::get_selection_by_count_rate(
-        long long **output, int *n_output,
+        unsigned long long **output, int *n_output,
         double time_window, int n_ph_max,
         bool invert
 ){
@@ -535,7 +535,7 @@ void TTTR::get_selection_by_count_rate(
 
 
 void TTTR::get_ranges_by_count_rate(
-        int **output, int *n_output,
+        unsigned long long **output, int *n_output,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max){
 
@@ -555,11 +555,11 @@ TTTR* TTTR::select(unsigned long long *selection, int n_selection) {
 
 
 void selection_by_channels(
-        long long **output, int *n_output,
-        long long *input, int n_input,
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input,
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
-    *output = (long long *) malloc(n_routing_channels * sizeof(long long));
+    *output = (unsigned long long *) malloc(n_routing_channels * sizeof(unsigned long long));
 
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
@@ -595,12 +595,12 @@ size_t determine_number_of_records_by_file_size(
 
 
 void ranges_by_time_window(
-        int **ranges, int *n_range,
+        unsigned long long **ranges, int *n_range,
         unsigned long long *time, int n_time,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max
 ) {
-    *ranges = (int *) malloc(2 * n_time * sizeof(int));
+    *ranges = (unsigned long long *) malloc(2 * n_time * sizeof(unsigned long long));
     *n_range = 0;
 
     size_t tw_begin = 0;
@@ -631,14 +631,14 @@ void ranges_by_time_window(
 
 
 void selection_by_count_rate(
-        long long **output, int *n_output,
+        unsigned long long **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration,
         bool invert
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
-    *output = (long long*) calloc(sizeof(long long), n_time);
+    *output = (unsigned long long*) calloc(sizeof(unsigned long long), n_time);
     int i = 0;
     *n_output = 0;
     while (i < (n_time - 1)){

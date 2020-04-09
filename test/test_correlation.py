@@ -106,8 +106,8 @@ class Tests(unittest.TestCase):
     def test_correlation(self):
         # correlations providing macro times and weights
         data = self.data
-        ch1_indeces = data.get_selection_by_channel(np.array([0]))
-        ch2_indeces = data.get_selection_by_channel(np.array([8]))
+        ch1_indeces = data.get_selection_by_channel([0])
+        ch2_indeces = data.get_selection_by_channel([8])
         mt = data.get_macro_time()
 
         t1 = mt[ch1_indeces]

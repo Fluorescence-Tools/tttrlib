@@ -90,7 +90,7 @@ size_t determine_number_of_records_by_file_size(
  * of photons exceeds n_ph_max are selected
  */
 void selection_by_count_rate(
-        long long **output, int *n_output,
+        unsigned long long **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration=1.0,
@@ -142,8 +142,8 @@ void get_ranges_channel(
  * @param n_routing_channels
  */
 void selection_by_channels(
-        long long **output, int *n_output,
-        long long *input, int n_input,
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input,
         short *routing_channels, int n_routing_channels);
 
 
@@ -209,7 +209,7 @@ inline void get_array(
  *
  */
 void ranges_by_time_window(
-        int **ranges, int *n_range,
+        unsigned long long  **ranges, int *n_range,
         unsigned long long *time, int n_time,
         int tw_min, int tw_max,
         int n_ph_min, int n_ph_max
@@ -586,8 +586,8 @@ public:
      * @param n_input the length of the channel list.
      */
     void get_selection_by_channel(
-            long long **output, int *n_output,
-            long long *input, int n_input
+            unsigned long long **output, int *n_output,
+            unsigned long long *input, int n_input
             );
 
     /*!
@@ -603,13 +603,13 @@ public:
      * @param n_ph_max the maximum number of photons within a time window
      */
     void get_selection_by_count_rate(
-            long long **output, int *n_output,
+            unsigned  long long **output, int *n_output,
             double time_window, int n_ph_max,
             bool invert=false
             );
 
     void get_ranges_by_count_rate(
-            int **output, int *n_output,
+            unsigned long long **output, int *n_output,
             int tw_min, int tw_max,
             int n_ph_min, int n_ph_max
             );
