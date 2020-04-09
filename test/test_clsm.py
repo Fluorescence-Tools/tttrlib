@@ -8,6 +8,10 @@ import numpy as np
 
 class TestCLSM(unittest.TestCase):
 
+    # If this is set to True as set of files are wirtten as a
+    # reference for future tests
+    make_reference = False
+
     sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
     sp8_data = tttrlib.TTTR(sp8_filename, 'PTU')
 
@@ -46,13 +50,11 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             n_ph_min=1
         ).sum(axis=0)
-        np.save('./data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
+        if self.make_reference:
+            np.save('./data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
         self.assertEqual(
             np.allclose(
-                np.load(
-                    './data/reference/img_ref_mean_tac_sp8.npy',
-                ),
-                mean_tac_image
+                np.load('./data/reference/img_ref_mean_tac_sp8.npy'), mean_tac_image
             ),
             True
         )
@@ -63,11 +65,11 @@ class TestCLSM(unittest.TestCase):
             tac_coarsening=256,
             stack_frames=True
         )
+        if self.make_reference:
+            np.save('./data/reference/img_ref_decay_image_sp8.npy', decay_image)
         self.assertEqual(
             np.allclose(
-                np.load(
-                    './data/reference/img_ref_decay_image_sp8.npy',
-                ),
+                np.load('./data/reference/img_ref_decay_image_sp8.npy'),
                 decay_image
             ),
             True
@@ -176,12 +178,13 @@ class TestCLSM(unittest.TestCase):
             np.allclose(intensity_image_1, intensity_image_2),
             True
         )
+        reference_filename = './data/reference/img_intensity_image_sp5.npy'
+        if self.make_reference:
+            np.save(reference_filename, intensity_image_1)
 
         self.assertEqual(
             np.allclose(
-                np.load(
-                    './data/reference/img_intensity_image_sp5.npy',
-                ),
+                np.load(reference_filename,),
                 intensity_image_1
             ),
             True
@@ -195,10 +198,18 @@ class TestCLSM(unittest.TestCase):
         header = data.get_header()
         dt = header.micro_time_resolution
         x_axis = np.arange(counts.shape[0]) * dt
-        output_filename = 'test.csv'
-        np.savetxt(
-            fname=output_filename,
-            X=np.vstack([x_axis, counts]).T
+        decay = np.vstack([x_axis, counts]).T
+        if self.make_reference:
+            np.save(
+                './data/reference/img_decay_histogram.npy',
+                decay
+            )
+        self.assertEqual(
+            np.allclose(
+                np.load('./data/reference/img_decay_histogram.npy'),
+                decay
+            ),
+            True
         )
 
     def test_clsm_intensity(self):

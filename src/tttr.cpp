@@ -396,36 +396,24 @@ void TTTR::read_records(
     size_t offset = 0;
 
     // read if possible the data in chunks to speed up the access
-    while(n_records_read < n_rec){
+    size_t number_of_objects;
+    do{
         char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
-        if(fread(tmp, bytes_per_record, chunk, fp) != chunk) break;
-        for(size_t i=0; i<chunk; i++){
-            offset = bytes_per_record * i;
+        number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
+        for (size_t j = 0; j < number_of_objects; j++) {
+            offset = bytes_per_record * j;
             n_valid_events += processRecord(
-                    *(uint64_t *)&tmp[offset],
+                    *(uint64_t *) &tmp[offset],
                     overflow_counter,
-                    *(uint64_t *)&macro_times[n_valid_events],
-                    *(uint32_t *)&micro_times[n_valid_events],
-                    *(int16_t *)&routing_channels[n_valid_events],
-                    *(int16_t *)&event_types[n_valid_events]
-                    );
+                    *(uint64_t *) &macro_times[n_valid_events],
+                    *(uint32_t *) &micro_times[n_valid_events],
+                    *(int16_t *) &routing_channels[n_valid_events],
+                    *(int16_t *) &event_types[n_valid_events]
+            );
         }
-        n_records_read += chunk;
-    }
-    // records that do not fit in chunks are read one by one (slower)
-    char* tmp = (char*) malloc(bytes_per_record);
-    for(size_t j = n_records_read; j < n_rec; j++){
-        fread(tmp, bytes_per_record, 1, fp);
-        n_valid_events += processRecord(
-                *(uint64_t *)&tmp[0],
-                overflow_counter,
-                *(uint64_t *)&macro_times[n_valid_events],
-                *(uint32_t *)&micro_times[n_valid_events],
-                *(int16_t *)&routing_channels[n_valid_events],
-                *(int16_t *)&event_types[n_valid_events]
-        );
-    }
-    free(tmp);
+        free(tmp);
+        n_records_read += number_of_objects;
+    }while(number_of_objects > 0);
 }
 
 
@@ -760,7 +748,6 @@ bool TTTR::write(
 
                     // write overflows
                     while(MT_ov_last>1){
-                        std::cout << MT_ov_last << std::endl;
                         // we fit 65536 = 2**16 in each overflow record
                         overflow.bits.cnt = MIN(65536, MT_ov_last);
                         fwrite(&overflow, 4, 1, fp);
@@ -778,10 +765,7 @@ bool TTTR::write(
                         fwrite(&record, 4, 1, fp);
                         n++;
                     }
-                    std::cout << n << " " << std::endl;
                 }
-                std::cout << std::endl;
-                fflush(fp);
                 fclose(fp);
             } else {
                 std::cerr << "Cannot write to file: " << filename <<  std::endl;

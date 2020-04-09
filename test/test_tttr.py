@@ -205,9 +205,11 @@ class Tests(unittest.TestCase):
         )
 
     def test_write_spc(self):
-        fp = tempfile.TemporaryFile()
-        data = tttrlib.TTTR(fp.name, 'SPC-130')
-        d2 = tttrlib.TTTR(fp.name, 'SPC-130')
+        _, filename = tempfile.mkstemp(
+            suffix='.npy'
+        )
+        data.write(filename, 'SPC-130')
+        d2 = tttrlib.TTTR(filename, 'SPC-130')
         self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
-        self.assertEqual(np.allclose(d2.macro_times, data.micro_times), True)
+        self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
         self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)
