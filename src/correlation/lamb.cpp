@@ -25,7 +25,6 @@ void lamb::normalize(
         auto delta_t = (double) (maximum_macro_time - x_axis[i]);
         corr_normalized[i] = corr[i] / (divisor[i] * delta_t * cr1 * cr2);
     }
-    std::cout << std::endl;
 }
 
 void lamb::CCF(

@@ -161,17 +161,22 @@ void get_ranges_channel(
 
 
 /*!
+ * Selects a subset of indices by a  list of routing channel numbers.
  *
- * @param output
- * @param n_output
- * @param input
- * @param n_input
- * @param routing_channels
- * @param n_routing_channels
+ * The retuned set of indices will have routing channel numbers that are in
+ * the list of the provided routing channel numbers.
+ *
+ * @param output[out] output array that will contain the selected indices
+ * @param n_output[out] the length of the output array
+ * @param input[int] routing channel numbers defining the returned subset of indices
+ * @param n_input[int] the length of the input array
+ * @param routing_channels[int] array of routing channel numbers. A subset of this
+ * array will be selected by the input.
+ * @param n_routing_channels[int] the length of the routing channel number array.
  */
 void selection_by_channels(
-        unsigned long long **output, int *n_output,
-        unsigned long long *input, int n_input,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels);
 
 
@@ -220,6 +225,8 @@ private:
 
     Header *header = nullptr;
 
+    /// Global overflow counter that counts the total number of overflows in a
+    /// TTTR file
     uint64_t overflow_counter;
 
     /// map to translates string container types to int container types
@@ -262,18 +269,20 @@ private:
      * initializing the class.
     */
     int tttr_container_type; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
+
+    /// A string that defines the TTTR container type
     std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
     int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
-    /// The size in bytes per TTTR record
+    /// The size in bytes per TTTR record.
     size_t bytes_per_record;
 
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;
     hid_t      hdf5_file;                        /*HDF5 file handle */
 
-    /// marks the end of the header in the input file (to seek the
-    /// beginning of the tttr records)
+    /// marks the end of the header in the input file used
+    /// to seek the begining of the tttr records
     size_t fp_records_begin;
 
     /// the data contained in the current TTTRRecord
@@ -285,7 +294,6 @@ private:
     * The integer is processed by the reading routing and writes to the
     * @return The return value is true if the record is not an overflow record.
     */
-
     bool (*processRecord)(
             uint64_t&, // input
             uint64_t&, // overflow counter
@@ -297,13 +305,25 @@ private:
 
     /// The number of sync pulses
     unsigned long long *macro_times;
+
     /// Micro time
     unsigned int *micro_times;
+
     /// The channel number
     short *routing_channels;
+
     /// The event type
     short *event_types;
 
+    /*!
+     * Reads the content of a Photon HDF file.
+     *
+     * WARNING: Only the micro time, the macro time, and the routing channel
+     * number are read. The meta data is not proccessed.
+     *
+     * @param fn filename pointing to the Photon HDF file
+     * @return
+     */
     int read_hdf_file(const char *fn);
 
 
@@ -328,9 +348,9 @@ protected:
     /// @param n_rec is the number of records that are being read. If no number
     /// of records to be read is specified all records in the file are being read.
     /// If the parameter @param rewind is true (default behaviour) the file is read
-    /// from the beginning of the records till the end of the file or till n_red records have been read.
-    /// If @param rewind is false the records are being read from the current location of the file
-    /// pointer till the end of the file.
+    /// from the beginning of the records till the end of the file or till n_red
+    /// records have been read. If @param rewind is false the records are being
+    /// read from the current location of the file pointer till the end of the file.
     void read_records(size_t n_rec, bool rewind, size_t chunk);
     void read_records(size_t n_rec);
     void read_records();
@@ -347,8 +367,10 @@ protected:
     /*!
      * Reads the TTTR data contained in a file into the TTTR object
      *
+     * @param fn The filename that is read. If fn is a nullptr (default value
+     * is nullptr) the filename attribute of the TTTR object is used as
+     * filename.
      *
-     * @param fn The filename
      * @param container_type The container type.
      * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
      */
@@ -410,26 +432,23 @@ public:
     unsigned int get_number_of_micro_time_channels();
 
     /*!
-     *
      * @return number of valid events in the TTTR file
      */
     unsigned int get_n_valid_events();
 
     /*!
-     *
      * @return the container type that was used to open the file
      */
     std::string get_tttr_container_type(){
         return tttr_container_type_str;
     }
 
-    TTTR* select(unsigned long long *selection, int n_selection);
+    TTTR* select(long long *selection, int n_selection);
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
      *        parent->children.push_back()
-
-
+     *
      * PQ_PTU_CONTAINER          0
      * PQ_HT3_CONTAINER          1
      * BH_SPC130_CONTAINER       2
@@ -507,12 +526,9 @@ public:
      * to find the used routing channels
      *
      */
-    TTTR(
-            const TTTR &parent,
-            unsigned long long *selection,
-            int n_selection,
-            bool find_used_channels = true
-            );
+    TTTR(const TTTR &parent,
+            long long *selection, int n_selection,
+            bool find_used_channels = true);
 
     /// Destructor
     ~TTTR();
@@ -526,14 +542,13 @@ public:
 
     /*!
      * Returns a vector containing indices of records that
-     * @param input a pointer to an array of int16_tchannel numbers that are
-     * used to select indices of photons
-     * @param n_input the length of the channel list.
+     *
+     * @param input channel number array used to select indices of photons
+     * @param n_input the length of the channel number list.
      */
     void get_selection_by_channel(
-            unsigned long long **output, int *n_output,
-            unsigned long long *input, int n_input
-            );
+            long long **output, int *n_output,
+            long long *input, int n_input);
 
     /*!
      * List of indices where the count rate is smaller than a maximum count
@@ -615,17 +630,17 @@ class TTTRRange {
 public:
 
     /// The start index of the TTTRRange
-    size_t _start = 0;
+    long long _start = 0;
 
     /// The stop index of the TTTRRange
-    size_t _stop = 0;
+    long long _stop = 0;
 
     /// The start time of the TTTRRange
-    unsigned long long _start_time = 0;
+    long long _start_time = 0;
 
     /// The stop time of the TTTRRange
-    unsigned long long _stop_time = 0;
-    std::vector<unsigned long long> _tttr_indices = {};
+    long long _stop_time = 0;
+    std::vector<long long> _tttr_indices = {};
 
 
     /*!
@@ -638,8 +653,8 @@ public:
     TTTRRange(
             size_t start=0,
             size_t stop=0,
-            unsigned long long start_time = 0,
-            unsigned long long stop_time = 0,
+            long long start_time = 0,
+            long long stop_time = 0,
             TTTRRange* other = nullptr
     );
 
@@ -647,69 +662,69 @@ public:
     TTTRRange(const TTTRRange& p2);
 
     /// A vector containing a set of TTTR indices that was assigned to the range
-    const std::vector<unsigned long long>&  get_tttr_indices(){
+    const std::vector<long long>&  get_tttr_indices(){
         return _tttr_indices;
     }
 
     /// A vector of the start and the stop TTTR index of the range
-    std::vector<unsigned long long> get_start_stop(){
-        std::vector<unsigned long long> v = {_start, _stop};
+    std::vector<long long> get_start_stop(){
+        std::vector<long long> v = {_start, _stop};
         return v;
     }
 
     /// A vector of the start and stop time
-    std::vector<unsigned long long> get_start_stop_time(){
-        std::vector<unsigned long long> v = {_start_time, _stop_time};
+    std::vector<long long> get_start_stop_time(){
+        std::vector<long long> v = {_start_time, _stop_time};
         return v;
     }
 
     /// The difference between the start and the stop time of a range
-    unsigned long long get_duration(){
+    long long get_duration(){
         return get_start_stop_time()[1] - get_start_stop_time()[0];
     }
 
     /// The start index of the TTTR range object
-    void set_start(unsigned long long start_value){
+    void set_start(long long start_value){
         _start = start_value;
     }
 
     /// The start index of the TTTR range object
-    unsigned long long get_start(){
+    long long get_start(){
         return _start;
     }
 
     /// The stop index of the TTTR range object
-    void set_stop(unsigned long long stop_value){
+    void set_stop(long long stop_value){
         _stop = stop_value;
     }
 
     /// The stop index of the TTTR range object
-    unsigned long long get_stop(){
+    long long get_stop(){
         return _stop;
     }
 
     /// The stop time of the TTTR range object
-    void set_stop_time(unsigned long long stop_time_value){
+    void set_stop_time(long long stop_time_value){
         _stop_time = stop_time_value;
     }
 
     /// The stop time of the TTTR range object
-    unsigned long long get_stop_time(){
+    long long get_stop_time(){
         return _stop_time;
     }
 
     /// The start time of the TTTR range object
-    void set_start_time(unsigned long long start_time_value){
+    void set_start_time(long long start_time_value){
         _start_time = start_time_value;
     }
 
     /// The start time of the TTTR range object
-    unsigned long long get_start_time(){
+    long long get_start_time(){
         return _start_time;
     }
 
     /// Append a index to the TTTR index vector
-    void append(unsigned long long v){
+    void append(long long v){
         _tttr_indices.emplace_back(v);
     }
 

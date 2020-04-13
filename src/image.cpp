@@ -429,12 +429,10 @@ void CLSMImage::fill_pixels(
 #if VERBOSE
     std::clog << "Fill pixels with photons" << std::endl;
     std::clog << "-- Channels: ";
-#endif
     for(auto ch: channels){
         std::clog << ch << " ";
     }
     std::clog << std::endl;
-#if VERBOSE
     std::clog << "-- Assign photons to pixels" << std::endl;
 #endif
     for(auto frame : frames){
@@ -577,7 +575,6 @@ void CLSMImage::get_fcs_image(
     std::clog << "-- Number of correlation bins per block: " << n_bins << std::endl;
     std::clog << "-- Number of correlation channels: " << n_corr << std::endl;
     std::clog << "-- Correlating... " << n_corr << std::endl;
-
 #endif
     size_t i_frame = 0;
     for(auto frame : frames){
@@ -641,7 +638,7 @@ void CLSMImage::get_pixel_decays(
 ){
     size_t n_decays = stack_frames ? 1 : n_frames;
     size_t n_tac = tttr_data->header->number_of_micro_time_channels / tac_coarsening;
-#ifdef DEBUG
+#ifdef VERBOSE
     std::clog << "Get decays:" << std::endl;
     std::clog << "-- Number of frames: " << n_frames << std::endl;
     std::clog << "-- Stack frames (true/false): " << stack_frames << std::endl;
@@ -655,10 +652,9 @@ void CLSMImage::get_pixel_decays(
     size_t n_tac_total = n_decays * n_tac;
     auto* t = (unsigned int*) calloc(n_tac_total, sizeof(unsigned int));
     if((d_selection_1 != n_frames) || (d_selection_2 != n_lines) || (d_selection_3 != n_pixel)){
-        std::cerr
-                << "Error: the dimensions of the selection ("
-                << n_frames << ", " << n_lines << ", " << n_pixel
-                << ") does not match the CLSM image dimensions.";
+        std::cerr << "Error: the dimensions of the selection ("
+                  << n_frames << ", " << n_lines << ", " << n_pixel
+                  << ") does not match the CLSM image dimensions.";
     } else{
         size_t w_frame = 0;
         for(size_t i_frame=0; i_frame < n_frames; i_frame++) {

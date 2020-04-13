@@ -1,17 +1,3 @@
-/****************************************************************************
- * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
- *                                                                          *
- * This file is part of the library tttrlib.                                *
- *                                                                          *
- *   tttrlib is free software: you can redistribute it and/or modify it     *
- *   under the terms of the MIT License.                                    *
- *                                                                          *
- *   tttrlib is distributed in the hope that it will be useful,             *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
- *                                                                          *
- ****************************************************************************/
-
 #include <include/record_types.h>
 #include <include/tttr.h>
 #include <boost/filesystem.hpp>
@@ -70,7 +56,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
                 n_microtimes, std::min(
                         n_routing_channels, n_event_types
                 )));
-        std::cerr << "WARNING: The input vectors differ in size. Using " << std::endl;
+        std::clog << "WARNING: The input vectors differ in size. Using " << std::endl;
     } else{
         n_elements = n_macrotimes;
     }
@@ -88,25 +74,26 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
 
 TTTR::TTTR(
         const TTTR &parent,
-        unsigned long long *selection,
+        long long *selection,
         int n_selection,
-        bool find_used_channels
-        ) :  TTTR()
+        bool find_used_channels) :  TTTR()
         {
 #if VERBOSE
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
 #endif
     copy_from(parent, false);
-    this->n_valid_events = (size_t) n_selection;
+    n_valid_events = (size_t) n_selection;
     if ((size_t) n_selection > parent.n_valid_events) {
-        std::cerr << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
+        std::clog << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
     }
     allocate_memory_for_records(n_selection);
-    for(size_t i=0; i<n_valid_events; i++){
-        macro_times[i] = parent.macro_times[selection[i]];
-        micro_times[i] = parent.micro_times[selection[i]];
-        event_types[i] = parent.event_types[selection[i]];
-        routing_channels[i] = parent.routing_channels[selection[i]];
+    for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
+        auto sel = selection[sel_i];
+        sel = (sel < 0) ? parent.n_valid_events + sel : sel;
+        macro_times[sel_i] = parent.macro_times[sel];
+        micro_times[sel_i] = parent.micro_times[sel];
+        event_types[sel_i] = parent.event_types[sel];
+        routing_channels[sel_i] = parent.routing_channels[sel];
     }
     if(find_used_channels) find_used_routing_channels();
 }
@@ -303,9 +290,7 @@ int TTTR::read_file(
 #endif
             return 1;
     } else{
-#if VERBOSE
-        std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
-#endif
+        std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
         return 0;
     }
 }
@@ -436,9 +421,7 @@ Header TTTR::get_header() {
     if(header != nullptr){
         return *header;
     } else{
-#if VERBOSE
-        std::cerr << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
-#endif
+        std::clog << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
         return Header();
     }
 }
@@ -492,9 +475,8 @@ unsigned int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        unsigned long long **output, int *n_output,
-        unsigned long long *input, int n_input
-){
+        long long **output, int *n_output,
+        long long *input, int n_input){
     ::selection_by_channels(
             output, n_output,
             input, n_input,
@@ -541,17 +523,17 @@ void TTTR::get_ranges_by_count_rate(
 }
 
 
-TTTR* TTTR::select(unsigned long long *selection, int n_selection) {
+TTTR* TTTR::select(long long *selection, int n_selection) {
     return new TTTR(*this, selection, n_selection);
 }
 
 
 void selection_by_channels(
-        unsigned long long **output, int *n_output,
-        unsigned long long *input, int n_input,
+        long long **output, int *n_output,
+        long long *input, int n_input,
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
-    *output = (unsigned long long *) malloc(n_routing_channels * sizeof(unsigned long long));
+    *output = (long long *) malloc(n_routing_channels * sizeof(long long));
 
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
@@ -808,8 +790,8 @@ TTTRRange::TTTRRange(const TTTRRange& p2){
 TTTRRange::TTTRRange(
         size_t start,
         size_t stop,
-        unsigned long long start_time,
-        unsigned long long stop_time,
+        long long start_time,
+        long long stop_time,
         TTTRRange* other
 ) {
     if(other != nullptr){

@@ -30,13 +30,10 @@ def __len__(self):
 
 def __getitem__(self, key):
     if isinstance(key, slice):
-        selection = np.arange(
-            *key.indices(self.get_n_valid_events()),
-            dtype=np.uint64
-        )
+        sel = np.arange(*key.indices(self.get_n_valid_events()), dtype=np.int64)
     else:
-        selection = np.array([key], dtype=np.uint64)
-    return tttrlib.TTTR(self, selection)
+        sel = np.array([key], dtype=np.int64)
+    return tttrlib.TTTR(self, sel)
 
 
 def __repr__(self):

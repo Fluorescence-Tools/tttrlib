@@ -4,11 +4,12 @@
 %}
 
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}
-%apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *selection, int n_selection)}
-%apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long **selection, int *n_selection)}
+%apply (long long* IN_ARRAY1, int DIM1) {(long long *selection, int n_selection)}
+%apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **selection, int *n_selection)}
 %apply (int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
 %apply (long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
+%apply (long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long **ranges, int *n_range)}
 %apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
 %apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)}
@@ -25,12 +26,12 @@
 // documentation see
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
 %include attribute.i
-%attribute2(TTTRRange, %arg(std::vector<unsigned long long>), tttr_indices, get_tttr_indices);
-%attributeval(TTTRRange, std::vector<unsigned long long>, start_stop, get_start_stop);
-%attribute(TTTRRange, unsigned long long, start, get_start, set_start);
-%attribute(TTTRRange, unsigned long long, stop, get_stop, set_stop);
-%attribute(TTTRRange, unsigned long long, start_time, get_start_time, set_start_time);
-%attribute(TTTRRange, unsigned long long, stop_time, get_stop_time, set_stop_time);
+%attribute2(TTTRRange, %arg(std::vector<long long>), tttr_indices, get_tttr_indices);
+%attributeval(TTTRRange, std::vector<long long>, start_stop, get_start_stop);
+%attribute(TTTRRange, long long, start, get_start, set_start);
+%attribute(TTTRRange, long long, stop, get_stop, set_stop);
+%attribute(TTTRRange, long long, start_time, get_start_time, set_start_time);
+%attribute(TTTRRange, long long, stop_time, get_stop_time, set_stop_time);
 
 %extend Correlator{
         %pythoncode "../ext/python/correlation/correlator_extension.py"

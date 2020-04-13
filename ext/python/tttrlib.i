@@ -26,6 +26,7 @@ import_array();
 
 %template(MapStringString) std::map<std::string, std::string>;
 %template(VectorUint64) std::vector<unsigned long long>;
+%template(VectorInt64) std::vector<long long>;
 %template(VectorUint32) std::vector<unsigned int>;
 %template(VectorInt32) std::vector<int>;
 %template(VectorInt16) std::vector<short>;
