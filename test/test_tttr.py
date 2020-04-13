@@ -173,6 +173,11 @@ class Tests(unittest.TestCase):
             ),
             True
         )
+        # selections wrap over
+        d2 = tttrlib.TTTR(data, [-1])
+        self.assertEqual(
+            d2.macro_times[0], data.macro_times[-1]
+        )
 
     def test_constructor_with_array(self):
         macro_times = data.macro_times
@@ -194,8 +199,6 @@ class Tests(unittest.TestCase):
         )
 
     def test_TTTRRange(self):
-        import tttrlib
-
         # empty range object
         tttr_range_1 = tttrlib.TTTRRange()
         self.assertEqual(tttr_range_1.start, 0)
