@@ -13,9 +13,7 @@ class TestCLSM(unittest.TestCase):
     make_reference = False
 
     sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-    sp8_data = tttrlib.TTTR(sp8_filename, 'PTU')
     sp8_reading_parameter = {
-        "tttr_data": sp8_data,
         "marker_frame_start": [4, 6],
         "marker_line_start": 1,
         "marker_line_stop": 2,
@@ -25,9 +23,7 @@ class TestCLSM(unittest.TestCase):
     }
 
     ht3_filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
-    ht3_data = tttrlib.TTTR(ht3_filename, 'HT3')
     ht3_reading_parameter = {
-        "tttr_data": ht3_data,
         "marker_frame_start": [4],
         "marker_line_start": 1,
         "marker_line_stop": 2,
@@ -39,7 +35,6 @@ class TestCLSM(unittest.TestCase):
     sp5_filename = './data/leica/sp5/LSM_1.ptu'
     sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
     sp5_reading_parameter = {
-        "tttr_data": sp5_data,
         "marker_frame_start": [4, 6],
         "marker_line_start": 1,
         "marker_line_stop": 2,
@@ -50,8 +45,11 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_image_1(self):
         print("test_leica_sp8_image_1")
-        data = self.sp8_data
-        clsm_image = tttrlib.CLSMImage(**self.sp8_reading_parameter)
+        data = tttrlib.TTTR(self.sp8_filename, 'PTU')
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=data,
+            **self.sp8_reading_parameter
+        )
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[1]
@@ -109,10 +107,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_image_2(self):
         print("test_leica_sp8_image_2")
-        data = self.sp8_data
-
-        sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-        data = tttrlib.TTTR(sp8_filename, 'PTU')
+        data = tttrlib.TTTR(self.sp8_filename, 'PTU')
 
         frame_marker = [4, 6]
         line_start_marker = 1
@@ -167,12 +162,11 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp5_image(self):
         print("test_leica_sp5_image")
-        data = self.sp5_data
-
-        # sp5_filename = './data/leica/sp5/LSM_1.ptu'
-        # data = tttrlib.TTTR(sp5_filename, 'PTU')
-        reading_parameter = self.sp5_reading_parameter
-        clsm_image = tttrlib.CLSMImage(**reading_parameter)
+        data = tttrlib.TTTR(self.sp5_filename, 'PTU')
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=data,
+            **self.sp5_reading_parameter
+        )
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[0]
@@ -199,8 +193,6 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_histogram(self):
         print("test_leica_sp8_histogram")
-        data = self.sp8_data
-
         sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
         data = tttrlib.TTTR(sp8_filename, 'PTU')
 
@@ -225,10 +217,8 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_copy_constructor(self):
-        filename = './data/leica/sp5/LSM_1.ptu'
-        data = tttrlib.TTTR(filename, 'PTU')
         reading_parameter = {
-            "tttr_data": data,
+            "tttr_data": tttrlib.TTTR(self.sp5_filename, 'PTU'),
             "marker_frame_start": [4, 6],
             "marker_line_start": 1,
             "marker_line_stop": 2,
@@ -241,16 +231,19 @@ class TestCLSM(unittest.TestCase):
         clsm_image_1 = tttrlib.CLSMImage(**reading_parameter)
         clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
         self.assertAlmostEqual(
-            np.sum(clsm_image_1.intensity - clsm_image_2.intensity),
+            float(np.sum(clsm_image_1.intensity - clsm_image_2.intensity)),
             0.0
         )
 
     def test_clsm_intensity(self):
         print("test_clsm_intensity")
-        data = self.ht3_data
+        data = tttrlib.TTTR(self.ht3_filename, 'HT3')
         reading_parameter = self.ht3_reading_parameter
 
-        clsm_image_1 = tttrlib.CLSMImage(*reading_parameter.values())
+        clsm_image_1 = tttrlib.CLSMImage(
+            tttr_data=data,
+            **reading_parameter
+        )
         clsm_image_1.fill_pixels(
             tttr_data=data,
             channels=[0]

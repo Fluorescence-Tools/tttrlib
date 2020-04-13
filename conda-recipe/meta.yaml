@@ -9,7 +9,7 @@ source:
 
 build:
     number: 0
-    string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ data.get('GIT_BUILD_STR', "")|lower }}
+    string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ data.get('GIT_BUILD_STR', "0")|lower }}
 
 requirements:
   host:
