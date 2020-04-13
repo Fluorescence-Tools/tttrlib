@@ -12,10 +12,11 @@ for start, stop in zip(tw_ranges[::2], tw_ranges[1::2]):
     sel += range(start, stop)
 sel = np.array(sel)
 
-green_indeces = data.get_selection_by_channel(np.array([0, 8]))
-red_indeces = data.get_selection_by_channel(np.array([1, 9]))
+green_indeces = data.get_selection_by_channel([0, 8])
+red_indeces = data.get_selection_by_channel([1, 9])
 
-fig, ax = p.subplots(3, 1, sharex=True, sharey=False)
+
+fig, ax = p.subplots(3, sharex=True, sharey=False)
 
 p.setp(ax[0].get_xticklabels(), visible=False)
 ax[0].plot(tttrlib.histogram_trace(mt[green_indeces], 30000), 'g')

@@ -9,12 +9,12 @@ mt = data.get_macro_time()
 
 # make a cross-correlation between the two green channels (ch 0, ch 8)
 # This selects the indices of the first routing channel 0
-ch1_indeces = data.get_selection_by_channel(np.array([0]))
+ch1_indeces = data.get_selection_by_channel([0])
 t1 = mt[ch1_indeces]
 w1 = np.ones_like(t1, dtype=np.float)
 
 # This selects the indices of the routing channel 8
-ch2_indeces = data.get_selection_by_channel(np.array([8]))
+ch2_indeces = data.get_selection_by_channel([8])
 t2 = mt[ch2_indeces]
 w2 = np.ones_like(t1, dtype=np.float)
 
