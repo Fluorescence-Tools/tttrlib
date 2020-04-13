@@ -331,7 +331,7 @@ filling the pixels, to every pixel a start and stop time in the TTTR data stream
     print("duration: ", pixel.get_start_stop_time())
 
     image_intensity = image.get_intensity_image()
-    image_decay = image.get_decay_image(data, 32)
+    image_decay = image.get_fluorescence_decay_image(data, 32)
 
     p.imshow(image_intensity.sum(axis=0))
     p.show()
@@ -348,7 +348,7 @@ certain amount of photons (below 3 photons). As can be seen by this analysis, th
 detection of fluorescence is fairly constant over the cell, while the intensity varies in this particular sample.
 
 For more detailed analysis the fluorescence decays contained in the 4D image (frame, x, y, fluorescence decay) returned
-by ``get_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a
+by ``get_fluorescence_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a
 fluorescence decay containing all photons of the 30 frames is shown below.
 
 .. literalinclude:: plots/imaging_tutorial_2.py
@@ -500,4 +500,84 @@ To sum up, in the Leica SP8 PTU files
     Usually, the TTTR records utilize the event type to distinguish markers from photons. Here, Leica decided to use
     the routing channel number to identify markers. When opening an image in ``tttrlib`` this special case is considered
     by specifying the reading routine.
+
+
+Estimation of the image resolution
+++++++++++++++++++++++++++++++++++
+
+In electron microscopy the Fourier Ring Correlation (FRC) is widely used as a
+measure for the resolution of an image. This very practical approach for a quality
+measure begins to get traction in fluorescence microscopy. Briefly, the correlation
+between two subsets of the same images are Fourier transformed and their overlap
+in the Fourier space is measured. The FRC is the normalised cross-correlation
+coefficient between two images over corresponding shells in Fourier space transform.
+
+
+.. code:: python
+    @nb.jit(nopython=True)
+    def _frc_histogram(lx, rx, ly, ry, f1f2, f12, f22, n_bins, bin_width):
+        """Auxiliary function only intented to be used by compute_frc"""
+        """
+        wf1f2 = np.zeros(n_bins, np.float64)
+        wf1 = np.zeros(n_bins, np.float64)
+        wf2 = np.zeros(n_bins, np.float64)
+        for xi in range(lx, rx):
+            for yi in range(ly, ry):
+                distance_bin = int(np.sqrt(xi ** 2 + yi ** 2) / bin_width)
+                if distance_bin < n_bins:
+                    wf1f2[distance_bin] += f1f2[xi, yi]
+                    wf1[distance_bin] += f12[xi, yi]
+                    wf2[distance_bin] += f22[xi, yi]
+        return wf1f2 / np.sqrt(wf1 * wf2)
+
+    def compute_frc(
+            image_1: np.ndarray,
+            image_2: np.ndarray,
+            bin_width: int = 2.0
+    ):
+        """
+
+        Parameters
+        ----------
+        image_1 : numpy.array
+            The first image
+        image_2 : numpy.array
+            The second image
+        bin_width : float
+            The bin width used in the computation of the FRC histogram
+
+        Returns
+        -------
+        Numpy array:
+            density of the FRC histogram
+        Numpy array:
+            bins of the FRC histogram
+
+        """
+        f1 = np.fft.fft2(image_1)
+        f2 = np.fft.fft2(image_2)
+        f1f2 = np.real(f1 * np.conjugate(f2))
+        f12, f22 = np.abs(f1) ** 2, np.abs(f2) ** 2
+        nx, ny = image_1.shape
+
+        bins = np.arange(0, np.sqrt((nx // 2) ** 2 + (ny // 2) ** 2), bin_width)
+        n_bins = int(bins.shape[0])
+        lx, rx = int(-(nx // 2)), int(nx // 2)
+        ly, ry = int(-(ny // 2)), int(ny // 2)
+        density = _frc_histogram(
+            lx, rx,
+            ly, ry,
+            f1f2, f12, f22,
+            n_bins, bin_width
+        )
+        return density, bins
+
+
+
+Fluorescence correlation image
+++++++++++++++++++++++++++++++
+
+Every pixel is defined by a list of TTTR indices. To these indices a macro time
+and micro time are associtate. Hence, correlation functions can be computed.
+
 

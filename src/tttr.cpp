@@ -53,7 +53,8 @@ TTTR::TTTR() :
 TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            unsigned int *micro_times, int n_microtimes,
            short *routing_channels, int n_routing_channels,
-           short *event_types, int n_event_types
+           short *event_types, int n_event_types,
+           bool find_used_channels
 ): TTTR() {
 #if VERBOSE
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
@@ -81,14 +82,15 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
         this->event_types[i] = event_types[i];
         this->routing_channels[i] = routing_channels[i];
     }
-    find_used_routing_channels();
+    if(find_used_channels) find_used_routing_channels();
 }
 
 
 TTTR::TTTR(
         const TTTR &parent,
         unsigned long long *selection,
-        int n_selection
+        int n_selection,
+        bool find_used_channels
         ) :  TTTR()
         {
 #if VERBOSE
@@ -106,7 +108,7 @@ TTTR::TTTR(
         event_types[i] = parent.event_types[selection[i]];
         routing_channels[i] = parent.routing_channels[selection[i]];
     }
-    find_used_routing_channels();
+    if(find_used_channels) find_used_routing_channels();
 }
 
 void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
@@ -518,16 +520,24 @@ void TTTR::get_selection_by_count_rate(
 
 void TTTR::get_ranges_by_count_rate(
         unsigned long long **output, int *n_output,
-        int tw_min, int tw_max,
-        int n_ph_min, int n_ph_max){
-
+        double minimum_window_length,
+        double maximum_window_length,
+        int minimum_number_of_photons_in_time_window,
+        int maximum_number_of_photons_in_time_window,
+        bool invert
+        ){
+    // macro_time_resolution is in ns minimum_window_length selection
+    // is in units of ms
+    double macro_time_calibration = header->macro_time_resolution / 1e6;
     ranges_by_time_window(
             output, n_output,
             macro_times, (int) n_valid_events,
-            tw_min, tw_max,
-            n_ph_min, n_ph_max
-            );
-
+            minimum_window_length, maximum_window_length,
+            minimum_number_of_photons_in_time_window,
+            maximum_number_of_photons_in_time_window,
+            macro_time_calibration,
+            invert
+    );
 }
 
 
@@ -580,35 +590,41 @@ size_t determine_number_of_records_by_file_size(
 
 
 void ranges_by_time_window(
-        unsigned long long **ranges, int *n_range,
-        unsigned long long *time, int n_time,
-        int tw_min, int tw_max,
-        int n_ph_min, int n_ph_max
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input,
+        double minimum_window_length,
+        double maximum_window_length,
+        int minimum_number_of_photons_in_time_window,
+        int maximum_number_of_photons_in_time_window,
+        double macro_time_calibration,
+        bool invert
 ) {
-    *ranges = (unsigned long long *) malloc(2 * n_time * sizeof(unsigned long long));
-    *n_range = 0;
+    auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
+    auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
+    *output = (unsigned long long *) malloc(2 * n_input * sizeof(unsigned long long));
+    *n_output = 0;
 
     size_t tw_begin = 0;
-    while (tw_begin < n_time) {
+    while (tw_begin < n_input) {
 
         // search for the end of a time window
         size_t tw_end = 0;
-        for (tw_end = tw_begin; (tw_end < n_time); tw_end++){
-            if((time[tw_end] - time[tw_begin]) >= tw_min){
+        for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
+            if((input[tw_end] - input[tw_begin]) >= tw_min){
                 break;
             }
         }
         size_t n_ph = tw_end - tw_begin;
-        unsigned long long dt = time[tw_begin] - time[tw_end];
-
-        if (
+        unsigned long long dt = input[tw_begin] - input[tw_end];
+        bool is_selected =
                 ((tw_max < 0) || (dt < tw_max)) &&
-                ((n_ph_min < 0) || (n_ph >= n_ph_min)) &&
-                ((n_ph_max < 0) || (n_ph <= n_ph_max))
-                ) {
-            (*ranges)[(*n_range) + 0] = tw_begin;
-            (*ranges)[(*n_range) + 1] = tw_end;
-            (*n_range) += 2;
+                ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window)) &&
+                ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window));
+        is_selected = invert ? !is_selected : is_selected;
+        if (is_selected) {
+            (*output)[(*n_output) + 0] = tw_begin;
+            (*output)[(*n_output) + 1] = tw_end;
+            (*n_output) += 2;
         }
         tw_begin = tw_end;
     }
@@ -774,5 +790,38 @@ bool TTTR::write(
             break;
     }
     return true;
+}
+
+TTTRRange::TTTRRange(const TTTRRange& p2){
+//#if VERBOSE
+//    std::clog << "TTTRRange copy" << std::endl;
+//#endif
+    _start = p2._start;
+    _stop = p2._stop;
+    _start_time = p2._start_time;
+    _stop_time = p2._stop_time;
+    for(auto &v: p2._tttr_indices){
+        _tttr_indices.emplace_back(v);
+    }
+}
+
+TTTRRange::TTTRRange(
+        size_t start,
+        size_t stop,
+        unsigned long long start_time,
+        unsigned long long stop_time,
+        TTTRRange* other
+) {
+    if(other != nullptr){
+        this->_start = other->_start;
+        this->_stop = other->_stop;
+        this->_start_time = other->_start_time;
+        this->_stop_time = other->_stop_time;
+    } else {
+        this->_start = start;
+        this->_stop = stop;
+        this->_start_time = start_time;
+        this->_stop_time = stop_time;
+    }
 }
 

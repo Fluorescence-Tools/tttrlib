@@ -99,6 +99,34 @@ void selection_by_count_rate(
 
 
 /*!
+* Returns time windows (tw), i.e., the start and the stop indices for a
+* minimum tw size, a minimum number of photons in a tw.
+*
+* @param output [out] Array containing the interleaved start and stop indices
+* of the tws in the TTTR object.
+* @param n_output [out] Length of the output array
+* @param input [in] Array containing the macro times
+* @param n_input [in] Number of macro times
+* @param minimum_window_length [in] Minimum length of a tw (mandatory).
+* @param maximum_window_length [in] Maximum length of a tw (optional).
+* @param minimum_number_of_photons_in_time_window [in] Minimum number of
+* photons a selected tw contains (optional)
+* @param maximum_number_of_photons_in_time_window [in] Maximum number of
+* photons a selected tw contains (optional)
+* @param invert [in] If set to true, the selection criteria are inverted.
+*/
+void ranges_by_time_window(
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input,
+        double minimum_window_length, double maximum_window_length,
+        int minimum_number_of_photons_in_time_window=-1,
+        int maximum_number_of_photons_in_time_window=-1,
+        double macro_time_calibration=1.0,
+        bool invert=false
+);
+
+
+/*!
  * Splits the time trace into bins that are at least of the length specified by @param time_window and
  * counts the number of photons in each time interval
  *
@@ -166,101 +194,13 @@ inline void get_array(
 }
 
 
-/*!
- * Determines time windows (tw) for an array of consecutive time events based
- * on a minimum tw size @param tw_min, a minimum number of photons in
- * a tw @param n_ph_min.
- *
- * Optionally, the tw bigger than @param tw_max and tw with more photons than
- * @param n_ph_max are disregarded.
- *
- * The function determines for an array of consecutive time events passed to the
- * function by the argument @param time an interleaved array @param time_windows
- * containing a list of time windows (tw). In the array @param time_windows the
- * beginning and the end of the tws are interleaved, e.g., for two time windows
- *
- *      [begin1, end1, begin2, end2]
- *
- * The returned beginnings and ends refer to the index of the photons in the
- * array of consecutive times @param time.
- *
- *
- * The selection of the tws can be adjusted by the parameters @param tw_min, @param tw_max,
- * @param n_ph_min, and @param n_ph_max.
- *
- *
- * The parameters @param tw_min and @param tw_max determine the minimum and the
- * maximum size of a tw.
- *
- *
- * The parameters @param n_ph_max and @param n_ph_min limit the number of photons
- * within a time window, i.e.,
- *
- *
- * @param[out] ranges A pointer to a C type array that will contain the begin and end of tws.
- * @param[out] n_tw A pointer to an integer that will contain the length of @param ranges.
- * @param[in] time A C type array that that contains the time events.
- * @param[in] n_time The number of time events of @param time.
- * @param[in] tw_min The minimum length of a tw (mandatory).
- * @param[in} tw_max The maximum length of a tw (optional, use -1 if not used).
- * @param[in} n_ph_min The minimum number of photons in a tw (options, use -1 if not used).
- * @param[in} n_ph_max The maximum number of photons in a tw (options, use -1 if not used).
- *
- *
- */
-void ranges_by_time_window(
-        unsigned long long  **ranges, int *n_range,
-        unsigned long long *time, int n_time,
-        int tw_min, int tw_max,
-        int n_ph_min, int n_ph_max
-);
 
-
-class TTTRRange {
-
-protected:
-    size_t start;
-    size_t stop;
-    unsigned long long start_time;
-    unsigned long long stop_time;
-
-public:
-
-    TTTRRange():
-    start(0),
-    stop(0),
-    start_time(0),
-    stop_time(0)
-    {};
-
-    virtual std::vector<unsigned int > get_tttr_indices(){
-        std::vector<unsigned int > v;
-        for(size_t i=start; i<stop; i++){
-            v.emplace_back(i);
-        }
-        return v;
-    }
-
-    std::vector<unsigned long long> get_start_stop(){
-        std::vector<unsigned long long> v = {start, stop};
-        return v;
-    }
-
-    std::vector<unsigned long long> get_start_stop_time(){
-        std::vector<unsigned long long> v = {start_time, stop_time};
-        return v;
-    }
-
-    unsigned long long get_duration(){
-        return get_start_stop_time()[1] - get_start_stop_time()[0];
-    }
-
-};
 
 
 class TTTR {
 
     friend class CLSMImage;
+    friend class TTTRRange;
 
 private:
 
@@ -501,7 +441,6 @@ public:
     /// Copy constructor
     TTTR(const TTTR &p2);
 
-
     /*!
      *
      * @param filename TTTR filename
@@ -543,11 +482,14 @@ public:
      * @param n_routing_channels length of the routing channel array
      * @param event_types array of event types
      * @param n_event_types number of elements in the event type array
+     * @param find_used_channels if set to true (default) searches all indices
+     * to find the used routing channels
      */
     TTTR(unsigned long long *macro_times, int n_macrotimes,
          unsigned int *micro_times, int n_microtimes,
          short *routing_channels, int n_routing_channels,
-         short *event_types, int n_event_types
+         short *event_types, int n_event_types,
+         bool find_used_channels = true
     );
 
     /*!
@@ -561,12 +503,15 @@ public:
      * @param parent
      * @param selection
      * @param n_selection
+     * @param find_used_channels if set to true (default) searches all indices
+     * to find the used routing channels
      *
      */
     TTTR(
             const TTTR &parent,
             unsigned long long *selection,
-            int n_selection
+            int n_selection,
+            bool find_used_channels = true
             );
 
     /// Destructor
@@ -608,11 +553,30 @@ public:
             bool invert=false
             );
 
+    /*!
+    * Returns time windows (tw), i.e., the start and the stop indices for a
+    * minimum tw size, a minimum number of photons in a tw.
+    *
+    * @param output [out] Array containing the interleaved start and stop indices
+    * of the tws in the TTTR object.
+    * @param n_output [out] Length of the output array
+    * @param minimum_window_length [in] Minimum length of a tw (mandatory).
+    * @param maximum_window_length [in] Maximum length of a tw (optional).
+    * @param minimum_number_of_photons_in_time_window [in] Minimum number of
+    * photons a selected tw contains (optional)
+    * @param maximum_number_of_photons_in_time_window [in] Maximum number of
+    * photons a selected tw contains (optional)
+    * @param invert [in] If set to true, the selection criteria are inverted.
+    */
     void get_ranges_by_count_rate(
             unsigned long long **output, int *n_output,
-            int tw_min, int tw_max,
-            int n_ph_min, int n_ph_max
-            );
+            double minimum_window_length,
+            double maximum_window_length,
+            int minimum_number_of_photons_in_time_window,
+            int maximum_number_of_photons_in_time_window,
+            bool invert = false
+    );
+
 
     /// Get header returns the header (if present) as a map of strings.
     Header get_header();
@@ -643,6 +607,170 @@ public:
      * @param shift
      */
     void shift_macro_time(int shift);
+};
+
+
+class TTTRRange {
+
+public:
+
+    /// The start index of the TTTRRange
+    size_t _start = 0;
+
+    /// The stop index of the TTTRRange
+    size_t _stop = 0;
+
+    /// The start time of the TTTRRange
+    unsigned long long _start_time = 0;
+
+    /// The stop time of the TTTRRange
+    unsigned long long _stop_time = 0;
+    std::vector<unsigned long long> _tttr_indices = {};
+
+
+    /*!
+     *
+     * @param start start index of the TTTRRange
+     * @param stop stop index of the TTTRRange
+     * @param start_time start time of the TTTRRange
+     * @param stop_time stop time of the TTTRRange
+     */
+    TTTRRange(
+            size_t start=0,
+            size_t stop=0,
+            unsigned long long start_time = 0,
+            unsigned long long stop_time = 0,
+            TTTRRange* other = nullptr
+    );
+
+    /// Copy constructor
+    TTTRRange(const TTTRRange& p2);
+
+    /// A vector containing a set of TTTR indices that was assigned to the range
+    const std::vector<unsigned long long>&  get_tttr_indices(){
+        return _tttr_indices;
+    }
+
+    /// A vector of the start and the stop TTTR index of the range
+    std::vector<unsigned long long> get_start_stop(){
+        std::vector<unsigned long long> v = {_start, _stop};
+        return v;
+    }
+
+    /// A vector of the start and stop time
+    std::vector<unsigned long long> get_start_stop_time(){
+        std::vector<unsigned long long> v = {_start_time, _stop_time};
+        return v;
+    }
+
+    /// The difference between the start and the stop time of a range
+    unsigned long long get_duration(){
+        return get_start_stop_time()[1] - get_start_stop_time()[0];
+    }
+
+    /// The start index of the TTTR range object
+    void set_start(unsigned long long start_value){
+        _start = start_value;
+    }
+
+    /// The start index of the TTTR range object
+    unsigned long long get_start(){
+        return _start;
+    }
+
+    /// The stop index of the TTTR range object
+    void set_stop(unsigned long long stop_value){
+        _stop = stop_value;
+    }
+
+    /// The stop index of the TTTR range object
+    unsigned long long get_stop(){
+        return _stop;
+    }
+
+    /// The stop time of the TTTR range object
+    void set_stop_time(unsigned long long stop_time_value){
+        _stop_time = stop_time_value;
+    }
+
+    /// The stop time of the TTTR range object
+    unsigned long long get_stop_time(){
+        return _stop_time;
+    }
+
+    /// The start time of the TTTR range object
+    void set_start_time(unsigned long long start_time_value){
+        _start_time = start_time_value;
+    }
+
+    /// The start time of the TTTR range object
+    unsigned long long get_start_time(){
+        return _start_time;
+    }
+
+    /// Append a index to the TTTR index vector
+    void append(unsigned long long v){
+        _tttr_indices.emplace_back(v);
+    }
+
+    /// Clears the TTTR index vector
+    void clear(){
+        _tttr_indices.clear();
+    }
+
+    void shift_start_time(long v){
+//#if VERBOSE
+//        std::clog << "-- Old start, stop time: " << _start_time << "," << _stop_time << std::endl;
+//#endif
+        _start_time += v;
+        _stop_time += v;
+//#if VERBOSE
+//        std::clog << "-- New start, stop time: " << _start_time << "," << _stop_time << std::endl;
+//#endif
+    }
+
+    /*!
+     * Update start, stop and the start and stop using the tttr_indices
+     * attribute
+     *
+     * @param tttr_data [in] the TTTR dataset that is used to determine the start
+     * and stop time by the TTTR macro time.
+     * @param from_tttr_indices [in] if set to true (default is true) the start
+     * stop indices and the start stop time are updated from the tttr_indices
+     * attribute. Otherwise, the start stop times are updated from the tttr object
+     * using the current start stop
+     */
+    void update(
+            TTTR* tttr_data,
+            bool from_tttr_indices=true
+    ){
+        if(from_tttr_indices){
+            if(!_tttr_indices.empty()){
+                _start = _tttr_indices[0];
+                _stop = _tttr_indices[_tttr_indices.size() - 1];
+                _start_time = tttr_data->macro_times[_start];
+                _stop_time = tttr_data->macro_times[_stop];
+            }
+        } else{
+            _start_time = tttr_data->macro_times[_start];
+            _stop_time = tttr_data->macro_times[_stop];
+        }
+    }
+
+    bool operator==(const TTTRRange& other) const
+    {
+        return  (_tttr_indices == other._tttr_indices) &&
+                (_start == other._start) &&
+                (_stop == other._stop) &&
+                (_start_time == other._start_time) &&
+                (_stop_time == other._stop_time);
+    }
+
+    bool operator!=(const TTTRRange& other) const
+    {
+        return !operator==(other);
+    }
+
 };
 
 

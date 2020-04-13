@@ -193,6 +193,54 @@ class Tests(unittest.TestCase):
             True
         )
 
+    def test_TTTRRange(self):
+        import tttrlib
+
+        # empty range object
+        tttr_range_1 = tttrlib.TTTRRange()
+        self.assertEqual(tttr_range_1.start, 0)
+        self.assertEqual(tttr_range_1.stop, 0)
+        self.assertEqual(tttr_range_1.start_time, 0)
+        self.assertEqual(tttr_range_1.stop_time, 0)
+        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (0, 0))
+        self.assertEqual(len(tttr_range_1.tttr_indices), 0)
+
+        d = {
+            "start": 11,
+            "stop": 898,
+            "start_time": 222,
+            "stop_time": 2222
+        }
+        tttr_range_1 = tttrlib.TTTRRange(*d.values())
+        self.assertEqual(tttr_range_1.start, d["start"])
+        self.assertEqual(tttr_range_1.stop, d["stop"])
+        self.assertEqual(tttr_range_1.start_time, d["start_time"])
+        self.assertEqual(tttr_range_1.stop_time, d["stop_time"])
+        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (d["start"], d["stop"]))
+
+        tttr_range_2 = tttrlib.TTTRRange(other=tttr_range_1)
+        self.assertEqual(tttr_range_2.start, d["start"])
+        self.assertEqual(tttr_range_2.stop, d["stop"])
+        self.assertEqual(tttr_range_2.start_time, d["start_time"])
+        self.assertEqual(tttr_range_2.stop_time, d["stop_time"])
+        self.assertTupleEqual(tuple(tttr_range_2.start_stop), (d["start"], d["stop"]))
+
+        # append a index
+        tttr_range_1.append(89)
+        self.assertEqual(len(tttr_range_1.tttr_indices), 1)
+        self.assertTupleEqual(tuple(tttr_range_1.tttr_indices), (89,))
+        tttr_range_1.clear()
+        self.assertEqual(len(tttr_range_1.tttr_indices), 0)
+
+        tttr_range_2 = tttrlib.TTTRRange(**d)
+        tttr_range_3 = tttrlib.TTTRRange(other=tttr_range_1)
+        self.assertEqual(
+            tttr_range_1, tttr_range_2
+        )
+        self.assertEqual(
+            tttr_range_2, tttr_range_3
+        )
+
     def test_open_non_existing_file(self):
         # make sure that opening an non-exisitng file does not crash
         d = tttrlib.TTTR('NOFILE', 'PTU')

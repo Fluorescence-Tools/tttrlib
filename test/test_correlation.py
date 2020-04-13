@@ -14,8 +14,8 @@ class Tests(unittest.TestCase):
         # this compares the result of the implemented correlators
         data = self.data
 
-        ch1_indeces = data.get_selection_by_channel(np.array([8]))
-        ch2_indeces = data.get_selection_by_channel(np.array([0]))
+        ch1_indeces = data.get_selection_by_channel([8])
+        ch2_indeces = data.get_selection_by_channel([0])
         mt = data.macro_times
 
         t1 = mt[ch1_indeces]
