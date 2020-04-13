@@ -17,6 +17,69 @@
 
 ////////////////////////////////// convolution with background ////////////////////////////////////
 
+
+/*!
+ * Histogram routine that
+ * @tparam T
+ * @param input the SgSr matrix that contains P(Sgreen, Sred)
+ * @param Nmax max N photons
+ * @param histogram_param "Histogram" cluster from Tatiana
+ * @param exp_param "Experimental" cluster from Tatiana
+ * @param histogram_x histogram X axis (return)
+ * @param histogram_y histogram itself (return)
+ */
+void Pda::sgsr_histogram(
+        double **histogram_x, int *n_histogram_x,
+        double **histogram_y, int *n_histogram_y
+) {
+    double xminlog = log(xmin);
+    auto Nbinsf = (double) NBins;
+
+    (*n_histogram_x) = NBins;
+    (*n_histogram_y) = NBins;
+    *histogram_x = (double*) calloc(sizeof(double), NBins);
+    *histogram_y = (double*) calloc(sizeof(double), NBins);
+
+    int green, red, firstred, bin;
+    // build histogram
+    for (bin = 0; bin < NBins; bin++) (*histogram_y)[bin] = 0.;
+    if(log_x) {
+        double bin_width = (log(xmax) - xminlog) / ((double) NBins - 1);
+        double inverse_bin_width = 1. / bin_width;
+        double xmincorr = log(xmin) - 0.5 * bin_width;
+        // histogram X
+        for (bin = 0; bin < NBins; bin++)
+            (*histogram_x)[bin] = exp(xminlog + bin_width * (double) bin);
+        // histogram Y
+        for (green = 0; green <= Nmax; green++) {
+            green > Nmin ? firstred = 0 : firstred = Nmin - green;
+            for (red = firstred; red <= Nmax - green; red++) {
+                double x = log((double) green / (double) red); // SgSgr
+                double binf = floor((x - xmincorr) * inverse_bin_width);
+                bin = (int) binf;
+                if ((binf < Nbinsf) && (binf >= 0.)) (*histogram_y)[bin] += SgSr[green * (Nmax + 1) + red];
+            }
+        }
+    } else {        // not log
+        double bin_width = (xmax - xmin) / ((double) NBins - 1.);
+        double inverse_bin_width = 1. / bin_width;
+        double xmincorr = xmin - 0.5 * bin_width;
+        // histogram X
+        for (bin = 0; bin < NBins; bin++)
+            (*histogram_x)[bin] = xmin + bin_width * (double) bin;
+        // histogram Y
+        for (green = 0; green <= Nmax; green++) {
+            green > Nmin ? firstred = 0 : firstred = Nmin - green;
+            for (red = firstred; red <= Nmax - green; red++) {
+                double x = (double) green / (double) red; // SgSgr;
+                double binf = floor((x - xmincorr) * inverse_bin_width);
+                bin = (int) binf;
+                if ((binf < Nbinsf) && (binf >= 0.)) (*histogram_y)[bin] += SgSr[green * (Nmax + 1) + red];
+            }
+        }
+    }
+}
+
 void PdaFunctions::conv_pF(
         double *SgSr,
         double *FgFr,
@@ -25,9 +88,9 @@ void PdaFunctions::conv_pF(
         double Br
 ) {
 
-    auto *tmp = new double[(Nmax + 1) * (Nmax + 1)];
+    auto *tmp = new double[(Nmax + 1) * (Nmax + 1)]();
     // green and red background
-    auto *bg = new double[Nmax + 1];
+    auto *bg = new double[Nmax + 1]();
     poisson_0toN(bg, Bg, Nmax);
     unsigned int Bg_max = 2 * (unsigned int) Bg + 52;
     auto *br = new double[Nmax + 1];
@@ -92,16 +155,18 @@ void PdaFunctions::sgsr_pN(
         double Br,        // <background red>, -"-
         double pg_theor)        // p(green|F=1), incl. crosstalk
 {
-
     /*** FgFr: matrix, FgFr(i,j) = p(Fg=i, Fr=j | F=i+j) ***/
-    auto *FgFr = new double[(Nmax + 1) * (Nmax + 1)];
+    auto *FgFr = new double[(Nmax + 1) * (Nmax + 1)]();
     FgFr[0] = 1.;
-    for (size_t i = 1; i <= Nmax; i++) {
-        polynom2_conv(FgFr + i * (Nmax + 1), FgFr + (i - 1) * (Nmax + 1), i,
-                      pg_theor);
+    for (unsigned int i = 1; i <= Nmax; i++) {
+        polynom2_conv(
+                FgFr + i * (Nmax + 1),
+                FgFr + (i - 1) * (Nmax + 1),
+                (unsigned int) i,
+                (double) pg_theor
+        );
         for (size_t red = 0; red <= i - 1; red++) {
-            FgFr[(i - 1 - red) * (Nmax + 1) + red] = FgFr[(i - 1) * (Nmax + 1) +
-                                                          red];
+            FgFr[(i - 1 - red) * (Nmax + 1) + red] = FgFr[(i - 1) * (Nmax + 1) + red];
         }
     }
     for (size_t red = 0; red <= Nmax; red++) {
@@ -124,7 +189,7 @@ void PdaFunctions::sgsr_pF(
 
     /*** FgFr: matrix, FgFr(i,j) = p(Fg = i, Fr = j) ***/
 
-    auto *FgFr = new double[(Nmax + 1) * (Nmax + 1)];
+    auto *FgFr = new double[(Nmax + 1) * (Nmax + 1)]();
     FgFr[0] = 1.;
     unsigned int red;
 
@@ -161,8 +226,8 @@ void PdaFunctions::sgsr_pN_manypg(
         double *a) {
     /*** FgFr: matrix, FgFr(i,j) = p(Fg = i, Fr = j) ***/
     size_t matrix_elements = (Nmax + 1) * (Nmax + 1);
-    auto *FgFr = new double[matrix_elements];
-    auto *tmp = new double[matrix_elements];
+    auto *FgFr = new double[matrix_elements]();
+    auto *tmp = new double[matrix_elements]();
     memset(FgFr, 0, matrix_elements);
 
     unsigned int red;
@@ -197,34 +262,23 @@ void PdaFunctions::sgsr_pF_manypg(
         unsigned int Nmax,
         double Bg,
         double Br,
-        unsigned int N_pg,        // size of pg_theor
-        double *pg_theor,
-        double *a
-)            // corresponding amplitudes
-{
-
+        std::vector<double> &pg_theor,
+        std::vector<double> &a // corresponding amplitudes
+){
     /*** FgFr: matrix, FgFr(i,j) = p(Fg = i, Fr = j) ***/
     size_t matrix_elements = (Nmax + 1) * (Nmax + 1);
-    auto *FgFr = new double[matrix_elements];
-    auto *tmp = new double[matrix_elements];
-    memset(FgFr, 0, matrix_elements);
-
-    unsigned int j, i, red;
-    for (j = 0; j < N_pg; j++) {
-
+    auto *FgFr = new double[matrix_elements]();
+    auto *tmp = new double[matrix_elements]();
+    for (size_t pg_idx = 0; pg_idx < pg_theor.size(); pg_idx++) {
         tmp[0] = 1.;
-        for (i = 1; i <= Nmax; i++) {
-            polynom2_conv(tmp + i * (Nmax + 1), tmp + (i - 1) * (Nmax + 1), i,
-                          pg_theor[j]);
-            for (red = 0; red <= i - 1; red++)
-                FgFr[(i - 1 - red) * (Nmax + 1) + red] +=
-                        tmp[(i - 1) * (Nmax + 1) + red] * pF[i - 1] * a[j];
+        for (size_t i = 1; i <= Nmax; i++) {
+            polynom2_conv(tmp + i * (Nmax + 1),tmp + (i - 1) * (Nmax + 1), i, pg_theor[pg_idx]);
+            for (size_t red = 0; red <= i - 1; red++)
+                FgFr[(i - 1 - red) * (Nmax + 1) + red] += tmp[(i - 1) * (Nmax + 1) + red] * pF[i - 1] * a[pg_idx];
         }
-        for (red = 0; red <= Nmax; red++)
-            FgFr[(Nmax - red) * (Nmax + 1) + red] +=
-                    tmp[Nmax * (Nmax + 1) + red] * pF[Nmax] * a[j];
+        for (size_t red = 0; red <= Nmax; red++)
+            FgFr[(Nmax - red) * (Nmax + 1) + red] += tmp[Nmax * (Nmax + 1) + red] * pF[Nmax] * a[pg_idx];
     }
-
     /*** SgSr: matrix, SgSr(i,j) = p(Sg = i, Sr = j) ***/
     conv_pF(SgSr, FgFr, Nmax, Bg, Br);
     delete[] FgFr;
@@ -246,9 +300,8 @@ void PdaFunctions::sgsr_manypF(
 
     /*** FgFr: matrix, FgFr(i,j) = p(Fg = i, Fr = j) ***/
     size_t matrix_elements = (Nmax + 1) * (Nmax + 1);
-    auto *FgFr = new double[matrix_elements];
-    auto *tmp = new double[matrix_elements];
-    memset(FgFr, 0, matrix_elements);
+    auto *FgFr = new double[matrix_elements]();
+    auto *tmp = new double[matrix_elements]();
 
     unsigned int j, i, red;
     for (j = 0; j < N_pg; j++) {
@@ -278,8 +331,7 @@ void PdaFunctions::sgsr_manypF(
 }
 
 
-void PdaFunctions::poisson_0toN(double *return_p, double lam,
-                                unsigned int return_dim) {
+void PdaFunctions::poisson_0toN(double *return_p, double lam, size_t return_dim) {
     unsigned int i;
     return_p[0] = exp(-lam);
     for (i = 1; i <= return_dim; i++) {
@@ -288,8 +340,7 @@ void PdaFunctions::poisson_0toN(double *return_p, double lam,
 }
 
 
-void PdaFunctions::poisson_0toN_multi(double *return_p, double *lambda,
-                                      unsigned int M, unsigned int N) {
+void PdaFunctions::poisson_0toN_multi(double *return_p, double *lambda, unsigned int M, unsigned int N) {
     for (size_t j = 0; j < M; j++) {
         size_t ishift = (N + 1) * j;
         return_p[ishift] = exp(-lambda[j]);
@@ -366,9 +417,8 @@ void Pda::evaluate() {
             get_max_number_of_photons(),
             get_green_background(),
             get_red_background(),
-            probability_green_theor.size(),
-            probability_green_theor.data(),
-            amplitudes.data()
+            probability_green_theor,
+            amplitudes
     );
 }
 

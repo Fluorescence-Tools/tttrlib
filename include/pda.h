@@ -19,16 +19,59 @@
 #include <string.h>
 #include <vector>
 
+/* "Histogram" and "Experimental" clusters */
+#pragma pack(1)
+typedef struct {
+    double xmin;
+    double xmax;
+    int Nbins;
+    char log_x;
+    unsigned short equation;
+    int Nmax;
+    int Nmin;
+} HistCluster;
+
+#pragma pack(1)
+typedef struct {
+    double Bg;
+    double Br;
+    double crosstalk;
+    double phiD;
+    double phiA;
+    double R0;
+    double Gfactor;
+    double l1;
+    double l2;
+    double mumlimol_p;
+} ExpCluster;
+
+
+// delta-T histogram cluster
+#pragma pack(1)
+typedef struct {
+    int deltaN;
+    double maxT;
+    int Nbins;
+    char log_x;
+} DeltaTHistCluster;
+
+
 
 class Pda {
 
-private:
+protected:
 
     // This is set to true if the content of SgSr is valid for the inputs
     bool sgsr_valid = false;
-    double Bg;
-    double Br;
-    unsigned int Nmax;
+    double Bg = 0.0;
+    double Br = 0.0;
+    int Nmax = 300;
+    int NBins = 81;
+    int Nmin = 3;
+    bool log_x = true;
+    double xmin = 0.01;
+    double xmax = 100.0;
+
     std::vector<double> SgSr;
     std::vector<double> pF;
     std::vector<double> amplitudes;
@@ -58,7 +101,24 @@ public:
     void set_red_background(double br);
     void setPF(double *input, int n_input);
     void get_SgSr_matrix(double **output, int *n_output1, int *n_output2);
+    void set_n_bins(unsigned int n){
+        NBins = n;
+    }
 
+    /*!
+     * Histogram routine that
+     * @tparam T
+     * @param input the SgSr matrix that contains P(Sgreen, Sred)
+     * @param Nmax max N photons
+     * @param histogram_param "Histogram" cluster from Tatiana
+     * @param exp_param "Experimental" cluster from Tatiana
+     * @param histogram_x histogram X axis (return)
+     * @param histogram_y histogram itself (return)
+     */
+    void sgsr_histogram(
+            double **histogram_x, int *n_histogram_x,
+            double **histogram_y, int *n_histogram_y
+    );
 };
 
 
@@ -146,9 +206,8 @@ namespace PdaFunctions {
             unsigned int Nmax,
             double Bg,
             double Br,
-            unsigned int N_pg,
-            double *pg_theor,
-            double *a);
+            std::vector<double> &pg_theor,
+            std::vector<double> &a);
 
     void sgsr_manypF(
             double *SgSr,        // see sgsr_pN
@@ -171,7 +230,6 @@ namespace PdaFunctions {
      */
     void conv_pF(double *SgSr, double *FgFr, unsigned int Nmax, double Bg, double Br);
 
-
     /*!
      *
      * @param SgSr
@@ -183,7 +241,6 @@ namespace PdaFunctions {
      */
     void conv_pN(double *SgSr, double *FgFr, unsigned int Nmax, double Bg, double Br, double *pN);
 
-
     /*!
     * generates Poisson distribution witn average= lam, for 0..N
     *
@@ -191,14 +248,12 @@ namespace PdaFunctions {
     * @param lam
     * @param return_dim
     */
-    void poisson_0toN(double *return_p, double lam, unsigned int return_dim);
-
+    void poisson_0toN(double *return_p, double lam, size_t return_dim);
 
     /*!
      * generates Poisson distribution for a set of lambdas
      */
     void poisson_0toN_multi(double *, double *, unsigned int, unsigned int);
-
 
     /*!
      * convolves vectors p and [p2 1-p2]
