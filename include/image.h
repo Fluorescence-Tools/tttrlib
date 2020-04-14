@@ -333,8 +333,6 @@ public:
      */
     void append(CLSMFrame* frame);
 
-//    /// Default Constructor
-//    CLSMImage() = default;
 
     /// Copy constructor
     CLSMImage(const CLSMImage& p2, bool fill=false);
