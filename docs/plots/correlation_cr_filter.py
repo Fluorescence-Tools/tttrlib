@@ -2,12 +2,13 @@ import pylab as p
 import tttrlib
 import numpy as np
 
-fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
 data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 
 # Plot the raw/unfiltered correlations
+
+fig, ax = p.subplots(nrows=1, ncols=2)
 
 correlator = tttrlib.Correlator(
     tttr=data,
@@ -35,14 +36,13 @@ filter_options = {
     'macro_time_calibration': data.header.macro_time_resolution,
     'invert': True  # set invert to True to select TW with more than 60 ph
 }
-data_selection = tttrlib.TTTR(
-    data,
-    tttrlib.selection_by_count_rate(**filter_options)
-)
+data_selection = data[tttrlib.selection_by_count_rate(**filter_options)]
 correlator = tttrlib.Correlator(
     channels=([0], [8]),
     tttr=data_selection
 )
+
+
 ax[1].semilogx(
     correlator.x_axis,
     correlator.correlation
