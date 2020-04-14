@@ -337,22 +337,24 @@ public:
             bool make_fine = false,
             bool set_weights = true
             );
-//
-//    /*!
-//     * Updates the weights. Non-zero weights are assigned a filter value that
-//     * is defined by a filter map and the micro time of the event.
-//     *
-//     * @param micro_times[in]
-//     * @param routing_channels[in]
-//     * @param filter[in] map of filters the first element in the map is the routing
-//     * channel number, the second element of the map is a vector that maps a
-//     * micro time to a filter value.
-//     */
-//    void set_filter(
-//            std::vector<double> micro_times,
-//            std::map<int, std::vector<double>> filter,
-//            std::vector<double> routing_channels,
-//    );
+
+    /*!
+     * Updates the weights. Non-zero weights are assigned a filter value that
+     * is defined by a filter map and the micro time of the event.
+     *
+     * @param micro_times[in]
+     * @param routing_channels[in]
+     * @param filter[in] map of filters the first element in the map is the routing
+     * channel number, the second element of the map is a vector that maps a
+     * micro time to a filter value.
+     */
+    void set_filter(
+            const std::vector<unsigned int>& micro_times_1,
+            const std::vector<short>& routing_channels_1,
+            const std::vector<unsigned int>& micro_times_2,
+            const std::vector<short>& routing_channels_2,
+            const std::map<short, std::vector<double>>& filter
+    );
 
 };
 

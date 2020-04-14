@@ -337,3 +337,34 @@ void Correlator::set_tttr(
         set_microtimes(tac_1, n_tac1, tac_2, n_tac2, n_tac);
     }
 }
+
+void Correlator::set_filter(
+        const std::vector<unsigned int>& micro_times_1,
+        const std::vector<short>& routing_channels_1,
+        const std::vector<unsigned int>& micro_times_2,
+        const std::vector<short>& routing_channels_2,
+        const std::map<short, std::vector<double>>& filter
+){
+    // make sure that the weights are of the right size
+    free(w1); free(w2);
+    w1 = (double*) malloc(sizeof(double) * micro_times_1.size());
+    w2 = (double*) malloc(sizeof(double) * micro_times_2.size());
+
+    // lookup the weights ch1
+    size_t idx = 0;
+    for(auto r: routing_channels_1){
+        auto m = micro_times_1[idx];
+        w1[idx] = filter.at(r)[m];
+        idx++;
+    }
+    // lookup the weights ch2
+    idx = 0;
+    for(auto r: routing_channels_2){
+        auto m = micro_times_2[idx];
+        w2[idx] = filter.at(r)[m];
+        idx++;
+    }
+    set_weights(w1, micro_times_1.size(),
+            w2, micro_times_2.size(),
+            true);
+}

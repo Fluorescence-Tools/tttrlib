@@ -24,13 +24,15 @@
 import_array();
 %}
 
-%template(MapStringString) std::map<std::string, std::string>;
+%template(VectorDouble) std::vector<double>;
 %template(VectorUint64) std::vector<unsigned long long>;
 %template(VectorInt64) std::vector<long long>;
 %template(VectorUint32) std::vector<unsigned int>;
 %template(VectorInt32) std::vector<int>;
 %template(VectorInt16) std::vector<short>;
 %template(VectorUint32_3D) std::vector<std::vector<std::vector<unsigned int>>>;
+%template(MapStringString) std::map<std::string, std::string>;
+%template(MapShortVectorDouble) std::map<short, std::vector<double>>;
 
 %include "tttr.i"
 %include "histogram.i"
