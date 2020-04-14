@@ -18,6 +18,8 @@ class TestCLSM(unittest.TestCase):
         "marker_line_start": 1,
         "marker_line_stop": 2,
         "marker_event_type": 15,
+        # if set to zero the number of pixels will be the set to the number
+        # of lines
         "n_pixel_per_line": 0,
         "reading_routine": 'SP8',
     }
@@ -46,59 +48,13 @@ class TestCLSM(unittest.TestCase):
     def test_leica_sp8_image_2(self):
         print("test_leica_sp8_image_2")
         sp8_filename = self.sp8_filename
-
-        # sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-
         data = tttrlib.TTTR(sp8_filename, 'PTU')
-        frame_marker = [4, 6]
-        line_start_marker = 1
-        line_stop_marker = 2
-        event_type_marker = 15
-        pixel_per_line = 512
-        reading_routine = 'SP8'
-
         clsm_image = tttrlib.CLSMImage(
-            data,
-            frame_marker,
-            line_start_marker,
-            line_stop_marker,
-            event_type_marker,
-            pixel_per_line,
-            reading_routine
+            tttr_data=data, **self.sp8_reading_parameter
         )
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[1]
-        )
-
-        selection = np.ones(
-            (
-                clsm_image.n_frames,
-                clsm_image.n_lines,
-                clsm_image.n_pixel,
-            ),
-            dtype=np.uint8
-        )
-        decays = clsm_image.get_pixel_decays(
-            tttr_data=data,
-            selection=selection,
-            tac_coarsening=1,
-            stack_frames=False
-        )
-
-        decay = clsm_image.get_pixel_decays(
-            tttr_data=data,
-            selection=selection,
-            tac_coarsening=1,
-            stack_frames=True
-        )
-
-        self.assertEqual(
-            np.allclose(
-                decays.sum(axis=0),
-                decay
-            ),
-            True
         )
 
     def test_leica_sp5_image(self):
@@ -121,6 +77,35 @@ class TestCLSM(unittest.TestCase):
             np.allclose(
                 np.load(reference_filename,),
                 intensity_image_1
+            ),
+            True
+        )
+        selection = np.ones(
+            (
+                clsm_image.n_frames,
+                clsm_image.n_lines,
+                clsm_image.n_pixel,
+            ),
+            dtype=np.uint8
+        )
+
+        decays = clsm_image.get_pixel_decays(
+            tttr_data=data,
+            selection=selection,
+            tac_coarsening=1,
+            stack_frames=False
+        )
+        decay = clsm_image.get_pixel_decays(
+            tttr_data=data,
+            selection=selection,
+            tac_coarsening=1,
+            stack_frames=True
+        )
+
+        self.assertEqual(
+            np.allclose(
+                decays.sum(axis=0),
+                decay
             ),
             True
         )
@@ -196,16 +181,6 @@ class TestCLSM(unittest.TestCase):
                 np.load(
                     './data/reference/img_ref_decay_image.npy',
                 )
-            ),
-            True
-        )
-
-        clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
-        intensity_image_2 = clsm_image_2.intensity.sum(axis=0)
-        self.assertEqual(
-            np.allclose(
-                intensity_image_2,
-                intensity_image_1
             ),
             True
         )

@@ -366,12 +366,12 @@ public:
     CLSMImage(
             TTTR *tttr_data = nullptr,
             std::vector<int> marker_frame_start = std::vector<int>(),
-            unsigned int marker_line_start = 0,
-            unsigned int marker_line_stop = 0,
-            unsigned int marker_event_type = 0,
-            unsigned int n_pixel_per_line = 0,
+            int marker_line_start = 0,
+            int marker_line_stop = 0,
+            int marker_event_type = 0,
+            int n_pixel_per_line = 0,
             std::string reading_routine = "default",
-            unsigned long long macro_time_shift=0,
+            long long macro_time_shift=0,
             CLSMImage* source = nullptr,
             bool fill = false,
             std::vector<int> channels = std::vector<int>()

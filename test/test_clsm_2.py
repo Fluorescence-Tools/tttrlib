@@ -106,21 +106,15 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_copy_constructor(self):
-        reading_parameter = {
-            "tttr_data": tttrlib.TTTR(self.sp5_filename, 'PTU'),
-            "marker_frame_start": [4, 6],
-            "marker_line_start": 1,
-            "marker_line_stop": 2,
-            "marker_event_type": 1,
-            "n_pixel_per_line": 256,
-            "reading_routine": 'SP5',
-            "channels": [0],
-            "fill": True
-        }
-        clsm_image_1 = tttrlib.CLSMImage(**reading_parameter)
+        ht3_filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
+        data = tttrlib.TTTR(ht3_filename, 'HT3')
+        reading_parameter = self.ht3_reading_parameter
+        clsm_image_1 = tttrlib.CLSMImage(
+            tttr_data=data,
+            **reading_parameter
+        )
         clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
         self.assertAlmostEqual(
             float(np.sum(clsm_image_1.intensity - clsm_image_2.intensity)),
             0.0
         )
-

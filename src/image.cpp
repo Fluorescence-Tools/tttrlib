@@ -109,12 +109,12 @@ void CLSMImage::shift_line_start(
 CLSMImage::CLSMImage (
         TTTR *tttr_data,
         std::vector<int> marker_frame_start,
-        unsigned int marker_line_start,
-        unsigned int marker_line_stop,
-        unsigned int marker_event_type,
-        unsigned int pixel_per_line,
+        int marker_line_start,
+        int marker_line_stop,
+        int marker_event_type,
+        int pixel_per_line,
         std::string reading_routine,
-        unsigned long long macro_time_shift,
+        long long macro_time_shift,
         CLSMImage* source,
         bool fill,
         std::vector<int> channels
@@ -195,6 +195,9 @@ void CLSMImage::define_pixels_in_lines() {
             l->n_pixel = n_pixel;
         }
     }
+#if VERBOSE
+    std::clog << "-- Number of pixels per line: " << n_pixel << std::endl;
+#endif
 }
 
 
@@ -248,10 +251,9 @@ void CLSMImage::initialize_leica_sp8_ptu(
                 continue;
             }
             else if(tttr_data->micro_times[i_event] == marker_line_stop){
-                auto* line = frame->lines.back();
+                auto line = frame->lines.back();
                 line->_stop = i_event;
-                line->_start_time = tttr_data->macro_times[line->_start];
-                line->_stop_time = tttr_data->macro_times[line->_stop];
+                line->update(tttr_data, false);
                 continue;
             }
             else
@@ -259,8 +261,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
                     if(f == tttr_data->micro_times[i_event])
                     {
                         frame->_stop = i_event;
-                        frame->_start_time = tttr_data->macro_times[frame->_start];
-                        frame->_stop_time = tttr_data->macro_times[frame->_stop];
+                        frame->update(tttr_data, false);
                         append(new CLSMFrame(i_event));
                         continue;
                     }
@@ -364,15 +365,13 @@ void CLSMImage::initialize_default(TTTR* tttr_data){
             } else if(tttr_data->routing_channels[i_event] == marker_line_stop){
                 auto line = frame->lines.back();
                 line->_stop = i_event;
-                line->_start_time = tttr_data->macro_times[line->_start];
-                line->_stop_time = tttr_data->macro_times[line->_stop];
+                line->update(tttr_data, false);
             } else{
                 for(auto f: marker_frame){
                     if(f == tttr_data->routing_channels[i_event]) {
                         // set values of old frame
                         frame->_stop = i_event;
-                        frame->_start_time = tttr_data->macro_times[frame->_start];
-                        frame->_stop_time = tttr_data->macro_times[frame->_stop];
+                        frame->update(tttr_data, false);
                         auto new_frame = new CLSMFrame(i_event);
                         append(new_frame);
                         continue;
