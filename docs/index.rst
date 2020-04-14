@@ -7,8 +7,9 @@
 Getting started
 ###############
 
+*******
 tttrlib
-=======
+*******
 
 Process time-tagged time resolved (TTTR) data with a unified application programming interface (API) that entitles you
 to process data of TTTR experiments without the need of data conversion with your preferred scripting language.
@@ -24,7 +25,7 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
 
 
 Contents
---------
+========
 
 .. toctree::
    :maxdepth: 1
@@ -41,13 +42,13 @@ Contents
 
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`search`
 
 
 License
--------
+=======
 
 tttrlib is released under the open source `MIT license <https://opensource.org/licenses/MIT>`_.

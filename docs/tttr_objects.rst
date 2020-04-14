@@ -2,8 +2,9 @@
 TTTR-Objects
 ############
 
+****************
 General features
-----------------
+****************
 
 The library tttrlib facilitates the work with files containing time-tagged time
 resolved photon streams by providing a vendor independent C++ application
@@ -116,11 +117,12 @@ In the example file contains 299999 entries whereas overall only 152312 TTTR
 entries are stored. The example file corresponds to a single-molecule measurement
 where a large fraction of the entries are overflow records.
 
+*******************
 Create TTTR objects
--------------------
+*******************
 
 Opening files
-+++++++++++++
+=============
 
 In Python, first, the tttrlib module needs to be imported. Next, a TTTR object
 needs to be created. When creating a new TTTR object, the file name and the file
@@ -172,9 +174,9 @@ objects can be created that contain initially no data. Moreover, TTTR objects ca
 be created based on existing files and selection.
 
 Slicing / subsets
-+++++++++++++++++
+=================
 
-TTTR objects can be sliced, if you are interested a subset of
+TTTR objects can be sliced, if you are interested a subset of the data.
 
 .. code-block:: python
 
@@ -182,12 +184,15 @@ TTTR objects can be sliced, if you are interested a subset of
     data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
     data_sliced = data[:10]
 
+A slice of a ``TTTR`` object creates a copy, i.e., the routing channel, the
+macro, and the micro times are copied including the header information.
 
+***********
 TTTR-Header
------------
+***********
 
 Accessing header data
----------------------
+=====================
 
 Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
 For that, a ``TTTR`` object provides a header attribute. The header attribute is
@@ -222,7 +227,7 @@ The last statement prints the keys of the map.
 
 
 Time calibration data
----------------------
+=====================
 
 Essential for the analysis of TTTR data is the time calibration (time resolution)
 of the macro and the micro times in addition to the number of possible micro time
@@ -264,24 +269,24 @@ The number of micro time channels can be accessed as displayed below.
     effectively only 3125 micro time channels will be filled with photons.
 
 
+**********
 Selections
-----------
+**********
 
 Using selections
-++++++++++++++++
+================
 
-Based on an existing TTTR object and a selection a new TTTR object can be created.
-That only contains the selected elements. Beyond the the array processing
-capabilities either provided by the high-level programming language or an library
-like `NumPy <http://www.numpy.org/>`_, ``tttrlib`` offers a set of functions and
-methods to select a subset of the data contained in a TTTR file. There are two
-options to get selection for a subset of the data
+There is a set of functions and methods to select subsets of TTTR objects.
+Beyond the the array processing capabilities either provided by the high-level
+programming language or an library like `NumPy <http://www.numpy.org/>`_, ``tttrlib``
+offers a set of functions and methods to select a subset of the data contained
+in a TTTR file. There are two options to get selection for a subset of the data
 
     1. By *ranges*
     2. By *selection*
 
-*Ranges* are lists of subsequential tuples marking the beginning and the end of
-a range. *Selections* are list of integers, where the integers refer to the indices
+*Ranges* are lists of tuples marking the beginning and the end of a range.
+*Selections* are list of integers, where the integers refer to the indices
 of the event stream that was selected.
 
 
@@ -307,7 +312,7 @@ channels are usually selected by *selections*.
 
 
 Channel selections
-++++++++++++++++++
+==================
 
 A very typical use case in TCSPC experiments (either in fluorescence lifetime
 microscopy (FLIM) or multiparameteric fluorescence detection (MFD)) is to select
@@ -332,7 +337,7 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
     data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
 
     green_indices = data.get_selection_by_channel([0, 8])
-    red_indices = data.get_selection_by_channel(np.array([1, 9]))
+    red_indices = data.get_selection_by_channel([1, 9])
 
 This examples needs to be adapted to the channel assignment dependent on the actual
 experimental setup.
@@ -351,7 +356,7 @@ be created.
 The `TTTR` object can be operated on normally.
 
 Count rate selections
-+++++++++++++++++++++
+=====================
 
 Another very common selection is based on the count rate. The count rate is
 determined by the number of detected events within a given time window. The
@@ -368,6 +373,4 @@ given by the number of macro time steps.
 
 In the example shown above, the time window is 1200000 and 30 is the maximum
 number of photons within that is permitted in a time window.
-
-
 

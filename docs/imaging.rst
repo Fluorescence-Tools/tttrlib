@@ -13,11 +13,13 @@ the laser and moving the position of the exciting on a fixed sample (laser
 scanning). In both cases, the position of the detection volume within the sample
 needs to be saved in the recorded TTTR event stream.
 
-The position of the laser in the TTTR event stream is encoded by injecting markers into the event stream the report
-on the laser position. Some manufactures present these markers as special ""events"" that are distinguished from
-normal photon events. Some manufacturers use the same routing channel numbers for markers and for photon detection
-channels. To distinguish photons from markers,``TTTR`` objects present for every event an additional event type
-specifier (see :ref:`TTTR Objects:Anatomy`).
+The position of the laser in the TTTR event stream is encoded by injecting
+markers into the event stream the report on the laser position. Some manufactures
+present these markers as special ""events"" that are distinguished from normal
+photon events. Some manufacturers use the same routing channel numbers for markers
+and for photon detection channels. To distinguish photons from markers,``TTTR``
+objects present for every event an additional event type specifier (see
+:ref:`TTTR Objects:Anatomy`).
 
 The position of the laser on the sample is mostly defined by the following markers
 
@@ -27,43 +29,51 @@ The position of the laser on the sample is mostly defined by the following marke
     2. A line start marker
     3. A line stop marker
 
-The line start and the line stop marker define a *valid* region of the image. In confocal laser scanning microscopy
-(CLSM) the laser beam is usually repositioned between the line stop and the line start marker. The detectors are
-usually switched on in this period and register how the laser is fast repositioned on the sample.
+The line start and the line stop marker define a *valid* region of the image. In
+confocal laser scanning microscopy (CLSM) the laser beam is usually repositioned
+between the line stop and the line start marker. The detectors are usually switched
+on in this period and register how the laser is fast repositioned on the sample.
 
-The assignment of the markers to channels depends on the configuration of the microscope. Below it is briefly outlined
-how these markers can be assigned to channels.
+The assignment of the markers to channels depends on the configuration of the
+microscope. Below it is briefly outlined how these markers can be assigned to channels.
 
 Below a typical traces of channel numbers for special events are shown.
 
 .. plot:: plots/imaging_special_markers.py
    :include-source:
 
-To the top a longer trace of special events channel numbers is shown. As can be seen by inspecting the traces of
-special events, channel number 4 is followed by an interleaved sequence of channel number 1 and channel number 2.
-This identifies channel 4 as frame number and channel 1 and 2 as, line start and line stop, respectively. As is shown
-for the end of the special event channel trace, the last frame marker is followed by an incomplete frame. This is
-not uncommon. Hence, the photons registered following the last frame number should be rejected, as they would result
-in an incomplete image.
+To the top a longer trace of special events channel numbers is shown. As can be
+seen by inspecting the traces of special events, channel number 4 is followed by
+an interleaved sequence of channel number 1 and channel number 2. This identifies
+channel 4 as frame number and channel 1 and 2 as, line start and line stop,
+respectively. As is shown for the end of the special event channel trace, the last
+frame marker is followed by an incomplete frame. This is not uncommon. Hence, the
+photons registered following the last frame number should be rejected, as they
+would result in an incomplete image.
 
 
 Image construction
 ^^^^^^^^^^^^^^^^^^
 
-``tttrlib`` provides a set of functions to create images based on CLSM TTTR data. ``tttrlib`` provides efficient
-functionality to generate FLIM images implemented in C/C++. Below, it is outlined, how an image can be only using the
-basic functionality of ``tttrlib``. The presented outline presented below may serve to understand how the image
-construction in CLSM work and is not intended for productive use.
+``tttrlib`` provides a set of functions to create images based on CLSM TTTR data.
+``tttrlib`` provides efficient functionality to generate FLIM images implemented
+in C/C++. Below, it is outlined, how an image can be only using the basic functionality
+of ``tttrlib``. The presented outline presented below may serve to understand how
+the image construction in CLSM work and is not intended for productive use.
 
-Before creating an image the channel numbers of the frame and the line markers need to be determined. For the example
-that is shown above the frame, line start, and line stop markers are 4, 1, and 2, respectively. Next, the TTTR data
-needs to be loaded into memory, the number of frames, and the number of lines need to be determined in order to allocate
-memory for the image. In CLSM the number of pixels per line can be arbitrarily defined, as the laser beam is
-continuously displaced and the fluorescence of the sample is continuously recorded. Hence, the main experimental
-determinants of the image size in memory are the number of frames and the number of line scans per frame. Usually,
-the number of line scans per frame is constant within a TTTR file.
+Before creating an image the channel numbers of the frame and the line markers need
+to be determined. For the example that is shown above the frame, line start, and
+line stop markers are 4, 1, and 2, respectively. Next, the TTTR data needs to be
+loaded into memory, the number of frames, and the number of lines need to be determined
+in order to allocate memory for the image. In CLSM the number of pixels per line
+can be arbitrarily defined, as the laser beam is continuously displaced and the
+fluorescence of the sample is continuously recorded. Hence, the main experimental
+determinants of the image size in memory are the number of frames and the number
+of line scans per frame. Usually, the number of line scans per frame is constant
+within a TTTR file.
 
-The number of frames can be determined by counting extracting and counting the number of frame markers as shown below.
+The number of frames can be determined by counting extracting and counting the number
+of frame markers as shown below.
 
 .. code-block:: python
 
@@ -104,29 +114,36 @@ The number of frames can be determined by counting extracting and counting the n
     line_duration_valid = t[line_stop_marker_list] - t[line_start_marker_list]
 
 .. note::
-    The channel number of the frame makers (here 4) depends on the experimental setup. Moreover, some
-    setup configurations use "photons" event types to record special events.
+    The channel number of the frame makers (here 4) depends on the experimental
+    setup. Moreover, some setup configurations use "photons" event types to record
+    special events.
 
-In the example above, first the number of frames are counted. Next, the number of start line events are counted. In
-the example, there are overall 41 frames are present in the file each having 256 lines. As the last frame is often
-incomplete (see Figure above) the last frame is neglected (41 - 1 = 40). With the script above, the number of frames
-``n_frames`` and the number of lines per frame ``n_lines_per_frame`` is determined. Next, the number of pixel per line
-``n_pixel`` can be freely defined. Based on the time the laser spends in each line, the duration per pixel (the laser
-is constantly scanning) needs to be calculated. Here, there are two options: 1) either the total time from the
-beginning of each new line (line start) to the beginning of the next line is considered as a line or 2) the time
-between the line start and the line stop is considered as the time base to calculate the pixel duration. In the first
-case, the back movement of the laser to the line start can be visualized in the image. In the later case, only the
-*valid* region where the laser scans over the sample is visualized. For most applications the later approach is
-useful. To understand the microscope laser scanner the former approach is more useful. Above, ``line_duration_valid`` is
-the time the laser spends in every of the lines in a valid region and ``line_duration_total`` is the total time the laser
-spends in a line including the rewind to the line beginning. Above, ``n_pixel`` is the freely defined number of pixels
-per line and ``pixel_duration`` is the duration of every pixel. With the number of frames ``n_frames``, the number
-of pixels ``n_pixel``, and the number of lines ``n_lines_per_frame`` it is clear how much the memory for an image needs to be
-can be allocated and with the defined number of pixels per line the duration for the pixel can be calculated for all
-the lines of the frames.
+In the example above, first the number of frames are counted. Next, the number of
+start line events are counted. In the example, there are overall 41 frames are present
+in the file each having 256 lines. As the last frame is often incomplete (see Figure
+above) the last frame is neglected (41 - 1 = 40). With the script above, the number
+of frames ``n_frames`` and the number of lines per frame ``n_lines_per_frame`` is
+determined. Next, the number of pixel per line ``n_pixel`` can be freely defined.
+Based on the time the laser spends in each line, the duration per pixel (the laser
+is constantly scanning) needs to be calculated. Here, there are two options: 1)
+either the total time from the beginning of each new line (line start) to the beginning
+of the next line is considered as a line or 2) the time between the line start and
+the line stop is considered as the time base to calculate the pixel duration. In
+the first case, the back movement of the laser to the line start can be visualized
+in the image. In the later case, only the *valid* region where the laser scans over
+the sample is visualized. For most applications the later approach is useful. To
+understand the microscope laser scanner the former approach is more useful. Above,
+``line_duration_valid`` is the time the laser spends in every of the lines in a
+valid region and ``line_duration_total`` is the total time the laser spends in a
+line including the rewind to the line beginning. Above, ``n_pixel`` is the freely
+defined number of pixels per line and ``pixel_duration`` is the duration of every
+pixel. With the number of frames ``n_frames``, the number of pixels ``n_pixel``,
+and the number of lines ``n_lines_per_frame`` it is clear how much the memory for
+an image needs to be can be allocated and with the defined number of pixels per
+line the duration for the pixel can be calculated for all the lines of the frames.
 
-With these numbers an image for a certain set of detector channels ``detector_channels`` can be calculated. Below this
-is by the function ``make_image``.
+With these numbers an image for a certain set of detector channels ``detector_channels``
+can be calculated. Below this is by the function ``make_image``.
 
 .. code-block:: python
 
@@ -188,8 +205,9 @@ is by the function ``make_image``.
         channels=np.array([0, 1])
     )
 
-In the example function ``make_image`` the an 3D array is created that contains in every pixel a histogram of the
-micro times. An histogram of the micro time can be displayed by the code shown below:
+In the example function ``make_image`` the an 3D array is created that contains in
+every pixel a histogram of the micro times. An histogram of the micro time can be
+displayed by the code shown below:
 
 
 .. code-block:: python
@@ -199,21 +217,23 @@ micro times. An histogram of the micro time can be displayed by the code shown b
     ax[1].plot(image.sum(axis=0)[175,128])
     p.show()
 
-The outcome of such analysis for a complete working example is shown below including all necessary source code.
+The outcome of such analysis for a complete working example is shown below including
+all necessary source code.
 
 .. plot:: plots/imaging_tutorial.py
 
 
-For any practical applications it is recommended the determine the images using the built-in functions of ``tttrlib``.
-Using this functions is illustrated below.
+For any practical applications it is recommended the determine the images using
+the built-in functions of ``tttrlib``. Using this functions is illustrated below.
 
 
 C/C++ interface
 ^^^^^^^^^^^^^^^
 
 
-As was pointed out above based on some lines of Python source code (see :ref:`Imaging:Confocal laser scanning:Image construction:Theory`)
-to construct an image
+As was pointed out above based on some lines of Python source code (see
+:ref:`Imaging:Confocal laser scanning:Image construction:Theory`) to construct an
+image
 
     1. the frame marker
     2. the line start marker
@@ -221,9 +241,10 @@ to construct an image
     4. the detector channel numbers
     5. the number of pixels per scanning line
 
-need to be specified. Based on these parameters, the indices of the photons in the TTTR data stream are assigned to
-frames, lines, and pixels. When creating a ``CLSMImage`` object with a ``TTTR`` object that contains the photon stream
-a set of ``CLSMFrame``, ``CLSMLine``, and ``CLSMPixel`` objects are create.
+need to be specified. Based on these parameters, the indices of the photons in the
+TTTR data stream are assigned to frames, lines, and pixels. When creating a ``CLSMImage``
+object with a ``TTTR`` object that contains the photon stream a set of ``CLSMFrame``,
+``CLSMLine``, and ``CLSMPixel`` objects are create.
 
 .. code-block:: python
 
@@ -249,14 +270,16 @@ a set of ``CLSMFrame``, ``CLSMLine``, and ``CLSMPixel`` objects are create.
 
 .. note::
 
-    In the example above the reading routine is specified to the default (=0). If no reading routine is specified
-    the ``CLSMImage`` class uses the channel number of an event to identify line start/stops and frame marker.
-    In Leica SP8 PTU files the micro time of an photon events encodes the type of the event. Here, a different
+    In the example above the reading routine is specified to the default (=0). If
+    no reading routine is specified the ``CLSMImage`` class uses the channel number
+    of an event to identify line start/stops and frame marker. In Leica SP8 PTU files
+    the micro time of an photon events encodes the type of the event. Here, a different
     reading routine needs to be specified.
 
 
-The last parameter (here 0) specifies the reading routine (parameter = ``reading_routine``) for the line and
-frame markers. The supported marker types are shown in the table below.
+The last parameter (here 0) specifies the reading routine (parameter = ``reading_routine``)
+for the line and frame markers. The supported marker types are shown in the table
+below.
 
 .. _marker-types:
 .. table:: Table of selections for reading routines for CLSMImages
@@ -271,11 +294,13 @@ frame markers. The supported marker types are shown in the table below.
     +--------------------------+-------------------------+
 
 
-As illustrated by the code shown below, every ``CLSMImage`` object may contain multiple ``CLSMFrame`` objects , every
-``CLSMFrame`` contain a set of ``CLSMLine`` objects, and every ``CLSMLine`` object contains multiple ``CLSMPixel``
-objects. The number of ``CLSMPixel`` objects per line is specified upon instantiation if the ``CLSMImage`` object (see
-code example above). The ``CLSMFrame``, ``CLSMLine``, and the ``CLSMPixel`` classes derive from the ``TTTRRange`` class
-and provide access to the associated TTTR indices that mark the beginning and the end of the respective object via the
+As illustrated by the code shown below, every ``CLSMImage`` object may contain multiple
+``CLSMFrame`` objects , every ``CLSMFrame`` contain a set of ``CLSMLine`` objects,
+and every ``CLSMLine`` object contains multiple ``CLSMPixel`` objects. The number
+of ``CLSMPixel`` objects per line is specified upon instantiation if the ``CLSMImage``
+object (see code example above). The ``CLSMFrame``, ``CLSMLine``, and the ``CLSMPixel``
+classes derive from the ``TTTRRange`` class and provide access to the associated
+TTTR indices that mark the beginning and the end of the respective object via the
 function ``get_start_stop`` (see example below).
 
 
@@ -308,16 +333,18 @@ function ``get_start_stop`` (see example below).
 
 
 
-Object of the ``CLSMImage`` class store the frame, line, and pixel location of the TTTR data stream that was used to
-create the ``CLSMImage`` object. Next, to determine images, the detection channels of interest need to be specified
-using the method ``fill_pixels``. The method ``fill_pixels`` populates the
+Object of the ``CLSMImage`` class store the frame, line, and pixel location of the
+TTTR data stream that was used to create the ``CLSMImage`` object. Next, to determine
+images, the detection channels of interest need to be specified using the method
+``fill_pixels``. The method ``fill_pixels`` populates the
 
 .. note::
-    The pixels are not filled with start and stop indices and associated start and stop times, as the channels of
-    the image have not been defined.
+    The pixels are not filled with start and stop indices and associated start and
+    stop times, as the channels of the image have not been defined.
 
-To fill the pixels, it has to be defined, which detection channels are used. Next, the pixels can be filled. When
-filling the pixels, to every pixel a start and stop time in the TTTR data stream is associated.
+To fill the pixels, it has to be defined, which detection channels are used. Next,
+the pixels can be filled. When filling the pixels, to every pixel a start and stop
+time in the TTTR data stream is associated.
 
 .. code-block:: python
 
@@ -340,15 +367,19 @@ filling the pixels, to every pixel a start and stop time in the TTTR data stream
     p.show()
 
 
-To yield the mean time between excitation and detection of fluorescence the method ``get_mean_tac_image`` can be used.
-The example shown below shows the counts per pixel for all frames (top, left), the counts per pixel for frame number 30
-(top, right), and the mean time between excitation and detection of fluorescence (bottom, left). The function
-``get_mean_tac_image`` takes in addition to the TTTR data an argument that discriminates pixels with less than a
-certain amount of photons (below 3 photons). As can be seen by this analysis, the mean time between excitation and
-detection of fluorescence is fairly constant over the cell, while the intensity varies in this particular sample.
+To yield the mean time between excitation and detection of fluorescence the method
+``get_mean_tac_image`` can be used. The example shown below shows the counts per
+pixel for all frames (top, left), the counts per pixel for frame number 30 (top,
+right), and the mean time between excitation and detection of fluorescence (bottom,
+left). The function ``get_mean_tac_image`` takes in addition to the TTTR data an
+argument that discriminates pixels with less than a certain amount of photons (below
+3 photons). As can be seen by this analysis, the mean time between excitation and
+detection of fluorescence is fairly constant over the cell, while the intensity
+varies in this particular sample.
 
-For more detailed analysis the fluorescence decays contained in the 4D image (frame, x, y, fluorescence decay) returned
-by ``get_fluorescence_decay_image`` can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a
+For more detailed analysis the fluorescence decays contained in the 4D image (frame,
+x, y, fluorescence decay) returned by ``get_fluorescence_decay_image`` can be used,
+e.g., by analyzing fluorescence decay histograms. A full example that generates a
 fluorescence decay containing all photons of the 30 frames is shown below.
 
 .. literalinclude:: plots/imaging_tutorial_2.py
@@ -356,14 +387,16 @@ fluorescence decay containing all photons of the 30 frames is shown below.
 Analyzing CLSM marker (Leica SP8)
 ---------------------------------
 
-Not always it is completely documented by the manufacturer of a microscope how the laser scanning is implemented.
-Meaning, how the frame and line marker are integrated into the event data stream. Below, it is briefly outlined on a
-test case how for a given image the event stream can analyzed. The example data illustrated below, was recored on a
-Leica SP8 with three hybrid detectors and PicoQuant counting electronics.
+Not always it is completely documented by the manufacturer of a microscope how the
+laser scanning is implemented. Meaning, how the frame and line marker are integrated
+into the event data stream. Below, it is briefly outlined on a test case how for a
+given image the event stream can analyzed. The example data illustrated below, was
+recored on a Leica SP8 with three hybrid detectors and PicoQuant counting electronics.
 
-First, the data corresponding to the image needs to be exported from the Leica file container to yield a PTU file that
-contains the TTTR events. This file is loaded in ``tttrlib`` and the event types, the routing channel numbers, the
-macro time, and the micro time are inspected.
+First, the data corresponding to the image needs to be exported from the Leica file
+container to yield a PTU file that contains the TTTR events. This file is loaded
+in ``tttrlib`` and the event types, the routing channel numbers, the macro time,
+and the micro time are inspected.
 
 .. code-block:: python
 
@@ -379,9 +412,10 @@ macro time, and the micro time are inspected.
     t = data.get_macro_time()
     m = data.get_micro_time()
 
-As a first step, the routing channels are inspected to determine the actual channel numbers of the detectors. By making
-a bincount of the channel numbers the number how often a channel occurs in the data stream and the channel numbers in
-the data stream can be determined.
+As a first step, the routing channels are inspected to determine the actual channel
+numbers of the detectors. By making a bincount of the channel numbers the number
+how often a channel occurs in the data stream and the channel numbers in the data
+stream can be determined.
 
 .. code-block:: python
 
@@ -391,8 +425,9 @@ the data stream can be determined.
     p.plot(y)
     p.show()
 
-For the given dataset three channels were populated (channel 1, channel 2, channel 3, and channel 15). The microscopy
-is only equipped with three detectors. The counts per channel were as follows
+For the given dataset three channels were populated (channel 1, channel 2, channel 3,
+and channel 15). The microscopy is only equipped with three detectors. The counts
+per channel were as follows
 
     * 1 - 2170040
     * 2 - 43020969
@@ -401,22 +436,26 @@ is only equipped with three detectors. The counts per channel were as follows
 
 .. note::
 
-    Usually, the TTTR records utilize the event type to distinguish markers from photons. Here, Leica decided to use
-    the routing channel number to identify markers.
+    Usually, the TTTR records utilize the event type to distinguish markers from
+    photons. Here, Leica decided to use the routing channel number to identify
+    markers.
 
 
-Based on these counts channel 15 very likely identifies the markers. The number of events 8090 closely matches a
-multiple of 2 (8194 = 4 * 1024 * 2 - 1 + 3). Note, there are 1024 lines in the images, 4 images in the file.
+Based on these counts channel 15 very likely identifies the markers. The number
+of events 8090 closely matches a multiple of 2 (8194 = 4 * 1024 * 2 - 1 + 3). Note,
+there are 1024 lines in the images, 4 images in the file.
 
-By looking at the macro time one can also identify that there are four images in the file, as intensity within the
-image in non-uniform. Hence, the macro time fluctuates.
+By looking at the macro time one can also identify that there are four images in
+the file, as intensity within the image in non-uniform. Hence, the macro time
+fluctuates.
 
 
 .. image:: ./images/imaging_analyzing_clsm_marker_2.png
 
 
-To make sure that the routing channels 1, 2, and 3 are indeed detection channels, one can create (in a time-resolved
-experiment) a bincount of the associated micro times.
+To make sure that the routing channels 1, 2, and 3 are indeed detection channels,
+one can create (in a time-resolved experiment) a bincount of the associated micro
+times.
 
 .. code-block:: python
 
@@ -432,9 +471,10 @@ experiment) a bincount of the associated micro times.
     p.plot(y)
     p.show()
 
-Next, to identify if in addition to the channel number 15 the markers are identified by non-photon event marker we
-make a bincount of the channel numbers, where the event type is 1 (photon events have the event type 0, non-photon
-events have the event type 1).
+Next, to identify if in addition to the channel number 15 the markers are identified
+by non-photon event marker we make a bincount of the channel numbers, where the
+event type is 1 (photon events have the event type 0, non-photon events have the
+event type 1).
 
 .. code-block:: python
 
@@ -449,13 +489,15 @@ The bin count yield the following:
     * 2 - 48349
     * 3 - 172871
 
-This means we never have events where the channel number is 15 and the event type is 1. Moreover, the number of special
-events scales with the number of counts in a channel. Thus, the special events are very likely to mark overflows or
-gaps in the stream.
+This means we never have events where the channel number is 15 and the event type
+is 1. Moreover, the number of special events scales with the number of counts in
+a channel. Thus, the special events are very likely to mark overflows or gaps in
+the stream.
 
-To sum up, channel 1, 2, and 3 were determined as the routing channels of the detectors. Channel 15 is the routing
-channel used to inject the special markers. Next, we inspect the micro time and the macro time of the events registered
-by the routing channel 15.
+To sum up, channel 1, 2, and 3 were determined as the routing channels of the detectors.
+Channel 15 is the routing channel used to inject the special markers. Next, we inspect
+the micro time and the macro time of the events registered by the routing channel
+15.
 
 .. code-block:: python
 
@@ -466,8 +508,9 @@ by the routing channel 15.
 
 .. image:: ./images/imaging_analyzing_clsm_marker_3.png
 
-The plot of the micro times for the events of the routing channel 15 reveals, that the micro time is either 1, 2, or 4.
-A more close inspection reveals that a micro time value of 1 is always succeeded by a micro time value of 2.
+The plot of the micro times for the events of the routing channel 15 reveals, that
+the micro time is either 1, 2, or 4. A more close inspection reveals that a micro
+time value of 1 is always succeeded by a micro time value of 2.
 
 .. image:: ./images/imaging_analyzing_clsm_marker_3_1.png
 
@@ -475,7 +518,8 @@ A micro time value of 4 is followed by a micro time value of 1.
 
 .. image:: ./images/imaging_analyzing_clsm_marker_3_2.png
 
-This means, that the micro time encodes the frame marker and the line start/stop markers.
+This means, that the micro time encodes the frame marker and the line start/stop
+markers.
 
     * micro time 1 - line start
     * micro time 2 - line stop
@@ -484,8 +528,9 @@ This means, that the micro time encodes the frame marker and the line start/stop
 .. note::
     The first frame does not have a frame start.
 
-Next, the macro time of the events where the routing channel number equals 15 is inspected. As anticipated, the macro
-time increases on first glance continuously. On closer inspection, however, steps in the macro time are visible.
+Next, the macro time of the events where the routing channel number equals 15 is
+inspected. As anticipated, the macro time increases on first glance continuously.
+On closer inspection, however, steps in the macro time are visible.
 
 .. image:: ./images/imaging_analyzing_clsm_marker_4.png
 
@@ -497,9 +542,10 @@ To sum up, in the Leica SP8 PTU files
 
 .. note::
 
-    Usually, the TTTR records utilize the event type to distinguish markers from photons. Here, Leica decided to use
-    the routing channel number to identify markers. When opening an image in ``tttrlib`` this special case is considered
-    by specifying the reading routine.
+    Usually, the TTTR records utilize the event type to distinguish markers from
+    photons. Here, Leica decided to use the routing channel number to identify markers.
+    When opening an image in ``tttrlib`` this special case is considered by specifying
+    the reading routine.
 
 
 Estimation of the image resolution
@@ -535,25 +581,6 @@ coefficient between two images over corresponding shells in Fourier space transf
             image_2: np.ndarray,
             bin_width: int = 2.0
     ):
-        """
-
-        Parameters
-        ----------
-        image_1 : numpy.array
-            The first image
-        image_2 : numpy.array
-            The second image
-        bin_width : float
-            The bin width used in the computation of the FRC histogram
-
-        Returns
-        -------
-        Numpy array:
-            density of the FRC histogram
-        Numpy array:
-            bins of the FRC histogram
-
-        """
         f1 = np.fft.fft2(image_1)
         f2 = np.fft.fft2(image_2)
         f1f2 = np.real(f1 * np.conjugate(f2))
@@ -572,12 +599,7 @@ coefficient between two images over corresponding shells in Fourier space transf
         )
         return density, bins
 
-
-
-Fluorescence correlation image
-++++++++++++++++++++++++++++++
-
-Every pixel is defined by a list of TTTR indices. To these indices a macro time
-and micro time are associtate. Hence, correlation functions can be computed.
-
+The above approach is used by the software `ChiSurf <https://github.com/fluorescence-tools/chisurf/>`_.
+In practice, a set of CLSM images can be split into two subsets. The two subsets
+can be used to estimate the resolution of the image.
 
