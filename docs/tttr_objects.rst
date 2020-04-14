@@ -187,13 +187,35 @@ TTTR objects can be sliced, if you are interested a subset of the data.
 A slice of a ``TTTR`` object creates a copy, i.e., the routing channel, the
 macro, and the micro times are copied including the header information.
 
+Writing TTTR files
+==================
+TTTR objects can be writen to files using the method ``write`` of TTTR objects.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data_sliced = data[:10]
+    output = {
+        'filename': 'sliced_data.spc'
+        'container_type': 'SPC-130'
+    }
+    data.write(**output)
+
+This way, as shown above, data can be sliced into pieces or converted into other
+data types.
+
+.. note::
+    The differnet TTTR container formats are not fully compatible. Hence, it can
+    happen that certain information that is for instance stored in the header is
+    lost when converting and saving data.
+
 ***********
 TTTR-Header
 ***********
 
 Accessing header data
 =====================
-
 Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
 For that, a ``TTTR`` object provides a header attribute. The header attribute is
 of the type :class:`.Header`.
