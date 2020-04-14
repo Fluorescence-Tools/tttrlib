@@ -5,9 +5,9 @@
 
 %apply (double* IN_ARRAY1, int DIM1) {
     (double* data, int n_data),
-    (double *weights, int n_weights),
+    (double* weights, int n_weights),
     (double* bin_edges, int n_bins),
-    (double *hist, int n_hist)
+    (double* hist, int n_hist)
 }
 %apply (int* IN_ARRAY1, int DIM1) {
     (int* data, int n_data),

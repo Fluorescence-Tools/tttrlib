@@ -6,16 +6,7 @@
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}
 %apply (long long* IN_ARRAY1, int DIM1) {(long long *selection, int n_selection)}
 %apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **selection, int *n_selection)}
-%apply (int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
-%apply (long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
-%apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
-%apply (long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long **ranges, int *n_range)}
-%apply (unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
-%apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)}
-%apply (unsigned int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned int** output, int* n_output)}
-%apply (short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(short** output, int* n_output)}
-%apply (int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(int** output, int* n_output)}
 
 // Used in a TTTR constructor
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *macro_times, int n_macrotimes)}
@@ -33,15 +24,10 @@
 %attribute(TTTRRange, long long, start_time, get_start_time, set_start_time);
 %attribute(TTTRRange, long long, stop_time, get_stop_time, set_stop_time);
 
-%extend Correlator{
-        %pythoncode "../ext/python/correlation/correlator_extension.py"
-}
-
 // Python does not support overloading. Thus, ignore the copy constructor
 %ignore TTTRRange(const TTTRRange& p2);
-%extend TTTR{
-        %pythoncode "./ext/python/tttr/tttr_extension.py"
-}
+%extend TTTR{%pythoncode "./ext/python/tttr/tttr_extension.py"}
+%extend Correlator{%pythoncode "../ext/python/correlation/correlator_extension.py"}
 
 %include "../include/header.h"
 %include "../include/tttr.h"

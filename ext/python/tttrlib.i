@@ -24,6 +24,22 @@
 import_array();
 %}
 
+// Generic input arrays
+%apply(double* IN_ARRAY1, int DIM1) {(double *input, int n_input)}
+%apply(int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
+%apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
+%apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
+
+// Generic view arrays
+%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
+%apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
+%apply(unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
+%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)}
+%apply(unsigned int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned int** output, int* n_output)}
+%apply(short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(short** output, int* n_output)}
+%apply(int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(int** output, int* n_output)}
+
+// Templates
 %template(VectorDouble) std::vector<double>;
 %template(VectorUint64) std::vector<unsigned long long>;
 %template(VectorInt64) std::vector<long long>;
