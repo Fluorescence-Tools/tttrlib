@@ -10,12 +10,13 @@ def mean_tac(self):
 
 
 def __len__(self):
-    return self.n_frames()
+    return self.n_frames
 
 
 def __repr__(self):
-    return 'tttrlib.TTTR("%s", "%s")' % (
-        self.get_filename(),
-        self.get_tttr_container_type()
+    return 'tttrlib.CLSMImage(%s, %s, %s)' % (
+        self.n_frames,
+        self.n_lines,
+        self.n_pixel
     )
 

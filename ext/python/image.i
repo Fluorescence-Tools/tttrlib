@@ -16,7 +16,11 @@
 
 // documentation see
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
-%include attribute.i
+%attribute(CLSMImage, int, n_frames, get_n_frames);
+%attribute(CLSMImage, int, n_lines, get_n_lines);
+%attribute(CLSMImage, int, n_pixel, get_n_pixel);
+%attribute(CLSMFrame, int, n_lines, get_n_lines);
+%attribute(CLSMLine, int, n_pixel, get_n_pixel);
 %attribute(CLSMLine, unsigned long long, pixel_duration, get_pixel_duration);
 
 // Python does not support overloading. Thus, ignore the copy constructor
@@ -29,16 +33,16 @@
         %pythoncode "./ext/python/image/image_extension.py"
         CLSMFrame* __getitem__(int i) {
             if (i < 0) {
-                i = $self->n_frames + i;
+                i = $self->get_n_frames() + i;
             }
-            if (i >= $self->n_frames) {
+            if (i >= $self->get_n_frames()) {
                 return nullptr;
             }
             return (*($self))[i];
         }
 
         size_t __len__(){
-            return $self->n_frames;
+            return $self->get_n_frames();
         }
 }
 
@@ -46,15 +50,16 @@
 
         CLSMLine* __getitem__(int i) {
             if (i < 0){
-                i = $self->n_lines + i;
+                i = $self->get_n_lines() + i;
             }
-            if (i >= $self->n_lines) {
+            if (i >= $self->get_n_lines()) {
                 return nullptr;
             }
             return (*($self))[i];
         }
+
         size_t __len__(){
-            return $self->n_lines;
+            return $self->get_n_lines();
         }
 }
 
@@ -62,15 +67,15 @@
 
         CLSMPixel* __getitem__(int i) {
             if (i < 0){
-                i = $self->n_pixel + i;
+                i = $self->get_n_pixel() + i;
             }
-            if (i >= $self->n_pixel) {
+            if (i >= $self->get_n_pixel()) {
                 return nullptr;
             }
             return (*($self))[i];
         }
         size_t __len__(){
-            return $self->n_pixel;
+            return $self->get_n_pixel();
         }
 }
 

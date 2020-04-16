@@ -35,15 +35,16 @@ class CLSMPixel : public TTTRRange{
 
 class CLSMLine : public TTTRRange{
 
-    friend class CLSMFrame;
     friend class CLSMImage;
+    friend class CLSMFrame;
+    friend class CLSMLine;
 
 private:
     std::vector<CLSMPixel*> pixels;
 
 public:
-    unsigned int n_pixel;
-    unsigned int pixel_duration;
+    int n_pixel = 0;
+    int pixel_duration = 1;
 
     std::vector<CLSMPixel*> get_pixels(){
         return pixels;
@@ -53,8 +54,12 @@ public:
         return (size_t) (get_duration() / n_pixel);
     }
 
-    CLSMLine()
-    {}
+    /// Get the number of pixels per line a frame of the CLSMImage
+    int get_n_pixel() const {
+        return n_pixel;
+    }
+
+    CLSMLine() = default;
 
     CLSMLine(const CLSMLine& old_line, bool fill = false) : TTTRRange(old_line){
         // private attributes
@@ -71,18 +76,16 @@ public:
         }
     }
 
-    CLSMLine(
-            unsigned int line_start
-    ){
+    explicit CLSMLine(unsigned int line_start){
         _start = line_start;
     }
 
     CLSMLine(
-            unsigned int line_start,
-            unsigned int n_pixel
+            int line_start,
+            int n_pixel
             ){
-        _start = line_start;
-        CLSMLine::n_pixel = n_pixel;
+        this->_start = line_start;
+        this->n_pixel = std::abs(n_pixel);
         for(unsigned int i=0; i<n_pixel; i++){
             auto* pixel = new CLSMPixel();
             pixels.emplace_back(pixel);
@@ -92,7 +95,7 @@ public:
     void append(CLSMPixel* pixel){
         pixels.emplace_back(pixel);
         n_pixel++;
-        pixel_duration = (unsigned int) (get_duration() / n_pixel);
+        pixel_duration = (int) (get_duration() / n_pixel);
     }
 
     CLSMPixel* operator[](unsigned int i_pixel){
@@ -110,10 +113,15 @@ private:
     std::vector<CLSMLine*> lines;
 
 public:
-    unsigned int n_lines;
+    unsigned int n_lines = 0;
 
     std::vector<CLSMLine*> get_lines(){
         return lines;
+    }
+
+    /// Get the number of lines per frame in the CLSMImage
+    int get_n_lines() const{
+        return (int) n_lines;
     }
 
     CLSMFrame();
@@ -132,7 +140,7 @@ public:
         }
     }
 
-    CLSMFrame(size_t frame_start);
+    explicit CLSMFrame(size_t frame_start);
 
     /*!
      * Append a line to the current frame
@@ -148,11 +156,26 @@ public:
 
 class CLSMImage{
     friend class Correlator;
+    friend class CLSMFrame;
+    friend class CLSMLine;
+    friend class CLSMPixel;
 
 private:
     std::vector<CLSMFrame*> frames;
     void remove_incomplete_frames();
     void define_pixels_in_lines();
+
+protected:
+    /// The number of frames in an CLSMImage
+    size_t n_frames;
+
+
+    /// The number of lines per frames
+    size_t n_lines;
+
+    /// The number if pixels per line
+    size_t n_pixel;
+
 
 protected:
     /*!
@@ -172,24 +195,13 @@ protected:
      */
     void initialize_leica_sp8_ptu(TTTR *tttr_data);
 
+
 public:
     std::vector<int> marker_frame;
     int marker_line_start;
     int marker_line_stop;
     int marker_event;
 
-    /// The number of frames in an CLSMImage
-    size_t n_frames;
-
-    /// The number of lines per frames
-    size_t n_lines;
-
-    /// The number if pixels per line
-    size_t n_pixel;
-
-    CLSMFrame* operator[](unsigned int i_frame){
-        return frames[i_frame];
-    }
 
     /*!
      * Fill the tttr_indices of the pixels with the indices of the channels
@@ -315,6 +327,20 @@ public:
             bool stack_frames= false
     );
 
+    /// Get the number of frames in the CLSM image
+    int get_n_frames() const{
+        return n_frames;
+    }
+
+    /// Get the number of lines per frame in the CLSMImage
+    int get_n_lines() const{
+        return n_lines;
+    }
+
+    /// Get the number of pixels per line a frame of the CLSMImage
+    int get_n_pixel() const{
+        return n_pixel;
+    }
 
     /*!
      * Copy the information from another CLSMImage object
@@ -332,7 +358,6 @@ public:
      * @param frame
      */
     void append(CLSMFrame* frame);
-
 
     /// Copy constructor
     CLSMImage(const CLSMImage& p2, bool fill=false);
@@ -361,7 +386,7 @@ public:
      * encoding for frame and line markers marking TTTR events as marker events and
      * using the channel number to differentiate the different marker types.
      */
-    CLSMImage(
+    explicit CLSMImage(
             TTTR *tttr_data = nullptr,
             std::vector<int> marker_frame_start = std::vector<int>(),
             int marker_line_start = 0,
@@ -394,6 +419,10 @@ public:
     void shift_line_start(
             int macro_time_shift
     );
+
+    CLSMFrame* operator[](unsigned int i_frame){
+        return frames[i_frame];
+    }
 
 };
 
