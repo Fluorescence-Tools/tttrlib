@@ -138,9 +138,8 @@ TTTR::TTTR(
     filename.assign(fn);
     tttr_container_type = container_type;
     if(read_input){
-        read_file();
+        if(read_file()) find_used_routing_channels();
     }
-    find_used_routing_channels();
 }
 
 
@@ -157,8 +156,7 @@ TTTR::TTTR(const char *fn, const char *container_type) :
     tttr_container_type_str.assign(container_type);
     tttr_container_type = container_names.left.at(std::string(container_type));
     filename.assign(fn);
-    read_file();
-    find_used_routing_channels();
+    if(read_file()) find_used_routing_channels();
 }
 
 void TTTR::shift_macro_time(int shift) {
@@ -534,7 +532,6 @@ void selection_by_channels(
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
     *output = (long long *) malloc(n_routing_channels * sizeof(long long));
-
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
         int ch = routing_channels[i];
@@ -588,7 +585,6 @@ void ranges_by_time_window(
 
     size_t tw_begin = 0;
     while (tw_begin < n_input) {
-
         // search for the end of a time window
         size_t tw_end = 0;
         for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
@@ -598,10 +594,11 @@ void ranges_by_time_window(
         }
         size_t n_ph = tw_end - tw_begin;
         unsigned long long dt = input[tw_begin] - input[tw_end];
-        bool is_selected =
-                ((tw_max < 0) || (dt < tw_max)) &&
-                ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window)) &&
-                ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window));
+        bool is_selected = (
+            (tw_max < 0) || (dt < tw_max))
+            && ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window))
+            && ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window)
+        );
         is_selected = invert ? !is_selected : is_selected;
         if (is_selected) {
             (*output)[(*n_output) + 0] = tw_begin;
@@ -714,12 +711,12 @@ void get_ranges_channel(
 }
 
 bool TTTR::write(
-        const char *fn,
+        const char *filename,
         const char* container_type
         ) {
     switch(container_names.left.at(container_type)) {
         case BH_SPC130_CONTAINER:
-            fp = fopen(fn, "wb");
+            fp = fopen(filename, "wb");
             if (fp != nullptr) {
                 // write header
                 bh_spc132_header_t head;

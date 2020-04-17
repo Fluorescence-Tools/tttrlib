@@ -131,8 +131,14 @@ CLSMImage::CLSMImage (
 #if VERBOSE
         std::clog << "-- Initializing new CLSM image..." << std::endl;
 #endif
-        if((tttr_data == nullptr) || (marker_frame_start.empty())){
-            std::cerr << "WARNING: No TTTR data or frame marker provided" << std::endl;
+        if(tttr_data == nullptr){
+            std::cerr << "WARNING: No TTTR data provided" << std::endl;
+            return;
+        } else if(marker_frame_start.empty()){
+            std::cerr << "WARNING: No frame marker provided" << std::endl;
+            return;
+        } else if(tttr_data->n_records_read == 0){
+            std::cerr << "WARNING: No records in file" << std::endl;
             return;
         }
         this->marker_frame = marker_frame_start;
