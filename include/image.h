@@ -385,6 +385,16 @@ public:
      * micro time channel numbers. PicoQuant and others use a more 'traditional'
      * encoding for frame and line markers marking TTTR events as marker events and
      * using the channel number to differentiate the different marker types.
+     * @param macro_time_shift Number of macro time counts a line start is shifted
+     * relative to the line start marker in the TTTR object (default 0)
+     * @param source A CLSMImage object that is used as a template for the created
+     * object. All frames and lines are copied and empty pixels are created. If
+     * the parameter fill is set to true moreover the content of the pixels is copied.
+     * @param fill if set to true (default) is false the lines are filled with pixels
+     * that will contain either the photons of the specified channels or the photons
+     * from the source CLSMImage instance.
+     * @param channels The channel number of the events that will be used to fill
+     * the pixels.
      */
     explicit CLSMImage(
             TTTR *tttr_data = nullptr,
