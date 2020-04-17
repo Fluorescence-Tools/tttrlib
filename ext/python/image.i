@@ -1,6 +1,7 @@
 %{
 #include "../include/image.h"
 #include "../include/tttr.h"
+static int myErr = 0; // flag to save error state
 %}
 
 %template(vector_CLSMFrame) std::vector<CLSMFrame*>;
@@ -27,22 +28,48 @@
 %ignore CLSMImage();
 %ignore CLSMImage(const CLSMImage& p2, bool fill=false);
 
+%include "../include/tttr.h"
+%include "../include/image.h"
+
+
+// https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
+%exception CLSMImage::__getitem__ {
+    assert(!myErr);
+    $action
+    if (myErr) {
+        myErr = 0; // clear flag for next time
+        // You could also check the value in $result, but it's a PyObject here
+        SWIG_exception(SWIG_IndexError, "Index out of bounds");
+    }
+}
 
 %extend CLSMImage {
 
-        %pythoncode "./ext/python/image/image_extension.py"
         CLSMFrame* __getitem__(int i) {
+            if (i >= $self->get_n_frames()){
+                myErr = 1;
+                return 0;
+            }
             if (i < 0) {
                 i = $self->get_n_frames() + i;
-            }
-            if (i >= $self->get_n_frames()) {
-                return nullptr;
             }
             return (*($self))[i];
         }
 
         size_t __len__(){
             return $self->get_n_frames();
+        }
+
+        %pythoncode "./ext/python/image/image_extension.py"
+}
+
+%exception CLSMFrame::__getitem__ {
+        assert(!myErr);
+        $action
+        if (myErr) {
+            myErr = 0; // clear flag for next time
+            // You could also check the value in $result, but it's a PyObject here
+            SWIG_exception(SWIG_IndexError, "Index out of bounds");
         }
 }
 
@@ -52,8 +79,9 @@
             if (i < 0){
                 i = $self->get_n_lines() + i;
             }
-            if (i >= $self->get_n_lines()) {
-                return nullptr;
+            if (i >= $self->get_n_lines()){
+                myErr = 1;
+                return 0;
             }
             return (*($self))[i];
         }
@@ -63,21 +91,30 @@
         }
 }
 
-%extend CLSMLine {
-
-        CLSMPixel* __getitem__(int i) {
-            if (i < 0){
-                i = $self->get_n_pixel() + i;
-            }
-            if (i >= $self->get_n_pixel()) {
-                return nullptr;
-            }
-            return (*($self))[i];
-        }
-        size_t __len__(){
-            return $self->get_n_pixel();
+%exception CLSMLine::__getitem__ {
+        assert(!myErr);
+        $action
+        if (myErr) {
+            myErr = 0; // clear flag for next time
+            // You could also check the value in $result, but it's a PyObject here
+            SWIG_exception(SWIG_IndexError, "Index out of bounds");
         }
 }
 
-%include "../include/tttr.h"
-%include "../include/image.h"
+%extend CLSMLine {
+
+    CLSMPixel* __getitem__(int i) {
+        if (i < 0){
+            i = $self->get_n_pixel() + i;
+        }
+        if (i >= $self->get_n_pixel()){
+            myErr = 1;
+            return 0;
+        }
+        return (*($self))[i];
+    }
+    size_t __len__(){
+        return $self->get_n_pixel();
+    }
+}
+
