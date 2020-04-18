@@ -3,6 +3,7 @@
 import os
 import platform
 import subprocess
+import pathlib
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -83,9 +84,19 @@ class CMakeBuild(build_ext):
         )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        print(
-            "cmake building: " + " ".join(cmake_args)
+        # build the documentation.i file using doxygen and doxy2swig
+        working_directory = pathlib.Path(__file__).parent.absolute()
+        subprocess.check_call(
+            ["doxygen"],
+            cwd=str(working_directory / "docs"),
+            env=env
         )
+        subprocess.check_call(
+            ["python", "doxy2swig.py", "../docs/_build/xml/index.xml", "../ext/python/documentation.i"],
+            cwd=str(working_directory / "utility"),
+            env=env
+        )
+        print("cmake building: " + " ".join(cmake_args))
         subprocess.check_call(
             ['cmake', ext.sourcedir] + cmake_args,
             cwd=self.build_temp,
@@ -96,6 +107,14 @@ class CMakeBuild(build_ext):
             cwd=self.build_temp
         )
 
+
+# TODO: create console scripts for basic tasks
+console_scripts = {
+    "csc_tttr_decay_histogram": "chisurf.cmd_tools.tttr_decay_histogram:main",
+    "csc_tttr_correlate": "chisurf.cmd_tools.tttr_correlate:main",
+    "csc_fcs_convert": "chisurf.cmd_tools.fcs_convert:main",
+    "csc_protein_mc_fret": "csc_protein_mc_fret.cmd_tools.fcs_convert:main"
+}
 
 setup(
     name=__name__,
@@ -125,5 +144,10 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
-    ]
+    ],
+    entry_points={
+        "console_scripts": [
+            "%s=%s" % (key, console_scripts[key]) for key in console_scripts
+        ]
+    }
 )

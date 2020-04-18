@@ -169,7 +169,7 @@ class TestCLSM(unittest.TestCase):
         )
         mean_tac_image = clsm_image_1.get_mean_micro_time_image(
             tttr_data=data,
-            n_ph_min=1
+            minimum_number_of_photons=1
         ).sum(axis=0)
         self.assertEqual(
             np.allclose(
@@ -181,7 +181,7 @@ class TestCLSM(unittest.TestCase):
         tac_coarsening = 512
         tac_image = clsm_image_1.get_fluorescence_decay_image(
             tttr_data=data,
-            tac_coarsening=tac_coarsening,
+            micro_time_coarsening=tac_coarsening,
             stack_frames=True
         ).sum(axis=1)
         self.assertEqual(

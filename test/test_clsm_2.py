@@ -58,7 +58,7 @@ class TestCLSM(unittest.TestCase):
         # Test mean TAC image
         mean_tac_image = clsm_image.get_mean_micro_time_image(
             tttr_data=data,
-            n_ph_min=1
+            minimum_number_of_photons=1
         ).sum(axis=0)
         if self.make_reference:
             np.save('./data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
@@ -72,7 +72,7 @@ class TestCLSM(unittest.TestCase):
         # Test decay image
         decay_image = clsm_image.get_fluorescence_decay_image(
             tttr_data=data,
-            tac_coarsening=256,
+            micro_time_coarsening=256,
             stack_frames=True
         )
         if self.make_reference:

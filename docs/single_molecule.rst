@@ -1,8 +1,9 @@
+***************
 Single Molecule
-===============
+***************
 
 Histogram traces
-----------------
+================
 The function ``tttrlib.histogram_trace`` can be applied to a event time trace to
 calculate the time-dependent counts for a given time window size. In
 single-molecule FRET experiments such traces are particularly useful to illustrate
@@ -16,7 +17,7 @@ in green and red.
 
 
 Burst selection
----------------
+===============
 The function ``tttrlib.ranges_by_time_window`` can be used to define ranges in
 a photon stream based on time windows and a minimum number of photons within
 the time windows. The function has two main parameters that determine the

@@ -1,9 +1,8 @@
-Correlation
-===========
+Fluorescence correlation
+========================
 
 Creating correlators
 --------------------
-
 ``tttrlib`` offers a set of correlators via a unified interface for correlations
 of TTTR data. To correlate ``TTTR`` objects, first a TTTR dataset should be
 loaded. Next, a ``Correlator`` object needs to be created. There are different
@@ -107,7 +106,6 @@ via the ``correlation`` attribute of the correlator is accessed.
 
 Correlators options
 -------------------
-
 The default correlation algorithm follows a multi-tau correlation algorithm. Here,
 two parameters control the correlation range, i.e, the maximum correlation time
 and the number of correlation points: ``n_bins`` and ``n_casc``. In a multiple
@@ -136,14 +134,12 @@ is used.
 
 Examples
 --------
-
 Below are a few examples how the correlator con be used in conjuncture with
 tttrlib. The given examples can be used as templates to develop other correlation
 analysis procedures.
 
 Normal correlations
 +++++++++++++++++++
-
 As described previously there are several analogous possibilities to compute
 correlations. Two possibilities are shown in the example below.
 
@@ -158,7 +154,6 @@ software.
 
 Count rate filer
 ++++++++++++++++
-
 Low count rate parts of a TTTR file can be discriminated. The example below
 displays the correlation analysis of a single molecule FRET experiment. Note,
 the background has a significant contribution to the unfiltered correlation
@@ -214,7 +209,6 @@ Lifetime filters
 
 Estimating the noise of the correlation curves
 ++++++++++++++++++++++++++++++++++++++++++++++
-
 There are many approaches to calculate the noise in correlation functions
 (see: :cite:`Wohland2001`, :cite:`Qian1990`, :cite:`Starchev2001`). An
 analytical calculation of the noise is not possible because it involves diverging

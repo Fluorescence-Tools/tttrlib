@@ -33,20 +33,22 @@ author = u'Thomas-Otavio Peulen'
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = '1.8.5'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.mathbase',
-    'matplotlib.sphinxext.only_directives',
+    # 'sphinx.ext.mathbase',
+    # 'matplotlib.sphinxext.only_directives',
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'recommonmark',
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.intersphinx'
 ]
 
 
@@ -54,7 +56,8 @@ breathe_projects = {}
 # latex and breathe do not play very well together. Therefore
 # breathe is only used for the webpage.
 # compatible with readthedocs online builder and local builder
-if sys.argv[0].endswith('sphinx-build') and ('html' in sys.argv or sys.argv[-1] == '_build/html'):
+if sys.argv[0].endswith('sphinx-build') and \
+        ('html' in sys.argv or sys.argv[-1] == '_build/html'):
     subprocess.call('doxygen', shell=True)
     breathe_projects['tttrlib'] = './_build/xml'
     breathe_default_project = "tttrlib"
@@ -113,8 +116,9 @@ else:
         html_theme_path = sphinx_rtd_theme.get_html_theme_path()
     html_theme = 'sphinx_rtd_theme'
 
+
 def setup(app):
-    app.add_stylesheet("fix_rtd.css")
+    app.add_css_file("fix_rtd.css")
 
 
 # Theme options are theme-specific and customize the look and feel of a theme

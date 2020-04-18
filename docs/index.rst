@@ -1,15 +1,6 @@
-.. tttrlib documentation master file, created by
-   sphinx-quickstart on Tue Mar 12 09:32:34 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-###############
-Getting started
-###############
-
-*******
+#######
 tttrlib
-*******
+#######
 
 Process time-tagged time resolved (TTTR) data with a unified application programming interface (API) that entitles you
 to process data of TTTR experiments without the need of data conversion with your preferred scripting language.
@@ -32,10 +23,10 @@ Contents
 
    installation
    tttr_objects
-   histograms
-   correlation
-   single_molecule
    imaging
+   single_molecule
+   correlation
+   tools
    cpp_api
    glossary
    references
