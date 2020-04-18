@@ -10,6 +10,8 @@ fig, ax = p.subplots(nrows=1, ncols=2)
 
 correlator = tttrlib.Correlator(
     tttr=data,
+    n_bins=1,
+    n_casc=30,
     channels=([0], [8]),  # green correlation
 )
 
@@ -20,6 +22,8 @@ ax[0].semilogx(
 )
 correlator = tttrlib.Correlator(
     tttr=data,
+    n_bins=1,
+    n_casc=30,
     channels=([0, 8], [1, 9]),  # green-red correlation
 )
 ax[0].semilogx(
@@ -36,26 +40,18 @@ filter_options = {
     'macro_time_calibration': data.header.macro_time_resolution,
     'invert': True  # set invert to True to select TW with more than 60 ph
 }
-data_selection = data[tttrlib.selection_by_count_rate(**filter_options)]
-correlator = tttrlib.Correlator(
-    channels=([0], [8]),
-    tttr=data_selection
-)
+correlations = list()
+for tw in np.linspace(0.1e6, 50.0e6, 50):
+    filter_options['time_window'] = tw
+    correlator = tttrlib.Correlator(
+        n_bins=1,
+        n_casc=30,
+        channels=([0], [8]),
+        tttr=data[tttrlib.selection_by_count_rate(**filter_options)]
+    )
+    correlations.append(correlator.correlation)
 
 
-ax[1].semilogx(
-    correlator.x_axis,
-    correlator.correlation
-)
-
-# green-red cross-correlation
-correlator = tttrlib.Correlator(
-    channels=([0, 8], [9, 1]),
-    tttr=data_selection
-)
-ax[1].semilogx(
-    correlator.x_axis,
-    correlator.correlation
-)
+p.imshow(np.array(correlations))
 
 p.show()

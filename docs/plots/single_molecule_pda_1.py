@@ -28,11 +28,11 @@ pF = dist.pmf(x)
 pda.setPF(pF)
 
 # Now we define a set of species with associated amplitudes
-amplitudes = [0.5, 0.5]
+amplitudes = [0.33, 0.33, 0.33]
 
 # probabilities_ch1 is the theoretical probability of detecting a photon
 # in the first channel. In the PDA manuscript this is also called pG
-probabilities_ch1 = [0.8, 0.2]
+probabilities_ch1 = [0.75, 0.4, 0.2]
 
 pda.set_amplitudes(amplitudes)
 pda.set_probabilities_ch1(probabilities_ch1)

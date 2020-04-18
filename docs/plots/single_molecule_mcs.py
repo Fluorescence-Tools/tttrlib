@@ -18,11 +18,13 @@ m = min(len(green_trace), len(red_trace))
 SgSr_ratio = (green_trace[:m] / red_trace[:m])
 SgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) < 30)] *= 0
 
-ax[0].plot(green_trace, 'g')
-ax[1].plot(red_trace, 'r')
+ax[0].plot(green_trace, 'g', label='Green signal, Sg')
+ax[1].plot(red_trace, 'r', label='Red signal, Sr')
 ax[1].invert_yaxis()
-ax[2].plot(SgSr_ratio, 'b', )
-
+ax[0].legend()
+ax[1].legend()
+ax[2].plot(SgSr_ratio, 'b', label='Sg/Sr')
+ax[2].legend()
 p.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0)
 
 p.show()

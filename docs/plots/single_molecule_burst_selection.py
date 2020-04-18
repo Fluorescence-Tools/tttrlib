@@ -4,11 +4,15 @@ import pylab as p
 
 data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 mt = data.get_macro_time()
-tw_ranges = data.get_ranges_by_count_rate(50000, -1, 20, -1)
-
+time_in_ms = 1.0
+tw_ranges = data.get_ranges_by_count_rate(
+    minimum_window_length=time_in_ms,
+    minimum_number_of_photons_in_time_window=20
+)
+start_stop = tw_ranges.reshape([len(tw_ranges) // 2, 2])
 
 sel = list()
-for start, stop in zip(tw_ranges[::2], tw_ranges[1::2]):
+for start, stop in start_stop:
     sel += range(start, stop)
 sel = np.array(sel)
 
@@ -28,6 +32,9 @@ ax[2].plot(tttrlib.histogram_trace(mt[green_indeces], 30000), 'g')
 ax[2].plot(tttrlib.histogram_trace(mt[red_indeces], 30000), 'r')
 ax[2].plot(tttrlib.histogram_trace(mt[sel], 30000), 'b')
 
-p.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0)
+p.subplots_adjust(
+    left=None, bottom=None, right=None, top=None,
+    wspace=None, hspace=0
+)
 
 p.show()
