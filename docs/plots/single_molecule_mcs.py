@@ -12,11 +12,11 @@ red_indeces = data.get_selection_by_channel([1, 9])
 fig, ax = p.subplots(3, 1, sharex=True, sharey=False)
 
 p.setp(ax[0].get_xticklabels(), visible=False)
-green_trace = tttrlib.histogram_trace(mt[green_indeces], 480000)
-red_trace = tttrlib.histogram_trace(mt[red_indeces], 480000)
+green_trace = tttrlib.histogram_trace(mt[green_indeces], 40000)
+red_trace = tttrlib.histogram_trace(mt[red_indeces], 40000)
 m = min(len(green_trace), len(red_trace))
 SgSr_ratio = (green_trace[:m] / red_trace[:m])
-SgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) < 30)] *= 0
+SgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) < 2)] *= 0
 
 ax[0].plot(green_trace, 'g', label='Green signal, Sg')
 ax[1].plot(red_trace, 'r', label='Red signal, Sr')
@@ -28,4 +28,4 @@ ax[2].legend()
 p.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0)
 
 p.show()
-
+#

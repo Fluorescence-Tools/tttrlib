@@ -143,7 +143,7 @@ void histogram_trace(
         int **output, int *n_output,
         unsigned long long *input, int n_input,
         int time_window
-        );
+);
 
 
 /*!
