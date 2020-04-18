@@ -46,7 +46,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
 #endif
     this->filename = "NA";
-    size_t n_elements = 0;
+    size_t n_elements;
     if (!(n_macrotimes == n_microtimes &&
           n_macrotimes == n_routing_channels &&
           n_macrotimes == n_event_types)
@@ -378,7 +378,7 @@ void TTTR::read_records(
     n_records_read = 0;
     overflow_counter = 0;
     n_valid_events = 0;
-    size_t offset = 0;
+    size_t offset;
 
     // read if possible the data in chunks to speed up the access
     size_t number_of_objects;
@@ -501,9 +501,9 @@ void TTTR::get_selection_by_count_rate(
 void TTTR::get_ranges_by_count_rate(
         unsigned long long **output, int *n_output,
         double minimum_window_length,
-        double maximum_window_length,
         int minimum_number_of_photons_in_time_window,
         int maximum_number_of_photons_in_time_window,
+        double maximum_window_length,
         bool invert
         ){
     // macro_time_resolution is in ns minimum_window_length selection
@@ -586,7 +586,7 @@ void ranges_by_time_window(
     size_t tw_begin = 0;
     while (tw_begin < n_input) {
         // search for the end of a time window
-        size_t tw_end = 0;
+        size_t tw_end;
         for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
             if((input[tw_end] - input[tw_begin]) >= tw_min){
                 break;
@@ -683,8 +683,7 @@ void get_ranges_channel(
 
     int previous_marker_position = 0;
     int next_marker_position;
-    int i = 0;
-
+    int i;
     // find first marker position
     for(i=0; i<n_channel; i++){
         if(channel[i] == selection_channel){
@@ -692,9 +691,7 @@ void get_ranges_channel(
             break;
         }
     }
-
-    while(i<n_channel)
-    {
+    while(i<n_channel){
         // find next marker position
         for(; i<n_channel; i++) {
             if (channel[i] == selection_channel) {
@@ -731,7 +728,7 @@ bool TTTR::write(
 
                 bh_spc130_record_t record;
                 unsigned dMT;
-                unsigned long long MT_ov_last = 0;
+                unsigned long long MT_ov_last;
                 unsigned long long MT_ov = 0;
                 for(size_t n = 0; n < get_n_valid_events();){
                     // time since last macro_time record

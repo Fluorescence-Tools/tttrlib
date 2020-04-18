@@ -19,6 +19,8 @@
 %include "std_shared_ptr.i";
 %include "cpointer.i"
 %include "numpy.i"
+%include "exception.i"
+%include attribute.i
 
 %init %{
 import_array();
@@ -26,18 +28,19 @@ import_array();
 
 // Generic input arrays
 %apply(double* IN_ARRAY1, int DIM1) {(double *input, int n_input)}
+%apply(double* IN_ARRAY2, int DIM1, DIM2) {(double *input, int n_input1, int n_input2)}
 %apply(int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
 
 // Generic view arrays
-%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
 %apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
-%apply(unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
+%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)}
-%apply(unsigned int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned int** output, int* n_output)}
+%apply(unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
 %apply(short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(short** output, int* n_output)}
 %apply(int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(int** output, int* n_output)}
+%apply(unsigned int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned int** output, int* n_output)}
 
 // Templates
 %template(VectorDouble) std::vector<double>;
@@ -47,6 +50,7 @@ import_array();
 %template(VectorInt32) std::vector<int>;
 %template(VectorInt16) std::vector<short>;
 %template(VectorUint32_3D) std::vector<std::vector<std::vector<unsigned int>>>;
+%template(VectorDouble_2D) std::vector<std::vector<double>>;
 %template(MapStringString) std::map<std::string, std::string>;
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
 

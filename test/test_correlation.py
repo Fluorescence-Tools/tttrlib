@@ -258,8 +258,6 @@ class Tests(unittest.TestCase):
         # import tttrlib
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
 
-        # Below as a reference is a correlator with TTTR objects as input
-        # get the indices of the two channels
         ch1, ch2 = [8], [0]
         tttr_ch1 = tttrlib.TTTR(data, data.get_selection_by_channel(ch1))
         tttr_ch2 = tttrlib.TTTR(data, data.get_selection_by_channel(ch2))
@@ -290,34 +288,38 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             np.allclose(y, y_ref), True
         )
-    #
-    # def test_cross_correlation(self):
-    #     data = self.data
-    #
-    #     # make a cross-correlation between the two green channels (ch 0, ch 8)
-    #     ph1 = tttrlib.TTTR(data, data.get_selection_by_channel([0]))
-    #     ph2 = tttrlib.TTTR(data, data.get_selection_by_channel([8]))
-    #
-    #     t1 = ph1.macro_times
-    #     w1 = np.ones_like(t1, dtype=np.float)
-    #     cr_selection = tttrlib.selection_by_count_rate(t1, 1200000, 30)
-    #     w1[cr_selection] *= 0.0
-    #
-    #     t2 = ph2.macro_times
-    #     w2 = np.ones_like(t2, dtype=np.float)
-    #     cr_selection = tttrlib.selection_by_count_rate(t2, 1200000, 30)
-    #     w2[cr_selection] *= 0.0
-    #
-    #     correlator = tttrlib.Correlator()
-    #     correlator.n_bins = 10
-    #     correlator.n_casc = 25
-    #     correlator.set_macrotimes(t1, t2)
-    #     correlator.set_weights(w1, w2)
-    #
-    #     x = correlator.x_axis
-    #     y = correlator.correlation
-    #
-    #     #self.assertEqual(b2.name, 'B')
+
+    def test_cross_correlation(self):
+        data = self.data
+
+        # This is a selection where at most 60 photons in any time window of
+        # 10 ms are allowed
+        filter_options = {
+            'n_ph_max': 60,
+            'time_window': 10.0e6,  # = 10 ms (macro_time_resolution is in ns)
+            'time': data.macro_times,
+            'macro_time_calibration': data.header.macro_time_resolution,
+            'invert': True  # set invert to True to select TW with more than 60 ph
+        }
+        indices = tttrlib.selection_by_count_rate(**filter_options)
+        data_selection = data[indices]
+        correlator1 = tttrlib.Correlator(
+            channels=([0], [8]),
+            tttr=data_selection
+        )
+        # now correlate the events with less than 60 photons in a TW
+        filter_options['invert'] = False
+        indices = tttrlib.selection_by_count_rate(**filter_options)
+        data_selection = data[indices]
+        correlator2 = tttrlib.Correlator(
+            channels=([0], [8]),
+            tttr=data_selection
+        )
+        # The amplitude of the count rate filtered correlation should be higher
+        self.assertEqual(
+            np.sum(correlator2.correlation[10:100] > correlator1.correlation[10:100]),
+            0
+        )
 
     # def test_time_window_selection(self):
     #     photons = self.data

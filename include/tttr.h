@@ -28,7 +28,7 @@
 #include <map>
 #include <array>
 #include <memory>
-#include <stdlib.h>     /* calloc, exit, free */
+#include <stdlib.h>     /* malloc, calloc, exit, free */
 
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
@@ -41,7 +41,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.14"
+#define VERSION                     "0.0.15"
 
 
 /*!
@@ -66,18 +66,18 @@ size_t determine_number_of_records_by_file_size(
 
 
 /*!
- * A count rate (cr) filter that returns an array containing a list of indices where
+ * @brief A count rate (cr) filter that returns an array containing a list of indices where
  * the cr was smaller than a specified cr.
  *
  *
- * The filter is applied to a series of consecutive time events specified by the C type
- * array @param.
- *
- *
- * The filter piecewise determines if the number of photons within a time window (tw)
- * exceeds @param n_ph_max. If the within a tw the number of photons is smaller than
- * @param n_ph_max, the time events within the tw are added to the selection.
- *
+ * @details The filter is applied to a series of consecutive time events. The time events
+ * are sliced into time windows (tw) which have at least a duration as specified by
+ * time_window. The tttr indices of the time windows are written to the
+ * output parameter output. Moreover, for every tw the number of
+ * photons is determined. If in a tw the number of photons exceeds n_ph_max
+ * and invert is false (default) the tw is not written to output.
+ * If If in a tw the number of photons is less then n_ph_max and invert
+ * is true the tw is not written to output.
  *
  * @param selection output array
  * @param n_selected number of elements in output array
@@ -99,8 +99,10 @@ void selection_by_count_rate(
 
 
 /*!
-* Returns time windows (tw), i.e., the start and the stop indices for a
+* @brief Returns time windows (tw), i.e., the start and the stop indices for a
 * minimum tw size, a minimum number of photons in a tw.
+ *
+ *
 *
 * @param output [out] Array containing the interleaved start and stop indices
 * of the tws in the TTTR object.
@@ -118,7 +120,8 @@ void selection_by_count_rate(
 void ranges_by_time_window(
         unsigned long long **output, int *n_output,
         unsigned long long *input, int n_input,
-        double minimum_window_length, double maximum_window_length,
+        double minimum_window_length,
+        double maximum_window_length=-1,
         int minimum_number_of_photons_in_time_window=-1,
         int maximum_number_of_photons_in_time_window=-1,
         double macro_time_calibration=1.0,
@@ -443,7 +446,9 @@ public:
         return tttr_container_type_str;
     }
 
-    TTTR* select(long long *selection, int n_selection);
+    TTTR* select(
+            long long *selection, int n_selection
+            );
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
@@ -572,23 +577,23 @@ public:
     * Returns time windows (tw), i.e., the start and the stop indices for a
     * minimum tw size, a minimum number of photons in a tw.
     *
-    * @param output [out] Array containing the interleaved start and stop indices
+    * @param output[out] Array containing the interleaved start and stop indices
     * of the tws in the TTTR object.
-    * @param n_output [out] Length of the output array
-    * @param minimum_window_length [in] Minimum length of a tw (mandatory).
-    * @param maximum_window_length [in] Maximum length of a tw (optional).
-    * @param minimum_number_of_photons_in_time_window [in] Minimum number of
+    * @param n_output[out] Length of the output array
+    * @param minimum_window_length[in] Minimum length of a tw in units of ms (mandatory).
+    * @param maximum_window_length[in] Maximum length of a tw (optional).
+    * @param minimum_number_of_photons_in_time_window[in] Minimum number of
+    * photons a selected tw contains (optional) in units of ms
+    * @param maximum_number_of_photons_in_time_window[in] Maximum number of
     * photons a selected tw contains (optional)
-    * @param maximum_number_of_photons_in_time_window [in] Maximum number of
-    * photons a selected tw contains (optional)
-    * @param invert [in] If set to true, the selection criteria are inverted.
+    * @param invert[in] If set to true, the selection criteria are inverted.
     */
     void get_ranges_by_count_rate(
             unsigned long long **output, int *n_output,
             double minimum_window_length,
-            double maximum_window_length,
             int minimum_number_of_photons_in_time_window,
-            int maximum_number_of_photons_in_time_window,
+            int maximum_number_of_photons_in_time_window=-1,
+            double maximum_window_length=-1.0,
             bool invert = false
     );
 
@@ -613,7 +618,7 @@ public:
      * @return
      */
     bool write(
-            const char *fn,
+            const char *filename,
             const char* container_type
             );
 
@@ -689,7 +694,7 @@ public:
     }
 
     /// The start index of the TTTR range object
-    long long get_start(){
+    long long get_start() const{
         return _start;
     }
 
@@ -699,7 +704,7 @@ public:
     }
 
     /// The stop index of the TTTR range object
-    long long get_stop(){
+    long long get_stop() const{
         return _stop;
     }
 

@@ -47,14 +47,25 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_image_2(self):
         print("test_leica_sp8_image_2")
-        sp8_filename = self.sp8_filename
-        data = tttrlib.TTTR(sp8_filename, 'PTU')
+        filename = self.sp8_filename
+        reading_parameter = self.sp8_reading_parameter
+
+        data = tttrlib.TTTR(filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
-            tttr_data=data, **self.sp8_reading_parameter
+            tttr_data=data, **reading_parameter
         )
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[1]
+        )
+        self.assertEqual(clsm_image.n_frames, 92)
+        self.assertEqual(clsm_image.n_lines, 512)
+        self.assertEqual(clsm_image.n_lines, 512)
+        # The string representation of a CLSMImage returns the
+        # number of frames, lines, and pixels
+        self.assertEqual(
+            clsm_image.__str__(),
+            "tttrlib.CLSMImage(92, 512, 512)"
         )
 
     def test_leica_sp5_image(self):
@@ -89,13 +100,13 @@ class TestCLSM(unittest.TestCase):
             dtype=np.uint8
         )
 
-        decays = clsm_image.get_pixel_decays(
+        decays = clsm_image.get_average_decay_of_pixels(
             tttr_data=data,
             selection=selection,
             tac_coarsening=1,
             stack_frames=False
         )
-        decay = clsm_image.get_pixel_decays(
+        decay = clsm_image.get_average_decay_of_pixels(
             tttr_data=data,
             selection=selection,
             tac_coarsening=1,
@@ -156,8 +167,7 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-
-        mean_tac_image = clsm_image_1.get_mean_tac_image(
+        mean_tac_image = clsm_image_1.get_mean_micro_time_image(
             tttr_data=data,
             n_ph_min=1
         ).sum(axis=0)
@@ -168,7 +178,6 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-
         tac_coarsening = 512
         tac_image = clsm_image_1.get_fluorescence_decay_image(
             tttr_data=data,
@@ -184,4 +193,3 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-

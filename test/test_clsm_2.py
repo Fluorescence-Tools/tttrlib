@@ -56,7 +56,7 @@ class TestCLSM(unittest.TestCase):
         )
 
         # Test mean TAC image
-        mean_tac_image = clsm_image.get_mean_tac_image(
+        mean_tac_image = clsm_image.get_mean_micro_time_image(
             tttr_data=data,
             n_ph_min=1
         ).sum(axis=0)
