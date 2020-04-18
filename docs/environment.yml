@@ -7,7 +7,7 @@ dependencies:
     # the versions are all pinned to reduce the memory load by conda
     # without that, the docs would not build on read the docs
     - numba=0.48.0
-    - scipy-1.4.1
+    - scipy=1.4.1
     - blas=1.0
     - bzip2=1.0.8
     - ca-certificates=2020.1.1
