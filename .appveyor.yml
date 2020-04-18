@@ -14,7 +14,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep
+  - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep doxygen
   - activate build
   - conda build conda-recipe
 
