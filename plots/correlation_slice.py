@@ -2,7 +2,7 @@ import pylab as p
 import tttrlib
 import numpy as np
 
-data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 
 ch1 = [0]
 ch2 = [8]

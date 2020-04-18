@@ -6,14 +6,14 @@ import numpy as np
 #  Read the data data
 data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
 
-# Plot the raw/unfiltered correlations
-
 fig, ax = p.subplots(nrows=1, ncols=2)
 
 correlator = tttrlib.Correlator(
     tttr=data,
     channels=([0], [8]),  # green correlation
 )
+
+# Plot the raw/unfiltered correlations
 ax[0].semilogx(
     correlator.x_axis,
     correlator.correlation
