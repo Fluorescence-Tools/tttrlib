@@ -8,6 +8,14 @@ matrix:
     - os: osx
       osx_image: xcode9.4
 
+addons:
+  apt:
+    packages:
+      - doxygen
+  homebrew:
+    packages:
+      - doxygen
+
 env:
   # Build and test package on all supported python versions
   - BUILD_TARGET=3.7 MINICONDA_VERSION=latest
