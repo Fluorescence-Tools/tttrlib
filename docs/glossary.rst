@@ -17,9 +17,11 @@ Glossary
         Meaning the fluorescence lifetime of the corresponding donor fluorescence quantum yield, :math:`\Phi_{F}^{D0}`
         should be used.
 
-    CLSM confocal laser scanning microscopy
+    CLSM
+        confocal laser scanning microscopy
 
-    PDA Photon Distribution Analysis
+    PDA
+        Photon Distribution Analysis
 
     MFD (Multiparameter Fluorescence Detection)
         A MFD experiments is a time-resolved fluorescence experiment which probes the absorption and fluorescence,
