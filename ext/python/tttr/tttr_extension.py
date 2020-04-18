@@ -24,6 +24,20 @@ def header(self):
     return self.get_header()
 
 
+def __len__(self):
+    return self.get_n_valid_events()
+
+
+def __getitem__(self, key):
+    if isinstance(key, slice):
+        sel = np.arange(*key.indices(self.get_n_valid_events()), dtype=np.int64)
+    elif isinstance(key, np.ndarray):
+        sel = key.astype(np.int64)
+    else:
+        sel = np.array([key], dtype=np.int64)
+    return tttrlib.TTTR(self, sel)
+
+
 def __repr__(self):
     return 'tttrlib.TTTR("%s", "%s")' % (
         self.get_filename(),

@@ -11,7 +11,15 @@ environment:
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
+  ##################################################
+  # Install packages for docs.
+  # i#4000: choco fails to download doxygen.portable so we install ourselves:
+  - appveyor DownloadFile http://doxygen.nl/files/doxygen-1.8.17.windows.x64.bin.zip
+  - 7z x doxygen-1.8.17.windows.x64.bin.zip -oc:\projects\install\doxygen > nul
+  - set PATH=c:\projects\install\doxygen;%PATH%
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  ##################################################
+  # Build conda package
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep

@@ -66,7 +66,8 @@ void Correlator::update_axis(){
 
 void Correlator::set_macrotimes(
         unsigned long long  *t1v, int n_t1v,
-        unsigned long long  *t2v, int n_t2v
+        unsigned long long  *t2v, int n_t2v,
+        bool inplace
 ){
 #if VERBOSE
     std::clog << "-- Setting macro times..." << std::endl;
@@ -74,18 +75,25 @@ void Correlator::set_macrotimes(
 #endif
     is_valid = false;
     free(t1); free(t2);
-    t1 = (unsigned long long*) malloc(sizeof(unsigned long long) * n_t1v);
-    t2 = (unsigned long long*) malloc(sizeof(unsigned long long) * n_t2v);
-    for(int i=0; i<n_t1v; i++) t1[i] = t1v[i];
-    for(int i=0; i<n_t2v; i++) t2[i] = t2v[i];
-    n_t1 = (size_t) n_t1v;
-    n_t2 = (size_t) n_t2v;
+    if(!inplace){
+        t1 = (unsigned long long*) malloc(sizeof(unsigned long long) * n_t1v);
+        t2 = (unsigned long long*) malloc(sizeof(unsigned long long) * n_t2v);
+        for(int i=0; i<n_t1v; i++) t1[i] = t1v[i];
+        for(int i=0; i<n_t2v; i++) t2[i] = t2v[i];
+        n_t1 = (size_t) n_t1v;
+        n_t2 = (size_t) n_t2v;
+    } else{
+        t1 = t1v; t2 = t2v;
+        n_t1 = n_t1v;
+        n_t2 = n_t2v;
+    }
     compute_dt();
 }
 
 void Correlator::set_weights(
         double* weight_ch1, int n_weights_ch1,
-        double* weight_ch2, int n_weights_ch2
+        double* weight_ch2, int n_weights_ch2,
+        bool inplace
 ){
 #if VERBOSE
     std::clog << "-- Setting weights..." << std::endl;
@@ -94,22 +102,37 @@ void Correlator::set_weights(
 #endif
     is_valid = false;
     free(w1); free(w2);
-    w1 = (double*) malloc(sizeof(double) * n_weights_ch1);
-    w2 = (double*) malloc(sizeof(double) * n_weights_ch2);
-    for(int i=0; i<n_weights_ch1; i++) w1[i] = weight_ch1[i];
-    for(int i=0; i<n_weights_ch2; i++) w2[i] = weight_ch2[i];
-    n_t1 = (size_t) n_weights_ch1;
-    n_t2 = (size_t) n_weights_ch2;
+    if(!inplace){
+        w1 = (double*) malloc(sizeof(double) * n_weights_ch1);
+        w2 = (double*) malloc(sizeof(double) * n_weights_ch2);
+        for(int i=0; i<n_weights_ch1; i++) w1[i] = weight_ch1[i];
+        for(int i=0; i<n_weights_ch2; i++) w2[i] = weight_ch2[i];
+        n_t1 = (size_t) n_weights_ch1;
+        n_t2 = (size_t) n_weights_ch2;
+    } else{
+        w1 = weight_ch1; w2 = weight_ch2;
+        n_t1 = MIN(n_weights_ch1, n_t1);
+        n_t2 = MIN(n_weights_ch2, n_t1);
+    }
 }
 
 void Correlator::set_events(
         unsigned long long  *t1, int n_t1,
         double* weight_ch1, int n_weights_ch1,
         unsigned long long  *t2, int n_t2,
-        double* weight_ch2, int n_weights_ch2
+        double* weight_ch2, int n_weights_ch2,
+        bool inplace
 ){
-    set_macrotimes(t1, n_t1, t2, n_t2);
-    set_weights(weight_ch1, n_weights_ch1, weight_ch2, n_weights_ch2);
+    set_macrotimes(
+            t1, n_t1,
+            t2, n_t2,
+            inplace
+    );
+    set_weights(
+            weight_ch1, n_weights_ch1,
+            weight_ch2, n_weights_ch2,
+            inplace
+    );
 }
 
 void Correlator::normalize(){
@@ -129,7 +152,6 @@ void Correlator::normalize(){
     std::clog << "-- Count rate in correlation channel 1: " << cr1 << std::endl;
     std::clog << "-- Count rate in correlation channel 2: " << cr2 << std::endl;
 #endif
-
     for(size_t i=0; i<x_axis_normalized.size(); i++) x_axis_normalized[i] = x_axis[i];
     for(size_t i=0; i<corr_normalized.size(); i++) corr_normalized[i] = corr[i];
 
@@ -215,14 +237,10 @@ void Correlator::run(){
 
 
 void Correlator::get_corr_normalized(double** output, int* n_output){
-    if(!is_valid){
-        run();
-    }
+    if(!is_valid) run();
     (*n_output) = n_corr;
     auto* t = (double *) malloc((*n_output) * sizeof(double));
-    for(int i = 0; i < (*n_output); i++){
-        t[i] = corr_normalized[i];
-    }
+    for(int i = 0; i < (*n_output); i++) t[i] = corr_normalized[i];
     *output = t;
 }
 
@@ -231,17 +249,13 @@ void Correlator::get_x_axis_normalized(double** output, int* n_output){
     (*n_output) = (int) n_corr;
     auto* t = (double*) malloc((*n_output) * sizeof(double));
     double tc = time_axis_calibration;
-    for(int i = 0; i<(*n_output); i++){
-        t[i] = x_axis_normalized[i] * tc;
-    }
+    for(int i = 0; i<(*n_output); i++) t[i] = x_axis_normalized[i] * tc;
     *output = t;
 }
 
 
-void Correlator::get_corr(
-        double** corr,
-        int* n_out
-        ){
+void Correlator::get_corr(double** corr, int* n_out){
+    if(!is_valid) run();
     (*n_out) = n_corr;
     auto* t = (double *) malloc((*n_out) * sizeof(double));
     for(int i = 0; i < (*n_out); i++){
@@ -251,10 +265,7 @@ void Correlator::get_corr(
 }
 
 
-void Correlator::get_x_axis(
-        unsigned long long** x_axis,
-        int* n_out
-        ){
+void Correlator::get_x_axis(unsigned long long** x_axis, int* n_out){
     (*n_out) = (int) n_corr;
     auto* t = (unsigned long long*) malloc((*n_out) * sizeof(unsigned long long));
     for(int i = 0; i<(*n_out); i++){
@@ -293,7 +304,8 @@ void Correlator::compute_dt(){
 
 void Correlator::set_tttr(
         TTTR* tttr_1, TTTR* tttr_2,
-        bool make_fine
+        bool make_fine,
+        bool set_weights
 ){
     is_fine = false;
     is_valid = false;
@@ -306,10 +318,12 @@ void Correlator::set_tttr(
     tttr_2->get_macro_time(&t2, &nt2);
     n_t1 = nt1; n_t2 = nt2;
     // set weights
-    w1 = (double*) malloc(sizeof(double) * n_t1);
-    w2 = (double*) malloc(sizeof(double) * n_t2);
-    for(int i=0;i<n_t1;i++) w1[i] = 1.0;
-    for(int i=0;i<n_t2;i++) w2[i] = 1.0;
+    if(set_weights){
+        w1 = (double*) malloc(sizeof(double) * n_t1);
+        w2 = (double*) malloc(sizeof(double) * n_t2);
+        for(int i=0;i<n_t1;i++) w1[i] = 1.0;
+        for(int i=0;i<n_t2;i++) w2[i] = 1.0;
+    }
     compute_dt();
     if(make_fine){
         int n_tac = MIN(
@@ -322,4 +336,35 @@ void Correlator::set_tttr(
         tttr_2->get_micro_time(&tac_2, &n_tac2);
         set_microtimes(tac_1, n_tac1, tac_2, n_tac2, n_tac);
     }
+}
+
+void Correlator::set_filter(
+        const std::vector<unsigned int>& micro_times_1,
+        const std::vector<short>& routing_channels_1,
+        const std::vector<unsigned int>& micro_times_2,
+        const std::vector<short>& routing_channels_2,
+        const std::map<short, std::vector<double>>& filter
+){
+    // make sure that the weights are of the right size
+    free(w1); free(w2);
+    w1 = (double*) malloc(sizeof(double) * micro_times_1.size());
+    w2 = (double*) malloc(sizeof(double) * micro_times_2.size());
+
+    // lookup the weights ch1
+    size_t idx = 0;
+    for(auto r: routing_channels_1){
+        auto m = micro_times_1[idx];
+        w1[idx] = filter.at(r)[m];
+        idx++;
+    }
+    // lookup the weights ch2
+    idx = 0;
+    for(auto r: routing_channels_2){
+        auto m = micro_times_2[idx];
+        w2[idx] = filter.at(r)[m];
+        idx++;
+    }
+    set_weights(w1, micro_times_1.size(),
+            w2, micro_times_2.size(),
+            true);
 }

@@ -52,7 +52,7 @@ print("tttrlib speedup: %.2f" % (time_phconvert / time_tttrlib))
 # time(tttrlib)   = 690 ms               # 270 Mb file -> 391 MB/sec
 
 r = spc132
-ch0 = r.get_indeces_by_channels(np.array([0]))
+ch0 = r.get_indeces_by_channels([0])
 p.hist(r.micro_times[ch0], bins=np.linspace(1, 2000))
 
 ch1 = r.get_indeces_by_channels(np.array([2]))

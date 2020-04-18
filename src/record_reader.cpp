@@ -265,22 +265,18 @@ bool ProcessSPC130(
         micro_time = (uint16_t) (4095 - rec.bits.adc);
         channel = (uint16_t) (rec.bits.rout);
         return true;
-    } else{
-        if(!rec.bits.invalid && rec.bits.mtov){
-            // valid record with a single macro time overflow
-            overflow_counter += 1;
-            true_nsync = rec.bits.mt + overflow_counter * 4096; // 4096 = 2**12 (12 bits for macro time counter)
-            micro_time = (uint16_t) (4095 - rec.bits.adc);
-            channel = (uint16_t) (rec.bits.rout);
-            return true;
-        } else{
-            if(rec.bits.invalid && rec.bits.mtov){
+    } else if(!rec.bits.invalid && rec.bits.mtov) {
+        // valid record with a single macro time overflow
+        overflow_counter += 1;
+        true_nsync = rec.bits.mt + overflow_counter * 4096; // 4096 = 2**12 (12 bits for macro time counter)
+        micro_time = (uint16_t) (4095 - rec.bits.adc);
+        channel = (uint16_t) (rec.bits.rout);
+        return true;
+    } else if(rec.bits.invalid && rec.bits.mtov){
                 bh_overflow_t overflow_record;
                 overflow_record.allbits = TTTRRecord;
                 overflow_counter += overflow_record.bits.cnt;
                 return false;
-            }
-        }
     }
     return false;
 }

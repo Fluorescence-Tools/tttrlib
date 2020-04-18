@@ -1,21 +1,9 @@
-/****************************************************************************
- * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
- *                                                                          *
- * This file is part of the library tttrlib.                                *
- *                                                                          *
- *   tttrlib is free software: you can redistribute it and/or modify it     *
- *   under the terms of the MIT License.                                    *
- *                                                                          *
- *   tttrlib is distributed in the hope that it will be useful,             *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
- *                                                                          *
- ****************************************************************************/
-
 #include <include/record_types.h>
 #include <include/tttr.h>
 #include <boost/filesystem.hpp>
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
 TTTR::TTTR() :
@@ -51,13 +39,14 @@ TTTR::TTTR() :
 TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            unsigned int *micro_times, int n_microtimes,
            short *routing_channels, int n_routing_channels,
-           short *event_types, int n_event_types
+           short *event_types, int n_event_types,
+           bool find_used_channels
 ): TTTR() {
 #if VERBOSE
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
 #endif
     this->filename = "NA";
-    size_t n_elements = 0;
+    size_t n_elements;
     if (!(n_macrotimes == n_microtimes &&
           n_macrotimes == n_routing_channels &&
           n_macrotimes == n_event_types)
@@ -67,7 +56,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
                 n_microtimes, std::min(
                         n_routing_channels, n_event_types
                 )));
-        std::cerr << "WARNING: The input vectors differ in size. Using " << std::endl;
+        std::clog << "WARNING: The input vectors differ in size. Using " << std::endl;
     } else{
         n_elements = n_macrotimes;
     }
@@ -79,28 +68,34 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
         this->event_types[i] = event_types[i];
         this->routing_channels[i] = routing_channels[i];
     }
-    find_used_routing_channels();
+    if(find_used_channels) find_used_routing_channels();
 }
 
 
-TTTR::TTTR(const TTTR &parent, long long *selection, int n_selection) :  TTTR()
+TTTR::TTTR(
+        const TTTR &parent,
+        long long *selection,
+        int n_selection,
+        bool find_used_channels) :  TTTR()
         {
 #if VERBOSE
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
 #endif
     copy_from(parent, false);
-    this->n_valid_events = (size_t) n_selection;
+    n_valid_events = (size_t) n_selection;
     if ((size_t) n_selection > parent.n_valid_events) {
-        std::cerr << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
+        std::clog << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
     }
     allocate_memory_for_records(n_selection);
-    for(size_t i=0; i<n_valid_events; i++){
-        TTTR::macro_times[i] = parent.macro_times[selection[i]];
-        TTTR::micro_times[i] = parent.micro_times[selection[i]];
-        TTTR::event_types[i] = parent.event_types[selection[i]];
-        TTTR::routing_channels[i] = parent.routing_channels[selection[i]];
+    for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
+        auto sel = selection[sel_i];
+        sel = (sel < 0) ? parent.n_valid_events + sel : sel;
+        macro_times[sel_i] = parent.macro_times[sel];
+        micro_times[sel_i] = parent.micro_times[sel];
+        event_types[sel_i] = parent.event_types[sel];
+        routing_channels[sel_i] = parent.routing_channels[sel];
     }
-    find_used_routing_channels();
+    if(find_used_channels) find_used_routing_channels();
 }
 
 void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
@@ -143,9 +138,8 @@ TTTR::TTTR(
     filename.assign(fn);
     tttr_container_type = container_type;
     if(read_input){
-        read_file();
+        if(read_file()) find_used_routing_channels();
     }
-    find_used_routing_channels();
 }
 
 
@@ -162,8 +156,7 @@ TTTR::TTTR(const char *fn, const char *container_type) :
     tttr_container_type_str.assign(container_type);
     tttr_container_type = container_names.left.at(std::string(container_type));
     filename.assign(fn);
-    read_file();
-    find_used_routing_channels();
+    if(read_file()) find_used_routing_channels();
 }
 
 void TTTR::shift_macro_time(int shift) {
@@ -286,9 +279,6 @@ int TTTR::read_file(
                     header->header_end,
                     bytes_per_record
             );
-#if VERBOSE
-            std::clog << "-- Number of records: " << n_records_in_file << std::endl;
-#endif
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
@@ -298,9 +288,7 @@ int TTTR::read_file(
 #endif
             return 1;
     } else{
-#if VERBOSE
-        std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
-#endif
+        std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
         return 0;
     }
 }
@@ -379,6 +367,9 @@ void TTTR::read_records(
         size_t chunk
         ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
+#if VERBOSE
+    std::cout << "-- Records that will be read : " << n_rec << std::endl;
+#endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
@@ -387,45 +378,27 @@ void TTTR::read_records(
     n_records_read = 0;
     overflow_counter = 0;
     n_valid_events = 0;
-    size_t offset = 0;
+    size_t offset;
 
-    bool is_valid_record;
     // read if possible the data in chunks to speed up the access
-    char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
-    while(
-            (n_records_read < n_rec) &&
-            (fread(tmp, bytes_per_record, chunk, fp) == chunk)
-            ){
-        for(size_t i=0; i<chunk; i++){
-            offset = bytes_per_record * i;
+    size_t number_of_objects;
+    do{
+        char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
+        number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
+        for (size_t j = 0; j < number_of_objects; j++) {
+            offset = bytes_per_record * j;
             n_valid_events += processRecord(
-                    *(uint64_t *)&tmp[offset],
+                    *(uint64_t *) &tmp[offset],
                     overflow_counter,
-                    *(uint64_t *)&macro_times[n_valid_events],
-                    *(uint32_t *)&micro_times[n_valid_events],
-                    *(int16_t *)&routing_channels[n_valid_events],
-                    *(int16_t *)&event_types[n_valid_events]
-                    );
+                    *(uint64_t *) &macro_times[n_valid_events],
+                    *(uint32_t *) &micro_times[n_valid_events],
+                    *(int16_t *) &routing_channels[n_valid_events],
+                    *(int16_t *) &event_types[n_valid_events]
+            );
         }
-        n_records_read += chunk;
-    }
-    // records that do not fit in chunks are read one by one (slower)
-    while (
-            (n_records_read < n_rec) &&
-            fread(&TTTRRecord, (size_t) bytes_per_record, 1, fp)
-            )
-    {
-        n_valid_events += processRecord(
-                *(uint64_t *)&tmp[offset],
-                overflow_counter,
-                *(uint64_t *)&macro_times[n_valid_events],
-                *(uint32_t *)&micro_times[n_valid_events],
-                *(int16_t *)&routing_channels[n_valid_events],
-                *(int16_t *)&event_types[n_valid_events]
-        );
-        n_records_read += 1;
-    }
-    free(tmp);
+        free(tmp);
+        n_records_read += number_of_objects;
+    }while(number_of_objects > 0);
 }
 
 
@@ -446,9 +419,7 @@ Header TTTR::get_header() {
     if(header != nullptr){
         return *header;
     } else{
-#if VERBOSE
-        std::cerr << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
-#endif
+        std::clog << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
         return Header();
     }
 }
@@ -467,6 +438,7 @@ void TTTR::get_micro_time(uint32_t** output, int* n_output){
 void TTTR::get_routing_channel(int16_t** output, int* n_output){
     get_array<int16_t>(n_valid_events, routing_channels, output, n_output);
 }
+
 
 void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
     get_array(
@@ -488,13 +460,13 @@ void TTTR::get_event_type(int16_t** output, int* n_output){
 }
 
 
-int TTTR::get_n_valid_events(){
+unsigned int TTTR::get_n_valid_events(){
     return (int) n_valid_events;
 }
 
 
 
-int TTTR::get_n_events(){
+unsigned int TTTR::get_n_events(){
     return (int) n_valid_events;
 }
 
@@ -502,8 +474,7 @@ int TTTR::get_n_events(){
 
 void TTTR::get_selection_by_channel(
         long long **output, int *n_output,
-        long long *input, int n_input
-){
+        long long *input, int n_input){
     ::selection_by_channels(
             output, n_output,
             input, n_input,
@@ -513,7 +484,7 @@ void TTTR::get_selection_by_channel(
 
 
 void TTTR::get_selection_by_count_rate(
-        long long **output, int *n_output,
+        unsigned long long **output, int *n_output,
         double time_window, int n_ph_max,
         bool invert
 ){
@@ -528,17 +499,25 @@ void TTTR::get_selection_by_count_rate(
 
 
 void TTTR::get_ranges_by_count_rate(
-        int **output, int *n_output,
-        int tw_min, int tw_max,
-        int n_ph_min, int n_ph_max){
-
+        unsigned long long **output, int *n_output,
+        double minimum_window_length,
+        int minimum_number_of_photons_in_time_window,
+        int maximum_number_of_photons_in_time_window,
+        double maximum_window_length,
+        bool invert
+        ){
+    // macro_time_resolution is in ns minimum_window_length selection
+    // is in units of ms
+    double macro_time_calibration = header->macro_time_resolution / 1e6;
     ranges_by_time_window(
             output, n_output,
             macro_times, (int) n_valid_events,
-            tw_min, tw_max,
-            n_ph_min, n_ph_max
-            );
-
+            minimum_window_length, maximum_window_length,
+            minimum_number_of_photons_in_time_window,
+            maximum_number_of_photons_in_time_window,
+            macro_time_calibration,
+            invert
+    );
 }
 
 
@@ -553,7 +532,6 @@ void selection_by_channels(
         short *routing_channels, int n_routing_channels) {
     size_t n_sel;
     *output = (long long *) malloc(n_routing_channels * sizeof(long long));
-
     n_sel = 0;
     for (long long i = 0; i < n_routing_channels; i++) {
         int ch = routing_channels[i];
@@ -583,40 +561,49 @@ size_t determine_number_of_records_by_file_size(
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
     fseek(fp, (long) current_position, SEEK_SET);
+#if VERBOSE
+    std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
+#endif
     return n_records_in_file;
 }
 
 
 void ranges_by_time_window(
-        int **ranges, int *n_range,
-        unsigned long long *time, int n_time,
-        int tw_min, int tw_max,
-        int n_ph_min, int n_ph_max
+        unsigned long long **output, int *n_output,
+        unsigned long long *input, int n_input,
+        double minimum_window_length,
+        double maximum_window_length,
+        int minimum_number_of_photons_in_time_window,
+        int maximum_number_of_photons_in_time_window,
+        double macro_time_calibration,
+        bool invert
 ) {
-    *ranges = (int *) malloc(2 * n_time * sizeof(int));
-    *n_range = 0;
+    auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
+    auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
+    *output = (unsigned long long *) malloc(2 * n_input * sizeof(unsigned long long));
+    *n_output = 0;
 
     size_t tw_begin = 0;
-    while (tw_begin < n_time) {
-
+    while (tw_begin < n_input) {
         // search for the end of a time window
-        size_t tw_end = 0;
-        for (tw_end = tw_begin; (tw_end < n_time); tw_end++){
-            if((time[tw_end] - time[tw_begin]) >= tw_min){
+        size_t tw_end;
+        for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
+            if((input[tw_end] - input[tw_begin]) >= tw_min){
                 break;
             }
         }
         size_t n_ph = tw_end - tw_begin;
-        unsigned long long dt = time[tw_begin] - time[tw_end];
-
-        if (
-                ((tw_max < 0) || (dt < tw_max)) &&
-                ((n_ph_min < 0) || (n_ph >= n_ph_min)) &&
-                ((n_ph_max < 0) || (n_ph <= n_ph_max))
-                ) {
-            (*ranges)[(*n_range) + 0] = tw_begin;
-            (*ranges)[(*n_range) + 1] = tw_end;
-            (*n_range) += 2;
+        unsigned long long dt = input[tw_begin] - input[tw_end];
+        bool is_selected = (
+            (tw_max < 0) || (dt < tw_max))
+            && ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window))
+            && ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window)
+        );
+        is_selected = invert ? !is_selected : is_selected;
+        if (is_selected) {
+            (*output)[(*n_output) + 0] = tw_begin;
+            (*output)[(*n_output) + 1] = tw_end;
+            (*n_output) += 2;
         }
         tw_begin = tw_end;
     }
@@ -624,14 +611,14 @@ void ranges_by_time_window(
 
 
 void selection_by_count_rate(
-        long long **output, int *n_output,
+        unsigned long long **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration,
         bool invert
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
-    *output = (long long*) calloc(sizeof(long long), n_time);
+    *output = (unsigned long long*) calloc(sizeof(unsigned long long), n_time);
     int i = 0;
     *n_output = 0;
     while (i < (n_time - 1)){
@@ -696,8 +683,7 @@ void get_ranges_channel(
 
     int previous_marker_position = 0;
     int next_marker_position;
-    int i = 0;
-
+    int i;
     // find first marker position
     for(i=0; i<n_channel; i++){
         if(channel[i] == selection_channel){
@@ -705,9 +691,7 @@ void get_ranges_channel(
             break;
         }
     }
-
-    while(i<n_channel)
-    {
+    while(i<n_channel){
         // find next marker position
         for(; i<n_channel; i++) {
             if (channel[i] == selection_channel) {
@@ -723,45 +707,58 @@ void get_ranges_channel(
 
 }
 
-
-bool TTTR::write_file(
-        const char *fn,
+bool TTTR::write(
+        const char *filename,
         const char* container_type
         ) {
     switch(container_names.left.at(container_type)) {
         case BH_SPC130_CONTAINER:
-            fp = fopen(fn, "wb");
+            fp = fopen(filename, "wb");
             if (fp != nullptr) {
+                // write header
+                bh_spc132_header_t head;
+                head.invalid = true;
+                head.macro_time_clock = (unsigned) (header->macro_time_resolution * 10.0);
+                fwrite(&head, 4, 1, fp);
 
-                bh_overflow_t record_overflow;
-                record_overflow.bits.invalid = true;
-                record_overflow.bits.mtov = true;
-                record_overflow.bits.empty = 0;
+                bh_overflow_t overflow;
+                overflow.bits.empty = 0;
+                overflow.bits.mtov = 1;
+                overflow.bits.invalid = 1;
 
                 bh_spc130_record_t record;
-                record.bits.invalid = false;
-                record.bits.mtov = false;
+                unsigned dMT;
+                unsigned long long MT_ov_last;
+                unsigned long long MT_ov = 0;
+                for(size_t n = 0; n < get_n_valid_events();){
+                    // time since last macro_time record
+                    dMT = macro_times[n] - MT_ov * 4096;
+                    // Count the number of MT overflows
+                    MT_ov_last = dMT / 4096;
+                    // increment the global overflow counter
+                    MT_ov += MT_ov_last;
 
-                int n = 0;
-                unsigned long MT_ov = 0;
-                while (n < n_valid_events) {
-                    unsigned long MT = macro_times[n] - MT_ov * 4095;
-                    if (MT > 4095) {
-                        /* invalid photon */
-                        unsigned long MT_ov_last = MT / (4096);
-                        record_overflow.bits.cnt = MT_ov_last;
-                        fwrite(&record_overflow, 4, 1, fp);
-                        MT_ov += MT_ov_last;
-                    } else {
-                        /* valid photon */
+                    // write overflows
+                    while(MT_ov_last>1){
+                        // we fit 65536 = 2**16 in each overflow record
+                        overflow.bits.cnt = MIN(65536, MT_ov_last);
+                        fwrite(&overflow, 4, 1, fp);
+                        MT_ov_last -= overflow.bits.cnt;
+                    }
+                    {
+                        // we wrote all macro time overflows that do not fit
+                        // in the record. Hence we have a valid photon
+                        record.bits.mt = dMT;
                         record.bits.adc = 4095 - micro_times[n];
                         record.bits.rout = routing_channels[n];
-                        record.bits.mt = MT;
-                        fwrite(&record, 1, 4, fp);
+                        // If there is a overflow set mtov
+                        record.bits.mtov = (MT_ov_last == 1);
+                        record.bits.invalid = 0;
+                        fwrite(&record, 4, 1, fp);
                         n++;
                     }
                 }
-            fclose(fp);
+                fclose(fp);
             } else {
                 std::cerr << "Cannot write to file: " << filename <<  std::endl;
                 return false;
@@ -769,5 +766,38 @@ bool TTTR::write_file(
             break;
     }
     return true;
+}
+
+TTTRRange::TTTRRange(const TTTRRange& p2){
+//#if VERBOSE
+//    std::clog << "TTTRRange copy" << std::endl;
+//#endif
+    _start = p2._start;
+    _stop = p2._stop;
+    _start_time = p2._start_time;
+    _stop_time = p2._stop_time;
+    for(auto &v: p2._tttr_indices){
+        _tttr_indices.emplace_back(v);
+    }
+}
+
+TTTRRange::TTTRRange(
+        size_t start,
+        size_t stop,
+        long long start_time,
+        long long stop_time,
+        TTTRRange* other
+) {
+    if(other != nullptr){
+        this->_start = other->_start;
+        this->_stop = other->_stop;
+        this->_start_time = other->_start_time;
+        this->_stop_time = other->_stop_time;
+    } else {
+        this->_start = start;
+        this->_stop = stop;
+        this->_start_time = start_time;
+        this->_stop_time = stop_time;
+    }
 }
 

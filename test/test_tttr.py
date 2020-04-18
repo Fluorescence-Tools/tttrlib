@@ -1,6 +1,7 @@
 from __future__ import division
 
 import os
+import tempfile
 import unittest
 import numpy as np
 
@@ -80,6 +81,28 @@ class Tests(unittest.TestCase):
                 data.__repr__()
             )
 
+    def test_slicing(self):
+        # single element
+        d = data[0]
+        self.assertEqual(d.routing_channels, data.routing_channels[0])
+        self.assertEqual(d.event_types, data.event_types[0])
+        self.assertEqual(d.micro_times, data.micro_times[0])
+        self.assertEqual(d.macro_times, data.macro_times[0])
+
+        # steps of two
+        d = data[:10:2]
+        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:2]), True)
+        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:2]), True)
+        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:2]), True)
+        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:2]), True)
+
+        # reverse oder
+        d = data[:10:-1]
+        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:-1]), True)
+        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:-1]), True)
+        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:-1]), True)
+        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:-1]), True)
+
     def test_header_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
@@ -141,7 +164,7 @@ class Tests(unittest.TestCase):
 
     def test_constructor_with_selection(self):
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-        ch1_indeces = data.get_selection_by_channel(np.array([8]))
+        ch1_indeces = data.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data, ch1_indeces)
         self.assertEqual(
             np.allclose(
@@ -149,6 +172,11 @@ class Tests(unittest.TestCase):
                 data_ch1.macro_times
             ),
             True
+        )
+        # selections wrap over
+        d2 = tttrlib.TTTR(data, [-1])
+        self.assertEqual(
+            d2.macro_times[0], data.macro_times[-1]
         )
 
     def test_constructor_with_array(self):
@@ -170,6 +198,52 @@ class Tests(unittest.TestCase):
             True
         )
 
+    def test_TTTRRange(self):
+        # empty range object
+        tttr_range_1 = tttrlib.TTTRRange()
+        self.assertEqual(tttr_range_1.start, 0)
+        self.assertEqual(tttr_range_1.stop, 0)
+        self.assertEqual(tttr_range_1.start_time, 0)
+        self.assertEqual(tttr_range_1.stop_time, 0)
+        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (0, 0))
+        self.assertEqual(len(tttr_range_1.tttr_indices), 0)
+
+        d = {
+            "start": 11,
+            "stop": 898,
+            "start_time": 222,
+            "stop_time": 2222
+        }
+        tttr_range_1 = tttrlib.TTTRRange(*d.values())
+        self.assertEqual(tttr_range_1.start, d["start"])
+        self.assertEqual(tttr_range_1.stop, d["stop"])
+        self.assertEqual(tttr_range_1.start_time, d["start_time"])
+        self.assertEqual(tttr_range_1.stop_time, d["stop_time"])
+        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (d["start"], d["stop"]))
+
+        tttr_range_2 = tttrlib.TTTRRange(other=tttr_range_1)
+        self.assertEqual(tttr_range_2.start, d["start"])
+        self.assertEqual(tttr_range_2.stop, d["stop"])
+        self.assertEqual(tttr_range_2.start_time, d["start_time"])
+        self.assertEqual(tttr_range_2.stop_time, d["stop_time"])
+        self.assertTupleEqual(tuple(tttr_range_2.start_stop), (d["start"], d["stop"]))
+
+        # append a index
+        tttr_range_1.append(89)
+        self.assertEqual(len(tttr_range_1.tttr_indices), 1)
+        self.assertTupleEqual(tuple(tttr_range_1.tttr_indices), (89,))
+        tttr_range_1.clear()
+        self.assertEqual(len(tttr_range_1.tttr_indices), 0)
+
+        tttr_range_2 = tttrlib.TTTRRange(**d)
+        tttr_range_3 = tttrlib.TTTRRange(other=tttr_range_1)
+        self.assertEqual(
+            tttr_range_1, tttr_range_2
+        )
+        self.assertEqual(
+            tttr_range_2, tttr_range_3
+        )
+
     def test_open_non_existing_file(self):
         # make sure that opening an non-exisitng file does not crash
         d = tttrlib.TTTR('NOFILE', 'PTU')
@@ -180,3 +254,13 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             header.getTTTRRecordType(), -1
         )
+
+    def test_write_spc(self):
+        _, filename = tempfile.mkstemp(
+            suffix='.npy'
+        )
+        data.write(filename, 'SPC-130')
+        d2 = tttrlib.TTTR(filename, 'SPC-130')
+        self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
+        self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
+        self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)

@@ -80,8 +80,8 @@ def test_fill_pixels():
 
 
 n_ph_min = 1
-def test_get_mean_tac_image():
-    mean_micro_time = clsm_image.get_mean_tac_image(
+def test_get_mean_micro_time_image():
+    mean_micro_time = clsm_image.get_mean_micro_time_image(
         data,
         n_ph_min,
         True
@@ -115,9 +115,9 @@ if __name__ == '__main__':
     #     number=n_test_runs
     # )
     #
-    test_get_mean_tac_image_time = timeit.timeit(
-        "test_get_mean_tac_image()",
-        setup="from __main__ import test_get_mean_tac_image",
+    test_get_mean_micro_time_image_time = timeit.timeit(
+        "test_get_mean_micro_time_image()",
+        setup="from __main__ import test_get_mean_micro_time_image",
         number=n_test_runs
     )
     # print("test_test_make_clsm_image: %s" % (test_test_make_clsm_image / \
@@ -125,5 +125,5 @@ if __name__ == '__main__':
     # print("test_get_decay_image_time: %s" % test_get_decay_image_time  / n_test_runs)
     # print("test_fill_pixels_time: %s" % (test_fill_pixels_time / n_test_runs))
     # print("test_get_decays_time: %s" % (test_get_decays_time / n_test_runs))
-    print("test_get_mean_tac_image: %s" % (test_get_mean_tac_image_time /
+    print("test_get_mean_micro_time_image: %s" % (test_get_mean_micro_time_image_time /
                                            n_test_runs))

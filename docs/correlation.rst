@@ -1,9 +1,8 @@
-Correlation
-===========
+Fluorescence correlation
+========================
 
 Creating correlators
 --------------------
-
 ``tttrlib`` offers a set of correlators via a unified interface for correlations
 of TTTR data. To correlate ``TTTR`` objects, first a TTTR dataset should be
 loaded. Next, a ``Correlator`` object needs to be created. There are different
@@ -107,7 +106,6 @@ via the ``correlation`` attribute of the correlator is accessed.
 
 Correlators options
 -------------------
-
 The default correlation algorithm follows a multi-tau correlation algorithm. Here,
 two parameters control the correlation range, i.e, the maximum correlation time
 and the number of correlation points: ``n_bins`` and ``n_casc``. In a multiple
@@ -136,22 +134,26 @@ is used.
 
 Examples
 --------
-
 Below are a few examples how the correlator con be used in conjuncture with
 tttrlib. The given examples can be used as templates to develop other correlation
 analysis procedures.
 
 Normal correlations
 +++++++++++++++++++
-
 As described previously there are several analogous possibilities to compute
 correlations. Two possibilities are shown in the example below.
 
 .. plot:: plots/correlation_normal.py
 
+Analysing such correlation functions informs on diffusion and fast kinetics. Such
+correlation functions can be analyzed by dedicated open tools for fluorescence
+such as `ChiSurf <https://github.com/fluorescence-tools/chisurf/>`_,
+`PyCorrFit <https://github.com/FCS-analysis/PyCorrFit>`_, and
+`PAM <https://github.com/fluorescence-tools/pam>`_ or generic curve analysis
+software.
+
 Count rate filer
 ++++++++++++++++
-
 Low count rate parts of a TTTR file can be discriminated. The example below
 displays the correlation analysis of a single molecule FRET experiment. Note,
 the background has a significant contribution to the unfiltered correlation
@@ -159,6 +161,9 @@ function. The example uses a sliding time-window (TW). TWs with less than a
 certain amount of photons are discriminated by the selection.
 
 .. plot:: plots/correlation_cr_filter.py
+
+Such a filter can be used to remove the background in a single-molecule experiment
+that decreased the correlation amplitude.
 
 
 Micro time gating
@@ -174,12 +179,28 @@ Micro time gating
 
 Full correlation
 ++++++++++++++++
+When processes faster than the macro time clock are of interest, the micro time
+and the macro time can be combined into a united time axis. Using the combined
+time axis a so called full correlation can be performed using cw excitation.
 
 .. plot:: plots/correlation_gating.py
 
+Above is an example how a full correlation can be computed. Note, in the example
+the full correlation is computed for a sample that was measured in a pulsed
+excitation experiment. However, the same procedure can be applied to cw data.
 
-Filtering aggregates
-++++++++++++++++++++
+
+Slice and correlate
++++++++++++++++++++
+In some cases it can be advantages to slice the data into sub-sets and correlate
+the subsets individually in particular if the average intensity in the sample
+is not stable, e.g. when measuring in cells.
+
+.. plot:: plots/correlation_slice.py
+
+The By comparing the correlations of the subsets a filter can be defined that
+discriminates outlines. For details on how such a filter can be determined
+see :cite:`Ries2010`.
 
 
 Lifetime filters
@@ -188,7 +209,6 @@ Lifetime filters
 
 Estimating the noise of the correlation curves
 ++++++++++++++++++++++++++++++++++++++++++++++
-
 There are many approaches to calculate the noise in correlation functions
 (see: :cite:`Wohland2001`, :cite:`Qian1990`, :cite:`Starchev2001`). An
 analytical calculation of the noise is not possible because it involves diverging

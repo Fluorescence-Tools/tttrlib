@@ -13,12 +13,12 @@ data = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
 mt = data.get_macro_time()
 
 # This selects the indices of the first routing channel 0
-ch1_indeces = data.get_selection_by_channel(np.array([0]))
+ch1_indeces = data.get_selection_by_channel([0])
 t1 = mt[ch1_indeces]
 w1 = np.ones_like(t1, dtype=np.float)
 
 # This selects the indices of the routing channel 8
-ch2_indeces = data.get_selection_by_channel(np.array([8]))
+ch2_indeces = data.get_selection_by_channel([8])
 t2 = mt[ch2_indeces]
 w2 = np.ones_like(t1, dtype=np.float)
 

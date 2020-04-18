@@ -1,10 +1,9 @@
-############
+************
 TTTR-Objects
-############
+************
 
 General features
-----------------
-
+================
 The library tttrlib facilitates the work with files containing time-tagged time
 resolved photon streams by providing a vendor independent C++ application
 programming interface (API) for TTTR files that is wrapped by `SWIG <http://swig.org/>`_
@@ -117,11 +116,10 @@ entries are stored. The example file corresponds to a single-molecule measuremen
 where a large fraction of the entries are overflow records.
 
 Create TTTR objects
--------------------
+===================
 
 Opening files
-+++++++++++++
-
+-------------
 In Python, first, the tttrlib module needs to be imported. Next, a TTTR object
 needs to be created. When creating a new TTTR object, the file name and the file
 type can be passed to the object's constructor. If a TTTR object is created this
@@ -171,12 +169,49 @@ Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
 
+Slicing / subsets
+-----------------
+
+New TTTR objects can be created by slicing existing objects, if you are
+interested a subset of the data.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data_sliced = data[:10]
+
+A slice of a ``TTTR`` object creates a copy, i.e., the routing channel, the
+macro, and the micro times are copied including the header information.
+
+Writing TTTR-files
+==================
+TTTR objects can be writen to files using the method ``write`` of TTTR objects.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data_sliced = data[:10]
+    output = {
+        'filename': 'sliced_data.spc'
+        'container_type': 'SPC-130'
+    }
+    data.write(**output)
+
+This way, as shown above, data can be sliced into pieces or converted into other
+data types.
+
+.. note::
+    The differnet TTTR container formats are not fully compatible. Hence, it can
+    happen that certain information that is for instance stored in the header is
+    lost when converting and saving data.
+
 TTTR-Header
------------
+===========
 
 Accessing header data
 ---------------------
-
 Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
 For that, a ``TTTR`` object provides a header attribute. The header attribute is
 of the type :class:`.Header`.
@@ -211,7 +246,6 @@ The last statement prints the keys of the map.
 
 Time calibration data
 ---------------------
-
 Essential for the analysis of TTTR data is the time calibration (time resolution)
 of the macro and the micro times in addition to the number of possible micro time
 channels. In many functions the micro and macro time calibration are transparently
@@ -247,29 +281,34 @@ The number of micro time channels can be accessed as displayed below.
 
 .. note::
     The effective number of micro time channels, i.e., the number of micro time
-    channels can be smaller than the actual number of micro time channels. For instance
-    at a micro time channel resolution of 4 ps and macro time resolution of 12.5 ns
-    effectively only 3125 micro time channels will be filled with photons.
+    channels can be smaller than the actual number of micro time channels. For
+    instance at a micro time channel resolution of 4 ps and macro time resolution
+    of 12.5 ns effectively only 3125 micro time channels will be filled with
+    photons.
 
 
 Selections
-----------
+==========
+General
+-------
+A defining feature of TTTR data is that subsets can be selected and defined for
+more detailed analysis. This is for instance exploited in single-molecule experimetns
+There are different methods to access subsets of a TTTR object that are described
+in this section.
 
 Using selections
-++++++++++++++++
-
-Based on an existing TTTR object and a selection a new TTTR object can be created.
-That only contains the selected elements. Beyond the the array processing
-capabilities either provided by the high-level programming language or an library
-like `NumPy <http://www.numpy.org/>`_, ``tttrlib`` offers a set of functions and
-methods to select a subset of the data contained in a TTTR file. There are two
-options to get selection for a subset of the data
+----------------
+There is a set of functions and methods to select subsets of TTTR objects.
+Beyond the the array processing capabilities either provided by the high-level
+programming language or an library like `NumPy <http://www.numpy.org/>`_, ``tttrlib``
+offers a set of functions and methods to select a subset of the data contained
+in a TTTR file. There are two options to get selection for a subset of the data
 
     1. By *ranges*
     2. By *selection*
 
-*Ranges* are lists of subsequential tuples marking the beginning and the end of
-a range. *Selections* are list of integers, where the integers refer to the indices
+*Ranges* are lists of tuples marking the beginning and the end of a range.
+*Selections* are list of integers, where the integers refer to the indices
 of the event stream that was selected.
 
 
@@ -293,10 +332,8 @@ Depending on the specific application either ranges or selections are more usefu
 For instance, single molecule bursts are usually defined by *ranges*, while detection
 channels are usually selected by *selections*.
 
-
 Channel selections
-++++++++++++++++++
-
+------------------
 A very typical use case in TCSPC experiments (either in fluorescence lifetime
 microscopy (FLIM) or multiparameteric fluorescence detection (MFD)) is to select
 a subset of the registered events based on the detection channel. The experimental
@@ -319,8 +356,8 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
 
     data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
 
-    green_indices = data.get_selection_by_channel(np.array([0, 8]))
-    red_indices = data.get_selection_by_channel(np.array([1, 9]))
+    green_indices = data.get_selection_by_channel([0, 8])
+    red_indices = data.get_selection_by_channel([1, 9])
 
 This examples needs to be adapted to the channel assignment dependent on the actual
 experimental setup.
@@ -331,14 +368,15 @@ be created.
 .. code-block:: python
 
         data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-        ch1_indeces = data.get_selection_by_channel(np.array([8]))
+        ch1_indeces = data.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data, ch1_indeces)
+        # alternatively
+        data_ch1 = data[ch1_indeces]
 
 The `TTTR` object can be operated on normally.
 
 Count rate selections
-+++++++++++++++++++++
-
+---------------------
 Another very common selection is based on the count rate. The count rate is
 determined by the number of detected events within a given time window. The
 selection by the method ``get_selection_by_count_rate`` returns all indices where
@@ -355,5 +393,11 @@ given by the number of macro time steps.
 In the example shown above, the time window is 1200000 and 30 is the maximum
 number of photons within that is permitted in a time window.
 
+Such count rate selections are for instance used to detect bursts in single molecule
+experiments or to generate filters for advanced FCS analysis :cite:`laurence2004`
+(see also :ref:`Correlation:Count rate filer` and :ref:`Single Molecule:Burst selection`).
 
+TTTR ranges
+===========
 
+STOP

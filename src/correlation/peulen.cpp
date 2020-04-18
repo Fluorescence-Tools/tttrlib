@@ -71,8 +71,7 @@ void peulen::correlation(
         size_t edge_r = edge_l + n_bins;
         for (i2 = p; i2 < end_2; i2++) {
             if (t2[i2] > edge_r) break;
-            // removed - faster without this if statement
-            // if (w2[i2] != 0) {
+            // if (w2[i2] != 0) { // faster without this if statement
             if (t2[i2] > edge_l) {
                 index = t2[i2] - edge_l + i_casc * n_bins;
                 corr[index] += (w1[i1] * w2[i2]);
@@ -91,8 +90,8 @@ void peulen::correlation_normalize(
         size_t n_bins,
         bool correct_x_axis
 ) {
-    double cr1 = (double) np1 / (double) dt1;
-    double cr2 = (double) np2 / (double) dt2;
+    double cr1 = (double) np1 / MAX(1, (double) dt1);
+    double cr2 = (double) np2 / MAX(1, (double) dt2);
     for (int j = 0; j < x_axis.size(); j++) {
         uint64_t pw = (uint64_t) pow(2.0, (int) (float(j - 1) / n_bins));
         double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 - x_axis[j]);

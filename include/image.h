@@ -1,18 +1,3 @@
-/****************************************************************************
- * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
- *                                                                          *
- * This file is part of the library tttrlib.                                *
- *                                                                          *
- *   tttrlib is free software: you can redistribute it and/or modify it     *
- *   under the terms of the MIT License.                                    *
- *                                                                          *
- *   tttrlib is distributed in the hope that it will be useful,             *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
- *                                                                          *
- ****************************************************************************/
-
-
 #ifndef TTTRLIB_IMAGE_H
 #define TTTRLIB_IMAGE_H
 
@@ -23,6 +8,7 @@
 #include <cstring>
 #include <numeric>      // std::accumulate
 #include <algorithm>
+#include "correlation.h"
 
 
 class CLSMPixel : public TTTRRange{
@@ -30,44 +16,35 @@ class CLSMPixel : public TTTRRange{
     friend class CLSMLine;
     friend class CLSMImage;
 
-protected:
-    /// Stores the TTTR indices of the pixel
-    std::vector<unsigned int > tttr_indices;
-    bool filled;
+    CLSMPixel(const CLSMPixel& p2) : TTTRRange(p2){};
 
-public:
-
-    std::vector<unsigned int > get_tttr_indices(){
-        return tttr_indices;
+    CLSMPixel(CLSMPixel* p2 = nullptr){
+        if(p2 != nullptr){
+            _start = p2->_start;
+            _stop = p2->_stop;
+            _start_time = p2->_start_time;
+            _stop_time = p2->_stop_time;
+            for(auto &v: p2->_tttr_indices){
+                _tttr_indices.emplace_back(v);
+            }
+        }
     }
-
-    void append(unsigned int v){
-        tttr_indices.emplace_back(v);
-    }
-
-    CLSMPixel():
-    tttr_indices(0),
-    filled(false)
-    {};
-
-    CLSMPixel(const CLSMPixel& old_pixel) :
-    tttr_indices(old_pixel.tttr_indices)
-    {}
 
 };
 
 
 class CLSMLine : public TTTRRange{
 
-    friend class CLSMFrame;
     friend class CLSMImage;
+    friend class CLSMFrame;
+    friend class CLSMLine;
 
 private:
     std::vector<CLSMPixel*> pixels;
 
 public:
-    unsigned int n_pixel;
-    unsigned int pixel_duration;
+    int n_pixel = 0;
+    int pixel_duration = 1;
 
     std::vector<CLSMPixel*> get_pixels(){
         return pixels;
@@ -77,22 +54,17 @@ public:
         return (size_t) (get_duration() / n_pixel);
     }
 
-    CLSMLine()
-    {}
-
-    ~CLSMLine(){
-        for(auto p: pixels){
-            delete(p);
-        }
+    /// Get the number of pixels per line a frame of the CLSMImage
+    int get_n_pixel() const {
+        return n_pixel;
     }
 
-    CLSMLine(
-            const CLSMLine& old_line,
-            bool fill = false
-            ){
+    CLSMLine() = default;
+
+    CLSMLine(const CLSMLine& old_line, bool fill = false) : TTTRRange(old_line){
         // private attributes
         if(fill){
-            for(auto &p: old_line.pixels){
+            for(auto p: old_line.pixels){
                 pixels.emplace_back(new CLSMPixel(*p));
                 n_pixel++;
             }
@@ -104,18 +76,16 @@ public:
         }
     }
 
-    CLSMLine(
-            unsigned int line_start
-    ){
-        start = line_start;
+    explicit CLSMLine(unsigned int line_start){
+        _start = line_start;
     }
 
     CLSMLine(
-            unsigned int line_start,
-            unsigned int n_pixel
+            int line_start,
+            int n_pixel
             ){
-        start = line_start;
-        CLSMLine::n_pixel = n_pixel;
+        this->_start = line_start;
+        this->n_pixel = std::abs(n_pixel);
         for(unsigned int i=0; i<n_pixel; i++){
             auto* pixel = new CLSMPixel();
             pixels.emplace_back(pixel);
@@ -125,7 +95,7 @@ public:
     void append(CLSMPixel* pixel){
         pixels.emplace_back(pixel);
         n_pixel++;
-        pixel_duration = (unsigned int) (get_duration() / n_pixel);
+        pixel_duration = (int) (get_duration() / n_pixel);
     }
 
     CLSMPixel* operator[](unsigned int i_pixel){
@@ -143,18 +113,20 @@ private:
     std::vector<CLSMLine*> lines;
 
 public:
-    unsigned int n_lines;
+    unsigned int n_lines = 0;
 
     std::vector<CLSMLine*> get_lines(){
         return lines;
     }
 
+    /// Get the number of lines per frame in the CLSMImage
+    int get_n_lines() const{
+        return (int) n_lines;
+    }
+
     CLSMFrame();
 
-    CLSMFrame(
-            const CLSMFrame& old_frame,
-            bool fill = false
-            ){
+    CLSMFrame(const CLSMFrame& old_frame, bool fill = false) : TTTRRange(old_frame){
         // private attributes
         for(auto l: old_frame.lines){
             lines.emplace_back(new CLSMLine(*l, fill));
@@ -168,8 +140,12 @@ public:
         }
     }
 
-    CLSMFrame(size_t frame_start);
+    explicit CLSMFrame(size_t frame_start);
 
+    /*!
+     * Append a line to the current frame
+     * @param line
+     */
     void append(CLSMLine * line);
 
     CLSMLine* operator[](unsigned int i_line){
@@ -179,11 +155,27 @@ public:
 
 
 class CLSMImage{
+    friend class Correlator;
+    friend class CLSMFrame;
+    friend class CLSMLine;
+    friend class CLSMPixel;
 
 private:
     std::vector<CLSMFrame*> frames;
     void remove_incomplete_frames();
     void define_pixels_in_lines();
+
+protected:
+    /// The number of frames in an CLSMImage
+    size_t n_frames;
+
+
+    /// The number of lines per frames
+    size_t n_lines;
+
+    /// The number if pixels per line
+    size_t n_pixel;
+
 
 protected:
     /*!
@@ -203,31 +195,54 @@ protected:
      */
     void initialize_leica_sp8_ptu(TTTR *tttr_data);
 
+
 public:
-    std::vector<unsigned int> marker_frame;
-    unsigned int marker_line_start;
-    unsigned int marker_line_stop;
-    unsigned int marker_event;
+    std::vector<int> marker_frame;
+    int marker_line_start;
+    int marker_line_stop;
+    int marker_event;
 
-    size_t n_frames;
-    size_t n_lines;
-    size_t n_pixel;
-
-    CLSMFrame* operator[](unsigned int i_frame){
-        return frames[i_frame];
-    }
 
     /*!
      * Fill the tttr_indices of the pixels with the indices of the channels
      * that are within a pixel
      *
-     * @param channels
+     * @param channels[in] list of routing channels. Events that have routing
+     * channels in this vector are added to pixels of corresponding time.
+     * @param clear_pixel[in] if set to true (default) the pixels are cleared
+     * before they are filled. If set to false new tttr indices are added to
+     * the pixels
      */
     void fill_pixels(
             TTTR* tttr_data,
-            std::vector<unsigned int> channels
+            std::vector<int> channels,
+            bool clear_pixel = true
     );
 
+    /*!
+     * Computes the
+     *
+     * @param output[out]
+     * @param dim1[out]
+     * @param dim2[out]
+     * @param dim3[out]
+     * @param dim4[out]
+     * @param tttr_data
+     * @param tac_coarsening
+     * @param stack_frames
+     */
+    void get_fcs_image(
+            float** output, int* dim1, int* dim2, int* dim3, int* dim4,
+            TTTR* tttr_data,
+            TTTR* tttr_data_other,
+            CLSMImage* clsm_other,
+            std::string correlation_method = "default",
+            int n_bins = 1,
+            int n_casc = 10,
+            bool stack_frames = true,
+            bool normalized_correlation = true,
+            int min_photons = 3
+    );
 
     /*!
      * Clear tttr_indices stored in the pixels
@@ -241,7 +256,7 @@ public:
     }
 
     void get_intensity_image(
-            unsigned int** out, int* dim1, int* dim2, int* dim3
+            unsigned int** output, int* dim1, int* dim2, int* dim3
     );
 
     /*!
@@ -250,18 +265,20 @@ public:
      * by integer numbers.
      *
      * @param tttr_data pointer to a TTTR object
-     * @param out pointer to output array of unsigned chars that will contain the image stack
+     * @param out pointer to output array of unsigned chars that will contain
+     * the image stack
      * @param dim1 number of frames
      * @param dim2 number of lines
      * @param dim3 number of pixels
      * @param dim4 number of micro time channels in the histogram
-     * @param tac_coarsening constant used to coarsen the micro times
+     * @param micro_time_coarsening constant used to coarsen the micro times. The default
+     * value is 1 and the micro times are binned without coarsening.
      * @param stack_frames if True the frames are stacked.
      */
-    void get_decay_image(
+    void get_fluorescence_decay_image(
             TTTR* tttr_data,
-            unsigned char** out, int* dim1, int* dim2, int* dim3, int* dim4,
-            int tac_coarsening,
+            unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4,
+            int micro_time_coarsening=1,
             bool stack_frames=false
     );
 
@@ -281,35 +298,63 @@ public:
      * @param tac_coarsening constant used to coarsen the micro times
      * @param stack_frames if True the frames are stacked.
      */
-    void get_decays(
+    void get_average_decay_of_pixels(
             TTTR* tttr_data,
             uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3,
-            unsigned int** out, int* dim1, int* dim2,
+            unsigned int** output, int* dim1, int* dim2,
             int tac_coarsening,
             bool stack_frames
     );
 
     /*!
      * Calculates an image stack where the value of each pixel corresponds
-     * to the mean micro times per pixel
-     * discriminating micro time channels with few counts
+     * to the mean micro time.
      *
-     * @param tttr_data pointer to a TTTR object
-     * @param out pointer to output array that will contain the image stack
-     * @param dim1 returns the number of frames
-     * @param dim2 returns the number of lines
-     * @param dim3 returns the number of pixels per line
-     * @param n_ph_min the minimum number of photons in a micro time
-     * @param stack_frames if true the frames are stacked and a single the
-     * frame containing the photon count weighted average arrival time is
-     * returned
+     * Pixels with few photons can be discriminated. Discriminated pixels will
+     * be filled with zeros.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param out[out] pointer to output array that will contain the image stack
+     * @param dim1[out] returns the number of frames
+     * @param dim2[out] returns the number of lines
+     * @param dim3[out] returns the number of pixels per line
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     * @param stack_frames[in] if true the frames are stacked (default value is
+     * false). If stack frames is set to true the mean arrival time is computed
+     * using the tttr indices of all pixels (this corresponds to the photon weighted
+     * mean arrival time).
      */
-    void get_mean_tac_image(
+    void get_mean_micro_time_image(
             TTTR* tttr_data,
-            double** out, int* dim1, int* dim2, int* dim3,
-            int n_ph_min,
-            bool stack_frames= false
+            double** output, int* dim1, int* dim2, int* dim3,
+            int minimum_number_of_photons=2,
+            bool stack_frames=false
     );
+
+    /// Get the number of frames in the CLSM image
+    int get_n_frames() const{
+        return n_frames;
+    }
+
+    /// Get the number of lines per frame in the CLSMImage
+    int get_n_lines() const{
+        return n_lines;
+    }
+
+    /// Get the number of pixels per line a frame of the CLSMImage
+    int get_n_pixel() const{
+        return n_pixel;
+    }
+
+    /*!
+     * Copy the information from another CLSMImage object
+     *
+     * @param p2 The information from this object is copied.
+     * @param fill If this is set to true (default is false) the tttr indices
+     * of the pixels are copied.
+     * @return
+     */
+    void copy(const CLSMImage& p2, bool fill=false);
 
     /*!
      * Append a frame to the CLSM image.
@@ -318,26 +363,8 @@ public:
      */
     void append(CLSMFrame* frame);
 
-    // Constructor
-    CLSMImage();
-
-    CLSMImage(
-            const CLSMImage& old_clsm,
-            bool fill=false
-            ){
-        // private attributes
-        for(auto f: old_clsm.frames){
-            frames.emplace_back(new CLSMFrame(*f, fill));
-        }
-        // public attributes
-        marker_frame = old_clsm.marker_frame;
-        marker_line_start = old_clsm.marker_line_start;
-        marker_line_stop = old_clsm.marker_line_stop;
-        marker_event = old_clsm.marker_event;
-        n_frames = old_clsm.n_frames;
-        n_lines = old_clsm.n_lines;
-        n_pixel = old_clsm.n_pixel;
-    }
+    /// Copy constructor
+    CLSMImage(const CLSMImage& p2, bool fill=false);
 
     /*!
      *
@@ -362,22 +389,55 @@ public:
      * micro time channel numbers. PicoQuant and others use a more 'traditional'
      * encoding for frame and line markers marking TTTR events as marker events and
      * using the channel number to differentiate the different marker types.
+     * @param macro_time_shift Number of macro time counts a line start is shifted
+     * relative to the line start marker in the TTTR object (default 0)
+     * @param source A CLSMImage object that is used as a template for the created
+     * object. All frames and lines are copied and empty pixels are created. If
+     * the parameter fill is set to true moreover the content of the pixels is copied.
+     * @param fill if set to true (default) is false the lines are filled with pixels
+     * that will contain either the photons of the specified channels or the photons
+     * from the source CLSMImage instance.
+     * @param channels The channel number of the events that will be used to fill
+     * the pixels.
      */
-    CLSMImage(
-            TTTR *tttr_data,
-            std::vector<unsigned int> marker_frame_start,
-            unsigned int marker_line_start,
-            unsigned int marker_line_stop,
-            unsigned int marker_event_type,
-            unsigned int n_pixel_per_line,
-            std::string reading_routine
+    explicit CLSMImage(
+            TTTR *tttr_data = nullptr,
+            std::vector<int> marker_frame_start = std::vector<int>(),
+            int marker_line_start = 0,
+            int marker_line_stop = 0,
+            int marker_event_type = 0,
+            int n_pixel_per_line = 0,
+            std::string reading_routine = "default",
+            long long macro_time_shift=0,
+            CLSMImage* source = nullptr,
+            bool fill = false,
+            std::vector<int> channels = std::vector<int>()
     );
 
+    /// Destructor
     ~CLSMImage(){
         for(auto frame : frames){
             delete(frame);
         }
     }
+
+    /*!
+     * Shift the line starts at least by a specified number of macro time clock
+     * counts
+     *
+     * @param tttr_data pointer [in] to the TTTR object used to construct the CLSM
+     * object that is shifted
+     * @param macro_time_shift  [in] the number of macro time counts that which
+     * which the lines are at least shifted.
+     */
+    void shift_line_start(
+            int macro_time_shift
+    );
+
+    CLSMFrame* operator[](unsigned int i_frame){
+        return frames[i_frame];
+    }
+
 };
 
 

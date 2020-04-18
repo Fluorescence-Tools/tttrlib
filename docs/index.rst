@@ -1,11 +1,6 @@
-.. tttrlib documentation master file, created by
-   sphinx-quickstart on Tue Mar 12 09:32:34 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
+#######
 tttrlib
-=======
-
+#######
 Process time-tagged time resolved (TTTR) data with a unified application programming interface (API) that entitles you
 to process data of TTTR experiments without the need of data conversion with your preferred scripting language.
 
@@ -19,31 +14,38 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
    - FLIM image generation and analysis
 
 
+Documentation
+=============
+Documentation for the latest releases is available `here <https://fluorescence-tools.github.io/tttrlib/>`_,.
+Previous releases are available through the read-the-docs page
+`page <https://tttrlib.readthedocs.io/>`_,.
+
+
 Contents
---------
+========
 
 .. toctree::
    :maxdepth: 1
 
    installation
    tttr_objects
-   histograms
-   correlation
-   single_molecule
    imaging
+   single_molecule
+   correlation
+   tools
    cpp_api
    glossary
    references
 
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`search`
 
 
 License
--------
+=======
 
 tttrlib is released under the open source `MIT license <https://opensource.org/licenses/MIT>`_.

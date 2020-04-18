@@ -1,35 +1,3 @@
-/****************************************************************************
- * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
- *                                                                          *
- * This file is part of the library tttrlib.                                *
- *                                                                          *
- *   tttrlib is free software: you can redistribute it and/or modify it     *
- *   under the terms of the MIT License.                                    *
- *                                                                          *
- *   tttrlib is distributed in the hope that it will be useful,             *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
- *                                                                          *
- ****************************************************************************/
-
-/**
- * @file correlation.h
- * @author Thomas-Otavio Peulen
- * @date 20 Feb 2019
- * @brief File containing example of doxygen usage for quick reference.
- *
- * Here typically goes a more extensive explanation of what the header
- * defines. Doxygens tags are words preceeded by either a backslash @\
- * or by an at symbol @@.
- * @see http://www.stack.nl/~dimitri/doxygen/docblocks.html
- * @see http://www.stack.nl/~dimitri/doxygen/commands.html
- */
-
-
-//
-// Created by thomas on 2/18/19.
-//
-
 #ifndef TTTRLIB_CORRELATION_H
 #define TTTRLIB_CORRELATION_H
 
@@ -43,22 +11,24 @@
 #include <numeric>
 #include <algorithm>
 #include <climits>
+#include <map>
 //#include <taskflow/taskflow.hpp>
 
 #include <include/tttr.h>
 #include <include/correlation/peulen.h>
 #include <include/correlation/lamb.h>
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 
-class Correlator{
+class Correlator {
 
+friend class CLSMImage;
 
 private:
 
-    TTTR* tttr;
+    TTTR *tttr;
 
     /// The used correlation method. Currently either "peulen" or
     /// "lamb".
@@ -81,19 +51,20 @@ private:
     int n_corr = 0;
 
     /// The array containing the times points of the first correlation channel
-    unsigned long long* t1 = nullptr;
+    unsigned long long *t1 = nullptr;
     /// The array containing the weights of the first correlation channel
-    double* w1 = nullptr;
+    double *w1 = nullptr;
     /// The number of time points in the first correlation channel
     size_t n_t1 = 0;
 
     /// The array containing the times points of the second correlation channel
-    unsigned long long * t2 = nullptr;
+    unsigned long long *t2 = nullptr;
     /// The array containing the weights of the second correlation channel
-    double* w2 = nullptr;
+    double *w2 = nullptr;
     /// The number of time points in the second correlation channel
     size_t n_t2 = 0;
 
+protected:
     /// The x-axis (the time axis) of the correlation
     std::vector<unsigned long long> x_axis;
     /// The non-normalized correlation
@@ -137,15 +108,6 @@ protected:
      */
     void update_axis();
 
-    /*!
-     * Get the correlation.
-     *
-    *
-    * @param[out] corr a pointer to an array that will contain the correlation
-    * @param[out] n_out a pointer to the an integer that will contain the
-    * number of elements of the x-axis
-    */
-    void get_corr(double **corr, int *n_out);
 
     /*!
      * Get the x-axis of the correlation
@@ -155,7 +117,7 @@ protected:
      * @param[out] n_out a pointer to the an integer that will contain the
      * number of elements of the x-axis
      */
-    void get_x_axis(unsigned long long** output, int* n_output);
+    void get_x_axis(unsigned long long **output, int *n_output);
 
     /*!
      * Calculates the normalized correlation amplitudes and x-axis
@@ -169,7 +131,7 @@ protected:
 
 
 public:
-    void set_time_axis_calibration(double v){
+    void set_time_axis_calibration(double v) {
 #if VERBOSE
         std::clog << "-- Time axis calibration [ms/bin]: " << v << std::endl;
 #endif
@@ -177,57 +139,82 @@ public:
         is_valid = false;
     }
 
-    Correlator(TTTR *tttr = nullptr,
-               std::string method = "default",
-               int n_bins = 17,
-               int n_casc = 25
+    /*!
+     *
+     * @param tttr an optional TTTR object. The macro and micro time calibdation
+     * of the header in the TTTR object calibrate the correlator.
+     * @param method name of correlation method that is used by the correlator
+     * @param n_bins the number of equally spaced correlation bins per block
+     * @param n_casc the number of blocks
+     */
+    Correlator(
+            TTTR *tttr = nullptr,
+           std::string method = "default",
+           int n_bins = 17,
+           int n_casc = 25
     );
 
-    ~Correlator(){
+    /// Destructor
+    ~Correlator() {
         free(t1); free(t2);
         free(w1); free(w2);
     };
 
 
     /*!
-     * Sets the number of cascades of the correlation curve and
-     * updates the correlation axis.
+     * Sets the number of cascades (also called blocks) of the correlation curve
+     * and updates the correlation axis.
      * @param[in] n_casc
      */
-    void set_n_casc(int v){
+    void set_n_casc(int v) {
         is_valid = false;
         n_casc = MAX(1, v);
         update_axis();
     }
 
     /*!
-     *
-     * @return
+     * @return number of correlation blocks
      */
-    int get_n_casc(){
+    int get_n_casc() {
         return n_casc;
     }
 
-    void set_n_bins(int v){
+    /*!
+     * @param[in] v  the number of equally spaced correaltion channels per block
+     */
+    void set_n_bins(int v) {
         is_valid = false;
         n_bins = MAX(1, v);
         update_axis();
     }
 
-    int get_n_bins(){
+    /*!
+     * @return the number of equally spaced correlation channels per block
+     */
+    int get_n_bins() {
         return n_bins;
     }
 
-    size_t get_n_corr(){
+    /*!
+     * @return the overall (total number) of correlation channels
+     */
+    size_t get_n_corr() {
         return n_corr;
     }
 
-    void set_correlation_method(std::string cm){
+    /*!
+     * Set method that to correlate the data
+     * @param[in] cm the name of the method
+     */
+    void set_correlation_method(std::string cm) {
         is_valid = false;
         correlation_method = cm;
     }
 
-    std::string get_correlation_method(){
+    /*!
+     * @return name of the used correlation method
+     */
+    std::string get_correlation_method() {
         return correlation_method;
     }
 
@@ -240,76 +227,89 @@ public:
      * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
     void set_microtimes(
-            unsigned int* tac_1,
+            unsigned int *tac_1,
             unsigned int n_tac_1,
-            unsigned int* tac_2,
+            unsigned int *tac_2,
             unsigned int n_tac_2,
             unsigned int n_tac
-            );
+    );
 
     /*!
-    *
-    * @param[in, out] Array t1 of the time events of the first channel
+    * @param[in] t1 time events in the the first correlation channel
     * @param[in] n_t1 The number of time events in the first channel
-    * @param t2 A vector of the time events of the second channel
-    * @param n_t2 The number of time events in the second channel
+    * @param[in] t1 time events in the the second correlation channel
+    * @param[in] n_t2 The number of time events in the second channel
+    * @param[in] inplace If true (default false) the arrays are modified in place
     */
     void set_macrotimes(
-            unsigned long long  *t1, int n_t1,
-            unsigned long long  *t2, int n_t2
+            unsigned long long *t1, int n_t1,
+            unsigned long long *t2, int n_t2,
+            bool inplace = false
     );
 
     /*!
     *
-    * @param[in, out] Array t1 of the time events of the first channel (the
-    * array is modified in place)
+    * @param[in] time events of the first correlation channel
     * @param[in] n_t1 The number of time events in the first channel
-    * @param w1 A vector of weights for the time events of the first channel
-    * @param n_weights_ch1 The number of weights of the first channel
-    * @param t2 A vector of the time events of the second channel
-    * @param n_t2 The number of time events in the second channel
-    * @param w2 A vector of weights for the time events of the second channel
-    * @param n_weights_ch2 The number of weights of the second channel
+    * @param[in] w1 A vector of weights for the time events of the first channel
+    * @param[in] n_weights_ch1 The number of weights of the first channel
+    * @param[in] t2 A vector of the time events of the second channel
+    * @param[in] n_t2 The number of time events in the second channel
+    * @param[in] w2 A vector of weights for the time events of the second channel
+    * @param[in] n_weights_ch2 The number of weights of the second channel
+    * @param[in] inplace If true (default false) the arrays are modified in place
     */
     void set_events(
-            unsigned long long  *t1, int n_t1,
-            double* weight_ch1, int n_weights_ch1,
-            unsigned long long  *t2, int n_t2,
-            double* weight_ch2, int n_weights_ch2
+            unsigned long long *t1, int n_t1,
+            double *weight_ch1, int n_weights_ch1,
+            unsigned long long *t2, int n_t2,
+            double *weight_ch2, int n_weights_ch2,
+            bool inplace = false
     );
 
     /*!
      * Get the normalized x-axis of the correlation
      *
-     *
-     * @param[out] x_axis a pointer to an array that will contain the x-axis
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements
+     * @param[out] output x_axis / time axis of the correlation
+     * @param[out] n_out number of elements in the axis
      * of the x-axis
      */
-    void get_x_axis_normalized(double** output, int* n_output);
+    void get_x_axis_normalized(double **output, int *n_output);
 
     /*!
-    *
-    * @param w1 A vector of weights for the time events of the first channel
-    * @param n_weights_ch1 The number of weights of the first channel
-    * @param w2 A vector of weights for the time events of the second channel
-    * @param n_weights_ch2 The number of weights of the second channel
-    */
+     * Set the weights that are used in the correlation channels
+     *
+     *
+     * @param w1 A vector of weights for the time events of the first channel
+     * @param n_weights_ch1 The number of weights of the first channel
+     * @param w2 A vector of weights for the time events of the second channel
+     * @param n_weights_ch2 The number of weights of the second channel
+     * @param[in] inplace If true (default false) the arrays are modified in place
+     */
     void set_weights(
-            double* weight_ch1, int n_weights_ch1,
-            double* weight_ch2, int n_weights_ch2
+            double *weight_ch1, int n_weights_ch1,
+            double *weight_ch2, int n_weights_ch2,
+            bool inplace = false
     );
 
     /*!
      * Get the normalized correlation.
      *
-     * @param[out] corr a pointer to an array that will contain the
-     * normalized  correlation
-     * @param[out] n_out a pointer to the an integer that will contain the
-     * number of elements of the normalized x-axis
+     * @param[out] output an array that containing normalized  correlation
+     * @param[out] n_output the number of elements of output
      */
-    void get_corr_normalized(double** output, int* n_output);
+    void get_corr_normalized(double **output, int *n_output);
+
+    /*!
+     * Get the correlation.
+     *
+    *
+    * @param[out] corr a pointer to an array that will contain the correlation
+    * @param[out] n_out a pointer to the an integer that will contain the
+    * number of elements of the x-axis
+    */
+    void get_corr(double **corr, int *n_out);
+
 
     /*!
      * Compute the correlation function. Usually calling this method is
@@ -329,8 +329,32 @@ public:
      * @param tttr_2
      * @param make_fine if true a full correlation is computed that uses the
      * micro time in the TTTR objects (default is false).
+     * @param set_weights if set to true (default) the weights for all passed events
+     * is set to one.
      */
-    void set_tttr(TTTR* tttr_1, TTTR* tttr_2, bool make_fine=false);
+    void set_tttr(
+            TTTR *tttr_1, TTTR *tttr_2,
+            bool make_fine = false,
+            bool set_weights = true
+            );
+
+    /*!
+     * Updates the weights. Non-zero weights are assigned a filter value that
+     * is defined by a filter map and the micro time of the event.
+     *
+     * @param micro_times[in]
+     * @param routing_channels[in]
+     * @param filter[in] map of filters the first element in the map is the routing
+     * channel number, the second element of the map is a vector that maps a
+     * micro time to a filter value.
+     */
+    void set_filter(
+            const std::vector<unsigned int>& micro_times_1,
+            const std::vector<short>& routing_channels_1,
+            const std::vector<unsigned int>& micro_times_2,
+            const std::vector<short>& routing_channels_2,
+            const std::map<short, std::vector<double>>& filter
+    );
 
 };
 
