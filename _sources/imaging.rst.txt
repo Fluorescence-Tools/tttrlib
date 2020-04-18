@@ -9,7 +9,7 @@ or by deflecting the laser and moving the position of the exciting on a fixed
 sample (laser scanning). In both cases, the position of the detection volume
 within the sample needs to be saved in the recorded TTTR event stream. In the
 section `Theory`_ the basics of CLSM data are described. In the section
-`Use Python for CLSM`_ basic python functions are used to create an CLSM image
+`Image construction`_ basic python functions are used to create an CLSM image
 using ``TTTR`` objects. In the section `CLSMImage`_ it is explained how to use
 ``tttrlib``'s C++ interface to efficiently create CLSM images and different
 `CLSM representations`_, e.g., intensity images, mean micro time images are
@@ -227,10 +227,11 @@ displayed by the code shown below:
     p.show()
 
 The outcome of such analysis for a complete working example is shown below including
-all necessary source code.
+all necessary source code below.
 
-.. plot:: plots/imaging_python.py
-
+.. literalinclude:: plots/imaging_python.py
+   :language: python
+   :linenos:
 
 For any practical applications it is recommended the determine the images using
 the built-in functions of ``tttrlib``. Using this functions is illustrated below.
