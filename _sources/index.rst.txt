@@ -1,7 +1,6 @@
 #######
 tttrlib
 #######
-
 Process time-tagged time resolved (TTTR) data with a unified application programming interface (API) that entitles you
 to process data of TTTR experiments without the need of data conversion with your preferred scripting language.
 
@@ -13,6 +12,13 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
    - Time-window analysis
    - Photon distribution anaylsis
    - FLIM image generation and analysis
+
+
+Documentation
+=============
+Documentation for the latest releases is available `here <https://fluorescence-tools.github.io/tttrlib/>`_,.
+Previous releases are available through the read-the-docs page
+`page <https://tttrlib.readthedocs.io/>`_,.
 
 
 Contents
