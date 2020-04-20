@@ -10,7 +10,6 @@ single-molecule FRET experiments such traces are particularly useful to illustra
 single-molecule bursts.
 
 .. plot:: plots/single_molecule_mcs.py
-   :include-source:
 
 Above, for a donor and acceptor detection channel a histogram trace for is shown
 in green and red.
@@ -50,7 +49,6 @@ to select single molecule events confocal single-molecule FRET experiments as
 shown below.
 
 .. plot:: plots/single_molecule_burst_selection.py
-   :include-source:
 
 Above, for a donor and acceptor detection channel a histogram trace for is shown
 in green and red. In blue the range based selection is shown.
@@ -66,7 +64,7 @@ histograns using Photon Distribution Analysis (PDA) for scoring of realizations
 of models by experimental single molecule histograms :cite:`kalinin2007`.
 
 .. plot:: plots/single_molecule_pda_1.py
-   :include-source:
+   :include-source: False
 
 To create a PDA model first create an instance of the ``tttrlib.Pda`` class. The
 Pda class implements a Photon Distribution Analysis algorithm for photons that

@@ -81,7 +81,9 @@
 <li><a class="reference internal" href="#general-features">General features</a></li>
 <li><a class="reference internal" href="#create-tttr-objects">Create TTTR objects</a><ul>
 <li><a class="reference internal" href="#opening-files">Opening files</a></li>
+<li><a class="reference internal" href="#comparison-other-software">Comparison other software</a></li>
 <li><a class="reference internal" href="#slicing-subsets">Slicing / subsets</a></li>
+<li><a class="reference internal" href="#joining-tttrs">Joining TTTRs</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#writing-tttr-files">Writing TTTR-files</a></li>
@@ -322,17 +324,46 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.<
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.</p>
 </div>
+<div class="section" id="comparison-other-software">
+<h3>Comparison other software<a class="headerlink" href="#comparison-other-software" title="Permalink to this headline">¶</a></h3>
+<p>The conversion tools <a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a>
+that can be used to convert original data into the <a class="reference external" href="https://www.photon-hdf5.org/">Photon-HDF5</a>
+format for down-stream processing uses <a class="reference external" href="https://numba.pydata.org/">numba</a> to
+accelerate the interpretation of the binary data in TTTR files.</p>
+<p>(<a class="reference external" href="./plots/tttr_read_benchmark.py">Source code</a>)</p>
+<p>Overall <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> surpasses phconvert in performance. For cases where phconvert
+uses numba effectively, the reading performance of phconvert is comparable.</p>
+</div>
 <div class="section" id="slicing-subsets">
 <h3>Slicing / subsets<a class="headerlink" href="#slicing-subsets" title="Permalink to this headline">¶</a></h3>
 <p>New TTTR objects can be created by slicing existing objects, if you are
 interested a subset of the data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">data_sliced</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>A slice of a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object creates a copy, i.e., the routing channel, the
 macro, and the micro times are copied including the header information.</p>
+</div>
+<div class="section" id="joining-tttrs">
+<h3>Joining TTTRs<a class="headerlink" href="#joining-tttrs" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects can be joined either by the append method or by using the <code class="docutils literal notranslate"><span class="pre">+</span></code>
+operator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">d2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">other</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">shift_macro_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">macro_time_offset</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+<span class="n">d3</span> <span class="o">=</span> <span class="n">data</span> <span class="o">+</span> <span class="n">data</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">d3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">shift_macro_time</span></code> is set to True, which is the default, the macro times of the
+data that are offset by the last macro time record in the first set in addition to
+the value specified by <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>. The parameter <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>
+is set to zero by default.</p>
 </div>
 </div>
 <div class="section" id="writing-tttr-files">
