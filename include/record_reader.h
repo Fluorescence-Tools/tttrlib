@@ -29,7 +29,7 @@
 
 
 bool ProcessSPC130(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -38,7 +38,7 @@ bool ProcessSPC130(
 );
 
 bool ProcessSPC600_4096(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -47,7 +47,7 @@ bool ProcessSPC600_4096(
 );
 
 bool ProcessSPC600_256(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -56,7 +56,7 @@ bool ProcessSPC600_256(
 );
 
 bool ProcessHHT2v2(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -65,7 +65,7 @@ bool ProcessHHT2v2(
 );
 
 bool ProcessHHT2v1(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -74,7 +74,7 @@ bool ProcessHHT2v1(
 );
 
 bool ProcessHHT3v2(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -84,7 +84,7 @@ bool ProcessHHT3v2(
 
 
 bool ProcessHHT3v1(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -93,7 +93,7 @@ bool ProcessHHT3v1(
 );
 
 bool ProcessPHT3(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -102,7 +102,7 @@ bool ProcessPHT3(
 );
 
 bool ProcessPHT2(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,

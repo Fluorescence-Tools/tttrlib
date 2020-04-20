@@ -236,7 +236,7 @@ private:
     boost::bimap<std::string, int> container_names;
 
     typedef bool (*processRecord_t)(
-            uint64_t&,  // input
+            uint32_t&,  // input
             uint64_t&,  // overflow counter
             uint64_t&,  // true number of sync pulses
             uint32_t&,  // microtime
@@ -298,7 +298,7 @@ private:
     * @return The return value is true if the record is not an overflow record.
     */
     bool (*processRecord)(
-            uint64_t&, // input
+            uint32_t&, // input
             uint64_t&, // overflow counter
             uint64_t&, // true number of sync pulses
             uint32_t&, // microtime
@@ -382,6 +382,31 @@ protected:
 
 
 public:
+
+    void append(
+            const TTTR *other,
+            bool shift_macro_time=true,
+            long long macro_time_offset=0
+    ){
+#if VERBOSE
+        std::cout << "-- Appending number of records: " << other->n_valid_events << std::endl;
+#endif
+        size_t n_rec = this->n_valid_events + other->n_valid_events;
+        macro_times = (unsigned long long*) realloc(macro_times, n_rec * sizeof(unsigned long long));
+        micro_times = (unsigned int*) realloc(micro_times, n_rec * sizeof(unsigned int));
+        routing_channels = (short*) realloc(routing_channels, n_rec * sizeof(short));
+        event_types = (short*) realloc(event_types, n_rec * sizeof(short));
+        if(shift_macro_time){
+            macro_time_offset += macro_times[n_valid_events - 1];
+        }
+        for(size_t i_rec=0; i_rec<other->n_valid_events; i_rec++){
+            macro_times[i_rec + n_valid_events] = other->macro_times[i_rec] + macro_time_offset;
+            micro_times[i_rec + n_valid_events] = other->micro_times[i_rec];
+            routing_channels[i_rec + n_valid_events] = other->routing_channels[i_rec];
+            event_types[i_rec + n_valid_events] = other->event_types[i_rec];
+        }
+        n_valid_events += other->n_valid_events;
+    }
 
     /*!
      * Returns an array containing the routing channel numbers
@@ -627,6 +652,16 @@ public:
      * @param shift
      */
     void shift_macro_time(int shift);
+
+
+    TTTR* operator+(const TTTR* other) const
+    {
+        auto re = new TTTR();
+        re->copy_from(*this, true);
+        re->append(other);
+        return re;
+    }
+
 };
 
 

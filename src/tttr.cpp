@@ -365,7 +365,7 @@ void TTTR::read_records(
         size_t n_rec,
         bool rewind,
         size_t chunk
-        ) {
+) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
 #if VERBOSE
     std::cout << "-- Records that will be read : " << n_rec << std::endl;
@@ -388,7 +388,7 @@ void TTTR::read_records(
         for (size_t j = 0; j < number_of_objects; j++) {
             offset = bytes_per_record * j;
             n_valid_events += processRecord(
-                    *(uint64_t *) &tmp[offset],
+                    *(uint32_t *) &tmp[offset],
                     overflow_counter,
                     *(uint64_t *) &macro_times[n_valid_events],
                     *(uint32_t *) &micro_times[n_valid_events],

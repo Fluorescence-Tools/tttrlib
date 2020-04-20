@@ -117,7 +117,6 @@ where a large fraction of the entries are overflow records.
 
 Create TTTR objects
 ===================
-
 Opening files
 -------------
 In Python, first, the tttrlib module needs to be imported. Next, a TTTR object
@@ -169,20 +168,53 @@ Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
 
+Comparison other software
+-------------------------
+The conversion tools `phconvert <https://phconvert.readthedocs.io/>`_
+that can be used to convert original data into the `Photon-HDF5 <https://www.photon-hdf5.org/>`_
+format for down-stream processing uses `numba <https://numba.pydata.org/>`_ to
+accelerate the interpretation of the binary data in TTTR files.
+
+.. plot:: plots/tttr_read_benchmark.py
+
+Overall ``tttrlib`` surpasses phconvert in performance. For cases where phconvert
+uses numba effectively, the reading performance of phconvert is comparable.
+
+
 Slicing / subsets
 -----------------
-
 New TTTR objects can be created by slicing existing objects, if you are
 interested a subset of the data.
 
 .. code-block:: python
 
-    import tttrlib
     data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
     data_sliced = data[:10]
 
 A slice of a ``TTTR`` object creates a copy, i.e., the routing channel, the
 macro, and the micro times are copied including the header information.
+
+Joining TTTRs
+-------------
+``TTTR`` objects can be joined either by the append method or by using the ``+``
+operator.
+
+.. code-block:: python
+
+    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    d2 = data.append(
+        other=data,
+        shift_macro_time=True,
+        macro_time_offset=0
+    )
+    d3 = data + data
+    len(d2) == 2 * len(data)
+    len(d3) == len(d2)
+
+If ``shift_macro_time`` is set to True, which is the default, the macro times of the
+data that are offset by the last macro time record in the first set in addition to
+the value specified by ``macro_time_offset``. The parameter ``macro_time_offset``
+is set to zero by default.
 
 Writing TTTR-files
 ==================

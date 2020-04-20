@@ -103,6 +103,28 @@ class Tests(unittest.TestCase):
         self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:-1]), True)
         self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:-1]), True)
 
+    def test_join(self):
+        d = tttrlib.TTTR(data)
+        d.append(data)
+        self.assertEqual(
+            len(d), 2 * len(data)
+        )
+        # by default the data macro time data is shifted
+        self.assertEqual(
+            d.macro_times[len(data)],
+            data.macro_times[len(data) - 1] + data.macro_times[0]
+        )
+        # if shift_macro_time is set to False it is not shifted
+        # an optional constant offset is added independently
+        d2 = tttrlib.TTTR(data)
+        d2.append(data, shift_macro_time=False, macro_time_offset=11)
+        self.assertEqual(
+            d2.macro_times[len(data)],
+            int(data.macro_times[0] + 11)
+        )
+
+
+
     def test_header_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
