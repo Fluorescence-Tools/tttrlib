@@ -227,11 +227,7 @@ displayed by the code shown below:
     p.show()
 
 The outcome of such analysis for a complete working example is shown below including
-all necessary source code below.
-
-.. literalinclude:: plots/imaging_python.py
-   :language: python
-   :linenos:
+all necessary source code is `here <https://github.com/Fluorescence-Tools/tttrlib/tree/master/docs/plots/imaging_python.py>`_.
 
 For any practical applications it is recommended the determine the images using
 the built-in functions of ``tttrlib``. Using this functions is illustrated below.

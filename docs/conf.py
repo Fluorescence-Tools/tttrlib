@@ -51,6 +51,19 @@ extensions = [
     'sphinx.ext.intersphinx'
 ]
 
+# numpydoc
+numpydoc_attributes_as_param_list = False
+
+# matplotlib plot directive
+plot_include_source = False
+plot_formats = [("png", 90)]
+plot_html_show_formats = True
+plot_html_show_source_link = True
+plot_pre_code = """import numpy as np
+import tttrlib
+import pylab as p
+"""
+
 
 breathe_projects = {}
 # latex and breathe do not play very well together. Therefore
