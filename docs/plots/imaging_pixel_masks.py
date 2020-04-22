@@ -17,7 +17,7 @@ reading_parameter = {
     "channels": channels
 }
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
-mask = imread("../../test/data/imaging/aux/pq_ht3_clsm_mask.png").astype(np.uint8)
+mask = imread("../../test/data/imaging/misc/clsm_mask.png").astype(np.uint8)
 selection = np.ascontiguousarray(
     np.broadcast_to(
         mask,
