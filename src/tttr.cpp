@@ -74,7 +74,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
 
 TTTR::TTTR(
         const TTTR &parent,
-        long long *selection,
+        int *selection,
         int n_selection,
         bool find_used_channels) :  TTTR()
         {
@@ -182,7 +182,7 @@ void TTTR::find_used_routing_channels(){
 #if VERBOSE
     std::clog << "-- Used routing channels: ";
     for(auto c: used_routing_channels){
-        std::clog << c << ", ";
+        std::clog << static_cast<unsigned>(c) << ", ";
     }
     std::clog << std::endl;
 #endif
@@ -224,7 +224,7 @@ int TTTR::read_hdf_file(const char *fn){
      */
     H5Dread(
             ds_microtime,
-            H5T_NATIVE_UINT32, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             micro_times
     );
     H5Dread(
@@ -234,7 +234,7 @@ int TTTR::read_hdf_file(const char *fn){
     );
     H5Dread(
             ds_routing_channels,
-            H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+            H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT,
             routing_channels
     );
 
@@ -317,29 +317,29 @@ void TTTR::allocate_memory_for_records(size_t n_rec){
     if(tttr_container_type == 5) {
         macro_times = (unsigned long long*) H5allocate_memory(
                 n_rec * sizeof(unsigned long long), false
-                );
-        micro_times = (unsigned int*) H5allocate_memory(
-                n_rec * sizeof(unsigned int), false
-                );
-        routing_channels = (short*) H5allocate_memory(
-                n_rec * sizeof(short), false
-                );
-        event_types = (short*) H5allocate_memory(
-                n_rec * sizeof(short), false
-                );
+        );
+        micro_times = (unsigned short*) H5allocate_memory(
+                n_rec * sizeof(unsigned short), false
+        );
+        routing_channels = (signed char*) H5allocate_memory(
+                n_rec * sizeof(signed char), false
+        );
+        event_types = (signed char*) H5allocate_memory(
+                n_rec * sizeof(signed char), false
+        );
     } else {
         macro_times = (unsigned long long*) malloc(
                 n_rec * sizeof(unsigned long long)
                 );
-        micro_times = (unsigned int*) malloc(
+        micro_times = (unsigned short*) malloc(
                 n_rec * sizeof(unsigned int)
-                );
-        routing_channels = (short*) malloc(
-                n_rec * sizeof(short)
-                );
-        event_types = (short*) malloc(
-                n_rec * sizeof(short)
-                );
+        );
+        routing_channels = (signed char*) malloc(
+                n_rec * sizeof(signed char)
+        );
+        event_types = (signed char*) malloc(
+                n_rec * sizeof(signed char)
+        );
     }
 }
 
@@ -383,7 +383,7 @@ void TTTR::read_records(
     // read if possible the data in chunks to speed up the access
     size_t number_of_objects;
     do{
-        char* tmp = (char*) malloc(bytes_per_record * (chunk + 1));
+        signed char* tmp = (signed char*) malloc(bytes_per_record * (chunk + 1));
         number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
         for (size_t j = 0; j < number_of_objects; j++) {
             offset = bytes_per_record * j;
@@ -430,18 +430,18 @@ void TTTR::get_macro_time(unsigned long long** output, int* n_output){
 }
 
 
-void TTTR::get_micro_time(uint32_t** output, int* n_output){
-    get_array<uint32_t>(n_valid_events, micro_times, output, n_output);
+void TTTR::get_micro_time(unsigned short** output, int* n_output){
+    get_array<unsigned short>(n_valid_events, micro_times, output, n_output);
 }
 
 
-void TTTR::get_routing_channel(int16_t** output, int* n_output){
-    get_array<int16_t>(n_valid_events, routing_channels, output, n_output);
+void TTTR::get_routing_channel(signed char** output, int* n_output){
+    get_array<signed char>(n_valid_events, routing_channels, output, n_output);
 }
 
 
-void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
-    get_array(
+void TTTR::get_used_routing_channels(signed char** output, int* n_output){
+    get_array<signed char>(
             used_routing_channels.size(),
             used_routing_channels.data(),
             output,
@@ -450,8 +450,8 @@ void TTTR::get_used_routing_channels(int16_t** output, int* n_output){
 }
 
 
-void TTTR::get_event_type(int16_t** output, int* n_output){
-    get_array(
+void TTTR::get_event_type(signed char** output, int* n_output){
+    get_array<signed char>(
             n_valid_events,
             event_types,
             output,
@@ -473,9 +473,9 @@ unsigned int TTTR::get_n_events(){
 
 
 void TTTR::get_selection_by_channel(
-        long long **output, int *n_output,
-        long long *input, int n_input){
-    ::selection_by_channels(
+        int **output, int *n_output,
+        int *input, int n_input){
+    selection_by_channels(
             output, n_output,
             input, n_input,
             routing_channels, get_n_events()
@@ -484,7 +484,7 @@ void TTTR::get_selection_by_channel(
 
 
 void TTTR::get_selection_by_count_rate(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         double time_window, int n_ph_max,
         bool invert
 ){
@@ -499,7 +499,7 @@ void TTTR::get_selection_by_count_rate(
 
 
 void TTTR::get_time_window_ranges(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         double minimum_window_length,
         int minimum_number_of_photons_in_time_window,
         int maximum_number_of_photons_in_time_window,
@@ -521,19 +521,19 @@ void TTTR::get_time_window_ranges(
 }
 
 
-TTTR* TTTR::select(long long *selection, int n_selection) {
+TTTR* TTTR::select(int *selection, int n_selection) {
     return new TTTR(*this, selection, n_selection);
 }
 
 
 void selection_by_channels(
-        long long **output, int *n_output,
-        long long *input, int n_input,
-        short *routing_channels, int n_routing_channels) {
+        int **output, int *n_output,
+        int *input, int n_input,
+        signed char *routing_channels, int n_routing_channels) {
     size_t n_sel;
-    *output = (long long *) malloc(n_routing_channels * sizeof(long long));
+    *output = (int *) malloc(n_routing_channels * sizeof(int));
     n_sel = 0;
-    for (long long i = 0; i < n_routing_channels; i++) {
+    for (int i = 0; i < n_routing_channels; i++) {
         int ch = routing_channels[i];
         for (int j = 0; j < n_input; j++) {
             if (input[j] == ch) {
@@ -569,7 +569,7 @@ size_t determine_number_of_records_by_file_size(
 
 
 void ranges_by_time_window(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         unsigned long long *input, int n_input,
         double minimum_window_length,
         double maximum_window_length,
@@ -590,7 +590,7 @@ void ranges_by_time_window(
     std::clog << "-- tw_min: " << tw_min << std::endl;
     std::clog << "-- tw_max: " << tw_max << std::endl;
 #endif
-    *output = (unsigned long long *) malloc(2 * n_input * sizeof(unsigned long long));
+    *output = (int *) malloc(2 * n_input * sizeof(int));
     *n_output = 0;
 
     size_t tw_begin = 0;
@@ -621,14 +621,14 @@ void ranges_by_time_window(
 
 
 void selection_by_count_rate(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration,
         bool invert
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
-    *output = (unsigned long long*) calloc(sizeof(unsigned long long), n_time);
+    *output = (int*) calloc(sizeof(int), n_time);
     int i = 0;
     *n_output = 0;
     while (i < (n_time - 1)){
@@ -700,12 +700,12 @@ void compute_intensity_trace(
 
 
 void get_ranges_channel(
-        int **ranges, int *n_range,
+        unsigned int **ranges, int *n_range,
         short *channel, int n_channel,
         int selection_channel
         ){
     *n_range = 0;
-    *ranges = (int *) malloc(2 * n_channel * sizeof(int));
+    *ranges = (unsigned int *) malloc(2 * n_channel * sizeof(unsigned int));
 
     int previous_marker_position = 0;
     int next_marker_position;
@@ -795,9 +795,6 @@ bool TTTR::write(
 }
 
 TTTRRange::TTTRRange(const TTTRRange& p2){
-//#if VERBOSE
-//    std::clog << "TTTRRange copy" << std::endl;
-//#endif
     _start = p2._start;
     _stop = p2._stop;
     _start_time = p2._start_time;
@@ -810,9 +807,10 @@ TTTRRange::TTTRRange(const TTTRRange& p2){
 TTTRRange::TTTRRange(
         size_t start,
         size_t stop,
-        long long start_time,
-        long long stop_time,
-        TTTRRange* other
+        unsigned int start_time,
+        unsigned int stop_time,
+        TTTRRange* other,
+        int pre_reserve
 ) {
     if(other != nullptr){
         this->_start = other->_start;
@@ -825,5 +823,6 @@ TTTRRange::TTTRRange(
         this->_start_time = start_time;
         this->_stop_time = stop_time;
     }
+    _tttr_indices.reserve(pre_reserve);
 }
 

@@ -7,8 +7,7 @@ n_lines(0)
 {}
 
 
-CLSMFrame::CLSMFrame(size_t frame_start) :
-CLSMFrame()
+CLSMFrame::CLSMFrame(size_t frame_start) : CLSMFrame()
 {
     CLSMFrame::_start = frame_start;
 }
@@ -57,40 +56,6 @@ CLSMImage::CLSMImage(const CLSMImage& p2, bool fill){
     copy(p2, fill);
 }
 
-//void CLSMImage::shift_line_start(
-//        TTTR *tttr_data,
-//        int macro_time_shift
-//        ){
-//    for(auto &frame : this->get_frames()){
-//        for(auto &line: frame->get_lines()){
-//            // The shifted should refer to valid events. Thus, the macro time
-//            // cannot be shifted by any number.
-//            // Thus, do a linear search to find new start/stop indices and times
-//            // that are closest to the macro time.
-//            int increment = (macro_time_shift < 0) ? -1 : 1;
-//            unsigned long long unshifted_macro_time = line->start_time;
-//
-//            // Shift start
-//            for(int i = line->start; 0 <= i < tttr_data->n_valid_events; i+=increment){
-//                // shift at least by the specified macro_time_shift
-//                if((unshifted_macro_time - tttr_data->macro_times[i]) > macro_time_shift){
-//                    line->start_time = tttr_data->macro_times[i];
-//                    line->start = i;
-//                    break;
-//                }
-//            }
-//            // do the same shift for stop
-//            for(int i = line->stop; 0 <= i < tttr_data->n_valid_events; i+=increment){
-//                // shift at least by the specified macro_time_shift
-//                if((unshifted_macro_time - tttr_data->macro_times[i]) > macro_time_shift){
-//                    line->stop_time = tttr_data->macro_times[i];
-//                    line->stop = i;
-//                    break;
-//                }
-//            }
-//        }
-//    }
-//}
 
 void CLSMImage::shift_line_start(
         int macro_time_shift
@@ -236,7 +201,7 @@ void CLSMImage::initialize_leica_sp8_ptu(
                 if(f == tttr_data->micro_times[i_event])
                 {
 #if VERBOSE
-                    std::clog << "-- Found first frame at event: "  << i_event << std::endl;
+                    std::clog << "-- Found first frame at event: " << i_event << std::endl;
 #endif
                     found_frame = true;
                     break;

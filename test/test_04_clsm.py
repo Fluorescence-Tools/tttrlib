@@ -5,10 +5,40 @@ import unittest
 import tttrlib
 import numpy as np
 
+
+print("Test: ", __file__)
+
 sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
 sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 
+sp8_reading_parameter = {
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 15,
+    "n_pixel_per_line": 0,
+    "reading_routine": 'SP8',
+}
+
+ht3_reading_parameter = {
+    "marker_frame_start": [4],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 1,
+    "n_pixel_per_line": 256,
+    "reading_routine": 'default'
+}
+
+sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+sp5_reading_parameter = {
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 1,
+    "n_pixel_per_line": 256,
+    "reading_routine": 'SP5'
+}
 
 
 class TestCLSM(unittest.TestCase):
@@ -17,45 +47,16 @@ class TestCLSM(unittest.TestCase):
     # reference for future tests
     make_reference = False
 
-    sp8_reading_parameter = {
-        "marker_frame_start": [4, 6],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 15,
-        "n_pixel_per_line": 0,
-        "reading_routine": 'SP8',
-    }
-
-    ht3_reading_parameter = {
-        "marker_frame_start": [4],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 1,
-        "n_pixel_per_line": 256,
-        "reading_routine": 'default'
-    }
-
-    sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
-    sp5_reading_parameter = {
-        "marker_frame_start": [4, 6],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 1,
-        "n_pixel_per_line": 256,
-        "reading_routine": 'SP5'
-    }
-
     def test_leica_sp8_image_1(self):
         data = tttrlib.TTTR(sp8_filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
             tttr_data=data,
-            **self.sp8_reading_parameter
+            **sp8_reading_parameter
         )
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[1]
         )
-
         # Test mean TAC image
         mean_tac_image = clsm_image.get_mean_micro_time_image(
             tttr_data=data,
@@ -69,7 +70,6 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-
         # Test decay image
         decay_image = clsm_image.get_fluorescence_decay_image(
             tttr_data=data,
@@ -85,7 +85,6 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-
         # Access the pixel
         frame_nbr = 0
         frame = clsm_image[frame_nbr]
@@ -108,7 +107,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_copy_constructor(self):
         data = tttrlib.TTTR(ht3_filename, 'HT3')
-        reading_parameter = self.ht3_reading_parameter
+        reading_parameter = ht3_reading_parameter
         clsm_image_1 = tttrlib.CLSMImage(
             tttr_data=data,
             **reading_parameter

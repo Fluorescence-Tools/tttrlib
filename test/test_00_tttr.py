@@ -8,13 +8,13 @@ import numpy as np
 import tttrlib
 
 
+print("Test: ", __file__)
 spc132_filename = './data/bh/bh_spc132.spc'
 spc630_filename = './data/bh/bh_spc630_256.spc'
 photon_hdf_filename = './data/hdf/1a_1b_Mix.hdf5'
 ht3_clsm_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 ptu_hh_t2_filename = './data/PQ/ptu/pq_ptu_hh_T2.ptu'
 ptu_hh_t3_filename = './data/pq/ptu/pq_ptu_hh_T3.ptu'
-
 
 data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
@@ -192,7 +192,6 @@ class Tests(unittest.TestCase):
             )
 
     def test_constructor_with_selection(self):
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
         data_subset = data[:1000]
         ch1_indeces = data_subset.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data_subset, ch1_indeces)

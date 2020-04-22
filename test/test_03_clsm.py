@@ -5,6 +5,7 @@ import unittest
 import tttrlib
 import numpy as np
 
+print("Test: ", __file__)
 
 sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
 sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
@@ -22,8 +23,7 @@ class TestCLSM(unittest.TestCase):
         "marker_line_start": 1,
         "marker_line_stop": 2,
         "marker_event_type": 15,
-        # if set to zero the number of pixels will be the set to the number
-        # of lines
+        # if zero the number of pixels is the set to the number of lines
         "n_pixel_per_line": 0,
         "reading_routine": 'SP8',
     }

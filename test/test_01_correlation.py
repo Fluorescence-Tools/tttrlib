@@ -5,7 +5,7 @@ import tttrlib
 import numpy as np
 import scipy.spatial
 
-
+print("Test: ", __file__)
 spc132_filename = './data/bh/bh_spc132.spc'
 
 class Tests(unittest.TestCase):

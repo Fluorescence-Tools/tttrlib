@@ -37,7 +37,6 @@ class CLSMLine : public TTTRRange{
 
     friend class CLSMImage;
     friend class CLSMFrame;
-    friend class CLSMLine;
 
 private:
     std::vector<CLSMPixel*> pixels;
@@ -92,6 +91,12 @@ public:
         }
     }
 
+    ~CLSMLine(){
+        for(auto p: pixels){
+            delete(p);
+        }
+    }
+
     void append(CLSMPixel* pixel){
         pixels.emplace_back(pixel);
         n_pixel++;
@@ -126,7 +131,10 @@ public:
 
     CLSMFrame();
 
-    CLSMFrame(const CLSMFrame& old_frame, bool fill = false) : TTTRRange(old_frame){
+    CLSMFrame(
+            const CLSMFrame& old_frame,
+            bool fill = false
+    ) : TTTRRange(old_frame){
         // private attributes
         for(auto l: old_frame.lines){
             lines.emplace_back(new CLSMLine(*l, fill));
@@ -167,14 +175,13 @@ private:
 
 protected:
     /// The number of frames in an CLSMImage
-    size_t n_frames;
-
+    size_t n_frames = 0;
 
     /// The number of lines per frames
-    size_t n_lines;
+    size_t n_lines = 0;
 
     /// The number if pixels per line
-    size_t n_pixel;
+    size_t n_pixel = 0;
 
 
 protected:
@@ -197,9 +204,17 @@ protected:
 
 
 public:
+
+    /// Vector containing the tttr indices of the frame markers
     std::vector<int> marker_frame;
+
+    /// Defines the marker for a line start
     int marker_line_start;
+
+    /// Defines the marker for a line stop
     int marker_line_stop;
+
+    /// The event type used for the marker
     int marker_event;
 
 
@@ -232,16 +247,16 @@ public:
      * @param stack_frames
      */
     void get_fcs_image(
-            float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-            TTTR* tttr_data,
-            TTTR* tttr_data_other,
-            CLSMImage* clsm_other,
-            std::string correlation_method = "default",
-            int n_bins = 1,
-            int n_casc = 10,
-            bool stack_frames = true,
-            bool normalized_correlation = true,
-            int min_photons = 3
+        float** output, int* dim1, int* dim2, int* dim3, int* dim4,
+        TTTR* tttr_data,
+        TTTR* tttr_data_other,
+        CLSMImage* clsm_other,
+        std::string correlation_method = "default",
+        int n_bins = 1,
+        int n_casc = 10,
+        bool stack_frames = true,
+        bool normalized_correlation = true,
+        int min_photons = 3
     );
 
     /*!

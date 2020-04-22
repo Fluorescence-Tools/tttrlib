@@ -190,9 +190,8 @@ namespace peulen{
      * @param[in] tac The number of micro time channels (TAC channels)
      */
     void make_fine_times(
-            unsigned long long *t,
-            unsigned int n_times,
-            unsigned int* tac,
+            unsigned long long *t, unsigned int n_times,
+            unsigned short* tac,
             unsigned int n_tac
     );
 

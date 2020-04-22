@@ -227,11 +227,9 @@ public:
      * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
     void set_microtimes(
-            unsigned int *tac_1,
-            unsigned int n_tac_1,
-            unsigned int *tac_2,
-            unsigned int n_tac_2,
-            unsigned int n_tac
+        unsigned short *tac_1, int n_tac_1,
+        unsigned short *tac_2, int n_tac_2,
+        int n_tac
     );
 
     /*!

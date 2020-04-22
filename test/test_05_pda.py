@@ -4,6 +4,8 @@ import unittest
 import tttrlib
 import numpy as np
 
+print("Test: ", __file__)
+
 
 class Tests(unittest.TestCase):
 

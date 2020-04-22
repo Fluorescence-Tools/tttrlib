@@ -106,10 +106,8 @@ void peulen::correlation_normalize(
 }
 
 void peulen::make_fine_times(
-        unsigned long long *t,
-        unsigned int n_times,
-        unsigned int *tac,
-        unsigned int n_tac
+        unsigned long long *t, unsigned int n_times,
+        unsigned short *tac, unsigned int n_tac
 ) {
 #if VERBOSE
     std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;

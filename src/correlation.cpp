@@ -276,9 +276,9 @@ void Correlator::get_x_axis(unsigned long long** x_axis, int* n_out){
 
 
 void Correlator::set_microtimes(
-        unsigned int* tac_1, unsigned int n_tac_1,
-        unsigned int* tac_2, unsigned int n_tac_2,
-        unsigned int n_tac
+        unsigned short* tac_1, int n_tac_1,
+        unsigned short* tac_2, int n_tac_2,
+        int n_tac
         ){
 #if VERBOSE
     std::clog << "-- Setting micro times..." << std::endl;
@@ -330,9 +330,9 @@ void Correlator::set_tttr(
                 tttr_1->get_number_of_micro_time_channels(),
                 tttr_2->get_number_of_micro_time_channels()
                 );
-        unsigned int* tac_1; int n_tac1;
+        unsigned short* tac_1; int n_tac1;
         tttr_1->get_micro_time(&tac_1, &n_tac1);
-        unsigned int* tac_2; int n_tac2;
+        unsigned short* tac_2; int n_tac2;
         tttr_2->get_micro_time(&tac_2, &n_tac2);
         set_microtimes(tac_1, n_tac1, tac_2, n_tac2, n_tac);
     }

@@ -235,7 +235,7 @@ void Pda::compute_experimental_histograms(
         TTTR* tttr_data,
         double** s1s2, int* dim1, int* dim2,
         double** ps, int* dim_ps,
-        long long** tttr_indices, int* n_tttr_indices,
+        int** tttr_indices, int* n_tttr_indices,
         std::vector<int> channels_1,
         std::vector<int> channels_2,
         int maximum_number_of_photons,
@@ -256,15 +256,17 @@ void Pda::compute_experimental_histograms(
             (maximum_number_of_photons + 1) * 2, sizeof(double)
     );
     for(int i=0; i< (maximum_number_of_photons + 1) * 2; i++) tmp_ps[i]=0.0;
-    std::vector<long long> tmp_tttr_indices;
-    unsigned long long *tws; int n_tw;
+    std::vector<int> tmp_tttr_indices;
+    int *tws; int n_tw;
     tttr_data->get_time_window_ranges(
             &tws, &n_tw,
             minimum_time_window_length,
             minimum_number_of_photons
     );
-    short* routing_channels; int n_routing_channels;
-    tttr_data->get_routing_channel(&routing_channels, &n_routing_channels);
+    signed char* routing_channels; int n_routing_channels;
+    tttr_data->get_routing_channel(
+            &routing_channels, &n_routing_channels
+    );
 #if VERBOSE
     std::clog << "-- Number of time windows: " << n_tw / 2 << std::endl;
     std::clog << "-- Getting routing channels... " << std::endl;
@@ -276,7 +278,7 @@ void Pda::compute_experimental_histograms(
         size_t stop = tws[i + 1];
         int n_ch1 = 0;
         int n_ch2 = 0;
-        size_t j;
+        int j;
         for(j=start; j<stop; j++){
             short channel = routing_channels[j];
             for(auto &c: channels_1) n_ch1 += (c==channel);
@@ -291,7 +293,7 @@ void Pda::compute_experimental_histograms(
         tmp_s1s2[n_ch2 * (maximum_number_of_photons + 1) + n_ch1] += 1.0;
         tmp_ps[n_photons] += 1.0;
     }
-    *tttr_indices = (long long*) malloc(tmp_tttr_indices.size() * sizeof(long long));
+    *tttr_indices = (int*) malloc(tmp_tttr_indices.size() * sizeof(int));
     memcpy(*tttr_indices, tmp_tttr_indices.data(), tmp_tttr_indices.size());
     *n_tttr_indices = n_tttr;
     *ps = tmp_ps;

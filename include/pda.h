@@ -75,11 +75,11 @@ public:
      * @param hist2d_nmin the minimum number of photons considered
      */
     Pda(
-            int hist2d_nmax=300,
-            int hist2d_nmin=5,
-            double background_ch1=0.0,
-            double background_ch2=0.0,
-            std::vector<double> pF = std::vector<double>()
+        int hist2d_nmax=300,
+        int hist2d_nmin=5,
+        double background_ch1=0.0,
+        double background_ch2=0.0,
+        std::vector<double> pF = std::vector<double>()
     ){
         set_max_number_of_photons(std::abs(hist2d_nmax));
         _n_2d_min = std::abs(hist2d_nmin);
@@ -166,8 +166,8 @@ public:
         auto* t = (double *) malloc(_S1S2.size() * sizeof(double));
         for(int i = 0; i < _S1S2.size(); i++) t[i] = _S1S2[i];
         *output = t;
-        *n_output1 = _n_2d_max + 1;
-        *n_output2 = _n_2d_max + 1;
+        *n_output1 = int (_n_2d_max + 1);
+        *n_output2 = int (_n_2d_max + 1);
     }
 
     /*!
@@ -320,15 +320,15 @@ public:
      * units of milli seconds.
      */
     static void compute_experimental_histograms(
-            TTTR* tttr_data,
-            double** s1s2, int* dim1, int* dim2,
-            double** ps, int* dim_ps,
-            long long** tttr_indices, int* n_tttr_indices,
-            std::vector<int> channels_1,
-            std::vector<int> channels_2,
-            int maximum_number_of_photons,
-            int minimum_number_of_photons,
-            double minimum_time_window_length
+        TTTR* tttr_data,
+        double** s1s2, int* dim1, int* dim2,
+        double** ps, int* dim_ps,
+        int** tttr_indices, int* n_tttr_indices,
+        std::vector<int> channels_1,
+        std::vector<int> channels_2,
+        int maximum_number_of_photons,
+        int minimum_number_of_photons,
+        double minimum_time_window_length
     );
 
     /*!
@@ -343,13 +343,14 @@ public:
      * @param amplitudes[in] corresponding amplitudes
      */
     static void S1S2_pF(
-            std::vector<double> &S1S2,
-            std::vector<double> &pF,
-            unsigned int Nmax,
-            double background_ch1,
-            double background_ch2,
-            std::vector<double> &p_ch1,
-            std::vector<double> &amplitudes);
+        std::vector<double> &S1S2,
+        std::vector<double> &pF,
+        unsigned int Nmax,
+        double background_ch1,
+        double background_ch2,
+        std::vector<double> &p_ch1,
+        std::vector<double> &amplitudes
+    );
 
     /*!
      * Convolves the Fluorescence matrix F1F2 with the background
@@ -362,11 +363,11 @@ public:
      * @param background_ch2
      */
     static void conv_pF(
-            std::vector<double> &S1S2,
-            const std::vector<double> &F1F2,
-            unsigned int Nmax,
-            double background_ch1,
-            double background_ch2
+        std::vector<double> &S1S2,
+        const std::vector<double> &F1F2,
+        unsigned int Nmax,
+        double background_ch1,
+        double background_ch2
     );
 
     /*!
@@ -378,10 +379,10 @@ public:
     * @param return_dim[in]
     */
     static void poisson_0toN(
-            std::vector<double> &return_p,
-            int start_idx,
-            double lam,
-            int return_dim
+        std::vector<double> &return_p,
+        int start_idx,
+        double lam,
+        int return_dim
     );
 
 
