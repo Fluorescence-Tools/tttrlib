@@ -6,9 +6,11 @@ import numpy as np
 import scipy.spatial
 
 
+spc132_filename = './data/bh/bh_spc132.spc'
+
 class Tests(unittest.TestCase):
 
-    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
     def test_correlation(self):
         # this compares the result of the implemented correlators
@@ -68,7 +70,7 @@ class Tests(unittest.TestCase):
 
         # import tttrlib
         # import pylab as p
-        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         correlator = tttrlib.Correlator(
             method='default',

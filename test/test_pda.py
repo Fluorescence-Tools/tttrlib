@@ -64,8 +64,6 @@ class Tests(unittest.TestCase):
         self.assertEqual(pda.hist2d_nmax, kw["hist2d_nmax"])
         self.assertEqual(pda.hist2d_nmin, kw["hist2d_nmin"])
 
-
-
     # def test_pda_1(self):
     #     """
     #     create a pda object and test its

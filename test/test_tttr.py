@@ -7,7 +7,16 @@ import numpy as np
 
 import tttrlib
 
-data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+
+spc132_filename = './data/bh/bh_spc132.spc'
+spc630_filename = './data/bh/bh_spc630_256.spc'
+photon_hdf_filename = './data/hdf/1a_1b_Mix.hdf5'
+ht3_clsm_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+ptu_hh_t2_filename = './data/PQ/ptu/pq_ptu_hh_T2.ptu'
+ptu_hh_t3_filename = './data/pq/ptu/pq_ptu_hh_T3.ptu'
+
+
+data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
 
 class Tests(unittest.TestCase):
@@ -15,12 +24,12 @@ class Tests(unittest.TestCase):
     make_references = False
 
     test_files = [
-        ('./data/BH/BH_SPC132.spc', 'SPC-130'),
-        ('./data/BH/BH_SPC630_256.spc', 'SPC-600_256'),
-        ('./data/HDF/1a_1b_Mix.hdf5', 'PHOTON-HDF5'),
-        ('./data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3'),
-        ('./data/PQ/PTU/PQ_PTU_HH_T2.ptu', 'PTU'),
-        ('./data/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
+        (spc132_filename, 'SPC-130'),
+        (spc630_filename, 'SPC-600_256'),
+        (photon_hdf_filename, 'PHOTON-HDF5'),
+        (ht3_clsm_filename, 'HT3'),
+        (ptu_hh_t2_filename, 'PTU'),
+        (ptu_hh_t3_filename, 'PTU')
     ]
 
     def test_reading(self):
@@ -123,8 +132,6 @@ class Tests(unittest.TestCase):
             int(data.macro_times[0] + 11)
         )
 
-
-
     def test_header_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
@@ -164,11 +171,11 @@ class Tests(unittest.TestCase):
         # second element is the name of the container
         # third element is the number used by tttrlib to identify containers
         names_types = [
-            ('./data/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU', 0),
-            ('./data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3', 1),
-            ('./data/BH/BH_SPC132.spc', 'SPC-130', 2),
-            ('./data/BH/BH_SPC630_256.spc', 'SPC-600_256', 3),
-            ('./data/HDF/1a_1b_Mix.hdf5', 'PHOTON-HDF5', 5)
+            (ptu_hh_t3_filename, 'PTU', 0),
+            (ht3_clsm_filename, 'HT3', 1),
+            (spc132_filename, 'SPC-130', 2),
+            (spc630_filename, 'SPC-600_256', 3),
+            (photon_hdf_filename, 'PHOTON-HDF5', 5)
         ]
         # Two ways of creating a TTTR container - by container type
         # number or name. Both should give the same result

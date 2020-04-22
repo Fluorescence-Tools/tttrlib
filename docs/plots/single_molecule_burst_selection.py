@@ -19,18 +19,17 @@ sel = np.array(sel)
 green_indeces = data.get_selection_by_channel([0, 8])
 red_indeces = data.get_selection_by_channel([1, 9])
 
-
 fig, ax = p.subplots(3, sharex=True, sharey=False)
 
 p.setp(ax[0].get_xticklabels(), visible=False)
-ax[0].plot(tttrlib.intensity_trace(mt[green_indeces], 30000), 'g')
+ax[0].plot(tttrlib.compute_intensity_trace(mt[green_indeces], 30000), 'g')
 
-ax[1].plot(tttrlib.intensity_trace(mt[red_indeces], 30000), 'r')
+ax[1].plot(tttrlib.compute_intensity_trace(mt[red_indeces], 30000), 'r')
 ax[1].invert_yaxis()
 
-ax[2].plot(tttrlib.intensity_trace(mt[green_indeces], 30000), 'g')
-ax[2].plot(tttrlib.intensity_trace(mt[red_indeces], 30000), 'r')
-ax[2].plot(tttrlib.intensity_trace(mt[sel], 30000), 'b')
+ax[2].plot(tttrlib.compute_intensity_trace(mt[green_indeces], 30000), 'g')
+ax[2].plot(tttrlib.compute_intensity_trace(mt[red_indeces], 30000), 'r')
+ax[2].plot(tttrlib.compute_intensity_trace(mt[sel], 30000), 'b')
 
 p.subplots_adjust(
     left=None, bottom=None, right=None, top=None,

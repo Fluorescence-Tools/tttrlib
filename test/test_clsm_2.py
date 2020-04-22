@@ -5,6 +5,11 @@ import unittest
 import tttrlib
 import numpy as np
 
+sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
+sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+
+
 
 class TestCLSM(unittest.TestCase):
 
@@ -12,7 +17,6 @@ class TestCLSM(unittest.TestCase):
     # reference for future tests
     make_reference = False
 
-    sp8_filename = './data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
     sp8_reading_parameter = {
         "marker_frame_start": [4, 6],
         "marker_line_start": 1,
@@ -22,7 +26,6 @@ class TestCLSM(unittest.TestCase):
         "reading_routine": 'SP8',
     }
 
-    ht3_filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
     ht3_reading_parameter = {
         "marker_frame_start": [4],
         "marker_line_start": 1,
@@ -32,7 +35,6 @@ class TestCLSM(unittest.TestCase):
         "reading_routine": 'default'
     }
 
-    sp5_filename = './data/leica/sp5/LSM_1.ptu'
     sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
     sp5_reading_parameter = {
         "marker_frame_start": [4, 6],
@@ -44,8 +46,7 @@ class TestCLSM(unittest.TestCase):
     }
 
     def test_leica_sp8_image_1(self):
-        print("test_leica_sp8_image_1")
-        data = tttrlib.TTTR(self.sp8_filename, 'PTU')
+        data = tttrlib.TTTR(sp8_filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
             tttr_data=data,
             **self.sp8_reading_parameter
@@ -106,7 +107,6 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_copy_constructor(self):
-        ht3_filename = './data/PQ/HT3/PQ_HT3_CLSM.ht3'
         data = tttrlib.TTTR(ht3_filename, 'HT3')
         reading_parameter = self.ht3_reading_parameter
         clsm_image_1 = tttrlib.CLSMImage(
