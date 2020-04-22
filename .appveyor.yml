@@ -37,10 +37,10 @@ test_script:
   - nosetests
   - cd ..
 
-#### scripts to run after tests
-#deploy_script:
-#  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-#  - anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
+# scripts to run after tests
+deploy_script:
+  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+  - anaconda -t %ANACONDA_API_TOKEN% upload -u %CONDA_USER% upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
 
 build: off
 
