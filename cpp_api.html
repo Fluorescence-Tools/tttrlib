@@ -63,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">C++ API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">References</a></li>
 </ul>
 </ul>
 </li>
@@ -1705,8 +1705,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N3Pda3PdaEiidd">
-<span id="_CPPv3N3Pda3PdaEiidd"></span><span id="_CPPv2N3Pda3PdaEiidd"></span><span id="Pda::Pda__i.i.double.double"></span><span class="target" id="class_pda_1a654aeb02e7e1930b3406f97e1779f2e1"></span><code class="sig-name descname">Pda</code><span class="sig-paren">(</span>int <em>hist2d_nmax</em> = 300, int <em>hist2d_nmin</em> = 5, double <em>background_ch1</em> = 0.0, double <em>background_ch2</em> = 0.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda3PdaEiidd" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N3Pda3PdaEiiddNSt6vectorIdEE">
+<span id="_CPPv3N3Pda3PdaEiiddNSt6vectorIdEE"></span><span id="_CPPv2N3Pda3PdaEiiddNSt6vectorIdEE"></span><span id="Pda::Pda__i.i.double.double.std::vector:double:"></span><span class="target" id="class_pda_1a5854f3ffd44cb77e2dbd378f75b0ebd7"></span><code class="sig-name descname">Pda</code><span class="sig-paren">(</span>int <em>hist2d_nmax</em> = 300, int <em>hist2d_nmin</em> = 5, double <em>background_ch1</em> = 0.0, double <em>background_ch2</em> = 0.0, std::vector&lt;double&gt; <em>pF</em> = std::vector&lt;double&gt;()<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda3PdaEiiddNSt6vectorIdEE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Constructor creating a new <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object</p>
 <p>A <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object can be used to compute Photon Distribution Analysis histograms.</p>
 <p><dl class="simple">
@@ -1727,8 +1727,7 @@
 <dl class="function">
 <dt id="_CPPv4N3Pda6appendEdd">
 <span id="_CPPv3N3Pda6appendEdd"></span><span id="_CPPv2N3Pda6appendEdd"></span><span id="Pda::append__double.double"></span><span class="target" id="class_pda_1ad78aa5e4991102a09da4042084159482"></span>void <code class="sig-name descname">append</code><span class="sig-paren">(</span>double <em>amplitude</em>, double <em>probability_ch1</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda6appendEdd" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Add a species. </p>
-<p>Appends a species.</p>
+<dd><p>Appends a species.</p>
 <p>A species is defined by the probability of detecting a photon in the first detection channel.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -1749,7 +1748,8 @@
 <dl class="function">
 <dt id="_CPPv4N3Pda14get_amplitudesEPPdPi">
 <span id="_CPPv3N3Pda14get_amplitudesEPPdPi"></span><span id="_CPPv2N3Pda14get_amplitudesEPPdPi"></span><span id="Pda::get_amplitudes__doublePP.iP"></span><span class="target" id="class_pda_1ae670951898a822e7d3aaf5cd19213ece"></span>void <code class="sig-name descname">get_amplitudes</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda14get_amplitudesEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Returns the amplitudes of the species <dl class="simple">
+<dd><p>Returns the amplitudes of the species</p>
+<p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">output[out]</span></code>: A C type array containing the amplitude of the species </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_output[out]</span></code>: The number of species </p></li>
@@ -1880,8 +1880,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibPdiiiib">
-<span id="_CPPv3N3Pda15get_1dhistogramEPPdPiPPdPiddibPdiiiib"></span><span id="_CPPv2N3Pda15get_1dhistogramEPPdPiPPdPiddibPdiiiib"></span><span id="Pda::get_1dhistogram__doublePP.iP.doublePP.iP.double.double.i.b.doubleP.i.i.i.i.b"></span><span class="target" id="class_pda_1aeead56bbbd1975ff2e1d6c1e53b861fb"></span>void <code class="sig-name descname">get_1dhistogram</code><span class="sig-paren">(</span>double **<em>histogram_x</em>, int *<em>n_histogram_x</em>, double **<em>histogram_y</em>, int *<em>n_histogram_y</em>, double <em>xmax</em> = 1000.0, double <em>xmin</em> = 0.01, int <em>nbins</em> = 81, bool <em>log_x</em> = true, double *<em>input</em> = nullptr, int <em>n_input1</em> = 0, int <em>n_input2</em> = 0, int <em>n_max</em> = -1, int <em>n_min</em> = -1, bool <em>skip_zero_photon</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibPdiiiib" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibNSt6vectorIdEEibNSt6vectorIdEENSt6vectorIdEE">
+<span id="_CPPv3N3Pda15get_1dhistogramEPPdPiPPdPiddibNSt6vectorIdEEibNSt6vectorIdEENSt6vectorIdEE"></span><span id="_CPPv2N3Pda15get_1dhistogramEPPdPiPPdPiddibNSt6vectorIdEEibNSt6vectorIdEENSt6vectorIdEE"></span><span id="Pda::get_1dhistogram__doublePP.iP.doublePP.iP.double.double.i.b.std::vector:double:.i.b.std::vector:double:.std::vector:double:"></span><span class="target" id="class_pda_1aa7ff29593bd7eca96cbf9b21e7bc13e6"></span>void <code class="sig-name descname">get_1dhistogram</code><span class="sig-paren">(</span>double **<em>histogram_x</em>, int *<em>n_histogram_x</em>, double **<em>histogram_y</em>, int *<em>n_histogram_y</em>, double <em>x_max</em> = 1000.0, double <em>x_min</em> = 0.01, int <em>n_bins</em> = 81, bool <em>log_x</em> = true, std::vector&lt;double&gt; <em>s1s2</em> = std::vector&lt;double&gt;(), int <em>n_min</em> = -1, bool <em>skip_zero_photon</em> = true, std::vector&lt;double&gt; <em>amplitudes</em> = std::vector&lt;double&gt;(), std::vector&lt;double&gt; <em>probabilities_ch1</em> = std::vector&lt;double&gt;()<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibNSt6vectorIdEEibNSt6vectorIdEENSt6vectorIdEE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns a one dimensional histogram of the 2D counting array of the two channels.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -1889,16 +1889,15 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">n_histogram_x[out]</span></code>: dimension of the x-axis </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">histogram_y[out]</span></code>: array containing the computed histogram </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_histogram_y[out]</span></code>: dimension of the histogram </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">xmax[in]</span></code>: maximum x value of the histogram </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">xmin[in]</span></code>: minimum x value of the histogram </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_max[in]</span></code>: maximum x value of the histogram </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_min[in]</span></code>: minimum x value of the histogram </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nbins[int]</span></code>: number of histogram bins </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">log_x[in]</span></code>: If set to true (default is true) the values on the x-axis are logarithmically spaced otherwise they have a linear spacing. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">input[in]</span></code>: Optional input for the S1S2 matrix. If this is set to a nullptr (default) the S1S2 matrix of the <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object is used to compute the 1D histogram. If this is not set to nullptr and both dimensions set by n_input1 and n_input2 are larger than zero. The input is used as S1S2 matrix. The input matrix must be quadratic. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_input1[in]</span></code>: First dimension of the S1S2 matrix. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_input2[in]</span></code>: Second dimension of the S1S2 matrix. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_max[in]</span></code>: Maximum number of photons in the histogram. If set to -1 (default is -1) the minimum number set when the <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object was created is used. Otherwise, the minimum of n_max and the number when the object was created is used. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s1s2[in]</span></code>: Optional input for the S1S2 matrix. If this is set to a nullptr (default) the S1S2 matrix of the <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object is used to compute the 1D histogram. If this is not set to nullptr and both dimensions set by n_input1 and n_input2 are larger than zero. The input is used as S1S2 matrix. The input matrix must be quadratic. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_min[in]</span></code>: Minimum number of photons in the histogram. If set to -1 the number set when the <a class="reference internal" href="#class_pda"><span class="std std-ref">Pda</span></a> object was instancitated is used. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">skip_zero_photon[in]</span></code>: When this option is set to true only elements of the s1s2 matrix i,j (i&gt;0 and j&gt;0) are considered. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitudes[in]</span></code>: The species amplitudes (optional). This updates the s1s2 matrix of the object. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">probabilities_ch1[in]</span></code>: The theoretical probabilities of detecting the species in channel 1(optional)This updates the s1s2 matrix of the object. </p></li>
 </ul>
 </dd>
 </dl>
@@ -1975,16 +1974,92 @@
 
 </div>
 <div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid">
+<span id="_CPPv3N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="_CPPv2N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="Pda::compute_experimental_histograms__TTTRP.doublePP.iP.iP.doublePP.iP.l-lPP.iP.std::vector:i:.std::vector:i:.i.i.double"></span><span class="target" id="class_pda_1a3a94dc18860da7d72666e58e1c8bcf3e"></span><em class="property">static</em> void <code class="sig-name descname">compute_experimental_histograms</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, double **<em>s1s2</em>, int *<em>dim1</em>, int *<em>dim2</em>, double **<em>ps</em>, int *<em>dim_ps</em>, long long **<em>tttr_indices</em>, int *<em>n_tttr_indices</em>, std::vector&lt;int&gt; <em>channels_1</em>, std::vector&lt;int&gt; <em>channels_2</em>, int <em>maximum_number_of_photons</em>, int <em>minimum_number_of_photons</em>, double <em>minimum_time_window_length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s1s2[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim1[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim2[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ps[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim_ps[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">channels_1</span></code>: routing channel numbers that are used for the first channel in the S1S2 matrix. Photons with this channel number are counted and increment values in the S1S2 matrix. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">channels_2</span></code>: routing channel numbers that are used for the second channel in the S1S2 matrix.Photons with this channel number are counted and increment values in the S1S2 matrix. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum_number_of_photons</span></code>: The maximum number of photons in the computed S1S2 matrix </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum_number_of_photons</span></code>: The minimum number of photons in a time window and in the S1S2 matrix </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum_time_window_length</span></code>: The minimum length of a time windows in units of milli seconds. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N3Pda7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE">
+<span id="_CPPv3N3Pda7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE"></span><span id="_CPPv2N3Pda7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE"></span><span id="Pda::S1S2_pF__std::vector:double:R.std::vector:double:R.unsigned-i.double.double.std::vector:double:R.std::vector:double:R"></span><span class="target" id="class_pda_1a829890486af3f307c44eec84bcc76924"></span><em class="property">static</em> void <code class="sig-name descname">S1S2_pF</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>S1S2</em>, std::vector&lt;double&gt; &amp;<em>pF</em>, unsigned int <em>Nmax</em>, double <em>background_ch1</em>, double <em>background_ch2</em>, std::vector&lt;double&gt; &amp;<em>p_ch1</em>, std::vector&lt;double&gt; &amp;<em>amplitudes</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>calculating p(G,R), several ratios using the same same P(F)</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">S1S2[]</span></code>: see sgsr_pN </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pF[in]</span></code>: input: p(F) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Nmax[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background_ch1[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background_ch2[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p_ch1[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitudes[in]</span></code>: corresponding amplitudes </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N3Pda7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd">
+<span id="_CPPv3N3Pda7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd"></span><span id="_CPPv2N3Pda7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd"></span><span id="Pda::conv_pF__std::vector:double:R.std::vector:double:CR.unsigned-i.double.double"></span><span class="target" id="class_pda_1a938f71ad17a45872d3e51b50803d8f8b"></span><em class="property">static</em> void <code class="sig-name descname">conv_pF</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>S1S2</em>, <em class="property">const</em> std::vector&lt;double&gt; &amp;<em>F1F2</em>, unsigned int <em>Nmax</em>, double <em>background_ch1</em>, double <em>background_ch2</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Convolves the Fluorescence matrix F1F2 with the background to yield the signal matrix S1S2</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">S1S2[out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">F1F2[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Nmax</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background_ch1</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background_ch2</span></code>: </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N3Pda12poisson_0toNERNSt6vectorIdEEidi">
+<span id="_CPPv3N3Pda12poisson_0toNERNSt6vectorIdEEidi"></span><span id="_CPPv2N3Pda12poisson_0toNERNSt6vectorIdEEidi"></span><span id="Pda::poisson_0toN__std::vector:double:R.i.double.i"></span><span class="target" id="class_pda_1aab1ae37085cb2451fecc140e73e3bce0"></span><em class="property">static</em> void <code class="sig-name descname">poisson_0toN</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>return_p</em>, int <em>start_idx</em>, double <em>lam</em>, int <em>return_dim</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda12poisson_0toNERNSt6vectorIdEEidi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Writes a Poisson distribution with an average lam, for 0..N into a vector starting at a specified index.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">return_p[in</span><span class="pre">out]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam[in]</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">return_dim[in]</span></code>: </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Protected Attributes</p>
 <dl class="member">
-<dt id="_CPPv4N3Pda5_NmaxE">
-<span id="_CPPv3N3Pda5_NmaxE"></span><span id="_CPPv2N3Pda5_NmaxE"></span><span id="Pda::_Nmax__unsigned-i"></span><span class="target" id="class_pda_1afe4edb86d0205ccaa4c441fef9868c17"></span>unsigned int <code class="sig-name descname">_Nmax</code> = 300<a class="headerlink" href="#_CPPv4N3Pda5_NmaxE" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N3Pda9_n_2d_maxE">
+<span id="_CPPv3N3Pda9_n_2d_maxE"></span><span id="_CPPv2N3Pda9_n_2d_maxE"></span><span id="Pda::_n_2d_max__unsigned-i"></span><span class="target" id="class_pda_1ae7f35b6a7459fb705012fcaafc6564cf"></span>unsigned int <code class="sig-name descname">_n_2d_max</code> = 300<a class="headerlink" href="#_CPPv4N3Pda9_n_2d_maxE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Maximum number of photons in the SgSr histogram. </p>
 </dd></dl>
 
 <dl class="member">
-<dt id="_CPPv4N3Pda5_NminE">
-<span id="_CPPv3N3Pda5_NminE"></span><span id="_CPPv2N3Pda5_NminE"></span><span id="Pda::_Nmin__unsigned-i"></span><span class="target" id="class_pda_1af4170b5872adbda397861d26584a81a0"></span>unsigned int <code class="sig-name descname">_Nmin</code> = 3<a class="headerlink" href="#_CPPv4N3Pda5_NminE" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N3Pda9_n_2d_minE">
+<span id="_CPPv3N3Pda9_n_2d_minE"></span><span id="_CPPv2N3Pda9_n_2d_minE"></span><span id="Pda::_n_2d_min__unsigned-i"></span><span class="target" id="class_pda_1a41c0f9ba5a69141c49474d9503ab2af5"></span>unsigned int <code class="sig-name descname">_n_2d_min</code> = 3<a class="headerlink" href="#_CPPv4N3Pda9_n_2d_minE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Minimum number of photons. </p>
 </dd></dl>
 
@@ -2585,6 +2660,21 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="_CPPv4N4TTTR15intensity_traceEPPiPid">
+<span id="_CPPv3N4TTTR15intensity_traceEPPiPid"></span><span id="_CPPv2N4TTTR15intensity_traceEPPiPid"></span><span id="TTTR::intensity_trace__iPP.iP.double"></span><span class="target" id="class_t_t_t_r_1a848bf4f38a7cfe1b097f9e08432b20d2"></span>void <code class="sig-name descname">intensity_trace</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, double <em>time_window_length</em> = 1.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR15intensity_traceEPPiPid" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Returns a intensity trace that is computed for a specified integration window</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: the returned intensity trace </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: the number of points in the intensity trace </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_window_length</span></code>: the length of the integration time windows in units of milliseconds. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="_CPPv4N4TTTR19get_routing_channelEPPsPi">
 <span id="_CPPv3N4TTTR19get_routing_channelEPPsPi"></span><span id="_CPPv2N4TTTR19get_routing_channelEPPsPi"></span><span id="TTTR::get_routing_channel__shortPP.iP"></span><span class="target" id="class_t_t_t_r_1ae5ebc99b307b6071a68306653d3eab2a"></span>void <code class="sig-name descname">get_routing_channel</code><span class="sig-paren">(</span>short **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR19get_routing_channelEPPsPi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns an array containing the routing channel numbers of the valid <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> events.</p>
@@ -2795,8 +2885,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR24get_ranges_by_count_rateEPPyPidiidb">
-<span id="_CPPv3N4TTTR24get_ranges_by_count_rateEPPyPidiidb"></span><span id="_CPPv2N4TTTR24get_ranges_by_count_rateEPPyPidiidb"></span><span id="TTTR::get_ranges_by_count_rate__unsigned-l-lPP.iP.double.i.i.double.b"></span><span class="target" id="class_t_t_t_r_1a2cd77e65283e8f585ae9db58e456c29b"></span>void <code class="sig-name descname">get_ranges_by_count_rate</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, double <em>minimum_window_length</em>, int <em>minimum_number_of_photons_in_time_window</em>, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>maximum_window_length</em> = -1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR24get_ranges_by_count_rateEPPyPidiidb" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR22get_time_window_rangesEPPyPidiidb">
+<span id="_CPPv3N4TTTR22get_time_window_rangesEPPyPidiidb"></span><span id="_CPPv2N4TTTR22get_time_window_rangesEPPyPidiidb"></span><span id="TTTR::get_time_window_ranges__unsigned-l-lPP.iP.double.i.i.double.b"></span><span class="target" id="class_t_t_t_r_1a096feedfc00dc38a39b0a6a87ddf3970"></span>void <code class="sig-name descname">get_time_window_ranges</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, double <em>minimum_window_length</em>, int <em>minimum_number_of_photons_in_time_window</em>, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>maximum_window_length</em> = -1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR22get_time_window_rangesEPPyPidiidb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns time windows (tw), i.e., the start and the stop indices for a minimum tw size, a minimum number of photons in a tw.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -3321,66 +3411,6 @@
 </div>
 </dd></dl>
 
-<dl class="type">
-<dt id="_CPPv412PdaFunctions">
-<span id="_CPPv312PdaFunctions"></span><span id="_CPPv212PdaFunctions"></span><span id="PdaFunctions"></span><span class="target" id="namespace_pda_functions"></span><em class="property">namespace </em><code class="sig-name descname">PdaFunctions</code><a class="headerlink" href="#_CPPv412PdaFunctions" title="Permalink to this definition">¶</a><br /></dt>
-<dd><div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Functions</p>
-<dl class="function">
-<dt id="_CPPv4N12PdaFunctions7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE">
-<span id="_CPPv3N12PdaFunctions7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE"></span><span id="_CPPv2N12PdaFunctions7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE"></span><span id="PdaFunctions::S1S2_pF__std::vector:double:R.std::vector:double:R.unsigned-i.double.double.std::vector:double:R.std::vector:double:R"></span><span class="target" id="pda_8h_1a04cfdfc384b9c7fbec9c75b4e3c602fd"></span>void <code class="sig-name descname">S1S2_pF</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>SgSr</em>, std::vector&lt;double&gt; &amp;<em>pF</em>, unsigned int <em>Nmax</em>, double <em>Bg</em>, double <em>Br</em>, std::vector&lt;double&gt; &amp;<em>pg_theor</em>, std::vector&lt;double&gt; &amp;<em>amplitudes</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12PdaFunctions7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>calculating p(G,R), several ratios, same P(F)</p>
-<p><dl class="simple">
-<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SgSr</span></code>: see sgsr_pN </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pF</span></code>: input: p(F) </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Nmax</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Bg</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Br</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">N_pg</span></code>: size of pg_theor </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pg_theor</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">amplitudes</span></code>: corresponding amplitudes </p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N12PdaFunctions7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd">
-<span id="_CPPv3N12PdaFunctions7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd"></span><span id="_CPPv2N12PdaFunctions7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd"></span><span id="PdaFunctions::conv_pF__std::vector:double:R.std::vector:double:CR.unsigned-i.double.double"></span><span class="target" id="pda_8h_1ab2ae4f69527decc7eb45f1bc5d5f2230"></span>void <code class="sig-name descname">conv_pF</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>SgSr</em>, <em class="property">const</em> std::vector&lt;double&gt; &amp;<em>FgFr</em>, unsigned int <em>Nmax</em>, double <em>Bg</em>, double <em>Br</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12PdaFunctions7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Convolves the Fluorescence matrix F1F2 with the background to yield the signal matrix S1S2</p>
-<p><dl class="simple">
-<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">S1S2[out]</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">F1F2[in]</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Nmax</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Bg</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Br</span></code>: </p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N12PdaFunctions12poisson_0toNERNSt6vectorIdEEidi">
-<span id="_CPPv3N12PdaFunctions12poisson_0toNERNSt6vectorIdEEidi"></span><span id="_CPPv2N12PdaFunctions12poisson_0toNERNSt6vectorIdEEidi"></span><span id="PdaFunctions::poisson_0toN__std::vector:double:R.i.double.i"></span><span class="target" id="pda_8h_1a2adbf9d6dfcbd45f9436a4738c4f7de2"></span>void <code class="sig-name descname">poisson_0toN</code><span class="sig-paren">(</span>std::vector&lt;double&gt; &amp;<em>return_p</em>, int <em>start_idx</em>, double <em>lam</em>, int <em>return_dim</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12PdaFunctions12poisson_0toNERNSt6vectorIdEEidi" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Writes a Poisson distribution with an average lam, for 0..N into a vector starting at a specified index.</p>
-<p><dl class="simple">
-<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">return_p</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">return_dim</span></code>: </p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-</div>
-</dd></dl>
-
 <dl class="file">
 <dt>
 <span class="target" id="correlation_8h"></span><em>file</em> <code class="sig-name descname">correlation.h</code></dt>
@@ -3787,7 +3817,7 @@
 <dl class="file">
 <dt>
 <span class="target" id="pda_8h"></span><em>file</em> <code class="sig-name descname">pda.h</code></dt>
-<dd><em>#include &lt;vector&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;cmath&gt;</em><div class="breathe-sectiondef docutils container">
+<dd><em>#include &lt;vector&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;cmath&gt;</em><em>#include “tttr.h”</em><div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Defines</p>
 <dl class="macro">
 <dt>
@@ -3997,18 +4027,18 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv415histogram_tracePPiPiPyii">
-<span id="_CPPv315histogram_tracePPiPiPyii"></span><span id="_CPPv215histogram_tracePPiPiPyii"></span><span id="histogram_trace__iPP.iP.unsigned-l-lP.i.i"></span><span class="target" id="tttr_8h_1a74f3aa124ba664fb2e9b843c3f7006ae"></span>void <code class="sig-name descname">histogram_trace</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>input</em>, int <em>n_input</em>, int <em>time_window</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415histogram_tracePPiPiPyii" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Splits the time trace into bins that are at least of the length specified by <dl class="simple">
+<dt id="_CPPv423compute_intensity_tracePPiPiPyidd">
+<span id="_CPPv323compute_intensity_tracePPiPiPyidd"></span><span id="_CPPv223compute_intensity_tracePPiPiPyidd"></span><span id="compute_intensity_trace__iPP.iP.unsigned-l-lP.i.double.double"></span><span class="target" id="tttr_8h_1a553370d17d1da96ab7fa0487cb6a6f5c"></span>void <code class="sig-name descname">compute_intensity_trace</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>input</em>, int <em>n_input</em>, double <em>time_window_length</em>, double <em>macro_time_resolution</em> = 1.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423compute_intensity_tracePPiPiPyidd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes a intensity trace for a sequence of time events</p>
+<p>The intensity trace is computed by splitting the trace of time events into time windows (tws) with a minimum specified length and counts the number of photons in each tw.</p>
+<p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">time_window</span></code>: and counts the number of photons in each time interval</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: array of counts </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: number of elements in </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: array of detection times </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n_input</span></code>: number of elements in the </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: array </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">time_window</span></code>: The size of the </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: number of photons in each time window </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: number of time windows </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: array of time points </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_input</span></code>: number number of time points </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_window</span></code>: time window size in units of the macro time resolution </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macro_time_resolution</span></code>: the resolution of the macro time clock </p></li>
 </ul>
 </dd>
 </dl>

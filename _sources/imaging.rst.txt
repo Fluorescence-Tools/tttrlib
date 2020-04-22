@@ -28,7 +28,7 @@ present these markers as special ""events"" that are distinguished from normal
 photon events. Some manufacturers use the same routing channel numbers for markers
 and for photon detection channels. To distinguish photons from markers,``TTTR``
 objects present for every event an additional event type specifier (see
-:doc:`tttr_objects <.>`).
+:doc:`tttr_objects`).
 
 The position of the laser on the sample is mostly defined by the following markers
 

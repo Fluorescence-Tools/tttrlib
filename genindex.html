@@ -62,7 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++ API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">References</a></li>
 </ul>
 </ul>
 </li>
@@ -359,13 +359,15 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N8CLSMLine14pixel_durationE">CLSMLine::pixel_duration (C++ member)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cpp_api.html#_CPPv4N8CLSMLine6pixelsE">CLSMLine::pixels (C++ member)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cpp_api.html#_CPPv49CLSMPixel">CLSMPixel (C++ class)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMPixel9CLSMPixelEP9CLSMPixel">CLSMPixel::CLSMPixel (C++ function)</a>, <a href="cpp_api.html#_CPPv4N9CLSMPixel9CLSMPixelERK9CLSMPixel">[1]</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv423compute_intensity_tracePPiPiPyidd">compute_intensity_trace (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv410Correlator">Correlator (C++ class)</a>
 </li>
@@ -565,8 +567,6 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N9HistogramD0Ev">Histogram::~Histogram (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv415histogram_tracePPiPiPyii">histogram_trace (C++ function)</a>
-</li>
       <li><a href="cpp_api.html#_CPPv4I0E13HistogramAxis">HistogramAxis (C++ class)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N13HistogramAxis9axis_typeE">HistogramAxis::axis_type (C++ member)</a>
@@ -661,9 +661,9 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda14_is_valid_sgsrE">Pda::_is_valid_sgsr (C++ member)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N3Pda5_NmaxE">Pda::_Nmax (C++ member)</a>
+      <li><a href="cpp_api.html#_CPPv4N3Pda9_n_2d_maxE">Pda::_n_2d_max (C++ member)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N3Pda5_NminE">Pda::_Nmin (C++ member)</a>
+      <li><a href="cpp_api.html#_CPPv4N3Pda9_n_2d_minE">Pda::_n_2d_min (C++ member)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda16_probability_ch1E">Pda::_probability_ch1 (C++ member)</a>
 </li>
@@ -673,9 +673,13 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda21clear_probability_ch1Ev">Pda::clear_probability_ch1 (C++ function)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid">Pda::compute_experimental_histograms (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N3Pda7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd">Pda::conv_pF (C++ function)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N3Pda8evaluateEv">Pda::evaluate (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibPdiiiib">Pda::get_1dhistogram (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N3Pda15get_1dhistogramEPPdPiPPdPiddibNSt6vectorIdEEibNSt6vectorIdEENSt6vectorIdEE">Pda::get_1dhistogram (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda14get_amplitudesEPPdPi">Pda::get_amplitudes (C++ function)</a>
 </li>
@@ -697,9 +701,13 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4NK3Pda13is_valid_sgsrEv">Pda::is_valid_sgsr (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N3Pda3PdaEiidd">Pda::Pda (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N3Pda3PdaEiiddNSt6vectorIdEE">Pda::Pda (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda2pFE">Pda::pF (C++ member)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N3Pda12poisson_0toNERNSt6vectorIdEEidi">Pda::poisson_0toN (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N3Pda7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE">Pda::S1S2_pF (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N3Pda14set_amplitudesEPdi">Pda::set_amplitudes (C++ function)</a>
 </li>
@@ -730,14 +738,6 @@
       <li><a href="cpp_api.html#_CPPv4N11PdaCallback3runEdd">PdaCallback::run (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N11PdaCallbackD0Ev">PdaCallback::~PdaCallback (C++ function)</a>
-</li>
-      <li><a href="cpp_api.html#_CPPv412PdaFunctions">PdaFunctions (C++ type)</a>
-</li>
-      <li><a href="cpp_api.html#_CPPv4N12PdaFunctions7conv_pFERNSt6vectorIdEERKNSt6vectorIdEEjdd">PdaFunctions::conv_pF (C++ function)</a>
-</li>
-      <li><a href="cpp_api.html#_CPPv4N12PdaFunctions12poisson_0toNERNSt6vectorIdEEidi">PdaFunctions::poisson_0toN (C++ function)</a>
-</li>
-      <li><a href="cpp_api.html#_CPPv4N12PdaFunctions7S1S2_pFERNSt6vectorIdEERNSt6vectorIdEEjddRNSt6vectorIdEERNSt6vectorIdEE">PdaFunctions::S1S2_pF (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv415ph_ph_t2_record">ph_ph_t2_record (C++ union)</a>
 </li>
@@ -1073,13 +1073,13 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR33get_number_of_micro_time_channelsEv">TTTR::get_number_of_micro_time_channels (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N4TTTR24get_ranges_by_count_rateEPPyPidiidb">TTTR::get_ranges_by_count_rate (C++ function)</a>
-</li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR19get_routing_channelEPPsPi">TTTR::get_routing_channel (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR24get_selection_by_channelEPPxPiPxi">TTTR::get_selection_by_channel (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR27get_selection_by_count_rateEPPyPidib">TTTR::get_selection_by_count_rate (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N4TTTR22get_time_window_rangesEPPyPidiidb">TTTR::get_time_window_ranges (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR23get_tttr_container_typeEv">TTTR::get_tttr_container_type (C++ function)</a>
 </li>
@@ -1088,6 +1088,8 @@
       <li><a href="cpp_api.html#_CPPv4N4TTTR9hdf5_fileE">TTTR::hdf5_file (C++ member)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR6headerE">TTTR::header (C++ member)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N4TTTR15intensity_traceEPPiPid">TTTR::intensity_trace (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR11macro_timesE">TTTR::macro_times (C++ member)</a>
 </li>
@@ -1113,10 +1115,10 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR12read_recordsE6size_t">TTTR::read_records (C++ function)</a>, <a href="cpp_api.html#_CPPv4N4TTTR12read_recordsE6size_tb6size_t">[1]</a>, <a href="cpp_api.html#_CPPv4N4TTTR12read_recordsEv">[2]</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N4TTTR16routing_channelsE">TTTR::routing_channels (C++ member)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cpp_api.html#_CPPv4N4TTTR16routing_channelsE">TTTR::routing_channels (C++ member)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR6selectEPxi">TTTR::select (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N4TTTR16shift_macro_timeEi">TTTR::shift_macro_time (C++ function)</a>

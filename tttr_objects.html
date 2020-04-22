@@ -63,7 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++ API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">References</a></li>
 </ul>
 </ul>
 </li>
@@ -78,10 +78,12 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">TTTR-Objects</a><ul>
-<li><a class="reference internal" href="#general-features">General features</a></li>
+<li><a class="reference internal" href="#general-features">General features</a><ul>
+<li><a class="reference internal" href="#comparison-other-software">Comparison other software</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#create-tttr-objects">Create TTTR objects</a><ul>
 <li><a class="reference internal" href="#opening-files">Opening files</a></li>
-<li><a class="reference internal" href="#comparison-other-software">Comparison other software</a></li>
 <li><a class="reference internal" href="#slicing-subsets">Slicing / subsets</a></li>
 <li><a class="reference internal" href="#joining-tttrs">Joining TTTRs</a></li>
 </ul>
@@ -215,8 +217,8 @@ for photon detection channels. To distinguish photons from markers, <code class=
 objects present for every event an additional event type specifier. The event
 types stored in TTTR objects help to distinguish such events from normal photon
 events. Currently the following events are considered.</p>
-<span id="event-types"></span><table class="colwidths-auto docutils align-default" id="id3">
-<caption><span class="caption-text">Table of event type identifiers</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<span id="event-types"></span><table class="colwidths-auto docutils align-default" id="id5">
+<caption><span class="caption-text">Table of event type identifiers</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Event type</p></th>
 <th class="head" colspan="2"><p>Event type number</p></th>
@@ -259,6 +261,21 @@ opening the BH-SPC132 file provided in the test folder.</p>
 <p>In the example file contains 299999 entries whereas overall only 152312 TTTR
 entries are stored. The example file corresponds to a single-molecule measurement
 where a large fraction of the entries are overflow records.</p>
+<div class="section" id="comparison-other-software">
+<h3>Comparison other software<a class="headerlink" href="#comparison-other-software" title="Permalink to this headline">¶</a></h3>
+<p>The conversion tool <a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a>
+that can open and be process TTTR data. phconvert uses <a class="reference external" href="https://numba.pydata.org/">numba</a>
+to accelerate the interpretation of the binary data in TTTR files.</p>
+<p>(<a class="reference external" href="./plots/tttr_read_benchmark.py">Source code</a>)</p>
+<p>Overall <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> surpasses phconvert in performance. For cases where phconvert
+uses numba effectively, the reading performance of phconvert is comparable.
+<a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a> is a tool to convert original
+data into the <a class="reference external" href="https://www.photon-hdf5.org/">Photon-HDF5</a> format that intends
+to replace existing file formats by a HDF5 file format for down-stream processing,
+e.g., by <a class="reference external" href="https://fretbursts.readthedocs.io/en/latest/">Photon-HDF5</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is intended as a library that allows to process TTTR data without
+prior conversion.</p>
+</div>
 </div>
 <div class="section" id="create-tttr-objects">
 <h2>Create TTTR objects<a class="headerlink" href="#create-tttr-objects" title="Permalink to this headline">¶</a></h2>
@@ -270,8 +287,8 @@ type can be passed to the object’s constructor. If a TTTR object is created th
 way, by default, the data contained in the TTTR file is read into the TTTR object.
 The TTTR file type is either specified by a number or by passing a string to the
 TTTR object’s constructor.</p>
-<span id="supported-file-types"></span><table class="colwidths-auto docutils align-default" id="id4">
-<caption><span class="caption-text">Table of supported file types and corresponding identifiers</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<span id="supported-file-types"></span><table class="colwidths-auto docutils align-default" id="id6">
+<caption><span class="caption-text">Table of supported file types and corresponding identifiers</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>File type</p></th>
 <th class="head"><p>Number</p></th>
@@ -324,16 +341,6 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.<
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.</p>
 </div>
-<div class="section" id="comparison-other-software">
-<h3>Comparison other software<a class="headerlink" href="#comparison-other-software" title="Permalink to this headline">¶</a></h3>
-<p>The conversion tools <a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a>
-that can be used to convert original data into the <a class="reference external" href="https://www.photon-hdf5.org/">Photon-HDF5</a>
-format for down-stream processing uses <a class="reference external" href="https://numba.pydata.org/">numba</a> to
-accelerate the interpretation of the binary data in TTTR files.</p>
-<p>(<a class="reference external" href="./plots/tttr_read_benchmark.py">Source code</a>)</p>
-<p>Overall <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> surpasses phconvert in performance. For cases where phconvert
-uses numba effectively, the reading performance of phconvert is comparable.</p>
-</div>
 <div class="section" id="slicing-subsets">
 <h3>Slicing / subsets<a class="headerlink" href="#slicing-subsets" title="Permalink to this headline">¶</a></h3>
 <p>New TTTR objects can be created by slicing existing objects, if you are
@@ -364,6 +371,25 @@ operator.</p>
 data that are offset by the last macro time record in the first set in addition to
 the value specified by <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>. The parameter <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>
 is set to zero by default.</p>
+<p>By appending TTTR objects to each other data that is splitted into multiple files
+can be joined into a single TTTR object as follows</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132_smDNA/*.spc&#39;</span><span class="p">)</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In practice, take care that the files are ordered. The code above stiches the
+objects in the order as returned by the <code class="docutils literal notranslate"><span class="pre">glob</span></code> module. The glob module finds
+all the pathnames matching a specified pattern according to the rules used by
+the Unix shell, although results are returned in arbitrary order. Hence, we
+sort the data by creating time first. In case you need another ordering, e.g.
+lexical ordering adapt the code.</p>
+</div>
 </div>
 </div>
 <div class="section" id="writing-tttr-files">
@@ -583,13 +609,13 @@ given by the number of macro time steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tttrlib</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
-<span class="n">cr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_ranges_by_count_rate</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="n">cr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In the example shown above, the time window is 1200000 and 30 is the maximum
 number of photons within that is permitted in a time window.</p>
 <p>Such count rate selections are for instance used to detect bursts in single molecule
-experiments or to generate filters for advanced FCS analysis <span class="bibtex" id="id2">[laurence2004]</span>
+experiments or to generate filters for advanced FCS analysis <a class="bibtex reference internal" href="zreferences.html#laurence2004" id="id4">[LKK+04]</a>
 (see also <a class="reference internal" href="correlation.html#count-rate-filer"><span class="std std-ref">Count rate filer</span></a> and <span class="xref std std-ref">Single Molecule:Burst selection</span>).</p>
 </div>
 </div>
