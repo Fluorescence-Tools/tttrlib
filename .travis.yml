@@ -5,8 +5,17 @@ matrix:
   include:
     - os: linux
       dist: bionic
+      addons:
+        apt:
+          packages:
+            - doxygen
     - os: osx
       osx_image: xcode9.4
+      addons:
+        homebrew:
+          packages:
+            - doxygen
+          update: true
 
 # The Sphinx C++ docs are build with doxygen and breathe
 addons:
@@ -16,6 +25,7 @@ addons:
   homebrew:
     packages:
       - doxygen
+    update: true
 
 env:
   # Build and test package on all supported python versions
