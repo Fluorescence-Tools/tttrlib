@@ -29,7 +29,7 @@ import pylab as p
 benchmark_files = [
     {
         "name": "spc132",
-        "file": '../../test/data/BH/BH_SPC132.spc',
+        "file": '../../test/data/bh/bh_spc132.spc',
         "tttr_mode": 2,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-134'"
@@ -44,7 +44,7 @@ benchmark_files = [
     # phconvert does not open the HT3 file
     {
         "name": "ht3",
-        "file": '../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3',
+        "file": '../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3',
         "tttr_mode": 1,
         "phconvert": "pqreader.load_ht3",
         "phconvert_args": "ovcfunc=None"
@@ -103,18 +103,44 @@ n_file_tests = len(benchmark_files)
 width = 0.35
 ind = np.arange(n_file_tests)  # the x locations for the groups
 
-fig, ax = p.subplots(nrows=1, ncols=1)
-ax.set_ylabel('time (ms / mega byte)')
+fig, (ax, ax2) = p.subplots(nrows=2, ncols=1, sharex=True)
+
+ax2.set_ylabel('time (ms / mega byte)')
 ax.set_title('Time to read file')
 ax.set_xticks(ind + width / 2)
 ax.set_xticklabels(labels)
-rects2 = ax.bar(ind, times_phconvert_numba, width, color='y')
-rects3 = ax.bar(ind + width, times_tttrlib, width, color='r')
+
+rects2 = ax2.bar(ind, times_phconvert_numba, width, color='y')
+rects3 = ax2.bar(ind + width, times_tttrlib, width, color='r')
+ax.bar(ind, times_phconvert_numba, width, color='y')
+ax.bar(ind + width, times_tttrlib, width, color='r')
+
+# zoom-in / limit the view to different portions of the data
+ax2.set_ylim(.0035, 0.04)  # outliers only
+ax.set_ylim(0.4, 3)  # most of the data
 
 ax.legend(
     (rects2[0], rects3[1]),
     ('phconvert(numba)', 'tttrlib')
 )
-ax.set_yscale('log')
+#ax.set_yscale('log')
+
+# hide the spines between ax and ax2
+ax.spines['bottom'].set_visible(False)
+ax2.spines['top'].set_visible(False)
+ax.xaxis.tick_top()
+ax.tick_params(labeltop=False)  # don't put tick labels at the top
+ax2.xaxis.tick_bottom()
+
+
+d = .01
+kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
+ax.plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
+ax.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
+
+kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
+ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
+ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)  # bottom-right diagonal
+
 p.show()
 

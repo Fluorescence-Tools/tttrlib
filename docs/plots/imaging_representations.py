@@ -2,7 +2,7 @@ from __future__ import print_function
 import tttrlib
 import pylab as p
 
-data = tttrlib.TTTR('../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
+data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
 
 frame_marker = [4]
 line_start_marker = 1

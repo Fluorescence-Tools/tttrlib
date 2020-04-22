@@ -20,8 +20,7 @@ void Pda::get_1dhistogram(
 #endif
     auto Nbinsf = (double) n_bins;
     if(
-        !species_amplitudes.empty() &&
-        !probabilities_ch1.empty()
+        !species_amplitudes.empty() && !probabilities_ch1.empty()
     ){
         if(species_amplitudes.size() == probabilities_ch1.size()){
             set_amplitudes(species_amplitudes.data(), species_amplitudes.size());
@@ -187,10 +186,10 @@ void Pda::S1S2_pF(
         auto p = p_ch1[pg_idx];
         auto a = amplitudes[pg_idx];
 #if VERBOSE
-        std::clog << "-- Adding species (amplitude, theoretical "
-                     "detection probability): " << a << ", " << p << std::endl;
+        std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
 #endif
         tmp[0] = 1.;
+
         // Propagate the probabilities to other matrix rows
         for (size_t row = 1; row <= Nmax; row++) {
             // marks beginning of current and previous matrix row
@@ -203,6 +202,7 @@ void Pda::S1S2_pF(
                         tmp[row_offset_pre + col + 1] * p;
             }
         }
+        // This could be optimized with AVX!
         for (size_t row = 0; row < Nmax; row++) {
             for (size_t red = 0; red <= row; red++)
                 FgFr[(row - red) * (Nmax + 1) + red] +=

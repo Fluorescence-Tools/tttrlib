@@ -415,7 +415,7 @@ to the markers.
 
 .. code-block:: python
 
-    filename = './test/data/PQ/HT3/PQ_HT3_CLSM.ht3'
+    filename = './test/data/imaging/pq/ht3/pq_ht3_clsm.ht3'
     data = tttrlib.TTTR(filename, 'HT3')
     reading_parameter = {
         "marker_frame_start": [4],
@@ -471,7 +471,7 @@ Alternatively, the channels can be specified when a ``CLSMImage`` object is crea
 
 .. code-block:: python
 
-    filename = './test/data/PQ/HT3/PQ_HT3_CLSM.ht3'
+    filename = './test/data/imaging/pq/ht3/pq_ht3_clsm.ht3'
     reading_parameter = {
         "tttr_data": tttrlib.TTTR(filename, 'HT3')
         "marker_frame_start": [4],
@@ -505,7 +505,7 @@ as a template.
 
 .. code-block::python
 
-    tttr_data = tttrlib.TTTR('./test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+    tttr_data = tttrlib.TTTR('./test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
     reading_parameter = {
         "tttr_data": tttr_data,
         "marker_frame_start": [4],
@@ -534,6 +534,16 @@ fluorescence lifetime or an intensity. A few representations for CLSM data and
 scripts how to generate these representations are outlined here.
 
 .. plot:: plots/imaging_representations.py
+
+The figure displayed above corresponds to a live-cell FLIM measurement of eGFP. The
+fluorescent label eGFP is often used as an donor fluorophore in FRET experiments.
+In the image shown above, eGFP was measured in the absence of FRET. The intensity
+image shows a non uniform intensity in the cell. However, an image of the mean
+arrival time reveals as expected a uniform distribution. Inspecting the fluorescence
+decay curve of the corresponding image reveals a fluorescence decay that is not
+curved and hence likely single exponential.
+
+
 
 Intensity
 ^^^^^^^^^
@@ -676,6 +686,9 @@ time resolution by a factor of 2.
 
 Pixel averaged decays
 ^^^^^^^^^^^^^^^^^^^^^
+Using selection masks the signal to noise of the fluorescence decays can be greatly
+improved to allow for a detailed analyis. Here it is briefly outlined, how pixels
+are selected and fluorescence decays of these pixel sub-populations can be created.
 
 .. plot:: plots/imaging_pixel_masks.py
 

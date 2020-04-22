@@ -11,9 +11,6 @@ def histogram2d(data, bins):
     h.update(data.T)
     return h.getHistogram().reshape((bins, bins))
 
-
-print("\n\nTesting 2D Histogram linear spacing")
-print("---------------------------------------")
 x = np.random.randn(10000)
 y = 0.2 * np.random.randn(10000)
 data = np.vstack([x, y])

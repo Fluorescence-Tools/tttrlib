@@ -3,7 +3,7 @@ from matplotlib.pyplot import imread
 import tttrlib
 import numpy as np
 
-tttr_data = tttrlib.TTTR('../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+tttr_data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
 channels = (0, 1)
 reading_parameter = {
     "tttr_data": tttr_data,
