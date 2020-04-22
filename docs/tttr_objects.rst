@@ -115,6 +115,24 @@ In the example file contains 299999 entries whereas overall only 152312 TTTR
 entries are stored. The example file corresponds to a single-molecule measurement
 where a large fraction of the entries are overflow records.
 
+Comparison other software
+-------------------------
+The conversion tool `phconvert <https://phconvert.readthedocs.io/>`_
+that can open and be process TTTR data. phconvert uses `numba <https://numba.pydata.org/>`_
+to accelerate the interpretation of the binary data in TTTR files.
+
+.. plot:: plots/tttr_read_benchmark.py
+
+Overall ``tttrlib`` surpasses phconvert in performance. For cases where phconvert
+uses numba effectively, the reading performance of phconvert is comparable.
+`phconvert <https://phconvert.readthedocs.io/>`_ is a tool to convert original
+data into the `Photon-HDF5 <https://www.photon-hdf5.org/>`_ format that intends
+to replace existing file formats by a HDF5 file format for down-stream processing,
+e.g., by `Photon-HDF5 <https://fretbursts.readthedocs.io/en/latest/>`_.
+
+``tttrlib`` is intended as a library that allows to process TTTR data without
+prior conversion.
+
 Create TTTR objects
 ===================
 Opening files
@@ -168,18 +186,6 @@ Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
 
-Comparison other software
--------------------------
-The conversion tools `phconvert <https://phconvert.readthedocs.io/>`_
-that can be used to convert original data into the `Photon-HDF5 <https://www.photon-hdf5.org/>`_
-format for down-stream processing uses `numba <https://numba.pydata.org/>`_ to
-accelerate the interpretation of the binary data in TTTR files.
-
-.. plot:: plots/tttr_read_benchmark.py
-
-Overall ``tttrlib`` surpasses phconvert in performance. For cases where phconvert
-uses numba effectively, the reading performance of phconvert is comparable.
-
 
 Slicing / subsets
 -----------------
@@ -216,6 +222,29 @@ data that are offset by the last macro time record in the first set in addition 
 the value specified by ``macro_time_offset``. The parameter ``macro_time_offset``
 is set to zero by default.
 
+By appending TTTR objects to each other data that is splitted into multiple files
+can be joined into a single TTTR object as follows
+
+
+.. code-block:: python
+
+    import os
+    files = glob.glob('./data/BH/BH_SPC132_smDNA/*.spc')
+    sorted(glob.glob('*.png'), key=os.path.getmtime)
+    data = tttrlib.TTTR(files[0], 'SPC-130')
+    for d in files[1:]:
+        data.append(tttrlib.TTTR(d, 'SPC-130'))
+
+
+.. note::
+    In practice, take care that the files are ordered. The code above stiches the
+    objects in the order as returned by the ``glob`` module. The glob module finds
+    all the pathnames matching a specified pattern according to the rules used by
+    the Unix shell, although results are returned in arbitrary order. Hence, we
+    sort the data by creating time first. In case you need another ordering, e.g.
+    lexical ordering adapt the code.
+
+
 Writing TTTR-files
 ==================
 TTTR objects can be writen to files using the method ``write`` of TTTR objects.
@@ -241,7 +270,6 @@ data types.
 
 TTTR-Header
 ===========
-
 Accessing header data
 ---------------------
 Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
@@ -420,7 +448,7 @@ given by the number of macro time steps.
     import numpy as np
     import tttrlib
     data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
-    cr_selection = data.get_ranges_by_count_rate(1, 30)
+    cr_selection = data.get_time_window_ranges(1, 30)
 
 In the example shown above, the time window is 1200000 and 30 is the maximum
 number of photons within that is permitted in a time window.

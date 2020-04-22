@@ -59,9 +59,9 @@ pda.histogram_function = proximity_ratio
 # of the s1s2 array for the specified function
 x_pr, y_pr = pda.get_1dhistogram(
     log_x=False,
-    xmin=0.0,
-    xmax=1.0,
-    nbins=21
+    x_min=0.0,
+    x_max=1.0,
+    n_bins=21
 )
 
 # functions, e.g., the FRET efficiency, that require additional parameters
@@ -73,12 +73,13 @@ x_pr, y_pr = pda.get_1dhistogram(
 def fret_efficiency(ch1, ch2, phiD=0.8, phiA=0.32, det_ratio=0.32):
     return 1.0 / (1. + phiD / phiA * det_ratio * ch2 / ch1)
 
+
 pda.histogram_function = fret_efficiency
 x_eff, y_eff = pda.get_1dhistogram(
     log_x=False,
-    xmin=0.0,
-    xmax=1.0,
-    nbins=31
+    x_min=0.0,
+    x_max=1.0,
+    n_bins=31
 )
 
 # Histograms with a logarithmic scale are computed by setting `log_x`
@@ -90,9 +91,9 @@ sg_sr = lambda ch1, ch2: max(1, ch1) / max(1, ch2)
 pda.histogram_function = sg_sr
 x_sgsr, y_sgsr = pda.get_1dhistogram(
     log_x=True,
-    xmin=0.05,
-    xmax=80.0,
-    nbins=31,
+    x_min=0.05,
+    x_max=80.0,
+    n_bins=31,
     skip_zero_photon=False
 )
 

@@ -186,8 +186,9 @@ class Tests(unittest.TestCase):
 
     def test_constructor_with_selection(self):
         # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
-        ch1_indeces = data.get_selection_by_channel([8])
-        data_ch1 = tttrlib.TTTR(data, ch1_indeces)
+        data_subset = data[:1000]
+        ch1_indeces = data_subset.get_selection_by_channel([8])
+        data_ch1 = tttrlib.TTTR(data_subset, ch1_indeces)
         self.assertEqual(
             np.allclose(
                 data.macro_times[ch1_indeces],

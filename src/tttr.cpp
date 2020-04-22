@@ -498,7 +498,7 @@ void TTTR::get_selection_by_count_rate(
 }
 
 
-void TTTR::get_ranges_by_count_rate(
+void TTTR::get_time_window_ranges(
         unsigned long long **output, int *n_output,
         double minimum_window_length,
         int minimum_number_of_photons_in_time_window,
@@ -580,6 +580,16 @@ void ranges_by_time_window(
 ) {
     auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
     auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
+#if VERBOSE
+    std::clog << "-- Select ranges_by_time_window: " << std::endl;
+    std::clog << "-- minimum_window_length: " << minimum_window_length << std::endl;
+    std::clog << "-- maximum_window_length: " << maximum_window_length << std::endl;
+    std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons_in_time_window << std::endl;
+    std::clog << "-- maximum_number_of_photons_in_time_window: " << maximum_number_of_photons_in_time_window << std::endl;
+    std::clog << "-- macro_time_calibration: " << macro_time_calibration << std::endl;
+    std::clog << "-- tw_min: " << tw_min << std::endl;
+    std::clog << "-- tw_max: " << tw_max << std::endl;
+#endif
     *output = (unsigned long long *) malloc(2 * n_input * sizeof(unsigned long long));
     *n_output = 0;
 
@@ -587,18 +597,18 @@ void ranges_by_time_window(
     while (tw_begin < n_input) {
         // search for the end of a time window
         size_t tw_end;
+        unsigned long long dt;
         for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
-            if((input[tw_end] - input[tw_begin]) >= tw_min){
+            dt = input[tw_end] - input[tw_begin];
+            if(dt >= tw_min){
                 break;
             }
         }
         size_t n_ph = tw_end - tw_begin;
-        unsigned long long dt = input[tw_begin] - input[tw_end];
-        bool is_selected = (
-            (tw_max < 0) || (dt < tw_max))
-            && ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window))
-            && ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window)
-        );
+        bool is_selected =
+            ((tw_max < 0) || (dt < tw_max)) &&
+            ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window)) &&
+            ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window));
         is_selected = invert ? !is_selected : is_selected;
         if (is_selected) {
             (*output)[(*n_output) + 0] = tw_begin;
@@ -648,14 +658,30 @@ unsigned int TTTR::get_number_of_micro_time_channels(){
 }
 
 
-void histogram_trace(
+void TTTR::intensity_trace(
+        int **output, int *n_output,
+        double time_window_length
+){
+    compute_intensity_trace(
+            output, n_output,
+            this->macro_times, this->n_valid_events,
+            time_window_length,
+            this->header->macro_time_resolution / 1e6
+    );
+}
+
+
+
+void compute_intensity_trace(
         int **output, int *n_output,
         unsigned long long *input, int n_input,
-        int time_window){
+        double time_window,
+        double macro_time_resolution
+){
     int l, r;
+    int n_macro_time_clocks = (int) (time_window / macro_time_resolution);
     unsigned long long t_max = input[n_input - 1];
-
-    int n_bin = (int) (t_max / time_window);
+    int n_bin = (int) (t_max / n_macro_time_clocks);
 
     *n_output = n_bin;
     *output = (int*) calloc(n_bin, sizeof(int));
@@ -663,8 +689,8 @@ void histogram_trace(
     l = 0; r = 0;
     while(r < n_input){
         r++;
-        int i_bin = int (input[l] / time_window);
-        if ((input[r] - input[l]) > time_window){
+        int i_bin = int (input[l] / n_macro_time_clocks);
+        if ((input[r] - input[l]) > n_macro_time_clocks){
             l = r;
         } else{
             (*output)[i_bin] += 1;

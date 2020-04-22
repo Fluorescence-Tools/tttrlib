@@ -35,7 +35,7 @@ Contents
    tools
    cpp_api
    glossary
-   references
+   zreferences
 
 
 Indices and tables

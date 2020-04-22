@@ -10,6 +10,12 @@
 %apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double **histogram_x, int *n_histogram_x)}
 %apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double **histogram_y, int *n_histogram_y)}
 
+// output of make_s1s2 //
+// the 2d matrix
+%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** s1s2, int* dim1, int* dim2)}
+%apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** ps, int* dim_ps)}
+%apply(long long** ARGOUTVIEW_ARRAY1, int* DIM1) {(long long** tttr_indices, int* n_tttr_indices)}
+%apply(double* IN_ARRAY1, int DIM1) {(double* pF, int n_pF)}
 
 // Pda Model attributes
 %attribute(Pda, double, background_ch2, get_ch2_background, set_ch2_background);

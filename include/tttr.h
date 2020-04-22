@@ -130,19 +130,24 @@ void ranges_by_time_window(
 
 
 /*!
- * Splits the time trace into bins that are at least of the length specified by @param time_window and
- * counts the number of photons in each time interval
+ * Computes a intensity trace for a sequence of time events
  *
- * @param output array of counts
- * @param n_output number of elements in @param output
- * @param input array of detection times
- * @param n_input number of elements in the @param input array
- * @param time_window The size of the
+ * The intensity trace is computed by splitting the trace of time events into
+ * time windows (tws) with a minimum specified length and counts the number
+ * of photons in each tw.
+ *
+ * @param output number of photons in each time window
+ * @param n_output number of time windows
+ * @param input array of time points
+ * @param n_input number number of time points
+ * @param time_window time window size in units of the macro time resolution
+ * @param macro_time_resolution the resolution of the macro time clock
  */
-void histogram_trace(
+void compute_intensity_trace(
         int **output, int *n_output,
         unsigned long long *input, int n_input,
-        int time_window
+        double time_window_length,
+        double macro_time_resolution = 1.0
 );
 
 
@@ -436,6 +441,20 @@ public:
     void get_micro_time(unsigned int **output, int *n_output);
 
     /*!
+     * Returns a intensity trace that is computed for a specified integration
+     * window
+     *
+     * @param output the returned intensity trace
+     * @param n_output the number of points in the intensity trace
+     * @param time_window_length the length of the integration time windows in
+     * units of milliseconds.
+     */
+    void intensity_trace(
+            int **output, int *n_output,
+            double time_window_length=1.0
+    );
+
+    /*!
      * Returns an array containing the routing channel numbers of the
      * valid TTTR events.
      *
@@ -613,7 +632,7 @@ public:
     * photons a selected tw contains (optional)
     * @param invert[in] If set to true, the selection criteria are inverted.
     */
-    void get_ranges_by_count_rate(
+    void get_time_window_ranges(
             unsigned long long **output, int *n_output,
             double minimum_window_length,
             int minimum_number_of_photons_in_time_window,
@@ -621,7 +640,6 @@ public:
             double maximum_window_length=-1.0,
             bool invert = false
     );
-
 
     /// Get header returns the header (if present) as a map of strings.
     Header get_header();
