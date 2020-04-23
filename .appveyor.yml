@@ -40,7 +40,7 @@ test_script:
 # scripts to run after tests
 deploy_script:
   - if "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-  - anaconda -t %ANACONDA_API_TOKEN% upload -u %CONDA_USER% -l nightly C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
+  - anaconda -t %ANACONDA_API_TOKEN% upload -u %CONDA_USER% -l nightly C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2 --force
 
 build: off
 
