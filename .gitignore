@@ -10,6 +10,7 @@ playground
 temp
 *.egg-info
 docs/_build
+test/stage
 
 # Documentation and tools
 doc/_*

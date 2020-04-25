@@ -8,11 +8,12 @@ INCLUDE_DIRECTORIES(.)
 SET(MODULE_NAME tttrlib)
 
 SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
+
 FILE(
-        GLOB
-        SRC_files
-        "../src/*.cpp"
-        "../src/correlation/*.cpp"
+    GLOB
+    SRC_files
+    "../src/*.cpp"
+    "../src/correlation/*.cpp"
 )
 
 IF(BUILD_PYTHON_INTERFACE)
@@ -21,9 +22,9 @@ IF(BUILD_PYTHON_INTERFACE)
     INCLUDE_DIRECTORIES(${Python_INCLUDE_DIR})
     INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
     SWIG_ADD_LIBRARY(
-            ${MODULE_NAME}
-            LANGUAGE python
-            SOURCES python/tttrlib.i ${SRC_files}
+        ${MODULE_NAME}
+        LANGUAGE python
+        SOURCES python/tttrlib.i ${SRC_files}
     )
 
     EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"

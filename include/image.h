@@ -186,9 +186,15 @@ protected:
 
 protected:
     /*!
-    * Initializes the frames, lines, and pixels of a CLSMImage.
-    */
-    void initialize_default(TTTR* tttr_data);
+     * Initializes the frames, lines, and pixels of a CLSMImage.
+     *
+     * @param skip_before_first_frame_marker if set to true (the default value is true) all events
+     * before the first frame marker are ignored.
+     */
+    void initialize_default(
+            TTTR* tttr_data,
+            bool skip_before_first_frame_marker=true
+    );
 
     /*!
      * Leica SP5
@@ -426,7 +432,8 @@ public:
             long long macro_time_shift=0,
             CLSMImage* source = nullptr,
             bool fill = false,
-            std::vector<int> channels = std::vector<int>()
+            std::vector<int> channels = std::vector<int>(),
+            bool skip_before_first_frame_marker=true
     );
 
     /// Destructor

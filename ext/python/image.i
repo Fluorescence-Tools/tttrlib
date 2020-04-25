@@ -8,10 +8,6 @@ static int myErr = 0; // flag to save error state
 %template(vector_CLSMLine) std::vector<CLSMLine*>;
 %template(vector_CLSMPixel) std::vector<CLSMPixel*>;
 
-%apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(unsigned int** output, int* dim1, int* dim2)}
-%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
-%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* dim1, int* dim2, int* dim3)}
-%apply (float** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(float** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 %apply (uint8_t* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {(uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3)}
 
 // documentation see

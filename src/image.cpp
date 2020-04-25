@@ -82,7 +82,8 @@ CLSMImage::CLSMImage (
         long long macro_time_shift,
         CLSMImage* source,
         bool fill,
-        std::vector<int> channels
+        std::vector<int> channels,
+        bool skip_before_first_frame_marker
 ) {
 #if VERBOSE
     std::clog << "Initializing CLSM image" << std::endl;
@@ -120,7 +121,10 @@ CLSMImage::CLSMImage (
         } else{
             switch (image_reading_routines[reading_routine]){
                 case 0:
-                    initialize_default(tttr_data);
+                    initialize_default(
+                            tttr_data,
+                            skip_before_first_frame_marker
+                    );
                     break;
                 case 1:
                     initialize_leica_sp8_ptu(tttr_data);
@@ -300,34 +304,40 @@ void CLSMImage::initialize_leica_sp5_ptu(
 }
 
 
-void CLSMImage::initialize_default(TTTR* tttr_data){
+void CLSMImage::initialize_default(
+        TTTR* tttr_data,
+        bool skip_before_first_frame_marker
+){
 #if VERBOSE
     std::clog << "-- Routine: default" << std::endl;
 #endif
     size_t n_events = tttr_data->get_n_events();
 
-    // search first frame
     frames.clear();
     size_t i_event=0;
-    for(; i_event < n_events; i_event++){
-        if(tttr_data->event_types[i_event] == marker_event){
-            bool found_frame = false;
-            for (auto f: marker_frame){
-                if(f == tttr_data->routing_channels[i_event]){
+    // search first frame
+    if(skip_before_first_frame_marker){
+        for(; i_event < n_events; i_event++){
+            if(tttr_data->event_types[i_event] == marker_event){
+                bool found_frame = false;
+                for (auto f: marker_frame){
+                    if(f == tttr_data->routing_channels[i_event]){
 #if VERBOSE
-                    std::clog << "-- Found first frame at event: "  << i_event << std::endl;
+                        std::clog << "-- Found first frame at event: "  << i_event << std::endl;
 #endif
-                    found_frame = true;
+                        found_frame = true;
+                        break;
+                    }
+                }
+                if (found_frame){
                     break;
                 }
             }
-            if (found_frame){
-                append(new CLSMFrame(i_event));
-                i_event++;
-                break;
-            }
         }
     }
+    // Assume that the file starts with a "clean/complete" first frame
+    append(new CLSMFrame(i_event));
+    i_event++;
     for(; i_event < tttr_data->n_valid_events; i_event++){
         if(tttr_data->event_types[i_event] == marker_event){
             auto frame = frames.back();
