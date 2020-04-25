@@ -7,8 +7,10 @@
 %attribute(Pda, bool, hist_sgsr_valid, is_valid_sgsr, set_valid_sgsr);
 
 // 1D histogram
-%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double **histogram_x, int *n_histogram_x)}
-%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double **histogram_y, int *n_histogram_y)}
+%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {
+    (double **histogram_x, int *n_histogram_x),
+    (double **histogram_y, int *n_histogram_y)
+}
 
 // output of make_s1s2 //
 // the 2d matrix

@@ -27,7 +27,6 @@
 // Python does not support overloading. Thus, ignore the copy constructor
 %ignore TTTRRange(const TTTRRange& p2);
 %extend TTTR{%pythoncode "./ext/python/tttr/tttr_extension.py"}
-%extend Correlator{%pythoncode "../ext/python/correlation/correlator_extension.py"}
 
 %include "../include/header.h"
 %include "../include/tttr.h"

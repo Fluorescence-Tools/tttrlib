@@ -611,7 +611,7 @@ public:
             int **output, int *n_output,
             double time_window, int n_ph_max,
             bool invert=false
-            );
+    );
 
     /*!
     * Returns time windows (tw), i.e., the start and the stop indices for a

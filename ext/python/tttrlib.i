@@ -38,10 +38,12 @@ import_array();
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
 
-// Generic view arrays
+// Generic output view arrays
 // floating points
 %apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
 %apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
+%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* dim1, int* dim2, int* dim3)}
+%apply (float** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(float** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 // integers
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)}
 %apply(unsigned long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned long long** output, int* n_output)}
@@ -51,7 +53,13 @@ import_array();
 %apply(unsigned short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned short** output, int* n_output)}
 %apply(char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(char** output, int* n_output)}
 %apply(signed char** ARGOUTVIEW_ARRAY1, int* DIM1) {(signed char** output, int* n_output)}
+%apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(unsigned int** output, int* dim1, int* dim2)}
+%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
+
+/// Generic inplace arrays
+%apply(double* INPLACE_ARRAY1, int DIM1) {(double* inplace_output, int n_output)}
+
 
 // Templates
 %template(VectorDouble) std::vector<double>;
@@ -70,3 +78,4 @@ import_array();
 %include "correlation.i"
 %include "image.i"
 %include "pda.i"
+%include "decay.i"
