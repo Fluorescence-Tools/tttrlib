@@ -19,6 +19,26 @@ class Decay {
 
 private:
 
+    /// Stores the weighted residuals
+    std::vector<double> _weighted_residuals;
+
+    /// Proportional to the area of the model. If negative, the area is scaled
+    /// to the data.
+    double _total_area = -1;
+
+    /// The constant offset in the model
+    double _constant_background = 0.0;
+
+    /// The fraction of the irf (scattered light) in the model decay
+    double _areal_fraction_scatter = 0.0;
+
+    /// The time shift of the irf
+    double _irf_shift_channels = 0.0;
+
+    /// Background counts of irf. This number is sutracted from the counts
+    /// in each channel before convolution.
+    double _irf_background_counts = 0.0;
+
     /// The repetiotion period (usually in nano seconds)
     double _period = 100.;
 
@@ -93,6 +113,16 @@ public:
         return _amplitude_threshold;
     }
 
+
+    void set_total_area(double v){
+        _is_valid = false;
+        _total_area = v;
+    }
+
+    double get_total_area() const{
+        return _total_area;
+    }
+
     void set_period(double v){
         _is_valid = false;
         _period = v;
@@ -100,6 +130,33 @@ public:
 
     double get_period() const{
         return _period;
+    }
+
+    void set_irf_shift_channels(double v){
+        _is_valid = false;
+        _irf_shift_channels = v;
+    }
+
+    double get_irf_shift_channels() const{
+        return _irf_shift_channels;
+    }
+
+    void set_areal_fraction_scatter(double v){
+        _is_valid = false;
+        _areal_fraction_scatter = std::min(1., std::max(0.0, v));
+    }
+
+    double get_areal_fraction_scatter() const{
+        return _areal_fraction_scatter;
+    }
+
+    void set_constant_background(double v){
+        _is_valid = false;
+        _constant_background = v;
+    }
+
+    double get_constant_background() const{
+        return _constant_background;
     }
 
     void set_convolution_start(int v){
@@ -140,7 +197,7 @@ public:
         *n_output = _irf.size();
     }
 
-    void get_model_function(double **output, int *n_output){
+    void get_model(double **output, int *n_output){
         if(!_is_valid){
             evaluate();
         }
@@ -180,6 +237,15 @@ public:
         *n_output = _time_axis.size();
     }
 
+    void set_irf_background_counts(double irf_background_counts){
+        _irf_background_counts = irf_background_counts;
+        _is_valid = false;
+    }
+
+    double get_irf_background_counts(){
+        return _irf_background_counts;
+    }
+
     /*!
      *
      * @param data the data to which the decay is fitted
@@ -215,7 +281,10 @@ public:
         double amplitude_threshold = 1e10,
         bool correct_pile_up = false,
         double period = 100.0,
-        double dt = 1.0
+        double dt = 1.0,
+        double irf_background_counts = 0.0,
+        double areal_fraction_scatter = 0.0,
+        double constant_background = 0.0
     ){
         set_data(data.data(), data.size());
         set_time_axis(time_axis.data(), time_axis.size());
@@ -227,6 +296,9 @@ public:
         _use_amplitude_threshold = use_amplitude_threshold;
         _correct_pile_up = correct_pile_up;
         _period = period;
+        _irf_background_counts = irf_background_counts;
+        _areal_fraction_scatter = areal_fraction_scatter;
+        _constant_background = constant_background;
 
         if(_irf.empty() && !data.empty()){
 #if VERBOSE
@@ -511,45 +583,67 @@ public:
             bool correct_pile_up=false
     );
 
+    void get_weighted_residuals(double** output, int* n_output){
+#if VERBOSE
+        std::clog << "Compute weighted residuals..." << std::endl;
+        std::clog << "-- points in model function:" << _model_function.size() << std::endl;
+        std::clog << "-- points in weights:" << _weights.size() << std::endl;
+        std::clog << "-- points in data:" << _data.size() << std::endl;
+#endif
+        evaluate();
+        if((_model_function.size() == _data.size()) &&
+            (_weights.size() == _data.size())){
+            _weighted_residuals.resize(_data.size());
+            for(int i=0; i<_data.size(); i++){
+                _weighted_residuals[i] = (_data[i] - _model_function[i]) * _weights[i];
+            }
+            *n_output = _weighted_residuals.size();
+            *output = _weighted_residuals.data();
+        }else{
+            std::cerr << "WARNING: the dimensions of the data, the model, and the"
+                         "weights do not match.";
+            *n_output = 0;
+            *output = nullptr;
+        }
+    }
+
     void evaluate(
-            std::vector<double> lifetime_spectrum=std::vector<double>(),
-            double irf_background_counts=0.0,
-            double irf_shift_channels=0.0,
-            double irf_areal_fraction=0.0,
-            double period=-1,
-            double constant_background=0.0,
-            double total_area=-1
+            std::vector<double> lifetime_spectrum=std::vector<double>()
     ){
+#if VERBOSE
+        std::cout << "evaluate..." << std::endl;
+#endif
         if(!lifetime_spectrum.empty()){
             set_lifetime_spectrum(
                     lifetime_spectrum.data(),
                     lifetime_spectrum.size()
             );
         }
-        period = (period < 0) ? _period : period;
         if(!_is_valid){
             compute_decay(
-                _model_function.data(),
-                _model_function.size(),
-                _data.data(),
-                _data.size(),
-                _weights.data(),
-                _weights.size(),
-                _time_axis.data(),
-                _time_axis.size(),
-                _irf.data(),
-                _irf.size(),
-                _lifetime_spectrum.data(),
-                _lifetime_spectrum.size(),
-                _convolution_start, _convolution_stop,
-                irf_background_counts, irf_shift_channels, irf_areal_fraction,
-                period,
-                constant_background,
-                total_area,
-                _use_amplitude_threshold,
-                _amplitude_threshold,
-                _correct_pile_up
+                    _model_function.data(),
+                    _model_function.size(),
+                    _data.data(),
+                    _data.size(),
+                    _weights.data(),
+                    _weights.size(),
+                    _time_axis.data(),
+                    _time_axis.size(),
+                    _irf.data(),
+                    _irf.size(),
+                    _lifetime_spectrum.data(),
+                    _lifetime_spectrum.size(),
+                    _convolution_start, _convolution_stop,
+                    _irf_background_counts, _irf_shift_channels,
+                    _areal_fraction_scatter,
+                    _period,
+                    _constant_background,
+                    _total_area,
+                    _use_amplitude_threshold,
+                    _amplitude_threshold,
+                    _correct_pile_up
             );
+            _is_valid = true;
         }
     }
 

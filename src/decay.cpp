@@ -156,7 +156,9 @@ void Decay::shift_array(
         bool set_outside,
         double outside_value
 ){
-    int ts_i = (int) shift < 0 ? n_input + shift: shift;
+    // mod
+    int r = (int) shift % n_input;
+    int ts_i = r < 0 ? r + n_input : r;
     double ts_f = shift - std::floor(shift);
 #if VERBOSE
     std::clog << "shift_array..." << std::endl;
@@ -174,12 +176,11 @@ void Decay::shift_array(
         tmp[i] = tmp1[i] * (1.0 - ts_f) + tmp2[i] * ts_f;
     }
     if(set_outside){
-        int b = std::ceil(shift);
         if(shift > 0){
-            for(int i=0; i<b; i++)
+            for(int i=0; i<r; i++)
                 tmp[i] = outside_value;
         } else if(shift<0){
-            for(int i = n_input - b; i<n_input; i++)
+            for(int i = n_input - r; i<n_input; i++)
                 tmp[i] = outside_value;
         }
     }
@@ -336,7 +337,11 @@ void Decay::compute_decay(
         double sum = std::accumulate( decay_irf + start, decay_irf + stop, 0.0);
         scale = total_area / sum;
     }
-    for(int i=0; i<n_decay_irf;i++)
+#if VERBOSE
+    std::clog << "Adding Background" << std::endl;
+    std::clog << "-- add constant background: " << constant_background << std::endl;
+#endif
+    for(int i=0; i<n_model_function;i++)
         model_function[i] = decay_irf[i] * scale + constant_background;
 }
 
