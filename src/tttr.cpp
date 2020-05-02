@@ -492,7 +492,7 @@ void TTTR::get_selection_by_count_rate(
             output, n_output,
             macro_times, (int) n_valid_events,
             time_window, n_ph_max,
-            header->macro_time_resolution,
+            header->macro_time_resolution / 1e6,
             invert
     );
 }
@@ -629,8 +629,8 @@ void selection_by_count_rate(
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
     *output = (int*) calloc(sizeof(int), n_time);
-    int i = 0;
-    *n_output = 0;
+
+    int i = 0; *n_output = 0;
     while (i < (n_time - 1)){
         int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
@@ -799,6 +799,7 @@ TTTRRange::TTTRRange(const TTTRRange& p2){
     _stop = p2._stop;
     _start_time = p2._start_time;
     _stop_time = p2._stop_time;
+    _tttr_indices.reserve(p2._tttr_indices.size());
     for(auto &v: p2._tttr_indices){
         _tttr_indices.emplace_back(v);
     }

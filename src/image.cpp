@@ -144,9 +144,11 @@ CLSMImage::CLSMImage (
             n_frames = frames.size();
             remove_incomplete_frames();
             define_pixels_in_lines();
-            if(fill && !channels.empty()){
-                fill_pixels(tttr_data, channels, false);
-            }
+        }
+    }
+    if(tttr_data != nullptr){
+        if(fill && !channels.empty()){
+            fill_pixels(tttr_data, channels, false);
         }
     }
 }
@@ -159,16 +161,16 @@ void CLSMImage::define_pixels_in_lines() {
         n_pixel = frame->n_lines;
     }
     for(auto f: frames){
-        for(auto l: f->lines){
-            for(size_t i=0; i<n_pixel; i++){
-                size_t pixel_start_time = l->_start_time + i * l->pixel_duration;
-                size_t pixel_stop_time = l->_start_time + (i + 1) * l->pixel_duration;
-                auto pixel = new CLSMPixel();
-                pixel->set_start_time(pixel_start_time);
-                pixel->set_stop_time(pixel_stop_time);
-                l->pixels.emplace_back(pixel);
-            }
+        for(int line_i = 0; line_i < f->n_lines; line_i++){
+            auto l = f->lines[line_i];
+            l->pixels.resize(n_pixel);
             l->n_pixel = n_pixel;
+            for(size_t i=0; i<n_pixel; i++){
+                auto pixel = new CLSMPixel();
+                pixel->set_start_time(l->_start_time + i * l->pixel_duration);
+                pixel->set_stop_time(l->_start_time + (i + 1) * l->pixel_duration);
+                l->pixels[i] = pixel;
+            }
         }
     }
 #if VERBOSE
@@ -469,9 +471,10 @@ void CLSMImage::get_intensity_image(
         for(auto line : frame->lines){
             size_t i_pixel = 0;
             for(auto pixel : line->pixels){
-                t[i_frame * (n_lines * n_pixel) +
-                i_line * (n_pixel) +
-                i_pixel] = pixel->_tttr_indices.size();
+                size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
+                                   i_line * (n_pixel) +
+                                   i_pixel;
+                t[pixel_nbr] = pixel->_tttr_indices.size();
                 t_pixel++;
                 i_pixel++;
             }
@@ -512,14 +515,15 @@ void CLSMImage::get_fluorescence_decay_image(
         size_t i_line = 0;
         for(auto line : frame->lines){
             size_t i_pixel = 0;
-            for(auto pixel : line->pixels){
+            for(int pixel_i=0; pixel_i<n_pixel;pixel_i++){
+                auto pixel = line->pixels[pixel_i];
+                size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
+                                   i_line  * (n_pixel * n_tac) +
+                                   i_pixel * (n_tac);
+
                 for(auto i : pixel->_tttr_indices){
                     size_t i_tac = tttr_data->micro_times[i] / micro_time_coarsening;
-                    t[i_frame * (n_lines * n_pixel * n_tac) +
-                      i_line  * (n_pixel * n_tac) +
-                      i_pixel * (n_tac) +
-                      i_tac
-                    ] += 1;
+                    t[pixel_nbr + i_tac] += 1;
                 }
                 i_pixel++;
             }
@@ -533,20 +537,19 @@ void CLSMImage::get_fluorescence_decay_image(
 
 void CLSMImage::get_fcs_image(
         float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-        TTTR* tttr_data_self,
-        TTTR* tttr_data_other,
-        CLSMImage* clsm_other,
-        std::string correlation_method, int n_bins, int n_casc,
-        bool stack_frames,
-        bool normalized_correlation,
-        int min_photons
+        TTTR* tttr,
+        const std::string correlation_method,
+        const int n_bins, const int n_casc,
+        const bool stack_frames,
+        const bool normalized_correlation,
+        const int min_photons
 ){
 #if VERBOSE
     std::clog << "Get fluorescence correlation image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
-    auto corr = Correlator(tttr_data_self, correlation_method, n_bins, n_casc);
-    int n_corr = corr.x_axis.size();
+    auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+    const int n_corr = corr.x_axis.size();
 
     size_t n_cor_total = nf * n_lines * n_pixel * n_corr;
     auto t = (float*) calloc(n_cor_total, sizeof(float));
@@ -557,28 +560,20 @@ void CLSMImage::get_fcs_image(
     std::clog << "-- Number of correlation channels: " << n_corr << std::endl;
     std::clog << "-- Correlating... " << n_corr << std::endl;
 #endif
-    size_t i_frame = 0;
-    for(auto frame : frames){
-        CLSMFrame* other_frame = clsm_other->frames[i_frame];
-        size_t i_line = 0;
-        for(auto line : frame->lines){
-            CLSMLine* other_line = other_frame->lines[i_line];
-            size_t i_pixel = 0;
-            for(auto pixel : line->pixels){
-                auto other_pixel = (*other_line)[i_pixel];
-                if((pixel->_tttr_indices.size() >= min_photons)
-//                && (other_pixel->_tttr_indices.size() >= min_photons)
-                ){
+    size_t o_frame = 0;
+#pragma omp parallel for default(none) shared(tttr, o_frame, t)
+    for(int i_frame=0; i_frame < n_frames; i_frame++){
+        auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+        auto frame = frames[i_frame];
+        for(int i_line=0; i_line < n_lines; i_line++){
+            auto line = frame->lines[i_line];
+            for(int i_pixel=0; i_pixel < n_pixel; i_pixel++){
+                auto pixel = line->pixels[i_pixel];
+                if((pixel->_tttr_indices.size() >= min_photons)){
                     auto tttr_1 = TTTR(
-                            *tttr_data_self,
+                            *tttr,
                             pixel->_tttr_indices.data(),
                             pixel->_tttr_indices.size(),
-                            false
-                    );
-                    auto tttr_2 = TTTR(
-                            *tttr_data_other,
-                            other_pixel->_tttr_indices.data(),
-                            other_pixel->_tttr_indices.size(),
                             false
                     );
                     corr.set_tttr(&tttr_1, &tttr_1);
@@ -589,18 +584,16 @@ void CLSMImage::get_fcs_image(
                         corr.get_corr_normalized(&correlation, &temp);
                     }
                     for(int i_corr = 0; i_corr < n_corr; i_corr++){
-                        t[i_frame * (n_lines * n_pixel * n_corr) +
+                        t[o_frame * (n_lines * n_pixel * n_corr) +
                           i_line  * (n_pixel * n_corr) +
                           i_pixel * (n_corr) +
                           i_corr
-                        ] = (float) correlation[i_corr];
+                        ] += (float) correlation[i_corr];
                     }
                 }
-                i_pixel++;
             }
-            i_line++;
         }
-        i_frame += !stack_frames;
+        o_frame += !stack_frames;
     }
     *output = t;
     *dim1 = nf;
@@ -728,3 +721,69 @@ void CLSMImage::get_mean_micro_time_image(
     }
 }
 
+
+void CLSMImage::get_mean_lifetime_image(
+        TTTR* tttr_data,
+        double** output, int* dim1, int* dim2, int* dim3,
+        const int minimum_number_of_photons,
+        TTTR* tttr_irf,
+        double m0_irf,
+        double m1_irf,
+        bool stack_frames
+){
+    const double dt = tttr_data->header->micro_time_resolution;
+#if VERBOSE
+    std::clog << "Compute a mean lifetime image (Isenberg 1973)" << std::endl;
+    std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
+    std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
+    std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
+    std::clog << "-- Computing stack of mean micro times " << std::endl;
+#endif
+    if(tttr_irf != nullptr){
+        unsigned short *micro_times_irf; int n_micro_times_irf;
+        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
+        m0_irf = n_micro_times_irf; m1_irf = 0;
+        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+    }
+#if VERBOSE
+    std::clog << "-- IRF m0: " << m0_irf << std::endl;
+    std::clog << "-- IRF m1: " << m1_irf << std::endl;
+#endif
+    int o_frames = stack_frames? 1: n_frames;
+    auto* t = (double *) calloc(o_frames * n_lines * n_pixel, sizeof(double));
+#pragma omp parallel for default(none) shared(tttr_data, m0_irf, m1_irf, t, stack_frames)
+    for(int i_line = 0; i_line < n_lines; i_line++){
+        for(int i_pixel = 0; i_pixel < n_pixel; i_pixel++){
+            if(stack_frames){
+                size_t pixel_nbr = i_line  * (n_pixel) + i_pixel;
+                double mu0 = 0.0; double mu1 = 0.0;
+                for(auto &frame: frames){
+                    mu0 += frame->lines[i_line]->pixels[i_pixel]->_tttr_indices.size();
+                    for(auto &vi: frame->lines[i_line]->pixels[i_pixel]->_tttr_indices)
+                        mu1 += tttr_data->micro_times[vi];
+                }
+                double g1 = mu0 / m0_irf;
+                double g2 = (mu1 - g1 * m1_irf) / m0_irf;
+                double tau1 = g2 / g1 * dt;
+                t[pixel_nbr] = tau1 * (mu0 > minimum_number_of_photons);
+            } else{
+                for(int i_frame = 0; i_frame < n_frames; i_frame++){
+                    size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
+                    auto v = frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices;
+                    if (v.size() > minimum_number_of_photons){
+                        double mu0 = v.size(); double mu1 = 0.0;
+                        for(auto &vi: v) mu1 += tttr_data->micro_times[vi];
+                        double g1 = mu0 / m0_irf;
+                        double g2 = (mu1 - g1 * m1_irf) / m0_irf;
+                        double tau1 = g2 / g1 * dt;
+                        t[pixel_nbr] = tau1;
+                    }
+                }
+            }
+        }
+    }
+    *dim1 = (int) o_frames;
+    *dim2 = (int) n_lines;
+    *dim3 = (int) n_pixel;
+    *output = t;
+}

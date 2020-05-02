@@ -116,8 +116,8 @@ ax.bar(ind, times_phconvert_numba, width, color='y')
 ax.bar(ind + width, times_tttrlib, width, color='r')
 
 # zoom-in / limit the view to different portions of the data
-ax2.set_ylim(.0035, 0.04)  # outliers only
-ax.set_ylim(0.4, 3)  # most of the data
+ax2.set_ylim(.0, 0.03)  # outliers only
+ax.set_ylim(0.3, 3)  # most of the data
 
 ax.legend(
     (rects2[0], rects3[1]),

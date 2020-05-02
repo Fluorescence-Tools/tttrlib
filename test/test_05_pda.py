@@ -66,62 +66,45 @@ class Tests(unittest.TestCase):
         self.assertEqual(pda.hist2d_nmax, kw["hist2d_nmax"])
         self.assertEqual(pda.hist2d_nmin, kw["hist2d_nmin"])
 
-    # def test_pda_1(self):
-    #     """
-    #     create a pda object and test its
-    #     setter and getter methods
-    #     :return:
-    #     """
-    #
-    #     pda = tttrlib.Pda()
-    #     green_background = 1.5
-    #     red_background = 0.6
-    #     max_number_of_photons = 20
-    #     pda.set_green_background(green_background)
-    #     pda.set_red_background(red_background)
-    #     # self.assertEqual(
-    #     #     pda.get_green_background(),
-    #     #     green_background
-    #     # )
-    #     # self.assertEqual(
-    #     #     pda.get_red_background(),
-    #     #     red_background
-    #     # )
-    #     pda.set_max_number_of_photons(max_number_of_photons)
-    #     # self.assertEqual(
-    #     #     pda.get_max_number_of_photons(),
-    #     #     max_number_of_photons
-    #     # )
-    #
-    #     amplitude = 0.5
-    #     probability_green = 0.7
-    #     pda.append(
-    #         amplitude=amplitude,
-    #         probability_green=probability_green
-    #     )
-    #     pF = np.ones(max_number_of_photons, dtype=np.float)
-    #     pda.setPF(pF)
-    #     sgsr_matrix = pda.get_SgSr_matrix()
-    #
-    # def test_pda_2(self):
-    #
-    #     pda = tttrlib.Pda()
-    #     green_background = 1.5
-    #     red_background = 0.6
-    #     max_number_of_photons = 100
-    #     pda.set_green_background(green_background)
-    #     pda.set_red_background(red_background)
-    #     pda.set_max_number_of_photons(max_number_of_photons)
-    #
-    #     amplitude = 0.5
-    #     probability_green_1 = 0.7
-    #     probability_green_2 = 0.2
-    #     pg = np.array([
-    #         amplitude, probability_green_1,
-    #         1-amplitude, probability_green_2],
-    #         dtype=np.float
-    #     )
-    #     pda.set_probability_green(pg)
-    #     pF = np.ones(max_number_of_photons, dtype=np.float)
-    #     pda.setPF(pF)
-    #     sgsr_matrix = pda.get_SgSr_matrix()
+    def test_pda_1(self):
+        green_background = 1.5
+        red_background = 0.6
+        max_number_of_photons = 5
+        pda = tttrlib.Pda(
+            hist2d_nmax=5
+        )
+        pda.background_ch1 = green_background
+        pda.background_ch2 = red_background
+        self.assertEqual(
+            pda.background_ch1,
+            green_background,
+        )
+        self.assertEqual(
+            pda.background_ch2,
+            red_background
+        )
+
+        amplitude = 0.5
+        probability_green = 0.7
+        pda.append(
+            amplitude=amplitude,
+            probability_ch1=probability_green
+        )
+        pF = np.ones(max_number_of_photons, dtype=np.float)
+        pda.setPF(pF)
+        ref = np.array(
+            [[0.06122821, 0.05510539, 0.0275527, 0.01047002, 0.00347164,
+              0.00089271],
+             [0.13470207, 0.13408979, 0.07604544, 0.03344897, 0.01122497,
+              0.],
+             [0.16317319, 0.18414385, 0.12087368, 0.05405563, 0.,
+              0.],
+             [0.1486621, 0.19416385, 0.13015894, 0., 0.,
+              0.],
+             [0.1169788, 0.15670619, 0., 0., 0.,
+              0.],
+             [0.07159453, 0., 0., 0., 0.,
+              0.]
+             ]
+        )
+        self.assertEqual(np.allclose(pda.s1s2, ref), True)

@@ -30,6 +30,8 @@
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
 
+#include "roaring.h"
+#include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
 
@@ -41,7 +43,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.15"
+#define VERSION                     "0.0.16"
 
 
 /*!
@@ -604,7 +606,7 @@ public:
      *
      * @param output the output array that will contain the selected indices
      * @param n_output the number of elements in the output array
-     * @param time_window the length of the time window
+     * @param time_window the length of the time window in milliseconds
      * @param n_ph_max the maximum number of photons within a time window
      */
     void get_selection_by_count_rate(
@@ -790,9 +792,9 @@ public:
         _tttr_indices.clear();
     }
 
-    void shift_start_time(long v){
-        _start_time += v;
-        _stop_time += v;
+    void shift_start_time(long time_shift=0){
+        _start_time += time_shift;
+        _stop_time += time_shift;
     }
 
     /*!

@@ -195,9 +195,6 @@ void Correlator::run(){
 #if VERBOSE
             std::clog << "-- Computing ACF for all macro times. " << std::endl;
 #endif
-            // copy to array and make sure everything is correctly setup.
-            // cannot use setter here (pointing in circle)
-            //set_macrotimes(t1, n_t1, t2, n_t2);
             int nt1; int nt2;
             tttr->get_macro_time(&t1, &nt1);
             tttr->get_macro_time(&t2, &nt2);

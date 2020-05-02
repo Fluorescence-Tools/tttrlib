@@ -40,6 +40,7 @@ import_array();
 
 // Generic output view arrays
 // floating points
+// TODO: This is not consistent (ARGOUTVIEW vs ARGOUTVIEWM)
 %apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
 %apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
 %apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* dim1, int* dim2, int* dim3)}

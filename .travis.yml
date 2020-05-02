@@ -15,6 +15,7 @@ matrix:
         homebrew:
           packages:
             - doxygen
+            - libomp
           update: true
 
 # The Sphinx C++ docs are build with doxygen and breathe

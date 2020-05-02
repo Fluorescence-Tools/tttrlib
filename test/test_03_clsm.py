@@ -11,45 +11,49 @@ sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
 sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 
+ht3_filename_img = './data/imaging/pq/ht3/crn_clv_img.ht3'
+ht3_filename_irf = './data/imaging/pq/ht3/crn_clv_mirror.ht3'
+
+
+sp8_reading_parameter = {
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 15,
+    # if zero the number of pixels is the set to the number of lines
+    "n_pixel_per_line": 0,
+    "reading_routine": 'SP8',
+}
+
+ht3_reading_parameter = {
+    "marker_frame_start": [4],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 1,
+    "n_pixel_per_line": 256,
+    "reading_routine": 'default'
+}
+
+sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+sp5_reading_parameter = {
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 1,
+    "n_pixel_per_line": 256,
+    "reading_routine": 'SP5'
+}
+
+# If this is set to True as set of files are wirtten as a
+# reference for future tests
+make_reference = False
+
 
 class TestCLSM(unittest.TestCase):
 
-    # If this is set to True as set of files are wirtten as a
-    # reference for future tests
-    make_reference = False
-
-    sp8_reading_parameter = {
-        "marker_frame_start": [4, 6],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 15,
-        # if zero the number of pixels is the set to the number of lines
-        "n_pixel_per_line": 0,
-        "reading_routine": 'SP8',
-    }
-
-    ht3_reading_parameter = {
-        "marker_frame_start": [4],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 1,
-        "n_pixel_per_line": 256,
-        "reading_routine": 'default'
-    }
-
-    sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
-    sp5_reading_parameter = {
-        "marker_frame_start": [4, 6],
-        "marker_line_start": 1,
-        "marker_line_stop": 2,
-        "marker_event_type": 1,
-        "n_pixel_per_line": 256,
-        "reading_routine": 'SP5'
-    }
-
     def test_leica_sp8_image_2(self):
         filename = sp8_filename
-        reading_parameter = self.sp8_reading_parameter
+        reading_parameter = sp8_reading_parameter
 
         data = tttrlib.TTTR(filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
@@ -71,7 +75,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp5_image(self):
         filename = sp5_filename
-        reading_parameter = self.sp5_reading_parameter
+        reading_parameter = sp5_reading_parameter
         data = tttrlib.TTTR(filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
             tttr_data=data,
@@ -81,7 +85,7 @@ class TestCLSM(unittest.TestCase):
         )
         intensity_image_1 = clsm_image.intensity.sum(axis=0)
         reference_filename = './data/reference/img_intensity_image_sp5.npy'
-        if self.make_reference:
+        if make_reference:
             np.save(reference_filename, intensity_image_1)
 
         self.assertEqual(
@@ -131,7 +135,7 @@ class TestCLSM(unittest.TestCase):
         dt = header.micro_time_resolution
         x_axis = np.arange(counts.shape[0]) * dt
         decay = np.vstack([x_axis, counts]).T
-        if self.make_reference:
+        if make_reference:
             np.save(
                 './data/reference/img_decay_histogram.npy',
                 decay
@@ -147,7 +151,7 @@ class TestCLSM(unittest.TestCase):
     def test_clsm_intensity(self):
         print("test_clsm_intensity")
         data = tttrlib.TTTR(ht3_filename, 'HT3')
-        reading_parameter = self.ht3_reading_parameter
+        reading_parameter = ht3_reading_parameter
 
         clsm_image_1 = tttrlib.CLSMImage(
             tttr_data=data,
@@ -185,9 +189,28 @@ class TestCLSM(unittest.TestCase):
         self.assertEqual(
             np.allclose(
                 tac_image,
-                np.load(
-                    './data/reference/img_ref_decay_image.npy',
-                )
+                np.load('./data/reference/img_ref_decay_image.npy')
             ),
+            True
+        )
+
+    def test_mean_tau(self):
+        data = tttrlib.TTTR(ht3_filename_img, 'HT3')
+        irf = tttrlib.TTTR(ht3_filename_irf, 'HT3')
+        irf_0 = irf[irf.get_selection_by_channel([0])]
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=data,
+            **ht3_reading_parameter
+        )
+        mean_tau = clsm_image.get_mean_lifetime_image(
+                    tttr_irf=irf_0,
+                    tttr_data=data,
+                    minimum_number_of_photons=2
+        )
+        reference_fn = './data/reference/img_decay_mean_tau.npy'
+        if make_reference:
+            np.save(reference_fn, mean_tau)
+        self.assertEqual(
+            np.allclose(mean_tau, np.load(reference_fn)),
             True
         )

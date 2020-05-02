@@ -16,6 +16,7 @@ void Decay::convolve_lifetime_spectrum(
             MIN(n_time_axis, MIN(n_instrument_response_function,
                     MIN(n_output, convolution_stop))) :
             MIN(n_time_axis, MIN(n_instrument_response_function, n_output));
+    convolution_start = std::max(convolution_start, 1);
 #if VERBOSE
     std::clog << "convolve_lifetime_spectrum... " << std::endl;
     std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
@@ -34,8 +35,7 @@ void Decay::convolve_lifetime_spectrum(
     for(int ne=0; ne<number_of_exponentials; ne++){
         double a = lifetime_spectrum[2 * ne];
         double current_lifetime = (lifetime_spectrum[2 * ne + 1]);
-        if(a == 0.0) continue;
-        if(current_lifetime == 0.0) continue;
+        if((a == 0.0) || (current_lifetime == 0.0)) continue;
         double current_model_value = 0.0;
         for(int i=convolution_start; i<convolution_stop; i++){
             double dt = dt = (time_axis[i] - time_axis[i - 1]);
@@ -60,15 +60,15 @@ void Decay::convolve_lifetime_spectrum_periodic(
         double period
 ){
     convolution_stop = convolution_stop > 0 ?
-                       MIN(n_time_axis, MIN(n_instrument_response_function,
-                    MIN(n_output, convolution_stop))) :
-                       MIN(n_time_axis, MIN(n_instrument_response_function, n_output));
+                       std::min(n_time_axis, std::min(n_instrument_response_function, std::min(n_output, convolution_stop))) :
+                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
     int number_of_exponentials = n_lifetime_spectrum / 2;
     double dt = time_axis[1] - time_axis[0];
     double dt_2 = dt / 2;
     int period_n = std::ceil(period / dt - 0.5);
-    int stop1 = MIN(convolution_stop, period_n);
-    for(int i=convolution_start; i<convolution_stop; i++) output[i] = 0;
+    int stop1 = std::min(convolution_stop, period_n);
+    for(int i=0; i<n_output; i++) output[i] = 0;
+    convolution_start = std::max(convolution_start, 1);
 #if VERBOSE
     std::clog << "convolve_lifetime_spectrum_periodic..." << std::endl;
     std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
@@ -80,8 +80,7 @@ void Decay::convolve_lifetime_spectrum_periodic(
 #endif
     if(use_amplitude_threshold){
         for(int ne = 0; ne<number_of_exponentials; ne++){
-            double a = std::abs(lifetime_spectrum[2 * ne]);
-            lifetime_spectrum[2 * ne] *= (a < amplitude_threshold);
+            lifetime_spectrum[2 * ne] *= (std::abs(lifetime_spectrum[2 * ne]) < amplitude_threshold);
         }
     }
     for(int ne=0; ne < number_of_exponentials; ne++){
@@ -92,7 +91,8 @@ void Decay::convolve_lifetime_spectrum_periodic(
         double fit_curr = 0.;
         double exp_curr = std::exp(-dt/lt_curr);
         output[0] += dt_2 * instrument_response_function[0] * (exp_curr + 1.) * x_curr;
-        for(int i=0; i<convolution_stop; i++){
+
+        for(int i=convolution_start; i<convolution_stop; i++){
             fit_curr = (fit_curr + dt_2 * instrument_response_function[i - 1]) *
                     exp_curr + dt_2 * instrument_response_function[i];
             output[i] += fit_curr * x_curr;
@@ -120,7 +120,7 @@ double Decay::compute_scale(
         int start,
         int stop
 ){
-    start = MIN(MAX(start, 0), n_model_function);
+    start = std::min(std::max(start, 0), n_model_function);
     stop = (stop <0)? n_model_function: stop;
 #if VERBOSE
     std::clog << "scale_to_data..." << std::endl;
@@ -131,12 +131,11 @@ double Decay::compute_scale(
     std::clog << "-- n_data: " << n_data << std::endl;
     std::clog << "-- n_weights: " << n_weights << std::endl;
 #endif
-    double scale = 0.0;
     double sum_nom = 0.0;
     double sum_denom = 0.0;
     for(int i=start; i<stop; i++){
         if(data[i] > 0){
-            double iwsq = 1.0 / (weights[i] * weights[i] + 1e-12);
+            double iwsq = (weights[i] == 0)? 0.0: 1.0 / (weights[i] * weights[i]);
             sum_nom += model_function[i] * (data[i] - background) * iwsq;
             sum_denom += model_function[i] * model_function[i] * iwsq;
         }
@@ -167,7 +166,7 @@ void Decay::shift_array(
     std::clog << "-- shift integer: " << ts_i << std::endl;
     std::clog << "-- shift float: " << ts_f << std::endl;
 #endif
-    auto tmp = (double*) malloc(n_input * sizeof(double));
+    auto tmp = (double*) calloc(n_input, sizeof(double));
     std::vector<double> tmp1(input, input+n_input);
     std::vector<double> tmp2(input, input+n_input);
     std::rotate(tmp1.begin(), tmp1.begin()+ts_i, tmp1.end());
@@ -203,9 +202,9 @@ void Decay::add_curve(
     std::clog << "-- stop: " << stop << std::endl;
     std::clog << "-- areal_fraction_curve2: " << areal_fraction_curve2 << std::endl;
 #endif
-    *n_output = MIN(n_curve1, n_curve2);
-    start = MIN(0, start);
-    stop = stop < 0? *n_output: MIN(*n_output, stop);
+    *n_output = std::min(n_curve1, n_curve2);
+    start = std::min(0, start);
+    stop = stop < 0? *n_output: std::min(*n_output, stop);
     auto tmp  = (double*) malloc(*n_output * sizeof(double));
     auto tmp1 = (double*) malloc(n_curve1 * sizeof(double));
     auto tmp2 = (double*) malloc(n_curve2 * sizeof(double));
@@ -214,8 +213,7 @@ void Decay::add_curve(
     for(int i=0; i<n_curve1;i++) tmp1[i]  = curve1[i] / sum_curve_1;
     for(int i=0; i<n_curve2;i++) tmp2[i]  = curve2[i] / sum_curve_2;
     for(int i=start; i<stop;i++)
-        tmp[i] = ((1. - areal_fraction_curve2) * tmp1[i] + areal_fraction_curve2 * tmp2[i]) *
-                 sum_curve_1;
+        tmp[i] = ((1. - areal_fraction_curve2) * tmp1[i] + areal_fraction_curve2 * tmp2[i]) * sum_curve_1;
     *output = tmp;
 }
 
@@ -255,13 +253,13 @@ void Decay::compute_decay(
         int start, int stop,
         double irf_background_counts,
         double irf_shift_channels,
-        double irf_areal_fraction,
-        double period,
+        double scatter_areal_fraction,
+        double excitation_period,
         double constant_background,
         double total_area,
         bool use_amplitude_threshold,
         double amplitude_threshold,
-        bool correct_pile_up
+        bool add_pile_up
 ){
 #if VERBOSE
     std::clog << "compute_decay..." << std::endl;
@@ -275,21 +273,18 @@ void Decay::compute_decay(
     std::clog << "-- stop: " << stop << std::endl;
     std::clog << "-- irf_background_counts: " << irf_background_counts << std::endl;
     std::clog << "-- irf_shift_channels: " << irf_shift_channels << std::endl;
-    std::clog << "-- irf_areal_fraction: " << irf_areal_fraction << std::endl;
-    std::clog << "-- period: " << period << std::endl;
+    std::clog << "-- irf_areal_fraction: " << scatter_areal_fraction << std::endl;
+    std::clog << "-- period: " << excitation_period << std::endl;
     std::clog << "-- constant_background: " << constant_background << std::endl;
     std::clog << "-- total_area: " << total_area << std::endl;
     std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
     std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
-    std::clog << "-- correct_pile_up: " << correct_pile_up << std::endl;
+    std::clog << "-- correct_pile_up: " << add_pile_up << std::endl;
 #endif
     // correct irf for background counts
-    std::vector<double> irf_bg_corrected;
-    irf_bg_corrected.resize(n_instrument_response_function);
-    for(int i=0; i < n_instrument_response_function; i++){
-        irf_bg_corrected[i] =
-                MAX(0, instrument_response_function[i] - irf_background_counts);
-    }
+    auto irf_bg_corrected = std::vector<double>(n_instrument_response_function);
+    for(int i=0; i < n_instrument_response_function; i++)
+        irf_bg_corrected[i] = std::max(0.0, instrument_response_function[i] - irf_background_counts);
 
     // shift irf
     double* irf_bg_shift_corrected; int n_irf_bg_shift_corrected;
@@ -307,7 +302,7 @@ void Decay::compute_decay(
             lifetime_spectrum, n_lifetime_spectrum,
             start, stop,
             use_amplitude_threshold, amplitude_threshold,
-            period
+            excitation_period
     );
     free(irf_bg_shift_corrected);
 
@@ -317,7 +312,7 @@ void Decay::compute_decay(
             &decay_irf, &n_decay_irf,
             model_function, n_model_function,
             irf_bg_corrected.data(), irf_bg_corrected.size(),
-            irf_areal_fraction,
+            scatter_areal_fraction,
             start, stop
     );
 
@@ -346,3 +341,74 @@ void Decay::compute_decay(
 }
 
 
+void Decay::compute_microtime_histogram(
+        TTTR* tttr_data,
+        double** histogram, int* n_histogram,
+        double** time, int* n_time,
+        unsigned short micro_time_coarsening
+) {
+    // construct histogram
+    if (tttr_data != nullptr) {
+        auto header = tttr_data->get_header();
+        int n_channels =header.number_of_micro_time_channels / micro_time_coarsening;
+        double micro_time_resolution = header.micro_time_resolution;
+        unsigned short *micro_times; int n_micro_times;
+        tttr_data->get_micro_time(&micro_times, &n_micro_times);
+#if VERBOSE
+        std::cout << "compute_histogram" << std::endl;
+        std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
+        std::cout << "-- n_channels: " << n_channels << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        for(int i=0; i<n_micro_times;i++)
+            micro_times[i] /= micro_time_coarsening;
+#if VERBOSE
+        std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        auto bin_edges = std::vector<unsigned short>(n_channels);
+        for (int i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
+        auto hist = (double *) malloc(n_channels * sizeof(double));
+        for(int i=0; i<n_channels;i++) hist[i] = 0.0;
+        histogram1D<unsigned short>(
+                micro_times, n_micro_times,
+                nullptr, 0,
+                bin_edges.data(), bin_edges.size(),
+                hist, n_channels,
+                "lin", false
+        );
+        *histogram = hist;
+        *n_histogram = n_channels;
+
+        auto t = (double *) malloc(n_channels * sizeof(double));
+        for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
+        *time = t;
+        *n_time = n_channels;
+        free(micro_times);
+    }
+}
+
+double Decay::compute_mean_lifetime(
+        TTTR* tttr_data,
+        TTTR* tttr_irf,
+        int m0_irf, int m1_irf
+){
+    if(tttr_irf != nullptr){
+        unsigned short *micro_times_irf; int n_micro_times_irf;
+        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
+        m0_irf = n_micro_times_irf;
+        m1_irf = 0;
+        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+    }
+
+    unsigned short *micro_times_data; int n_micro_times_data;
+    tttr_data->get_micro_time(&micro_times_data, &n_micro_times_data);
+    double mu0 = n_micro_times_data;
+    double mu1 = 0.0;
+    for(int i=0; i< n_micro_times_data; i++) mu1 += micro_times_data[i];
+
+    double g1 = mu0 / m0_irf;
+    double g2 = (mu1 - g1 * m1_irf) / m0_irf;
+    double tau1 = g2 / g1;
+    return tau1 * tttr_data->get_header().micro_time_resolution;
+}

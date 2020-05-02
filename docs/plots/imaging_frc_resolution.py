@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 
 
@@ -19,7 +20,7 @@ def compute_frc(
     af1f2 = np.real(f1 * np.conj(f2))
     af1_2, af2_2 = np.abs(f1)**2, np.abs(f2)**2
     nx, ny = af1f2.shape
-    x = np.arange(-np.floor(ny / 2.0), np.ceil(ny / 2.0))
+    x = np.arange(-np.floor(nx / 2.0), np.ceil(nx / 2.0))
     y = np.arange(-np.floor(ny / 2.0), np.ceil(ny / 2.0))
     distances = list()
     wf1f2 = list()

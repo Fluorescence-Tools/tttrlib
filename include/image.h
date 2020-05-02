@@ -1,14 +1,17 @@
 #ifndef TTTRLIB_IMAGE_H
 #define TTTRLIB_IMAGE_H
 
+#include <omp.h>
 #include <stdlib.h>
 #include <tttr.h>
 #include <vector>
+#include <iterator> // std::begin, std::end
 #include <list>
 #include <cstring>
 #include <numeric>      // std::accumulate
 #include <algorithm>
 #include "correlation.h"
+#include "decay.h"
 
 
 class CLSMPixel : public TTTRRange{
@@ -248,21 +251,19 @@ public:
      * @param dim2[out]
      * @param dim3[out]
      * @param dim4[out]
-     * @param tttr_data
+     * @param tttr_self
      * @param tac_coarsening
      * @param stack_frames
      */
     void get_fcs_image(
         float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-        TTTR* tttr_data,
-        TTTR* tttr_data_other,
-        CLSMImage* clsm_other,
+        TTTR* tttr,
         std::string correlation_method = "default",
-        int n_bins = 1,
-        int n_casc = 10,
-        bool stack_frames = true,
-        bool normalized_correlation = true,
-        int min_photons = 3
+        int n_bins = 50,
+        int n_casc = 1,
+        bool stack_frames = false,
+        bool normalized_correlation = false,
+        int min_photons = 2
     );
 
     /*!
@@ -351,6 +352,36 @@ public:
             int minimum_number_of_photons=2,
             bool stack_frames=false
     );
+
+    /*!
+     *  Computes an image of average lifetimes
+     *
+     * The average lifetimes are computed (not fitted) by the methods of
+     * moments (Irvin Isenberg, 1973, Biophysical journal). This approach
+     * does not consider scattered light.
+     *
+     * Pixels with few photons can be discriminated. Discriminated pixels are
+     * filled with zeros.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param tttr_irf[in] pointer to a TTTR object of the IRF
+     * @param out[out] pointer to output array that will contain the image stack
+     * @param dim1[out] returns the number of frames
+     * @param dim2[out] returns the number of lines
+     * @param dim3[out] returns the number of pixels per line
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     * @param m0_irf is the zero moment of the IRF (optional, default=1)
+     * @param m1_irf is the first moment of the IRF (optional, default=1)
+     */
+    void get_mean_lifetime_image(
+            TTTR* tttr_data,
+            double** output, int* dim1, int* dim2, int* dim3,
+            int minimum_number_of_photons= 3,
+            TTTR* tttr_irf= nullptr,
+            double m0_irf= 1.0, double m1_irf= 1.0,
+            bool stack_frames=false
+    );
+
 
     /// Get the number of frames in the CLSM image
     int get_n_frames() const{

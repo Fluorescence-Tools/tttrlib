@@ -13,6 +13,11 @@
     (double* curve2, int n_curve2)
 }
 
+%apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1){
+    (double** histogram, int* n_histogram),
+    (double** time, int* n_time)
+};
+
 // Input output arrays
 %apply(double* INPLACE_ARRAY1, int DIM1) {
     (double* model_function, int n_model_function)

@@ -29,8 +29,14 @@ void peulen::correlation_full(
                 t1_c, w1_c, nt1,
                 t2_c, w2_c, nt2
         );
-        peulen::correlation_coarsen(t1_c, w1_c, nt1);
-        peulen::correlation_coarsen(t2_c, w2_c, nt2);
+#pragma omp parallel sections default(none) shared(t1_c, t2_c, w1_c, w2_c, nt1, nt2)
+        {
+#pragma omp section
+            peulen::correlation_coarsen(t1_c, w1_c, nt1);
+
+#pragma omp section
+            peulen::correlation_coarsen(t2_c, w2_c, nt2);
+        }
     }
 }
 

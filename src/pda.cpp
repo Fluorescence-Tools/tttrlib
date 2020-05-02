@@ -189,7 +189,6 @@ void Pda::S1S2_pF(
         std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
 #endif
         tmp[0] = 1.;
-
         // Propagate the probabilities to other matrix rows
         for (size_t row = 1; row <= Nmax; row++) {
             // marks beginning of current and previous matrix row
@@ -202,7 +201,6 @@ void Pda::S1S2_pF(
                         tmp[row_offset_pre + col + 1] * p;
             }
         }
-        // This could be optimized with AVX!
         for (size_t row = 0; row < Nmax; row++) {
             for (size_t red = 0; red <= row; red++)
                 FgFr[(row - red) * (Nmax + 1) + red] +=

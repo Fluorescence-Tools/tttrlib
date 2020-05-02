@@ -39,6 +39,9 @@ if(APPLE)
     set(CMAKE_MACOSX_RPATH 0)
 endif(APPLE)
 
+## CRoaring
+INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CRoaringUnityBuild)
+
 ## FFTW
 FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
@@ -63,7 +66,20 @@ LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 ## OpenMP
-# FIND_PACKAGE(OpenMP REQUIRED)
+if (APPLE)
+    # dirty hack to make OpenMP work see:
+    # https://gitlab.kitware.com/cmake/cmake/issues/18098
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
+    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+    set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+    set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
+endif()
+FIND_PACKAGE(OpenMP REQUIRED)
+LINK_LIBRARIES(OpenMP::OpenMP_CXX)
 
 # Doxygen
 IF(BUILD_DOC)
