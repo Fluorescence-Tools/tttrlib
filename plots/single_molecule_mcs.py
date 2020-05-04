@@ -3,7 +3,7 @@ import numpy as np
 
 import tttrlib
 
-data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
 mt = data.get_macro_time()
 
 green_indeces = data.get_selection_by_channel([0, 8])

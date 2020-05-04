@@ -458,8 +458,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRP4TTTRP9CLSMImageNSt6stringEiibbi">
-<span id="_CPPv3N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRP4TTTRP9CLSMImageNSt6stringEiibbi"></span><span id="_CPPv2N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRP4TTTRP9CLSMImageNSt6stringEiibbi"></span><span id="CLSMImage::get_fcs_image__floatPP.iP.iP.iP.iP.TTTRP.TTTRP.CLSMImageP.ss.i.i.b.b.i"></span><span class="target" id="class_c_l_s_m_image_1a1e53965b74a05f5f9550780109a34e59"></span>void <code class="sig-name descname">get_fcs_image</code><span class="sig-paren">(</span>float **<em>output</em>, int *<em>dim1</em>, int *<em>dim2</em>, int *<em>dim3</em>, int *<em>dim4</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data_other</em>, <a class="reference internal" href="#_CPPv49CLSMImage" title="CLSMImage">CLSMImage</a> *<em>clsm_other</em>, std::string <em>correlation_method</em> = &quot;default&quot;, int <em>n_bins</em> = 1, int <em>n_casc</em> = 10, bool <em>stack_frames</em> = true, bool <em>normalized_correlation</em> = true, int <em>min_photons</em> = 3<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRP4TTTRP9CLSMImageNSt6stringEiibbi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRNSt6stringEiibbi">
+<span id="_CPPv3N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRNSt6stringEiibbi"></span><span id="_CPPv2N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRNSt6stringEiibbi"></span><span id="CLSMImage::get_fcs_image__floatPP.iP.iP.iP.iP.TTTRP.ss.i.i.b.b.i"></span><span class="target" id="class_c_l_s_m_image_1a9f73d088c9579b5e5fcb235f7aab69f6"></span>void <code class="sig-name descname">get_fcs_image</code><span class="sig-paren">(</span>float **<em>output</em>, int *<em>dim1</em>, int *<em>dim2</em>, int *<em>dim3</em>, int *<em>dim4</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr</em>, std::string <em>correlation_method</em> = &quot;default&quot;, int <em>n_bins</em> = 50, int <em>n_casc</em> = 1, bool <em>stack_frames</em> = false, bool <em>normalized_correlation</em> = false, int <em>min_photons</em> = 2<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRNSt6stringEiibbi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Computes the</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -468,7 +468,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">dim2[out]</span></code>: </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dim3[out]</span></code>: </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dim4[out]</span></code>: </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_self</span></code>: </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tac_coarsening</span></code>: </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stack_frames</span></code>: </p></li>
 </ul>
@@ -563,6 +563,50 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="_CPPv4N9CLSMImage16get_phasor_imageEPPfPiPiPiPiP4TTTRP4TTTRdib">
+<span id="_CPPv3N9CLSMImage16get_phasor_imageEPPfPiPiPiPiP4TTTRP4TTTRdib"></span><span id="_CPPv2N9CLSMImage16get_phasor_imageEPPfPiPiPiPiP4TTTRP4TTTRdib"></span><span id="CLSMImage::get_phasor_image__floatPP.iP.iP.iP.iP.TTTRP.TTTRP.double.i.b"></span><span class="target" id="class_c_l_s_m_image_1ad40b575403b8102b60dcd4eeda13f49d"></span>void <code class="sig-name descname">get_phasor_image</code><span class="sig-paren">(</span>float **<em>output</em>, int *<em>dim1</em>, int *<em>dim2</em>, int *<em>dim3</em>, int *<em>dim4</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_irf</em> = nullptr, double <em>frequency</em> = -1, int <em>minimum_number_of_photons</em> = 2, bool <em>stack_frames</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage16get_phasor_imageEPPfPiPiPiPiP4TTTRP4TTTRdib" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes the phasor values for every pixel</p>
+<p>Pixels with few photons can be discriminated. Discriminated pixels will be filled with zeros.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data[in]</span></code>: pointer to a <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">out[out]</span></code>: pointer to output array that will contain the image stack </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim1[out]</span></code>: returns the number of frames </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim2[out]</span></code>: returns the number of lines </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim3[out]</span></code>: returns the number of pixels per line </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim4[out]</span></code>: returns 2 (first is the g phasor value (cos), second the s phasor (sin) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum_number_of_photons[in]</span></code>: the minimum number of photons in a micro time (only used if frames are not stacked) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stack_frames[in]</span></code>: if true the frames are stacked (default value is false). If stack frames is set to true the mean arrival time is computed using the tttr indices of all pixels (this corresponds to the photon weighted mean arrival time). </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N9CLSMImage23get_mean_lifetime_imageEP4TTTRPPdPiPiPiiP4TTTRddb">
+<span id="_CPPv3N9CLSMImage23get_mean_lifetime_imageEP4TTTRPPdPiPiPiiP4TTTRddb"></span><span id="_CPPv2N9CLSMImage23get_mean_lifetime_imageEP4TTTRPPdPiPiPiiP4TTTRddb"></span><span id="CLSMImage::get_mean_lifetime_image__TTTRP.doublePP.iP.iP.iP.i.TTTRP.double.double.b"></span><span class="target" id="class_c_l_s_m_image_1ab628d934aed1fbc3ba61d941572579d9"></span>void <code class="sig-name descname">get_mean_lifetime_image</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, double **<em>output</em>, int *<em>dim1</em>, int *<em>dim2</em>, int *<em>dim3</em>, int <em>minimum_number_of_photons</em> = 3, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_irf</em> = nullptr, double <em>m0_irf</em> = 1.0, double <em>m1_irf</em> = 1.0, bool <em>stack_frames</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage23get_mean_lifetime_imageEP4TTTRPPdPiPiPiiP4TTTRddb" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes an image of average lifetimes</p>
+<p>The average lifetimes are computed (not fitted) by the methods of moments (Irvin Isenberg, 1973, Biophysical journal). This approach does not consider scattered light.</p>
+<p>Pixels with few photons can be discriminated. Discriminated pixels are filled with zeros.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data[in]</span></code>: pointer to a <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_irf[in]</span></code>: pointer to a <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object of the IRF </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">out[out]</span></code>: pointer to output array that will contain the image stack </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim1[out]</span></code>: returns the number of frames </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim2[out]</span></code>: returns the number of lines </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dim3[out]</span></code>: returns the number of pixels per line </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum_number_of_photons[in]</span></code>: the minimum number of photons in a micro time </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m0_irf</span></code>: is the zero moment of the IRF (optional, default=1) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m1_irf</span></code>: is the first moment of the IRF (optional, default=1) </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="_CPPv4NK9CLSMImage12get_n_framesEv">
 <span id="_CPPv3NK9CLSMImage12get_n_framesEv"></span><span id="_CPPv2NK9CLSMImage12get_n_framesEv"></span><span id="CLSMImage::get_n_framesC"></span><span class="target" id="class_c_l_s_m_image_1a2c68cb2184fca70b02f01e308572db4e"></span>int <code class="sig-name descname">get_n_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK9CLSMImage12get_n_framesEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Get the number of frames in the CLSM image. </p>
@@ -616,8 +660,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEE">
-<span id="_CPPv3N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEE"></span><span id="_CPPv2N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEE"></span><span id="CLSMImage::CLSMImage__TTTRP.std::vector:i:.i.i.i.i.ss.l-l.CLSMImageP.b.std::vector:i:"></span><span class="target" id="class_c_l_s_m_image_1adbb251d2fcade8306cc8217235c5b0d2"></span><code class="sig-name descname">CLSMImage</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em> = nullptr, std::vector&lt;int&gt; <em>marker_frame_start</em> = std::vector&lt;int&gt;(), int <em>marker_line_start</em> = 0, int <em>marker_line_stop</em> = 0, int <em>marker_event_type</em> = 0, int <em>n_pixel_per_line</em> = 0, std::string <em>reading_routine</em> = &quot;default&quot;, long long <em>macro_time_shift</em> = 0, <a class="reference internal" href="#_CPPv4N9CLSMImage9CLSMImageERK9CLSMImageb" title="CLSMImage::CLSMImage">CLSMImage</a> *<em>source</em> = nullptr, bool <em>fill</em> = false, std::vector&lt;int&gt; <em>channels</em> = std::vector&lt;int&gt;()<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEE" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb">
+<span id="_CPPv3N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb"></span><span id="_CPPv2N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb"></span><span id="CLSMImage::CLSMImage__TTTRP.std::vector:i:.i.i.i.i.ss.l-l.CLSMImageP.b.std::vector:i:.b"></span><span class="target" id="class_c_l_s_m_image_1a285a0221ef05a533f6a5a8f91daeefe0"></span><code class="sig-name descname">CLSMImage</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em> = nullptr, std::vector&lt;int&gt; <em>marker_frame_start</em> = std::vector&lt;int&gt;(), int <em>marker_line_start</em> = 0, int <em>marker_line_stop</em> = 0, int <em>marker_event_type</em> = 0, int <em>n_pixel_per_line</em> = 0, std::string <em>reading_routine</em> = &quot;default&quot;, long long <em>macro_time_shift</em> = 0, <a class="reference internal" href="#_CPPv4N9CLSMImage9CLSMImageERK9CLSMImageb" title="CLSMImage::CLSMImage">CLSMImage</a> *<em>source</em> = nullptr, bool <em>fill</em> = false, std::vector&lt;int&gt; <em>channels</em> = std::vector&lt;int&gt;(), bool <em>skip_before_first_frame_marker</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">tttr_data</span></code>: pointer to <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object </p></li>
@@ -668,30 +712,41 @@
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage12marker_frameE">
 <span id="_CPPv3N9CLSMImage12marker_frameE"></span><span id="_CPPv2N9CLSMImage12marker_frameE"></span><span id="CLSMImage::marker_frame__std::vector:i:"></span><span class="target" id="class_c_l_s_m_image_1a697a99e2c905ea316609ede321da3e2c"></span>std::vector&lt;int&gt; <code class="sig-name descname">marker_frame</code><a class="headerlink" href="#_CPPv4N9CLSMImage12marker_frameE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dd><p>Vector containing the tttr indices of the frame markers. </p>
+</dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage17marker_line_startE">
 <span id="_CPPv3N9CLSMImage17marker_line_startE"></span><span id="_CPPv2N9CLSMImage17marker_line_startE"></span><span id="CLSMImage::marker_line_start__i"></span><span class="target" id="class_c_l_s_m_image_1a2ff9571b1c2b9630ce3078d36a46949f"></span>int <code class="sig-name descname">marker_line_start</code><a class="headerlink" href="#_CPPv4N9CLSMImage17marker_line_startE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dd><p>Defines the marker for a line start. </p>
+</dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage16marker_line_stopE">
 <span id="_CPPv3N9CLSMImage16marker_line_stopE"></span><span id="_CPPv2N9CLSMImage16marker_line_stopE"></span><span id="CLSMImage::marker_line_stop__i"></span><span class="target" id="class_c_l_s_m_image_1af6fe08950c68e071d04926a9c8b2c6a7"></span>int <code class="sig-name descname">marker_line_stop</code><a class="headerlink" href="#_CPPv4N9CLSMImage16marker_line_stopE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dd><p>Defines the marker for a line stop. </p>
+</dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage12marker_eventE">
 <span id="_CPPv3N9CLSMImage12marker_eventE"></span><span id="_CPPv2N9CLSMImage12marker_eventE"></span><span id="CLSMImage::marker_event__i"></span><span class="target" id="class_c_l_s_m_image_1a2e964e62bc599ad4d10407898913fe6e"></span>int <code class="sig-name descname">marker_event</code><a class="headerlink" href="#_CPPv4N9CLSMImage12marker_eventE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dd><p>The event type used for the marker. </p>
+</dd></dl>
 
 </div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Protected Functions</p>
 <dl class="function">
-<dt id="_CPPv4N9CLSMImage18initialize_defaultEP4TTTR">
-<span id="_CPPv3N9CLSMImage18initialize_defaultEP4TTTR"></span><span id="_CPPv2N9CLSMImage18initialize_defaultEP4TTTR"></span><span id="CLSMImage::initialize_default__TTTRP"></span><span class="target" id="class_c_l_s_m_image_1a71c594888ce3588540f100a4f953d32e"></span>void <code class="sig-name descname">initialize_default</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage18initialize_defaultEP4TTTR" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Initializes the frames, lines, and pixels of a <a class="reference internal" href="#class_c_l_s_m_image"><span class="std std-ref">CLSMImage</span></a>. </p>
+<dt id="_CPPv4N9CLSMImage18initialize_defaultEP4TTTRb">
+<span id="_CPPv3N9CLSMImage18initialize_defaultEP4TTTRb"></span><span id="_CPPv2N9CLSMImage18initialize_defaultEP4TTTRb"></span><span id="CLSMImage::initialize_default__TTTRP.b"></span><span class="target" id="class_c_l_s_m_image_1aba59103d04f40c29d9d33fe41f2953b9"></span>void <code class="sig-name descname">initialize_default</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, bool <em>skip_before_first_frame_marker</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9CLSMImage18initialize_defaultEP4TTTRb" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Initializes the frames, lines, and pixels of a <a class="reference internal" href="#class_c_l_s_m_image"><span class="std std-ref">CLSMImage</span></a>.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">skip_before_first_frame_marker</span></code>: if set to true (the default value is true) all events before the first frame marker are ignored. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
 </dd></dl>
 
 <dl class="function">
@@ -723,19 +778,19 @@
 <p class="breathe-sectiondef-title rubric">Protected Attributes</p>
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage8n_framesE">
-<span id="_CPPv3N9CLSMImage8n_framesE"></span><span id="_CPPv2N9CLSMImage8n_framesE"></span><span id="CLSMImage::n_frames__s"></span><span class="target" id="class_c_l_s_m_image_1aa79f038dbcea67c750c18a3189251af7"></span>size_t <code class="sig-name descname">n_frames</code><a class="headerlink" href="#_CPPv4N9CLSMImage8n_framesE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9CLSMImage8n_framesE"></span><span id="_CPPv2N9CLSMImage8n_framesE"></span><span id="CLSMImage::n_frames__s"></span><span class="target" id="class_c_l_s_m_image_1aa79f038dbcea67c750c18a3189251af7"></span>size_t <code class="sig-name descname">n_frames</code> = 0<a class="headerlink" href="#_CPPv4N9CLSMImage8n_framesE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The number of frames in an <a class="reference internal" href="#class_c_l_s_m_image"><span class="std std-ref">CLSMImage</span></a>. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage7n_linesE">
-<span id="_CPPv3N9CLSMImage7n_linesE"></span><span id="_CPPv2N9CLSMImage7n_linesE"></span><span id="CLSMImage::n_lines__s"></span><span class="target" id="class_c_l_s_m_image_1ae20252da2f829eaf726001a7e9a2673a"></span>size_t <code class="sig-name descname">n_lines</code><a class="headerlink" href="#_CPPv4N9CLSMImage7n_linesE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9CLSMImage7n_linesE"></span><span id="_CPPv2N9CLSMImage7n_linesE"></span><span id="CLSMImage::n_lines__s"></span><span class="target" id="class_c_l_s_m_image_1ae20252da2f829eaf726001a7e9a2673a"></span>size_t <code class="sig-name descname">n_lines</code> = 0<a class="headerlink" href="#_CPPv4N9CLSMImage7n_linesE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The number of lines per frames. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9CLSMImage7n_pixelE">
-<span id="_CPPv3N9CLSMImage7n_pixelE"></span><span id="_CPPv2N9CLSMImage7n_pixelE"></span><span id="CLSMImage::n_pixel__s"></span><span class="target" id="class_c_l_s_m_image_1a4b17b872849a38099970b5f4962df0f5"></span>size_t <code class="sig-name descname">n_pixel</code><a class="headerlink" href="#_CPPv4N9CLSMImage7n_pixelE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9CLSMImage7n_pixelE"></span><span id="_CPPv2N9CLSMImage7n_pixelE"></span><span id="CLSMImage::n_pixel__s"></span><span class="target" id="class_c_l_s_m_image_1a4b17b872849a38099970b5f4962df0f5"></span>size_t <code class="sig-name descname">n_pixel</code> = 0<a class="headerlink" href="#_CPPv4N9CLSMImage7n_pixelE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The number if pixels per line. </p>
 </dd></dl>
 
@@ -828,6 +883,11 @@
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="_CPPv4N8CLSMLineD0Ev">
+<span id="_CPPv3N8CLSMLineD0Ev"></span><span id="_CPPv2N8CLSMLineD0Ev"></span><span id="CLSMLine::~CLSMLine"></span><span class="target" id="class_c_l_s_m_line_1a6a19274622b3608d800d09bc0330d840"></span><code class="sig-name descname">~CLSMLine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N8CLSMLineD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="_CPPv4N8CLSMLine6appendEP9CLSMPixel">
 <span id="_CPPv3N8CLSMLine6appendEP9CLSMPixel"></span><span id="_CPPv2N8CLSMLine6appendEP9CLSMPixel"></span><span id="CLSMLine::append__CLSMPixelP"></span><span class="target" id="class_c_l_s_m_line_1a1918df9839519738383f97da2d313fe0"></span>void <code class="sig-name descname">append</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv49CLSMPixel" title="CLSMPixel">CLSMPixel</a> *<em>pixel</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N8CLSMLine6appendEP9CLSMPixel" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
@@ -869,11 +929,6 @@
 <dl class="function">
 <dt>
 <span class="target" id="class_c_l_s_m_line_1ac517b687bf3de6e76c3422bc2875e470"></span><em class="property">friend </em><code class="sig-name descname">CLSMLine::CLSMFrame</code></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt>
-<span class="target" id="class_c_l_s_m_line_1a1e4d674b52d52ae0d7249f764164c95a"></span><em class="property">friend </em><code class="sig-name descname">CLSMLine::CLSMLine</code></dt>
 <dd></dd></dl>
 
 </div>
@@ -1018,8 +1073,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N10Correlator14set_microtimesEPjjPjjj">
-<span id="_CPPv3N10Correlator14set_microtimesEPjjPjjj"></span><span id="_CPPv2N10Correlator14set_microtimesEPjjPjjj"></span><span id="Correlator::set_microtimes__unsigned-iP.unsigned-i.unsigned-iP.unsigned-i.unsigned-i"></span><span class="target" id="class_correlator_1af1e92afc713e265d2b80cf7d1deb6a73"></span>void <code class="sig-name descname">set_microtimes</code><span class="sig-paren">(</span>unsigned int *<em>tac_1</em>, unsigned int <em>n_tac_1</em>, unsigned int *<em>tac_2</em>, unsigned int <em>n_tac_2</em>, unsigned int <em>n_tac</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10Correlator14set_microtimesEPjjPjjj" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N10Correlator14set_microtimesEPtiPtii">
+<span id="_CPPv3N10Correlator14set_microtimesEPtiPtii"></span><span id="_CPPv2N10Correlator14set_microtimesEPtiPtii"></span><span id="Correlator::set_microtimes__unsigned-shortP.i.unsigned-shortP.i.i"></span><span class="target" id="class_correlator_1a13acb7c65d4496066f22dad508a5abd2"></span>void <code class="sig-name descname">set_microtimes</code><span class="sig-paren">(</span>unsigned short *<em>tac_1</em>, int <em>n_tac_1</em>, unsigned short *<em>tac_2</em>, int <em>n_tac_2</em>, int <em>n_tac</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10Correlator14set_microtimesEPtiPtii" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Changes the time axis to consider the micro times. <dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">[in]</span> <span class="pre">tac_1</span></code>: The micro times of the first correlation channel </p></li>
@@ -1367,6 +1422,566 @@
 <dt id="_CPPv4N14CurveMapping_t4ShowE">
 <span id="_CPPv3N14CurveMapping_t4ShowE"></span><span id="_CPPv2N14CurveMapping_t4ShowE"></span><span id="CurveMapping_t::Show__int32_t"></span><span class="target" id="struct_curve_mapping__t_1a37f717372240c8fd4c4dfacfcfe33234"></span>int32_t <code class="sig-name descname">Show</code><a class="headerlink" href="#_CPPv4N14CurveMapping_t4ShowE" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv45Decay">
+<span id="_CPPv35Decay"></span><span id="_CPPv25Decay"></span><span id="Decay"></span><span class="target" id="class_decay"></span><em class="property">class </em><code class="sig-name descname">Decay</code><a class="headerlink" href="#_CPPv45Decay" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK5Decay8is_validEv">
+<span id="_CPPv3NK5Decay8is_validEv"></span><span id="_CPPv2NK5Decay8is_validEv"></span><span id="Decay::is_validC"></span><span class="target" id="class_decay_1aa141bf5c0c1c92261bfdd4eada23659e"></span>bool <code class="sig-name descname">is_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay8is_validEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay8set_dataEPdi">
+<span id="_CPPv3N5Decay8set_dataEPdi"></span><span id="_CPPv2N5Decay8set_dataEPdi"></span><span id="Decay::set_data__doubleP.i"></span><span class="target" id="class_decay_1a42b02593df2a05f42ecdfc8d714d28eb"></span>void <code class="sig-name descname">set_data</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay8set_dataEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay8get_dataEPPdPi">
+<span id="_CPPv3N5Decay8get_dataEPPdPi"></span><span id="_CPPv2N5Decay8get_dataEPPdPi"></span><span id="Decay::get_data__doublePP.iP"></span><span class="target" id="class_decay_1a037fbd73be1b7e130d0dfadf2fb06ad7"></span>void <code class="sig-name descname">get_data</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay8get_dataEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay27set_use_amplitude_thresholdEb">
+<span id="_CPPv3N5Decay27set_use_amplitude_thresholdEb"></span><span id="_CPPv2N5Decay27set_use_amplitude_thresholdEb"></span><span id="Decay::set_use_amplitude_threshold__b"></span><span class="target" id="class_decay_1ab7c04c8bb081755c3a19591f3ab2a74b"></span>void <code class="sig-name descname">set_use_amplitude_threshold</code><span class="sig-paren">(</span>bool <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay27set_use_amplitude_thresholdEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay27get_use_amplitude_thresholdEv">
+<span id="_CPPv3NK5Decay27get_use_amplitude_thresholdEv"></span><span id="_CPPv2NK5Decay27get_use_amplitude_thresholdEv"></span><span id="Decay::get_use_amplitude_thresholdC"></span><span class="target" id="class_decay_1ad48418f2b9e5913d67251ab5a2f38eaa"></span>bool <code class="sig-name descname">get_use_amplitude_threshold</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay27get_use_amplitude_thresholdEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay23set_amplitude_thresholdEd">
+<span id="_CPPv3N5Decay23set_amplitude_thresholdEd"></span><span id="_CPPv2N5Decay23set_amplitude_thresholdEd"></span><span id="Decay::set_amplitude_threshold__double"></span><span class="target" id="class_decay_1aea647aa3e2bc44f76929d2fd4da7f125"></span>void <code class="sig-name descname">set_amplitude_threshold</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay23set_amplitude_thresholdEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay23get_amplitude_thresholdEv">
+<span id="_CPPv3NK5Decay23get_amplitude_thresholdEv"></span><span id="_CPPv2NK5Decay23get_amplitude_thresholdEv"></span><span id="Decay::get_amplitude_thresholdC"></span><span class="target" id="class_decay_1abf301aa7b547df89d11c1bcad004ec62"></span>double <code class="sig-name descname">get_amplitude_threshold</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay23get_amplitude_thresholdEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay14set_total_areaEd">
+<span id="_CPPv3N5Decay14set_total_areaEd"></span><span id="_CPPv2N5Decay14set_total_areaEd"></span><span id="Decay::set_total_area__double"></span><span class="target" id="class_decay_1aa151183aa47c5b9c94533a5618fadb89"></span>void <code class="sig-name descname">set_total_area</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay14set_total_areaEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay14get_total_areaEv">
+<span id="_CPPv3NK5Decay14get_total_areaEv"></span><span id="_CPPv2NK5Decay14get_total_areaEv"></span><span id="Decay::get_total_areaC"></span><span class="target" id="class_decay_1a0fb97c546917c07115f82bbbe1b74b0d"></span>double <code class="sig-name descname">get_total_area</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay14get_total_areaEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay10set_periodEd">
+<span id="_CPPv3N5Decay10set_periodEd"></span><span id="_CPPv2N5Decay10set_periodEd"></span><span id="Decay::set_period__double"></span><span class="target" id="class_decay_1a72c0e66c868add9b9bcd097d3eb95671"></span>void <code class="sig-name descname">set_period</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay10set_periodEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay10get_periodEv">
+<span id="_CPPv3NK5Decay10get_periodEv"></span><span id="_CPPv2NK5Decay10get_periodEv"></span><span id="Decay::get_periodC"></span><span class="target" id="class_decay_1ae6e3f06816edf36d6a8508114b7647ff"></span>double <code class="sig-name descname">get_period</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay10get_periodEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay22set_irf_shift_channelsEd">
+<span id="_CPPv3N5Decay22set_irf_shift_channelsEd"></span><span id="_CPPv2N5Decay22set_irf_shift_channelsEd"></span><span id="Decay::set_irf_shift_channels__double"></span><span class="target" id="class_decay_1acbd4216dd042cf166c34eeb8c2e605a6"></span>void <code class="sig-name descname">set_irf_shift_channels</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay22set_irf_shift_channelsEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay22get_irf_shift_channelsEv">
+<span id="_CPPv3NK5Decay22get_irf_shift_channelsEv"></span><span id="_CPPv2NK5Decay22get_irf_shift_channelsEv"></span><span id="Decay::get_irf_shift_channelsC"></span><span class="target" id="class_decay_1a8aef4f408392786ad626efba98775dac"></span>double <code class="sig-name descname">get_irf_shift_channels</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay22get_irf_shift_channelsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay26set_areal_fraction_scatterEd">
+<span id="_CPPv3N5Decay26set_areal_fraction_scatterEd"></span><span id="_CPPv2N5Decay26set_areal_fraction_scatterEd"></span><span id="Decay::set_areal_fraction_scatter__double"></span><span class="target" id="class_decay_1a9e27dd4d06c18896d61aefcdf15a48b0"></span>void <code class="sig-name descname">set_areal_fraction_scatter</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay26set_areal_fraction_scatterEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay26get_areal_fraction_scatterEv">
+<span id="_CPPv3NK5Decay26get_areal_fraction_scatterEv"></span><span id="_CPPv2NK5Decay26get_areal_fraction_scatterEv"></span><span id="Decay::get_areal_fraction_scatterC"></span><span class="target" id="class_decay_1ab1760e15ab341f6980934a06b9e18144"></span>double <code class="sig-name descname">get_areal_fraction_scatter</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay26get_areal_fraction_scatterEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay23set_constant_backgroundEd">
+<span id="_CPPv3N5Decay23set_constant_backgroundEd"></span><span id="_CPPv2N5Decay23set_constant_backgroundEd"></span><span id="Decay::set_constant_background__double"></span><span class="target" id="class_decay_1a5099bbac228ea8f644a38d3980c338a9"></span>void <code class="sig-name descname">set_constant_background</code><span class="sig-paren">(</span>double <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay23set_constant_backgroundEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay23get_constant_backgroundEv">
+<span id="_CPPv3NK5Decay23get_constant_backgroundEv"></span><span id="_CPPv2NK5Decay23get_constant_backgroundEv"></span><span id="Decay::get_constant_backgroundC"></span><span class="target" id="class_decay_1afb61efad1311de0fe17fffcc92b728c9"></span>double <code class="sig-name descname">get_constant_background</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay23get_constant_backgroundEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay21set_convolution_startEi">
+<span id="_CPPv3N5Decay21set_convolution_startEi"></span><span id="_CPPv2N5Decay21set_convolution_startEi"></span><span id="Decay::set_convolution_start__i"></span><span class="target" id="class_decay_1a899e1e7b18186005d67bdc31d663fd21"></span>void <code class="sig-name descname">set_convolution_start</code><span class="sig-paren">(</span>int <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay21set_convolution_startEi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay21get_convolution_startEv">
+<span id="_CPPv3NK5Decay21get_convolution_startEv"></span><span id="_CPPv2NK5Decay21get_convolution_startEv"></span><span id="Decay::get_convolution_startC"></span><span class="target" id="class_decay_1a665eb136f174b5adc4922e63fcece48c"></span>int <code class="sig-name descname">get_convolution_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay21get_convolution_startEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay20set_convolution_stopEi">
+<span id="_CPPv3N5Decay20set_convolution_stopEi"></span><span id="_CPPv2N5Decay20set_convolution_stopEi"></span><span id="Decay::set_convolution_stop__i"></span><span class="target" id="class_decay_1ad6a55e2f584dbc220aa5ac0126e6b9e5"></span>void <code class="sig-name descname">set_convolution_stop</code><span class="sig-paren">(</span>int <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay20set_convolution_stopEi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay20get_convolution_stopEv">
+<span id="_CPPv3NK5Decay20get_convolution_stopEv"></span><span id="_CPPv2NK5Decay20get_convolution_stopEv"></span><span id="Decay::get_convolution_stopC"></span><span class="target" id="class_decay_1a70b43d7de5f4af646b2351c94177a472"></span>int <code class="sig-name descname">get_convolution_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay20get_convolution_stopEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay19set_correct_pile_upEb">
+<span id="_CPPv3N5Decay19set_correct_pile_upEb"></span><span id="_CPPv2N5Decay19set_correct_pile_upEb"></span><span id="Decay::set_correct_pile_up__b"></span><span class="target" id="class_decay_1a04b8c26db964d3dd0a967862fa05ed43"></span>void <code class="sig-name descname">set_correct_pile_up</code><span class="sig-paren">(</span>bool <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay19set_correct_pile_upEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay19get_correct_pile_upEv">
+<span id="_CPPv3NK5Decay19get_correct_pile_upEv"></span><span id="_CPPv2NK5Decay19get_correct_pile_upEv"></span><span id="Decay::get_correct_pile_upC"></span><span class="target" id="class_decay_1a38b7f2d6dec9d4298b2602bf8337aefb"></span>bool <code class="sig-name descname">get_correct_pile_up</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay19get_correct_pile_upEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay7set_irfEPdi">
+<span id="_CPPv3N5Decay7set_irfEPdi"></span><span id="_CPPv2N5Decay7set_irfEPdi"></span><span id="Decay::set_irf__doubleP.i"></span><span class="target" id="class_decay_1ac1d2d5d528477ff42654ecf3d490875a"></span>void <code class="sig-name descname">set_irf</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay7set_irfEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay7get_irfEPPdPi">
+<span id="_CPPv3N5Decay7get_irfEPPdPi"></span><span id="_CPPv2N5Decay7get_irfEPPdPi"></span><span id="Decay::get_irf__doublePP.iP"></span><span class="target" id="class_decay_1a342b94efcd3fa36da9c29700f25aeedb"></span>void <code class="sig-name descname">get_irf</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay7get_irfEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay9get_modelEPPdPi">
+<span id="_CPPv3N5Decay9get_modelEPPdPi"></span><span id="_CPPv2N5Decay9get_modelEPPdPi"></span><span id="Decay::get_model__doublePP.iP"></span><span class="target" id="class_decay_1a40ef346c35a65110876855d04e7fe8c5"></span>void <code class="sig-name descname">get_model</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay9get_modelEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay21set_lifetime_spectrumEPdi">
+<span id="_CPPv3N5Decay21set_lifetime_spectrumEPdi"></span><span id="_CPPv2N5Decay21set_lifetime_spectrumEPdi"></span><span id="Decay::set_lifetime_spectrum__doubleP.i"></span><span class="target" id="class_decay_1a955386ab91ac817240c38c5cdba3e9ae"></span>void <code class="sig-name descname">set_lifetime_spectrum</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay21set_lifetime_spectrumEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay21get_lifetime_spectrumEPPdPi">
+<span id="_CPPv3N5Decay21get_lifetime_spectrumEPPdPi"></span><span id="_CPPv2N5Decay21get_lifetime_spectrumEPPdPi"></span><span id="Decay::get_lifetime_spectrum__doublePP.iP"></span><span class="target" id="class_decay_1ab6cfd746309bd559e17f028b6120789d"></span>void <code class="sig-name descname">get_lifetime_spectrum</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay21get_lifetime_spectrumEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay11set_weightsEPdi">
+<span id="_CPPv3N5Decay11set_weightsEPdi"></span><span id="_CPPv2N5Decay11set_weightsEPdi"></span><span id="Decay::set_weights__doubleP.i"></span><span class="target" id="class_decay_1a37e4b2e2f762dc917be830ebf5caa7c4"></span>void <code class="sig-name descname">set_weights</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay11set_weightsEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay11get_weightsEPPdPi">
+<span id="_CPPv3N5Decay11get_weightsEPPdPi"></span><span id="_CPPv2N5Decay11get_weightsEPPdPi"></span><span id="Decay::get_weights__doublePP.iP"></span><span class="target" id="class_decay_1a2fc17cdaf44dc73e49c1f9a8157b4428"></span>void <code class="sig-name descname">get_weights</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay11get_weightsEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay13set_time_axisEPdi">
+<span id="_CPPv3N5Decay13set_time_axisEPdi"></span><span id="_CPPv2N5Decay13set_time_axisEPdi"></span><span id="Decay::set_time_axis__doubleP.i"></span><span class="target" id="class_decay_1ab88da58c3a951532d53913aa9bb5a161"></span>void <code class="sig-name descname">set_time_axis</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13set_time_axisEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay13get_time_axisEPPdPi">
+<span id="_CPPv3N5Decay13get_time_axisEPPdPi"></span><span id="_CPPv2N5Decay13get_time_axisEPPdPi"></span><span id="Decay::get_time_axis__doublePP.iP"></span><span class="target" id="class_decay_1a64ac7631cf20798ac271371b64c1776c"></span>void <code class="sig-name descname">get_time_axis</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13get_time_axisEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay25set_irf_background_countsEd">
+<span id="_CPPv3N5Decay25set_irf_background_countsEd"></span><span id="_CPPv2N5Decay25set_irf_background_countsEd"></span><span id="Decay::set_irf_background_counts__double"></span><span class="target" id="class_decay_1ac3547d239bedb7d3b11f0b782a9bfdce"></span>void <code class="sig-name descname">set_irf_background_counts</code><span class="sig-paren">(</span>double <em>irf_background_counts</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay25set_irf_background_countsEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5Decay25get_irf_background_countsEv">
+<span id="_CPPv3NK5Decay25get_irf_background_countsEv"></span><span id="_CPPv2NK5Decay25get_irf_background_countsEv"></span><span id="Decay::get_irf_background_countsC"></span><span class="target" id="class_decay_1a3f2daabc7b53ab45c8bcb3d9fd421a86"></span>double <code class="sig-name descname">get_irf_background_counts</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5Decay25get_irf_background_countsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbddddd">
+<span id="_CPPv3N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbddddd"></span><span id="_CPPv2N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbddddd"></span><span id="Decay::Decay__TTTRP.TTTRP.i.std::vector:double:.std::vector:double:.std::vector:double:.std::vector:double:.i.i.b.double.b.double.double.double.double.double"></span><span class="target" id="class_decay_1a55db18c8f5acc885f8eaecb161a82eae"></span><code class="sig-name descname">Decay</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em> = nullptr, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_irf</em> = nullptr, int <em>micro_time_coarsening</em> = 1, std::vector&lt;double&gt; <em>decay_data</em> = std::vector&lt;double&gt;(), std::vector&lt;double&gt; <em>time_axis</em> = std::vector&lt;double&gt;(), std::vector&lt;double&gt; <em>weights</em> = std::vector&lt;double&gt;(), std::vector&lt;double&gt; <em>instrument_response_function</em> = std::vector&lt;double&gt;(), int <em>start</em> = 0, int <em>stop</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, bool <em>correct_pile_up</em> = false, double <em>excitation_period</em> = 100.0, double <em>dt</em> = 1.0, double <em>irf_background_counts</em> = 0.0, double <em>areal_fraction_scatter</em> = 0.0, double <em>constant_background</em> = 0.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbddddd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data</span></code>: pointer to <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object that is used to construct a decay histogram </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micro_time_coarsening</span></code>: an (optional) integer by which the micro times are divided to coarsen the time axis (default is 1) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decay_data</span></code>: the data to which the decay is fitted </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_axis</span></code>: the time axis that belongs to the data </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dt</span></code>: the spacing between the points in the time axis. This optional parameter is used to compute a time axis if not time axis was provided by the parameter time_axis </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code>: the weights of the data points. If the weights are not provided (nullptr / None) the weights are computed assuming Poisson noise. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">instrument_response_function</span></code>: The instrument response function (IRF) that is used for convolution. If no IRF is provided </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code>: The start index in the IRF used for convolution. Points in the IRF before the start index are not used for convolution. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop</span></code>: The stop index in the IRF used for convolution. Points beyond the stop index are not convolved. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold</span></code>: If this is set to true (default value is true) the values that are smaller then a specified threshold are omitted </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code>: The amplitude threshold that is used if the parameter use_amplitude_threshold is set to true (the default value is 1e10) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">correct_pile_up</span></code>: If this is set to true (the default value is false) the convolved model function is ‘piled up’ to match pile up artifacts in the data. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">excitation_period</span></code>: the repetition period, .i.e, the time between subsequent excitation pulses. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay22get_weighted_residualsEPPdPi">
+<span id="_CPPv3N5Decay22get_weighted_residualsEPPdPi"></span><span id="_CPPv2N5Decay22get_weighted_residualsEPPdPi"></span><span id="Decay::get_weighted_residuals__doublePP.iP"></span><span class="target" id="class_decay_1accd8b83eea60bff937c4882675dcc873"></span>void <code class="sig-name descname">get_weighted_residuals</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay22get_weighted_residualsEPPdPi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay8evaluateENSt6vectorIdEE">
+<span id="_CPPv3N5Decay8evaluateENSt6vectorIdEE"></span><span id="_CPPv2N5Decay8evaluateENSt6vectorIdEE"></span><span id="Decay::evaluate__std::vector:double:"></span><span class="target" id="class_decay_1a91de2e6148a32a48955bbd8d2ab3369a"></span>void <code class="sig-name descname">evaluate</code><span class="sig-paren">(</span>std::vector&lt;double&gt; <em>lifetime_spectrum</em> = std::vector&lt;double&gt;()<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay8evaluateENSt6vectorIdEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv4N5Decay27compute_microtime_histogramEP4TTTRPPdPiPPdPit">
+<span id="_CPPv3N5Decay27compute_microtime_histogramEP4TTTRPPdPiPPdPit"></span><span id="_CPPv2N5Decay27compute_microtime_histogramEP4TTTRPPdPiPPdPit"></span><span id="Decay::compute_microtime_histogram__TTTRP.doublePP.iP.doublePP.iP.unsigned-short"></span><span class="target" id="class_decay_1afcf2c4c03c466995315e3bd60987bf3e"></span><em class="property">static</em> void <code class="sig-name descname">compute_microtime_histogram</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, double **<em>histogram</em>, int *<em>n_histogram</em>, double **<em>time</em>, int *<em>n_time</em>, unsigned short <em>micro_time_coarsening</em> = 1<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay27compute_microtime_histogramEP4TTTRPPdPiPPdPit" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes a histogram of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> data’s micro times</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data</span></code>: a pointer to the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> data </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">histogram</span></code>: pointer to which the histogram will be written (the memory is allocated but the method) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_histogram</span></code>: the number of points in the histogram </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time</span></code>: pointer to the time axis of the histogram (the memory is allocated by the method) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_time</span></code>: the number of points in the time axis </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micro_time_coarsening</span></code>: a factor by which the micro times in the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object are divided (default value is 1). </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay21compute_mean_lifetimeEP4TTTRP4TTTRii">
+<span id="_CPPv3N5Decay21compute_mean_lifetimeEP4TTTRP4TTTRii"></span><span id="_CPPv2N5Decay21compute_mean_lifetimeEP4TTTRP4TTTRii"></span><span id="Decay::compute_mean_lifetime__TTTRP.TTTRP.i.i"></span><span class="target" id="class_decay_1a9d8faab429b8c8060f5c974cc6d5dc50"></span><em class="property">static</em> double <code class="sig-name descname">compute_mean_lifetime</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, <a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_irf</em> = nullptr, int <em>m0_irf</em> = 1, int <em>m1_irf</em> = 1<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay21compute_mean_lifetimeEP4TTTRP4TTTRii" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Compute the mean lifetime by the moments of the decay and the instrument response function.</p>
+<p>The computed lifetime is the first lifetime determined by the method of moments (Irvin Isenberg, 1973, Biophysical journal).</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The computed lifetime </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_data</span></code>: <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object for which the lifetime is computed </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tttr_irf</span></code>: <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object that is used as IRF </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m0_irf</span></code>: Number of counts in the IRF (used if no <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object for IRF provided. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m1_irf</span></code>: First moment of the IRF (used if no <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object for IRF provided. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbdd">
+<span id="_CPPv3N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbdd"></span><span id="_CPPv2N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbdd"></span><span id="Decay::compute_decay__doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.double.double.double.double.double.double.b.double.b.double.double"></span><span class="target" id="class_decay_1ad2511f800748ad74c97a2cbd5e9b6b4e"></span><em class="property">static</em> void <code class="sig-name descname">compute_decay</code><span class="sig-paren">(</span>double *<em>model_function</em>, int <em>n_model_function</em>, double *<em>data</em>, int <em>n_data</em>, double *<em>weights</em>, int <em>n_weights</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>start</em> = 0, int <em>stop</em> = -1, double <em>irf_background_counts</em> = 0.0, double <em>irf_shift_channels</em> = 0.0, double <em>scatter_areal_fraction</em> = 0.0, double <em>excitation_period</em> = 1000.0, double <em>constant_background</em> = 0.0, double <em>total_area</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, bool <em>add_pile_up</em> = false, double <em>instrument_dead_time</em> = 120.0, double <em>acquisition_time</em> = 100000.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes a fluorescence decay for a lifetime spectrum.</p>
+<p>The lifetime spectrum is a interleaved array of amplitudes and fluorescence lifetimes. The fluorescence decay for the lifetime spectrum is computed. The computed decay is convolved with a instrument response function (IRF). Before convolution the IRF is corrected for a constant offset. The convolution considers periodic excitation. The IRF is shifted by a specified value of micro time channels. After convolution a constant fraction of scattered light is added to the computed decay and the decay is scaled to the number of photons in an experimental fluorescence decay. Finally, a constant background is added. Optionally, pile-up is added to the computed fluorescence decay. Before the fluorescence decay is computed an amplitude threshold can be applied to the fluorescence lifetime spectrum to discrimintate fluorescence lifetimes with small amplitudes.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model_function[out]</span></code>: The ouput array that will contain the computed fluorescence decay </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_model_function[out]</span></code>: The number of points in the model function </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data[in]</span></code>: The data for which the model function is computed. The data will be used to scaled the computed decay. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_data[in]</span></code>: The number of data points </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weights[in]</span></code>: The weights of the data points. The data weights are used to scale the model function to the data (usually the data weights is Poissonian) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_weights[in]</span></code>: The number of weights </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_axis[in]</span></code>: The time axiss for which the fluorescence decay is computed for </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_time_axis[in]</span></code>: The number of points in the time axis </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">instrument_response_function[in]</span></code>: The instrument response function used for convolution </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_instrument_response_function[in]</span></code>: The number of points in the instrument response function </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lifetime_spectrum[in]</span></code>: The lifetime spectrum. A lifetime specturm is an interleaved array of amplitudes and fluorescence lifetimes, .e.g, (amplitude1, lifetime1, amplitude2, lifetime2, …) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_lifetime_spectrum[in]</span></code>: The number of points in the fluorescence lifetime spectrum </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start[in]</span></code>: The start of the convolution </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop[in]</span></code>: The stop of the convoution. The decay will be computed in the range [start, stop] </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">irf_background_counts[in]</span></code>: The background counts of the instrument response function. This number will be subtracted from the IRF before convolution. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">irf_shift_channels[in]</span></code>: The number of micro time channels the IRF will be shifted before the fluorescence lifetimes are convoluted with the IRF. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scatter_areal_fraction[in]</span></code>: The fraction (integrated fraction), i.e., the area the scattered light will have in the computed decay. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">excitation_period[in]</span></code>: The excitation period (in units of the fluorescence lifetime, usually nanoseconds) that was used to excite the sample </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constant_background</span></code>: A constant offset that is added to the fluorescence decay. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">total_area[in]</span></code>: the area to which the model fluorescence decay is scaled to. If this value is negative (default value is -1) the model fluorescence decay is scaled to the data in the range defined by the parameters start, stop </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: if set to true (default is false) a threshold will be applied. If this parameter is set to true, fluorescence lifetimes with a amplitude that is smaller than a threshold will be not considered. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code>: The threshold that is used to discriminate fluorescence lifetimes that are smaller. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">add_pile_up</span></code>: if set to true (default is false) pile up will be added to the model function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">instrument_dead_time</span></code>: the dead time of the instrument (used for pile up (in units of the lifetime, usually nano seconds) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">acquisition_time</span></code>: the total time the acquisition of the decay in seconds. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd">
+<span id="_CPPv3N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd"></span><span id="_CPPv2N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd"></span><span id="Decay::convolve_lifetime_spectrum__doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.b.double"></span><span class="target" id="class_decay_1a55f866ab6c1f087fa888786fc03555ae"></span><em class="property">static</em> void <code class="sig-name descname">convolve_lifetime_spectrum</code><span class="sig-paren">(</span>double *<em>inplace_output</em>, int <em>n_output</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>convolution_start</em> = 0, int <em>convolution_stop</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Compute the fluorescence decay for a lifetime spectrum and a instrument response function.</p>
+<p>Fills the pre-allocated output array <code class="docutils literal notranslate"><span class="pre">output_decay</span></code> with a fluorescence intensity decay defined by a set of fluorescence lifetimes defined by the parameter <code class="docutils literal notranslate"><span class="pre">lifetime_spectrum</span></code>. The fluorescence decay will be convolved (non-periodically) with an instrumental response function that is defined by <code class="docutils literal notranslate"><span class="pre">instrument_response_function</span></code>.</p>
+<p>This function calculates a fluorescence intensity model_decay that is convolved with an instrument response function (IRF). The fluorescence intensity model_decay is specified by its fluorescence lifetime spectrum, i.e., an interleaved array containing fluorescence lifetimes with corresponding amplitudes.</p>
+<p>This convolution works also with uneven spaced time axes.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inplace_output[in</span><span class="pre">out]</span></code>: Inplace output array that is filled with the values of the computed fluorescence intensity decay model </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output[in]</span></code>: Number of elements in the output array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_axis[in]</span></code>: the time-axis of the model_decay </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_time_axis[in]</span></code>: length of the time axis </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">irf[in]</span></code>: the instrument response function array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_irf[in]</span></code>: length of the instrument response function array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lifetime_spectrum[in]</span></code>: Interleaved array of amplitudes and fluorescence lifetimes of the form (amplitude, lifetime, amplitude, lifetime, …) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_lifetime_spectrum[in]</span></code>: number of elements in the lifetime spectrum </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">convolution_start[in]</span></code>: Start channel of convolution (position in array of IRF) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">convolution_stop[in]</span></code>: convolution stop channel (the index on the time-axis) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: If this value is True (default False) fluorescence lifetimes in the lifetime spectrum which have an amplitude with an absolute value of that is smaller than <code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code> are not omitted in the convolution. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold[in]</span></code>: Threshold value for the amplitudes </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd">
+<span id="_CPPv3N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd"></span><span id="_CPPv2N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd"></span><span id="Decay::convolve_lifetime_spectrum_periodic__doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.b.double.double"></span><span class="target" id="class_decay_1a58e99fd56490c2f18a930bb1edadf881"></span><em class="property">static</em> void <code class="sig-name descname">convolve_lifetime_spectrum_periodic</code><span class="sig-paren">(</span>double *<em>inplace_output</em>, int <em>n_output</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>convolution_start</em> = 0, int <em>convolution_stop</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, double <em>period</em> = 100.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Compute the fluorescence decay for a lifetime spectrum and a instrument response function considering periodic excitation.</p>
+<p>Fills the pre-allocated output array <code class="docutils literal notranslate"><span class="pre">output_decay</span></code> with a fluorescence intensity decay defined by a set of fluorescence lifetimes defined by the parameter <code class="docutils literal notranslate"><span class="pre">lifetime_spectrum</span></code>. The fluorescence decay will be convolved (non-periodically) with an instrumental response function that is defined by <code class="docutils literal notranslate"><span class="pre">instrument_response_function</span></code>.</p>
+<p>This function calculates a fluorescence intensity model_decay that is convolved with an instrument response function (IRF). The fluorescence intensity model_decay is specified by its fluorescence lifetime spectrum, i.e., an interleaved array containing fluorescence lifetimes with corresponding amplitudes.</p>
+<p>This convolution only works with evenly linear spaced time axes.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inplace_output[in</span><span class="pre">out]</span></code>: Inplace output array that is filled with the values of the computed fluorescence intensity decay model </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output[in]</span></code>: Number of elements in the output array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_axis[in]</span></code>: the time-axis of the model_decay </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_time_axis[in]</span></code>: length of the time axis </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">irf[in]</span></code>: the instrument response function array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_irf[in]</span></code>: length of the instrument response function array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lifetime_spectrum[in]</span></code>: Interleaved array of amplitudes and fluorescence lifetimes of the form (amplitude, lifetime, amplitude, lifetime, …) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_lifetime_spectrum[in]</span></code>: number of elements in the lifetime spectrum </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">convolution_start[in]</span></code>: Start channel of convolution (position in array of IRF) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">convolution_stop[in]</span></code>: convolution stop channel (the index on the time-axis) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: If this value is True (default False) fluorescence lifetimes in the lifetime spectrum which have an amplitude with an absolute value of that is smaller than <code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code> are not omitted in the convolution. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold[in]</span></code>: Threshold value for the amplitudes </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">period</span></code>: Period of repetition in units of the lifetime (usually, nano-seconds) </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay13compute_scaleEPdiPdiPdidii">
+<span id="_CPPv3N5Decay13compute_scaleEPdiPdiPdidii"></span><span id="_CPPv2N5Decay13compute_scaleEPdiPdiPdidii"></span><span id="Decay::compute_scale__doubleP.i.doubleP.i.doubleP.i.double.i.i"></span><span class="target" id="class_decay_1a447a1dfd8344b05fcfe482df8d07a7d0"></span><em class="property">static</em> double <code class="sig-name descname">compute_scale</code><span class="sig-paren">(</span>double *<em>model_function</em>, int <em>n_model_function</em>, double *<em>data</em>, int <em>n_data</em>, double *<em>weights</em>, int <em>n_weights</em>, double <em>background</em> = 0.0, int <em>start</em> = 0, int <em>stop</em> = -1<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13compute_scaleEPdiPdiPdidii" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Compute a scaling factor for a given experimental histogram and model function and scale (optionally) the model function to the data.</p>
+<p>The scaling factor is computed considering the weighted photon counts in a specified range.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>the computed scaling factor </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model_function</span></code>: array containing the model function </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_model_function</span></code>: number of elements in the model function </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: array of the experimental data </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_data</span></code>: number of experimental data points </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code>: the weights of the experimental data </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_weights</span></code>: the number of weights of the experimental dat </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">background</span></code>: the background counts of the data </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code>: starting index that is used to compute the scaling factor </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop</span></code>: stop index to compute the scaling factor </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_inplace</span></code>: if set to true (default is true) the model function is scaled inplace </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay6phasorEPtid">
+<span id="_CPPv3N5Decay6phasorEPtid"></span><span id="_CPPv2N5Decay6phasorEPtid"></span><span id="Decay::phasor__unsigned-shortP.i.double"></span><span class="target" id="class_decay_1abd261756de095f17b82c07ba5dbaf551"></span><em class="property">static</em> std::vector&lt;double&gt; <code class="sig-name descname">phasor</code><span class="sig-paren">(</span>unsigned short *<em>microtimes</em>, int <em>n_microtimes</em>, double <em>frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay6phasorEPtid" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay20compute_phasor_g_theEdddd">
+<span id="_CPPv3N5Decay20compute_phasor_g_theEdddd"></span><span id="_CPPv2N5Decay20compute_phasor_g_theEdddd"></span><span id="Decay::compute_phasor_g_the__double.double.double.double"></span><span class="target" id="class_decay_1a3b1f864b19b4fcca76d7b9dce01d30bf"></span><em class="property">static</em> double <code class="sig-name descname">compute_phasor_g_the</code><span class="sig-paren">(</span>double <em>g_irf</em>, double <em>s_irf</em>, double <em>g_exp</em>, double <em>s_exp</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay20compute_phasor_g_theEdddd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference external" href="https://journals.plos.org/plosone/article/file?type=supplementary&amp;id=info:doi/10.1371/journal.pone.0194578.s001">https://journals.plos.org/plosone/article/file?type=supplementary&amp;id=info:doi/10.1371/journal.pone.0194578.s001</a></p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p></p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g_irf</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s_irf</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g_exp</span></code>: </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s_exp</span></code>: </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay20compute_phasor_s_theEdddd">
+<span id="_CPPv3N5Decay20compute_phasor_s_theEdddd"></span><span id="_CPPv2N5Decay20compute_phasor_s_theEdddd"></span><span id="Decay::compute_phasor_s_the__double.double.double.double"></span><span class="target" id="class_decay_1ad3171d483244508b1b4e3c3b60d824f7"></span><em class="property">static</em> double <code class="sig-name descname">compute_phasor_s_the</code><span class="sig-paren">(</span>double <em>g_irf</em>, double <em>s_irf</em>, double <em>g_exp</em>, double <em>s_exp</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay20compute_phasor_s_theEdddd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay11shift_arrayEPdiPPdPidbd">
+<span id="_CPPv3N5Decay11shift_arrayEPdiPPdPidbd"></span><span id="_CPPv2N5Decay11shift_arrayEPdiPPdPidbd"></span><span id="Decay::shift_array__doubleP.i.doublePP.iP.double.b.double"></span><span class="target" id="class_decay_1a52355fd52c7a8ba24441481aff018208"></span><em class="property">static</em> void <code class="sig-name descname">shift_array</code><span class="sig-paren">(</span>double *<em>input</em>, int <em>n_input</em>, double **<em>output</em>, int *<em>n_output</em>, double <em>shift</em>, bool <em>set_outside</em> = true, double <em>outside_value</em> = 0.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay11shift_arrayEPdiPPdPidbd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Shift an input array by a floating number.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input[in]</span></code>: the input array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_input[in]</span></code>: length of the input array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: output array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: length of the output array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shift[in]</span></code>: the shift of the output </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay9add_curveEPPdPiPdiPdidii">
+<span id="_CPPv3N5Decay9add_curveEPPdPiPdiPdidii"></span><span id="_CPPv2N5Decay9add_curveEPPdPiPdiPdidii"></span><span id="Decay::add_curve__doublePP.iP.doubleP.i.doubleP.i.double.i.i"></span><span class="target" id="class_decay_1a3890455712e4f17911182f5342832504"></span><em class="property">static</em> void <code class="sig-name descname">add_curve</code><span class="sig-paren">(</span>double **<em>output</em>, int *<em>n_output</em>, double *<em>curve1</em>, int <em>n_curve1</em>, double *<em>curve2</em>, int <em>n_curve2</em>, double <em>areal_fraction_curve2</em>, int <em>start</em> = 0, int <em>stop</em> = -1<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay9add_curveEPPdPiPdiPdidii" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Computes the sum of two arrays considering their respective areal fraction.</p>
+<p>A weighted sum of two curves is computed. The weighted sum is computed by the area of the first curve and the areal fraction of the second curve. The area of the computed curve equals to the area of the first input curve while the areal fraction of the second input curve will be equal to the specified value in the range specified by the input parameters.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: the computed output curve (array) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: the number of points in the output </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">curve1[in]</span></code>: the first input curve / array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_curve1[in]</span></code>: number of points in the first array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">curve2[in]</span></code>: second curve / array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_curve2[in]</span></code>: number of points in the second array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">areal_fraction_curve2[in]</span></code>: areal fraction of the second curve in the output array </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start[in]</span></code>: start index used for the area calculation </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop[in]</span></code>: stop index used for the area calculation </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5Decay11add_pile_upEPdiPdiddd">
+<span id="_CPPv3N5Decay11add_pile_upEPdiPdiddd"></span><span id="_CPPv2N5Decay11add_pile_upEPdiPdiddd"></span><span id="Decay::add_pile_up__doubleP.i.doubleP.i.double.double.double"></span><span class="target" id="class_decay_1a55c55d9c924ce9a20ce8195813bffb7f"></span><em class="property">static</em> void <code class="sig-name descname">add_pile_up</code><span class="sig-paren">(</span>double *<em>model</em>, int <em>n_model</em>, double *<em>data</em>, int <em>n_data</em>, double <em>repetition_rate</em>, double <em>dead_time</em>, double <em>measurement_time</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay11add_pile_upEPdiPdiddd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Correct the model function for pile up </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Private Members</p>
+<dl class="member">
+<dt id="_CPPv4N5Decay19_weighted_residualsE">
+<span id="_CPPv3N5Decay19_weighted_residualsE"></span><span id="_CPPv2N5Decay19_weighted_residualsE"></span><span id="Decay::_weighted_residuals__std::vector:double:"></span><span class="target" id="class_decay_1a1a2b3262e1002685e36d598da5ef9de3"></span>std::vector&lt;double&gt; <code class="sig-name descname">_weighted_residuals</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay19_weighted_residualsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Stores the weighted residuals. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay11_total_areaE">
+<span id="_CPPv3N5Decay11_total_areaE"></span><span id="_CPPv2N5Decay11_total_areaE"></span><span id="Decay::_total_area__double"></span><span class="target" id="class_decay_1aec8f0a0711c01351adc03f0e686b539a"></span>double <code class="sig-name descname">_total_area</code> = -1<a class="headerlink" href="#_CPPv4N5Decay11_total_areaE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Proportional to the area of the model. If negative, the area is scaled to the data. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay20_constant_backgroundE">
+<span id="_CPPv3N5Decay20_constant_backgroundE"></span><span id="_CPPv2N5Decay20_constant_backgroundE"></span><span id="Decay::_constant_background__double"></span><span class="target" id="class_decay_1a2231b2c517494955304daa1388c2bf6a"></span>double <code class="sig-name descname">_constant_background</code> = 0.0<a class="headerlink" href="#_CPPv4N5Decay20_constant_backgroundE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The constant offset in the model. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay23_areal_fraction_scatterE">
+<span id="_CPPv3N5Decay23_areal_fraction_scatterE"></span><span id="_CPPv2N5Decay23_areal_fraction_scatterE"></span><span id="Decay::_areal_fraction_scatter__double"></span><span class="target" id="class_decay_1ae23bb5a699f34fadd156d5bd9c7d490a"></span>double <code class="sig-name descname">_areal_fraction_scatter</code> = 0.0<a class="headerlink" href="#_CPPv4N5Decay23_areal_fraction_scatterE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The fraction of the irf (scattered light) in the model decay. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay19_irf_shift_channelsE">
+<span id="_CPPv3N5Decay19_irf_shift_channelsE"></span><span id="_CPPv2N5Decay19_irf_shift_channelsE"></span><span id="Decay::_irf_shift_channels__double"></span><span class="target" id="class_decay_1a708f05f59a4b9ee1c6270b67d4451241"></span>double <code class="sig-name descname">_irf_shift_channels</code> = 0.0<a class="headerlink" href="#_CPPv4N5Decay19_irf_shift_channelsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The time shift of the irf. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay22_irf_background_countsE">
+<span id="_CPPv3N5Decay22_irf_background_countsE"></span><span id="_CPPv2N5Decay22_irf_background_countsE"></span><span id="Decay::_irf_background_counts__double"></span><span class="target" id="class_decay_1a021a1bd93ea9112f4d1c5451604d9135"></span>double <code class="sig-name descname">_irf_background_counts</code> = 0.0<a class="headerlink" href="#_CPPv4N5Decay22_irf_background_countsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Background counts of irf. This number is sutracted from the counts in each channel before convolution. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay7_periodE">
+<span id="_CPPv3N5Decay7_periodE"></span><span id="_CPPv2N5Decay7_periodE"></span><span id="Decay::_period__double"></span><span class="target" id="class_decay_1af948ed4e24d3b7d75b65bf0232466654"></span>double <code class="sig-name descname">_period</code> = 100.<a class="headerlink" href="#_CPPv4N5Decay7_periodE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The repetiotion period (usually in nano seconds) </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay4_irfE">
+<span id="_CPPv3N5Decay4_irfE"></span><span id="_CPPv2N5Decay4_irfE"></span><span id="Decay::_irf__std::vector:double:"></span><span class="target" id="class_decay_1a0713df3acbb1870e7c9e2d821f23e0e5"></span>std::vector&lt;double&gt; <code class="sig-name descname">_irf</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay4_irfE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The instrument response function. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay5_dataE">
+<span id="_CPPv3N5Decay5_dataE"></span><span id="_CPPv2N5Decay5_dataE"></span><span id="Decay::_data__std::vector:double:"></span><span class="target" id="class_decay_1af3be5b4b59bf335e60337413f5d44b12"></span>std::vector&lt;double&gt; <code class="sig-name descname">_data</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay5_dataE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The experimental data (used for scaling) </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay8_weightsE">
+<span id="_CPPv3N5Decay8_weightsE"></span><span id="_CPPv2N5Decay8_weightsE"></span><span id="Decay::_weights__std::vector:double:"></span><span class="target" id="class_decay_1abcc0d10c05475b2c384849232c2655f0"></span>std::vector&lt;double&gt; <code class="sig-name descname">_weights</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay8_weightsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The weights of the experimental data (used for scaling) </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay10_time_axisE">
+<span id="_CPPv3N5Decay10_time_axisE"></span><span id="_CPPv2N5Decay10_time_axisE"></span><span id="Decay::_time_axis__std::vector:double:"></span><span class="target" id="class_decay_1a2931d9e3f4c6c2b19587aa843d9c3d86"></span>std::vector&lt;double&gt; <code class="sig-name descname">_time_axis</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay10_time_axisE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The time axis of the data (used in convolution) </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay15_model_functionE">
+<span id="_CPPv3N5Decay15_model_functionE"></span><span id="_CPPv2N5Decay15_model_functionE"></span><span id="Decay::_model_function__std::vector:double:"></span><span class="target" id="class_decay_1a0d9af80564d9ca27e06107e2e931d2fa"></span>std::vector&lt;double&gt; <code class="sig-name descname">_model_function</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay15_model_functionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The used to store the model function. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay18_lifetime_spectrumE">
+<span id="_CPPv3N5Decay18_lifetime_spectrumE"></span><span id="_CPPv2N5Decay18_lifetime_spectrumE"></span><span id="Decay::_lifetime_spectrum__std::vector:double:"></span><span class="target" id="class_decay_1a5bc6b39ac0ffc6d84f7777514b1d3ea1"></span>std::vector&lt;double&gt; <code class="sig-name descname">_lifetime_spectrum</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay18_lifetime_spectrumE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The lifetime spectrum. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay9_is_validE">
+<span id="_CPPv3N5Decay9_is_validE"></span><span id="_CPPv2N5Decay9_is_validE"></span><span id="Decay::_is_valid__b"></span><span class="target" id="class_decay_1acd2df6a6d27002ce3a23b1bd4c8cff0e"></span>bool <code class="sig-name descname">_is_valid</code> = false<a class="headerlink" href="#_CPPv4N5Decay9_is_validE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set to valid if the output decay matched the input. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay16_correct_pile_upE">
+<span id="_CPPv3N5Decay16_correct_pile_upE"></span><span id="_CPPv2N5Decay16_correct_pile_upE"></span><span id="Decay::_correct_pile_up__b"></span><span class="target" id="class_decay_1a4902407e4ef405ff7760e063928a1ebf"></span>bool <code class="sig-name descname">_correct_pile_up</code> = false<a class="headerlink" href="#_CPPv4N5Decay16_correct_pile_upE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If set to true will add pile up to the model function. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay18_convolution_startE">
+<span id="_CPPv3N5Decay18_convolution_startE"></span><span id="_CPPv2N5Decay18_convolution_startE"></span><span id="Decay::_convolution_start__i"></span><span class="target" id="class_decay_1a5eecaf64a1ffe5de6a10aea14c6eb75c"></span>int <code class="sig-name descname">_convolution_start</code> = 0<a class="headerlink" href="#_CPPv4N5Decay18_convolution_startE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Beginning index of the comvolution. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay17_convolution_stopE">
+<span id="_CPPv3N5Decay17_convolution_stopE"></span><span id="_CPPv2N5Decay17_convolution_stopE"></span><span id="Decay::_convolution_stop__i"></span><span class="target" id="class_decay_1a22f0c2ab50baa6c52228c048d9be0168"></span>int <code class="sig-name descname">_convolution_stop</code> = -1<a class="headerlink" href="#_CPPv4N5Decay17_convolution_stopE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Stop index of the convolution. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay20_amplitude_thresholdE">
+<span id="_CPPv3N5Decay20_amplitude_thresholdE"></span><span id="_CPPv2N5Decay20_amplitude_thresholdE"></span><span id="Decay::_amplitude_threshold__double"></span><span class="target" id="class_decay_1a76b10b0f1a592a19ab64179727ff046e"></span>double <code class="sig-name descname">_amplitude_threshold</code> = 1e10<a class="headerlink" href="#_CPPv4N5Decay20_amplitude_thresholdE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Amplitude thresholf used to discriminate low populated lifetimes. </p>
+</dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5Decay24_use_amplitude_thresholdE">
+<span id="_CPPv3N5Decay24_use_amplitude_thresholdE"></span><span id="_CPPv2N5Decay24_use_amplitude_thresholdE"></span><span id="Decay::_use_amplitude_threshold__b"></span><span class="target" id="class_decay_1a8190b5b07cdafaa26ddd11a161849348"></span>bool <code class="sig-name descname">_use_amplitude_threshold</code> = false<a class="headerlink" href="#_CPPv4N5Decay24_use_amplitude_thresholdE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If set to true discriminates low populated lifetimes in convolution. </p>
+</dd></dl>
 
 </div>
 </dd></dl>
@@ -1976,8 +2591,8 @@
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Static Functions</p>
 <dl class="function">
-<dt id="_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid">
-<span id="_CPPv3N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="_CPPv2N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="Pda::compute_experimental_histograms__TTTRP.doublePP.iP.iP.doublePP.iP.l-lPP.iP.std::vector:i:.std::vector:i:.i.i.double"></span><span class="target" id="class_pda_1a3a94dc18860da7d72666e58e1c8bcf3e"></span><em class="property">static</em> void <code class="sig-name descname">compute_experimental_histograms</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, double **<em>s1s2</em>, int *<em>dim1</em>, int *<em>dim2</em>, double **<em>ps</em>, int *<em>dim_ps</em>, long long **<em>tttr_indices</em>, int *<em>n_tttr_indices</em>, std::vector&lt;int&gt; <em>channels_1</em>, std::vector&lt;int&gt; <em>channels_2</em>, int <em>maximum_number_of_photons</em>, int <em>minimum_number_of_photons</em>, double <em>minimum_time_window_length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPxPiNSt6vectorIiEENSt6vectorIiEEiid" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPiPiNSt6vectorIiEENSt6vectorIiEEiid">
+<span id="_CPPv3N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPiPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="_CPPv2N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPiPiNSt6vectorIiEENSt6vectorIiEEiid"></span><span id="Pda::compute_experimental_histograms__TTTRP.doublePP.iP.iP.doublePP.iP.iPP.iP.std::vector:i:.std::vector:i:.i.i.double"></span><span class="target" id="class_pda_1afaa8c12d38fb6778b5211d37e608cf7d"></span><em class="property">static</em> void <code class="sig-name descname">compute_experimental_histograms</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<em>tttr_data</em>, double **<em>s1s2</em>, int *<em>dim1</em>, int *<em>dim2</em>, double **<em>ps</em>, int *<em>dim_ps</em>, int **<em>tttr_indices</em>, int *<em>n_tttr_indices</em>, std::vector&lt;int&gt; <em>channels_1</em>, std::vector&lt;int&gt; <em>channels_2</em>, int <em>maximum_number_of_photons</em>, int <em>minimum_number_of_photons</em>, double <em>minimum_time_window_length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N3Pda31compute_experimental_histogramsEP4TTTRPPdPiPiPPdPiPPiPiNSt6vectorIiEENSt6vectorIiEEiid" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">tttr_data[in]</span></code>: </p></li>
@@ -2618,8 +3233,8 @@
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR25get_used_routing_channelsEPPsPi">
-<span id="_CPPv3N4TTTR25get_used_routing_channelsEPPsPi"></span><span id="_CPPv2N4TTTR25get_used_routing_channelsEPPsPi"></span><span id="TTTR::get_used_routing_channels__shortPP.iP"></span><span class="target" id="class_t_t_t_r_1aee219c4ebc4e3896f5dbd164fe55df53"></span>void <code class="sig-name descname">get_used_routing_channels</code><span class="sig-paren">(</span>short **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR25get_used_routing_channelsEPPsPi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR25get_used_routing_channelsEPPaPi">
+<span id="_CPPv3N4TTTR25get_used_routing_channelsEPPaPi"></span><span id="_CPPv2N4TTTR25get_used_routing_channelsEPPaPi"></span><span id="TTTR::get_used_routing_channels__signed-cPP.iP"></span><span class="target" id="class_t_t_t_r_1a9ef5ac82bf7555952597de3df34b77a6"></span>void <code class="sig-name descname">get_used_routing_channels</code><span class="sig-paren">(</span>signed char **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR25get_used_routing_channelsEPPaPi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns an array containing the routing channel numbers that are contained (used) in the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> file.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -2646,8 +3261,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR14get_micro_timeEPPjPi">
-<span id="_CPPv3N4TTTR14get_micro_timeEPPjPi"></span><span id="_CPPv2N4TTTR14get_micro_timeEPPjPi"></span><span id="TTTR::get_micro_time__unsigned-iPP.iP"></span><span class="target" id="class_t_t_t_r_1a3355b2d7534bb8bd746c682f57b1035a"></span>void <code class="sig-name descname">get_micro_time</code><span class="sig-paren">(</span>unsigned int **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR14get_micro_timeEPPjPi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR14get_micro_timeEPPtPi">
+<span id="_CPPv3N4TTTR14get_micro_timeEPPtPi"></span><span id="_CPPv2N4TTTR14get_micro_timeEPPtPi"></span><span id="TTTR::get_micro_time__unsigned-shortPP.iP"></span><span class="target" id="class_t_t_t_r_1acd2645b95891ea0c83fb8cced60d21d6"></span>void <code class="sig-name descname">get_micro_time</code><span class="sig-paren">(</span>unsigned short **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR14get_micro_timeEPPtPi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns an array containing the micro times of the valid <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> events.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -2675,8 +3290,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR19get_routing_channelEPPsPi">
-<span id="_CPPv3N4TTTR19get_routing_channelEPPsPi"></span><span id="_CPPv2N4TTTR19get_routing_channelEPPsPi"></span><span id="TTTR::get_routing_channel__shortPP.iP"></span><span class="target" id="class_t_t_t_r_1ae5ebc99b307b6071a68306653d3eab2a"></span>void <code class="sig-name descname">get_routing_channel</code><span class="sig-paren">(</span>short **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR19get_routing_channelEPPsPi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR19get_routing_channelEPPaPi">
+<span id="_CPPv3N4TTTR19get_routing_channelEPPaPi"></span><span id="_CPPv2N4TTTR19get_routing_channelEPPaPi"></span><span id="TTTR::get_routing_channel__signed-cPP.iP"></span><span class="target" id="class_t_t_t_r_1afacd197a96d4e8cb33b6f20189671760"></span>void <code class="sig-name descname">get_routing_channel</code><span class="sig-paren">(</span>signed char **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR19get_routing_channelEPPaPi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns an array containing the routing channel numbers of the valid <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> events.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -2689,8 +3304,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR14get_event_typeEPPsPi">
-<span id="_CPPv3N4TTTR14get_event_typeEPPsPi"></span><span id="_CPPv2N4TTTR14get_event_typeEPPsPi"></span><span id="TTTR::get_event_type__shortPP.iP"></span><span class="target" id="class_t_t_t_r_1a351a2a20c6fdb2bc1f0ee344d3afc1f4"></span>void <code class="sig-name descname">get_event_type</code><span class="sig-paren">(</span>short **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR14get_event_typeEPPsPi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR14get_event_typeEPPaPi">
+<span id="_CPPv3N4TTTR14get_event_typeEPPaPi"></span><span id="_CPPv2N4TTTR14get_event_typeEPPaPi"></span><span id="TTTR::get_event_type__signed-cPP.iP"></span><span class="target" id="class_t_t_t_r_1aefc6b6e2191d37b3890f2bb346cd4a55"></span>void <code class="sig-name descname">get_event_type</code><span class="sig-paren">(</span>signed char **<em>output</em>, int *<em>n_output</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR14get_event_typeEPPaPi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: Pointer to the output array </p></li>
@@ -2733,8 +3348,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR6selectEPxi">
-<span id="_CPPv3N4TTTR6selectEPxi"></span><span id="_CPPv2N4TTTR6selectEPxi"></span><span id="TTTR::select__l-lP.i"></span><span class="target" id="class_t_t_t_r_1a665b2b758b544534e0978374879860a9"></span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<code class="sig-name descname">select</code><span class="sig-paren">(</span>long long *<em>selection</em>, int <em>n_selection</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR6selectEPxi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR6selectEPii">
+<span id="_CPPv3N4TTTR6selectEPii"></span><span id="_CPPv2N4TTTR6selectEPii"></span><span id="TTTR::select__iP.i"></span><span class="target" id="class_t_t_t_r_1a1948fb455e9f82e24abd3ab6420653a4"></span><a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *<code class="sig-name descname">select</code><span class="sig-paren">(</span>int *<em>selection</em>, int <em>n_selection</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR6selectEPii" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -2820,8 +3435,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR4TTTRERK4TTTRPxib">
-<span id="_CPPv3N4TTTR4TTTRERK4TTTRPxib"></span><span id="_CPPv2N4TTTR4TTTRERK4TTTRPxib"></span><span id="TTTR::TTTR__TTTRCR.l-lP.i.b"></span><span class="target" id="class_t_t_t_r_1a17f08baf9a50789ff1d2ac3b41eb4e94"></span><code class="sig-name descname">TTTR</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N4TTTR4TTTREv" title="TTTR::TTTR">TTTR</a> &amp;<em>parent</em>, long long *<em>selection</em>, int <em>n_selection</em>, bool <em>find_used_channels</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR4TTTRERK4TTTRPxib" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR4TTTRERK4TTTRPiib">
+<span id="_CPPv3N4TTTR4TTTRERK4TTTRPiib"></span><span id="_CPPv2N4TTTR4TTTRERK4TTTRPiib"></span><span id="TTTR::TTTR__TTTRCR.iP.i.b"></span><span class="target" id="class_t_t_t_r_1af937eb1d02475b0ed34836231dc0baaf"></span><code class="sig-name descname">TTTR</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N4TTTR4TTTREv" title="TTTR::TTTR">TTTR</a> &amp;<em>parent</em>, int *<em>selection</em>, int <em>n_selection</em>, bool <em>find_used_channels</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR4TTTRERK4TTTRPiib" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>This constructor can be used to create a new <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object that only contains records that are specified in the selection array.</p>
 <p>The selection array is an array of indices. The events with indices in the selection array are copied in the order of the selection array to a new <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> object.</p>
 <p><dl class="simple">
@@ -2854,8 +3469,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR24get_selection_by_channelEPPxPiPxi">
-<span id="_CPPv3N4TTTR24get_selection_by_channelEPPxPiPxi"></span><span id="_CPPv2N4TTTR24get_selection_by_channelEPPxPiPxi"></span><span id="TTTR::get_selection_by_channel__l-lPP.iP.l-lP.i"></span><span class="target" id="class_t_t_t_r_1a2610ebd9ad3c1552b10e12bd9ecbd92c"></span>void <code class="sig-name descname">get_selection_by_channel</code><span class="sig-paren">(</span>long long **<em>output</em>, int *<em>n_output</em>, long long *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR24get_selection_by_channelEPPxPiPxi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR24get_selection_by_channelEPPiPiPii">
+<span id="_CPPv3N4TTTR24get_selection_by_channelEPPiPiPii"></span><span id="_CPPv2N4TTTR24get_selection_by_channelEPPiPiPii"></span><span id="TTTR::get_selection_by_channel__iPP.iP.iP.i"></span><span class="target" id="class_t_t_t_r_1a1ebc97ff11a651e2f77d7dacdc528f16"></span>void <code class="sig-name descname">get_selection_by_channel</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, int *<em>input</em>, int <em>n_input</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR24get_selection_by_channelEPPiPiPii" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns a vector containing indices of records that</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -2868,15 +3483,15 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR27get_selection_by_count_rateEPPyPidib">
-<span id="_CPPv3N4TTTR27get_selection_by_count_rateEPPyPidib"></span><span id="_CPPv2N4TTTR27get_selection_by_count_rateEPPyPidib"></span><span id="TTTR::get_selection_by_count_rate__unsigned-l-lPP.iP.double.i.b"></span><span class="target" id="class_t_t_t_r_1ab22cfdca9e2a2afcb1c7222092489af7"></span>void <code class="sig-name descname">get_selection_by_count_rate</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, double <em>time_window</em>, int <em>n_ph_max</em>, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR27get_selection_by_count_rateEPPyPidib" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR27get_selection_by_count_rateEPPiPidib">
+<span id="_CPPv3N4TTTR27get_selection_by_count_rateEPPiPidib"></span><span id="_CPPv2N4TTTR27get_selection_by_count_rateEPPiPidib"></span><span id="TTTR::get_selection_by_count_rate__iPP.iP.double.i.b"></span><span class="target" id="class_t_t_t_r_1ac8a108d2a8bc1732af77f12f412d101c"></span>void <code class="sig-name descname">get_selection_by_count_rate</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, double <em>time_window</em>, int <em>n_ph_max</em>, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR27get_selection_by_count_rateEPPiPidib" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>List of indices where the count rate is smaller than a maximum count rate</p>
 <p>The count rate is specified by providing a time window that slides over the time array and the maximum number of photons within the time window.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: the output array that will contain the selected indices </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_output</span></code>: the number of elements in the output array </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">time_window</span></code>: the length of the time window </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_window</span></code>: the length of the time window in milliseconds </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_ph_max</span></code>: the maximum number of photons within a time window </p></li>
 </ul>
 </dd>
@@ -2885,8 +3500,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N4TTTR22get_time_window_rangesEPPyPidiidb">
-<span id="_CPPv3N4TTTR22get_time_window_rangesEPPyPidiidb"></span><span id="_CPPv2N4TTTR22get_time_window_rangesEPPyPidiidb"></span><span id="TTTR::get_time_window_ranges__unsigned-l-lPP.iP.double.i.i.double.b"></span><span class="target" id="class_t_t_t_r_1a096feedfc00dc38a39b0a6a87ddf3970"></span>void <code class="sig-name descname">get_time_window_ranges</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, double <em>minimum_window_length</em>, int <em>minimum_number_of_photons_in_time_window</em>, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>maximum_window_length</em> = -1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR22get_time_window_rangesEPPyPidiidb" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N4TTTR22get_time_window_rangesEPPiPidiidb">
+<span id="_CPPv3N4TTTR22get_time_window_rangesEPPiPidiidb"></span><span id="_CPPv2N4TTTR22get_time_window_rangesEPPiPidiidb"></span><span id="TTTR::get_time_window_ranges__iPP.iP.double.i.i.double.b"></span><span class="target" id="class_t_t_t_r_1a6984b53408954e46f21e4ed6dbec633f"></span>void <code class="sig-name descname">get_time_window_ranges</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, double <em>minimum_window_length</em>, int <em>minimum_number_of_photons_in_time_window</em>, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>maximum_window_length</em> = -1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4TTTR22get_time_window_rangesEPPiPidiidb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns time windows (tw), i.e., the start and the stop indices for a minimum tw size, a minimum number of photons in a tw.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -3030,7 +3645,7 @@
 <p class="breathe-sectiondef-title rubric">Protected Attributes</p>
 <dl class="member">
 <dt id="_CPPv4N4TTTR21used_routing_channelsE">
-<span id="_CPPv3N4TTTR21used_routing_channelsE"></span><span id="_CPPv2N4TTTR21used_routing_channelsE"></span><span id="TTTR::used_routing_channels__std::vector:short:"></span><span class="target" id="class_t_t_t_r_1a0926f9e45d0541f4e682622801e94ba6"></span>std::vector&lt;short&gt; <code class="sig-name descname">used_routing_channels</code><a class="headerlink" href="#_CPPv4N4TTTR21used_routing_channelsE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N4TTTR21used_routing_channelsE"></span><span id="_CPPv2N4TTTR21used_routing_channelsE"></span><span id="TTTR::used_routing_channels__std::vector:signed-c:"></span><span class="target" id="class_t_t_t_r_1abe3ea55dd1a1cf1bf5922277ab373a4c"></span>std::vector&lt;signed char&gt; <code class="sig-name descname">used_routing_channels</code><a class="headerlink" href="#_CPPv4N4TTTR21used_routing_channelsE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>a vector containing the used routing channel numbers in the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> file </p>
 </dd></dl>
 
@@ -3101,11 +3716,6 @@
 <span id="_CPPv3N4TTTR8filenameE"></span><span id="_CPPv2N4TTTR8filenameE"></span><span id="TTTR::filename__ss"></span><span class="target" id="class_t_t_t_r_1a4392d5cf18141e408ff44dfe4dfa62e3"></span>std::string <code class="sig-name descname">filename</code><a class="headerlink" href="#_CPPv4N4TTTR8filenameE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>the input file </p>
 </dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N4TTTR8childrenE">
-<span id="_CPPv3N4TTTR8childrenE"></span><span id="_CPPv2N4TTTR8childrenE"></span><span id="TTTR::children__std::vector:TTTRP:"></span><span class="target" id="class_t_t_t_r_1aef9baf6512ce98127b712c18287776f8"></span>std::vector&lt;<a class="reference internal" href="#_CPPv44TTTR" title="TTTR">TTTR</a> *&gt; <code class="sig-name descname">children</code><a class="headerlink" href="#_CPPv4N4TTTR8childrenE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N4TTTR6headerE">
@@ -3204,19 +3814,19 @@
 
 <dl class="member">
 <dt id="_CPPv4N4TTTR11micro_timesE">
-<span id="_CPPv3N4TTTR11micro_timesE"></span><span id="_CPPv2N4TTTR11micro_timesE"></span><span id="TTTR::micro_times__unsigned-iP"></span><span class="target" id="class_t_t_t_r_1a4c87b0c107f094a992946158166d0c4e"></span>unsigned int *<code class="sig-name descname">micro_times</code><a class="headerlink" href="#_CPPv4N4TTTR11micro_timesE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N4TTTR11micro_timesE"></span><span id="_CPPv2N4TTTR11micro_timesE"></span><span id="TTTR::micro_times__unsigned-shortP"></span><span class="target" id="class_t_t_t_r_1a5c812b1acc1f60ab98c65ab037f84867"></span>unsigned short *<code class="sig-name descname">micro_times</code><a class="headerlink" href="#_CPPv4N4TTTR11micro_timesE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Micro time. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N4TTTR16routing_channelsE">
-<span id="_CPPv3N4TTTR16routing_channelsE"></span><span id="_CPPv2N4TTTR16routing_channelsE"></span><span id="TTTR::routing_channels__shortP"></span><span class="target" id="class_t_t_t_r_1a96b63e819b171462056749a4dde87377"></span>short *<code class="sig-name descname">routing_channels</code><a class="headerlink" href="#_CPPv4N4TTTR16routing_channelsE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N4TTTR16routing_channelsE"></span><span id="_CPPv2N4TTTR16routing_channelsE"></span><span id="TTTR::routing_channels__signed-cP"></span><span class="target" id="class_t_t_t_r_1ae11a962bf7e2f1c601e23259ae6eda9e"></span>signed char *<code class="sig-name descname">routing_channels</code><a class="headerlink" href="#_CPPv4N4TTTR16routing_channelsE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The channel number. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N4TTTR11event_typesE">
-<span id="_CPPv3N4TTTR11event_typesE"></span><span id="_CPPv2N4TTTR11event_typesE"></span><span id="TTTR::event_types__shortP"></span><span class="target" id="class_t_t_t_r_1a9b20252cc758f7d8a7610af6258b1f5d"></span>short *<code class="sig-name descname">event_types</code><a class="headerlink" href="#_CPPv4N4TTTR11event_typesE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N4TTTR11event_typesE"></span><span id="_CPPv2N4TTTR11event_typesE"></span><span id="TTTR::event_types__signed-cP"></span><span class="target" id="class_t_t_t_r_1aa626c8e69fb5fb195889a2e79899c4f4"></span>signed char *<code class="sig-name descname">event_types</code><a class="headerlink" href="#_CPPv4N4TTTR11event_typesE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The event type. </p>
 </dd></dl>
 
@@ -3243,14 +3853,15 @@
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange">
-<span id="_CPPv3N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange"></span><span id="_CPPv2N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange"></span><span id="TTTRRange::TTTRRange__s.s.l-l.l-l.TTTRRangeP"></span><span class="target" id="class_t_t_t_r_range_1a39b754a9a79d8b7cd3da98ee9966ca94"></span><code class="sig-name descname">TTTRRange</code><span class="sig-paren">(</span>size_t <em>start</em> = 0, size_t <em>stop</em> = 0, long long <em>start_time</em> = 0, long long <em>stop_time</em> = 0, <a class="reference internal" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange" title="TTTRRange::TTTRRange">TTTRRange</a> *<em>other</em> = nullptr<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei">
+<span id="_CPPv3N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei"></span><span id="_CPPv2N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei"></span><span id="TTTRRange::TTTRRange__s.s.unsigned-i.unsigned-i.TTTRRangeP.i"></span><span class="target" id="class_t_t_t_r_range_1a3114ae214c34bdb0d77bc538443982e0"></span><code class="sig-name descname">TTTRRange</code><span class="sig-paren">(</span>size_t <em>start</em> = 0, size_t <em>stop</em> = 0, unsigned int <em>start_time</em> = 0, unsigned int <em>stop_time</em> = 0, <a class="reference internal" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei" title="TTTRRange::TTTRRange">TTTRRange</a> *<em>other</em> = nullptr, int <em>pre_reserve</em> = 8<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">start</span></code>: start index of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a> </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stop</span></code>: stop index of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a> </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start_time</span></code>: start time of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a> </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stop_time</span></code>: stop time of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a> </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pre_reserve</span></code>: is the number of tttr indices that is pre-allocated in in memory upon creation of a <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a> object. </p></li>
 </ul>
 </dd>
 </dl>
@@ -3259,25 +3870,25 @@
 
 <dl class="function">
 <dt id="_CPPv4N9TTTRRange9TTTRRangeERK9TTTRRange">
-<span id="_CPPv3N9TTTRRange9TTTRRangeERK9TTTRRange"></span><span id="_CPPv2N9TTTRRange9TTTRRangeERK9TTTRRange"></span><span id="TTTRRange::TTTRRange__TTTRRangeCR"></span><span class="target" id="class_t_t_t_r_range_1a09f2d484cef3e4c09577f2bcfa937681"></span><code class="sig-name descname">TTTRRange</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_txxP9TTTRRange" title="TTTRRange::TTTRRange">TTTRRange</a> &amp;<em>p2</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9TTTRRangeERK9TTTRRange" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange9TTTRRangeERK9TTTRRange"></span><span id="_CPPv2N9TTTRRange9TTTRRangeERK9TTTRRange"></span><span id="TTTRRange::TTTRRange__TTTRRangeCR"></span><span class="target" id="class_t_t_t_r_range_1a09f2d484cef3e4c09577f2bcfa937681"></span><code class="sig-name descname">TTTRRange</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N9TTTRRange9TTTRRangeE6size_t6size_tjjP9TTTRRangei" title="TTTRRange::TTTRRange">TTTRRange</a> &amp;<em>p2</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9TTTRRangeERK9TTTRRange" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Copy constructor. </p>
 </dd></dl>
 
 <dl class="function">
 <dt id="_CPPv4N9TTTRRange16get_tttr_indicesEv">
-<span id="_CPPv3N9TTTRRange16get_tttr_indicesEv"></span><span id="_CPPv2N9TTTRRange16get_tttr_indicesEv"></span><span id="TTTRRange::get_tttr_indices"></span><span class="target" id="class_t_t_t_r_range_1a53cf626d04f1eecb9c06fcd0dccd3db1"></span><em class="property">const</em> std::vector&lt;long long&gt; &amp;<code class="sig-name descname">get_tttr_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange16get_tttr_indicesEv" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange16get_tttr_indicesEv"></span><span id="_CPPv2N9TTTRRange16get_tttr_indicesEv"></span><span id="TTTRRange::get_tttr_indices"></span><span class="target" id="class_t_t_t_r_range_1a4e20d249f87325fda4f4090d0d2b5956"></span><em class="property">const</em> std::vector&lt;int&gt; &amp;<code class="sig-name descname">get_tttr_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange16get_tttr_indicesEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>A vector containing a set of <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> indices that was assigned to the range. </p>
 </dd></dl>
 
 <dl class="function">
 <dt id="_CPPv4N9TTTRRange14get_start_stopEv">
-<span id="_CPPv3N9TTTRRange14get_start_stopEv"></span><span id="_CPPv2N9TTTRRange14get_start_stopEv"></span><span id="TTTRRange::get_start_stop"></span><span class="target" id="class_t_t_t_r_range_1ada90f688abd76a7d18ba14779ba0aa9d"></span>std::vector&lt;long long&gt; <code class="sig-name descname">get_start_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange14get_start_stopEv" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange14get_start_stopEv"></span><span id="_CPPv2N9TTTRRange14get_start_stopEv"></span><span id="TTTRRange::get_start_stop"></span><span class="target" id="class_t_t_t_r_range_1a03211c23916e1b20f7542a3d60b43ea2"></span>std::vector&lt;int&gt; <code class="sig-name descname">get_start_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange14get_start_stopEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>A vector of the start and the stop <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> index of the range. </p>
 </dd></dl>
 
 <dl class="function">
 <dt id="_CPPv4N9TTTRRange19get_start_stop_timeEv">
-<span id="_CPPv3N9TTTRRange19get_start_stop_timeEv"></span><span id="_CPPv2N9TTTRRange19get_start_stop_timeEv"></span><span id="TTTRRange::get_start_stop_time"></span><span class="target" id="class_t_t_t_r_range_1a9ff19514aba6ff9131823805ba2a2d71"></span>std::vector&lt;long long&gt; <code class="sig-name descname">get_start_stop_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange19get_start_stop_timeEv" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange19get_start_stop_timeEv"></span><span id="_CPPv2N9TTTRRange19get_start_stop_timeEv"></span><span id="TTTRRange::get_start_stop_time"></span><span class="target" id="class_t_t_t_r_range_1a13c8c5604c070d7130df3c56bd24e279"></span>std::vector&lt;unsigned int&gt; <code class="sig-name descname">get_start_stop_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange19get_start_stop_timeEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>A vector of the start and stop time. </p>
 </dd></dl>
 
@@ -3288,8 +3899,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange9set_startEx">
-<span id="_CPPv3N9TTTRRange9set_startEx"></span><span id="_CPPv2N9TTTRRange9set_startEx"></span><span id="TTTRRange::set_start__l-l"></span><span class="target" id="class_t_t_t_r_range_1af0df7312fd18731b111a3594d1a4afed"></span>void <code class="sig-name descname">set_start</code><span class="sig-paren">(</span>long long <em>start_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9set_startEx" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange9set_startEi">
+<span id="_CPPv3N9TTTRRange9set_startEi"></span><span id="_CPPv2N9TTTRRange9set_startEi"></span><span id="TTTRRange::set_start__i"></span><span class="target" id="class_t_t_t_r_range_1affa3e8b2d5dfb0e5b4a8a788cb1564ef"></span>void <code class="sig-name descname">set_start</code><span class="sig-paren">(</span>int <em>start_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange9set_startEi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The start index of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
@@ -3300,8 +3911,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange8set_stopEx">
-<span id="_CPPv3N9TTTRRange8set_stopEx"></span><span id="_CPPv2N9TTTRRange8set_stopEx"></span><span id="TTTRRange::set_stop__l-l"></span><span class="target" id="class_t_t_t_r_range_1a19b592234ab5eb178b721aca50a6a5df"></span>void <code class="sig-name descname">set_stop</code><span class="sig-paren">(</span>long long <em>stop_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange8set_stopEx" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange8set_stopEi">
+<span id="_CPPv3N9TTTRRange8set_stopEi"></span><span id="_CPPv2N9TTTRRange8set_stopEi"></span><span id="TTTRRange::set_stop__i"></span><span class="target" id="class_t_t_t_r_range_1a2677c610ededc2e31e5f745c41b03e0b"></span>void <code class="sig-name descname">set_stop</code><span class="sig-paren">(</span>int <em>stop_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange8set_stopEi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The stop index of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
@@ -3312,32 +3923,32 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange13set_stop_timeEx">
-<span id="_CPPv3N9TTTRRange13set_stop_timeEx"></span><span id="_CPPv2N9TTTRRange13set_stop_timeEx"></span><span id="TTTRRange::set_stop_time__l-l"></span><span class="target" id="class_t_t_t_r_range_1a1dd373414286aa9197388aa4d5bb1e2d"></span>void <code class="sig-name descname">set_stop_time</code><span class="sig-paren">(</span>long long <em>stop_time_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange13set_stop_timeEx" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange13set_stop_timeEj">
+<span id="_CPPv3N9TTTRRange13set_stop_timeEj"></span><span id="_CPPv2N9TTTRRange13set_stop_timeEj"></span><span id="TTTRRange::set_stop_time__unsigned-i"></span><span class="target" id="class_t_t_t_r_range_1a300ca99814f39300acef78a91360d725"></span>void <code class="sig-name descname">set_stop_time</code><span class="sig-paren">(</span>unsigned int <em>stop_time_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange13set_stop_timeEj" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The stop time of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange13get_stop_timeEv">
-<span id="_CPPv3N9TTTRRange13get_stop_timeEv"></span><span id="_CPPv2N9TTTRRange13get_stop_timeEv"></span><span id="TTTRRange::get_stop_time"></span><span class="target" id="class_t_t_t_r_range_1a5f093da0cc6e0163d853581af45f7818"></span>long long <code class="sig-name descname">get_stop_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange13get_stop_timeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4NK9TTTRRange13get_stop_timeEv">
+<span id="_CPPv3NK9TTTRRange13get_stop_timeEv"></span><span id="_CPPv2NK9TTTRRange13get_stop_timeEv"></span><span id="TTTRRange::get_stop_timeC"></span><span class="target" id="class_t_t_t_r_range_1a6825defb2d28d71d93a90fbce03f8e60"></span>unsigned int <code class="sig-name descname">get_stop_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK9TTTRRange13get_stop_timeEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The stop time of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange14set_start_timeEx">
-<span id="_CPPv3N9TTTRRange14set_start_timeEx"></span><span id="_CPPv2N9TTTRRange14set_start_timeEx"></span><span id="TTTRRange::set_start_time__l-l"></span><span class="target" id="class_t_t_t_r_range_1a836a7dbc36b3177f86af743ac218e1b9"></span>void <code class="sig-name descname">set_start_time</code><span class="sig-paren">(</span>long long <em>start_time_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange14set_start_timeEx" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange14set_start_timeEj">
+<span id="_CPPv3N9TTTRRange14set_start_timeEj"></span><span id="_CPPv2N9TTTRRange14set_start_timeEj"></span><span id="TTTRRange::set_start_time__unsigned-i"></span><span class="target" id="class_t_t_t_r_range_1a365f7f317fdff455f9b9826d600e4499"></span>void <code class="sig-name descname">set_start_time</code><span class="sig-paren">(</span>unsigned int <em>start_time_value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange14set_start_timeEj" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The start time of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange14get_start_timeEv">
-<span id="_CPPv3N9TTTRRange14get_start_timeEv"></span><span id="_CPPv2N9TTTRRange14get_start_timeEv"></span><span id="TTTRRange::get_start_time"></span><span class="target" id="class_t_t_t_r_range_1ae0e6bf0a51c72377c4875fd05a21b7ad"></span>long long <code class="sig-name descname">get_start_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange14get_start_timeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4NK9TTTRRange14get_start_timeEv">
+<span id="_CPPv3NK9TTTRRange14get_start_timeEv"></span><span id="_CPPv2NK9TTTRRange14get_start_timeEv"></span><span id="TTTRRange::get_start_timeC"></span><span class="target" id="class_t_t_t_r_range_1ac36d276ac547998ecc67b9c7fd79650c"></span>unsigned int <code class="sig-name descname">get_start_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK9TTTRRange14get_start_timeEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The start time of the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> range object. </p>
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N9TTTRRange6appendEx">
-<span id="_CPPv3N9TTTRRange6appendEx"></span><span id="_CPPv2N9TTTRRange6appendEx"></span><span id="TTTRRange::append__l-l"></span><span class="target" id="class_t_t_t_r_range_1a0cf5a86df879c09da275ee1b8e2daa7c"></span>void <code class="sig-name descname">append</code><span class="sig-paren">(</span>long long <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange6appendEx" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N9TTTRRange6appendEi">
+<span id="_CPPv3N9TTTRRange6appendEi"></span><span id="_CPPv2N9TTTRRange6appendEi"></span><span id="TTTRRange::append__i"></span><span class="target" id="class_t_t_t_r_range_1a7b5a068d2b54c964223237b157f6cec8"></span>void <code class="sig-name descname">append</code><span class="sig-paren">(</span>int <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange6appendEi" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Append a index to the <a class="reference internal" href="#class_t_t_t_r"><span class="std std-ref">TTTR</span></a> index vector. </p>
 </dd></dl>
 
@@ -3349,7 +3960,7 @@
 
 <dl class="function">
 <dt id="_CPPv4N9TTTRRange16shift_start_timeEl">
-<span id="_CPPv3N9TTTRRange16shift_start_timeEl"></span><span id="_CPPv2N9TTTRRange16shift_start_timeEl"></span><span id="TTTRRange::shift_start_time__l"></span><span class="target" id="class_t_t_t_r_range_1af8bb1788381d8e7ffd30911f4ce56b63"></span>void <code class="sig-name descname">shift_start_time</code><span class="sig-paren">(</span>long <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange16shift_start_timeEl" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange16shift_start_timeEl"></span><span id="_CPPv2N9TTTRRange16shift_start_timeEl"></span><span id="TTTRRange::shift_start_time__l"></span><span class="target" id="class_t_t_t_r_range_1ae193e83bc4a7a4f7f06e6a03280765e1"></span>void <code class="sig-name descname">shift_start_time</code><span class="sig-paren">(</span>long <em>time_shift</em> = 0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N9TTTRRange16shift_start_timeEl" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -3381,31 +3992,31 @@
 <p class="breathe-sectiondef-title rubric">Public Members</p>
 <dl class="member">
 <dt id="_CPPv4N9TTTRRange6_startE">
-<span id="_CPPv3N9TTTRRange6_startE"></span><span id="_CPPv2N9TTTRRange6_startE"></span><span id="TTTRRange::_start__l-l"></span><span class="target" id="class_t_t_t_r_range_1a538c32ae441e380e18924368a9282146"></span>long long <code class="sig-name descname">_start</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange6_startE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange6_startE"></span><span id="_CPPv2N9TTTRRange6_startE"></span><span id="TTTRRange::_start__i"></span><span class="target" id="class_t_t_t_r_range_1a47562d226c9c93ccefa7073669e141af"></span>int <code class="sig-name descname">_start</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange6_startE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The start index of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a>. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9TTTRRange5_stopE">
-<span id="_CPPv3N9TTTRRange5_stopE"></span><span id="_CPPv2N9TTTRRange5_stopE"></span><span id="TTTRRange::_stop__l-l"></span><span class="target" id="class_t_t_t_r_range_1adb0b6c4e30fa623db9482796c3d09da1"></span>long long <code class="sig-name descname">_stop</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange5_stopE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange5_stopE"></span><span id="_CPPv2N9TTTRRange5_stopE"></span><span id="TTTRRange::_stop__i"></span><span class="target" id="class_t_t_t_r_range_1a8190f5e04d17b71a203e6da7094ffff5"></span>int <code class="sig-name descname">_stop</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange5_stopE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The stop index of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a>. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9TTTRRange11_start_timeE">
-<span id="_CPPv3N9TTTRRange11_start_timeE"></span><span id="_CPPv2N9TTTRRange11_start_timeE"></span><span id="TTTRRange::_start_time__l-l"></span><span class="target" id="class_t_t_t_r_range_1a50a4484c04dd5ee1b962910c5b224d68"></span>long long <code class="sig-name descname">_start_time</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange11_start_timeE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange11_start_timeE"></span><span id="_CPPv2N9TTTRRange11_start_timeE"></span><span id="TTTRRange::_start_time__unsigned-i"></span><span class="target" id="class_t_t_t_r_range_1ab13dcd0ade424f80a357d2e0c097bec1"></span>unsigned int <code class="sig-name descname">_start_time</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange11_start_timeE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The start time of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a>. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9TTTRRange10_stop_timeE">
-<span id="_CPPv3N9TTTRRange10_stop_timeE"></span><span id="_CPPv2N9TTTRRange10_stop_timeE"></span><span id="TTTRRange::_stop_time__l-l"></span><span class="target" id="class_t_t_t_r_range_1a8a43fa31fa647fd3573ad61c481f17a1"></span>long long <code class="sig-name descname">_stop_time</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange10_stop_timeE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange10_stop_timeE"></span><span id="_CPPv2N9TTTRRange10_stop_timeE"></span><span id="TTTRRange::_stop_time__unsigned-i"></span><span class="target" id="class_t_t_t_r_range_1a11c5caa1853667be7268c1d5dedcb58b"></span>unsigned int <code class="sig-name descname">_stop_time</code> = 0<a class="headerlink" href="#_CPPv4N9TTTRRange10_stop_timeE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The stop time of the <a class="reference internal" href="#class_t_t_t_r_range"><span class="std std-ref">TTTRRange</span></a>. </p>
 </dd></dl>
 
 <dl class="member">
 <dt id="_CPPv4N9TTTRRange13_tttr_indicesE">
-<span id="_CPPv3N9TTTRRange13_tttr_indicesE"></span><span id="_CPPv2N9TTTRRange13_tttr_indicesE"></span><span id="TTTRRange::_tttr_indices__std::vector:l-l:"></span><span class="target" id="class_t_t_t_r_range_1af439ff9f82bb3da525b150a39e154878"></span>std::vector&lt;long long&gt; <code class="sig-name descname">_tttr_indices</code> = {}<a class="headerlink" href="#_CPPv4N9TTTRRange13_tttr_indicesE" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N9TTTRRange13_tttr_indicesE"></span><span id="_CPPv2N9TTTRRange13_tttr_indicesE"></span><span id="TTTRRange::_tttr_indices__std::vector:i:"></span><span class="target" id="class_t_t_t_r_range_1a5d6ba017774186e240c3ec4fc83fa3b7"></span>std::vector&lt;int&gt; <code class="sig-name descname">_tttr_indices</code> = {}<a class="headerlink" href="#_CPPv4N9TTTRRange13_tttr_indicesE" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </div>
@@ -3424,6 +4035,24 @@
 <dl class="macro">
 <dt id="c.MAX">
 <span class="target" id="correlation_8h_1afa99ec4acc4ecb2dc3c2d05da15d0e3f"></span><code class="sig-name descname">MAX</code><span class="sig-paren">(</span>a, b<span class="sig-paren">)</span><a class="headerlink" href="#c.MAX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="file">
+<dt>
+<span class="target" id="decay_8h"></span><em>file</em> <code class="sig-name descname">decay.h</code></dt>
+<dd><em>#include &lt;cmath&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;numeric&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include “omp.h”</em><em>#include “tttr.h”</em><em>#include “histogram.h”</em><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Defines</p>
+<dl class="macro">
+<dt>
+<span class="target" id="decay_8h_1a3acffbd305ee72dcd4593c0d8af64a4f"></span><code class="sig-name descname">MIN</code><span class="sig-paren">(</span>a, b<span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="macro">
+<dt>
+<span class="target" id="decay_8h_1afa99ec4acc4ecb2dc3c2d05da15d0e3f"></span><code class="sig-name descname">MAX</code><span class="sig-paren">(</span>a, b<span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 </div>
@@ -3812,7 +4441,7 @@
 <dl class="file">
 <dt>
 <span class="target" id="image_8h"></span><em>file</em> <code class="sig-name descname">image.h</code></dt>
-<dd><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;tttr.h&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;list&gt;</em><em>#include &lt;cstring&gt;</em><em>#include &lt;numeric&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include “correlation.h”</em></dd></dl>
+<dd><em>#include &lt;omp.h&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;tttr.h&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;iterator&gt;</em><em>#include &lt;list&gt;</em><em>#include &lt;cstring&gt;</em><em>#include &lt;numeric&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include “correlation.h”</em><em>#include “decay.h”</em></dd></dl>
 
 <dl class="file">
 <dt>
@@ -3936,7 +4565,7 @@
 <dl class="file">
 <dt>
 <span class="target" id="tttr_8h"></span><em>file</em> <code class="sig-name descname">tttr.h</code></dt>
-<dd><em>#include &lt;cstdint&gt;</em><em>#include &lt;string&gt;</em><em>#include &lt;cmath&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;cstdio&gt;</em><em>#include &lt;map&gt;</em><em>#include &lt;array&gt;</em><em>#include &lt;memory&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;boost/filesystem.hpp&gt;</em><em>#include &lt;boost/bimap.hpp&gt;</em><em>#include “hdf5.h”</em><em>#include &lt;record_reader.h&gt;</em><em>#include &lt;header.h&gt;</em><div class="breathe-sectiondef docutils container">
+<dd><em>#include &lt;cstdint&gt;</em><em>#include &lt;string&gt;</em><em>#include &lt;cmath&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;cstdio&gt;</em><em>#include &lt;map&gt;</em><em>#include &lt;array&gt;</em><em>#include &lt;memory&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include “roaring.h”</em><em>#include “omp.h”</em><em>#include &lt;boost/filesystem.hpp&gt;</em><em>#include &lt;boost/bimap.hpp&gt;</em><em>#include “hdf5.h”</em><em>#include &lt;record_reader.h&gt;</em><em>#include &lt;header.h&gt;</em><div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Defines</p>
 <dl class="macro">
 <dt id="c._CRT_SECURE_NO_DEPRECATE">
@@ -3985,8 +4614,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv423selection_by_count_ratePPyPiPyididb">
-<span id="_CPPv323selection_by_count_ratePPyPiPyididb"></span><span id="_CPPv223selection_by_count_ratePPyPiPyididb"></span><span id="selection_by_count_rate__unsigned-l-lPP.iP.unsigned-l-lP.i.double.i.double.b"></span><span class="target" id="tttr_8h_1a9a6905fe1cadaaefac0d900535511bc0"></span>void <code class="sig-name descname">selection_by_count_rate</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>time</em>, int <em>n_time</em>, double <em>time_window</em>, int <em>n_ph_max</em>, double <em>macro_time_calibration</em> = 1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423selection_by_count_ratePPyPiPyididb" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv423selection_by_count_ratePPiPiPyididb">
+<span id="_CPPv323selection_by_count_ratePPiPiPyididb"></span><span id="_CPPv223selection_by_count_ratePPiPiPyididb"></span><span id="selection_by_count_rate__iPP.iP.unsigned-l-lP.i.double.i.double.b"></span><span class="target" id="tttr_8h_1a8102fba3e330ef3494f850d17f540325"></span>void <code class="sig-name descname">selection_by_count_rate</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>time</em>, int <em>n_time</em>, double <em>time_window</em>, int <em>n_ph_max</em>, double <em>macro_time_calibration</em> = 1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423selection_by_count_ratePPiPiPyididb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>A count rate (cr) filter that returns an array containing a list of indices where the cr was smaller than a specified cr. </p>
 <p>The filter is applied to a series of consecutive time events. The time events are sliced into time windows (tw) which have at least a duration as specified by time_window. The tttr indices of the time windows are written to the output parameter output. Moreover, for every tw the number of photons is determined. If in a tw the number of photons exceeds n_ph_max and invert is false (default) the tw is not written to output. If If in a tw the number of photons is less then n_ph_max and invert is true the tw is not written to output.</p>
 <p><dl class="simple">
@@ -4006,8 +4635,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv421ranges_by_time_windowPPyPiPyiddiidb">
-<span id="_CPPv321ranges_by_time_windowPPyPiPyiddiidb"></span><span id="_CPPv221ranges_by_time_windowPPyPiPyiddiidb"></span><span id="ranges_by_time_window__unsigned-l-lPP.iP.unsigned-l-lP.i.double.double.i.i.double.b"></span><span class="target" id="tttr_8h_1a3d18b1774c7208e016b860f82e944089"></span>void <code class="sig-name descname">ranges_by_time_window</code><span class="sig-paren">(</span>unsigned long long **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>input</em>, int <em>n_input</em>, double <em>minimum_window_length</em>, double <em>maximum_window_length</em> = -1, int <em>minimum_number_of_photons_in_time_window</em> = -1, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>macro_time_calibration</em> = 1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421ranges_by_time_windowPPyPiPyiddiidb" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv421ranges_by_time_windowPPiPiPyiddiidb">
+<span id="_CPPv321ranges_by_time_windowPPiPiPyiddiidb"></span><span id="_CPPv221ranges_by_time_windowPPiPiPyiddiidb"></span><span id="ranges_by_time_window__iPP.iP.unsigned-l-lP.i.double.double.i.i.double.b"></span><span class="target" id="tttr_8h_1abb13b10dc8a7d0a83d6953f11b405b15"></span>void <code class="sig-name descname">ranges_by_time_window</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, unsigned long long *<em>input</em>, int <em>n_input</em>, double <em>minimum_window_length</em>, double <em>maximum_window_length</em> = -1, int <em>minimum_number_of_photons_in_time_window</em> = -1, int <em>maximum_number_of_photons_in_time_window</em> = -1, double <em>macro_time_calibration</em> = 1.0, bool <em>invert</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421ranges_by_time_windowPPiPiPyiddiidb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Returns time windows (tw), i.e., the start and the stop indices for a minimum tw size, a minimum number of photons in a tw. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -4046,8 +4675,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv418get_ranges_channelPPiPiPsii">
-<span id="_CPPv318get_ranges_channelPPiPiPsii"></span><span id="_CPPv218get_ranges_channelPPiPiPsii"></span><span id="get_ranges_channel__iPP.iP.shortP.i.i"></span><span class="target" id="tttr_8h_1a1407532c07ea37bb757ae0af51994667"></span>void <code class="sig-name descname">get_ranges_channel</code><span class="sig-paren">(</span>int **<em>ranges</em>, int *<em>n_range</em>, short *<em>channel</em>, int <em>n_channel</em>, int <em>selection_channel</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418get_ranges_channelPPiPiPsii" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv418get_ranges_channelPPjPiPsii">
+<span id="_CPPv318get_ranges_channelPPjPiPsii"></span><span id="_CPPv218get_ranges_channelPPjPiPsii"></span><span id="get_ranges_channel__unsigned-iPP.iP.shortP.i.i"></span><span class="target" id="tttr_8h_1a987a71acb66d540a57930c47e194d9bc"></span>void <code class="sig-name descname">get_ranges_channel</code><span class="sig-paren">(</span>unsigned int **<em>ranges</em>, int *<em>n_range</em>, short *<em>channel</em>, int <em>n_channel</em>, int <em>selection_channel</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418get_ranges_channelPPjPiPsii" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ranges</span></code>: </p></li>
@@ -4062,8 +4691,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv421selection_by_channelsPPxPiPxiPsi">
-<span id="_CPPv321selection_by_channelsPPxPiPxiPsi"></span><span id="_CPPv221selection_by_channelsPPxPiPxiPsi"></span><span id="selection_by_channels__l-lPP.iP.l-lP.i.shortP.i"></span><span class="target" id="tttr_8h_1ad5614fb67fe9fe21fa32b36af96bcb58"></span>void <code class="sig-name descname">selection_by_channels</code><span class="sig-paren">(</span>long long **<em>output</em>, int *<em>n_output</em>, long long *<em>input</em>, int <em>n_input</em>, short *<em>routing_channels</em>, int <em>n_routing_channels</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421selection_by_channelsPPxPiPxiPsi" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv421selection_by_channelsPPiPiPiiPai">
+<span id="_CPPv321selection_by_channelsPPiPiPiiPai"></span><span id="_CPPv221selection_by_channelsPPiPiPiiPai"></span><span id="selection_by_channels__iPP.iP.iP.i.signed-cP.i"></span><span class="target" id="tttr_8h_1a7f2ec25f5a65cec90cb49732736699e5"></span>void <code class="sig-name descname">selection_by_channels</code><span class="sig-paren">(</span>int **<em>output</em>, int *<em>n_output</em>, int *<em>input</em>, int <em>n_input</em>, signed char *<em>routing_channels</em>, int <em>n_routing_channels</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421selection_by_channelsPPiPiPiiPai" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Selects a subset of indices by a list of routing channel numbers.</p>
 <p>The retuned set of indices will have routing channel numbers that are in the list of the provided routing channel numbers.</p>
 <p><dl class="simple">

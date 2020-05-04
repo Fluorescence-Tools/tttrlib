@@ -3,7 +3,7 @@ from matplotlib.pyplot import imread
 import tttrlib
 import numpy as np
 
-tttr_data = tttrlib.TTTR('../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+tttr_data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
 channels = (0, 1)
 reading_parameter = {
     "tttr_data": tttr_data,
@@ -17,7 +17,7 @@ reading_parameter = {
     "channels": channels
 }
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
-mask = imread("../../test/data/aux/PQ_HT3_CLSM_MASK.png").astype(np.uint8)
+mask = imread("../../test/data/imaging/misc/clsm_mask.png").astype(np.uint8)
 selection = np.ascontiguousarray(
     np.broadcast_to(
         mask,

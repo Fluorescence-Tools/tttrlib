@@ -6,7 +6,7 @@ import tttrlib
 
 
 # open a set of files and stack them in a single TTTR object
-files = glob.glob('../../test/data/BH/BH_SPC132_smDNA/*.spc')
+files = glob.glob('../../test/data/bh/bh_spc132_sm_dna/*.spc')
 data = tttrlib.TTTR(files[0], 'SPC-130')
 for d in files[1:]:
     data.append(tttrlib.TTTR(d, 'SPC-130'))

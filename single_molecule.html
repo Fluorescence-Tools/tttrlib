@@ -79,14 +79,17 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Single Molecule</a><ul>
 <li><a class="reference internal" href="#intensity-traces">Intensity traces</a></li>
-<li><a class="reference internal" href="#burst-selection">Burst selection</a><ul>
-<li><a class="reference internal" href="#saving-burst-ids">Saving Burst-IDs</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#burst-selection">Burst selection</a></li>
 <li><a class="reference internal" href="#photon-distribution-analysis">Photon distribution analysis</a><ul>
 <li><a class="reference internal" href="#theory">Theory</a></li>
 <li><a class="reference internal" href="#tttrlib-pda-objects">tttrlib.Pda objects</a></li>
 <li><a class="reference internal" href="#example-analysis-of-experimental-data">Example analysis of experimental data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fluorescence-decay-analysis">Fluorescence decay analysis</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#decay-histograms">Decay histograms</a></li>
+<li><a class="reference internal" href="#decay-class">Decay class</a></li>
 </ul>
 </li>
 </ul>
@@ -208,13 +211,12 @@ parameter <code class="docutils literal notranslate"><span class="pre">time</spa
 method <code class="docutils literal notranslate"><span class="pre">get_ranges_by_time_window</span></code>. A typical use case of this function is
 to select single molecule events confocal single-molecule FRET experiments as
 shown below.</p>
-<p>(<a class="reference external" href="./plots/single_molecule_burst_selection.py">Source code</a>)</p>
+<p>(<a class="reference external" href="./plots/single_molecule_burst_selection.py">Source code</a>, <a class="reference external" href="./plots/single_molecule_burst_selection.png">png</a>)</p>
+<div class="figure align-default">
+<img alt="_images/single_molecule_burst_selection.png" src="_images/single_molecule_burst_selection.png" />
+</div>
 <p>Above, for a donor and acceptor detection channel a histogram trace for is shown
 in green and red. In blue the range based selection is shown.</p>
-<div class="section" id="saving-burst-ids">
-<h3>Saving Burst-IDs<a class="headerlink" href="#saving-burst-ids" title="Permalink to this headline">¶</a></h3>
-<p>STOP</p>
-</div>
 </div>
 <div class="section" id="photon-distribution-analysis">
 <h2>Photon distribution analysis<a class="headerlink" href="#photon-distribution-analysis" title="Permalink to this headline">¶</a></h2>
@@ -564,56 +566,6 @@ computed, and the micro times of the tws collected to create fluorescence decay
 histograms that can be analyzed by other software packages (e.g.
 <a class="reference external" href="https://github.com/fluorescence-tools/chisurf/">ChiSurf</a>.).</p>
 <p>Finally, the collected results are plotted for illustrative purposes.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Experimental S1S2&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;1D Histograms&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Model S1S2&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Signal count distribution, P(S)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Fluorescence decays, f(t)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;time / ns&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Signal(red)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;w.res.&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Signal(green)/Signal(red)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Signal(green)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Signal(red)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Number of photons&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;P(S)&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">s1s2_e</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pda</span><span class="o">.</span><span class="n">s1s2</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-    <span class="n">decay_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span><span class="p">,</span>
-    <span class="n">decay_red</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
-    <span class="n">decay_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span><span class="p">,</span>
-    <span class="n">decay_green</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">fit_wres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">fit_wres</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neginf</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">y_model_initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">y_model_initial</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neginf</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">kw_hist</span><span class="p">[</span><span class="s1">&#39;log_x&#39;</span><span class="p">]:</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">initial_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">fit_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_model_initial</span><span class="p">,</span> <span class="n">y_model_initial</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_model_fit</span><span class="p">,</span> <span class="n">y_model_fit</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_model_initial</span><span class="p">,</span> <span class="n">y_model_initial</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Model&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_model_fit</span><span class="p">,</span> <span class="n">y_model_fit</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">initial_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">fit_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
 <p>The noise in the fluorescence decay histograms highlight that for a detailed
 analysis of the fluorescence decays more photons are needed in comparison to an
 intensity analysis by PDA.</p>
@@ -623,6 +575,41 @@ model, i.e. the weights, and the underlying assumption when a chi2 is minimized
 needs to be considered. For histograms with low counts maximizing the likelihood
 function is more appropriate. Moreover, for data with considerable background P(F)
 needs to be deconvolved from the experimental P(S) <a class="bibtex reference internal" href="zreferences.html#kalinin2007" id="id4">[KFAS07]</a>.</p>
+</div>
+</div>
+<div class="section" id="fluorescence-decay-analysis">
+<h2>Fluorescence decay analysis<a class="headerlink" href="#fluorescence-decay-analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="introduction">
+<h3>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h3>
+<p>In time-resolved fluorescence experiments the fluorescence intensity decay of a
+sample is monitored. To date this is mostly accomplished by repeatedly exciting
+the sample by a short laser pulse and recording the time between the sample excitation
+and the detection of photons. In such pulsed experiments the micro time in a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>
+object encodes the time between the excitation pulse and the detection of the photon.
+In analogue counting electronics is mostly operated in an inverse mode where the
+time between the photon and the subsequent detection pulse is recorded. After multiple
+photons have been recorded fluorescence decay histograms are computed. The shape
+of these histograms corresponds to the underlying fluorescence decay, f(t).</p>
+<p>In many cases fluorescence decays can be described by linear combinations of
+exponential decays. The <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> computes models for fluorescence
+decays, f(t), fluorescence intensity decay histograms, h(t), and to scores models
+against experimental decay histograms. The <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class handles typical artifacts
+encountered in fluorescence decays such as scattered light, constant backgrounds,
+convolutions with the instrument response function, pile-up artifacts, and more.</p>
+<p>Below the basic usage of the <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class is outlined with a few application
+examples. These examples can be used as starting point for custom analysis pipelines,
+e.g. for burst-wise single-molecule analysis, pixel-wise FLIM analysis or analysis
+over larger ensembles of molecules or pixels.</p>
+</div>
+<div class="section" id="decay-histograms">
+<h3>Decay histograms<a class="headerlink" href="#decay-histograms" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="decay-class">
+<h3>Decay class<a class="headerlink" href="#decay-class" title="Permalink to this headline">¶</a></h3>
+<p>Fluorescence decays can be either computed using the static method provided by the
+<code class="docutils literal notranslate"><span class="pre">Decay</span></code> class or
+Create an instance the <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class</p>
+<p>Single-molecule</p>
 </div>
 </div>
 </div>

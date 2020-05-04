@@ -75,9 +75,6 @@ shown below.
 Above, for a donor and acceptor detection channel a histogram trace for is shown
 in green and red. In blue the range based selection is shown.
 
-Saving Burst-IDs
-----------------
-STOP
 
 Photon distribution analysis
 ============================
@@ -493,7 +490,7 @@ histograms that can be analyzed by other software packages (e.g.
 
 Finally, the collected results are plotted for illustrative purposes.
 
-.. code-block::
+.. code-block::python
 
     fig, ax = p.subplots(nrows=2, ncols=3)
     ax[0, 0].set_title('Experimental S1S2')
@@ -554,3 +551,61 @@ model, i.e. the weights, and the underlying assumption when a chi2 is minimized
 needs to be considered. For histograms with low counts maximizing the likelihood
 function is more appropriate. Moreover, for data with considerable background P(F)
 needs to be deconvolved from the experimental P(S) :cite:`kalinin2007`.
+
+Fluorescence decay analysis
+===========================
+Introduction
+------------
+In time-resolved fluorescence experiments the fluorescence intensity decay of a
+sample is monitored. To date this is mostly accomplished by repeatedly exciting
+the sample by a short laser pulse and recording the time between the sample excitation
+and the detection of photons. In such pulsed experiments the micro time in a ``TTTR``
+object encodes the time between the excitation pulse and the detection of the photon.
+In analogue counting electronics is mostly operated in an inverse mode where the
+time between the photon and the subsequent detection pulse is recorded. After multiple
+photons have been recorded fluorescence decay histograms are computed. The shape
+of these histograms corresponds to the underlying fluorescence decay, f(t).
+
+In many cases fluorescence decays can be described by linear combinations of
+exponential decays. The ``Decay`` class of ``tttrlib`` computes models for fluorescence
+decays, f(t), fluorescence intensity decay histograms, h(t), and to scores models
+against experimental decay histograms. The ``Decay`` class handles typical artifacts
+encountered in fluorescence decays such as scattered light, constant backgrounds,
+convolutions with the instrument response function, pile-up artifacts, and more.
+
+Below the basic usage of the ``Decay`` class is outlined with a few application
+examples. These examples can be used as starting point for custom analysis pipelines,
+e.g. for burst-wise single-molecule analysis, pixel-wise FLIM analysis or analysis
+over larger ensembles of molecules or pixels.
+
+Decay histograms
+----------------
+
+.. code-block::python
+
+    tttr_object = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+    micro_time_coarsening = 8
+    counts, bins = tttrlib.Decay.compute_microtime_histogram(
+        tttr_object,
+        micro_time_coarsening=micro_time_coarsening,
+    )
+
+
+
+Decay class
+-----------
+Fluorescence decays can be either computed using the static method provided by the
+``Decay`` class or
+Create an instance the ``Decay`` class
+
+.. code-block::python
+
+    decay_object = tttrlib.Decay(
+        data=data_decay.astype(np.float64),
+        instrument_response_function=irf.astype(np.float64),
+        time_axis=time_axis,
+        period=data.header.macro_time_resolution
+    )
+
+
+Single-molecule

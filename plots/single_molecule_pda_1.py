@@ -41,6 +41,7 @@ pda.set_probabilities_ch1(probabilities_ch1)
 # can be set as an interleaved array [a1, p1, a2, p2, ...]
 p_spectrum_ch1 = np.dstack([amplitudes, probabilities_ch1]).flatten()
 pda.spectrum_ch1 = p_spectrum_ch1
+pda.evaluate()
 
 # The computed distribution of photons in channel 1 and channel 2
 # is given by the attribute s1s2. This attribute is convolved with
