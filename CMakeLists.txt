@@ -25,6 +25,7 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
 if(MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     add_definitions(-DMS_WIN64)
+    add_definitions(-D_USE_MATH_DEFINES)
 endif(MSVC)
 
 # MACOSX

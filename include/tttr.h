@@ -17,7 +17,6 @@
 #ifndef TTTRLIB_TTTR_H
 #define TTTRLIB_TTTR_H
 
-
 #include <cstdint>
 #include <string>
 #include <cmath>
