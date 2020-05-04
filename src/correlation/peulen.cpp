@@ -33,7 +33,6 @@ void peulen::correlation_full(
         {
 #pragma omp section
             peulen::correlation_coarsen(t1_c, w1_c, nt1);
-
 #pragma omp section
             peulen::correlation_coarsen(t2_c, w2_c, nt2);
         }
