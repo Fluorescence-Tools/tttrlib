@@ -185,7 +185,6 @@ size_t read_ht3_header(
     data["FileTime"] = std::string(ht3_header_ascii.FileTime);
     data["CRLF"] = std::string(ht3_header_ascii.CRLF);
     data["Comment"] = std::string(ht3_header_ascii.CommentField);
-
     data["Curves"] = std::to_string(ht3_header_binary.Curves);
     data["BitsPerChannel"] = std::to_string(ht3_header_binary.BitsPerChannel);
     data["RoutingChannels"] = std::to_string(ht3_header_binary.RoutingChannels);

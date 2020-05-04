@@ -721,6 +721,84 @@ void CLSMImage::get_mean_micro_time_image(
     }
 }
 
+void CLSMImage::get_phasor_image(
+        float **output, int *dim1, int *dim2, int *dim3, int *dim4,
+        TTTR *tttr_data,
+        TTTR *tttr_irf,
+        double frequency,
+        int minimum_number_of_photons,
+        bool stack_frames
+) {
+    double g_irf=1.0, s_irf=0.0;
+    if(tttr_irf!= nullptr){
+        std::vector<double> gs = Decay::phasor(
+                tttr_irf->micro_times, tttr_irf->n_valid_events,
+                frequency);
+        g_irf = gs[0];
+        s_irf = gs[1];
+    }
+    int o_frames = stack_frames? 1: n_frames;
+    if(frequency<0){
+        frequency = 1. / tttr_data->get_header().macro_time_resolution;
+    }
+    double factor = (2. * frequency * M_PI);
+    std::clog << "get_phasor_image..." << std::endl;
+    std::clog << "-- frequency [GHz]: " << frequency << std::endl;
+    std::clog << "-- stack_frames: " << stack_frames << std::endl;
+    std::clog << "-- minimum_number_of_photons: " << minimum_number_of_photons << std::endl;
+    auto* t = (float *) calloc(o_frames * n_lines * n_pixel * 2, sizeof(float));
+    for(int i_line=0; i_line < n_lines; i_line++){
+        for(int i_pixel=0; i_pixel < n_pixel; i_pixel++){
+            if(stack_frames){
+                size_t pixel_nbr = i_line  * (n_pixel * 2) + i_pixel * 2;
+                double sum=0.0, g_sum=0.0, s_sum = 0.0;
+                for(int i_frame=0; i_frame < n_frames; i_frame++){
+                    auto idxs = frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices;
+                    sum += idxs.size();
+                    for(auto &idx: idxs){
+                        auto mt = tttr_data->micro_times[idx];
+                        g_sum += std::cos(mt * factor);
+                        s_sum += std::sin(mt * factor);
+                    }
+                }
+                if(sum > minimum_number_of_photons){
+                    double g_exp = g_sum / std::max(1., sum);
+                    double s_exp = s_sum / std::max(1., sum);
+                    t[pixel_nbr + 0] = Decay::compute_phasor_g_the(g_irf, s_irf,g_exp, s_exp);
+                    t[pixel_nbr + 1] = Decay::compute_phasor_s_the(g_irf, s_irf,g_exp, s_exp);
+                } else{
+                    t[pixel_nbr + 0] = -1;
+                    t[pixel_nbr + 1] = -1;
+                }
+            } else{
+                for(int i_frame=0; i_frame < n_frames; i_frame++){
+                    size_t pixel_nbr = i_frame * (n_lines * n_pixel * 2) + i_line  * (n_pixel * 2) + i_pixel * 2;
+                    auto idxs = frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices;
+                    double sum=idxs.size(), g_sum=0.0, s_sum = 0.0;
+                    for(auto &idx: idxs){
+                        auto mt = tttr_data->micro_times[idx];
+                        g_sum += std::cos(mt * factor);
+                        s_sum += std::sin(mt * factor);
+                    }
+                    if(sum > minimum_number_of_photons){
+                        double g_exp = g_sum / std::max(1., sum);
+                        double s_exp = s_sum / std::max(1., sum);
+                        t[pixel_nbr + 0] = Decay::compute_phasor_g_the(g_irf, s_irf,g_exp, s_exp);
+                        t[pixel_nbr + 1] = Decay::compute_phasor_s_the(g_irf, s_irf,g_exp, s_exp);
+                    } else{
+                        t[pixel_nbr + 0] = -1;
+                        t[pixel_nbr + 1] = -1;
+                    }
+                }
+            }
+        }
+    }
+    *dim1 = (int) o_frames;
+    *dim2 = (int) n_lines;
+    *dim3 = (int) n_pixel;
+    *dim4 = (int) 2;
+    *output = t;
+}
 
 void CLSMImage::get_mean_lifetime_image(
         TTTR* tttr_data,

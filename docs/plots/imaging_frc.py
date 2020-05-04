@@ -1,6 +1,8 @@
 from __future__ import annotations
-import numpy as np
 
+import numpy as np
+import pylab as p
+import tttrlib
 
 def compute_frc(
         image_1: np.ndarray,
@@ -52,3 +54,36 @@ def compute_frc(
     )
     density = f1f2_r / np.sqrt(f12_r * f22_r)
     return density, bin_edges
+
+
+filename = '../../test/data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+data = tttrlib.TTTR(filename, 'PTU')
+
+line_factor = 1
+reading_parameter = {
+    "tttr_data": data,
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 15,
+    # if zero the number of pixels is the set to the number of lines
+    "n_pixel_per_line": 512 * line_factor,
+    "reading_routine": 'SP8',
+    "channels": [1],
+    "fill": True
+}
+
+clsm_image = tttrlib.CLSMImage(**reading_parameter)
+
+fig, ax = p.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
+ax[0].set_title('Intensity')
+ax[1].set_title('FRC')
+
+img = clsm_image.intensity
+im1 = img[::2].sum(axis=0)
+im2 = img[1::2].sum(axis=0)
+frc, frc_bins = compute_frc(im1, im2)
+ax[1].plot(frc, label="Intensity")
+ax[0].imshow(img.mean(axis=0))
+
+p.show()

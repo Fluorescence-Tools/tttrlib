@@ -354,6 +354,36 @@ public:
     );
 
     /*!
+     * Computes the phasor values for every pixel
+     *
+     * Pixels with few photons can be discriminated. Discriminated pixels will
+     * be filled with zeros.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param out[out] pointer to output array that will contain the image stack
+     * @param dim1[out] returns the number of frames
+     * @param dim2[out] returns the number of lines
+     * @param dim3[out] returns the number of pixels per line
+     * @param dim4[out] returns 2 (first is the g phasor value (cos), second the
+     * s phasor (sin)
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     * (only used if frames are not stacked)
+     * @param stack_frames[in] if true the frames are stacked (default value is
+     * false). If stack frames is set to true the mean arrival time is computed
+     * using the tttr indices of all pixels (this corresponds to the photon weighted
+     * mean arrival time).
+     */
+    void get_phasor_image(
+            float** output, int* dim1, int* dim2, int* dim3, int* dim4,
+            TTTR* tttr_data,
+            TTTR *tttr_irf=nullptr,
+            double frequency=-1,
+            int minimum_number_of_photons=2,
+            bool stack_frames=false
+    );
+
+
+    /*!
      *  Computes an image of average lifetimes
      *
      * The average lifetimes are computed (not fitted) by the methods of

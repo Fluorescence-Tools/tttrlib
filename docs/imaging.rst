@@ -525,9 +525,9 @@ the frames, lines, and pixels are copied. When the optional parameter `fill` is
 set the tttr indices of the photons are copied as well.
 
 CLSM representations
---------------------
+====================
 Representations
-^^^^^^^^^^^^^^^
+---------------
 The are several ways how the data contain in CLSM images can be represented and
 analyzed. For instance, images can be computed where every pixel contains an average
 fluorescence lifetime or an intensity. A few representations for CLSM data and
@@ -544,9 +544,8 @@ decay curve of the corresponding image reveals a fluorescence decay that is not
 curved and hence likely single exponential.
 
 
-
 Intensity
-^^^^^^^^^
+---------
 An intensity image of a ``CLSMImage`` instance that has been filled with photons
 can be created by counting the number of photons in each pixel. This can either
 be accomplished by iterating over the frames, lines, and pixels or by using the
@@ -591,7 +590,7 @@ intensity images is the second option.
 
 
 Mean micro time
-^^^^^^^^^^^^^^^
+---------------
 To create an image of the mean micro times in a pixel the method ``get_mean_micro_time_image`` of a
 ``CLSMImage`` instance has to be provided with a ``TTTR`` object the method uses
 the tttr indices of the photons stored in the ``CLSMPixel`` objects to look-up the
@@ -649,6 +648,10 @@ computed by the method ``get_mean_micro_time_image`` when the optional parameter
     photons that resulted in the average is not considered. Thus, the two
     averages in the code-block displayed above differ.
 
+Average fluorescence lifetime
+-----------------------------
+:cite:`isenberg_studies_1973`
+
 Fluorescence decay histograms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The micro times of the photons in every pixel can be binned to yield a fluorescence
@@ -685,7 +688,7 @@ time resolution by a factor of 2.
     to reduce the memory consumption.
 
 Pixel averaged decays
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 Using selection masks the signal to noise of the fluorescence decays can be greatly
 improved to allow for a detailed analyis. Here it is briefly outlined, how pixels
 are selected and fluorescence decays of these pixel sub-populations can be created.
@@ -746,9 +749,21 @@ to True.
     To keep the memory consumption low, we use only 8 bit per element in the selection
     mask.
 
+Phasor
+------
+The phasor method’s prospective is a model free analysis that has certain advantages
+over conventional nonlinear curve fitting. Nonlinear curve-fitting analysis is
+computationally-intensive and sensitive to potential inaccuracies due to correlations
+between computed terms. Conversely, phasor analysis provides a computationally-simple,
+robust approach to investigate variations in fluorescence lifetime measurements.
+
+.. plot:: plots/imaging_phasor.py
+
+Top phasor without instrument response function (IRF) correction. Bottom phasor
+with IRF correction.
 
 Correlation function
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 Every pixel is defined by a list of TTTR indices. To these indices a macro time
 and micro time are associtate. Hence, correlation functions can be computed.
 
@@ -762,52 +777,12 @@ between two subsets of the same images are Fourier transformed and their overlap
 in the Fourier space is measured. The FRC is the normalised cross-correlation
 coefficient between two images over corresponding shells in Fourier space transform.
 
-In CLSM usually multiple images of the sample sample are recoded. Thus, the resolution
-of the image can be estimated by the FRC. Below a few lines of python code are
-shown that read a CLSM image, split the image into two sets, and plot the FRC
-of the two subsets is shown for intensity images.
+In CLSM usually multiple images of the sample sample are recoded. Thus, the
+resolution of the image can be estimated by the FRC. Below a few lines of python
+code are shown that read a CLSM image, split the image into two sets, and plot
+the FRC of the two subsets is shown for intensity images.
 
-
-.. code:: python
-
-    @nb.jit(nopython=True)
-    def _frc_histogram(lx, rx, ly, ry, f1f2, f12, f22, n_bins, bin_width):
-        """Auxiliary function only intented to be used by compute_frc"""
-        """
-        wf1f2 = np.zeros(n_bins, np.float64)
-        wf1 = np.zeros(n_bins, np.float64)
-        wf2 = np.zeros(n_bins, np.float64)
-        for xi in range(lx, rx):
-            for yi in range(ly, ry):
-                distance_bin = int(np.sqrt(xi ** 2 + yi ** 2) / bin_width)
-                if distance_bin < n_bins:
-                    wf1f2[distance_bin] += f1f2[xi, yi]
-                    wf1[distance_bin] += f12[xi, yi]
-                    wf2[distance_bin] += f22[xi, yi]
-        return wf1f2 / np.sqrt(wf1 * wf2)
-
-    def compute_frc(
-            image_1: np.ndarray,
-            image_2: np.ndarray,
-            bin_width: int = 2.0
-    ):
-        f1 = np.fft.fft2(image_1)
-        f2 = np.fft.fft2(image_2)
-        f1f2 = np.real(f1 * np.conjugate(f2))
-        f12, f22 = np.abs(f1) ** 2, np.abs(f2) ** 2
-        nx, ny = image_1.shape
-
-        bins = np.arange(0, np.sqrt((nx // 2) ** 2 + (ny // 2) ** 2), bin_width)
-        n_bins = int(bins.shape[0])
-        lx, rx = int(-(nx // 2)), int(nx // 2)
-        ly, ry = int(-(ny // 2)), int(ny // 2)
-        density = _frc_histogram(
-            lx, rx,
-            ly, ry,
-            f1f2, f12, f22,
-            n_bins, bin_width
-        )
-        return density, bins
+.. plot:: plots/imaging_frc.py
 
 The above approach is used by the software `ChiSurf <https://github.com/fluorescence-tools/chisurf/>`_.
 In practice, a set of CLSM images can be split into two subsets. The two subsets
