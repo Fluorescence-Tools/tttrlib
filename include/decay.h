@@ -189,6 +189,10 @@ public:
      * fluorescence lifetimes that are smaller.
      * @param add_pile_up if set to true (default is false) pile up will be added
      * to the model function.
+     * @param instrument_dead_time the dead time of the instrument (used for
+     * pile up (in units of the lifetime, usually nano seconds)
+     * @param acquisition_time the total time the acquisition of the decay in
+     * seconds.
      */
     static void compute_decay(
             double *model_function, int n_model_function,
@@ -206,7 +210,9 @@ public:
             double total_area = -1,
             bool use_amplitude_threshold = false,
             double amplitude_threshold = 1e10,
-            bool add_pile_up = false
+            bool add_pile_up = false,
+            double instrument_dead_time=120.0,
+            double acquisition_time=100000.0
     );
 
 
@@ -649,6 +655,44 @@ public:
             int stop = -1
     );
 
+    static std::vector<double> phasor(
+            unsigned short* microtimes, int n_microtimes,
+            double frequency
+            ){
+        double factor = (2. * frequency * M_PI);
+        double sum = n_microtimes;
+        double g_sum = 0.0; double s_sum = 0.0;
+        for(int i=0;i<n_microtimes;i++){
+            g_sum += std::cos(microtimes[i] * factor);
+            s_sum += std::sin(microtimes[i] * factor);
+        }
+        std::vector<double> re{g_sum / sum, s_sum / sum};
+        return re;
+    }
+
+    /*!
+     * https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001
+     *
+     * @param g_irf
+     * @param s_irf
+     * @param g_exp
+     * @param s_exp
+     * @return
+     */
+    static inline double compute_phasor_g_the(
+            double g_irf, double s_irf,
+            double g_exp, double s_exp
+            ){
+        return 1. / (g_irf * g_irf + s_irf * s_irf) *(g_irf * g_exp + s_irf * s_exp);
+    }
+
+    static inline double compute_phasor_s_the(
+            double g_irf, double s_irf,
+            double g_exp, double s_exp
+    ){
+        return 1. / (g_irf * g_irf + s_irf * s_irf) *(g_irf * s_exp - s_irf * g_exp);
+    }
+
     /*!
      * Shift an input array by a floating number.
      *
@@ -699,6 +743,10 @@ public:
 
     /*!
      * Correct the model function for pile up
+     *     # Coates, 1968, eq. 2
+    p = data / (n_excitation_pulses - np.cumsum(data))
+    # Coates, 1968, eq. 4
+
      *
      * @param model[in,out] The array containing the model function
      * @param n_model[in] Number of elements in the model array
@@ -708,7 +756,7 @@ public:
      * @param dead_time[in] The dead-time of the detection system in nanoseconds
      * @param measurement_time[in] The measurement time in seconds
      */
-    void add_pile_up(
+    static void add_pile_up(
             double *model, int n_model,
             double *data, int n_data,
             double repetition_rate,

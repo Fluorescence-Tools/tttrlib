@@ -1,6 +1,5 @@
 #include "decay.h"
 
-
 void Decay::convolve_lifetime_spectrum(
         double* output, int n_output,
         double* time_axis, int n_time_axis,
@@ -235,12 +234,26 @@ void Decay::add_pile_up(
     repetition_rate *= 1e6;
     dead_time *= 1e-9;
     std::vector<double> cum_sum(n_data);
-//    std::partial_sum(data, data+n_data, cum_sum);
-//    int n_pulse_detected = (int) cum_sum[cum_sum.size() - 1];
-//    double total_dead_time = n_pulse_detected * dead_time;
-//    double live_time = measurement_time - total_dead_time;
-//    int n_excitation_pulses = MAX(live_time * repetition_rate, n_pulse_detected);
+    std::partial_sum(data, data + n_data, cum_sum.begin(), std::plus<double>());
+    double n_pulse_detected = cum_sum[cum_sum.size() - 1];
+    double total_dead_time = n_pulse_detected * dead_time;
+    double live_time = measurement_time - total_dead_time;
+    int n_excitation_pulses = std::max(live_time * repetition_rate, n_pulse_detected);
 
+    // Coates, 1968, eq. 2 & 4
+    std::vector<double> rescaled_data(n_data);
+    for(int i=0;i<n_data;i++)
+        rescaled_data[i] = -std::log(1.0 - data[i] / (n_excitation_pulses - cum_sum[i]));
+    for(int i=0;i<n_data;i++)
+        rescaled_data[i] = (rescaled_data[i] == 0) ? 1.0 : rescaled_data[i];
+
+    // rescale model function to preserve data counting statistics
+    std::vector<double> sf(n_data);
+    for(int i=0;i<n_data;i++)
+        sf[i] = data[i] / rescaled_data[i];
+    double s = std::accumulate(sf.begin(),sf.end(),0.0);
+    for(int i=0;i<n_data;i++)
+        model[i] = model[i] * (sf[i] / s * n_data);
 }
 
 void Decay::compute_decay(
@@ -259,7 +272,9 @@ void Decay::compute_decay(
         double total_area,
         bool use_amplitude_threshold,
         double amplitude_threshold,
-        bool add_pile_up
+        bool add_pile_up,
+        double instrument_dead_time,
+        double acquisition_time
 ){
 #if VERBOSE
     std::clog << "compute_decay..." << std::endl;
@@ -315,6 +330,15 @@ void Decay::compute_decay(
             scatter_areal_fraction,
             start, stop
     );
+
+    if(add_pile_up){
+        Decay::add_pile_up(
+                decay_irf, n_decay_irf,
+                data, n_data,
+                excitation_period, instrument_dead_time,
+                acquisition_time
+        );
+    }
 
     // scale model function
     double scale = 1.0;
