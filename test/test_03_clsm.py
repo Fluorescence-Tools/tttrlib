@@ -7,14 +7,8 @@ import numpy as np
 
 print("Test: ", __file__)
 
-sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
+
 sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
-
-ht3_filename_img = './data/imaging/pq/ht3/crn_clv_img.ht3'
-ht3_filename_irf = './data/imaging/pq/ht3/crn_clv_mirror.ht3'
-
-
 sp8_reading_parameter = {
     "marker_frame_start": [4, 6],
     "marker_line_start": 1,
@@ -25,6 +19,9 @@ sp8_reading_parameter = {
     "reading_routine": 'SP8',
 }
 
+ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+ht3_filename_img = './data/imaging/pq/ht3/crn_clv_img.ht3'
+ht3_filename_irf = './data/imaging/pq/ht3/crn_clv_mirror.ht3'
 ht3_reading_parameter = {
     "marker_frame_start": [4],
     "marker_line_start": 1,
@@ -34,6 +31,7 @@ ht3_reading_parameter = {
     "reading_routine": 'default'
 }
 
+sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
 sp5_reading_parameter = {
     "marker_frame_start": [4, 6],
