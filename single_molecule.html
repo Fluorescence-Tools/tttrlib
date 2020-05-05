@@ -16,7 +16,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Fluorescence correlation" href="correlation.html" />
-    <link rel="prev" title="Image scanning" href="imaging.html" />
+    <link rel="prev" title="Imaging" href="imaging.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -57,7 +57,7 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tttr_objects.html">TTTR-Objects</a></li>
-<li class="toctree-l1"><a class="reference internal" href="imaging.html">Image scanning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imaging.html">Imaging</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Single Molecule</a></li>
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Fluorescence correlation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
@@ -103,7 +103,7 @@
               
                 
   <li>
-    <a href="imaging.html" title="Previous Chapter: Image scanning"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Image scanning</span>
+    <a href="imaging.html" title="Previous Chapter: Imaging"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Imaging</span>
     </a>
   </li>
   <li>
@@ -595,7 +595,9 @@ exponential decays. The <code class="docutils literal notranslate"><span class="
 decays, f(t), fluorescence intensity decay histograms, h(t), and to scores models
 against experimental decay histograms. The <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class handles typical artifacts
 encountered in fluorescence decays such as scattered light, constant backgrounds,
-convolutions with the instrument response function, pile-up artifacts, and more.</p>
+convolutions with the instrument response function <a class="bibtex reference internal" href="zreferences.html#oconnor-time-correlated-2012" id="id5">[OConnor12]</a>,
+pile-up artifacts <a class="bibtex reference internal" href="zreferences.html#coates-correction-1968" id="id6">[Coa68]</a>, differential non-linearity of the
+micro time channels <a class="bibtex reference internal" href="zreferences.html#becker-advanced-2005" id="id7">[Bec05]</a> and more.</p>
 <p>Below the basic usage of the <code class="docutils literal notranslate"><span class="pre">Decay</span></code> class is outlined with a few application
 examples. These examples can be used as starting point for custom analysis pipelines,
 e.g. for burst-wise single-molecule analysis, pixel-wise FLIM analysis or analysis
