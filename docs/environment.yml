@@ -7,9 +7,8 @@ dependencies:
     - tttrlib
     # the versions are all pinned to reduce the memory load by conda
     # without that, the docs would not build on read the docs
+    - sphinx=3.0.3
     - numba=0.48.0
-    # breathe does not work with sphinx 3.0.0 (May 2020) fix to 2.4.4
-    - sphinx=2.4.4
     - scipy=1.4.1
     - phconvert=0.9
     - blas=1.0
@@ -75,4 +74,4 @@ dependencies:
       - sphinxcontrib-bibtex==1.0.0
       - sphinxcontrib-websupport==1.2.1
       - urllib3==1.25.8
-      - breathe==4.14.1
+      - breathe==4.18.0
