@@ -571,7 +571,9 @@ exponential decays. The ``Decay`` class of ``tttrlib`` computes models for fluor
 decays, f(t), fluorescence intensity decay histograms, h(t), and to scores models
 against experimental decay histograms. The ``Decay`` class handles typical artifacts
 encountered in fluorescence decays such as scattered light, constant backgrounds,
-convolutions with the instrument response function, pile-up artifacts, and more.
+convolutions with the instrument response function :cite:`oconnor_time-correlated_2012`,
+pile-up artifacts :cite:`coates_correction_1968`, differential non-linearity of the
+micro time channels :cite:`becker_advanced_2005` and more.
 
 Below the basic usage of the ``Decay`` class is outlined with a few application
 examples. These examples can be used as starting point for custom analysis pipelines,
