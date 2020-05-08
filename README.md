@@ -27,8 +27,10 @@ Scilab and R. Currently, tttrlib is wrapped for the use in Python.
 
 ![tttrlib FLIM][3]
 
-tttrlib is NOT intended as ready-to-use software for specific application 
-purposes.
+tttrlib is a library that facilitates the interaction with TTTR data that can be 
+used to develop data analysis pipelines e.g. for single-molecule and image 
+spectroscopy. tttrlib is not intended as end-user software for specific application 
+purposes.  
 
 ## Supported file formats
 ### PicoQuant (PQ)

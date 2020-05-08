@@ -90,6 +90,13 @@ class Tests(unittest.TestCase):
                 data.__repr__()
             )
 
+    def test_header(self):
+        data = tttrlib.TTTR(ptu_hh_t3_filename, 'PTU')
+        header = data.header
+        self.assertEqual(
+            72, len(header.data.keys())
+        )
+
     def test_slicing(self):
         # single element
         d = data[0]

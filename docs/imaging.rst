@@ -840,10 +840,12 @@ fluorescence decay containing all photons of the 30 frames is shown below.
 
 Creating CLSM images
 --------------------
+General reading framework
+^^^^^^^^^^^^^^^^^^^^^^^^^
 When a new ``CLSMImage`` object is created, the markers are processed. If the
 number of lines is set to zero the number of pixels per line is set to the number
 of lines. To create CLSM image the TTTR object needs to be provided in addition
-to the markers.
+to the markers. The markers can be manually specified.
 
 .. code-block:: python
 
@@ -930,8 +932,33 @@ a mean micro time image, a 3D map that contains a fluorescence decay histogram a
 every pixel, or an 3D map that contains a correlation function that is computed over
 the photons in each pixel.
 
-Copying CLSM images
--------------------
+Reading PTU files
+^^^^^^^^^^^^^^^^^
+`PicoQuant <https://www.picoquant.com/>`_ PTU files can contain additional image
+information in the file file header that inform the frame marker, the line marker.
+This data can be accessed by ``data`` attribute of the ``TTTR``'s object header.
+Thus, for ``CLSMImage`` instances of PTU files can be created by
+
+.. code-block::python
+
+    tttr_data = tttrlib.TTTR('./data/imaging/pq/Microtime200_HH400/beads.ptu', 'PTU')
+    clsm = tttrlib.CLSMImage(tttr_data)
+
+
+The PTU files of the Leica SP5 and the Leica SP8 use a non-standard way of encoding
+line markers. Thus the reading routing needs to be specified. For other CLSM PTU
+data ``CLSMImage`` instances can be directly created
+
+.. code-block::python
+
+    tttr_data = tttrlib.TTTR('./data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
+    clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = 'SP5')
+
+PTU files can also be opened by manually providing the marker parameters as
+described above.
+
+Copying CLSMImage instances
+---------------------------
 A new ``CLSMImage`` object can be created using an existing ``CLSMImage`` object
 as a template.
 
@@ -955,4 +982,35 @@ as a template.
 When creating a ``CLSMImage`` object using another ``CLSMImage`` object as a source
 the frames, lines, and pixels are copied. When the optional parameter `fill` is
 set the tttr indices of the photons are copied as well.
+
+Exporting as TIFF
+-----------------
+All representations of the FLIM data are `numpy <https://numpy.org/>`_ arrays that
+can be written of standard image data formats for instance using the input/output
+functionality of `OpenCV <https://opencv.org/>`_ or the library `tiffile <https://pypi.org/project/tifffile/>`_
+
+The sample code below opens a PTU dataset from a Leica SP5 and writes an intensity
+image to a TIFF image stack.
+
+.. code-block::python
+
+    import tifffile
+
+    tttr_data = tttrlib.TTTR('./data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
+    clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = 'SP5')
+    output_file = 'intensity_image.tif'
+    img_stack = clsm.intensity
+    img_stack = np.array([i.T for i in img_stack])
+    img_stack *= (2 ** 16 - 1) // np.max(img_stack)
+    img_stack = img_stack.astype(dtype=np.uint16)
+    with tifffile.TiffWriter(output_file, imagej=True) as tif:
+        tif.save(img_stack)
+
+Other representations can be saved accordingly as TIFF images.
+
+.. note::
+
+    Many representations use float, doubles, or long integers (64bit) that are
+    often not fully supported by standard image formats. Thus, make sure that the
+    images are properly scaled and quantized before saving.
 

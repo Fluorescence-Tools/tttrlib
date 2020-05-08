@@ -523,7 +523,7 @@ public:
                 (_data.size() != _weights.size()) ||
                 (_data.size() != _irf.size())
                 ) {
-            std::cerr << "ERROR: The size of the data, time, weight array, or "
+            std::clog << "WARNING: The size of the data, time, weight array, or "
                          "irf do not match" << std::endl;
         }
     }

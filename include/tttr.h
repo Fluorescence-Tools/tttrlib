@@ -685,10 +685,10 @@ class TTTRRange {
 public:
 
     /// The start index of the TTTRRange
-    int _start = 0;
+    int _start = -1;
 
     /// The stop index of the TTTRRange
-    int _stop = 0;
+    int _stop = -1;
 
     /// The start time of the TTTRRange
     unsigned int _start_time = 0;

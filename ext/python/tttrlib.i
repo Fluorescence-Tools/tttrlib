@@ -61,7 +61,6 @@ import_array();
 /// Generic inplace arrays
 %apply(double* INPLACE_ARRAY1, int DIM1) {(double* inplace_output, int n_output)}
 
-
 // Templates
 %template(VectorDouble) std::vector<double>;
 %template(VectorUint64) std::vector<unsigned long long>;

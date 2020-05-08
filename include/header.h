@@ -264,10 +264,7 @@ public:
      * @param tttr_container_type the container type
      *
      */
-    Header(
-            std::FILE *fpin,
-            int tttr_container_type
-            );
+    Header(std::FILE *fpin, int tttr_container_type);
     ~Header();
 
     ///

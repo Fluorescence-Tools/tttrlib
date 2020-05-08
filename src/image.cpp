@@ -151,6 +151,7 @@ CLSMImage::CLSMImage (
             fill_pixels(tttr_data, channels, false);
         }
     }
+    if(macro_time_shift!=0) shift_line_start(macro_time_shift);
 }
 
 void CLSMImage::define_pixels_in_lines() {
@@ -345,6 +346,16 @@ void CLSMImage::initialize_default(
             auto frame = frames.back();
             // Line marker
             if(tttr_data->routing_channels[i_event] == marker_line_start) {
+                // take care of cases where no correct line stop was given
+                // use line start as line stop
+                if(!frame->lines.empty()){
+                    auto line = frame->lines.back();
+                    if(line->_stop<0){
+                        line->_stop = i_event;
+                        line->update(tttr_data, false);
+                    }
+                }
+                // now actually add a new line
                 frame->append(new CLSMLine(i_event));
             } else if(tttr_data->routing_channels[i_event] == marker_line_stop){
                 auto line = frame->lines.back();
@@ -538,6 +549,7 @@ void CLSMImage::get_fluorescence_decay_image(
 void CLSMImage::get_fcs_image(
         float** output, int* dim1, int* dim2, int* dim3, int* dim4,
         TTTR* tttr,
+        CLSMImage* clsm_other,
         const std::string correlation_method,
         const int n_bins, const int n_casc,
         const bool stack_frames,
@@ -561,22 +573,31 @@ void CLSMImage::get_fcs_image(
     std::clog << "-- Correlating... " << n_corr << std::endl;
 #endif
     size_t o_frame = 0;
-#pragma omp parallel for default(none) shared(tttr, o_frame, t)
+#pragma omp parallel for default(none) shared(tttr, o_frame, t, clsm_other)
     for(int i_frame=0; i_frame < n_frames; i_frame++){
         auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
         auto frame = frames[i_frame];
+        auto other_frame = clsm_other->frames[i_frame];
         for(int i_line=0; i_line < n_lines; i_line++){
             auto line = frame->lines[i_line];
+            auto other_line = other_frame->lines[i_line];
             for(int i_pixel=0; i_pixel < n_pixel; i_pixel++){
                 auto pixel = line->pixels[i_pixel];
-                if((pixel->_tttr_indices.size() >= min_photons)){
+                auto other_pixel = other_line->pixels[i_pixel];
+                if((pixel->_tttr_indices.size() > min_photons) && (other_pixel->_tttr_indices.size() > min_photons)){
                     auto tttr_1 = TTTR(
                             *tttr,
                             pixel->_tttr_indices.data(),
                             pixel->_tttr_indices.size(),
                             false
                     );
-                    corr.set_tttr(&tttr_1, &tttr_1);
+                    auto tttr_2 = TTTR(
+                            *tttr,
+                            other_pixel->_tttr_indices.data(),
+                            other_pixel->_tttr_indices.size(),
+                            false
+                    );
+                    corr.set_tttr(&tttr_1, &tttr_2);
                     double* correlation; int temp;
                     if(!normalized_correlation){
                         corr.get_corr(&correlation, &temp);

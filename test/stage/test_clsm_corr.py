@@ -56,55 +56,79 @@ def compute_frc(
     density = f1f2_r / np.sqrt(f12_r * f22_r)
     return density, bin_edges
 
-
-filename = '../../test/data/imaging/pq/ht3/crn_clv_img.ht3'
-data = tttrlib.TTTR(filename, 'HT3')
-line_factor = 16
+filename = '../../test/data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+data = tttrlib.TTTR(filename, 'PTU')
+line_factor = 2
 reading_parameter = {
     "tttr_data": data,
-    "marker_frame_start": [4],
+    "marker_frame_start": [4, 6],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 15,
+    # if zero the number of pixels is the set to the number of lines
+    "n_pixel_per_line": 512 * line_factor,
+    "reading_routine": 'SP8',
+    "channels": [1],
+    "fill": True
+}
+
+filename = '../../test/data/imaging/leica/sp5/convolaria_1.ptu'
+data = tttrlib.TTTR(filename, 'PTU')
+line_factor = 0.25
+reading_parameter = {
+    "tttr_data": data,
+    "marker_frame_start": [4, 6],
     "marker_line_start": 1,
     "marker_line_stop": 2,
     "marker_event_type": 1,
-    "n_pixel_per_line": 256 * line_factor,
-    "reading_routine": 'default',
-    "channels": [0, 1],
+    # if zero the number of pixels is the set to the number of lines
+    "n_pixel_per_line": int(512 * line_factor),
+    "reading_routine": 'SP5',
+    "channels": [0],
     "fill": True
 }
-clsm_image = tttrlib.CLSMImage(**reading_parameter)
+
+
+clsm = tttrlib.CLSMImage(**reading_parameter)
+clsm_other = tttrlib.CLSMImage(
+    **reading_parameter,
+    macro_time_shift=90
+)
 
 fcs_parameter = {
     'tttr': data,
-    'n_bins': 10,
+    'clsm_other': clsm_other,
+    'n_bins': 100,
     'n_casc': 1,
     'stack_frames': False,
     'normalized_correlation': False,
-    'min_photons': 3
+    'min_photons': 2
 }
-x_min, x_max = 17 * line_factor, 30 * line_factor
-y_min, y_max = 90+50, 200-40
+fcs_image = clsm.get_fcs_image(**fcs_parameter)
+
+
+x_min, x_max = 0, int(512 * line_factor) #150 * line_factor, 300 * line_factor
+y_min, y_max = 0, 512 # 200, 300
+
+fcs_frame = 11
+im1 = fcs_image[::2].sum(axis=0)[y_min:y_max, x_min:x_max, fcs_frame]
+im2 = fcs_image[1::2].sum(axis=0)[y_min:y_max, x_min:x_max, fcs_frame]
+frc_fcs, frc_bins = compute_frc(im1, im2)
+img = clsm.intensity
+im1 = img[::2].sum(axis=0)[y_min:y_max, x_min:x_max]
+im2 = img[1::2].sum(axis=0)[y_min:y_max, x_min:x_max]
+frc_int, frc_bins = compute_frc(im1, im2)
 
 fig, ax = p.subplots(2, 2, sharex=False, sharey=False)
 ax[0, 0].set_title('Average pixel ACF')
 ax[1, 0].set_title('FRC of region')
 ax[0, 1].set_title('Intensity')
 ax[1, 1].set_title('Correlation amplitudes')
-
-fcs_image = clsm_image.get_fcs_image(**fcs_parameter)
-im1 = fcs_image[::2].sum(axis=0)[y_min:y_max, x_min:x_max, 4]
-im2 = fcs_image[1::2].sum(axis=0)[y_min:y_max, x_min:x_max, 4]
-frc, frc_bins = compute_frc(im1, im2)
-ax[1, 0].plot(frc, label="FCS")
-
-img = clsm_image.intensity
-im1 = img[::2].sum(axis=0)[y_min:y_max, x_min:x_max]
-im2 = img[1::2].sum(axis=0)[y_min:y_max, x_min:x_max]
-frc, frc_bins = compute_frc(im1, im2)
-ax[1, 0].plot(frc, label="Int")
-
-ax[0, 0].plot(fcs_image.mean(axis=(0, 1, 2)))
-ax[0, 1].imshow(clsm_image.intensity.mean(axis=0)[y_min:y_max, x_min:x_max], aspect=line_factor)
-ax[1, 1].imshow(fcs_image.mean(axis=0)[y_min:y_max, x_min:x_max, 4], aspect=line_factor)
+ax[1, 0].plot(frc_fcs, label="FCS")
+ax[1, 0].plot(frc_int, label="Int")
+ax[0, 0].plot(fcs_image.mean(axis=(0, 1, 2)), 'o-')
+ax[0, 1].imshow(clsm.intensity.mean(axis=0)[y_min:y_max, x_min:x_max], aspect=line_factor)
+ax[1, 1].imshow(fcs_image.mean(axis=0)[y_min:y_max, x_min:x_max, fcs_frame], aspect=line_factor)
 
 ax[1, 0].legend()
 p.show()

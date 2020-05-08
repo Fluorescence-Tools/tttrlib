@@ -2,6 +2,7 @@
 #define TTTRLIB_IMAGE_H
 
 #include <omp.h>
+#include "fftw3.h"
 #include <stdlib.h>
 #include <tttr.h>
 #include <vector>
@@ -159,6 +160,11 @@ public:
      */
     void append(CLSMLine * line);
 
+    /*!
+     *
+     * @param i_line the line number
+     * @return a pointer to the line with requested number
+     */
     CLSMLine* operator[](unsigned int i_line){
         return lines[i_line];
     }
@@ -258,6 +264,7 @@ public:
     void get_fcs_image(
         float** output, int* dim1, int* dim2, int* dim3, int* dim4,
         TTTR* tttr,
+        CLSMImage* clsm_other,
         std::string correlation_method = "default",
         int n_bins = 50,
         int n_casc = 1,
@@ -494,7 +501,7 @@ public:
             CLSMImage* source = nullptr,
             bool fill = false,
             std::vector<int> channels = std::vector<int>(),
-            bool skip_before_first_frame_marker=true
+            bool skip_before_first_frame_marker=false
     );
 
     /// Destructor
@@ -521,6 +528,74 @@ public:
         return frames[i_frame];
     }
 
+    void compute_ics(
+        double** output, int* dim1, int* dim2, int* dim3,
+        TTTR* tttr_data,
+        bool stack_frames=false,
+        int min_photons = 2,
+        std::string mode = "direct"
+    ){
+#if VERBOSE
+        std::clog << "compute_ics..." << std::endl;
+#endif
+        int o_frames = stack_frames? 1: n_frames;
+        auto t = (double*) calloc(o_frames * n_lines * n_pixel, sizeof(double));
+        if(mode == "fft"){
+            fftw_complex *in, *out;
+            fftw_plan p_forward, p_backward;
+            int N = n_lines * n_pixel;
+            in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+            out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+            p_forward = fftw_plan_dft_2d(
+                    n_lines, n_pixel,
+                    in, out,
+                    FFTW_FORWARD, FFTW_MEASURE
+            );
+            p_backward = fftw_plan_dft_2d(
+                    n_lines, n_pixel,
+                    in, out,
+                    FFTW_BACKWARD, FFTW_MEASURE
+            );
+            for (int i_frame = 0; i_frame < n_frames; i_frame++) {
+                auto frame = frames[i_frame];
+                double mean_intensity = 0.0;
+                // copy data in input
+                for (int l = 0; l < n_lines; l++) {
+                    auto line = frame->lines[l];
+                    for (int p = 0; p < n_pixel; p++) {
+                        int n_pixel_kl = line->pixels[p]->_tttr_indices.size();
+                        in[l * (n_pixel) + p][0] = n_pixel_kl;
+                        mean_intensity += n_pixel_kl;
+                    }
+                }
+                fftw_execute(p_forward);
+                // make product of FFT(img) * conj(FFT(img))
+                for(int n=0; n<N; n++){
+                    in[n][0] = out[n][0] * out[n][0] + out[n][1] * out[n][1];
+                    in[n][1] = 0;
+                }
+                // make backward transform
+                fftw_execute(p_backward);
+
+                // copy to results and normalize
+                double mean_intensity_2 = mean_intensity * mean_intensity;
+                for (int l = 0; l < n_lines; l++) {
+                    int line_pos = l * n_pixel;
+                    for (int p = 0; p < n_pixel; p++) {
+                        int pixel_pos = line_pos + p;
+                        t[pixel_pos] = out[pixel_pos][0]; // / mean_intensity_2 - 1.0;
+                    }
+                }
+            }
+            fftw_destroy_plan(p_forward);
+            fftw_destroy_plan(p_backward);
+            fftw_free(in); fftw_free(out);
+        }
+        *dim1 = (int) o_frames;
+        *dim2 = (int) n_lines;
+        *dim3 = (int) n_pixel;
+        *output = t;
+    }
 };
 
 

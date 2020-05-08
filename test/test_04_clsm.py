@@ -11,6 +11,10 @@ print("Test: ", __file__)
 sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
 sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+pq_test_files = [
+    './data/imaging/pq/Microtime200_HH400/beads.ptu',
+    './data/imaging/pq/Microtime200_TH260/beads.ptu'
+]
 
 sp8_reading_parameter = {
     "marker_frame_start": [4, 6],
@@ -27,7 +31,8 @@ ht3_reading_parameter = {
     "marker_line_stop": 2,
     "marker_event_type": 1,
     "n_pixel_per_line": 256,
-    "reading_routine": 'default'
+    "reading_routine": 'default',
+    "skip_before_first_frame_marker": True
 }
 
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
@@ -117,3 +122,8 @@ class TestCLSM(unittest.TestCase):
             float(np.sum(clsm_image_1.intensity - clsm_image_2.intensity)),
             0.0
         )
+
+    def test_open_clsm_ptu_read_header(self):
+        for ptu_file in pq_test_files:
+            data = tttrlib.TTTR(ptu_file, 'PTU')
+            clsm = tttrlib.CLSMImage(data)

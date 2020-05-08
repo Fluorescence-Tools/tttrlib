@@ -28,7 +28,8 @@ ht3_reading_parameter = {
     "marker_line_stop": 2,
     "marker_event_type": 1,
     "n_pixel_per_line": 256,
-    "reading_routine": 'default'
+    "reading_routine": 'default',
+    "skip_before_first_frame_marker": True
 }
 
 sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
