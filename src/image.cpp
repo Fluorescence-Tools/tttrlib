@@ -886,3 +886,73 @@ void CLSMImage::get_mean_lifetime_image(
     *dim3 = (int) n_pixel;
     *output = t;
 }
+
+
+void CLSMImage::compute_ics(
+        double** output, int* dim1, int* dim2, int* dim3,
+        TTTR* tttr_data
+){
+#if VERBOSE
+    std::clog << "compute_ics..." << std::endl;
+#endif
+    auto t = (double*) calloc(n_frames * n_lines * n_pixel, sizeof(double));
+    fftw_complex *in, *out;
+    fftw_plan p_forward, p_backward;
+    int N = n_lines * n_pixel;
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    p_forward = fftw_plan_dft_2d(
+            n_lines, n_pixel,
+            in, out,
+            FFTW_FORWARD, FFTW_MEASURE
+    );
+    p_backward = fftw_plan_dft_2d(
+            n_lines, n_pixel,
+            in, out,
+            FFTW_BACKWARD, FFTW_MEASURE
+    );
+    for (int i_frame = 0; i_frame < n_frames; i_frame++) {
+        auto frame = frames[i_frame];
+
+        // copy data in input and compute integral of intensity
+        double total_intensity = 0.0;
+        for (int l = 0; l < n_lines; l++) {
+            auto line = frame->lines[l];
+            for (int p = 0; p < n_pixel; p++) {
+                int n_pixel_kl = line->pixels[p]->_tttr_indices.size();
+                in[l * (n_pixel) + p][0] = n_pixel_kl;
+                total_intensity += n_pixel_kl;
+            }
+        }
+        fftw_execute(p_forward);
+        // make product of FFT(img) * conj(FFT(img))
+        for(int n=0; n<N; n++){
+            in[n][0] = out[n][0] * out[n][0] + out[n][1] * out[n][1];
+            in[n][1] = 0;
+        }
+        // make backward transform
+        fftw_execute(p_backward);
+
+        // copy to results and normalize
+        int frame_pos = i_frame * (n_lines * n_pixel);
+        double total_intensity_2 = total_intensity * total_intensity;
+        for (int l = 0; l < n_lines; l++) {
+            int line_pos = frame_pos + l * n_pixel;
+            for (int p = 0; p < n_pixel; p++) {
+                int pixel_pos = line_pos + p;
+                // We need to normalize by the mean intensity and the number of
+                // pixels. However, as forward and backward FFT of fftw3 introduces
+                // a factor of N=nx*ny it is enough to divide by total_intensity_2.
+                t[pixel_pos] = out[pixel_pos][0] / total_intensity_2 - 1.0;
+            }
+        }
+    }
+    fftw_destroy_plan(p_forward);
+    fftw_destroy_plan(p_backward);
+    fftw_free(in); fftw_free(out);
+
+    *dim1 = (int) n_frames;
+    *dim2 = (int) n_lines;
+    *dim3 = (int) n_pixel;
+    *output = t;
+}

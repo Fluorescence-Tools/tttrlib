@@ -171,15 +171,20 @@ public:
 };
 
 
-class CLSMImage{
+class CLSMImage {
     friend class Correlator;
+
     friend class CLSMFrame;
+
     friend class CLSMLine;
+
     friend class CLSMPixel;
 
 private:
-    std::vector<CLSMFrame*> frames;
+    std::vector<CLSMFrame *> frames;
+
     void remove_incomplete_frames();
+
     void define_pixels_in_lines();
 
 protected:
@@ -201,8 +206,8 @@ protected:
      * before the first frame marker are ignored.
      */
     void initialize_default(
-            TTTR* tttr_data,
-            bool skip_before_first_frame_marker=true
+            TTTR *tttr_data,
+            bool skip_before_first_frame_marker = true
     );
 
     /*!
@@ -244,7 +249,7 @@ public:
      * the pixels
      */
     void fill_pixels(
-            TTTR* tttr_data,
+            TTTR *tttr_data,
             std::vector<int> channels,
             bool clear_pixel = true
     );
@@ -262,15 +267,15 @@ public:
      * @param stack_frames
      */
     void get_fcs_image(
-        float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-        TTTR* tttr,
-        CLSMImage* clsm_other,
-        std::string correlation_method = "default",
-        int n_bins = 50,
-        int n_casc = 1,
-        bool stack_frames = false,
-        bool normalized_correlation = false,
-        int min_photons = 2
+            float **output, int *dim1, int *dim2, int *dim3, int *dim4,
+            TTTR *tttr,
+            CLSMImage *clsm_other,
+            std::string correlation_method = "default",
+            int n_bins = 50,
+            int n_casc = 1,
+            bool stack_frames = false,
+            bool normalized_correlation = false,
+            int min_photons = 2
     );
 
     /*!
@@ -280,12 +285,12 @@ public:
      */
     void clear_pixels();
 
-    std::vector<CLSMFrame*> get_frames(){
+    std::vector<CLSMFrame *> get_frames() {
         return frames;
     }
 
     void get_intensity_image(
-            unsigned int** output, int* dim1, int* dim2, int* dim3
+            unsigned int **output, int *dim1, int *dim2, int *dim3
     );
 
     /*!
@@ -305,10 +310,10 @@ public:
      * @param stack_frames if True the frames are stacked.
      */
     void get_fluorescence_decay_image(
-            TTTR* tttr_data,
-            unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4,
-            int micro_time_coarsening=1,
-            bool stack_frames=false
+            TTTR *tttr_data,
+            unsigned char **output, int *dim1, int *dim2, int *dim3, int *dim4,
+            int micro_time_coarsening = 1,
+            bool stack_frames = false
     );
 
     /*!
@@ -328,9 +333,9 @@ public:
      * @param stack_frames if True the frames are stacked.
      */
     void get_average_decay_of_pixels(
-            TTTR* tttr_data,
-            uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3,
-            unsigned int** output, int* dim1, int* dim2,
+            TTTR *tttr_data,
+            uint8_t *selection, int d_selection_1, int d_selection_2, int d_selection_3,
+            unsigned int **output, int *dim1, int *dim2,
             int tac_coarsening,
             bool stack_frames
     );
@@ -354,10 +359,10 @@ public:
      * mean arrival time).
      */
     void get_mean_micro_time_image(
-            TTTR* tttr_data,
-            double** output, int* dim1, int* dim2, int* dim3,
-            int minimum_number_of_photons=2,
-            bool stack_frames=false
+            TTTR *tttr_data,
+            double **output, int *dim1, int *dim2, int *dim3,
+            int minimum_number_of_photons = 2,
+            bool stack_frames = false
     );
 
     /*!
@@ -381,12 +386,12 @@ public:
      * mean arrival time).
      */
     void get_phasor_image(
-            float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-            TTTR* tttr_data,
-            TTTR *tttr_irf=nullptr,
-            double frequency=-1,
-            int minimum_number_of_photons=2,
-            bool stack_frames=false
+            float **output, int *dim1, int *dim2, int *dim3, int *dim4,
+            TTTR *tttr_data,
+            TTTR *tttr_irf = nullptr,
+            double frequency = -1,
+            int minimum_number_of_photons = 2,
+            bool stack_frames = false
     );
 
 
@@ -411,27 +416,27 @@ public:
      * @param m1_irf is the first moment of the IRF (optional, default=1)
      */
     void get_mean_lifetime_image(
-            TTTR* tttr_data,
-            double** output, int* dim1, int* dim2, int* dim3,
-            int minimum_number_of_photons= 3,
-            TTTR* tttr_irf= nullptr,
-            double m0_irf= 1.0, double m1_irf= 1.0,
-            bool stack_frames=false
+            TTTR *tttr_data,
+            double **output, int *dim1, int *dim2, int *dim3,
+            int minimum_number_of_photons = 3,
+            TTTR *tttr_irf = nullptr,
+            double m0_irf = 1.0, double m1_irf = 1.0,
+            bool stack_frames = false
     );
 
 
     /// Get the number of frames in the CLSM image
-    int get_n_frames() const{
+    int get_n_frames() const {
         return n_frames;
     }
 
     /// Get the number of lines per frame in the CLSMImage
-    int get_n_lines() const{
+    int get_n_lines() const {
         return n_lines;
     }
 
     /// Get the number of pixels per line a frame of the CLSMImage
-    int get_n_pixel() const{
+    int get_n_pixel() const {
         return n_pixel;
     }
 
@@ -443,17 +448,17 @@ public:
      * of the pixels are copied.
      * @return
      */
-    void copy(const CLSMImage& p2, bool fill=false);
+    void copy(const CLSMImage &p2, bool fill = false);
 
     /*!
      * Append a frame to the CLSM image.
      *
      * @param frame
      */
-    void append(CLSMFrame* frame);
+    void append(CLSMFrame *frame);
 
     /// Copy constructor
-    CLSMImage(const CLSMImage& p2, bool fill=false);
+    CLSMImage(const CLSMImage &p2, bool fill = false);
 
     /*!
      *
@@ -497,17 +502,17 @@ public:
             int marker_event_type = 0,
             int n_pixel_per_line = 0,
             std::string reading_routine = "default",
-            long long macro_time_shift=0,
-            CLSMImage* source = nullptr,
+            long long macro_time_shift = 0,
+            CLSMImage *source = nullptr,
             bool fill = false,
             std::vector<int> channels = std::vector<int>(),
-            bool skip_before_first_frame_marker=false
+            bool skip_before_first_frame_marker = false
     );
 
     /// Destructor
-    ~CLSMImage(){
-        for(auto frame : frames){
-            delete(frame);
+    ~CLSMImage() {
+        for (auto frame : frames) {
+            delete (frame);
         }
     }
 
@@ -524,79 +529,14 @@ public:
             int macro_time_shift
     );
 
-    CLSMFrame* operator[](unsigned int i_frame){
+    CLSMFrame *operator[](unsigned int i_frame) {
         return frames[i_frame];
-    }
+    };
 
     void compute_ics(
-        double** output, int* dim1, int* dim2, int* dim3,
-        TTTR* tttr_data,
-        bool stack_frames=false,
-        int min_photons = 2,
-        std::string mode = "direct"
-    ){
-#if VERBOSE
-        std::clog << "compute_ics..." << std::endl;
-#endif
-        int o_frames = stack_frames? 1: n_frames;
-        auto t = (double*) calloc(o_frames * n_lines * n_pixel, sizeof(double));
-        if(mode == "fft"){
-            fftw_complex *in, *out;
-            fftw_plan p_forward, p_backward;
-            int N = n_lines * n_pixel;
-            in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-            out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-            p_forward = fftw_plan_dft_2d(
-                    n_lines, n_pixel,
-                    in, out,
-                    FFTW_FORWARD, FFTW_MEASURE
-            );
-            p_backward = fftw_plan_dft_2d(
-                    n_lines, n_pixel,
-                    in, out,
-                    FFTW_BACKWARD, FFTW_MEASURE
-            );
-            for (int i_frame = 0; i_frame < n_frames; i_frame++) {
-                auto frame = frames[i_frame];
-                double mean_intensity = 0.0;
-                // copy data in input
-                for (int l = 0; l < n_lines; l++) {
-                    auto line = frame->lines[l];
-                    for (int p = 0; p < n_pixel; p++) {
-                        int n_pixel_kl = line->pixels[p]->_tttr_indices.size();
-                        in[l * (n_pixel) + p][0] = n_pixel_kl;
-                        mean_intensity += n_pixel_kl;
-                    }
-                }
-                fftw_execute(p_forward);
-                // make product of FFT(img) * conj(FFT(img))
-                for(int n=0; n<N; n++){
-                    in[n][0] = out[n][0] * out[n][0] + out[n][1] * out[n][1];
-                    in[n][1] = 0;
-                }
-                // make backward transform
-                fftw_execute(p_backward);
+            double **output, int *dim1, int *dim2, int *dim3,
+            TTTR *tttr_data
+    );
 
-                // copy to results and normalize
-                double mean_intensity_2 = mean_intensity * mean_intensity;
-                for (int l = 0; l < n_lines; l++) {
-                    int line_pos = l * n_pixel;
-                    for (int p = 0; p < n_pixel; p++) {
-                        int pixel_pos = line_pos + p;
-                        t[pixel_pos] = out[pixel_pos][0]; // / mean_intensity_2 - 1.0;
-                    }
-                }
-            }
-            fftw_destroy_plan(p_forward);
-            fftw_destroy_plan(p_backward);
-            fftw_free(in); fftw_free(out);
-        }
-        *dim1 = (int) o_frames;
-        *dim2 = (int) n_lines;
-        *dim3 = (int) n_pixel;
-        *output = t;
-    }
 };
-
-
 #endif //TTTRLIB_IMAGE_H

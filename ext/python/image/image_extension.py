@@ -15,12 +15,12 @@ def __repr__(self):
 def __init__(
         self,
         tttr_data: tttrlib.TTTR = None,
-        reading_routine: str = 'default',
         marker_frame_start: int = None,
         marker_line_start: int = None,
         marker_line_stop: int = None,
         marker_event_type: int = 1,
         n_pixel_per_line: int = None,
+        reading_routine: str = 'default',
         skip_before_first_frame_marker: bool = False,
         **kwargs
 ):

@@ -14,7 +14,8 @@ reading_parameter = {
     "n_pixel_per_line": 256, # if zero n_pixel_per_line = n_lines
     "reading_routine": 'default',
     "fill": True,
-    "channels": channels
+    "channels": channels,
+    "skip_before_first_frame_marker": True
 }
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
 mask = imread("../../test/data/imaging/misc/clsm_mask.png").astype(np.uint8)

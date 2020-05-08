@@ -939,7 +939,7 @@ information in the file file header that inform the frame marker, the line marke
 This data can be accessed by ``data`` attribute of the ``TTTR``'s object header.
 Thus, for ``CLSMImage`` instances of PTU files can be created by
 
-.. code-block::python
+.. code-block:: python
 
     tttr_data = tttrlib.TTTR('./data/imaging/pq/Microtime200_HH400/beads.ptu', 'PTU')
     clsm = tttrlib.CLSMImage(tttr_data)
@@ -949,7 +949,7 @@ The PTU files of the Leica SP5 and the Leica SP8 use a non-standard way of encod
 line markers. Thus the reading routing needs to be specified. For other CLSM PTU
 data ``CLSMImage`` instances can be directly created
 
-.. code-block::python
+.. code-block:: python
 
     tttr_data = tttrlib.TTTR('./data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
     clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = 'SP5')
@@ -962,7 +962,7 @@ Copying CLSMImage instances
 A new ``CLSMImage`` object can be created using an existing ``CLSMImage`` object
 as a template.
 
-.. code-block::python
+.. code-block:: python
 
     tttr_data = tttrlib.TTTR('./test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
     reading_parameter = {
@@ -992,10 +992,9 @@ functionality of `OpenCV <https://opencv.org/>`_ or the library `tiffile <https:
 The sample code below opens a PTU dataset from a Leica SP5 and writes an intensity
 image to a TIFF image stack.
 
-.. code-block::python
+.. code-block:: python
 
     import tifffile
-
     tttr_data = tttrlib.TTTR('./data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
     clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = 'SP5')
     output_file = 'intensity_image.tif'

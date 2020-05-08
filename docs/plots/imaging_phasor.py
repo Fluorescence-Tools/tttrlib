@@ -14,7 +14,8 @@ ht3_reading_parameter = {
     "reading_routine": 'default',
     "channels": [0, 1],
     "fill": True,
-    "tttr_data": data
+    "tttr_data": data,
+    "skip_before_first_frame_marker": True
 }
 image = tttrlib.CLSMImage(**ht3_reading_parameter)
 frequency = 32.0  # MHz

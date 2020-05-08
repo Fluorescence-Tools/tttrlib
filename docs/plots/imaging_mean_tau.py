@@ -11,7 +11,8 @@ ht3_reading_parameter = {
     "marker_line_stop": 2,
     "marker_event_type": 1,
     "n_pixel_per_line": 256,
-    "reading_routine": 'default'
+    "reading_routine": 'default',
+    "skip_before_first_frame_marker": True
 }
 
 data = tttrlib.TTTR(filename, 'HT3')
@@ -51,7 +52,7 @@ masked_red = np.ma.masked_where(mask, red)
 masked_tau = np.ma.masked_where(mask, mean_tau_green.mean(axis=0))
 lg_sg_sr = np.log(masked_green / masked_red)
 
-fig, ax = p.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
+fig, ax = p.subplots(nrows=2, ncols=2)
 ax[0, 0].set_title('Green intensity')
 ax[0, 1].set_title('Red intensity')
 ax[1, 0].set_title('Mean green fl. lifetime')
