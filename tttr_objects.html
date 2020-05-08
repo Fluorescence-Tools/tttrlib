@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>TTTR-Objects &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/fix_rtd.css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Imaging" href="imaging.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">TTTR-Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="single_molecule.html">Single Molecule</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correlation.html">Fluorescence correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">TTTR-Objects</a><ul>
+<li><a class="reference internal" href="#general-features">General features</a><ul>
+<li><a class="reference internal" href="#comparison-other-software">Comparison other software</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-tttr-objects">Create TTTR objects</a><ul>
+<li><a class="reference internal" href="#opening-files">Opening files</a></li>
+<li><a class="reference internal" href="#slicing-subsets">Slicing / subsets</a></li>
+<li><a class="reference internal" href="#joining-tttrs">Joining TTTRs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-tttr-files">Writing TTTR-files</a></li>
+<li><a class="reference internal" href="#tttr-header">TTTR-Header</a><ul>
+<li><a class="reference internal" href="#accessing-header-data">Accessing header data</a></li>
+<li><a class="reference internal" href="#time-calibration-data">Time calibration data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#selections">Selections</a><ul>
+<li><a class="reference internal" href="#general">General</a></li>
+<li><a class="reference internal" href="#using-selections">Using selections</a></li>
+<li><a class="reference internal" href="#channel-selections">Channel selections</a></li>
+<li><a class="reference internal" href="#count-rate-selections">Count rate selections</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tttr-ranges">TTTR ranges</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="installation.html" title="Previous Chapter: Installation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Installation</span>
+    </a>
+  </li>
+  <li>
+    <a href="imaging.html" title="Next Chapter: Imaging"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Imaging &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/tttr_objects.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="tttr-objects">
+<h1>TTTR-Objects<a class="headerlink" href="#tttr-objects" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="general-features">
+<h2>General features<a class="headerlink" href="#general-features" title="Permalink to this headline">¶</a></h2>
+<p>The library tttrlib facilitates the work with files containing time-tagged time
+resolved photon streams by providing a vendor independent C++ application
+programming interface (API) for TTTR files that is wrapped by <a class="reference external" href="http://swig.org/">SWIG</a>
+(Simplified Wrapper and Interface Generator) for common scripting languages as
+Python as target languages and non-scripting languages such as C# and Java including
+Octave, Scilab and R. This way, the information provided by the TTTR files can be
+conveniently accessed without the need of converting the files to alternative
+vendor independent exchange file formats as <a class="reference external" href="http://photon-hdf5.github.io/">Photon-HDF</a>.</p>
+<p>Common in all TTTR file formats is that the photon data is stored as a stream
+of events. Every event contains information on the</p>
+<blockquote class="highlights">
+<div><ol class="arabic simple">
+<li><p>Macro time</p></li>
+<li><p>Micro time</p></li>
+<li><p>Channel number</p></li>
+<li><p>Event type</p></li>
+</ol>
+</div></blockquote>
+<p>The macro time counts the number of clock cycles since the start of the
+experiment. In TCSPC experiments the macro time is typically the number of
+excitation sync pulses of the laser exciting the sample. In continuous wave FCS
+experiments the macro time is often the number of clock cycles of an external
+clock. In time-correlated single photon counting (TCSPC) experiments, the micro
+time is usually the time when a photon was detected since the last excitation
+laser pulse (macro time). The channel number encodes the detector that detected
+the event (the photon). The event type is a special identifier that informs whether
+the registered event is a photon or an other event (like a line marker in confocal
+laser scanning microscopy).To save storage space and band-width most TTTR formats
+do not provide the macro time directly. Typically, instead of directly providing
+the macro time, the number of events since the last detected event are counted.</p>
+<p>For convenience, tttrlib provides a unified way of accessing the TTTR data
+irrespectively of the vendor data format via the class <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code>. In memory
+the TTTR data are handled by tttrlib in <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code> objects as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Macro time - 64 bit unsigned integer</p></li>
+<li><p>Micro time - 32 bit unsigned integer</p></li>
+<li><p>Channel number - 16 bit integer</p></li>
+<li><p>Event type - 16 bit integer</p></li>
+<li><p>TTTR Header data</p></li>
+</ol>
+</div></blockquote>
+<p>TTTR files are handled by creating <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code> objects that contain the TTTR
+data of the files. The data contained in the files can be accessed by the methods
+provided by the TTTR class. Opening and and accessing the information contained in
+TTTR files is demonstrated by the Python code examples shown below. A TTTR object
+provides four getter methods to access the data contained in the associated file.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
+<span class="n">micro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
+<span class="n">channel</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_channel</span><span class="p">()</span>
+<span class="n">event_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In Python, the getter methods return <a class="reference external" href="http://www.numpy.org/">NumPy</a> arrays.</p>
+<p>Some manufactures inject special markers that relate to “”events”” into the TTTR
+stream. Some manufacturers use the same routing channel numbers for markers and
+for photon detection channels. To distinguish photons from markers, <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>
+objects present for every event an additional event type specifier. The event
+types stored in TTTR objects help to distinguish such events from normal photon
+events. Currently the following events are considered.</p>
+<span id="event-types"></span><table class="colwidths-auto docutils align-default" id="id5">
+<caption><span class="caption-text">Table of event type identifiers</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Event type</p></th>
+<th class="head" colspan="2"><p>Event type number</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Photon event</p></td>
+<td colspan="2"><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Special event</p></td>
+<td colspan="2"><p>1</p></td>
+</tr>
+</tbody>
+</table>
+<p>Overflow events that are used in some file formats are implicitly considered
+when reading the files. The precise type of a special event depends often on
+channel number associated to the event. A use case for the decoding of imaging
+data is presented in the <span class="xref std std-ref">Imaging:Confocal laser scanning</span> section.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The units of the macro time and the micro time <em>depend</em> on the specific
+instrument settings.</p>
+</div>
+<p>In some TTTR containers certain record types contain no photon information but
+count for instance the number of overflows since the last TTTR record, the total
+number macro time, micro time, routing channel numbers is usually smaller than
+the number of TTTR records in a file. This can be inspected on the command line
+for a <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> build debug mode <a class="reference internal" href="installation.html#compliation"><span class="std std-ref">Compliation</span></a> when
+opening the BH-SPC132 file provided in the test folder.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>READING TTTR FILE
+-- Filename: ./data/BH/BH_SPC132.spc
+-- Container type: 2
+-- TTTR record type: 7
+-- Number of records: 299999
+-- Allocating memory for 299999 TTTR records.
+-- Resulting number of TTTR entries: 152312
+-- Used routing channels: 9, 8, 0, 1,
+</pre></div>
+</div>
+<p>In the example file contains 299999 entries whereas overall only 152312 TTTR
+entries are stored. The example file corresponds to a single-molecule measurement
+where a large fraction of the entries are overflow records.</p>
+<div class="section" id="comparison-other-software">
+<h3>Comparison other software<a class="headerlink" href="#comparison-other-software" title="Permalink to this headline">¶</a></h3>
+<p>The conversion tool <a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a>
+that can open and be process TTTR data. phconvert uses <a class="reference external" href="https://numba.pydata.org/">numba</a>
+to accelerate the interpretation of the binary data in TTTR files.</p>
+<p>(<a class="reference external" href="./plots/tttr_read_benchmark.py">Source code</a>)</p>
+<p>Overall <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> surpasses phconvert in performance. For cases where phconvert
+uses numba effectively, the reading performance of phconvert is comparable.
+<a class="reference external" href="https://phconvert.readthedocs.io/">phconvert</a> is a tool to convert original
+data into the <a class="reference external" href="https://www.photon-hdf5.org/">Photon-HDF5</a> format that intends
+to replace existing file formats by a HDF5 file format for down-stream processing,
+e.g., by <a class="reference external" href="https://fretbursts.readthedocs.io/en/latest/">Photon-HDF5</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is intended as a library that allows to process TTTR data without
+prior conversion.</p>
+</div>
+</div>
+<div class="section" id="create-tttr-objects">
+<h2>Create TTTR objects<a class="headerlink" href="#create-tttr-objects" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="opening-files">
+<h3>Opening files<a class="headerlink" href="#opening-files" title="Permalink to this headline">¶</a></h3>
+<p>In Python, first, the tttrlib module needs to be imported. Next, a TTTR object
+needs to be created. When creating a new TTTR object, the file name and the file
+type can be passed to the object’s constructor. If a TTTR object is created this
+way, by default, the data contained in the TTTR file is read into the TTTR object.
+The TTTR file type is either specified by a number or by passing a string to the
+TTTR object’s constructor.</p>
+<span id="supported-file-types"></span><table class="colwidths-auto docutils align-default" id="id6">
+<caption><span class="caption-text">Table of supported file types and corresponding identifiers</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>File type</p></th>
+<th class="head"><p>Number</p></th>
+<th class="head"><p>Identifier</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PicoQuant, PTU</p></td>
+<td><p>0</p></td>
+<td><p>‘PTU’</p></td>
+</tr>
+<tr class="row-odd"><td><p>PicoQuant, HT3</p></td>
+<td><p>1</p></td>
+<td><p>‘HT3’</p></td>
+</tr>
+<tr class="row-even"><td><p>Becker&amp;Hickl, SPC130</p></td>
+<td><p>2</p></td>
+<td><p>‘SPC-130’</p></td>
+</tr>
+<tr class="row-odd"><td><p>Becker&amp;Hickl, SPC630-256</p></td>
+<td><p>3</p></td>
+<td><p>‘SPC-630-256’</p></td>
+</tr>
+<tr class="row-even"><td><p>Becker&amp;Hickl, SPC630-4096</p></td>
+<td><p>4</p></td>
+<td><p>‘SPC-630-4096’</p></td>
+</tr>
+<tr class="row-odd"><td><p>Photon-HDF5</p></td>
+<td><p>5</p></td>
+<td><p>‘PHOTON-HDF5’</p></td>
+</tr>
+</tbody>
+</table>
+<p>The two different approaches of initializing TTTR objects. A TTTR object that
+contains the data in a TTTR file can be initialized by the filename and the
+data type as specified in above (see <a class="reference internal" href="#supported-file-types"><span class="std std-ref">Table of supported file types and corresponding identifiers</span></a>). Both
+Alternatively, TTTR objects are initialized by the filename and the file type
+identifier as displayed in the table above (see <a class="reference internal" href="#supported-file-types"><span class="std std-ref">Table of supported file types and corresponding identifiers</span></a>).
+Both approaches are equivalent and demonstrated for the Becker&amp;Hickl SPC-130 and
+the PicoQuant PTU file supplied in the example folder in the Python code below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Beyond opening files and processing the content contained in a TTTR file TTTR
+objects can be created that contain initially no data. Moreover, TTTR objects can
+be created based on existing files and selection.</p>
+</div>
+<div class="section" id="slicing-subsets">
+<h3>Slicing / subsets<a class="headerlink" href="#slicing-subsets" title="Permalink to this headline">¶</a></h3>
+<p>New TTTR objects can be created by slicing existing objects, if you are
+interested a subset of the data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data_sliced</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>A slice of a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object creates a copy, i.e., the routing channel, the
+macro, and the micro times are copied including the header information.</p>
+</div>
+<div class="section" id="joining-tttrs">
+<h3>Joining TTTRs<a class="headerlink" href="#joining-tttrs" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects can be joined either by the append method or by using the <code class="docutils literal notranslate"><span class="pre">+</span></code>
+operator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">d2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">other</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">shift_macro_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">macro_time_offset</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+<span class="n">d3</span> <span class="o">=</span> <span class="n">data</span> <span class="o">+</span> <span class="n">data</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">d3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">shift_macro_time</span></code> is set to True, which is the default, the macro times of the
+data that are offset by the last macro time record in the first set in addition to
+the value specified by <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>. The parameter <code class="docutils literal notranslate"><span class="pre">macro_time_offset</span></code>
+is set to zero by default.</p>
+<p>By appending TTTR objects to each other data that is splitted into multiple files
+can be joined into a single TTTR object as follows</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132_smDNA/*.spc&#39;</span><span class="p">)</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.png&#39;</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In practice, take care that the files are ordered. The code above stiches the
+objects in the order as returned by the <code class="docutils literal notranslate"><span class="pre">glob</span></code> module. The glob module finds
+all the pathnames matching a specified pattern according to the rules used by
+the Unix shell, although results are returned in arbitrary order. Hence, we
+sort the data by creating time first. In case you need another ordering, e.g.
+lexical ordering adapt the code.</p>
+</div>
+</div>
+</div>
+<div class="section" id="writing-tttr-files">
+<h2>Writing TTTR-files<a class="headerlink" href="#writing-tttr-files" title="Permalink to this headline">¶</a></h2>
+<p>TTTR objects can be writen to files using the method <code class="docutils literal notranslate"><span class="pre">write</span></code> of TTTR objects.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data_sliced</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+<span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="s1">&#39;sliced_data.spc&#39;</span>
+    <span class="s1">&#39;container_type&#39;</span><span class="p">:</span> <span class="s1">&#39;SPC-130&#39;</span>
+<span class="p">}</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">**</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This way, as shown above, data can be sliced into pieces or converted into other
+data types.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The differnet TTTR container formats are not fully compatible. Hence, it can
+happen that certain information that is for instance stored in the header is
+lost when converting and saving data.</p>
+</div>
+</div>
+<div class="section" id="tttr-header">
+<h2>TTTR-Header<a class="headerlink" href="#tttr-header" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="accessing-header-data">
+<h3>Accessing header data<a class="headerlink" href="#accessing-header-data" title="Permalink to this headline">¶</a></h3>
+<p>Most TTTR container contain meta-data that can be accessed through <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.
+For that, a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object provides a header attribute. The header attribute is
+of the type <code class="xref py py-class docutils literal notranslate"><span class="pre">Header</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="c1"># the header can be accesses by the method get_header or as an property</span>
+<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The most important attributes of the header are the <code class="xref py py-attr docutils literal notranslate"><span class="pre">micro_time_resolution</span></code>
+and <code class="xref py py-attr docutils literal notranslate"><span class="pre">macro_time_resolution</span></code>. Becker&amp;Hickl Spc132 files files contain
+only a limited amount of information in the first record (32 bit).</p>
+<p>PicoQuant PTU and HT3 files provide more extensive information in their header
+that can be accessed via the <code class="xref py py-attr docutils literal notranslate"><span class="pre">data</span></code> attribute of a header object. The
+data attribute of a header object is a map that can be accesses like a normal
+Python dictionary.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/PQ_PTU_HH_T3.PTU&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+<span class="c1"># the header can be accesses by the method get_header or as an property</span>
+<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+<span class="n">header_data</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">data</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The last statement prints the keys of the map.</p>
+</div>
+<div class="section" id="time-calibration-data">
+<h3>Time calibration data<a class="headerlink" href="#time-calibration-data" title="Permalink to this headline">¶</a></h3>
+<p>Essential for the analysis of TTTR data is the time calibration (time resolution)
+of the macro and the micro times in addition to the number of possible micro time
+channels. In many functions the micro and macro time calibration are transparently
+handeled, meaning there is no need to worry. The <code class="docutils literal notranslate"><span class="pre">macro_time</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">micro_time</span></code> TTTR attributes correspond the to raw uncalibrated data.</p>
+<p>The macro and micro time resolution is accessed as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/PQ/PTU/PQ_PTU_HH_T3.PTU&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+<span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
+</pre></div>
+</div>
+<p>The number of micro time channels can be accessed as displayed below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/PQ/PTU/PQ_PTU_HH_T3.PTU&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+<span class="c1"># the header can be accesses by the method get_header or as an property</span>
+<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+<span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<span class="c1"># macro_time_resolution = 12.5 ns</span>
+<span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
+<span class="c1"># micro_time_resolution = 4 ps</span>
+<span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">number_of_micro_time_channels</span>
+<span class="c1"># will return 8129</span>
+<span class="n">data</span><span class="o">.</span><span class="n">get_number_of_micro_time_channels</span><span class="p">()</span>
+<span class="c1"># will return 3125</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The effective number of micro time channels, i.e., the number of micro time
+channels can be smaller than the actual number of micro time channels. For
+instance at a micro time channel resolution of 4 ps and macro time resolution
+of 12.5 ns effectively only 3125 micro time channels will be filled with
+photons.</p>
+</div>
+</div>
+</div>
+<div class="section" id="selections">
+<h2>Selections<a class="headerlink" href="#selections" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general">
+<h3>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h3>
+<p>A defining feature of TTTR data is that subsets can be selected and defined for
+more detailed analysis. This is for instance exploited in single-molecule experimetns
+There are different methods to access subsets of a TTTR object that are described
+in this section.</p>
+</div>
+<div class="section" id="using-selections">
+<h3>Using selections<a class="headerlink" href="#using-selections" title="Permalink to this headline">¶</a></h3>
+<p>There is a set of functions and methods to select subsets of TTTR objects.
+Beyond the the array processing capabilities either provided by the high-level
+programming language or an library like <a class="reference external" href="http://www.numpy.org/">NumPy</a>, <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>
+offers a set of functions and methods to select a subset of the data contained
+in a TTTR file. There are two options to get selection for a subset of the data</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>By <em>ranges</em></p></li>
+<li><p>By <em>selection</em></p></li>
+</ol>
+</div></blockquote>
+<p><em>Ranges</em> are lists of tuples marking the beginning and the end of a range.
+<em>Selections</em> are list of integers, where the integers refer to the indices
+of the event stream that was selected.</p>
+<p>For instance, for the sequence of time events displayed in the following table</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>index</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><p>time</p></td>
+<td><p>1</p></td>
+<td><p>12</p></td>
+<td><p>13</p></td>
+<td><p>14</p></td>
+<td><p>15</p></td>
+<td><p>18</p></td>
+<td><p>20</p></td>
+<td><p>23</p></td>
+<td><p>30</p></td>
+<td><p>32</p></td>
+</tr>
+</tbody>
+</table>
+<p>the selection (1, 3, 5, 7) yields:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">23</span>
+</pre></div>
+</div>
+<p>and the ranges (0, 2) and (7, 9) yield:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Depending on the specific application either ranges or selections are more useful.
+For instance, single molecule bursts are usually defined by <em>ranges</em>, while detection
+channels are usually selected by <em>selections</em>.</p>
+</div>
+<div class="section" id="channel-selections">
+<h3>Channel selections<a class="headerlink" href="#channel-selections" title="Permalink to this headline">¶</a></h3>
+<p>A very typical use case in TCSPC experiments (either in fluorescence lifetime
+microscopy (FLIM) or multiparameteric fluorescence detection (MFD)) is to select
+a subset of the registered events based on the detection channel. The experimental
+example data provided by the file <code class="docutils literal notranslate"><span class="pre">./examples/BH/BH_SPC132.spc</span></code> four detectors
+were used to register the fluorescence signal with two polarizations in a ‘green’
+and ‘red’ spectral range. In the example file the detector numbers for the green
+fluorescence were (0, 8) and (1, 9) for the red detection window.</p>
+<p>The method ‘get_selection_by_channel’ provides an array that contains the indices
+of the events when a the channel equals the channel number of the provided
+arguments. To obtain the indices where the channel number. In the example below
+the indices of the green (channel = 0 or channel = 8) and the indeces of the red
+(channel = 1 or channel = 9) are saved in the variables <code class="docutils literal notranslate"><span class="pre">green_indices</span></code>  and
+<code class="docutils literal notranslate"><span class="pre">red_indices</span></code>, respectively.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tttrlib</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+
+<span class="n">green_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+<span class="n">red_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This examples needs to be adapted to the channel assignment dependent on the actual
+experimental setup.</p>
+<p>Selections can be made by channel with such a selection a new <cite>TTTR</cite> object can
+be created.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">ch1_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">data_ch1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ch1_indeces</span><span class="p">)</span>
+<span class="c1"># alternatively</span>
+<span class="n">data_ch1</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">ch1_indeces</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The <cite>TTTR</cite> object can be operated on normally.</p>
+</div>
+<div class="section" id="count-rate-selections">
+<h3>Count rate selections<a class="headerlink" href="#count-rate-selections" title="Permalink to this headline">¶</a></h3>
+<p>Another very common selection is based on the count rate. The count rate is
+determined by the number of detected events within a given time window. The
+selection by the method <code class="docutils literal notranslate"><span class="pre">get_selection_by_count_rate</span></code> returns all indices where
+less photons were detected within a specified time window. The time window is
+given by the number of macro time steps.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">cr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example shown above, the time window is 1200000 and 30 is the maximum
+number of photons within that is permitted in a time window.</p>
+<p>Such count rate selections are for instance used to detect bursts in single molecule
+experiments or to generate filters for advanced FCS analysis <a class="bibtex reference internal" href="zreferences.html#laurence2004" id="id4">[LKK+04]</a>
+(see also <a class="reference internal" href="correlation.html#count-rate-filer"><span class="std std-ref">Count rate filer</span></a> and <span class="xref std std-ref">Single Molecule:Burst selection</span>).</p>
+</div>
+</div>
+<div class="section" id="tttr-ranges">
+<h2>TTTR ranges<a class="headerlink" href="#tttr-ranges" title="Permalink to this headline">¶</a></h2>
+<p>STOP</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

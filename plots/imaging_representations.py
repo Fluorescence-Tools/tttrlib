@@ -17,7 +17,8 @@ image = tttrlib.CLSMImage(
     line_stop_marker,
     event_type_marker,
     pixel_per_line,
-    reading_routine
+    reading_routine,
+    skip_before_first_frame_marker=True
 )
 
 channels = (0, 1)
