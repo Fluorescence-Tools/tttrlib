@@ -120,9 +120,9 @@ public:
      * @param output[out] A C type array containing the amplitude of the species
      * @param n_output[out] The number of species
      */
-    void get_amplitudes(double **output, int *n_output) {
+    void get_amplitudes(double **output_view, int *n_output) {
         *n_output = _amplitudes.size();
-        *output = _amplitudes.data();
+        *output_view = _amplitudes.data();
     }
 
     /*!
@@ -198,9 +198,9 @@ public:
      * @param output[out] A C type array containing the amplitude of the species
      * @param n_output[out] The number of species
      */
-    void get_probabilities_ch1(double **output, int *n_output) {
+    void get_probabilities_ch1(double **output_view, int *n_output) {
         *n_output = _probability_ch1.size();
-        *output = _probability_ch1.data();
+        *output_view = _probability_ch1.data();
     }
 
     /*!
@@ -228,7 +228,7 @@ public:
      * @param output[out] array containing the probability spectrum
      * @param n_output[out] number of elements in the output array
      */
-    void get_probability_spectrum_ch1(double **output, int *n_output) {
+    void get_probability_spectrum_ch1(double** output, int* n_output) {
         int n = (int)_amplitudes.size() * 2;
         auto temp = (double*) malloc(sizeof(double) * n);
         for(int i=0; i < _amplitudes.size(); i++){
@@ -254,9 +254,9 @@ public:
     }
 
     /// Set the probability P(F)
-    void getPF(double **output, int *n_output){
+    void getPF(double** output_view, int* n_output){
         *n_output = pF.size();
-        *output = pF.data();
+        *output_view = pF.data();
     }
 
     /*!

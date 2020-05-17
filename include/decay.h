@@ -227,8 +227,8 @@ public:
         _data.assign(input, input + n_input);
     }
 
-    void get_data(double **output, int *n_output) {
-        *output = _data.data();
+    void get_data(double **output_view, int *n_output) {
+        *output_view = _data.data();
         *n_output = _data.size();
     }
 
@@ -328,16 +328,16 @@ public:
         _irf.assign(input, input + n_input);
     }
 
-    void get_irf(double **output, int *n_output) {
-        *output = _irf.data();
+    void get_irf(double **output_view, int *n_output) {
+        *output_view = _irf.data();
         *n_output = _irf.size();
     }
 
-    void get_model(double **output, int *n_output) {
+    void get_model(double **output_view, int *n_output) {
         if (!_is_valid) {
             evaluate();
         }
-        *output = _model_function.data();
+        *output_view = _model_function.data();
         *n_output = _model_function.size();
     }
 
@@ -347,8 +347,8 @@ public:
         _lifetime_spectrum.assign(input, input + n_input);
     }
 
-    void get_lifetime_spectrum(double **output, int *n_output) {
-        *output = _lifetime_spectrum.data();
+    void get_lifetime_spectrum(double **output_view, int *n_output) {
+        *output_view = _lifetime_spectrum.data();
         *n_output = _lifetime_spectrum.size();
     }
 
@@ -358,8 +358,8 @@ public:
         _weights.assign(input, input + n_input);
     }
 
-    void get_weights(double **output, int *n_output) {
-        *output = _weights.data();
+    void get_weights(double **output_view, int *n_output) {
+        *output_view = _weights.data();
         *n_output = _weights.size();
     }
 
@@ -368,8 +368,8 @@ public:
         _time_axis.assign(input, input + n_input);
     }
 
-    void get_time_axis(double **output, int *n_output) {
-        *output = _time_axis.data();
+    void get_time_axis(double **output_view, int *n_output) {
+        *output_view = _time_axis.data();
         *n_output = _time_axis.size();
     }
 
@@ -704,7 +704,7 @@ public:
      */
     static void shift_array(
             double *input, int n_input,
-            double **output, int *n_output,
+            double **output_view, int *n_output,
             double shift,
             bool set_outside = true,
             double outside_value = 0.0
@@ -733,7 +733,7 @@ public:
      * @param stop[in] stop index used for the area calculation
      */
     static void add_curve(
-            double **output, int *n_output,
+            double **output_view, int *n_output,
             double *curve1, int n_curve1,
             double *curve2, int n_curve2,
             double areal_fraction_curve2,
@@ -765,7 +765,7 @@ public:
     );
 
 
-    void get_weighted_residuals(double **output, int *n_output) {
+    void get_weighted_residuals(double **output_view, int *n_output) {
 #if VERBOSE
         std::clog << "Compute weighted residuals..." << std::endl;
         std::clog << "-- points in model function:" << _model_function.size() << std::endl;
@@ -780,12 +780,12 @@ public:
                 _weighted_residuals[i] = (_data[i] - _model_function[i]) * _weights[i];
             }
             *n_output = _weighted_residuals.size();
-            *output = _weighted_residuals.data();
+            *output_view = _weighted_residuals.data();
         } else {
             std::cerr << "WARNING: the dimensions of the data, the model, and the"
                          "weights do not match.";
             *n_output = 0;
-            *output = nullptr;
+            *output_view = nullptr;
         }
     }
 

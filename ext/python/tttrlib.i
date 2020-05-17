@@ -16,6 +16,7 @@
 %include "std_map.i";
 %include "std_vector.i";
 %include "std_list.i";
+%include "std_pair.i";
 %include "std_shared_ptr.i";
 %include "cpointer.i"
 %include "numpy.i"
@@ -38,11 +39,15 @@ import_array();
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
 
-// Generic output view arrays
+// Generic output arrays views
 // floating points
-// TODO: This is not consistent (ARGOUTVIEW vs ARGOUTVIEWM)
-%apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output, int* n_output)}
-%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
+%apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output_view, int* n_output)}
+
+// Generic output memory managed arrays
+// floating points
+%apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** output, int* n_output)}
+%apply(double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
+%apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** output, int* n_output)}
 %apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* dim1, int* dim2, int* dim3)}
 %apply (float** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(float** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 // integers
@@ -72,6 +77,7 @@ import_array();
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
 %template(MapStringString) std::map<std::string, std::string>;
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
+%template(VectorPairInt) std::vector<std::pair<int,int>>;
 
 %include "tttr.i"
 %include "histogram.i"
