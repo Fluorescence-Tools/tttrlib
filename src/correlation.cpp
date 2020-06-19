@@ -13,9 +13,7 @@
  ****************************************************************************/
 
 #include <include/correlation.h>
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include <algorithm>
 
 
 Correlator::Correlator(TTTR *tttr,
@@ -111,8 +109,8 @@ void Correlator::set_weights(
         n_t2 = (size_t) n_weights_ch2;
     } else{
         w1 = weight_ch1; w2 = weight_ch2;
-        n_t1 = MIN(n_weights_ch1, n_t1);
-        n_t2 = MIN(n_weights_ch2, n_t1);
+        n_t1 = std::min(n_weights_ch1, n_t1);
+        n_t2 = std::min(n_weights_ch2, n_t1);
     }
 }
 
@@ -323,7 +321,7 @@ void Correlator::set_tttr(
     }
     compute_dt();
     if(make_fine){
-        int n_tac = MIN(
+        int n_tac = std::min(
                 tttr_1->get_number_of_micro_time_channels(),
                 tttr_2->get_number_of_micro_time_channels()
                 );

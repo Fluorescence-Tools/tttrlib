@@ -1,7 +1,3 @@
-//
-// Created by Thomas-Otavio Peulen on 4/22/20.
-//
-
 #ifndef TTTRLIB_DECAY_H
 #define TTTRLIB_DECAY_H
 
@@ -11,13 +7,27 @@
 #include <stdlib.h>
 #include <numeric>
 #include <algorithm>
+
 #include "omp.h"
+#include "thirdparty/lbfgs/i_lbfgs.h"
 
 #include "tttr.h"
 #include "histogram.h"
+#include "statistics.h"
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+/*!
+ * Objective function
+ *
+ * @param parameter
+ * x[0]=irf_background,
+ * x[1]=irf_shift_channels
+ * x[2]=set_constant_background
+ * x[3]=set_areal_scatter_fraction
+ * x[4...]=lifetime spectrum
+ */
+double target(double* x, void* pv);
+
 
 class Decay {
 
@@ -34,7 +44,7 @@ private:
     double _constant_background = 0.0;
 
     /// The fraction of the irf (scattered light) in the model decay
-    double _areal_fraction_scatter = 0.0;
+    double _areal_scatter_fraction = 0.0;
 
     /// The time shift of the irf
     double _irf_shift_channels = 0.0;
@@ -84,6 +94,13 @@ private:
 
 
 public:
+
+    /// The range on which the scoring function is evaluated
+    int x_min = -1;
+    int x_max = -1;
+
+    /// If set to true take abs values of lifetime spectrum
+    bool abs_lifetime_spectrum = true;
 
     /*!
      * Computes a histogram of the TTTR data's micro times
@@ -193,6 +210,13 @@ public:
      * pile up (in units of the lifetime, usually nano seconds)
      * @param acquisition_time the total time the acquisition of the decay in
      * seconds.
+     * @param add_corrected_irf if set to true (default is false) the background
+     * corrected irf will be added as scatter to the decay. If this is false the
+     * irf prior to a background and shift corrected irf is added as a scatter
+     * fraction.
+     * @param scale_model_to_area if set to true (default is true) the model is
+     * either scaled to the area s provided by total_area (if total_area is larger
+     * then zero) or to the total number of experimental counts.
      */
     static void compute_decay(
             double *model_function, int n_model_function,
@@ -212,9 +236,10 @@ public:
             double amplitude_threshold = 1e10,
             bool add_pile_up = false,
             double instrument_dead_time=120.0,
-            double acquisition_time=100000.0
+            double acquisition_time=100000.0,
+            bool add_corrected_irf = false,
+            bool scale_model_to_area = true
     );
-
 
 public:
 
@@ -264,26 +289,30 @@ public:
         _period = v;
     }
 
+    void set_score_range(int vmin, int vmax){
+        x_min = vmin; x_max = vmax;
+    }
+
     double get_period() const {
         return _period;
     }
 
     void set_irf_shift_channels(double v) {
         _is_valid = false;
-        _irf_shift_channels = v;
+        _irf_shift_channels = std::fmod(v, _irf.size());
     }
 
     double get_irf_shift_channels() const {
         return _irf_shift_channels;
     }
 
-    void set_areal_fraction_scatter(double v) {
+    void set_areal_scatter_fraction(double v) {
         _is_valid = false;
-        _areal_fraction_scatter = std::min(1., std::max(0.0, v));
+        _areal_scatter_fraction = std::min(1., std::max(0.0, v));
     }
 
-    double get_areal_fraction_scatter() const {
-        return _areal_fraction_scatter;
+    double get_areal_scatter_fraction() const {
+        return _areal_scatter_fraction;
     }
 
     void set_constant_background(double v) {
@@ -341,10 +370,19 @@ public:
         *n_output = _model_function.size();
     }
 
-    void set_lifetime_spectrum(double *input, int n_input) {
+    void set_lifetime_spectrum(double *input, int n_input = -1) {
         _is_valid = false;
-        _lifetime_spectrum.clear();
-        _lifetime_spectrum.assign(input, input + n_input);
+        if(n_input < 0) n_input = _lifetime_spectrum.size();
+        _lifetime_spectrum.resize(n_input);
+        if(abs_lifetime_spectrum) {
+            for (int i = 0; i < n_input; i++) {
+                _lifetime_spectrum[i] = std::abs(input[i]);
+            }
+        } else{
+            for (int i = 0; i < n_input; i++) {
+                _lifetime_spectrum[i] = std::abs(input[i]);
+            }
+        }
     }
 
     void get_lifetime_spectrum(double **output_view, int *n_output) {
@@ -373,7 +411,9 @@ public:
         *n_output = _time_axis.size();
     }
 
-    void set_irf_background_counts(double irf_background_counts) {
+    void set_irf_background_counts(
+            double irf_background_counts
+    ) {
         _irf_background_counts = irf_background_counts;
         _is_valid = false;
     }
@@ -381,6 +421,8 @@ public:
     double get_irf_background_counts() const {
         return _irf_background_counts;
     }
+
+    void optimize(double* x, int n_x, short* fixed, int n_fixed);
 
     /*!
      *
@@ -426,8 +468,11 @@ public:
             double excitation_period = 100.0,
             double dt = 1.0,
             double irf_background_counts = 0.0,
-            double areal_fraction_scatter = 0.0,
-            double constant_background = 0.0
+            double areal_scatter_fraction = 0.0,
+            double constant_background = 0.0,
+            int x_min = -1,
+            int x_max = -1,
+            std::vector<double> lifetime_spectrum = std::vector<double>()
     ) {
         _convolution_start = std::max(0, start);
         _convolution_stop = std::min(stop, (int) decay_data.size());
@@ -438,8 +483,11 @@ public:
                   excitation_period :
                   tttr_data->get_header().macro_time_resolution;
         _irf_background_counts = irf_background_counts;
-        _areal_fraction_scatter = areal_fraction_scatter;
+        _areal_scatter_fraction = areal_scatter_fraction;
         _constant_background = constant_background;
+        this->x_min = x_min;
+        this->x_max = x_max;
+        set_lifetime_spectrum(lifetime_spectrum.data(), lifetime_spectrum.size());
 
         // set data
         if (tttr_data != nullptr) {
@@ -773,20 +821,8 @@ public:
         std::clog << "-- points in data:" << _data.size() << std::endl;
 #endif
         evaluate();
-        if ((_model_function.size() == _data.size()) &&
-            (_weights.size() == _data.size())) {
-            _weighted_residuals.resize(_data.size());
-            for (int i = 0; i < _data.size(); i++) {
-                _weighted_residuals[i] = (_data[i] - _model_function[i]) * _weights[i];
-            }
-            *n_output = _weighted_residuals.size();
-            *output_view = _weighted_residuals.data();
-        } else {
-            std::cerr << "WARNING: the dimensions of the data, the model, and the"
-                         "weights do not match.";
-            *n_output = 0;
-            *output_view = nullptr;
-        }
+        *n_output = _weighted_residuals.size();
+        *output_view = _weighted_residuals.data();
     }
 
     void evaluate(
@@ -811,7 +847,7 @@ public:
                     _lifetime_spectrum.data(),_lifetime_spectrum.size(),
                     _convolution_start, _convolution_stop,
                     _irf_background_counts, _irf_shift_channels,
-                    _areal_fraction_scatter,
+                    _areal_scatter_fraction,
                     _period,
                     _constant_background,
                     _total_area,
@@ -819,11 +855,94 @@ public:
                     _amplitude_threshold,
                     _correct_pile_up
             );
+            if ((_model_function.size() == _data.size()) &&
+                (_weights.size() == _data.size())) {
+                _weighted_residuals.resize(_data.size());
+                for (int i = 0; i < _data.size(); i++) {
+                    _weighted_residuals[i] = (_data[i] - _model_function[i]) * _weights[i];
+                }
+            }
             _is_valid = true;
         }
     }
 
+    /*!
+     * Computes the chi2 for the model and the data
+     *
+     * The "normal" chi2 is the sum of the squared weighted deviations between
+     * the data and the model.
+     *
+     * @param x_min minimum index number of data / model used to compute the chi2
+     * @param x_max maximum index number of data / model used to compute the chi2
+     * @param type is either neyman or poisson for large count and low count data,
+     * respectively.
+     * @return the chi2 value
+     */
+    double get_chi2(
+            int x_min = -1,
+            int x_max = -1,
+            std::string type="poisson"
+    ){
+#if VERBOSE
+        std::cout << "CHI2" << std::endl;
+#endif
+        if(x_min < 0){
+            x_min = std::max(this->x_min, 0);
+        } else{
+            x_min = std::max(x_min, 0);
+        }
+        if(x_max < 0){
+            if(this->x_max < 0){
+                x_max = (int)_data.size();
+            } else{
+                x_max = std::min(this->x_max, (int)_data.size());
+            }
+        }
+        if(!is_valid()) {
+            evaluate();
+#if VERBOSE
+            std::cout << "-- evaluate" << std::endl;
+#endif
+        }
+        double v = statistics::chi2_counting(
+                _data,
+                _model_function,
+                x_min, x_max, type
+        );
+#if VERBOSE
+        std::cout << "-- x_min: " << x_min << std::endl;
+        std::cout << "-- x_max: " << x_max << std::endl;
+        std::cout << "-- type: " << type << std::endl;
+        std::cout << "-- chi2: " << v << std::endl;
+#endif
+        return v;
+    }
+
+    /*!
+     * Convenience method to update parameters that are frequently changed.
+     *
+     * @param irf_background
+     * @param irf_shift_channels
+     * @param areal_scatter_fraction
+     * @param constant_background
+     * @param lifetime_spectrum
+     * @param n_lifetime_spectrum
+     */
+    void set(
+        double irf_background = 0.0,
+        double irf_shift_channels = 0.0,
+        double areal_scatter_fraction = 0.0,
+        double constant_background = 0.0,
+        double *lifetime_spectrum = nullptr, int n_lifetime_spectrum = -1
+    ){
+        set_irf_background_counts(irf_background);
+        set_irf_shift_channels(irf_shift_channels);
+        set_constant_background(constant_background);
+        set_lifetime_spectrum(lifetime_spectrum, n_lifetime_spectrum);
+        set_areal_scatter_fraction(areal_scatter_fraction);
+    }
 
 };
+
 
 #endif //TTTRLIB_DECAY_H

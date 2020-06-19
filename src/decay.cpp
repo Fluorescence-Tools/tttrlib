@@ -12,9 +12,9 @@ void Decay::convolve_lifetime_spectrum(
 ){
     int number_of_exponentials = n_lifetime_spectrum / 2;
     convolution_stop = convolution_stop > 0 ?
-            MIN(n_time_axis, MIN(n_instrument_response_function,
-                    MIN(n_output, convolution_stop))) :
-            MIN(n_time_axis, MIN(n_instrument_response_function, n_output));
+            std::min(n_time_axis, std::min(n_instrument_response_function,
+                                      std::min(n_output, convolution_stop))) :
+                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
     convolution_start = std::max(convolution_start, 1);
 #if VERBOSE
     std::clog << "convolve_lifetime_spectrum... " << std::endl;
@@ -212,7 +212,9 @@ void Decay::add_curve(
     for(int i=0; i<n_curve1;i++) tmp1[i]  = curve1[i] / sum_curve_1;
     for(int i=0; i<n_curve2;i++) tmp2[i]  = curve2[i] / sum_curve_2;
     for(int i=start; i<stop;i++)
-        tmp[i] = ((1. - areal_fraction_curve2) * tmp1[i] + areal_fraction_curve2 * tmp2[i]) * sum_curve_1;
+        tmp[i] = (
+                    (1. - areal_fraction_curve2) * tmp1[i] + areal_fraction_curve2 * tmp2[i]
+                ) * sum_curve_1;
     *output = tmp;
 }
 
@@ -274,7 +276,9 @@ void Decay::compute_decay(
         double amplitude_threshold,
         bool add_pile_up,
         double instrument_dead_time,
-        double acquisition_time
+        double acquisition_time,
+        bool add_corrected_irf,
+        bool scale_model_to_area
 ){
 #if VERBOSE
     std::clog << "compute_decay..." << std::endl;
@@ -295,11 +299,14 @@ void Decay::compute_decay(
     std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
     std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
     std::clog << "-- correct_pile_up: " << add_pile_up << std::endl;
+    std::clog << "-- add_corrected_irf: " << add_corrected_irf << std::endl;
 #endif
     // correct irf for background counts
     auto irf_bg_corrected = std::vector<double>(n_instrument_response_function);
     for(int i=0; i < n_instrument_response_function; i++)
-        irf_bg_corrected[i] = std::max(0.0, instrument_response_function[i] - irf_background_counts);
+        irf_bg_corrected[i] = std::max(
+                0.0, instrument_response_function[i] - irf_background_counts
+        );
 
     // shift irf
     double* irf_bg_shift_corrected; int n_irf_bg_shift_corrected;
@@ -323,13 +330,23 @@ void Decay::compute_decay(
 
     // add scatter fraction (irf)
     double* decay_irf; int n_decay_irf;
-    add_curve(
-            &decay_irf, &n_decay_irf,
-            model_function, n_model_function,
-            irf_bg_corrected.data(), irf_bg_corrected.size(),
-            scatter_areal_fraction,
-            start, stop
-    );
+    if(add_corrected_irf){
+        add_curve(
+                &decay_irf, &n_decay_irf,
+                model_function, n_model_function,
+                irf_bg_shift_corrected, n_irf_bg_shift_corrected,
+                scatter_areal_fraction,
+                start, stop
+        );
+    } else{
+        add_curve(
+                &decay_irf, &n_decay_irf,
+                model_function, n_model_function,
+                instrument_response_function, n_instrument_response_function,
+                scatter_areal_fraction,
+                start, stop
+        );
+    }
 
     if(add_pile_up){
         Decay::add_pile_up(
@@ -342,19 +359,21 @@ void Decay::compute_decay(
 
     // scale model function
     double scale = 1.0;
-    if(total_area < 0){
-        // scale the area to the data in the range start, stop
-        scale = compute_scale(
-            decay_irf, n_decay_irf,
-            data, n_data,
-            weights, n_weights,
-            constant_background,
-            start, stop
-        );
-    } else{
-        // normalize model to total_area
-        double sum = std::accumulate( decay_irf + start, decay_irf + stop, 0.0);
-        scale = total_area / sum;
+    if(scale_model_to_area){
+        if(total_area < 0){
+            // scale the area to the data in the range start, stop
+            scale = compute_scale(
+                    decay_irf, n_decay_irf,
+                    data, n_data,
+                    weights, n_weights,
+                    constant_background,
+                    start, stop
+            );
+        } else{
+            // normalize model to total_area
+            double sum = std::accumulate( decay_irf + start, decay_irf + stop, 0.0);
+            scale = total_area / sum;
+        }
     }
 #if VERBOSE
     std::clog << "Adding Background" << std::endl;
@@ -436,3 +455,31 @@ double Decay::compute_mean_lifetime(
     double tau1 = g2 / g1;
     return tau1 * tttr_data->get_header().micro_time_resolution;
 }
+
+
+double target(double* x, void* pv){
+    auto decay = (Decay*) pv;
+    decay->set_areal_scatter_fraction(x[0]);
+    decay->set_constant_background(x[1]);
+    decay->set_irf_shift_channels(x[2]);
+    decay->set_irf_background_counts(x[3]);
+    decay->set_lifetime_spectrum(&x[4]);
+    return decay->get_chi2();
+}
+
+void Decay::optimize(double* x, int n_x, short* fixed, int n_fixed){
+    int fixed_parameter = 0;
+    bfgs bfgs_o(target, n_x);
+    for(int i=0; i<n_fixed;i++){
+        if(fixed[i]) {
+            bfgs_o.fix(i);
+            fixed_parameter++;
+        }
+    }
+#if VERBOSE
+    std::cout << "N parameter: " << n_x << std::endl;
+    std::cout << "fixed_parameter: " << fixed_parameter << std::endl;
+#endif
+    bfgs_o.minimize(x, this);
+}
+
