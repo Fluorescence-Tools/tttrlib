@@ -16,3 +16,5 @@ dependencies:
   - nose
   - anaconda-client
   - conda-build
+  - mkl
+  - mkl-include

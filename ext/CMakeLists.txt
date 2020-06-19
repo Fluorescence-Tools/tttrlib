@@ -9,12 +9,6 @@ SET(MODULE_NAME tttrlib)
 
 SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
 
-FILE(
-    GLOB
-    SRC_files
-    "../src/*.cpp"
-    "../src/correlation/*.cpp"
-)
 
 IF(BUILD_PYTHON_INTERFACE)
     FIND_PACKAGE(Python)
