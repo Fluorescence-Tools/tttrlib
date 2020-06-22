@@ -68,7 +68,7 @@ def make_image_stack(
 
 
 # Benchmark
-n_test_runs = 10
+n_test_runs = 3
 n_frames = 10
 n_gaussians = 20
 array_sizes = [32, 64, 128, 256, 512, 1024]

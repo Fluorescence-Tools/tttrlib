@@ -287,7 +287,7 @@ public:
 
     void set_irf_shift_channels(double v) {
         _is_valid = false;
-        _irf_shift_channels = std::fmod(v, _irf.size());
+        _irf_shift_channels = std::fmod(v, (double)_irf.size());
     }
 
     double get_irf_shift_channels() const {

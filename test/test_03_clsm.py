@@ -94,7 +94,7 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
-        selection = np.ones(
+        selection_mask = np.ones(
             (
                 clsm_image.n_frames,
                 clsm_image.n_lines,
@@ -105,13 +105,13 @@ class TestCLSM(unittest.TestCase):
 
         decays = clsm_image.get_average_decay_of_pixels(
             tttr_data=data,
-            selection=selection,
+            mask=selection_mask,
             tac_coarsening=1,
             stack_frames=False
         )
         decay = clsm_image.get_average_decay_of_pixels(
             tttr_data=data,
-            selection=selection,
+            mask=selection_mask,
             tac_coarsening=1,
             stack_frames=True
         )

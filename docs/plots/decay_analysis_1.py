@@ -42,7 +42,7 @@ def objective_function_mle(
     decay_object.set_areal_scatter_fraction(scatter)
     decay_object.set_constant_background(background)
     decay_object.set_irf_shift_channels(time_shift)
-    chi2_mle = decay_object.get_chi2_mle(x_min, x_max)
+    chi2_mle = decay_object.get_chi2(x_min, x_max, type="poisson")
     # d = decay_object.get_data()[x_min:x_max]
     # m = decay_object.get_model()[x_min:x_max]
     # return np.sum((m - d) - d * np.log(m/d))
