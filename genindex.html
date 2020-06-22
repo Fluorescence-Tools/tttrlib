@@ -285,9 +285,9 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage12clear_pixelsEv">CLSMImage::clear_pixels (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N9CLSMImage9CLSMImageEP4TTTRNSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb">CLSMImage::CLSMImage (C++ function)</a>, <a href="cpp_api.html#_CPPv4N9CLSMImage9CLSMImageERK9CLSMImageb">[1]</a>
+      <li><a href="cpp_api.html#_CPPv4N9CLSMImage9CLSMImageENSt10shared_ptrI4TTTREENSt6vectorIiEEiiiiNSt6stringExP9CLSMImagebNSt6vectorIiEEb">CLSMImage::CLSMImage (C++ function)</a>, <a href="cpp_api.html#_CPPv4N9CLSMImage9CLSMImageERK9CLSMImageb">[1]</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N9CLSMImage11compute_icsEPPdPiPiPiP4TTTR">CLSMImage::compute_ics (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N9CLSMImage11compute_icsEPPdPiPiPiNSt10shared_ptrI4TTTREEP9CLSMImagePdiiiNSt6vectorIiEENSt6vectorIiEENSt6vectorINSt4pairIiiEEEENSt6stringEP9CLSMImagePdiiiP7uint8_tiii">CLSMImage::compute_ics (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage4copyERK9CLSMImageb">CLSMImage::copy (C++ function)</a>
 </li>
@@ -299,7 +299,7 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage27get_average_decay_of_pixelsEP4TTTRP7uint8_tiiiPPjPiPiib">CLSMImage::get_average_decay_of_pixels (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiP4TTTRP9CLSMImageNSt6stringEiibbi">CLSMImage::get_fcs_image (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N9CLSMImage13get_fcs_imageEPPfPiPiPiPiNSt10shared_ptrI4TTTREEP9CLSMImageNSt6stringEiibbi">CLSMImage::get_fcs_image (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage28get_fluorescence_decay_imageEP4TTTRPPhPiPiPiPiib">CLSMImage::get_fluorescence_decay_image (C++ function)</a>
 </li>
@@ -318,6 +318,8 @@
       <li><a href="cpp_api.html#_CPPv4NK9CLSMImage11get_n_pixelEv">CLSMImage::get_n_pixel (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage16get_phasor_imageEPPfPiPiPiPiP4TTTRP4TTTRdib">CLSMImage::get_phasor_image (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N9CLSMImage7get_roiEPPdPiPiPiP9CLSMImageNSt6vectorIiEENSt6vectorIiEENSt6stringEdbddPdiiiP7uint8_tiiiNSt6vectorIiEE">CLSMImage::get_roi (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage18initialize_defaultEP4TTTRb">CLSMImage::initialize_default (C++ function)</a>
 </li>
@@ -345,6 +347,8 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImage16shift_line_startEi">CLSMImage::shift_line_start (C++ function)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv4N9CLSMImage4tttrE">CLSMImage::tttr (C++ member)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N9CLSMImageD0Ev">CLSMImage::~CLSMImage (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv48CLSMLine">CLSMLine (C++ class)</a>
@@ -363,10 +367,10 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N8CLSMLineixEj">CLSMLine::operator[] (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N8CLSMLine14pixel_durationE">CLSMLine::pixel_duration (C++ member)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="cpp_api.html#_CPPv4N8CLSMLine14pixel_durationE">CLSMLine::pixel_duration (C++ member)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N8CLSMLine6pixelsE">CLSMLine::pixels (C++ member)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N8CLSMLineD0Ev">CLSMLine::~CLSMLine (C++ function)</a>
@@ -485,7 +489,7 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay20_amplitude_thresholdE">Decay::_amplitude_threshold (C++ member)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N5Decay23_areal_fraction_scatterE">Decay::_areal_fraction_scatter (C++ member)</a>
+      <li><a href="cpp_api.html#_CPPv4N5Decay23_areal_scatter_fractionE">Decay::_areal_scatter_fraction (C++ member)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay20_constant_backgroundE">Decay::_constant_background (C++ member)</a>
 </li>
@@ -521,11 +525,13 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay8_weightsE">Decay::_weights (C++ member)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay21abs_lifetime_spectrumE">Decay::abs_lifetime_spectrum (C++ member)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N5Decay9add_curveEPPdPiPdiPdidii">Decay::add_curve (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay11add_pile_upEPdiPdiddd">Decay::add_pile_up (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbdd">Decay::compute_decay (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb">Decay::compute_decay (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay21compute_mean_lifetimeEP4TTTRP4TTTRii">Decay::compute_mean_lifetime (C++ function)</a>
 </li>
@@ -541,20 +547,22 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd">Decay::convolve_lifetime_spectrum_periodic (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbddddd">Decay::Decay (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N5Decay5DecayEP4TTTRP4TTTRiNSt6vectorIdEENSt6vectorIdEENSt6vectorIdEENSt6vectorIdEEiibdbdddddiiNSt6vectorIdEE">Decay::Decay (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay8evaluateENSt6vectorIdEE">Decay::evaluate (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4NK5Decay23get_amplitude_thresholdEv">Decay::get_amplitude_threshold (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4NK5Decay26get_areal_fraction_scatterEv">Decay::get_areal_fraction_scatter (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4NK5Decay26get_areal_scatter_fractionEv">Decay::get_areal_scatter_fraction (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay8get_chi2EiiNSt6stringE">Decay::get_chi2 (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4NK5Decay23get_constant_backgroundEv">Decay::get_constant_background (C++ function)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cpp_api.html#_CPPv4NK5Decay21get_convolution_startEv">Decay::get_convolution_start (C++ function)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="cpp_api.html#_CPPv4NK5Decay20get_convolution_stopEv">Decay::get_convolution_stop (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4NK5Decay19get_correct_pile_upEv">Decay::get_correct_pile_up (C++ function)</a>
@@ -587,9 +595,11 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay6phasorEPtid">Decay::phasor (C++ function)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay3setEddddPdi">Decay::set (C++ function)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N5Decay23set_amplitude_thresholdEd">Decay::set_amplitude_threshold (C++ function)</a>
 </li>
-      <li><a href="cpp_api.html#_CPPv4N5Decay26set_areal_fraction_scatterEd">Decay::set_areal_fraction_scatter (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv4N5Decay26set_areal_scatter_fractionEd">Decay::set_areal_scatter_fraction (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay23set_constant_backgroundEd">Decay::set_constant_background (C++ function)</a>
 </li>
@@ -611,6 +621,8 @@
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay10set_periodEd">Decay::set_period (C++ function)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay15set_score_rangeEii">Decay::set_score_range (C++ function)</a>
+</li>
       <li><a href="cpp_api.html#_CPPv4N5Decay13set_time_axisEPdi">Decay::set_time_axis (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay14set_total_areaEd">Decay::set_total_area (C++ function)</a>
@@ -620,6 +632,10 @@
       <li><a href="cpp_api.html#_CPPv4N5Decay11set_weightsEPdi">Decay::set_weights (C++ function)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv4N5Decay11shift_arrayEPdiPPdPidbd">Decay::shift_array (C++ function)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay5x_maxE">Decay::x_max (C++ member)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N5Decay5x_minE">Decay::x_min (C++ member)</a>
 </li>
       <li><a href="cpp_api.html#_CPPv440determine_number_of_records_by_file_sizePNSt4FILEE6size_t6size_t">determine_number_of_records_by_file_size (C++ function)</a>
 </li>
@@ -773,13 +789,7 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="cpp_api.html#c.MAX">MAX (C macro)</a>, <a href="cpp_api.html#c.MAX">[1]</a>, <a href="cpp_api.html#c.MAX">[2]</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glossary.html#term-MFD-Multiparameter-Fluorescence-Detection"><strong>MFD (Multiparameter Fluorescence Detection)</strong></a>
-</li>
-      <li><a href="cpp_api.html#c.MIN">MIN (C macro)</a>, <a href="cpp_api.html#c.MIN">[1]</a>, <a href="cpp_api.html#c.MIN">[2]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1151,9 +1161,13 @@
 </li>
       <li><a href="cpp_api.html#_CPPv421selection_by_channelsPPiPiPiiPai">selection_by_channels (C++ function)</a>
 </li>
+      <li><a href="cpp_api.html#_CPPv423selection_by_count_ratePPiPiPyididb">selection_by_count_rate (C++ function)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="cpp_api.html#_CPPv423selection_by_count_ratePPiPiPyididb">selection_by_count_rate (C++ function)</a>
+      <li><a href="cpp_api.html#_CPPv410statistics">statistics (C++ type)</a>
+</li>
+      <li><a href="cpp_api.html#_CPPv4N10statistics13chi2_countingERNSt6vectorIdEERNSt6vectorIdEEiiNSt6stringE">statistics::chi2_counting (C++ function)</a>
 </li>
       <li><a href="glossary.html#term-SWIG"><strong>SWIG</strong></a>
 </li>
