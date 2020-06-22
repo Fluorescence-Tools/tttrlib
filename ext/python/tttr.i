@@ -28,5 +28,8 @@
 %ignore TTTRRange(const TTTRRange& p2);
 %extend TTTR{%pythoncode "./ext/python/tttr/tttr_extension.py"}
 
+// Use shared_prt for TTTR to pass TTTR around
+%shared_ptr(TTTR)
+
 %include "../include/header.h"
 %include "../include/tttr.h"

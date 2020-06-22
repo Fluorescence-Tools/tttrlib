@@ -581,42 +581,42 @@ void ranges_by_time_window(
     auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
     auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
 #if VERBOSE
-    std::clog << "-- Select ranges_by_time_window: " << std::endl;
-    std::clog << "-- minimum_window_length: " << minimum_window_length << std::endl;
-    std::clog << "-- maximum_window_length: " << maximum_window_length << std::endl;
+    std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
+    std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
+    std::clog << "-- maximum_window_length [ms]: " << maximum_window_length << std::endl;
     std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons_in_time_window << std::endl;
     std::clog << "-- maximum_number_of_photons_in_time_window: " << maximum_number_of_photons_in_time_window << std::endl;
     std::clog << "-- macro_time_calibration: " << macro_time_calibration << std::endl;
-    std::clog << "-- tw_min: " << tw_min << std::endl;
-    std::clog << "-- tw_max: " << tw_max << std::endl;
+    std::clog << "-- tw_min [macro time clocks]: " << tw_min << std::endl;
+    std::clog << "-- tw_max [macro time clocks]: " << tw_max << std::endl;
 #endif
-    *output = (int *) malloc(2 * n_input * sizeof(int));
-    *n_output = 0;
-
+    std::vector<int> ss;
+    ss.reserve(200);
     size_t tw_begin = 0;
     while (tw_begin < n_input) {
         // search for the end of a time window
         size_t tw_end;
         unsigned long long dt;
-        for (tw_end = tw_begin; (tw_end < n_input); tw_end++){
+        for (tw_end = tw_begin; tw_end < n_input; tw_end++){
             dt = input[tw_end] - input[tw_begin];
-            if(dt >= tw_min){
-                break;
-            }
+            if(dt >= tw_min) break;
         }
         size_t n_ph = tw_end - tw_begin;
         bool is_selected =
             ((tw_max < 0) || (dt < tw_max)) &&
             ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window)) &&
             ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window));
-        is_selected = invert ? !is_selected : is_selected;
+        if(invert) is_selected = !is_selected;
         if (is_selected) {
-            (*output)[(*n_output) + 0] = tw_begin;
-            (*output)[(*n_output) + 1] = tw_end;
-            (*n_output) += 2;
+            ss.push_back(tw_begin);
+            ss.push_back(tw_end);
         }
         tw_begin = tw_end;
     }
+    *output = (int *) malloc(ss.size() * sizeof(int));
+    for(int i = 0; i<ss.size(); i++) (*output)[i] = ss[i];
+    int n_out = ss.size();
+    *n_output = n_out;
 }
 
 
