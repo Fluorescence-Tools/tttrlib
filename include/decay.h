@@ -13,6 +13,7 @@
 #include "tttr.h"
 #include "histogram.h"
 #include "statistics.h"
+#include "fit2x/fsconv.h"
 
 
 
@@ -192,7 +193,7 @@ public:
      * considered.
      * @param amplitude_threshold The threshold that is used to discriminate
      * fluorescence lifetimes that are smaller.
-     * @param add_pile_up if set to true (default is false) pile up will be added
+     * @param pile_up if set to true (default is false) pile up will be added
      * to the model function.
      * @param instrument_dead_time the dead time of the instrument (used for
      * pile up (in units of the lifetime, usually nano seconds)
@@ -222,7 +223,7 @@ public:
             double total_area = -1,
             bool use_amplitude_threshold = false,
             double amplitude_threshold = 1e10,
-            bool add_pile_up = false,
+            bool pile_up = false,
             double instrument_dead_time=120.0,
             double acquisition_time=100000.0,
             bool add_corrected_irf = false,
@@ -773,29 +774,6 @@ public:
             double areal_fraction_curve2,
             int start = 0,
             int stop = -1
-    );
-
-    /*!
-     * Correct the model function for pile up
-     *     # Coates, 1968, eq. 2
-    p = data / (n_excitation_pulses - np.cumsum(data))
-    # Coates, 1968, eq. 4
-
-     *
-     * @param model[in,out] The array containing the model function
-     * @param n_model[in] Number of elements in the model array
-     * @param data[in] The array containing the experimental decay
-     * @param n_data[in] number of elements in experimental decay
-     * @param repetition_rate[in] The repetition-rate in MHz
-     * @param dead_time[in] The dead-time of the detection system in nanoseconds
-     * @param measurement_time[in] The measurement time in seconds
-     */
-    static void add_pile_up(
-            double *model, int n_model,
-            double *data, int n_data,
-            double repetition_rate,
-            double dead_time,
-            double measurement_time
     );
 
 
