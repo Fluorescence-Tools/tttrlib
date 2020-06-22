@@ -4,12 +4,39 @@ def intensity(self):
     return self.get_intensity_image()
 
 
+@property
+def line_duration(self):
+    """ line duration in milliseconds
+    """
+    # this is in milliseconds
+    header = self.header
+    line_duration = (self[0][1][0].get_start_stop_time()[0] -
+                     self[0][0][0].get_start_stop_time()[0]) * \
+                    header.macro_time_resolution / 1e6
+    return line_duration
+
+
+@property
+def pixel_duration(self):
+    """ pixel duration in milliseconds
+    """
+    line = self[0][0]
+    return line.get_duration() * \
+           self.header.macro_time_resolution / \
+           (1e3 * self.n_pixel)
+
+
 def __repr__(self):
     return 'tttrlib.CLSMImage(%s, %s, %s)' % (
         self.n_frames,
         self.n_lines,
         self.n_pixel
     )
+
+
+@property
+def shape(self):
+    return self.n_frames, self.n_lines, self.n_pixel
 
 
 def __init__(
@@ -33,6 +60,7 @@ def __init__(
     if tttr_data is not None:
         if tttr_data.get_tttr_container_type() == 'PTU':
             header = tttr_data.header
+            self.header = header
             # Markers necessary to make FLIM image stack
             try:
                 kwargs["marker_frame_start"] = [2**(int(header.data['ImgHdr_Frame'])-1)]

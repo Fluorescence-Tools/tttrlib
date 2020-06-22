@@ -12,6 +12,7 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 # Optimize compiler flags
+###########################
 INCLUDE(CMakeHostSystemInformationExtra)
 INCLUDE(GetCPUSIMDFeatures)
 INCLUDE(CMakeCompilerMachineOption)
@@ -62,15 +63,17 @@ FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
-## Intel MKL
-##############
-find_package(MKL REQUIRED)
-if (MKL_FOUND)
-    INCLUDE_DIRECTORIES(${MKL_INCLUDE_DIRS})
-    LINK_LIBRARIES(${MKL_CORE_LIBRARY})
-else ()
-    message(WARNING "MKL libs not found")
-endif ()
+# Does not work on Windows and conda mkl
+# maybe the pytorch people will resolve this issue in the future.
+### Intel MKL
+###############
+#find_package(MKL REQUIRED)
+#if (MKL_FOUND)
+#    INCLUDE_DIRECTORIES(${MKL_INCLUDE_DIRS})
+#    LINK_LIBRARIES(${MKL_CORE_LIBRARY})
+#else ()
+#    message(WARNING "MKL libs not found")
+#endif ()
 
 ## Boost
 ###########################

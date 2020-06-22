@@ -39,6 +39,10 @@ void CLSMImage::copy(const CLSMImage& p2, bool fill){
 #if VERBOSE
     std::clog << std::endl;
 #endif
+#if VERBOSE
+    std::clog << "-- Linking TTTR: " << std::flush;
+#endif
+    tttr = p2.tttr;
     // public attributes
     marker_frame = p2.marker_frame;
     marker_line_start = p2.marker_line_start;
@@ -72,7 +76,7 @@ void CLSMImage::shift_line_start(
 
 
 CLSMImage::CLSMImage (
-        TTTR *tttr_data,
+        std::shared_ptr<TTTR> tttr_data,
         std::vector<int> marker_frame_start,
         int marker_line_start,
         int marker_line_stop,
@@ -122,18 +126,18 @@ CLSMImage::CLSMImage (
             switch (image_reading_routines[reading_routine]){
                 case 0:
                     initialize_default(
-                            tttr_data,
+                            tttr_data.get(),
                             skip_before_first_frame_marker
                     );
                     break;
                 case 1:
-                    initialize_leica_sp8_ptu(tttr_data);
+                    initialize_leica_sp8_ptu(tttr_data.get());
                     break;
                 case 2:
-                    initialize_leica_sp5_ptu(tttr_data);
+                    initialize_leica_sp5_ptu(tttr_data.get());
                     break;
                 default:
-                    initialize_default(tttr_data);
+                    initialize_default(tttr_data.get());
                     break;
             }
 #if VERBOSE
@@ -148,10 +152,11 @@ CLSMImage::CLSMImage (
     }
     if(tttr_data != nullptr){
         if(fill && !channels.empty()){
-            fill_pixels(tttr_data, channels, false);
+            fill_pixels(tttr_data.get(), channels, false);
         }
     }
     if(macro_time_shift!=0) shift_line_start(macro_time_shift);
+    tttr = tttr_data;
 }
 
 void CLSMImage::define_pixels_in_lines() {
@@ -422,11 +427,8 @@ void CLSMImage::fill_pixels(
         ) {
 #if VERBOSE
     std::clog << "-- Filling pixels..." << std::endl;
-    std::clog << "-- Channels: ";
-    for(auto ch: channels){
-        std::clog << ch << " ";
-    }
-    std::clog << std::endl;
+    std::clog << "-- Channels: "; for(auto ch: channels) std::clog << ch << " "; std::clog << std::endl;
+    std::clog << "-- Clear pixel before fill: " << clear_pixel << std::endl;
     std::clog << "-- Assign photons to pixels" << std::endl;
 #endif
     for(auto frame : frames){
@@ -446,9 +448,7 @@ void CLSMImage::fill_pixels(
                     if(c == ci){
                         auto line_time = (tttr_data->macro_times[event_i] - line->_start_time);
                         auto pixel_nbr = line_time / pixel_duration;
-                        if(pixel_nbr < n_pixels_in_line){
-                            line->pixels[pixel_nbr]->append(event_i);
-                        }
+                        if(pixel_nbr < n_pixels_in_line) line->pixels[pixel_nbr]->append(event_i);
                         break;
                     }
                 }
@@ -548,7 +548,7 @@ void CLSMImage::get_fluorescence_decay_image(
 
 void CLSMImage::get_fcs_image(
         float** output, int* dim1, int* dim2, int* dim3, int* dim4,
-        TTTR* tttr,
+        std::shared_ptr<TTTR> tttr,
         CLSMImage* clsm_other,
         const std::string correlation_method,
         const int n_bins, const int n_casc,
@@ -560,7 +560,7 @@ void CLSMImage::get_fcs_image(
     std::clog << "Get fluorescence correlation image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
-    auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+    auto corr = Correlator(tttr.get(), correlation_method, n_bins, n_casc);
     const int n_corr = corr.x_axis.size();
 
     size_t n_cor_total = nf * n_lines * n_pixel * n_corr;
@@ -575,7 +575,7 @@ void CLSMImage::get_fcs_image(
     size_t o_frame = 0;
 #pragma omp parallel for default(none) shared(tttr, o_frame, t, clsm_other)
     for(int i_frame=0; i_frame < n_frames; i_frame++){
-        auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+        auto corr = Correlator(tttr.get(), correlation_method, n_bins, n_casc);
         auto frame = frames[i_frame];
         auto other_frame = clsm_other->frames[i_frame];
         for(int i_line=0; i_line < n_lines; i_line++){
@@ -626,7 +626,7 @@ void CLSMImage::get_fcs_image(
 
 void CLSMImage::get_average_decay_of_pixels(
         TTTR* tttr_data,
-        uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3,
+        uint8_t* mask, int dmask1, int dmask2, int dmask3,
         unsigned int** output, int* dim1, int* dim2,
         int tac_coarsening,
         bool stack_frames
@@ -646,7 +646,7 @@ void CLSMImage::get_average_decay_of_pixels(
     *dim2 = (int) n_tac;
     size_t n_tac_total = n_decays * n_tac;
     auto* t = (unsigned int*) calloc(n_tac_total, sizeof(unsigned int));
-    if((d_selection_1 != n_frames) || (d_selection_2 != n_lines) || (d_selection_3 != n_pixel)){
+    if((dmask1 != n_frames) || (dmask2 != n_lines) || (dmask3 != n_pixel)){
         std::cerr << "Error: the dimensions of the selection ("
                   << n_frames << ", " << n_lines << ", " << n_pixel
                   << ") does not match the CLSM image dimensions.";
@@ -658,7 +658,7 @@ void CLSMImage::get_average_decay_of_pixels(
                 auto line = frame->lines[i_line];
                 for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                     auto pixel = line->pixels[i_pixel];
-                    if (selection[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel]){
+                    if (mask[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel]){
                         for (auto i : pixel->_tttr_indices) {
                             size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
                             t[w_frame * n_tac + i_tac] += 1;
@@ -888,71 +888,348 @@ void CLSMImage::get_mean_lifetime_image(
 }
 
 
-void CLSMImage::compute_ics(
+void CLSMImage::get_roi(
         double** output, int* dim1, int* dim2, int* dim3,
-        TTTR* tttr_data
-){
+        CLSMImage* clsm,
+        std::vector<int> x_range,
+        std::vector<int> y_range,
+        std::string subtract_average,
+        double background,
+        bool clip, double clip_max, double clip_min,
+        double *images, int n_frames, int n_lines, int n_pixel,
+        uint8_t *mask, int dmask1, int dmask2, int dmask3,
+        std::vector<int> selected_frames
+) {
 #if VERBOSE
-    std::clog << "compute_ics..." << std::endl;
+    std::clog << "CREATE ROI" << std::endl;
 #endif
-    auto t = (double*) calloc(n_frames * n_lines * n_pixel, sizeof(double));
-    fftw_complex *in, *out;
-    fftw_plan p_forward, p_backward;
-    int N = n_lines * n_pixel;
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    p_forward = fftw_plan_dft_2d(
-            n_lines, n_pixel,
-            in, out,
-            FFTW_FORWARD, FFTW_MEASURE
-    );
-    p_backward = fftw_plan_dft_2d(
-            n_lines, n_pixel,
-            in, out,
-            FFTW_BACKWARD, FFTW_MEASURE
-    );
-    for (int i_frame = 0; i_frame < n_frames; i_frame++) {
-        auto frame = frames[i_frame];
+    // determine the total number of frames, lines, and pixel in the input
+    int nf, nl, np; // the number frames, lines, and pixel in the input
+    TTTR* tttr_data = nullptr;
+    if(clsm != nullptr){
+#if VERBOSE
+        std::clog << "-- Using CLSM/TTTR data" << std::endl;
+#endif
+        if(clsm->tttr == nullptr)
+            std::cerr << "WARNING: CLSM has no TTTR data associated." << std::endl;
+        tttr_data = clsm->tttr.get();
+        nf = clsm->n_frames;
+        nl = clsm->n_lines;
+        np = clsm->n_pixel;
+    } else if(
+            (images != nullptr) &&
+            (n_frames > 0) &&
+            (n_lines > 0) &&
+            (n_pixel > 0)
+    ){
+#if VERBOSE
+        std::clog << "-- Using image array input" << std::endl;
+#endif
+        nf = n_frames;
+        nl = n_lines;
+        np = n_pixel;
+    } else{
+        std::cerr << "ERROR: No input data specified!" << std::endl;
+    }
+#if VERBOSE
+    std::clog << "-- Input number of frames: " << nf << std::endl;
+    std::clog << "-- Input number of lines: " << nl << std::endl;
+    std::clog << "-- Input number of pixel: " << np << std::endl;
+#endif
+    // Determine mask
+    bool use_mask =
+            (dmask1 > 0) &&
+            (dmask2 > 0) &&
+            (dmask3 > 0) &&
+            (mask != nullptr);
 
-        // copy data in input and compute integral of intensity
-        double total_intensity = 0.0;
-        for (int l = 0; l < n_lines; l++) {
-            auto line = frame->lines[l];
-            for (int p = 0; p < n_pixel; p++) {
-                int n_pixel_kl = line->pixels[p]->_tttr_indices.size();
-                in[l * (n_pixel) + p][0] = n_pixel_kl;
-                total_intensity += n_pixel_kl;
+    // determine ROI range
+    // if no stop specified (-1) use n_pixel, n_lines as stop
+    int start_x = x_range[0]; int stop_x = x_range[1];
+    int start_y = y_range[0]; int stop_y = y_range[1];
+    stop_x = (stop_x<0)? np: stop_x % np;
+    stop_y = (stop_y<0)? nl: stop_y % nl;
+
+    // Compute the shape of the output array
+    int ncol_roi = stop_x - start_x;
+    int nrows_roi = stop_y - start_y;
+    int nframes_roi = selected_frames.size();
+    int pixel_in_roi = nrows_roi * ncol_roi;
+
+#if VERBOSE
+    std::clog << "-- ROI (x0, x1, y0, y1): " <<
+              start_x << ", " << stop_x << ", " <<
+              start_y << ", " << stop_y << std::endl;
+    std::clog << "-- ROI size (nx, ny): " << ncol_roi << ", " << nrows_roi << std::endl;
+    std::clog << "-- Number of pixel in ROI: " << pixel_in_roi << std::endl;
+#endif
+    if(selected_frames.empty()){
+#if VERBOSE
+        std::clog << "-- No frames specified, using all frames in input" << std::endl;
+#endif
+        selected_frames.reserve(nf);
+        for(int i=0; i < nf; i++) selected_frames.emplace_back(i);
+        nframes_roi = selected_frames.size();
+    }
+#if VERBOSE
+    if(use_mask)
+        std::clog << "-- Using selection mask." << std::endl;
+    else
+        std::clog << "-- No mask mask specified." << std::endl;
+#endif
+    // Check size of mask and give warning if mask size does not match ROI
+    if(
+            ((nf != dmask1) || (nl != dmask2) || (np != dmask3)) &&
+            use_mask
+    ) std::clog << "WARNING: Selection mask size and ROI size do not match!" << std::endl;
+    std::vector<bool> mask_v(nf*nl*np,true);
+    // copy the values from the input to the mask
+    for(int f=0; f<nf; f++)
+        for(int l=0; (l<nl) && (l < dmask2); l++)
+            for(int p=0; (p<np) && (p < dmask3); p++){
+                // in cases the number of frames in mask is smaller then the
+                // number of frames in ROI use first frame in mask
+                int fi = (f < dmask1)? f : 1;
+                mask_v[f*nl*np + l*np + p] = mask[fi * dmask1 * dmask2 + l * dmask2 + p];
             }
-        }
-        fftw_execute(p_forward);
-        // make product of FFT(img) * conj(FFT(img))
-        for(int n=0; n<N; n++){
-            in[n][0] = out[n][0] * out[n][0] + out[n][1] * out[n][1];
-            in[n][1] = 0;
-        }
-        // make backward transform
-        fftw_execute(p_backward);
-
-        // copy to results and normalize
-        int frame_pos = i_frame * (n_lines * n_pixel);
-        double total_intensity_2 = total_intensity * total_intensity;
-        for (int l = 0; l < n_lines; l++) {
-            int line_pos = frame_pos + l * n_pixel;
-            for (int p = 0; p < n_pixel; p++) {
-                int pixel_pos = line_pos + p;
-                // We need to normalize by the mean intensity and the number of
-                // pixels. However, as forward and backward FFT of fftw3 introduces
-                // a factor of N=nx*ny it is enough to divide by total_intensity_2.
-                t[pixel_pos] = out[pixel_pos][0] / total_intensity_2 - 1.0;
+#if VERBOSE
+    std::clog << "-- Copying image to ROI array... " << std::endl;
+    std::clog << "-- Frames in ROI: " << nframes_roi << std::endl;
+#endif
+    auto *img_roi = (double*) calloc(nframes_roi * pixel_in_roi, sizeof(double));
+#if VERBOSE
+    std::clog << "-- Copying frame: ";
+#endif
+    int current_pixel = 0;
+    for(auto f:selected_frames){
+#if VERBOSE
+        std::clog << f << " ";
+#endif
+        for(int l=start_y;l<stop_y;l++){
+            for(int p=start_x; p<stop_x;p++){
+                if(mask_v[current_pixel]){
+                    double value;
+                    if(clsm != nullptr) {
+                        auto frame = clsm->frames[f];
+                        auto line = frame->lines[l];
+                        value = line->pixels[p]->_tttr_indices.size();
+                    } else if(images != nullptr){
+                        value = images[f * (nl * np) + l * nl + p];
+                    }
+                    img_roi[current_pixel] = value;
+                } else{
+                    img_roi[current_pixel] = 0.0;
+                }
+                current_pixel++;
             }
         }
     }
-    fftw_destroy_plan(p_forward);
-    fftw_destroy_plan(p_backward);
-    fftw_free(in); fftw_free(out);
+#if VERBOSE
+    std::clog << std::endl;
+    std::clog << "-- Correcting ROI" << std::endl;
+#endif
+    if(background != 0){
+#if VERBOSE
+        std::clog << "-- Subtracted background per pixel: " << background << std::endl;
+#endif
+        for(int f=0;f<nframes_roi;f++){
+            for(int p=0;p<pixel_in_roi;p++){
+                img_roi[f * pixel_in_roi + p] -= background;
+            }
+        }
+    }
+    if(clip){
+#if VERBOSE
+        std::clog << "-- Clipping values: " << clip_max << ", " << clip_min << std::endl;
+#endif
+        for(int f=0;f<nframes_roi;f++){
+            for(int p=0;p<pixel_in_roi;p++){
+                double value = img_roi[f * pixel_in_roi + p];
+                value = std::min(clip_max, value);
+                value = std::max(clip_min, value);
+                img_roi[f * pixel_in_roi + p] = value;
+            }
+        }
+    }
+#if VERBOSE
+    std::clog << "-- Subtract average mode: " << subtract_average << std::endl;
+#endif
+    if(subtract_average=="stack"){
+#if VERBOSE
+        std::clog << "-- Subtract pixel average of all frames." << std::endl;
+#endif
+        auto img_mean = (double*) calloc(pixel_in_roi, sizeof(double));
+        double total_count = 0.0;
+        for(int f=0;f<nframes_roi;f++){
+            for(int p=0;p<pixel_in_roi;p++){
+                double count = img_roi[f * pixel_in_roi + p];
+                total_count += count;
+                img_mean[p] += count;
+            }
+        }
+        double mean_count = total_count / (nframes_roi * pixel_in_roi);
+        for(int p=0;p<pixel_in_roi;p++){
+            img_mean[p] /= nframes_roi;
+        }
+        for(int f=0;f<nframes_roi;f++){
+            for(int p=0;p<pixel_in_roi;p++){
+                img_roi[f * pixel_in_roi + p] =
+                        img_roi[f * pixel_in_roi + p] - img_mean[p] + mean_count;
+            }
+        }
+        free(img_mean);
+    } else if(subtract_average=="frame"){
+#if VERBOSE
+        std::clog << "-- Subtracting average intensity in frame." << std::endl;
+#endif
+        // compute the mean intensity in image and subtract the mean fro
+        for(int f=0;f<nframes_roi;f++){
+            double total_count = 0.0;
+            for(int p=0;p<pixel_in_roi;p++){
+                total_count += img_roi[f * pixel_in_roi + p];
+            }
+            double mean_count = total_count / (nframes_roi * pixel_in_roi);
+            for(int p=0;p<pixel_in_roi;p++){
+                img_roi[f * pixel_in_roi + p] = img_roi[f * pixel_in_roi + p] - mean_count;
+            }
+        }
+    }
+    *output = img_roi;
+    *dim1 = nframes_roi;
+    *dim2 = nrows_roi;
+    *dim3 = ncol_roi;
+}
 
-    *dim1 = (int) n_frames;
-    *dim2 = (int) n_lines;
-    *dim3 = (int) n_pixel;
-    *output = t;
+
+void CLSMImage::compute_ics(
+        double** output, int* dim1, int* dim2, int* dim3,
+        std::shared_ptr<TTTR> tttr_data,
+        CLSMImage* clsm,
+        double *images, int input_frames, int input_lines, int input_pixel,
+        std::vector<int> x_range, std::vector<int> y_range,
+        std::vector<std::pair<int,int>> frames_index_pairs,
+        std::string subtract_average,
+        CLSMImage* clsm2,
+        double *images_2, int input_frames_2, int input_lines_2, int input_pixel_2,
+        uint8_t *mask, int dmask1, int dmask2, int dmask3
+){
+#if VERBOSE
+    std::clog << "COMPUTE_ICS" << std::endl;
+#endif
+    // create roi
+    double *roi1; int nf1, nl1, np1;
+    double *roi2; int nf2, nl2, np2;
+    // If pair of ICS frames empty make ACF without frame shift
+    get_roi(&roi1, &nf1, &nl1, &np1,
+            clsm, x_range, y_range,
+            subtract_average, 0.0,
+            false, 1, 1,
+            images, input_frames, input_lines, input_pixel,
+            mask, dmask1, dmask2, dmask3
+    );
+    if((clsm2!= nullptr)&&(images_2!= nullptr)){
+        get_roi(&roi2, &nf2, &nl2, &np2,
+                clsm, x_range, y_range,
+                subtract_average, 0.0,
+                false, 1, 1,
+                images, input_frames, input_lines, input_pixel,
+                mask, dmask1, dmask2, dmask3
+        );
+    } else{
+        roi2 = roi1;
+        nf2 = nf1; nl2 = nl1; np2 = np1;
+    }
+    int nf, nl, np;
+    nf = std::min(nf1, nf2);
+    nl = std::min(nl1, nl2);
+    np = std::min(np1, np2);
+    int pixel_in_roi = nl * np;
+
+    // Define set of frame pairs (if no pairs were defined)
+    if(frames_index_pairs.empty()){
+#if VERBOSE
+        std::clog << "-- No frame pair selection: Computing ACF " << std::endl;
+#endif
+        frames_index_pairs.reserve(nf);
+        for(int i=0; i < nf; i++) frames_index_pairs.emplace_back(std::make_pair(i, i));
+    }
+    // Allocate memory for the ICS output array
+    auto out_tmp = (double*) calloc(frames_index_pairs.size() * pixel_in_roi, sizeof(double));
+    // Prepare FFTW plans for first and second frame, and the inverse
+    fftw_complex *in, *first_out, *second_out;
+    fftw_plan p_forward_first, p_forward_second, p_backward;
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
+    first_out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
+    second_out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
+    p_forward_first = fftw_plan_dft_2d(nl, np, in, first_out, FFTW_FORWARD, FFTW_MEASURE);
+    p_forward_second = fftw_plan_dft_2d(nl, np, in, second_out, FFTW_FORWARD, FFTW_MEASURE);
+    p_backward = fftw_plan_dft_2d(nl, np, in, first_out, FFTW_BACKWARD, FFTW_MEASURE);
+    // Iterate through the pair of frames
+#if VERBOSE
+    std::clog << "-- CCF of pair: ";
+#endif
+    int current_frame = 0;
+    for (auto frame_pair: frames_index_pairs) {
+#if VERBOSE
+        std::clog << "(" << frame_pair.first << ", " << frame_pair.second << ") ";
+#endif
+        // FFT of first frame
+        double first_frame_total_intensity = 0.0;
+        for (int pix = 0; pix < pixel_in_roi; pix++) {
+            double count = roi1[frame_pair.first * pixel_in_roi + pix];
+            first_frame_total_intensity += count;
+            in[pix][0] = count;
+        }
+        fftw_execute(p_forward_first);
+        // FFT of second frame
+        double second_frame_total_intensity;
+        if(frame_pair.second != frame_pair.first){
+            second_frame_total_intensity = 0.0;
+            for (int pix = 0; pix < pixel_in_roi; pix++) {
+                double count = roi1[frame_pair.second * pixel_in_roi + pix];
+                second_frame_total_intensity += count;
+                in[pix][0] = count;
+            }
+            fftw_execute(p_forward_second);
+            // make product of FFT(img1) * conj(FFT(img2))
+            for(int n=0; n < pixel_in_roi; n++){
+                in[n][0] = first_out[n][0] * second_out[n][0] + first_out[n][1] * second_out[n][1];
+                in[n][1] = 0;
+            }
+        } else{
+            // if the second frame equals to the first use first FFT
+            second_frame_total_intensity = first_frame_total_intensity;
+            // make product of FFT(img1) * conj(FFT(img1))
+            for(int n=0; n < pixel_in_roi; n++){
+                in[n][0] = first_out[n][0] * first_out[n][0] + first_out[n][1] * first_out[n][1];
+                in[n][1] = 0;
+            }
+        }
+        // make backward transform FFT-1(FFT(img1) * conj(FFT(img2)))
+        fftw_execute(p_backward);
+        // copy to results to ics output and normalize
+        int frame_pos = current_frame * pixel_in_roi;
+        for(int pix=0; pix < pixel_in_roi; pix++){
+            // We need to normalize by the mean intensity and the number of
+            // pixels. A forward and backward FFT by fftw3 introduce a factor
+            // N=nx*ny. THus, it is enough to divide by total_intensity_2.
+            double denom = (first_frame_total_intensity * second_frame_total_intensity);
+            out_tmp[frame_pos + pix] = first_out[pix][0] / denom - 1.0;
+        }
+        current_frame++;
+    }
+#if VERBOSE
+    std::clog << std::endl;
+#endif
+    fftw_destroy_plan(p_forward_first);
+    fftw_destroy_plan(p_forward_second);
+    fftw_destroy_plan(p_backward);
+    fftw_free(in);
+    fftw_free(first_out); fftw_free(second_out);
+    free(roi1);
+
+    *dim1 = (int) nf;
+    *dim2 = (int) nl;
+    *dim3 = (int) np;
+    *output = out_tmp;
 }

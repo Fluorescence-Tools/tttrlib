@@ -3,6 +3,7 @@
 
 #include <omp.h>
 #include "fftw3.h"
+//#include "mkl_dfti.h"
 #include <stdlib.h>
 #include <tttr.h>
 #include <vector>
@@ -28,9 +29,7 @@ class CLSMPixel : public TTTRRange{
             _stop = p2->_stop;
             _start_time = p2->_start_time;
             _stop_time = p2->_stop_time;
-            for(auto &v: p2->_tttr_indices){
-                _tttr_indices.emplace_back(v);
-            }
+            _tttr_indices = p2->_tttr_indices;
         }
     }
 
@@ -237,6 +236,7 @@ public:
     /// The event type used for the marker
     int marker_event;
 
+    std::shared_ptr<TTTR> tttr;
 
     /*!
      * Fill the tttr_indices of the pixels with the indices of the channels
@@ -268,7 +268,7 @@ public:
      */
     void get_fcs_image(
             float **output, int *dim1, int *dim2, int *dim3, int *dim4,
-            TTTR *tttr,
+            std::shared_ptr<TTTR> tttr,
             CLSMImage *clsm_other,
             std::string correlation_method = "default",
             int n_bins = 50,
@@ -322,10 +322,10 @@ public:
      * contribute to the returned array of micro time histograms.
      *
      * @param tttr_data pointer to a TTTR object
-     * @param selection a stack of images used to select pixels
-     * @param d_selection_1  number of frames
-     * @param d_selection_2  number of lines
-     * @param d_selection_3  number of pixels per line
+     * @param mask a stack of images used as a mask to select pixels
+     * @param dmask1  number of frames
+     * @param dmask2  number of lines
+     * @param dmask3  number of pixels per line
      * @param out pointer to output array of unsigned int contains the micro time histograms
      * @param dim1 dimension of the output array, i.e., the number of stacks
      * @param dim1 dimension the number of micro time channels
@@ -334,7 +334,7 @@ public:
      */
     void get_average_decay_of_pixels(
             TTTR *tttr_data,
-            uint8_t *selection, int d_selection_1, int d_selection_2, int d_selection_3,
+            uint8_t* mask, int dmask1, int dmaks2, int dmask3,
             unsigned int **output, int *dim1, int *dim2,
             int tac_coarsening,
             bool stack_frames
@@ -495,7 +495,7 @@ public:
      * the pixels.
      */
     explicit CLSMImage(
-            TTTR *tttr_data = nullptr,
+            std::shared_ptr<TTTR> tttr_data = nullptr,
             std::vector<int> marker_frame_start = std::vector<int>(),
             int marker_line_start = 0,
             int marker_line_stop = 0,
@@ -533,9 +533,112 @@ public:
         return frames[i_frame];
     };
 
-    void compute_ics(
+    /*!
+     * Computes an image correlation via FFTs for a set of frames
+     *
+     * This function computes the image correlation for a set of frames. The
+     * frames can be either specified by an array or by a CLSMImage object. This
+     * function can compute image cross-correlation and image auto-correlations.
+     * The type of the correlation is specified by a set of pairs that are cross-
+     * correlated.
+     *
+     * @param output the array that will contain the ICS
+     * @param dim1 number of frames in the ICS
+     * @param dim2 number of lines (line shifts) in the ICS
+     * @param dim3 number of pixel (pixel shifts) in the ICS
+     * @param tttr_data
+     * @param clsm an optional pointer to a CLSMImage object
+     * @param images an optional pointer to an image array
+     * @param input_frames number of frames in the image array
+     * @param input_lines number of lines in the image array
+     * @param input_pixel number of pixel in the image array
+     * @param x_range defines the region of interest (ROI) in the image (pixel).
+     * This parameter is optional. The default value is [0,-1]. This means that
+     * the entire input pixel range is used
+     * @param y_range region defines the ROI in y-direction (lines). The default
+     * value is [0,-1]. By default all lines in the image are used.
+     * @param frames_index_pairs A vector of integer pairs. The pairs correspond
+     * to the frame numbers in the input that will be cross-correlated. If no
+     * vector of frame pairs is specified the image auto-correlation will be
+     * computed
+     * @param subtract_average the input image can be corrected for the background,
+     * i.e., a constant background can be subtracted from the frames. If this
+     * parameter is set to "stack" the average over all frames is computed and
+     * subtracted pixel-wise from each frame. If this parameter is set to "frame"
+     * the average of each frame is computed and subtracted from the each frame.
+     * By default no correction is applied.
+     * @param mask a stack of images used as a to select pixels
+     * @param dmask1  number of frames
+     * @param dmask2  number of lines
+     * @param dmask3  number of pixels per line
+     */
+    static void compute_ics(
             double **output, int *dim1, int *dim2, int *dim3,
-            TTTR *tttr_data
+            std::shared_ptr<TTTR> tttr_data = nullptr,
+            CLSMImage* clsm = nullptr,
+            double *images = nullptr, int input_frames=-1, int input_lines=-1, int input_pixel=1,
+            std::vector<int> x_range=std::vector<int>({0,-1}),
+            std::vector<int> y_range=std::vector<int>({0,-1}),
+            std::vector<std::pair<int,int>> frames_index_pairs=std::vector<std::pair<int,int>>(),
+            std::string subtract_average="",
+            CLSMImage* clsm2=nullptr,
+            double *images_2=nullptr, int input_frames_2=-1, int input_lines_2=-1, int input_pixel_2=-1,
+            uint8_t *mask=nullptr, int dmask1=-1, int dmask2=-1, int dmask3=-1
+    );
+
+     /*!
+      * Copies a region of interest (ROI) into a new image and does some background
+      * correction.
+      *
+      * The ROI is defined by defining a range for the pixels and lines. The ROI
+      * can be corrected by a constant background value, clipped to limit the range
+      * of the output values, and corrected by the mean intensity of the frames.
+      *
+      * @param output the array that will contain the ROI. The array is allocated
+      * by the function
+      * @param dim1 the number of frames in the output ROI
+      * @param dim2 the number of lines per frame in the output
+      * @param dim3 the number of pixels per line in the output ROI
+      * @param clsm a pointer to a CLSMImage object
+      * @param x_range the range (selection) of the pixels
+      * @param y_range the range (selection) of the lines
+      * @param subtract_average If this parameter is set to "stack" the mean image
+      * of the ROIs that is computed by the average over all frames is subtracted
+      * from each frame and the mean intensity of all frames and pixels is added
+      * to the pixels. If this parameter is set to "frame" the average of each
+      * frame is subtracted from each frame. The default behaviour is to do nothing.
+      * @param background A constant number that is subtracted from each pixel.
+      * @param clip If set to true (the default value is false) the values in the
+      * ROI are clipped to the range [clip_min, clip_max]
+      * @param clip_max the maximum value when output ROIs are clipped
+      * @param clip_min the minimum value when output ROIs are clipped
+      * @param images Input array of images that are used to defined ROIs. If no
+      * CLSMImage object is specified. This array is used as an input.
+      * @param n_frames The number of frames in the input array images
+      * @param n_lines The number of lines in the input array images
+      * @param n_pixel The number of pixel in the input array images
+      * @param selected_frames A list of frames that is used to define the ROIs.
+      * If no frames are defined by this list, all frames in the input are used.
+      * @param mask a stack of images used as a to select pixels
+      * @param dmask1  number of frames if the number of frames in the mask is
+      * smaller then the ROI the first mask frame will be applied to all ROI
+      * frames that are greater than dmask1
+      * @param dmask2  number of lines if smaller then ROI the outside region
+      * will be selected and the mask will be applied to all lines smaller than
+      * dmask2
+      * @param dmask3 number of pixels per line in the mask.
+      */
+    static void get_roi(
+             double** output, int* dim1, int* dim2, int* dim3,
+             CLSMImage* clsm = nullptr,
+             std::vector<int> x_range=std::vector<int>({0,-1}),
+             std::vector<int> y_range=std::vector<int>({0,-1}),
+             std::string subtract_average = "",
+             double background = 0.0,
+             bool clip=false, double clip_max=1e6, double clip_min=-1e6,
+             double *images = nullptr, int input_frames=-1, int input_lines=-1, int input_pixel=1,
+             uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1,
+             std::vector<int> selected_frames = std::vector<int>()
     );
 
 };

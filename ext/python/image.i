@@ -8,8 +8,13 @@ static int myErr = 0; // flag to save error state
 %template(vector_CLSMLine) std::vector<CLSMLine*>;
 %template(vector_CLSMPixel) std::vector<CLSMPixel*>;
 
-%apply (uint8_t* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {(uint8_t* selection, int d_selection_1, int d_selection_2, int d_selection_3)}
-
+%apply (unsigned char* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
+    (uint8_t* mask, int dmask1, int dmaks2, int dmask3)
+}
+%apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {
+    (double *images, int input_frames, int input_lines, int input_pixel),
+    (double *images_2, int input_frames_2, int input_lines_2, int input_pixel_2)
+}
 // documentation see
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
 %attribute(CLSMImage, int, n_frames, get_n_frames);
