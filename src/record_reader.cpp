@@ -30,7 +30,7 @@
  * contains marker.
  */
 bool ProcessPHT3(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time_or_marker,
@@ -68,7 +68,7 @@ bool ProcessPHT3(
 
 /// PicoHarp T2 input
 bool ProcessPHT2(
-    uint64_t &TTTRRecord,
+    uint32_t &TTTRRecord,
     uint64_t &overflow_counter,
     uint64_t &true_nsync,
     uint32_t &micro_time,
@@ -101,7 +101,7 @@ bool ProcessPHT2(
 
 
 bool ProcessHHT2v1(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -136,7 +136,7 @@ bool ProcessHHT2v1(
 
 /// HydraHarp/TimeHarp260 T2 input
 bool ProcessHHT2v2(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -181,7 +181,7 @@ bool ProcessHHT2v2(
 
 
 bool ProcessHHT3v2(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -197,25 +197,17 @@ bool ProcessHHT3v2(
         return false;
     }
     else {
-        if(rec.bits.special == 1){
-            record_type = RECORD_MARKER;
-            channel = (uint16_t) (rec.bits.channel);
-            true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = rec.bits.dtime;
-            return true;
-        } else{
-            record_type = RECORD_PHOTON;
-            channel = (uint16_t) (rec.bits.channel);
-            true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = rec.bits.dtime;
-            return true;
-        }
+        record_type = rec.bits.special; // special bit set for RECORD_MARKER = 1;
+        channel = (uint16_t) (rec.bits.channel);
+        true_nsync = overflow_counter + rec.bits.n_sync;
+        micro_time = rec.bits.dtime;
+        return true;
     }
 }
 
 
 bool ProcessHHT3v1(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -231,59 +223,44 @@ bool ProcessHHT3v1(
         return false;
     }
     else {
-        if(rec.bits.special == 1){
-            record_type = RECORD_MARKER;
-            channel = (uint16_t) (rec.bits.channel);
-            true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = 0;
-            return true;
-        } else{
-            record_type = RECORD_PHOTON;
-            channel = (uint16_t) (rec.bits.channel);
-            true_nsync = overflow_counter + rec.bits.n_sync;
-            micro_time = rec.bits.dtime;
-            return true;
-        }
+        record_type = rec.bits.special; // == RECORD_MARKER=1;
+        channel = (uint16_t) (rec.bits.channel);
+        true_nsync = overflow_counter + rec.bits.n_sync;
+        micro_time = rec.bits.dtime;
+        return true;
     }
 }
 
 
 bool ProcessSPC130(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
         int16_t &channel,
         int16_t &record_type
-        ){
+){
     bh_spc130_record_t rec;
     rec.allbits = TTTRRecord;
-
-    if(!rec.bits.mtov && !rec.bits.invalid){
+    if(!rec.bits.invalid){
         // normal record
+        overflow_counter += rec.bits.mtov;
         true_nsync = rec.bits.mt + overflow_counter * 4096;
         micro_time = (uint16_t) (4095 - rec.bits.adc);
         channel = (uint16_t) (rec.bits.rout);
         return true;
-    } else if(!rec.bits.invalid && rec.bits.mtov) {
-        // valid record with a single macro time overflow
-        overflow_counter += 1;
-        true_nsync = rec.bits.mt + overflow_counter * 4096; // 4096 = 2**12 (12 bits for macro time counter)
-        micro_time = (uint16_t) (4095 - rec.bits.adc);
-        channel = (uint16_t) (rec.bits.rout);
-        return true;
     } else if(rec.bits.invalid && rec.bits.mtov){
-                bh_overflow_t overflow_record;
-                overflow_record.allbits = TTTRRecord;
-                overflow_counter += overflow_record.bits.cnt;
-                return false;
+        bh_overflow_t overflow_record;
+        overflow_record.allbits = TTTRRecord;
+        overflow_counter += overflow_record.bits.cnt;
+        return false;
     }
     return false;
 }
 
 
 bool ProcessSPC600_4096(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,
@@ -310,7 +287,7 @@ bool ProcessSPC600_4096(
 
 
 bool ProcessSPC600_256(
-        uint64_t &TTTRRecord,
+        uint32_t &TTTRRecord,
         uint64_t &overflow_counter,
         uint64_t &true_nsync,
         uint32_t &micro_time,

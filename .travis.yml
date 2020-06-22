@@ -5,8 +5,18 @@ matrix:
   include:
     - os: linux
       dist: bionic
+      addons:
+        apt:
+          packages:
+            - doxygen
     - os: osx
       osx_image: xcode9.4
+      addons:
+        homebrew:
+          packages:
+            - doxygen
+            - libomp
+          update: true
 
 # The Sphinx C++ docs are build with doxygen and breathe
 addons:
@@ -16,6 +26,7 @@ addons:
   homebrew:
     packages:
       - doxygen
+    update: true
 
 env:
   # Build and test package on all supported python versions
@@ -47,7 +58,7 @@ script:
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
   - echo $PWD
-  - nosetests --with-coverage test_*.py
+  - nosetests --nocapture --with-coverage test_*.py
   - cd ..
 
 after_success:

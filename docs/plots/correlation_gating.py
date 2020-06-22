@@ -6,7 +6,7 @@ fig, ax = p.subplots(nrows=1, ncols=2)
 
 #  Read the data data
 
-data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
 
 # Create correlator
 B = 9

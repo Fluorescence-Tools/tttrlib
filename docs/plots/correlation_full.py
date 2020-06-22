@@ -2,7 +2,7 @@ import tttrlib
 import pylab as p
 import numpy as np
 
-data = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
 
 # get the indices of the two channels
 ch1_indeces = data.get_selection_by_channel([8])

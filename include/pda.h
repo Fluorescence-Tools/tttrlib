@@ -4,9 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include "tttr.h"
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 
 class PdaCallback{
@@ -40,10 +39,10 @@ private:
 protected:
 
     /// Maximum number of photons in the SgSr histogram
-    unsigned int _Nmax = 300;
+    unsigned int _n_2d_max = 300;
 
     /// Minimum number of photons
-    unsigned int _Nmin = 3;
+    unsigned int _n_2d_min = 3;
 
     /// Background in the first channel (in FRET green channel)
     double _bg_ch1 = 0.0;
@@ -74,21 +73,22 @@ public:
      * @param hist2d_nmin the minimum number of photons considered
      */
     Pda(
-            int hist2d_nmax=300,
-            int hist2d_nmin=5,
-            double background_ch1=0.0,
-            double background_ch2=0.0
+        int hist2d_nmax=300,
+        int hist2d_nmin=5,
+        double background_ch1=0.0,
+        double background_ch2=0.0,
+        std::vector<double> pF = std::vector<double>()
     ){
         set_max_number_of_photons(std::abs(hist2d_nmax));
-        _Nmin = std::abs(hist2d_nmin);
+        _n_2d_min = std::abs(hist2d_nmin);
         _histogram_function = new PdaCallback();
         _bg_ch1 = background_ch1;
         _bg_ch2 = background_ch2;
+        setPF(pF.data(), pF.size());
     }
 
     ~Pda() = default;
     
-    /// Add a species
     /*!
      * Appends a species.
      *
@@ -114,12 +114,13 @@ public:
 
     /*!
      * Returns the amplitudes of the species
+     *
      * @param output[out] A C type array containing the amplitude of the species
      * @param n_output[out] The number of species
      */
-    void get_amplitudes(double **output, int *n_output) {
+    void get_amplitudes(double **output_view, int *n_output) {
         *n_output = _amplitudes.size();
-        *output = _amplitudes.data();
+        *output_view = _amplitudes.data();
     }
 
     /*!
@@ -163,8 +164,8 @@ public:
         auto* t = (double *) malloc(_S1S2.size() * sizeof(double));
         for(int i = 0; i < _S1S2.size(); i++) t[i] = _S1S2[i];
         *output = t;
-        *n_output1 = _Nmax + 1;
-        *n_output2 = _Nmax + 1;
+        *n_output1 = int (_n_2d_max + 1);
+        *n_output2 = int (_n_2d_max + 1);
     }
 
     /*!
@@ -195,9 +196,9 @@ public:
      * @param output[out] A C type array containing the amplitude of the species
      * @param n_output[out] The number of species
      */
-    void get_probabilities_ch1(double **output, int *n_output) {
+    void get_probabilities_ch1(double **output_view, int *n_output) {
         *n_output = _probability_ch1.size();
-        *output = _probability_ch1.data();
+        *output_view = _probability_ch1.data();
     }
 
     /*!
@@ -225,7 +226,7 @@ public:
      * @param output[out] array containing the probability spectrum
      * @param n_output[out] number of elements in the output array
      */
-    void get_probability_spectrum_ch1(double **output, int *n_output) {
+    void get_probability_spectrum_ch1(double** output, int* n_output) {
         int n = (int)_amplitudes.size() * 2;
         auto temp = (double*) malloc(sizeof(double) * n);
         for(int i=0; i < _amplitudes.size(); i++){
@@ -243,14 +244,17 @@ public:
      * @param n_input[in]
      */
     void setPF(double *input, int n_input){
+#if VERBOSE
+        std::clog << "-- Setting pF " << std::endl;
+#endif
         _is_valid_sgsr = false;
         pF.assign(input, input + n_input);
     }
 
     /// Set the probability P(F)
-    void getPF(double **output, int *n_output){
+    void getPF(double** output_view, int* n_output){
         *n_output = pF.size();
-        *output = pF.data();
+        *output_view = pF.data();
     }
 
     /*!
@@ -261,40 +265,128 @@ public:
     * @param n_histogram_x[out] dimension of the x-axis
     * @param histogram_y[out] array containing the computed histogram
     * @param n_histogram_y[out] dimension of the histogram
-    * @param xmax[in] maximum x value of the histogram
-    * @param xmin[in] minimum x value of the histogram
+    * @param x_max[in] maximum x value of the histogram
+    * @param x_min[in] minimum x value of the histogram
     * @param nbins[int] number of histogram bins
     * @param log_x[in] If set to true (default is true) the values on the
     * x-axis are logarithmically spaced otherwise they have a linear spacing.
-    * @param input[in] Optional input for the S1S2 matrix. If this is set
+    * @param s1s2[in] Optional input for the S1S2 matrix. If this is set
     * to a nullptr (default) the S1S2 matrix of the Pda object is used to
     * compute the 1D histogram. If this is not set to nullptr and both dimensions
     * set by n_input1 and n_input2 are larger than zero. The input is used as
     * S1S2 matrix. The input matrix must be quadratic.
-    * @param n_input1[in] First dimension of the S1S2 matrix.
-    * @param n_input2[in] Second dimension of the S1S2 matrix.
-    * @param n_max[in] Maximum number of photons in the histogram. If set to -1
-    * (default is -1) the minimum number set when the Pda object was created
-    * is used. Otherwise, the minimum of n_max and the number when the object was
-    * created is used.
     * @param n_min[in] Minimum number of photons in the histogram. If set to -1
     * the number set when the Pda object was instancitated is used.
     * @param skip_zero_photon[in] When this option is set to true only elements
     * of the s1s2 matrix i,j (i>0 and j>0) are considered.
+    * @param amplitudes[in] The species amplitudes (optional). This updates the
+    * s1s2 matrix of the object.
+    * @param probabilities_ch1[in] The theoretical probabilities of detecting the
+    * species in channel 1(optional)This updates the s1s2 matrix of the object.
     */
     void get_1dhistogram(
             double **histogram_x, int *n_histogram_x,
             double **histogram_y, int *n_histogram_y,
-            double xmax=1000.0, double xmin=0.01, int nbins=81,
+            double x_max=1000.0, double x_min=0.01, int n_bins=81,
             bool log_x=true,
-            double *input = nullptr, int n_input1=0, int n_input2=0,
-            int n_max=-1, int n_min=-1,
-            bool skip_zero_photon=true
+            std::vector<double> s1s2 = std::vector<double>(),
+            int n_min=-1,
+            bool skip_zero_photon=true,
+            std::vector<double> amplitudes = std::vector<double>(),
+            std::vector<double> probabilities_ch1 = std::vector<double>()
     );
+
+    /*!
+     *
+     * @param tttr_data[in]
+     * @param s1s2[out]
+     * @param dim1[out]
+     * @param dim2[out]
+     * @param ps[out]
+     * @param dim_ps[out]
+     * @param channels_1 routing channel numbers that are used for the first channel
+     * in the S1S2 matrix. Photons with this channel number are counted and increment
+     * values in the S1S2 matrix.
+     * @param channels_2 routing channel numbers that are used for the second channel
+     * in the S1S2 matrix.Photons with this channel number are counted and increment
+     * values in the S1S2 matrix.
+     * @param maximum_number_of_photons The maximum number of photons in the computed
+     * S1S2 matrix
+     * @param minimum_number_of_photons The minimum number of photons in a time window
+     * and in the S1S2 matrix
+     * @param minimum_time_window_length The minimum length of a time windows in
+     * units of milli seconds.
+     */
+    static void compute_experimental_histograms(
+        TTTR* tttr_data,
+        double** s1s2, int* dim1, int* dim2,
+        double** ps, int* dim_ps,
+        int** tttr_indices, int* n_tttr_indices,
+        std::vector<int> channels_1,
+        std::vector<int> channels_2,
+        int maximum_number_of_photons,
+        int minimum_number_of_photons,
+        double minimum_time_window_length
+    );
+
+    /*!
+     * calculating p(G,R), several ratios using the same same P(F)
+     *
+     * @param S1S2[] see sgsr_pN
+     * @param pF[in] input: p(F)
+     * @param Nmax[in]
+     * @param background_ch1[in]
+     * @param background_ch2[in]
+     * @param p_ch1[in]
+     * @param amplitudes[in] corresponding amplitudes
+     */
+    static void S1S2_pF(
+        std::vector<double> &S1S2,
+        std::vector<double> &pF,
+        unsigned int Nmax,
+        double background_ch1,
+        double background_ch2,
+        std::vector<double> &p_ch1,
+        std::vector<double> &amplitudes
+    );
+
+    /*!
+     * Convolves the Fluorescence matrix F1F2 with the background
+     * to yield the signal matrix S1S2
+     *
+     * @param S1S2[out]
+     * @param F1F2[in]
+     * @param Nmax
+     * @param background_ch1
+     * @param background_ch2
+     */
+    static void conv_pF(
+        std::vector<double> &S1S2,
+        const std::vector<double> &F1F2,
+        unsigned int Nmax,
+        double background_ch1,
+        double background_ch2
+    );
+
+    /*!
+    * Writes a Poisson distribution with an average lam, for 0..N
+    * into a vector starting at a specified index.
+    *
+    * @param return_p[in,out]
+    * @param lam[in]
+    * @param return_dim[in]
+    */
+    static void poisson_0toN(
+        std::vector<double> &return_p,
+        int start_idx,
+        double lam,
+        int return_dim
+    );
+
 
     /// The maximum number of photons in the SgSr matrix
     unsigned int get_max_number_of_photons() const{
-        return _Nmax;
+        return _n_2d_max;
     }
 
     /*!
@@ -306,19 +398,19 @@ public:
      * @param nmax[in] the maximum number of photons
      */
     void set_max_number_of_photons(unsigned int nmax){
-        _Nmax = nmax;
-        _S1S2.resize((_Nmax + 1) * (_Nmax + 1));
+        _n_2d_max = nmax;
+        _S1S2.resize((_n_2d_max + 1) * (_n_2d_max + 1));
         _is_valid_sgsr = false;
     }
 
     /// The minimum number of photons in the SgSr matrix
     unsigned int get_min_number_of_photons() const{
-        return this->_Nmin;
+        return this->_n_2d_min;
     }
 
     /// Set the minimum number of photons in the SgSr matrix
     void set_min_number_of_photons(unsigned int nmin){
-        this->_Nmin = nmin;
+        this->_n_2d_min = nmin;
         _is_valid_sgsr = false;
     }
 
@@ -357,66 +449,6 @@ public:
     }
 
 };
-
-
-namespace PdaFunctions {
-
-    /*!
-     *
-     * calculating p(G,R), several ratios, same P(F)
-     *
-     * @param SgSr see sgsr_pN
-     * @param pF input: p(F)
-     * @param Nmax
-     * @param Bg
-     * @param Br
-     * @param N_pg size of pg_theor
-     * @param pg_theor
-     * @param amplitudes corresponding amplitudes
-     */
-    void S1S2_pF(
-            std::vector<double> &SgSr,
-            std::vector<double> &pF,
-            unsigned int Nmax,
-            double Bg,
-            double Br,
-            std::vector<double> &pg_theor,
-            std::vector<double> &amplitudes);
-
-    /*!
-     * Convolves the Fluorescence matrix F1F2 with the background
-     * to yield the signal matrix S1S2
-     *
-     * @param S1S2[out]
-     * @param F1F2[in]
-     * @param Nmax
-     * @param Bg
-     * @param Br
-     */
-    void conv_pF(
-            std::vector<double> &SgSr,
-            const std::vector<double> &FgFr,
-            unsigned int Nmax,
-            double Bg,
-            double Br
-    );
-
-    /*!
-    * Writes a Poisson distribution with an average lam, for 0..N
-    * into a vector starting at a specified index.
-    *
-    * @param return_p
-    * @param lam
-    * @param return_dim
-    */
-    void poisson_0toN(
-            std::vector<double> &return_p,
-            int start_idx,
-            double lam,
-            int return_dim
-    );
-
-}
 
 
 #endif //TTTRLIB_PDA_H

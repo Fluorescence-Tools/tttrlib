@@ -17,7 +17,6 @@
 #ifndef TTTRLIB_TTTR_H
 #define TTTRLIB_TTTR_H
 
-
 #include <cstdint>
 #include <string>
 #include <cmath>
@@ -30,6 +29,8 @@
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
 
+//#include "roaring.h"
+#include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
 
@@ -41,7 +42,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.15"
+#define VERSION                     "0.0.17"
 
 
 /*!
@@ -90,7 +91,7 @@ size_t determine_number_of_records_by_file_size(
  * of photons exceeds n_ph_max are selected
  */
 void selection_by_count_rate(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration=1.0,
@@ -118,7 +119,7 @@ void selection_by_count_rate(
 * @param invert [in] If set to true, the selection criteria are inverted.
 */
 void ranges_by_time_window(
-        unsigned long long **output, int *n_output,
+        int **output, int *n_output,
         unsigned long long *input, int n_input,
         double minimum_window_length,
         double maximum_window_length=-1,
@@ -130,19 +131,24 @@ void ranges_by_time_window(
 
 
 /*!
- * Splits the time trace into bins that are at least of the length specified by @param time_window and
- * counts the number of photons in each time interval
+ * Computes a intensity trace for a sequence of time events
  *
- * @param output array of counts
- * @param n_output number of elements in @param output
- * @param input array of detection times
- * @param n_input number of elements in the @param input array
- * @param time_window The size of the
+ * The intensity trace is computed by splitting the trace of time events into
+ * time windows (tws) with a minimum specified length and counts the number
+ * of photons in each tw.
+ *
+ * @param output number of photons in each time window
+ * @param n_output number of time windows
+ * @param input array of time points
+ * @param n_input number number of time points
+ * @param time_window time window size in units of the macro time resolution
+ * @param macro_time_resolution the resolution of the macro time clock
  */
-void histogram_trace(
+void compute_intensity_trace(
         int **output, int *n_output,
         unsigned long long *input, int n_input,
-        int time_window
+        double time_window_length,
+        double macro_time_resolution = 1.0
 );
 
 
@@ -157,7 +163,7 @@ void histogram_trace(
  * @param channel
  */
 void get_ranges_channel(
-        int **ranges, int *n_range,
+        unsigned int **ranges, int *n_range,
         short *channel, int n_channel,
         int selection_channel
 );
@@ -178,10 +184,10 @@ void get_ranges_channel(
  * @param n_routing_channels[int] the length of the routing channel number array.
  */
 void selection_by_channels(
-        long long **output, int *n_output,
-        long long *input, int n_input,
-        short *routing_channels, int n_routing_channels);
-
+        int **output, int *n_output,
+        int *input, int n_input,
+        signed char *routing_channels, int n_routing_channels
+);
 
 
 template <typename T>
@@ -200,9 +206,6 @@ inline void get_array(
         std::cerr << "bad_typeid caught: " << bt.what() << '\n';
     }
 }
-
-
-
 
 
 class TTTR {
@@ -224,8 +227,6 @@ private:
     /// the input file
     std::string filename;
 
-    std::vector<TTTR*> children;
-
     Header *header = nullptr;
 
     /// Global overflow counter that counts the total number of overflows in a
@@ -236,7 +237,7 @@ private:
     boost::bimap<std::string, int> container_names;
 
     typedef bool (*processRecord_t)(
-            uint64_t&,  // input
+            uint32_t&,  // input
             uint64_t&,  // overflow counter
             uint64_t&,  // true number of sync pulses
             uint32_t&,  // microtime
@@ -298,7 +299,7 @@ private:
     * @return The return value is true if the record is not an overflow record.
     */
     bool (*processRecord)(
-            uint64_t&, // input
+            uint32_t&, // input
             uint64_t&, // overflow counter
             uint64_t&, // true number of sync pulses
             uint32_t&, // microtime
@@ -310,13 +311,13 @@ private:
     unsigned long long *macro_times;
 
     /// Micro time
-    unsigned int *micro_times;
+    unsigned short *micro_times;
 
     /// The channel number
-    short *routing_channels;
+    signed char *routing_channels;
 
     /// The event type
-    short *event_types;
+    signed char *event_types;
 
     /*!
      * Reads the content of a Photon HDF file.
@@ -339,7 +340,7 @@ protected:
     void find_used_routing_channels();
 
     /// a vector containing the used routing channel numbers in the TTTR file
-    std::vector<short> used_routing_channels;
+    std::vector<signed char> used_routing_channels;
 
     /// allocates memory for the records. @param n_rec are the number of records.
     void allocate_memory_for_records(size_t n_rec);
@@ -383,6 +384,31 @@ protected:
 
 public:
 
+    void append(
+            const TTTR *other,
+            bool shift_macro_time=true,
+            long long macro_time_offset=0
+    ){
+#if VERBOSE
+        std::cout << "-- Appending number of records: " << other->n_valid_events << std::endl;
+#endif
+        size_t n_rec = this->n_valid_events + other->n_valid_events;
+        macro_times = (unsigned long long*) realloc(macro_times, n_rec * sizeof(unsigned long long));
+        micro_times = (unsigned short*) realloc(micro_times, n_rec * sizeof(unsigned short));
+        routing_channels = (signed char*) realloc(routing_channels, n_rec * sizeof(signed char));
+        event_types = (signed char*) realloc(event_types, n_rec * sizeof(signed char));
+        if(shift_macro_time){
+            macro_time_offset += macro_times[n_valid_events - 1];
+        }
+        for(size_t i_rec=0; i_rec<other->n_valid_events; i_rec++){
+            macro_times[i_rec + n_valid_events] = other->macro_times[i_rec] + macro_time_offset;
+            micro_times[i_rec + n_valid_events] = other->micro_times[i_rec];
+            routing_channels[i_rec + n_valid_events] = other->routing_channels[i_rec];
+            event_types[i_rec + n_valid_events] = other->event_types[i_rec];
+        }
+        n_valid_events += other->n_valid_events;
+    }
+
     /*!
      * Returns an array containing the routing channel numbers
      * that are contained (used) in the TTTR file.
@@ -390,7 +416,7 @@ public:
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_used_routing_channels(short **output, int *n_output);
+    void get_used_routing_channels(signed char **output, int *n_output);
 
     /*!
      * Returns an array containing the macro times of the valid TTTR
@@ -408,7 +434,21 @@ public:
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_micro_time(unsigned int **output, int *n_output);
+    void get_micro_time(unsigned short **output, int *n_output);
+
+    /*!
+     * Returns a intensity trace that is computed for a specified integration
+     * window
+     *
+     * @param output the returned intensity trace
+     * @param n_output the number of points in the intensity trace
+     * @param time_window_length the length of the integration time windows in
+     * units of milliseconds.
+     */
+    void intensity_trace(
+            int **output, int *n_output,
+            double time_window_length=1.0
+    );
 
     /*!
      * Returns an array containing the routing channel numbers of the
@@ -417,14 +457,14 @@ public:
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_routing_channel(short ** output, int* n_output);
+    void get_routing_channel(signed char** output, int* n_output);
 
     /*!
      *
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_event_type(short ** output, int* n_output);
+    void get_event_type(signed char** output, int* n_output);
 
     /*!
      * Returns the number of micro time channels that fit between two
@@ -447,8 +487,8 @@ public:
     }
 
     TTTR* select(
-            long long *selection, int n_selection
-            );
+            int *selection, int n_selection
+    );
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
@@ -532,7 +572,7 @@ public:
      *
      */
     TTTR(const TTTR &parent,
-            long long *selection, int n_selection,
+            int *selection, int n_selection,
             bool find_used_channels = true);
 
     /// Destructor
@@ -552,8 +592,9 @@ public:
      * @param n_input the length of the channel number list.
      */
     void get_selection_by_channel(
-            long long **output, int *n_output,
-            long long *input, int n_input);
+            int **output, int *n_output,
+            int *input, int n_input
+    );
 
     /*!
      * List of indices where the count rate is smaller than a maximum count
@@ -564,14 +605,14 @@ public:
      *
      * @param output the output array that will contain the selected indices
      * @param n_output the number of elements in the output array
-     * @param time_window the length of the time window
+     * @param time_window the length of the time window in milliseconds
      * @param n_ph_max the maximum number of photons within a time window
      */
     void get_selection_by_count_rate(
-            unsigned  long long **output, int *n_output,
+            int **output, int *n_output,
             double time_window, int n_ph_max,
             bool invert=false
-            );
+    );
 
     /*!
     * Returns time windows (tw), i.e., the start and the stop indices for a
@@ -588,15 +629,14 @@ public:
     * photons a selected tw contains (optional)
     * @param invert[in] If set to true, the selection criteria are inverted.
     */
-    void get_ranges_by_count_rate(
-            unsigned long long **output, int *n_output,
+    void get_time_window_ranges(
+            int **output, int *n_output,
             double minimum_window_length,
             int minimum_number_of_photons_in_time_window,
             int maximum_number_of_photons_in_time_window=-1,
             double maximum_window_length=-1.0,
             bool invert = false
     );
-
 
     /// Get header returns the header (if present) as a map of strings.
     Header get_header();
@@ -627,6 +667,16 @@ public:
      * @param shift
      */
     void shift_macro_time(int shift);
+
+
+    TTTR* operator+(const TTTR* other) const
+    {
+        auto re = new TTTR();
+        re->copy_from(*this, true);
+        re->append(other);
+        return re;
+    }
+
 };
 
 
@@ -635,18 +685,18 @@ class TTTRRange {
 public:
 
     /// The start index of the TTTRRange
-    long long _start = 0;
+    int _start = -1;
 
     /// The stop index of the TTTRRange
-    long long _stop = 0;
+    int _stop = -1;
 
     /// The start time of the TTTRRange
-    long long _start_time = 0;
+    unsigned int _start_time = 0;
 
     /// The stop time of the TTTRRange
-    long long _stop_time = 0;
-    std::vector<long long> _tttr_indices = {};
+    unsigned int _stop_time = 0;
 
+    std::vector<int> _tttr_indices = {};
 
     /*!
      *
@@ -654,32 +704,35 @@ public:
      * @param stop stop index of the TTTRRange
      * @param start_time start time of the TTTRRange
      * @param stop_time stop time of the TTTRRange
+     * @param pre_reserve is the number of tttr indices that is pre-allocated in
+     * in memory upon creation of a TTTRRange object.
      */
     TTTRRange(
             size_t start=0,
             size_t stop=0,
-            long long start_time = 0,
-            long long stop_time = 0,
-            TTTRRange* other = nullptr
+            unsigned int start_time = 0,
+            unsigned int stop_time = 0,
+            TTTRRange* other = nullptr,
+            int pre_reserve = 8
     );
 
     /// Copy constructor
     TTTRRange(const TTTRRange& p2);
 
     /// A vector containing a set of TTTR indices that was assigned to the range
-    const std::vector<long long>&  get_tttr_indices(){
+    const std::vector<int>&  get_tttr_indices(){
         return _tttr_indices;
     }
 
     /// A vector of the start and the stop TTTR index of the range
-    std::vector<long long> get_start_stop(){
-        std::vector<long long> v = {_start, _stop};
+    std::vector<int> get_start_stop(){
+        std::vector<int> v = {_start, _stop};
         return v;
     }
 
     /// A vector of the start and stop time
-    std::vector<long long> get_start_stop_time(){
-        std::vector<long long> v = {_start_time, _stop_time};
+    std::vector<unsigned int> get_start_stop_time(){
+        std::vector<unsigned int> v = {_start_time, _stop_time};
         return v;
     }
 
@@ -689,7 +742,7 @@ public:
     }
 
     /// The start index of the TTTR range object
-    void set_start(long long start_value){
+    void set_start(int start_value){
         _start = start_value;
     }
 
@@ -699,7 +752,7 @@ public:
     }
 
     /// The stop index of the TTTR range object
-    void set_stop(long long stop_value){
+    void set_stop(int stop_value){
         _stop = stop_value;
     }
 
@@ -709,27 +762,27 @@ public:
     }
 
     /// The stop time of the TTTR range object
-    void set_stop_time(long long stop_time_value){
+    void set_stop_time(unsigned int stop_time_value){
         _stop_time = stop_time_value;
     }
 
     /// The stop time of the TTTR range object
-    long long get_stop_time(){
+    unsigned int get_stop_time() const{
         return _stop_time;
     }
 
     /// The start time of the TTTR range object
-    void set_start_time(long long start_time_value){
+    void set_start_time(unsigned int start_time_value){
         _start_time = start_time_value;
     }
 
     /// The start time of the TTTR range object
-    long long get_start_time(){
+    unsigned int get_start_time() const{
         return _start_time;
     }
 
     /// Append a index to the TTTR index vector
-    void append(long long v){
+    void append(int v){
         _tttr_indices.emplace_back(v);
     }
 
@@ -738,15 +791,9 @@ public:
         _tttr_indices.clear();
     }
 
-    void shift_start_time(long v){
-//#if VERBOSE
-//        std::clog << "-- Old start, stop time: " << _start_time << "," << _stop_time << std::endl;
-//#endif
-        _start_time += v;
-        _stop_time += v;
-//#if VERBOSE
-//        std::clog << "-- New start, stop time: " << _start_time << "," << _stop_time << std::endl;
-//#endif
+    void shift_start_time(long time_shift=0){
+        _start_time += time_shift;
+        _stop_time += time_shift;
     }
 
     /*!

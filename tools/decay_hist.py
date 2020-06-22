@@ -82,5 +82,3 @@ if __name__ == "__main__":
         X=np.vstack([x_axis, counts]).T
     )
 
-
-

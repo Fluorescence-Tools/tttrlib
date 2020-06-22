@@ -20,6 +20,7 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   ##################################################
   # Build conda package
+  - git submodule update --init --recursive
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep
@@ -37,10 +38,10 @@ test_script:
   - nosetests
   - cd ..
 
-#### scripts to run after tests
-#deploy_script:
-#  - if not "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
-#  - anaconda upload C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2
+# scripts to run after tests
+deploy_script:
+  - if "%APPVEYOR_REPO_BRANCH%" == "master" exit 0
+  - anaconda -t %ANACONDA_API_TOKEN% upload -u %CONDA_USER% -l nightly C:\Miniconda3-x64\envs\build\conda-bld\win-64\tttrlib-*.tar.bz2 --force
 
 build: off
 

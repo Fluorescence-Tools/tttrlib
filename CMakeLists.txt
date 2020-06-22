@@ -11,25 +11,39 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
+## Optimize compiler flags
+############################
+#INCLUDE(CMakeHostSystemInformationExtra)
+#INCLUDE(GetCPUSIMDFeatures)
+#INCLUDE(CMakeCompilerMachineOption)
+#SET(TARGET_ARCHITECTURE skylake)
+#CMAKE_COMPILER_MACHINE_OPTION(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
+#MESSAGE(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
+#ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
+
+
 # Debug build detection
 ###########################
-IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     MESSAGE("Release build")
     ADD_DEFINITIONS("-DVERBOSE=0")
-ELSE(CMAKE_BUILD_TYPE STREQUAL "Debug")
+ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE("Debug build")
     ADD_DEFINITIONS("-DVERBOSE=1")
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
+ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
 
 # Windows
-if(MSVC)
+##############
+if (MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
-    add_definitions(-DMS_WIN64)
-endif(MSVC)
+    ADD_DEFINITIONS(-DMS_WIN64)
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+endif (MSVC)
 
 # MACOSX
+##############
 FIND_PACKAGE(Threads)
-if(APPLE)
+if (APPLE)
     # explicit link to libc++ for recent osx versions
     MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
     ADD_DEFINITIONS(-stdlib=libc++)
@@ -37,48 +51,83 @@ if(APPLE)
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # Don't set MACOSX_RPATH by default
     set(CMAKE_MACOSX_RPATH 0)
-endif(APPLE)
+endif (APPLE)
+
+### CRoaring
+###############
+#INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CRoaringUnityBuild)
 
 ## FFTW
+##############
 FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
+# Does not work on Windows and conda mkl
+# maybe the pytorch people will resolve this issue in the future.
+### Intel MKL
+###############
+#find_package(MKL REQUIRED)
+#if (MKL_FOUND)
+#    INCLUDE_DIRECTORIES(${MKL_INCLUDE_DIRS})
+#    LINK_LIBRARIES(${MKL_CORE_LIBRARY})
+#else ()
+#    message(WARNING "MKL libs not found")
+#endif ()
+
 ## Boost
-if(WIN32)
+###########################
+if (WIN32)
     # use static Boost in Windows
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_STATIC ON)
     set(Boost_USE_MULTITHREAD)
-endif(WIN32)
+endif (WIN32)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 MESSAGE(${Boost_INCLUDE_DIRS})
 
 ## HDF5
+###########################
 FIND_PACKAGE(HDF5 1.10 REQUIRED COMPONENTS C)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 ## OpenMP
-# FIND_PACKAGE(OpenMP REQUIRED)
+###########################
+if (APPLE)
+    # dirty hack to make OpenMP work see:
+    # https://gitlab.kitware.com/cmake/cmake/issues/18098
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
+    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+    set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
+    set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
+endif ()
+FIND_PACKAGE(OpenMP REQUIRED)
+LINK_LIBRARIES(OpenMP::OpenMP_CXX)
 
 # Doxygen
-IF(BUILD_DOC)
+###########################
+IF (BUILD_DOC)
     FIND_PACKAGE(Doxygen REQUIRED)
     IF (DOXYGEN_FOUND)
     ELSE (DOXYGEN_FOUND)
         MESSAGE("Doxygen need to be installed to generate the doxygen documentation")
     ENDIF (DOXYGEN_FOUND)
-ENDIF()
+ENDIF ()
 
 FILE(
         GLOB
         SRC_files
-        "../src/*.cpp"
-        "../src/correlation/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp"
 )
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -86,9 +135,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(ext)
 
 # Add install target
+##############
 INSTALL(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/static
-        PUBLIC_HEADER DESTINATION include)
+        PUBLIC_HEADER DESTINATION include
+        )
 

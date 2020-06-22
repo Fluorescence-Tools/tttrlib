@@ -10,7 +10,7 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
    - Multi-dimensional histograms
    - Correlation analysis
    - Time-window analysis
-   - Photon distribution anaylsis
+   - Photon distribution analysis
    - FLIM image generation and analysis
 
 
@@ -35,7 +35,7 @@ Contents
    tools
    cpp_api
    glossary
-   references
+   zreferences
 
 
 Indices and tables

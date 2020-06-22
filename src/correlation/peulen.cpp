@@ -29,8 +29,13 @@ void peulen::correlation_full(
                 t1_c, w1_c, nt1,
                 t2_c, w2_c, nt2
         );
-        peulen::correlation_coarsen(t1_c, w1_c, nt1);
-        peulen::correlation_coarsen(t2_c, w2_c, nt2);
+#pragma omp parallel sections default(none) shared(t1_c, t2_c, w1_c, w2_c, nt1, nt2)
+        {
+#pragma omp section
+            peulen::correlation_coarsen(t1_c, w1_c, nt1);
+#pragma omp section
+            peulen::correlation_coarsen(t2_c, w2_c, nt2);
+        }
     }
 }
 
@@ -90,13 +95,12 @@ void peulen::correlation_normalize(
         size_t n_bins,
         bool correct_x_axis
 ) {
-    double cr1 = (double) np1 / MAX(1, (double) dt1);
-    double cr2 = (double) np2 / MAX(1, (double) dt2);
+    double cr1 = (double) np1 / std::max(1.0, (double) dt1);
+    double cr2 = (double) np2 / std::max(1.0, (double) dt2);
     for (int j = 0; j < x_axis.size(); j++) {
         uint64_t pw = (uint64_t) pow(2.0, (int) (float(j - 1) / n_bins));
         double t_corr = (dt1 < dt2 - x_axis[j]) ? (double) dt1 : (double) (dt2 - x_axis[j]);
-        corr[j] /= pw;
-        corr[j] /= (cr1 * cr2 * t_corr);
+        corr[j] /= pw; corr[j] /= (cr1 * cr2 * t_corr);
         if(correct_x_axis){
             x_axis[j] = x_axis[j] / pw * pw;
         } else{
@@ -106,10 +110,8 @@ void peulen::correlation_normalize(
 }
 
 void peulen::make_fine_times(
-        unsigned long long *t,
-        unsigned int n_times,
-        unsigned int *tac,
-        unsigned int n_tac
+        unsigned long long *t, unsigned int n_times,
+        unsigned short *tac, unsigned int n_tac
 ) {
 #if VERBOSE
     std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;

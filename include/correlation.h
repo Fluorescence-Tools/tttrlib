@@ -18,9 +18,6 @@
 #include <include/correlation/peulen.h>
 #include <include/correlation/lamb.h>
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 
 class Correlator {
 
@@ -55,14 +52,14 @@ private:
     /// The array containing the weights of the first correlation channel
     double *w1 = nullptr;
     /// The number of time points in the first correlation channel
-    size_t n_t1 = 0;
+    int n_t1 = 0;
 
     /// The array containing the times points of the second correlation channel
     unsigned long long *t2 = nullptr;
     /// The array containing the weights of the second correlation channel
     double *w2 = nullptr;
     /// The number of time points in the second correlation channel
-    size_t n_t2 = 0;
+    int n_t2 = 0;
 
 protected:
     /// The x-axis (the time axis) of the correlation
@@ -168,7 +165,7 @@ public:
      */
     void set_n_casc(int v) {
         is_valid = false;
-        n_casc = MAX(1, v);
+        n_casc = std::max(1, v);
         update_axis();
     }
 
@@ -184,7 +181,7 @@ public:
      */
     void set_n_bins(int v) {
         is_valid = false;
-        n_bins = MAX(1, v);
+        n_bins = std::max(1, v);
         update_axis();
     }
 
@@ -227,11 +224,9 @@ public:
      * @param[in] n_tac The maximum number of TAC channels of the micro times.
      */
     void set_microtimes(
-            unsigned int *tac_1,
-            unsigned int n_tac_1,
-            unsigned int *tac_2,
-            unsigned int n_tac_2,
-            unsigned int n_tac
+        unsigned short *tac_1, int n_tac_1,
+        unsigned short *tac_2, int n_tac_2,
+        int n_tac
     );
 
     /*!

@@ -79,7 +79,7 @@ def make_image(
     return image
 
 
-events = tttrlib.TTTR('../../test/data/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
+events = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
 e = events.get_event_type()
 c = events.get_routing_channel()
 t = events.get_macro_time()

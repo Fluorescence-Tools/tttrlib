@@ -16,9 +16,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstring> // memcpy
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#include "omp.h"
 
 
 namespace peulen{
@@ -190,9 +188,8 @@ namespace peulen{
      * @param[in] tac The number of micro time channels (TAC channels)
      */
     void make_fine_times(
-            unsigned long long *t,
-            unsigned int n_times,
-            unsigned int* tac,
+            unsigned long long *t, unsigned int n_times,
+            unsigned short* tac,
             unsigned int n_tac
     );
 

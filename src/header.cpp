@@ -185,7 +185,6 @@ size_t read_ht3_header(
     data["FileTime"] = std::string(ht3_header_ascii.FileTime);
     data["CRLF"] = std::string(ht3_header_ascii.CRLF);
     data["Comment"] = std::string(ht3_header_ascii.CommentField);
-
     data["Curves"] = std::to_string(ht3_header_binary.Curves);
     data["BitsPerChannel"] = std::to_string(ht3_header_binary.BitsPerChannel);
     data["RoutingChannels"] = std::to_string(ht3_header_binary.RoutingChannels);
@@ -310,38 +309,26 @@ size_t read_ptu_header(
         Result = fread(&TagHead, 1, sizeof(TagHead), fpin);
         if (Result != sizeof(TagHead))
             throw std::string("Incomplete File.");
-
         // Resolution for TCSPC-Decay
         if (strcmp(TagHead.Ident, TTTRTagRes) == 0)
             micro_time_resolution = *(double *) &(TagHead.TagValue) * 1e9;
-
         // Global macrotime_resolution for timetag in ns
         if (strcmp(TagHead.Ident, TTTRTagGlobRes) == 0)
             macro_time_resolution = *(double *) &(TagHead.TagValue)  * 1e9;
         // Number of records
         if (strcmp(TagHead.Ident, TTTRTagTTTRRecType) == 0)
             file_type = TagHead.TagValue;
-
         strcpy(Buffer, TagHead.Ident);
-        if (TagHead.Idx > -1)
-            sprintf(Buffer, "%s(%d)", TagHead.Ident, TagHead.Idx);
-
+        if (TagHead.Idx > -1) sprintf(Buffer, "%s(%d)", TagHead.Ident, TagHead.Idx);
         switch (TagHead.Typ) {
             case tyEmpty8:
                 sprintf(buffer_out, "<empty Tag>");
                 break;
             case tyBool8:
-                sprintf(
-                        buffer_out, "%s",
-                        bool(TagHead.TagValue) ? "True" : "False"
-                        );
+                sprintf(buffer_out, "%s", bool(TagHead.TagValue) ? "True" : "False");
                 break;
             case tyInt8:
-                sprintf(
-                        buffer_out,
-                        "%lu",
-                        (unsigned long) TagHead.TagValue
-                        );
+                sprintf(buffer_out, "%lu", (unsigned long) TagHead.TagValue);
                 break;
             case tyBitSet64:
                 sprintf(buffer_out, "0x0x%llx", TagHead.TagValue);
@@ -353,10 +340,7 @@ size_t read_ptu_header(
                 sprintf(buffer_out, "%E", *(double *) &(TagHead.TagValue));
                 break;
             case tyFloat8Array:
-                sprintf(
-                        buffer_out, "<Float Array with %llu Entries>",
-                        TagHead.TagValue / sizeof(double)
-                        );
+                sprintf(buffer_out, "<Float Array with %llu Entries>", TagHead.TagValue / sizeof(double));
                 // only seek the Data, if one needs the data, it can be loaded here
                 fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
                 break;
@@ -388,8 +372,7 @@ size_t read_ptu_header(
                 free(WideBuffer);
                 break;
             case tyBinaryBlob:
-                sprintf(buffer_out, "<Binary Blob contains %llu Bytes>",
-                        TagHead.TagValue);
+                sprintf(buffer_out, "<Binary Blob contains %llu Bytes>", TagHead.TagValue);
                 // only seek the Data, if one needs the data, it can be loaded here
                 fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
                 break;

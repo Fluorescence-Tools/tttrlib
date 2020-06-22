@@ -58,6 +58,16 @@ def species_amplitudes(self, v):
 
 
 @property
+def probabilities_ch1(self):
+    return self.get_probabilities_ch1()
+
+
+@probabilities_ch1.setter
+def probabilities_ch1(self, v):
+    self.set_probabilities_ch1(v)
+
+
+@property
 def s1s2(self):
     return self.get_S1S2_matrix()
 

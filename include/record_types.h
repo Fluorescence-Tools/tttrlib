@@ -21,7 +21,7 @@
 
 // HydraHarp/TimeHarp260 T2 record
 typedef union pq_hh_t2_record {
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned timetag  :25;
         unsigned channel  :6;
@@ -31,7 +31,7 @@ typedef union pq_hh_t2_record {
 
 // HydraHarp/TimeHarp260 T3 record
 typedef union pq_hh_t3_record {
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned n_sync    :10;    // number of sync period
         unsigned dtime    :15;    // delay from last sync in units of chosen macrotime_resolution
@@ -42,7 +42,7 @@ typedef union pq_hh_t3_record {
 
 // PicoHarp T2 input
 typedef union ph_ph_t2_record {
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned time     :28;
         unsigned channel  :4;
@@ -52,7 +52,7 @@ typedef union ph_ph_t2_record {
 
 // PicoHarp T3 input
 typedef union pq_ph_t3_record {
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned n_sync   :16;
         unsigned dtime    :12;
@@ -63,7 +63,7 @@ typedef union pq_ph_t3_record {
 
 // Becker Hickl SPC-600/630 256 Channel Mode, regular record
 typedef union bh_spc600_256_record{
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned adc     :8; //
         unsigned mt      :17;
@@ -87,7 +87,7 @@ typedef union bh_spc600_256_record{
 // number of overflows. @param gap marks possible gaps, e.g., due to FIFO overflows. @param rout
 // provides the (inverted) routing number of the TTTR record.
 typedef union bh_spc600_4096_record{
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned adc     :12;
         unsigned invalid :1;
@@ -104,7 +104,7 @@ typedef union bh_spc600_4096_record{
 
 // Becker Hickl SPC-130, regular record
 typedef union bh_spc130_record{
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned mt       :12;
         unsigned rout     :4;
@@ -119,7 +119,7 @@ typedef union bh_spc130_record{
 
 // Becker Hickl SPC-130/600 macro time overflow record
 typedef union bh_overflow{
-    uint64_t allbits;
+    uint32_t allbits;
     struct {
         unsigned cnt        :28;
         unsigned empty      :2;

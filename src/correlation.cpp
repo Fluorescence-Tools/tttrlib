@@ -13,9 +13,7 @@
  ****************************************************************************/
 
 #include <include/correlation.h>
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include <algorithm>
 
 
 Correlator::Correlator(TTTR *tttr,
@@ -111,8 +109,8 @@ void Correlator::set_weights(
         n_t2 = (size_t) n_weights_ch2;
     } else{
         w1 = weight_ch1; w2 = weight_ch2;
-        n_t1 = MIN(n_weights_ch1, n_t1);
-        n_t2 = MIN(n_weights_ch2, n_t1);
+        n_t1 = std::min(n_weights_ch1, n_t1);
+        n_t2 = std::min(n_weights_ch2, n_t1);
     }
 }
 
@@ -195,9 +193,6 @@ void Correlator::run(){
 #if VERBOSE
             std::clog << "-- Computing ACF for all macro times. " << std::endl;
 #endif
-            // copy to array and make sure everything is correctly setup.
-            // cannot use setter here (pointing in circle)
-            //set_macrotimes(t1, n_t1, t2, n_t2);
             int nt1; int nt2;
             tttr->get_macro_time(&t1, &nt1);
             tttr->get_macro_time(&t2, &nt2);
@@ -276,9 +271,9 @@ void Correlator::get_x_axis(unsigned long long** x_axis, int* n_out){
 
 
 void Correlator::set_microtimes(
-        unsigned int* tac_1, unsigned int n_tac_1,
-        unsigned int* tac_2, unsigned int n_tac_2,
-        unsigned int n_tac
+        unsigned short* tac_1, int n_tac_1,
+        unsigned short* tac_2, int n_tac_2,
+        int n_tac
         ){
 #if VERBOSE
     std::clog << "-- Setting micro times..." << std::endl;
@@ -326,13 +321,13 @@ void Correlator::set_tttr(
     }
     compute_dt();
     if(make_fine){
-        int n_tac = MIN(
+        int n_tac = std::min(
                 tttr_1->get_number_of_micro_time_channels(),
                 tttr_2->get_number_of_micro_time_channels()
                 );
-        unsigned int* tac_1; int n_tac1;
+        unsigned short* tac_1; int n_tac1;
         tttr_1->get_micro_time(&tac_1, &n_tac1);
-        unsigned int* tac_2; int n_tac2;
+        unsigned short* tac_2; int n_tac2;
         tttr_2->get_micro_time(&tac_2, &n_tac2);
         set_microtimes(tac_1, n_tac1, tac_2, n_tac2, n_tac);
     }

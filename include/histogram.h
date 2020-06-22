@@ -220,9 +220,7 @@ public:
         return axes.size();
     }
 
-    void update(
-            T *data, int n_rows_data, int n_cols_data
-            ){
+    void update(T *data, int n_rows_data, int n_cols_data){
         int axis_index;
         int global_bin_idx;
         int global_bin_offset;
