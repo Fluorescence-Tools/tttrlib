@@ -11,15 +11,15 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
-# Optimize compiler flags
-###########################
-INCLUDE(CMakeHostSystemInformationExtra)
-INCLUDE(GetCPUSIMDFeatures)
-# INCLUDE(CMakeCompilerMachineOption)
-# SET(TARGET_ARCHITECTURE skylake)
-CMAKE_COMPILER_MACHINE_OPTION(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
-MESSAGE(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
-ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
+## Optimize compiler flags
+############################
+#INCLUDE(CMakeHostSystemInformationExtra)
+#INCLUDE(GetCPUSIMDFeatures)
+#INCLUDE(CMakeCompilerMachineOption)
+#SET(TARGET_ARCHITECTURE skylake)
+#CMAKE_COMPILER_MACHINE_OPTION(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
+#MESSAGE(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
+#ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
 
 
 # Debug build detection
