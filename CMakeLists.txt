@@ -9,7 +9,24 @@ OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
+## Check for Conda
+###########################
+IF(DEFINED ENV{CONDA_PREFIX})
+    MESSAGE(STATUS "CONDA env seen: --[$ENV{CONDA_PREFIX}]--")
+    SET(ENV{PATH} "$ENV{CONDA_PREFIX}/bin;$ENV{PATH}")
+    INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/include)
+    LINK_LIBRARIES($ENV{CONDA_PREFIX}/lib)
+    # Define python_command that is used to call python and locate the python libraries
+    if (MSVC)
+        SET(python_command $ENV{CONDA_PREFIX}/python.exe)
+    ELSE()
+        SET(python_command $ENV{CONDA_PREFIX}/bin/python)
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "No conda environment defined")
+ENDIF()
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+
 
 ## Optimize compiler flags
 ############################
@@ -20,7 +37,6 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 #CMAKE_COMPILER_MACHINE_OPTION(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
 #MESSAGE(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
 #ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
-
 
 # Debug build detection
 ###########################
@@ -95,6 +111,7 @@ INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
+
 ## OpenMP
 ###########################
 if (APPLE)
@@ -122,12 +139,9 @@ IF (BUILD_DOC)
     ENDIF (DOXYGEN_FOUND)
 ENDIF ()
 
-FILE(
-        GLOB
-        SRC_files
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp"
+FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp"
 )
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
