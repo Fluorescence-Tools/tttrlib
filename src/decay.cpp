@@ -457,29 +457,3 @@ double Decay::compute_mean_lifetime(
 }
 
 
-double target(double* x, void* pv){
-    auto decay = (Decay*) pv;
-    decay->set_areal_scatter_fraction(x[0]);
-    decay->set_constant_background(x[1]);
-    decay->set_irf_shift_channels(x[2]);
-    decay->set_irf_background_counts(x[3]);
-    decay->set_lifetime_spectrum(&x[4]);
-    return decay->get_chi2();
-}
-
-void Decay::optimize(double* x, int n_x, short* fixed, int n_fixed){
-    int fixed_parameter = 0;
-    bfgs bfgs_o(target, n_x);
-    for(int i=0; i<n_fixed;i++){
-        if(fixed[i]) {
-            bfgs_o.fix(i);
-            fixed_parameter++;
-        }
-    }
-#if VERBOSE
-    std::cout << "N parameter: " << n_x << std::endl;
-    std::cout << "fixed_parameter: " << fixed_parameter << std::endl;
-#endif
-    bfgs_o.minimize(x, this);
-}
-

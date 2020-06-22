@@ -9,24 +9,12 @@
 #include <algorithm>
 
 #include "omp.h"
-#include "thirdparty/lbfgs/i_lbfgs.h"
 
 #include "tttr.h"
 #include "histogram.h"
 #include "statistics.h"
 
 
-/*!
- * Objective function
- *
- * @param parameter
- * x[0]=irf_background,
- * x[1]=irf_shift_channels
- * x[2]=set_constant_background
- * x[3]=set_areal_scatter_fraction
- * x[4...]=lifetime spectrum
- */
-double target(double* x, void* pv);
 
 
 class Decay {

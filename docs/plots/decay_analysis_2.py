@@ -14,7 +14,7 @@ def objective_function_chi2(
     scatter = abs(scatter)
     lifetime_spectrum = np.abs(lifetime_spectrum)
     lifetime_spectrum[::2] /= np.sum(lifetime_spectrum[::2])
-    decay_object.set_areal_fraction_scatter(scatter)
+    decay_object.set_areal_scatter_fraction(scatter)
     decay_object.set_lifetime_spectrum(lifetime_spectrum)
     decay_object.set_irf_shift_channels(time_shift)
     wres = decay_object.get_weighted_residuals()
