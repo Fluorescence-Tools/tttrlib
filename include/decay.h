@@ -410,8 +410,6 @@ public:
         return _irf_background_counts;
     }
 
-    void optimize(double* x, int n_x, short* fixed, int n_fixed);
-
     /*!
      *
      * @param tttr_data pointer to TTTR object that is used to construct a decay
