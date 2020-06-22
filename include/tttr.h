@@ -29,7 +29,7 @@
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
 
-#include "roaring.h"
+//#include "roaring.h"
 #include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
@@ -42,7 +42,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.16"
+#define VERSION                     "0.0.17"
 
 
 /*!

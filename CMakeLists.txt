@@ -53,9 +53,9 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH 0)
 endif (APPLE)
 
-## CRoaring
-##############
-INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CRoaringUnityBuild)
+### CRoaring
+###############
+#INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CRoaringUnityBuild)
 
 ## FFTW
 ##############
