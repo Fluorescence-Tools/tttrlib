@@ -1820,7 +1820,7 @@
 
 <dl class="cpp function">
 <dt id="_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb">
-<span id="_CPPv3N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb"></span><span id="_CPPv2N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb"></span><span id="Decay::compute_decay__doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.double.double.double.double.double.double.b.double.b.double.double.b.b"></span><span class="target" id="class_decay_1ac21d00f966092c85691260377aced725"></span>void <code class="sig-name descname">compute_decay</code><span class="sig-paren">(</span>double *<em>model_function</em>, int <em>n_model_function</em>, double *<em>data</em>, int <em>n_data</em>, double *<em>weights</em>, int <em>n_weights</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>start</em> = 0, int <em>stop</em> = -1, double <em>irf_background_counts</em> = 0.0, double <em>irf_shift_channels</em> = 0.0, double <em>scatter_areal_fraction</em> = 0.0, double <em>excitation_period</em> = 1000.0, double <em>constant_background</em> = 0.0, double <em>total_area</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, bool <em>add_pile_up</em> = false, double <em>instrument_dead_time</em> = 120.0, double <em>acquisition_time</em> = 100000.0, bool <em>add_corrected_irf</em> = false, bool <em>scale_model_to_area</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv3N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb"></span><span id="_CPPv2N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb"></span><span id="Decay::compute_decay__doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.double.double.double.double.double.double.b.double.b.double.double.b.b"></span><span class="target" id="class_decay_1a4788035fe83897d22c8c7093f2725b45"></span>void <code class="sig-name descname">compute_decay</code><span class="sig-paren">(</span>double *<em>model_function</em>, int <em>n_model_function</em>, double *<em>data</em>, int <em>n_data</em>, double *<em>squared_weights</em>, int <em>n_weights</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>start</em> = 0, int <em>stop</em> = -1, double <em>irf_background_counts</em> = 0.0, double <em>irf_shift_channels</em> = 0.0, double <em>scatter_areal_fraction</em> = 0.0, double <em>excitation_period</em> = 1000.0, double <em>constant_background</em> = 0.0, double <em>total_area</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, bool <em>pile_up</em> = false, double <em>instrument_dead_time</em> = 120.0, double <em>acquisition_time</em> = 100000.0, bool <em>add_corrected_irf</em> = false, bool <em>scale_model_to_area</em> = true<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13compute_decayEPdiPdiPdiPdiPdiPdiiiddddddbdbddbb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Computes a fluorescence decay for a lifetime spectrum.</p>
 <p>The lifetime spectrum is a interleaved array of amplitudes and fluorescence lifetimes. The fluorescence decay for the lifetime spectrum is computed. The computed decay is convolved with a instrument response function (IRF). Before convolution the IRF is corrected for a constant offset. The convolution considers periodic excitation. The IRF is shifted by a specified value of micro time channels. After convolution a constant fraction of scattered light is added to the computed decay and the decay is scaled to the number of photons in an experimental fluorescence decay. Finally, a constant background is added. Optionally, pile-up is added to the computed fluorescence decay. Before the fluorescence decay is computed an amplitude threshold can be applied to the fluorescence lifetime spectrum to discrimintate fluorescence lifetimes with small amplitudes.</p>
 <p><dl class="simple">
@@ -1829,7 +1829,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">n_model_function[out]</span></code>: The number of points in the model function </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">data[in]</span></code>: The data for which the model function is computed. The data will be used to scaled the computed decay. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_data[in]</span></code>: The number of data points </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weights[in]</span></code>: The weights of the data points. The data weights are used to scale the model function to the data (usually the data weights is Poissonian) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">squared_weights[in]</span></code>: The squared weights of the data points. The data weights are used to scale the model function to the data (usually the data weights is Poissonian) </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_weights[in]</span></code>: The number of weights </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">time_axis[in]</span></code>: The time axiss for which the fluorescence decay is computed for </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_time_axis[in]</span></code>: The number of points in the time axis </p></li>
@@ -1847,7 +1847,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">total_area[in]</span></code>: the area to which the model fluorescence decay is scaled to. If this value is negative (default value is -1) the model fluorescence decay is scaled to the data in the range defined by the parameters start, stop </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: if set to true (default is false) a threshold will be applied. If this parameter is set to true, fluorescence lifetimes with a amplitude that is smaller than a threshold will be not considered. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code>: The threshold that is used to discriminate fluorescence lifetimes that are smaller. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">add_pile_up</span></code>: if set to true (default is false) pile up will be added to the model function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pile_up</span></code>: if set to true (default is false) pile up will be added to the model function. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">instrument_dead_time</span></code>: the dead time of the instrument (used for pile up (in units of the lifetime, usually nano seconds) </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">acquisition_time</span></code>: the total time the acquisition of the decay in seconds. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">add_corrected_irf</span></code>: if set to true (default is false) the background corrected irf will be added as scatter to the decay. If this is false the irf prior to a background and shift corrected irf is added as a scatter fraction. </p></li>
@@ -1859,13 +1859,14 @@
 </dd></dl>
 
 <dl class="cpp function">
-<dt id="_CPPv4N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd">
-<span id="_CPPv3N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd"></span><span id="_CPPv2N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd"></span><span id="Decay::convolve_lifetime_spectrum__doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.b.double"></span><span class="target" id="class_decay_1a55f866ab6c1f087fa888786fc03555ae"></span>void <code class="sig-name descname">convolve_lifetime_spectrum</code><span class="sig-paren">(</span>double *<em>inplace_output</em>, int <em>n_output</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>convolution_start</em> = 0, int <em>convolution_stop</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay26convolve_lifetime_spectrumEPdiPdiPdiPdiiibd" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv4N5Decay6phasorEPtid">
+<span id="_CPPv3N5Decay6phasorEPtid"></span><span id="_CPPv2N5Decay6phasorEPtid"></span><span id="Decay::phasor__unsigned-shortP.i.double"></span><span class="target" id="class_decay_1abd261756de095f17b82c07ba5dbaf551"></span>std::vector&lt;double&gt; <code class="sig-name descname">phasor</code><span class="sig-paren">(</span>unsigned short *<em>microtimes</em>, int <em>n_microtimes</em>, double <em>frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay6phasorEPtid" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Compute the fluorescence decay for a lifetime spectrum and a instrument response function.</p>
 <p>Fills the pre-allocated output array <code class="docutils literal notranslate"><span class="pre">output_decay</span></code> with a fluorescence intensity decay defined by a set of fluorescence lifetimes defined by the parameter <code class="docutils literal notranslate"><span class="pre">lifetime_spectrum</span></code>. The fluorescence decay will be convolved (non-periodically) with an instrumental response function that is defined by <code class="docutils literal notranslate"><span class="pre">instrument_response_function</span></code>.</p>
 <p>This function calculates a fluorescence intensity model_decay that is convolved with an instrument response function (IRF). The fluorescence intensity model_decay is specified by its fluorescence lifetime spectrum, i.e., an interleaved array containing fluorescence lifetimes with corresponding amplitudes.</p>
 <p>This convolution works also with uneven spaced time axes.</p>
-<p><dl class="simple">
+<p><p>Compute the fluorescence decay for a lifetime spectrum and a instrument response function considering periodic excitation.</p>
+<dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">inplace_output[in</span><span class="pre">out]</span></code>: Inplace output array that is filled with the values of the computed fluorescence intensity decay model </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_output[in]</span></code>: Number of elements in the output array </p></li>
@@ -1878,21 +1879,16 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">convolution_start[in]</span></code>: Start channel of convolution (position in array of IRF) </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">convolution_stop[in]</span></code>: convolution stop channel (the index on the time-axis) </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: If this value is True (default False) fluorescence lifetimes in the lifetime spectrum which have an amplitude with an absolute value of that is smaller than <code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code> are not omitted in the convolution. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold[in]</span></code>: Threshold value for the amplitudes </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold[in]</span></code>: Threshold value for the amplitudes</p></li>
 </ul>
 </dd>
 </dl>
 </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd">
-<span id="_CPPv3N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd"></span><span id="_CPPv2N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd"></span><span id="Decay::convolve_lifetime_spectrum_periodic__doubleP.i.doubleP.i.doubleP.i.doubleP.i.i.i.b.double.double"></span><span class="target" id="class_decay_1a58e99fd56490c2f18a930bb1edadf881"></span>void <code class="sig-name descname">convolve_lifetime_spectrum_periodic</code><span class="sig-paren">(</span>double *<em>inplace_output</em>, int <em>n_output</em>, double *<em>time_axis</em>, int <em>n_time_axis</em>, double *<em>instrument_response_function</em>, int <em>n_instrument_response_function</em>, double *<em>lifetime_spectrum</em>, int <em>n_lifetime_spectrum</em>, int <em>convolution_start</em> = 0, int <em>convolution_stop</em> = -1, bool <em>use_amplitude_threshold</em> = false, double <em>amplitude_threshold</em> = 1e10, double <em>period</em> = 100.0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay35convolve_lifetime_spectrum_periodicEPdiPdiPdiPdiiibdd" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Compute the fluorescence decay for a lifetime spectrum and a instrument response function considering periodic excitation.</p>
 <p>Fills the pre-allocated output array <code class="docutils literal notranslate"><span class="pre">output_decay</span></code> with a fluorescence intensity decay defined by a set of fluorescence lifetimes defined by the parameter <code class="docutils literal notranslate"><span class="pre">lifetime_spectrum</span></code>. The fluorescence decay will be convolved (non-periodically) with an instrumental response function that is defined by <code class="docutils literal notranslate"><span class="pre">instrument_response_function</span></code>.</p>
 <p>This function calculates a fluorescence intensity model_decay that is convolved with an instrument response function (IRF). The fluorescence intensity model_decay is specified by its fluorescence lifetime spectrum, i.e., an interleaved array containing fluorescence lifetimes with corresponding amplitudes.</p>
 <p>This convolution only works with evenly linear spaced time axes.</p>
-<p><dl class="simple">
+<p><p>Compute a scaling factor for a given experimental histogram and model function and scale (optionally) the model function to the data.</p>
+<dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">inplace_output[in</span><span class="pre">out]</span></code>: Inplace output array that is filled with the values of the computed fluorescence intensity decay model </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_output[in]</span></code>: Number of elements in the output array </p></li>
@@ -1906,17 +1902,11 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">convolution_stop[in]</span></code>: convolution stop channel (the index on the time-axis) </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">use_amplitude_threshold[in]</span></code>: If this value is True (default False) fluorescence lifetimes in the lifetime spectrum which have an amplitude with an absolute value of that is smaller than <code class="docutils literal notranslate"><span class="pre">amplitude_threshold</span></code> are not omitted in the convolution. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">amplitude_threshold[in]</span></code>: Threshold value for the amplitudes </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">period</span></code>: Period of repetition in units of the lifetime (usually, nano-seconds) </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">period</span></code>: Period of repetition in units of the lifetime (usually, nano-seconds)</p></li>
 </ul>
 </dd>
 </dl>
 </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N5Decay13compute_scaleEPdiPdiPdidii">
-<span id="_CPPv3N5Decay13compute_scaleEPdiPdiPdidii"></span><span id="_CPPv2N5Decay13compute_scaleEPdiPdiPdidii"></span><span id="Decay::compute_scale__doubleP.i.doubleP.i.doubleP.i.double.i.i"></span><span class="target" id="class_decay_1a447a1dfd8344b05fcfe482df8d07a7d0"></span>double <code class="sig-name descname">compute_scale</code><span class="sig-paren">(</span>double *<em>model_function</em>, int <em>n_model_function</em>, double *<em>data</em>, int <em>n_data</em>, double *<em>weights</em>, int <em>n_weights</em>, double <em>background</em> = 0.0, int <em>start</em> = 0, int <em>stop</em> = -1<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay13compute_scaleEPdiPdiPdidii" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Compute a scaling factor for a given experimental histogram and model function and scale (optionally) the model function to the data.</p>
 <p>The scaling factor is computed considering the weighted photon counts in a specified range.</p>
 <p><dl class="simple">
 <dt><strong>Return</strong></dt><dd><p>the computed scaling factor </p>
@@ -1937,11 +1927,6 @@
 </dl>
 </p>
 </dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N5Decay6phasorEPtid">
-<span id="_CPPv3N5Decay6phasorEPtid"></span><span id="_CPPv2N5Decay6phasorEPtid"></span><span id="Decay::phasor__unsigned-shortP.i.double"></span><span class="target" id="class_decay_1abd261756de095f17b82c07ba5dbaf551"></span>std::vector&lt;double&gt; <code class="sig-name descname">phasor</code><span class="sig-paren">(</span>unsigned short *<em>microtimes</em>, int <em>n_microtimes</em>, double <em>frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay6phasorEPtid" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
 
 <dl class="cpp function">
 <dt id="_CPPv4N5Decay20compute_phasor_g_theEdddd">
@@ -2005,12 +1990,6 @@
 </p>
 </dd></dl>
 
-<dl class="cpp function">
-<dt id="_CPPv4N5Decay11add_pile_upEPdiPdiddd">
-<span id="_CPPv3N5Decay11add_pile_upEPdiPdiddd"></span><span id="_CPPv2N5Decay11add_pile_upEPdiPdiddd"></span><span id="Decay::add_pile_up__doubleP.i.doubleP.i.double.double.double"></span><span class="target" id="class_decay_1a55c55d9c924ce9a20ce8195813bffb7f"></span>void <code class="sig-name descname">add_pile_up</code><span class="sig-paren">(</span>double *<em>model</em>, int <em>n_model</em>, double *<em>data</em>, int <em>n_data</em>, double <em>repetition_rate</em>, double <em>dead_time</em>, double <em>measurement_time</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5Decay11add_pile_upEPdiPdiddd" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Correct the model function for pile up </p>
-</dd></dl>
-
 </div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Private Members</p>
@@ -2071,7 +2050,13 @@
 <dl class="cpp var">
 <dt id="_CPPv4N5Decay8_weightsE">
 <span id="_CPPv3N5Decay8_weightsE"></span><span id="_CPPv2N5Decay8_weightsE"></span><span id="Decay::_weights__std::vector:double:"></span><span class="target" id="class_decay_1abcc0d10c05475b2c384849232c2655f0"></span>std::vector&lt;double&gt; <code class="sig-name descname">_weights</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay8_weightsE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>The weights of the experimental data (used for scaling) </p>
+<dd><p>The weights of the experimental data (used for weighted residuals) </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5Decay11_sq_weightsE">
+<span id="_CPPv3N5Decay11_sq_weightsE"></span><span id="_CPPv2N5Decay11_sq_weightsE"></span><span id="Decay::_sq_weights__std::vector:double:"></span><span class="target" id="class_decay_1a7e9f9af463496a0ac3a201a54e8f4f7d"></span>std::vector&lt;double&gt; <code class="sig-name descname">_sq_weights</code> = std::vector&lt;double&gt;()<a class="headerlink" href="#_CPPv4N5Decay11_sq_weightsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The squared weights of the experimental data (used for scaling) </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -4203,7 +4188,7 @@
 <dl class="file">
 <dt>
 <span class="target" id="decay_8h"></span><em>file</em> <code class="sig-name descname">decay.h</code></dt>
-<dd><em>#include &lt;cmath&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;numeric&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include “omp.h”</em><em>#include “tttr.h”</em><em>#include “histogram.h”</em><em>#include “statistics.h”</em></dd></dl>
+<dd><em>#include &lt;cmath&gt;</em><em>#include &lt;iostream&gt;</em><em>#include &lt;vector&gt;</em><em>#include &lt;stdlib.h&gt;</em><em>#include &lt;numeric&gt;</em><em>#include &lt;algorithm&gt;</em><em>#include “omp.h”</em><em>#include “tttr.h”</em><em>#include “histogram.h”</em><em>#include “statistics.h”</em><em>#include “fit2x/fsconv.h”</em></dd></dl>
 
 <dl class="file">
 <dt>
