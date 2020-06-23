@@ -1,151 +1,155 @@
 #include "decay.h"
 
-void Decay::convolve_lifetime_spectrum(
-        double* output, int n_output,
-        double* time_axis, int n_time_axis,
-        double *instrument_response_function, int n_instrument_response_function,
-        double* lifetime_spectrum, int n_lifetime_spectrum,
-        int convolution_start,
-        int convolution_stop,
-        bool use_amplitude_threshold,
-        double amplitude_threshold
-){
-    int number_of_exponentials = n_lifetime_spectrum / 2;
-    convolution_stop = convolution_stop > 0 ?
-            std::min(n_time_axis, std::min(n_instrument_response_function,
-                                      std::min(n_output, convolution_stop))) :
-                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
-    convolution_start = std::max(convolution_start, 1);
-#if VERBOSE
-    std::clog << "convolve_lifetime_spectrum... " << std::endl;
-    std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
-    std::clog << "-- convolution_start: " << convolution_start << std::endl;
-    std::clog << "-- convolution_stop: " << convolution_stop << std::endl;
-    std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
-    std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
-#endif
-    for(int i=0; i<n_output; i++) output[i] = 0.0;
-    if(use_amplitude_threshold){
-        for(int ne = 0; ne<number_of_exponentials; ne++){
-            double a = std::abs(lifetime_spectrum[2 * ne]);
-            lifetime_spectrum[2 * ne] *= (a < amplitude_threshold);
-        }
-    }
-    for(int ne=0; ne<number_of_exponentials; ne++){
-        double a = lifetime_spectrum[2 * ne];
-        double current_lifetime = (lifetime_spectrum[2 * ne + 1]);
-        if((a == 0.0) || (current_lifetime == 0.0)) continue;
-        double current_model_value = 0.0;
-        for(int i=convolution_start; i<convolution_stop; i++){
-            double dt = dt = (time_axis[i] - time_axis[i - 1]);
-            double dt_2 = dt / 2.0;
-            double current_exponential = std::exp(-dt / current_lifetime);
-            current_model_value = (current_model_value + dt_2 * instrument_response_function[i - 1]) *
-                    current_exponential + dt_2 * instrument_response_function[i];
-            output[i] += current_model_value * a;
-        }
-    }
-}
-
-void Decay::convolve_lifetime_spectrum_periodic(
-        double* output, int n_output,
-        double* time_axis, int n_time_axis,
-        double *instrument_response_function, int n_instrument_response_function,
-        double* lifetime_spectrum, int n_lifetime_spectrum,
-        int convolution_start,
-        int convolution_stop,
-        bool use_amplitude_threshold,
-        double amplitude_threshold,
-        double period
-){
-    convolution_stop = convolution_stop > 0 ?
-                       std::min(n_time_axis, std::min(n_instrument_response_function, std::min(n_output, convolution_stop))) :
-                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
-    int number_of_exponentials = n_lifetime_spectrum / 2;
-    double dt = time_axis[1] - time_axis[0];
-    double dt_2 = dt / 2;
-    int period_n = std::ceil(period / dt - 0.5);
-    int stop1 = std::min(convolution_stop, period_n);
-    for(int i=0; i<n_output; i++) output[i] = 0;
-    convolution_start = std::max(convolution_start, 1);
-#if VERBOSE
-    std::clog << "convolve_lifetime_spectrum_periodic..." << std::endl;
-    std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
-    std::clog << "-- convolution_start: " << convolution_start << std::endl;
-    std::clog << "-- convolution_stop: " << convolution_stop << std::endl;
-    std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
-    std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
-    std::clog << "-- period: " << period << std::endl;
-#endif
-    if(use_amplitude_threshold){
-        for(int ne = 0; ne<number_of_exponentials; ne++){
-            lifetime_spectrum[2 * ne] *= (std::abs(lifetime_spectrum[2 * ne]) < amplitude_threshold);
-        }
-    }
-    for(int ne=0; ne < number_of_exponentials; ne++){
-        double x_curr = lifetime_spectrum[2 * ne];
-        if(x_curr == 0.0) continue;
-        double lt_curr = lifetime_spectrum[2 * ne + 1];
-        double tail_a = 1./(1.-exp(-period/lt_curr));
-        double fit_curr = 0.;
-        double exp_curr = std::exp(-dt/lt_curr);
-        output[0] += dt_2 * instrument_response_function[0] * (exp_curr + 1.) * x_curr;
-
-        for(int i=convolution_start; i<convolution_stop; i++){
-            fit_curr = (fit_curr + dt_2 * instrument_response_function[i - 1]) *
-                    exp_curr + dt_2 * instrument_response_function[i];
-            output[i] += fit_curr * x_curr;
-        }
-
-        for(int i=convolution_stop; i<stop1; i++){
-            fit_curr *= exp_curr;
-            output[i] += fit_curr * x_curr;
-        }
-
-        fit_curr *= exp(-(period_n - stop1) * dt / lt_curr);
-        for(int i=0; i < convolution_stop; i++) {
-            fit_curr *= exp_curr;
-            output[i] += fit_curr * x_curr * tail_a;
-        }
-    }
-}
+//// moved to fit2x
+//void Decay::convolve_lifetime_spectrum(
+//        double* output, int n_output,
+//        double* time_axis, int n_time_axis,
+//        double *instrument_response_function, int n_instrument_response_function,
+//        double* lifetime_spectrum, int n_lifetime_spectrum,
+//        int convolution_start,
+//        int convolution_stop,
+//        bool use_amplitude_threshold,
+//        double amplitude_threshold
+//){
+//    int number_of_exponentials = n_lifetime_spectrum / 2;
+//    convolution_stop = convolution_stop > 0 ?
+//            std::min(n_time_axis, std::min(n_instrument_response_function,
+//                                      std::min(n_output, convolution_stop))) :
+//                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
+//    convolution_start = std::max(convolution_start, 1);
+//#if VERBOSE
+//    std::clog << "convolve_lifetime_spectrum... " << std::endl;
+//    std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
+//    std::clog << "-- convolution_start: " << convolution_start << std::endl;
+//    std::clog << "-- convolution_stop: " << convolution_stop << std::endl;
+//    std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
+//    std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
+//#endif
+//    for(int i=0; i<n_output; i++) output[i] = 0.0;
+//    if(use_amplitude_threshold){
+//        for(int ne = 0; ne<number_of_exponentials; ne++){
+//            double a = std::abs(lifetime_spectrum[2 * ne]);
+//            lifetime_spectrum[2 * ne] *= (a < amplitude_threshold);
+//        }
+//    }
+//    for(int ne=0; ne<number_of_exponentials; ne++){
+//        double a = lifetime_spectrum[2 * ne];
+//        double current_lifetime = (lifetime_spectrum[2 * ne + 1]);
+//        if((a == 0.0) || (current_lifetime == 0.0)) continue;
+//        double current_model_value = 0.0;
+//        for(int i=convolution_start; i<convolution_stop; i++){
+//            double dt = dt = (time_axis[i] - time_axis[i - 1]);
+//            double dt_2 = dt / 2.0;
+//            double current_exponential = std::exp(-dt / current_lifetime);
+//            current_model_value = (current_model_value + dt_2 * instrument_response_function[i - 1]) *
+//                    current_exponential + dt_2 * instrument_response_function[i];
+//            output[i] += current_model_value * a;
+//        }
+//    }
+//}
 
 
-double Decay::compute_scale(
-        double* model_function, int n_model_function,
-        double* data, int n_data,
-        double* weights, int n_weights,
-        double background,
-        int start,
-        int stop
-){
-    start = std::min(std::max(start, 0), n_model_function);
-    stop = (stop <0)? n_model_function: stop;
-#if VERBOSE
-    std::clog << "scale_to_data..." << std::endl;
-    std::clog << "-- background: " << background << std::endl;
-    std::clog << "-- start: " << start << std::endl;
-    std::clog << "-- stop: " << stop << std::endl;
-    std::clog << "-- n_model_function: " << n_model_function << std::endl;
-    std::clog << "-- n_data: " << n_data << std::endl;
-    std::clog << "-- n_weights: " << n_weights << std::endl;
-#endif
-    double sum_nom = 0.0;
-    double sum_denom = 0.0;
-    for(int i=start; i<stop; i++){
-        if(data[i] > 0){
-            double iwsq = (weights[i] == 0)? 0.0: 1.0 / (weights[i] * weights[i]);
-            sum_nom += model_function[i] * (data[i] - background) * iwsq;
-            sum_denom += model_function[i] * model_function[i] * iwsq;
-        }
-    }
-    if(sum_denom > 0){
-        return sum_nom / sum_denom;
-    } else{
-        return 1.0;
-    }
-}
+/// moved to fit2x
+//void Decay::convolve_lifetime_spectrum_periodic(
+//        double* output, int n_output,
+//        double* time_axis, int n_time_axis,
+//        double *instrument_response_function, int n_instrument_response_function,
+//        double* lifetime_spectrum, int n_lifetime_spectrum,
+//        int convolution_start,
+//        int convolution_stop,
+//        bool use_amplitude_threshold,
+//        double amplitude_threshold,
+//        double period
+//){
+//    convolution_stop = convolution_stop > 0 ?
+//                       std::min(n_time_axis, std::min(n_instrument_response_function, std::min(n_output, convolution_stop))) :
+//                       std::min(n_time_axis, std::min(n_instrument_response_function, n_output));
+//    int number_of_exponentials = n_lifetime_spectrum / 2;
+//    double dt = time_axis[1] - time_axis[0];
+//    double dt_2 = dt / 2;
+//    int period_n = std::ceil(period / dt - 0.5);
+//    int stop1 = std::min(convolution_stop, period_n);
+//    for(int i=0; i<n_output; i++) output[i] = 0;
+//    convolution_start = std::max(convolution_start, 1);
+//#if VERBOSE
+//    std::clog << "convolve_lifetime_spectrum_periodic..." << std::endl;
+//    std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
+//    std::clog << "-- convolution_start: " << convolution_start << std::endl;
+//    std::clog << "-- convolution_stop: " << convolution_stop << std::endl;
+//    std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
+//    std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
+//    std::clog << "-- period: " << period << std::endl;
+//#endif
+//    if(use_amplitude_threshold){
+//        for(int ne = 0; ne<number_of_exponentials; ne++){
+//            lifetime_spectrum[2 * ne] *= (std::abs(lifetime_spectrum[2 * ne]) < amplitude_threshold);
+//        }
+//    }
+//    for(int ne=0; ne < number_of_exponentials; ne++){
+//        double x_curr = lifetime_spectrum[2 * ne];
+//        if(x_curr == 0.0) continue;
+//        double lt_curr = lifetime_spectrum[2 * ne + 1];
+//        double tail_a = 1./(1.-exp(-period/lt_curr));
+//        double fit_curr = 0.;
+//        double exp_curr = std::exp(-dt/lt_curr);
+//        output[0] += dt_2 * instrument_response_function[0] * (exp_curr + 1.) * x_curr;
+//
+//        for(int i=convolution_start; i<convolution_stop; i++){
+//            fit_curr = (fit_curr + dt_2 * instrument_response_function[i - 1]) *
+//                    exp_curr + dt_2 * instrument_response_function[i];
+//            output[i] += fit_curr * x_curr;
+//        }
+//
+//        for(int i=convolution_stop; i<stop1; i++){
+//            fit_curr *= exp_curr;
+//            output[i] += fit_curr * x_curr;
+//        }
+//
+//        fit_curr *= exp(-(period_n - stop1) * dt / lt_curr);
+//        for(int i=0; i < convolution_stop; i++) {
+//            fit_curr *= exp_curr;
+//            output[i] += fit_curr * x_curr * tail_a;
+//        }
+//    }
+//}
+//
 
+//// moved to fit2x
+//double Decay::compute_scale(
+//        double* model_function, int n_model_function,
+//        double* data, int n_data,
+//        double* weights, int n_weights,
+//        double background,
+//        int start,
+//        int stop
+//){
+//    start = std::min(std::max(start, 0), n_model_function);
+//    stop = (stop <0)? n_model_function: stop;
+//#if VERBOSE
+//    std::clog << "scale_to_data..." << std::endl;
+//    std::clog << "-- background: " << background << std::endl;
+//    std::clog << "-- start: " << start << std::endl;
+//    std::clog << "-- stop: " << stop << std::endl;
+//    std::clog << "-- n_model_function: " << n_model_function << std::endl;
+//    std::clog << "-- n_data: " << n_data << std::endl;
+//    std::clog << "-- n_weights: " << n_weights << std::endl;
+//#endif
+//    double sum_nom = 0.0;
+//    double sum_denom = 0.0;
+//    for(int i=start; i<stop; i++){
+//        if(data[i] > 0){
+//            double iwsq = (weights[i] == 0)? 0.0: 1.0 / (weights[i] * weights[i]);
+//            sum_nom += model_function[i] * (data[i] - background) * iwsq;
+//            sum_denom += model_function[i] * model_function[i] * iwsq;
+//        }
+//    }
+//    if(sum_denom > 0){
+//        return sum_nom / sum_denom;
+//    } else{
+//        return 1.0;
+//    }
+//}
+//
 
 void Decay::shift_array(
         double* input, int n_input,
@@ -218,50 +222,11 @@ void Decay::add_curve(
     *output = tmp;
 }
 
-void Decay::add_pile_up(
-    double* model, int n_model,
-    double* data, int n_data,
-    double repetition_rate,
-    double dead_time,
-    double measurement_time
-        ){
-#if VERBOSE
-    std::clog << "add_pile_up..." << std::endl;
-    std::clog << "-- repetition_rate: " << repetition_rate << std::endl;
-    std::clog << "-- dead_time: " << dead_time << std::endl;
-    std::clog << "-- measurement_time: " << measurement_time << std::endl;
-    std::clog << "-- n_data: " << n_data << std::endl;
-    std::clog << "-- n_model: " << n_model << std::endl;
-#endif
-    repetition_rate *= 1e6;
-    dead_time *= 1e-9;
-    std::vector<double> cum_sum(n_data);
-    std::partial_sum(data, data + n_data, cum_sum.begin(), std::plus<double>());
-    double n_pulse_detected = cum_sum[cum_sum.size() - 1];
-    double total_dead_time = n_pulse_detected * dead_time;
-    double live_time = measurement_time - total_dead_time;
-    int n_excitation_pulses = std::max(live_time * repetition_rate, n_pulse_detected);
-
-    // Coates, 1968, eq. 2 & 4
-    std::vector<double> rescaled_data(n_data);
-    for(int i=0;i<n_data;i++)
-        rescaled_data[i] = -std::log(1.0 - data[i] / (n_excitation_pulses - cum_sum[i]));
-    for(int i=0;i<n_data;i++)
-        rescaled_data[i] = (rescaled_data[i] == 0) ? 1.0 : rescaled_data[i];
-
-    // rescale model function to preserve data counting statistics
-    std::vector<double> sf(n_data);
-    for(int i=0;i<n_data;i++)
-        sf[i] = data[i] / rescaled_data[i];
-    double s = std::accumulate(sf.begin(),sf.end(),0.0);
-    for(int i=0;i<n_data;i++)
-        model[i] = model[i] * (sf[i] / s * n_data);
-}
 
 void Decay::compute_decay(
         double* model_function, int n_model_function,
         double* data, int n_data,
-        double* weights, int n_weights,
+        double* squared_weights, int n_weights,
         double* time_axis, int n_time_axis,
         double* instrument_response_function, int n_instrument_response_function,
         double* lifetime_spectrum, int n_lifetime_spectrum,
@@ -274,12 +239,15 @@ void Decay::compute_decay(
         double total_area,
         bool use_amplitude_threshold,
         double amplitude_threshold,
-        bool add_pile_up,
+        bool pile_up,
         double instrument_dead_time,
         double acquisition_time,
         bool add_corrected_irf,
         bool scale_model_to_area
 ){
+    stop = stop > 0 ?
+                   std::min(n_time_axis, std::min(n_instrument_response_function, std::min(n_model_function, stop))) :
+                   std::min(n_time_axis, std::min(n_instrument_response_function, n_model_function));
 #if VERBOSE
     std::clog << "compute_decay..." << std::endl;
     std::clog << "-- n_model_function: " << n_model_function << std::endl;
@@ -298,7 +266,7 @@ void Decay::compute_decay(
     std::clog << "-- total_area: " << total_area << std::endl;
     std::clog << "-- use_amplitude_threshold: " << use_amplitude_threshold << std::endl;
     std::clog << "-- amplitude_threshold: " << amplitude_threshold << std::endl;
-    std::clog << "-- correct_pile_up: " << add_pile_up << std::endl;
+    std::clog << "-- correct_pile_up: " << pile_up << std::endl;
     std::clog << "-- add_corrected_irf: " << add_corrected_irf << std::endl;
 #endif
     // correct irf for background counts
@@ -317,7 +285,7 @@ void Decay::compute_decay(
     );
 
     // convolve lifetime spectrum with irf
-    convolve_lifetime_spectrum_periodic(
+    fconv_per_cs_time_axis(
             model_function, n_model_function,
             time_axis, n_time_axis,
             irf_bg_shift_corrected, n_irf_bg_shift_corrected,
@@ -348,12 +316,12 @@ void Decay::compute_decay(
         );
     }
 
-    if(add_pile_up){
-        Decay::add_pile_up(
-                decay_irf, n_decay_irf,
-                data, n_data,
-                excitation_period, instrument_dead_time,
-                acquisition_time
+    if(pile_up){
+        add_pile_up(
+            decay_irf, n_decay_irf,
+            data, n_data,
+            excitation_period, instrument_dead_time,
+            acquisition_time
         );
     }
 
@@ -362,13 +330,14 @@ void Decay::compute_decay(
     if(scale_model_to_area){
         if(total_area < 0){
             // scale the area to the data in the range start, stop
-            scale = compute_scale(
-                    decay_irf, n_decay_irf,
-                    data, n_data,
-                    weights, n_weights,
-                    constant_background,
-                    start, stop
-            );
+            rescale_w_bg(decay_irf, data, squared_weights, constant_background, &scale, start, stop);
+//            scale = compute_scale(
+//                    decay_irf, n_decay_irf,
+//                    data, n_data,
+//                    weights, n_weights,
+//                    constant_background,
+//                    start, stop
+//            );
         } else{
             // normalize model to total_area
             double sum = std::accumulate( decay_irf + start, decay_irf + stop, 0.0);

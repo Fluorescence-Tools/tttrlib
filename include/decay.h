@@ -51,8 +51,11 @@ private:
     /// The experimental data (used for scaling)
     std::vector<double> _data = std::vector<double>();
 
-    /// The weights of the experimental data (used for scaling)
+    /// The weights of the experimental data (used for weighted residuals)
     std::vector<double> _weights = std::vector<double>();
+
+    /// The squared weights of the experimental data (used for scaling)
+    std::vector<double> _sq_weights = std::vector<double>();
 
     /// The time axis of the data (used in convolution)
     std::vector<double> _time_axis = std::vector<double>();
@@ -154,8 +157,8 @@ public:
      * @param data[in] The data for which the model function is computed. The data
      * will be used to scaled the computed decay.
      * @param n_data[in] The number of data points
-     * @param weights[in] The weights of the data points. The data weights are used to
-     * scale the model function to the data (usually the data weights is Poissonian)
+     * @param squared_weights[in] The squared weights of the data points. The data
+     * weights are used to scale the model function to the data (usually the data weights is Poissonian)
      * @param n_weights[in] The number of weights
      * @param time_axis[in] The time axiss for which the fluorescence decay is computed
      * for
@@ -210,7 +213,7 @@ public:
     static void compute_decay(
             double *model_function, int n_model_function,
             double *data, int n_data,
-            double *weights, int n_weights,
+            double *squared_weights, int n_weights,
             double *time_axis, int n_time_axis,
             double *instrument_response_function, int n_instrument_response_function,
             double *lifetime_spectrum, int n_lifetime_spectrum,
@@ -548,6 +551,10 @@ public:
             for (int i = 0; i < _data.size(); i++)
                 _weights[i] = (_data[i] <= 0.0) ? 0.0 : 1. / std::sqrt(_data[i]);
         }
+        // set squared weights
+        for(int i=0; i<weights.size(); i++){
+            _sq_weights.emplace_back(_weights[i] * _weights[i]);
+        }
 
         // set model function
         _model_function.resize(_data.size());
@@ -563,132 +570,136 @@ public:
         }
     }
 
-    /*!
-    * Compute the fluorescence decay for a lifetime spectrum and a instrument
-    * response function.
-    *
-    * Fills the pre-allocated output array `output_decay` with a fluorescence
-    * intensity decay defined by a set of fluorescence lifetimes defined by the
-    * parameter `lifetime_spectrum`. The fluorescence decay will be convolved
-    * (non-periodically) with an instrumental response function that is defined
-    * by `instrument_response_function`.
-    *
-    * This function calculates a fluorescence intensity model_decay that is
-    * convolved with an instrument response function (IRF). The fluorescence
-    * intensity model_decay is specified by its fluorescence lifetime spectrum,
-    * i.e., an interleaved array containing fluorescence lifetimes with
-    * corresponding amplitudes.
-    *
-    * This convolution works also with uneven spaced time axes.
-    *
-    * @param inplace_output[in,out] Inplace output array that is filled with the
-    * values of the computed fluorescence intensity decay model
-    * @param n_output[in] Number of elements in the output array
-    * @param time_axis[in] the time-axis of the model_decay
-    * @param n_time_axis[in] length of the time axis
-    * @param irf[in] the instrument response function array
-    * @param n_irf[in] length of the instrument response function array
-    * @param lifetime_spectrum[in] Interleaved array of amplitudes and fluorescence
-    * lifetimes of the form (amplitude, lifetime, amplitude, lifetime, ...)
-    * @param n_lifetime_spectrum[in] number of elements in the lifetime spectrum
-    * @param convolution_start[in] Start channel of convolution (position in array
-    * of IRF)
-    * @param convolution_stop[in] convolution stop channel (the index on the time-axis)
-    * @param use_amplitude_threshold[in] If this value is True (default False)
-    * fluorescence lifetimes in the lifetime spectrum which have an amplitude
-    * with an absolute value of that is smaller than `amplitude_threshold` are
-    * not omitted in the convolution.
-    * @param amplitude_threshold[in] Threshold value for the amplitudes
-    */
-    static void convolve_lifetime_spectrum(
-            double *inplace_output, int n_output,
-            double *time_axis, int n_time_axis,
-            double *instrument_response_function, int n_instrument_response_function,
-            double *lifetime_spectrum, int n_lifetime_spectrum,
-            int convolution_start = 0,
-            int convolution_stop = -1,
-            bool use_amplitude_threshold = false,
-            double amplitude_threshold = 1e10
-    );
+//    /*!
+//    * Compute the fluorescence decay for a lifetime spectrum and a instrument
+//    * response function.
+//    *
+//    * Fills the pre-allocated output array `output_decay` with a fluorescence
+//    * intensity decay defined by a set of fluorescence lifetimes defined by the
+//    * parameter `lifetime_spectrum`. The fluorescence decay will be convolved
+//    * (non-periodically) with an instrumental response function that is defined
+//    * by `instrument_response_function`.
+//    *
+//    * This function calculates a fluorescence intensity model_decay that is
+//    * convolved with an instrument response function (IRF). The fluorescence
+//    * intensity model_decay is specified by its fluorescence lifetime spectrum,
+//    * i.e., an interleaved array containing fluorescence lifetimes with
+//    * corresponding amplitudes.
+//    *
+//    * This convolution works also with uneven spaced time axes.
+//    *
+//    * @param inplace_output[in,out] Inplace output array that is filled with the
+//    * values of the computed fluorescence intensity decay model
+//    * @param n_output[in] Number of elements in the output array
+//    * @param time_axis[in] the time-axis of the model_decay
+//    * @param n_time_axis[in] length of the time axis
+//    * @param irf[in] the instrument response function array
+//    * @param n_irf[in] length of the instrument response function array
+//    * @param lifetime_spectrum[in] Interleaved array of amplitudes and fluorescence
+//    * lifetimes of the form (amplitude, lifetime, amplitude, lifetime, ...)
+//    * @param n_lifetime_spectrum[in] number of elements in the lifetime spectrum
+//    * @param convolution_start[in] Start channel of convolution (position in array
+//    * of IRF)
+//    * @param convolution_stop[in] convolution stop channel (the index on the time-axis)
+//    * @param use_amplitude_threshold[in] If this value is True (default False)
+//    * fluorescence lifetimes in the lifetime spectrum which have an amplitude
+//    * with an absolute value of that is smaller than `amplitude_threshold` are
+//    * not omitted in the convolution.
+//    * @param amplitude_threshold[in] Threshold value for the amplitudes
+//    */
+//    static void convolve_lifetime_spectrum(
+//            double *inplace_output, int n_output,
+//            double *time_axis, int n_time_axis,
+//            double *instrument_response_function, int n_instrument_response_function,
+//            double *lifetime_spectrum, int n_lifetime_spectrum,
+//            int convolution_start = 0,
+//            int convolution_stop = -1,
+//            bool use_amplitude_threshold = false,
+//            double amplitude_threshold = 1e10
+//    );
 
-    /*!
-    * Compute the fluorescence decay for a lifetime spectrum and a instrument
-    * response function considering periodic excitation.
-    *
-    * Fills the pre-allocated output array `output_decay` with a fluorescence
-    * intensity decay defined by a set of fluorescence lifetimes defined by the
-    * parameter `lifetime_spectrum`. The fluorescence decay will be convolved
-    * (non-periodically) with an instrumental response function that is defined
-    * by `instrument_response_function`.
-    *
-    * This function calculates a fluorescence intensity model_decay that is
-    * convolved with an instrument response function (IRF). The fluorescence
-    * intensity model_decay is specified by its fluorescence lifetime spectrum,
-    * i.e., an interleaved array containing fluorescence lifetimes with
-    * corresponding amplitudes.
-    *
-    * This convolution only works with evenly linear spaced time axes.
-    *
-    * @param inplace_output[in,out] Inplace output array that is filled with the values
-    * of the computed fluorescence intensity decay model
-    * @param n_output[in] Number of elements in the output array
-    * @param time_axis[in] the time-axis of the model_decay
-    * @param n_time_axis[in] length of the time axis
-    * @param irf[in] the instrument response function array
-    * @param n_irf[in] length of the instrument response function array
-    * @param lifetime_spectrum[in] Interleaved array of amplitudes and fluorescence
-    * lifetimes of the form (amplitude, lifetime, amplitude, lifetime, ...)
-    * @param n_lifetime_spectrum[in] number of elements in the lifetime spectrum
-    * @param convolution_start[in] Start channel of convolution (position in array of IRF)
-    * @param convolution_stop[in] convolution stop channel (the index on the time-axis)
-    * @param use_amplitude_threshold[in] If this value is True (default False)
-    * fluorescence lifetimes in the lifetime spectrum which have an amplitude
-    * with an absolute value of that is smaller than `amplitude_threshold` are
-    * not omitted in the convolution.
-    * @param amplitude_threshold[in] Threshold value for the amplitudes
-    * @param period Period of repetition in units of the lifetime (usually,
-    * nano-seconds)
-    */
-    static void convolve_lifetime_spectrum_periodic(
-            double *inplace_output, int n_output,
-            double *time_axis, int n_time_axis,
-            double *instrument_response_function, int n_instrument_response_function,
-            double *lifetime_spectrum, int n_lifetime_spectrum,
-            int convolution_start = 0,
-            int convolution_stop = -1,
-            bool use_amplitude_threshold = false,
-            double amplitude_threshold = 1e10,
-            double period = 100.0
-    );
+// MOVED TO FIT2X
+//
+//    /*!
+//    * Compute the fluorescence decay for a lifetime spectrum and a instrument
+//    * response function considering periodic excitation.
+//    *
+//    * Fills the pre-allocated output array `output_decay` with a fluorescence
+//    * intensity decay defined by a set of fluorescence lifetimes defined by the
+//    * parameter `lifetime_spectrum`. The fluorescence decay will be convolved
+//    * (non-periodically) with an instrumental response function that is defined
+//    * by `instrument_response_function`.
+//    *
+//    * This function calculates a fluorescence intensity model_decay that is
+//    * convolved with an instrument response function (IRF). The fluorescence
+//    * intensity model_decay is specified by its fluorescence lifetime spectrum,
+//    * i.e., an interleaved array containing fluorescence lifetimes with
+//    * corresponding amplitudes.
+//    *
+//    * This convolution only works with evenly linear spaced time axes.
+//    *
+//    * @param inplace_output[in,out] Inplace output array that is filled with the values
+//    * of the computed fluorescence intensity decay model
+//    * @param n_output[in] Number of elements in the output array
+//    * @param time_axis[in] the time-axis of the model_decay
+//    * @param n_time_axis[in] length of the time axis
+//    * @param irf[in] the instrument response function array
+//    * @param n_irf[in] length of the instrument response function array
+//    * @param lifetime_spectrum[in] Interleaved array of amplitudes and fluorescence
+//    * lifetimes of the form (amplitude, lifetime, amplitude, lifetime, ...)
+//    * @param n_lifetime_spectrum[in] number of elements in the lifetime spectrum
+//    * @param convolution_start[in] Start channel of convolution (position in array of IRF)
+//    * @param convolution_stop[in] convolution stop channel (the index on the time-axis)
+//    * @param use_amplitude_threshold[in] If this value is True (default False)
+//    * fluorescence lifetimes in the lifetime spectrum which have an amplitude
+//    * with an absolute value of that is smaller than `amplitude_threshold` are
+//    * not omitted in the convolution.
+//    * @param amplitude_threshold[in] Threshold value for the amplitudes
+//    * @param period Period of repetition in units of the lifetime (usually,
+//    * nano-seconds)
+//    */
+//    static void convolve_lifetime_spectrum_periodic(
+//            double *inplace_output, int n_output,
+//            double *time_axis, int n_time_axis,
+//            double *instrument_response_function, int n_instrument_response_function,
+//            double *lifetime_spectrum, int n_lifetime_spectrum,
+//            int convolution_start = 0,
+//            int convolution_stop = -1,
+//            bool use_amplitude_threshold = false,
+//            double amplitude_threshold = 1e10,
+//            double period = 100.0
+//    );
 
-    /*!
-     * Compute a scaling factor for a given experimental histogram and model
-     * function and scale (optionally) the model function to the data.
-     *
-     * The scaling factor is computed considering the weighted photon counts
-     * in a specified range.
-     *
-     * @param model_function array containing the model function
-     * @param n_model_function number of elements in the model function
-     * @param data array of the experimental data
-     * @param n_data number of experimental data points
-     * @param weights the weights of the experimental data
-     * @param n_weights the number of weights of the experimental dat
-     * @param background the background counts of the data
-     * @param start starting index that is used to compute the scaling factor
-     * @param stop stop index to compute the scaling factor
-     * @param scale_inplace if set to true (default is true) the model function
-     * is scaled inplace
-     * @return the computed scaling factor
-     */
-    static double compute_scale(
-            double *model_function, int n_model_function,
-            double *data, int n_data,
-            double *weights, int n_weights,
-            double background = 0.0,
-            int start = 0,
-            int stop = -1
-    );
+
+// MOVED TO FIT2X
+//    /*!
+//     * Compute a scaling factor for a given experimental histogram and model
+//     * function and scale (optionally) the model function to the data.
+//     *
+//     * The scaling factor is computed considering the weighted photon counts
+//     * in a specified range.
+//     *
+//     * @param model_function array containing the model function
+//     * @param n_model_function number of elements in the model function
+//     * @param data array of the experimental data
+//     * @param n_data number of experimental data points
+//     * @param weights the weights of the experimental data
+//     * @param n_weights the number of weights of the experimental dat
+//     * @param background the background counts of the data
+//     * @param start starting index that is used to compute the scaling factor
+//     * @param stop stop index to compute the scaling factor
+//     * @param scale_inplace if set to true (default is true) the model function
+//     * is scaled inplace
+//     * @return the computed scaling factor
+//     */
+//    static double compute_scale(
+//            double *model_function, int n_model_function,
+//            double *data, int n_data,
+//            double *weights, int n_weights,
+//            double background = 0.0,
+//            int start = 0,
+//            int stop = -1
+//    );
 
     static std::vector<double> phasor(
             unsigned short* microtimes, int n_microtimes,
@@ -805,7 +816,7 @@ public:
             compute_decay(
                     _model_function.data(),_model_function.size(),
                     _data.data(),_data.size(),
-                    _weights.data(),_weights.size(),
+                    _sq_weights.data(),_sq_weights.size(),
                     _time_axis.data(),_time_axis.size(),
                     _irf.data(),_irf.size(),
                     _lifetime_spectrum.data(),_lifetime_spectrum.size(),
