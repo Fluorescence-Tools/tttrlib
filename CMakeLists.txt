@@ -9,17 +9,23 @@ OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
+
 ## Check for Conda
 ###########################
 IF(DEFINED ENV{CONDA_PREFIX})
     MESSAGE(STATUS "CONDA env seen: --[$ENV{CONDA_PREFIX}]--")
     SET(ENV{PATH} "$ENV{CONDA_PREFIX}/bin;$ENV{PATH}")
-    INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/include)
-    LINK_LIBRARIES($ENV{CONDA_PREFIX}/lib)
     # Define python_command that is used to call python and locate the python libraries
     if (MSVC)
+        INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/Library/include)
+        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Library/lib)
+        # dlls can also be in bin folder
+        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Library/bin)
+        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Lib/static)
         SET(python_command $ENV{CONDA_PREFIX}/python.exe)
     ELSE()
+        INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/include)
+        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/lib)
         SET(python_command $ENV{CONDA_PREFIX}/bin/python)
     ENDIF()
 ELSE()
@@ -69,9 +75,6 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH 0)
 endif (APPLE)
 
-### CRoaring
-###############
-#INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/CRoaringUnityBuild)
 
 ## FFTW
 ##############
@@ -79,8 +82,11 @@ FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
-# Does not work on Windows and conda mkl
-# maybe the pytorch people will resolve this issue in the future.
+## FIT2X
+LINK_LIBRARIES(fit2x)
+
+## Does not work on Windows and conda mkl
+## maybe the pytorch people will resolve this issue in the future.
 ### Intel MKL
 ###############
 #find_package(MKL REQUIRED)
