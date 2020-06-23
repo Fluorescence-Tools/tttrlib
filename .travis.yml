@@ -47,6 +47,7 @@ before_install:
   - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client scipy
   - source activate base
   - git fetch --unshallow --tags --force
+  - conda config --add channels tpeulen
   - conda build conda-recipe --output-folder bld-dir
   - conda config --add channels "file://`pwd`/bld-dir"
 

@@ -25,6 +25,7 @@ install:
   - conda update -q conda
   - conda create -n build python=3.7 git conda-build anaconda-client numpy conda-verify ripgrep
   - activate build
+  - conda config --add channels tpeulen
   - conda build conda-recipe
 
 # to run your custom scripts instead of automatic tests
