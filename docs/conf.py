@@ -15,6 +15,7 @@
 import os
 import subprocess
 import sys
+import re
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
@@ -39,8 +40,6 @@ needs_sphinx = '1.8.5'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # 'sphinx.ext.mathbase',
-    # 'matplotlib.sphinxext.only_directives',
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
@@ -48,7 +47,63 @@ extensions = [
     'sphinxcontrib.bibtex',
     'recommonmark',
     'sphinx.ext.autosectionlabel',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'nbsphinx',
+    'sphinx_gallery.gen_gallery'
+]
+
+
+class SubSectionTitleOrder:
+    """Sort example gallery by title of subsection.
+    Assumes README.rst exists for all subsections and uses the subsection with
+    dashes, '---', as the adornment.
+    """
+    def __init__(self, src_dir):
+        self.src_dir = src_dir
+        self.regex = re.compile(r"^([\w ]+)\n-", re.MULTILINE)
+
+    def __repr__(self):
+        return '<%s>' % (self.__class__.__name__,)
+
+    def __call__(self, directory):
+        src_path = os.path.normpath(os.path.join(self.src_dir, directory))
+
+        # Forces Release Highlights to the top
+        if os.path.basename(src_path) == "release_highlights":
+            return "0"
+
+        readme = os.path.join(src_path, "README.rst")
+
+        try:
+            with open(readme, 'r') as f:
+                content = f.read()
+        except FileNotFoundError:
+            return directory
+
+        title_match = self.regex.search(content)
+        if title_match is not None:
+            return title_match.group(1)
+        return directory
+
+
+# This is largely from
+# https://github.com/scikit-learn/scikit-learn/blob/master/doc/conf.py
+sphinx_gallery_conf = {
+    'doc_module': 'tttrlib',
+    'backreferences_dir': os.path.join('modules', 'generated'),
+    'show_memory': False,
+    'examples_dirs': ['../examples'],
+    'gallery_dirs': ['auto_examples'],
+    'subsection_order': SubSectionTitleOrder('../examples'),
+    'inspect_global_variables': False,
+    'remove_config_comments': True,
+    'filename_pattern': '/plot_',
+    'ignore_pattern': r'__init__\.py',
+}
+
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'svg', 'pdf'}",
+    "--InlineBackend.rc={'figure.dpi': 96}",
 ]
 
 # numpydoc

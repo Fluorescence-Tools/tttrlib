@@ -1,7 +1,6 @@
 ************
 TTTR-Objects
 ************
-
 General features
 ================
 The library tttrlib facilitates the work with files containing time-tagged time
@@ -121,7 +120,7 @@ The conversion tool `phconvert <https://phconvert.readthedocs.io/>`_
 that can open and be process TTTR data. phconvert uses `numba <https://numba.pydata.org/>`_
 to accelerate the interpretation of the binary data in TTTR files.
 
-.. plot:: plots/tttr_read_benchmark.py
+#.. plot:: plots/tttr_read_benchmark.py
 
 Overall ``tttrlib`` surpasses phconvert in performance. For cases where phconvert
 uses numba effectively, the reading performance of phconvert is comparable.
@@ -132,6 +131,26 @@ e.g., by `Photon-HDF5 <https://fretbursts.readthedocs.io/en/latest/>`_.
 
 ``tttrlib`` is intended as a library that allows to process TTTR data without
 prior conversion.
+
+Common operations
+-----------------
+Creating fluorescence decay histograms
+
+#.. plot:: plots/tttr_microtime_histogram.py
+
+    Fluorescence decay histograms with different coarsening factors
+
+
+Compute mean fluorescence lifetimes.
+TODO
+
+shift_macro_time
+
+
+get_used_routing_channels
+
+
+
 
 Create TTTR objects
 ===================
@@ -230,7 +249,7 @@ can be joined into a single TTTR object as follows
 
     import os
     files = glob.glob('./data/BH/BH_SPC132_smDNA/*.spc')
-    sorted(glob.glob('*.png'), key=os.path.getmtime)
+    sorted(glob.glob('*.spc'), key=os.path.getmtime)
     data = tttrlib.TTTR(files[0], 'SPC-130')
     for d in files[1:]:
         data.append(tttrlib.TTTR(d, 'SPC-130'))
