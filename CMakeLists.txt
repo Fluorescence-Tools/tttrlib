@@ -72,7 +72,9 @@ if (APPLE)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # Don't set MACOSX_RPATH by default
-    set(CMAKE_MACOSX_RPATH 0)
+    SET(CMAKE_MACOSX_RPATH 0)
+    LINK_DIRECTORIES(/usr/local/lib)
+    INCLUDE_DIRECTORIES(/usr/local/include)
 endif (APPLE)
 
 
