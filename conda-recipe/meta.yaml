@@ -17,8 +17,6 @@ requirements:
     - {{ pin_compatible('numpy') }}
     - setuptools
     - git
-#    - mkl
-#    - mkl-include
   build:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
@@ -29,8 +27,6 @@ requirements:
     - libboost 1.67.0.* [not win]
     - fftw
     - fit2x
-#    - mkl
-#    - mkl-include
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
@@ -39,7 +35,6 @@ requirements:
     - libboost 1.67.0.* [not win]
     - fftw
     - fit2x
-#    - mkl
 
 test:
   imports:
