@@ -1,9 +1,4 @@
-#include <include/record_types.h>
-#include <include/tttr.h>
-#include <boost/filesystem.hpp>
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include "tttr.h"
 
 
 TTTR::TTTR() :
@@ -767,7 +762,7 @@ bool TTTR::write(
                     // write overflows
                     while(MT_ov_last>1){
                         // we fit 65536 = 2**16 in each overflow record
-                        overflow.bits.cnt = MIN(65536, MT_ov_last);
+                        overflow.bits.cnt = std::min(65536ull, MT_ov_last);
                         fwrite(&overflow, 4, 1, fp);
                         MT_ov_last -= overflow.bits.cnt;
                     }
@@ -827,3 +822,74 @@ TTTRRange::TTTRRange(
     _tttr_indices.reserve(pre_reserve);
 }
 
+void TTTR::compute_microtime_histogram(
+        TTTR* tttr_data,
+        double** histogram, int* n_histogram,
+        double** time, int* n_time,
+        unsigned short micro_time_coarsening
+) {
+    // construct histogram
+    if (tttr_data != nullptr) {
+        auto header = tttr_data->get_header();
+        int n_channels =header.number_of_micro_time_channels / micro_time_coarsening;
+        double micro_time_resolution = header.micro_time_resolution;
+        unsigned short *micro_times; int n_micro_times;
+        tttr_data->get_micro_time(&micro_times, &n_micro_times);
+#if VERBOSE
+        std::cout << "compute_histogram" << std::endl;
+        std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
+        std::cout << "-- n_channels: " << n_channels << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        for(int i=0; i<n_micro_times;i++)
+            micro_times[i] /= micro_time_coarsening;
+#if VERBOSE
+        std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        auto bin_edges = std::vector<unsigned short>(n_channels);
+        for (int i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
+        auto hist = (double *) malloc(n_channels * sizeof(double));
+        for(int i=0; i<n_channels;i++) hist[i] = 0.0;
+        histogram1D<unsigned short>(
+                micro_times, n_micro_times,
+                nullptr, 0,
+                bin_edges.data(), bin_edges.size(),
+                hist, n_channels,
+                "lin", false
+        );
+        *histogram = hist;
+        *n_histogram = n_channels;
+
+        auto t = (double *) malloc(n_channels * sizeof(double));
+        for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
+        *time = t;
+        *n_time = n_channels;
+        free(micro_times);
+    }
+}
+
+double TTTR::compute_mean_lifetime(
+        TTTR* tttr_data,
+        TTTR* tttr_irf,
+        int m0_irf, int m1_irf
+){
+    if(tttr_irf != nullptr){
+        unsigned short *micro_times_irf; int n_micro_times_irf;
+        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
+        m0_irf = n_micro_times_irf;
+        m1_irf = 0;
+        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+    }
+
+    unsigned short *micro_times_data; int n_micro_times_data;
+    tttr_data->get_micro_time(&micro_times_data, &n_micro_times_data);
+    double mu0 = n_micro_times_data;
+    double mu1 = 0.0;
+    for(int i=0; i< n_micro_times_data; i++) mu1 += micro_times_data[i];
+
+    double g1 = mu0 / m0_irf;
+    double g2 = (mu1 - g1 * m1_irf) / m0_irf;
+    double tau1 = g2 / g1;
+    return tau1 * tttr_data->get_header().micro_time_resolution;
+}

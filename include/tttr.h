@@ -29,20 +29,26 @@
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
 
-//#include "roaring.h"
 #include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
 
 #include "hdf5.h"
+#include "histogram.h"
+#include "statistics.h"
+#include "fit2x/fsconv.h"
 
 #include <record_reader.h>
 #include <header.h>
+#include <numeric>
+
+#include <include/record_types.h>
+#include <boost/filesystem.hpp>
 
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.18"
+#define VERSION                     "0.0.19"
 
 
 /*!
@@ -668,7 +674,6 @@ public:
      */
     void shift_macro_time(int shift);
 
-
     TTTR* operator+(const TTTR* other) const
     {
         auto re = new TTTR();
@@ -677,6 +682,69 @@ public:
         return re;
     }
 
+    /*!
+     * Computes a histogram of the TTTR data's micro times
+     *
+     * @param tttr_data a pointer to the TTTR data
+     * @param histogram pointer to which the histogram will be written (the memory
+     * is allocated but the method)
+     * @param n_histogram the number of points in the histogram
+     * @param time pointer to the time axis of the histogram (the memory is allocated
+     * by the method)
+     * @param n_time the number of points in the time axis
+     * @param micro_time_coarsening a factor by which the micro times in the TTTR
+     * object are divided (default value is 1).
+     */
+    static void compute_microtime_histogram(
+            TTTR *tttr_data,
+            double **histogram, int *n_histogram,
+            double **time, int *n_time,
+            unsigned short micro_time_coarsening = 1
+    );
+
+    void microtime_histogram(
+            double **histogram, int *n_histogram,
+            double **time, int *n_time,
+            unsigned short micro_time_coarsening = 1
+    ){
+        compute_microtime_histogram(
+                this, histogram, n_histogram,
+                time, n_time,
+                micro_time_coarsening
+        );
+    }
+
+    /*!
+     * Compute the mean lifetime by the moments of the decay and the instrument
+     * response function.
+     *
+     * The computed lifetime is the first lifetime determined by the method of
+     * moments (Irvin Isenberg, 1973, Biophysical journal).
+     *
+     * @param tttr_data TTTR object for which the lifetime is computed
+     * @param tttr_irf TTTR object that is used as IRF
+     * @param m0_irf Number of counts in the IRF (used if no TTTR object for IRF
+     * provided.
+     * @param m1_irf First moment of the IRF (used if no TTTR object for IRF
+     * provided.
+     * @return The computed lifetime
+     */
+    static double compute_mean_lifetime(
+            TTTR *tttr_data,
+            TTTR *tttr_irf = nullptr,
+            int m0_irf = 1, int m1_irf = 1
+    );
+
+    /*!
+     * Compute the mean lifetime by the moments of the decay and the instrument
+     * response function.
+     */
+    double mean_lifetime(
+            TTTR *tttr_irf = nullptr,
+            int m0_irf = 1, int m1_irf = 1
+    ){
+        return compute_mean_lifetime(this, tttr_irf, m0_irf, m1_irf);
+    }
 };
 
 

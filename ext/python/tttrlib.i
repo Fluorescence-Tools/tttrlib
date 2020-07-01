@@ -84,4 +84,5 @@ import_array();
 %include "correlation.i"
 %include "image.i"
 %include "pda.i"
-%include "decay.i"
+// moved to fit2x
+//%include "decay.i"
