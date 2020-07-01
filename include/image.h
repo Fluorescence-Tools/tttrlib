@@ -2,8 +2,6 @@
 #define TTTRLIB_IMAGE_H
 
 #include <omp.h>
-#include "fftw3.h"
-//#include "mkl_dfti.h"
 #include <stdlib.h>
 #include <tttr.h>
 #include <vector>
@@ -12,8 +10,11 @@
 #include <cstring>
 #include <numeric>      // std::accumulate
 #include <algorithm>
+#include "fftw3.h"
 #include "correlation.h"
-#include "decay.h"
+// moved to fit2x
+//#include "decay.h"
+#include "fit2x/phasor.h"
 
 
 class CLSMPixel : public TTTRRange{
@@ -171,6 +172,7 @@ public:
 
 
 class CLSMImage {
+
     friend class Correlator;
 
     friend class CLSMFrame;
