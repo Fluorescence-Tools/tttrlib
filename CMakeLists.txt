@@ -119,7 +119,6 @@ INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
-
 ## OpenMP
 ###########################
 if (APPLE)
@@ -149,19 +148,42 @@ ENDIF ()
 
 FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp"
 )
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(ext)
 
+## Shared / static library target
+###########################
+# cmake needs unique target name, thus place shared in front of project
+ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
+ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
+
+# Define which headers are going to be included in the install target
+FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+
+# By default the output name is the target. To not have different names, i.e.,
+# ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
+SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+
 # Add install target
-##############
-INSTALL(TARGETS ${PROJECT_NAME}
+#######################
+INSTALL(TARGETS ${PROJECT_NAME}Shared
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib/static
-        PUBLIC_HEADER DESTINATION include
+        ARCHIVE DESTINATION lib
+        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+        )
+INSTALL(TARGETS ${PROJECT_NAME}Static
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
         )
 
