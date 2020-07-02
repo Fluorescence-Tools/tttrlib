@@ -28,27 +28,25 @@
 #include <array>
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
+#include <numeric>
 
 #include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
+#include <boost/filesystem.hpp>
 
 #include "hdf5.h"
-#include "histogram.h"
-#include "statistics.h"
 #include "fit2x/fsconv.h"
 
-#include <record_reader.h>
-#include <header.h>
-#include <numeric>
-
-#include <include/record_types.h>
-#include <boost/filesystem.hpp>
+#include "histogram.h"
+#include "header.h"
+#include "record_reader.h"
+#include "record_types.h"
 
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.19"
+#define TTTRLIB_VERSION             "0.0.19"
 
 
 /*!
@@ -664,7 +662,7 @@ public:
      * @return
      */
     bool write(
-            const char *filename,
+            const char* filename,
             const char* container_type
             );
 

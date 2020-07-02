@@ -460,11 +460,9 @@ unsigned int TTTR::get_n_valid_events(){
 }
 
 
-
 unsigned int TTTR::get_n_events(){
     return (int) n_valid_events;
 }
-
 
 
 void TTTR::get_selection_by_channel(
@@ -823,7 +821,7 @@ TTTRRange::TTTRRange(
 }
 
 void TTTR::compute_microtime_histogram(
-        TTTR* tttr_data,
+        TTTR *tttr_data,
         double** histogram, int* n_histogram,
         double** time, int* n_time,
         unsigned short micro_time_coarsening
@@ -831,7 +829,7 @@ void TTTR::compute_microtime_histogram(
     // construct histogram
     if (tttr_data != nullptr) {
         auto header = tttr_data->get_header();
-        int n_channels =header.number_of_micro_time_channels / micro_time_coarsening;
+        int n_channels = header.number_of_micro_time_channels / micro_time_coarsening;
         double micro_time_resolution = header.micro_time_resolution;
         unsigned short *micro_times; int n_micro_times;
         tttr_data->get_micro_time(&micro_times, &n_micro_times);
