@@ -15,7 +15,7 @@ def read_version(
     version = "0.0.0"
     with open(header_file, "r") as fp:
         for line in fp.readlines():
-            if "#define" in line and "VERSION" in line:
+            if "#define" in line and "TTTRLIB_VERSION" in line:
                 version = line.split()[-1]
     return version.replace('"', '')
 
