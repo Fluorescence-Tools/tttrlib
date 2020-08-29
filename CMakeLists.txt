@@ -9,7 +9,6 @@ OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
-
 ## Check for Conda
 ###########################
 IF(DEFINED ENV{CONDA_PREFIX})
@@ -48,19 +47,21 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 ###########################
 IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     MESSAGE("Release build")
-    ADD_DEFINITIONS("-DVERBOSE=0")
+    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=0")
 ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE("Debug build")
-    ADD_DEFINITIONS("-DVERBOSE=1")
+    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
 
+
 # Windows
-##############
+##############decay.irf_shift_channels
 if (MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     ADD_DEFINITIONS(-DMS_WIN64)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 endif (MSVC)
+
 
 # MACOSX
 ##############
@@ -85,7 +86,8 @@ LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
 ## FIT2X
-LINK_LIBRARIES(fit2x)
+# Not needed anymore
+# LINK_LIBRARIES(fit2x)
 
 ## Does not work on Windows and conda mkl
 ## maybe the pytorch people will resolve this issue in the future.
@@ -98,6 +100,7 @@ LINK_LIBRARIES(fit2x)
 #else ()
 #    message(WARNING "MKL libs not found")
 #endif ()
+
 
 ## Boost
 ###########################
@@ -112,12 +115,14 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 MESSAGE(${Boost_INCLUDE_DIRS})
 
+
 ## HDF5
 ###########################
 FIND_PACKAGE(HDF5 1.10 REQUIRED COMPONENTS C)
 INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
+
 
 ## OpenMP
 ###########################
@@ -135,6 +140,21 @@ if (APPLE)
 endif ()
 FIND_PACKAGE(OpenMP REQUIRED)
 LINK_LIBRARIES(OpenMP::OpenMP_CXX)
+
+
+## Boost
+###########################
+if (WIN32)
+    # use static Boost in Windows
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_STATIC ON)
+    set(Boost_USE_MULTITHREAD)
+endif (WIN32)
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_LIBRARIES(${Boost_LIBRARIES})
+MESSAGE(${Boost_INCLUDE_DIRS})
+
 
 # Doxygen
 ###########################
@@ -154,6 +174,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(ext)
 
+
 ## Shared / static library target
 ###########################
 # cmake needs unique target name, thus place shared in front of project
@@ -161,6 +182,7 @@ ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
 ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
 
 # Define which headers are going to be included in the install target
+FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
 FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
@@ -171,6 +193,7 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PR
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+
 
 # Add install target
 #######################

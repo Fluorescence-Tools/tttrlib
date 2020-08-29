@@ -2,8 +2,8 @@
 // Created by Thomas-Otavio Peulen on 4/2/20.
 //
 
-#ifndef TTTRLIB_PEULEN_H
-#define TTTRLIB_PEULEN_H
+#ifndef TTTRLIB_CORRELATION_PEULEN_H
+#define TTTRLIB_CORRELATION_PEULEN_H
 
 #include <iostream>
 #include <cstdio>
@@ -196,4 +196,4 @@ namespace peulen{
 }
 
 
-#endif //TTTRLIB_PEULEN_H
+#endif //TTTRLIB_CORRELATION_PEULEN_H

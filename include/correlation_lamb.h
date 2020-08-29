@@ -2,8 +2,8 @@
 // Created by Thomas-Otavio Peulen on 4/2/20.
 //
 
-#ifndef TTTRLIB_LAMB_H
-#define TTTRLIB_LAMB_H
+#ifndef TTTRLIB_CORRELATION_LAMB_H
+#define TTTRLIB_CORRELATION_LAMB_H
 
 #include <iostream>
 #include <cstdio>
@@ -68,4 +68,4 @@ namespace lamb{
     );
 }
 
-#endif //TTTRLIB_LAMB_H
+#endif //TTTRLIB_CORRELATION_LAMB_H

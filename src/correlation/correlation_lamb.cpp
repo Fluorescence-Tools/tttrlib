@@ -1,4 +1,4 @@
-#include "include/correlation/lamb.h"
+#include "correlation_lamb.h"
 
 
 void lamb::normalize(
@@ -46,7 +46,7 @@ void lamb::CCF(
     // nc:                  number of evenly spaced elements per block
     // nb:                  number of blocks of increasing spacing
     // corrl:               pointer to correlation output
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Copying data to new arrays..." << std::endl;
 #endif
     // the arrays can be modified inplace during the correlation. Thus, copied to a new array.

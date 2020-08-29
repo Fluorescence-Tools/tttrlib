@@ -1,4 +1,4 @@
-#include "include/correlation/peulen.h"
+#include "correlation_peulen.h"
 
 
 void peulen::correlation_full(
@@ -7,7 +7,7 @@ void peulen::correlation_full(
         const unsigned long long *t1, const double *w1, size_t nt1,
         const unsigned long long *t2, const double *w2, size_t nt2
 ) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Copying data to new arrays..." << std::endl;
 #endif
     // the arrays can be modified inplace during the correlation. Thus, copied to a new array.
@@ -113,7 +113,7 @@ void peulen::make_fine_times(
         unsigned long long *t, unsigned int n_times,
         unsigned short *tac, unsigned int n_tac
 ) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;
 #endif
     for (size_t i = 0; i < n_times; i++) {
