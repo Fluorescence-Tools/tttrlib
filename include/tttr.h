@@ -36,7 +36,6 @@
 #include <boost/filesystem.hpp>
 
 #include "hdf5.h"
-#include "fit2x/fsconv.h"
 
 #include "histogram.h"
 #include "header.h"
@@ -76,7 +75,7 @@ size_t determine_number_of_records_by_file_size(
  *
  *
  * @details The filter is applied to a series of consecutive time events. The time events
- * are sliced into time windows (tw) which have at least a duration as specified by
+ * are sliced into time windows tw) which have at least a duration as specified by
  * time_window. The tttr indices of the time windows are written to the
  * output parameter output. Moreover, for every tw the number of
  * photons is determined. If in a tw the number of photons exceeds n_ph_max
@@ -393,7 +392,7 @@ public:
             bool shift_macro_time=true,
             long long macro_time_offset=0
     ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::cout << "-- Appending number of records: " << other->n_valid_events << std::endl;
 #endif
         size_t n_rec = this->n_valid_events + other->n_valid_events;
@@ -713,7 +712,7 @@ public:
     }
 
     /*!
-     * Compute the mean lifetime by the moments of the decay and the instrument
+     * Compute a mean lifetime by the moments of the decay and the instrument
      * response function.
      *
      * The computed lifetime is the first lifetime determined by the method of
@@ -774,13 +773,17 @@ public:
      * in memory upon creation of a TTTRRange object.
      */
     TTTRRange(
-            size_t start=0,
-            size_t stop=0,
+            size_t start = 0,
+            size_t stop = 0,
             unsigned int start_time = 0,
             unsigned int stop_time = 0,
-            TTTRRange* other = nullptr,
+            TTTRRange *other = nullptr,
             int pre_reserve = 8
     );
+
+    size_t size(){
+        return _tttr_indices.size();
+    }
 
     /// Copy constructor
     TTTRRange(const TTTRRange& p2);

@@ -3,7 +3,6 @@
 
 #include <omp.h>
 #include <stdlib.h>
-#include <tttr.h>
 #include <vector>
 #include <iterator> // std::begin, std::end
 #include <list>
@@ -11,10 +10,9 @@
 #include <numeric>      // std::accumulate
 #include <algorithm>
 #include "fftw3.h"
+
+#include "tttr.h"
 #include "correlation.h"
-// moved to fit2x
-//#include "decay.h"
-#include "fit2x/phasor.h"
 
 
 class CLSMPixel : public TTTRRange{
