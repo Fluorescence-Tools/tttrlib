@@ -191,7 +191,6 @@ identifier as displayed in the table above (see :ref:`supported-file-types`).
 Both approaches are equivalent and demonstrated for the Becker&Hickl SPC-130 and
 the PicoQuant PTU file supplied in the example folder in the Python code below.
 
-
 .. code-block:: python
 
     import tttrlib
@@ -204,6 +203,17 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.
 Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
+
+IF the container type is not specified `tttrlib` will try to infer the container
+type based on the file extension.
+
+.. code-block:: python
+
+    import tttrlib
+    ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu')
+
+This only works for PTU, HT3, and for HDF files. For SPC files the TTTR record
+types need to be specified.
 
 
 Slicing / subsets

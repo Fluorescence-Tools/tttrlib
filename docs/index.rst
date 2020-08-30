@@ -16,9 +16,8 @@ PicoQuant (PQ), Becker&Hickl measurement devices/cards, and TTTR files of the op
 
 Documentation
 =============
-Documentation for the latest releases is available `here <https://fluorescence-tools.github.io/tttrlib/>`_,.
-Previous releases are available through the read-the-docs page
-`page <https://tttrlib.readthedocs.io/>`_,.
+Documentation for the latest releases is available `here <https://fluorescence-tools.github.io/tttrlib/>`_.
+Previous releases are available through the read-the-docs `page <https://tttrlib.readthedocs.io/>`_.
 
 
 Contents
@@ -29,9 +28,8 @@ Contents
 
    installation
    tttr_objects
+   auto_examples/index
    imaging
-   single_molecule
-   correlation
    tools
    cpp_api
    glossary

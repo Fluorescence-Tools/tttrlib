@@ -143,13 +143,13 @@ Parameters
 ----------
 * `tttr_data` :  
     pointer to a TTTR object  
-* `selection` :  
-    a stack of images used to select pixels  
-* `d_selection_1` :  
+* `mask` :  
+    a stack of images used as a mask to select pixels  
+* `dmask1` :  
     number of frames  
-* `d_selection_2` :  
+* `dmask2` :  
     number of lines  
-* `d_selection_3` :  
+* `dmask3` :  
     number of pixels per line  
 * `out` :  
     pointer to output array of unsigned int contains the micro time histograms  
@@ -185,6 +185,36 @@ Parameters
     returns the number of pixels per line  
 * `minimum_number_of_photons[in]` :  
     the minimum number of photons in a micro time  
+* `stack_frames[in]` :  
+    if true the frames are stacked (default value is false). If stack frames is
+    set to true the mean arrival time is computed using the tttr indices of all
+    pixels (this corresponds to the photon weighted mean arrival time).  
+";
+
+%feature("docstring") CLSMImage::get_phasor_image "
+
+Computes the phasor values for every pixel  
+
+Pixels with few photons can be discriminated. Discriminated pixels will be
+filled with zeros.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `out[out]` :  
+    pointer to output array that will contain the image stack  
+* `dim1[out]` :  
+    returns the number of frames  
+* `dim2[out]` :  
+    returns the number of lines  
+* `dim3[out]` :  
+    returns the number of pixels per line  
+* `dim4[out]` :  
+    returns 2 (first is the g phasor value (cos), second the s phasor (sin)  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time (only used if frames are not
+    stacked)  
 * `stack_frames[in]` :  
     if true the frames are stacked (default value is false). If stack frames is
     set to true the mean arrival time is computed using the tttr indices of all
@@ -332,6 +362,129 @@ Parameters
 * `macro_time_shift` :  
     [in] the number of macro time counts that which which the lines are at least
     shifted.  
+";
+
+%feature("docstring") CLSMImage::compute_ics "
+
+Computes an image correlation via FFTs for a set of frames  
+
+This function computes the image correlation for a set of frames. The frames can
+be either specified by an array or by a CLSMImage object. This function can
+compute image cross-correlation and image auto-correlations. The type of the
+correlation is specified by a set of pairs that are cross- correlated.  
+
+Parameters
+----------
+* `output` :  
+    the array that will contain the ICS  
+* `dim1` :  
+    number of frames in the ICS  
+* `dim2` :  
+    number of lines (line shifts) in the ICS  
+* `dim3` :  
+    number of pixel (pixel shifts) in the ICS  
+* `tttr_data` :  
+* `clsm` :  
+    an optional pointer to a CLSMImage object  
+* `images` :  
+    an optional pointer to an image array  
+* `input_frames` :  
+    number of frames in the image array  
+* `input_lines` :  
+    number of lines in the image array  
+* `input_pixel` :  
+    number of pixel in the image array  
+* `x_range` :  
+    defines the region of interest (ROI) in the image (pixel). This parameter is
+    optional. The default value is [0,-1]. This means that the entire input
+    pixel range is used  
+* `y_range` :  
+    region defines the ROI in y-direction (lines). The default value is [0,-1].
+    By default all lines in the image are used.  
+* `frames_index_pairs` :  
+    A vector of integer pairs. The pairs correspond to the frame numbers in the
+    input that will be cross-correlated. If no vector of frame pairs is
+    specified the image auto-correlation will be computed  
+* `subtract_average` :  
+    the input image can be corrected for the background, i.e., a constant
+    background can be subtracted from the frames. If this parameter is set to
+    \"stack\" the average over all frames is computed and subtracted pixel-wise
+    from each frame. If this parameter is set to \"frame\" the average of each
+    frame is computed and subtracted from the each frame. By default no
+    correction is applied.  
+* `mask` :  
+    a stack of images used as a to select pixels  
+* `dmask1` :  
+    number of frames  
+* `dmask2` :  
+    number of lines  
+* `dmask3` :  
+    number of pixels per line  
+";
+
+%feature("docstring") CLSMImage::get_roi "
+
+Copies a region of interest (ROI) into a new image and does some background
+correction.  
+
+The ROI is defined by defining a range for the pixels and lines. The ROI can be
+corrected by a constant background value, clipped to limit the range of the
+output values, and corrected by the mean intensity of the frames.  
+
+Parameters
+----------
+* `output` :  
+    the array that will contain the ROI. The array is allocated by the function  
+* `dim1` :  
+    the number of frames in the output ROI  
+* `dim2` :  
+    the number of lines per frame in the output  
+* `dim3` :  
+    the number of pixels per line in the output ROI  
+* `clsm` :  
+    a pointer to a CLSMImage object  
+* `x_range` :  
+    the range (selection) of the pixels  
+* `y_range` :  
+    the range (selection) of the lines  
+* `subtract_average` :  
+    If this parameter is set to \"stack\" the mean image of the ROIs that is
+    computed by the average over all frames is subtracted from each frame and
+    the mean intensity of all frames and pixels is added to the pixels. If this
+    parameter is set to \"frame\" the average of each frame is subtracted from
+    each frame. The default behaviour is to do nothing.  
+* `background` :  
+    A constant number that is subtracted from each pixel.  
+* `clip` :  
+    If set to true (the default value is false) the values in the ROI are
+    clipped to the range [clip_min, clip_max]  
+* `clip_max` :  
+    the maximum value when output ROIs are clipped  
+* `clip_min` :  
+    the minimum value when output ROIs are clipped  
+* `images` :  
+    Input array of images that are used to defined ROIs. If no CLSMImage object
+    is specified. This array is used as an input.  
+* `n_frames` :  
+    The number of frames in the input array images  
+* `n_lines` :  
+    The number of lines in the input array images  
+* `n_pixel` :  
+    The number of pixel in the input array images  
+* `selected_frames` :  
+    A list of frames that is used to define the ROIs. If no frames are defined
+    by this list, all frames in the input are used.  
+* `mask` :  
+    a stack of images used as a to select pixels  
+* `dmask1` :  
+    number of frames if the number of frames in the mask is smaller then the ROI
+    the first mask frame will be applied to all ROI frames that are greater than
+    dmask1  
+* `dmask2` :  
+    number of lines if smaller then ROI the outside region will be selected and
+    the mask will be applied to all lines smaller than dmask2  
+* `dmask3` :  
+    number of pixels per line in the mask.  
 ";
 
 // File: class_c_l_s_m_line.xml
@@ -617,503 +770,6 @@ Parameters
 
 
 %feature("docstring") CurveMapping_t "
-";
-
-// File: class_decay.xml
-
-
-%feature("docstring") Decay "
-";
-
-%feature("docstring") Decay::compute_microtime_histogram "
-
-Computes a histogram of the TTTR data's micro times  
-
-Parameters
-----------
-* `tttr_data` :  
-    a pointer to the TTTR data  
-* `histogram` :  
-    pointer to which the histogram will be written (the memory is allocated but
-    the method)  
-* `n_histogram` :  
-    the number of points in the histogram  
-* `time` :  
-    pointer to the time axis of the histogram (the memory is allocated by the
-    method)  
-* `n_time` :  
-    the number of points in the time axis  
-* `micro_time_coarsening` :  
-    a factor by which the micro times in the TTTR object are divided (default
-    value is 1).  
-";
-
-%feature("docstring") Decay::compute_mean_lifetime "
-
-Compute the mean lifetime by the moments of the decay and the instrument
-response function.  
-
-The computed lifetime is the first lifetime determined by the method of moments
-(Irvin Isenberg, 1973, Biophysical journal).  
-
-Parameters
-----------
-* `tttr_data` :  
-    TTTR object for which the lifetime is computed  
-* `tttr_irf` :  
-    TTTR object that is used as IRF  
-* `m0_irf` :  
-    Number of counts in the IRF (used if no TTTR object for IRF provided.  
-* `m1_irf` :  
-    First moment of the IRF (used if no TTTR object for IRF provided.  
-
-Returns
--------
-The computed lifetime  
-";
-
-%feature("docstring") Decay::compute_decay "
-
-Computes a fluorescence decay for a lifetime spectrum.  
-
-The lifetime spectrum is a interleaved array of amplitudes and fluorescence
-lifetimes. The fluorescence decay for the lifetime spectrum is computed. The
-computed decay is convolved with a instrument response function (IRF). Before
-convolution the IRF is corrected for a constant offset. The convolution
-considers periodic excitation. The IRF is shifted by a specified value of micro
-time channels. After convolution a constant fraction of scattered light is added
-to the computed decay and the decay is scaled to the number of photons in an
-experimental fluorescence decay. Finally, a constant background is added.
-Optionally, pile-up is added to the computed fluorescence decay. Before the
-fluorescence decay is computed an amplitude threshold can be applied to the
-fluorescence lifetime spectrum to discrimintate fluorescence lifetimes with
-small amplitudes.  
-
-Parameters
-----------
-* `model_function[out]` :  
-    The ouput array that will contain the computed fluorescence decay  
-* `n_model_function[out]` :  
-    The number of points in the model function  
-* `data[in]` :  
-    The data for which the model function is computed. The data will be used to
-    scaled the computed decay.  
-* `n_data[in]` :  
-    The number of data points  
-* `weights[in]` :  
-    The weights of the data points. The data weights are used to scale the model
-    function to the data (usually the data weights is Poissonian)  
-* `n_weights[in]` :  
-    The number of weights  
-* `time_axis[in]` :  
-    The time axiss for which the fluorescence decay is computed for  
-* `n_time_axis[in]` :  
-    The number of points in the time axis  
-* `instrument_response_function[in]` :  
-    The instrument response function used for convolution  
-* `n_instrument_response_function[in]` :  
-    The number of points in the instrument response function  
-* `lifetime_spectrum[in]` :  
-    The lifetime spectrum. A lifetime specturm is an interleaved array of
-    amplitudes and fluorescence lifetimes, .e.g, (amplitude1, lifetime1,
-    amplitude2, lifetime2, ...)  
-* `n_lifetime_spectrum[in]` :  
-    The number of points in the fluorescence lifetime spectrum  
-* `start[in]` :  
-    The start of the convolution  
-* `stop[in]` :  
-    The stop of the convoution. The decay will be computed in the range [start,
-    stop]  
-* `irf_background_counts[in]` :  
-    The background counts of the instrument response function. This number will
-    be subtracted from the IRF before convolution.  
-* `irf_shift_channels[in]` :  
-    The number of micro time channels the IRF will be shifted before the
-    fluorescence lifetimes are convoluted with the IRF.  
-* `scatter_areal_fraction[in]` :  
-    The fraction (integrated fraction), i.e., the area the scattered light will
-    have in the computed decay.  
-* `excitation_period[in]` :  
-    The excitation period (in units of the fluorescence lifetime, usually
-    nanoseconds) that was used to excite the sample  
-* `constant_background` :  
-    A constant offset that is added to the fluorescence decay.  
-* `total_area[in]` :  
-    the area to which the model fluorescence decay is scaled to. If this value
-    is negative (default value is -1) the model fluorescence decay is scaled to
-    the data in the range defined by the parameters start, stop  
-* `use_amplitude_threshold[in]` :  
-    if set to true (default is false) a threshold will be applied. If this
-    parameter is set to true, fluorescence lifetimes with a amplitude that is
-    smaller than a threshold will be not considered.  
-* `amplitude_threshold` :  
-    The threshold that is used to discriminate fluorescence lifetimes that are
-    smaller.  
-* `add_pile_up` :  
-    if set to true (default is false) pile up will be added to the model
-    function.  
-";
-
-%feature("docstring") Decay::convolve_lifetime_spectrum "
-
-Compute the fluorescence decay for a lifetime spectrum and a instrument response
-function.  
-
-Fills the pre-allocated output array `output_decay` with a fluorescence
-intensity decay defined by a set of fluorescence lifetimes defined by the
-parameter `lifetime_spectrum`. The fluorescence decay will be convolved (non-
-periodically) with an instrumental response function that is defined by
-`instrument_response_function`.  
-
-This function calculates a fluorescence intensity model_decay that is convolved
-with an instrument response function (IRF). The fluorescence intensity
-model_decay is specified by its fluorescence lifetime spectrum, i.e., an
-interleaved array containing fluorescence lifetimes with corresponding
-amplitudes.  
-
-This convolution works also with uneven spaced time axes.  
-
-Parameters
-----------
-* `inplace_output[in`, `out]` :  
-    Inplace output array that is filled with the values of the computed
-    fluorescence intensity decay model  
-* `n_output[in]` :  
-    Number of elements in the output array  
-* `time_axis[in]` :  
-    the time-axis of the model_decay  
-* `n_time_axis[in]` :  
-    length of the time axis  
-* `irf[in]` :  
-    the instrument response function array  
-* `n_irf[in]` :  
-    length of the instrument response function array  
-* `lifetime_spectrum[in]` :  
-    Interleaved array of amplitudes and fluorescence lifetimes of the form
-    (amplitude, lifetime, amplitude, lifetime, ...)  
-* `n_lifetime_spectrum[in]` :  
-    number of elements in the lifetime spectrum  
-* `convolution_start[in]` :  
-    Start channel of convolution (position in array of IRF)  
-* `convolution_stop[in]` :  
-    convolution stop channel (the index on the time-axis)  
-* `use_amplitude_threshold[in]` :  
-    If this value is True (default False) fluorescence lifetimes in the lifetime
-    spectrum which have an amplitude with an absolute value of that is smaller
-    than `amplitude_threshold` are not omitted in the convolution.  
-* `amplitude_threshold[in]` :  
-    Threshold value for the amplitudes  
-";
-
-%feature("docstring") Decay::convolve_lifetime_spectrum_periodic "
-
-Compute the fluorescence decay for a lifetime spectrum and a instrument response
-function considering periodic excitation.  
-
-Fills the pre-allocated output array `output_decay` with a fluorescence
-intensity decay defined by a set of fluorescence lifetimes defined by the
-parameter `lifetime_spectrum`. The fluorescence decay will be convolved (non-
-periodically) with an instrumental response function that is defined by
-`instrument_response_function`.  
-
-This function calculates a fluorescence intensity model_decay that is convolved
-with an instrument response function (IRF). The fluorescence intensity
-model_decay is specified by its fluorescence lifetime spectrum, i.e., an
-interleaved array containing fluorescence lifetimes with corresponding
-amplitudes.  
-
-This convolution only works with evenly linear spaced time axes.  
-
-Parameters
-----------
-* `inplace_output[in`, `out]` :  
-    Inplace output array that is filled with the values of the computed
-    fluorescence intensity decay model  
-* `n_output[in]` :  
-    Number of elements in the output array  
-* `time_axis[in]` :  
-    the time-axis of the model_decay  
-* `n_time_axis[in]` :  
-    length of the time axis  
-* `irf[in]` :  
-    the instrument response function array  
-* `n_irf[in]` :  
-    length of the instrument response function array  
-* `lifetime_spectrum[in]` :  
-    Interleaved array of amplitudes and fluorescence lifetimes of the form
-    (amplitude, lifetime, amplitude, lifetime, ...)  
-* `n_lifetime_spectrum[in]` :  
-    number of elements in the lifetime spectrum  
-* `convolution_start[in]` :  
-    Start channel of convolution (position in array of IRF)  
-* `convolution_stop[in]` :  
-    convolution stop channel (the index on the time-axis)  
-* `use_amplitude_threshold[in]` :  
-    If this value is True (default False) fluorescence lifetimes in the lifetime
-    spectrum which have an amplitude with an absolute value of that is smaller
-    than `amplitude_threshold` are not omitted in the convolution.  
-* `amplitude_threshold[in]` :  
-    Threshold value for the amplitudes  
-* `period` :  
-    Period of repetition in units of the lifetime (usually, nano-seconds)  
-";
-
-%feature("docstring") Decay::compute_scale "
-
-Compute a scaling factor for a given experimental histogram and model function
-and scale (optionally) the model function to the data.  
-
-The scaling factor is computed considering the weighted photon counts in a
-specified range.  
-
-Parameters
-----------
-* `model_function` :  
-    array containing the model function  
-* `n_model_function` :  
-    number of elements in the model function  
-* `data` :  
-    array of the experimental data  
-* `n_data` :  
-    number of experimental data points  
-* `weights` :  
-    the weights of the experimental data  
-* `n_weights` :  
-    the number of weights of the experimental dat  
-* `background` :  
-    the background counts of the data  
-* `start` :  
-    starting index that is used to compute the scaling factor  
-* `stop` :  
-    stop index to compute the scaling factor  
-* `scale_inplace` :  
-    if set to true (default is true) the model function is scaled inplace  
-
-Returns
--------
-the computed scaling factor  
-";
-
-%feature("docstring") Decay::shift_array "
-
-Shift an input array by a floating number.  
-
-Parameters
-----------
-* `input[in]` :  
-    the input array  
-* `n_input[in]` :  
-    length of the input array  
-* `output` :  
-    output array  
-* `n_output` :  
-    length of the output array  
-* `shift[in]` :  
-    the shift of the output  
-";
-
-%feature("docstring") Decay::add_curve "
-
-Computes the sum of two arrays considering their respective areal fraction.  
-
-A weighted sum of two curves is computed. The weighted sum is computed by the
-area of the first curve and the areal fraction of the second curve. The area of
-the computed curve equals to the area of the first input curve while the areal
-fraction of the second input curve will be equal to the specified value in the
-range specified by the input parameters.  
-
-Parameters
-----------
-* `output` :  
-    the computed output curve (array)  
-* `n_output` :  
-    the number of points in the output  
-* `curve1[in]` :  
-    the first input curve / array  
-* `n_curve1[in]` :  
-    number of points in the first array  
-* `curve2[in]` :  
-    second curve / array  
-* `n_curve2[in]` :  
-    number of points in the second array  
-* `areal_fraction_curve2[in]` :  
-    areal fraction of the second curve in the output array  
-* `start[in]` :  
-    start index used for the area calculation  
-* `stop[in]` :  
-    stop index used for the area calculation  
-";
-
-%feature("docstring") Decay::is_valid "
-";
-
-%feature("docstring") Decay::set_data "
-";
-
-%feature("docstring") Decay::get_data "
-";
-
-%feature("docstring") Decay::set_use_amplitude_threshold "
-";
-
-%feature("docstring") Decay::get_use_amplitude_threshold "
-";
-
-%feature("docstring") Decay::set_amplitude_threshold "
-";
-
-%feature("docstring") Decay::get_amplitude_threshold "
-";
-
-%feature("docstring") Decay::set_total_area "
-";
-
-%feature("docstring") Decay::get_total_area "
-";
-
-%feature("docstring") Decay::set_period "
-";
-
-%feature("docstring") Decay::get_period "
-";
-
-%feature("docstring") Decay::set_irf_shift_channels "
-";
-
-%feature("docstring") Decay::get_irf_shift_channels "
-";
-
-%feature("docstring") Decay::set_areal_scatter_fraction "
-";
-
-%feature("docstring") Decay::get_areal_scatter_fraction "
-";
-
-%feature("docstring") Decay::set_constant_background "
-";
-
-%feature("docstring") Decay::get_constant_background "
-";
-
-%feature("docstring") Decay::set_convolution_start "
-";
-
-%feature("docstring") Decay::get_convolution_start "
-";
-
-%feature("docstring") Decay::set_convolution_stop "
-";
-
-%feature("docstring") Decay::get_convolution_stop "
-";
-
-%feature("docstring") Decay::set_correct_pile_up "
-";
-
-%feature("docstring") Decay::get_correct_pile_up "
-";
-
-%feature("docstring") Decay::set_irf "
-";
-
-%feature("docstring") Decay::get_irf "
-";
-
-%feature("docstring") Decay::get_model "
-";
-
-%feature("docstring") Decay::set_lifetime_spectrum "
-";
-
-%feature("docstring") Decay::get_lifetime_spectrum "
-";
-
-%feature("docstring") Decay::set_weights "
-";
-
-%feature("docstring") Decay::get_weights "
-";
-
-%feature("docstring") Decay::set_time_axis "
-";
-
-%feature("docstring") Decay::get_time_axis "
-";
-
-%feature("docstring") Decay::set_irf_background_counts "
-";
-
-%feature("docstring") Decay::get_irf_background_counts "
-";
-
-%feature("docstring") Decay::Decay "
-
-Parameters
-----------
-* `tttr_data` :  
-    pointer to TTTR object that is used to construct a decay histogram  
-* `micro_time_coarsening` :  
-    an (optional) integer by which the micro times are divided to coarsen the
-    time axis (default is 1)  
-* `decay_data` :  
-    the data to which the decay is fitted  
-* `time_axis` :  
-    the time axis that belongs to the data  
-* `dt` :  
-    the spacing between the points in the time axis. This optional parameter is
-    used to compute a time axis if not time axis was provided by the parameter
-    time_axis  
-* `weights` :  
-    the weights of the data points. If the weights are not provided (nullptr /
-    None) the weights are computed assuming Poisson noise.  
-* `instrument_response_function` :  
-    The instrument response function (IRF) that is used for convolution. If no
-    IRF is provided  
-* `start` :  
-    The start index in the IRF used for convolution. Points in the IRF before
-    the start index are not used for convolution.  
-* `stop` :  
-    The stop index in the IRF used for convolution. Points beyond the stop index
-    are not convolved.  
-* `use_amplitude_threshold` :  
-    If this is set to true (default value is true) the values that are smaller
-    then a specified threshold are omitted  
-* `amplitude_threshold` :  
-    The amplitude threshold that is used if the parameter
-    use_amplitude_threshold is set to true (the default value is 1e10)  
-* `correct_pile_up` :  
-    If this is set to true (the default value is false) the convolved model
-    function is 'piled up' to match pile up artifacts in the data.  
-* `excitation_period` :  
-    the repetition period, .i.e, the time between subsequent excitation pulses.  
-";
-
-%feature("docstring") Decay::add_pile_up "
-
-Correct the model function for pile up  
-
-Parameters
-----------
-* `model[in`, `out]` :  
-    The array containing the model function  
-* `n_model[in]` :  
-    Number of elements in the model array  
-* `data[in]` :  
-    The array containing the experimental decay  
-* `n_data[in]` :  
-    number of elements in experimental decay  
-* `repetition_rate[in]` :  
-    The repetition-rate in MHz  
-* `dead_time[in]` :  
-    The dead-time of the detection system in nanoseconds  
-* `measurement_time[in]` :  
-    The measurement time in seconds  
-";
-
-%feature("docstring") Decay::get_weighted_residuals "
-";
-
-%feature("docstring") Decay::evaluate "
 ";
 
 // File: class_header.xml
@@ -1984,6 +1640,62 @@ Parameters
 * `shift` :  
 ";
 
+%feature("docstring") TTTR::microtime_histogram "
+";
+
+%feature("docstring") TTTR::mean_lifetime "
+
+Compute the mean lifetime by the moments of the decay and the instrument
+response function.  
+";
+
+%feature("docstring") TTTR::compute_microtime_histogram "
+
+Computes a histogram of the TTTR data's micro times  
+
+Parameters
+----------
+* `tttr_data` :  
+    a pointer to the TTTR data  
+* `histogram` :  
+    pointer to which the histogram will be written (the memory is allocated but
+    the method)  
+* `n_histogram` :  
+    the number of points in the histogram  
+* `time` :  
+    pointer to the time axis of the histogram (the memory is allocated by the
+    method)  
+* `n_time` :  
+    the number of points in the time axis  
+* `micro_time_coarsening` :  
+    a factor by which the micro times in the TTTR object are divided (default
+    value is 1).  
+";
+
+%feature("docstring") TTTR::compute_mean_lifetime "
+
+Compute a mean lifetime by the moments of the decay and the instrument response
+function.  
+
+The computed lifetime is the first lifetime determined by the method of moments
+(Irvin Isenberg, 1973, Biophysical journal).  
+
+Parameters
+----------
+* `tttr_data` :  
+    TTTR object for which the lifetime is computed  
+* `tttr_irf` :  
+    TTTR object that is used as IRF  
+* `m0_irf` :  
+    Number of counts in the IRF (used if no TTTR object for IRF provided.  
+* `m1_irf` :  
+    First moment of the IRF (used if no TTTR object for IRF provided.  
+
+Returns
+-------
+The computed lifetime  
+";
+
 // File: class_t_t_t_r_range.xml
 
 
@@ -2010,6 +1722,9 @@ Parameters
 %feature("docstring") TTTRRange::TTTRRange "
 
 Copy constructor.  
+";
+
+%feature("docstring") TTTRRange::size "
 ";
 
 %feature("docstring") TTTRRange::get_tttr_indices "
@@ -2100,9 +1815,235 @@ Parameters
     stop times are updated from the tttr object using the current start stop  
 ";
 
+// File: namespacelamb.xml
+
+%feature("docstring") lamb::CCF "
+
+CAUTION: the arrays t1 and t2 are modified inplace by this function!!  
+
+Parameters
+----------
+* `t1` :  
+    macrotime vector  
+* `t2` :  
+    macrotime vector  
+* `photons1` :  
+* `photons2` :  
+* `nc` :  
+    number of evenly spaced elements per block  
+* `nb` :  
+    number of blocks of increasing spacing  
+* `np1` :  
+    number of photons in first channel  
+* `np2` :  
+    number of photons in second channel  
+* `xdat` :  
+    correlation time bins (timeaxis)  
+* `corrl` :  
+    pointer to correlation output  
+";
+
+%feature("docstring") lamb::normalize "
+
+Parameters
+----------
+* `x_axis` :  
+    the uncorrected x-axis (the correlation times)  
+* `corr` :  
+    the uncorrected correlation amplitudes  
+* `corr_normalized` :  
+    the corrected correlation amplitudes (output)  
+* `x_axis_normalized` :  
+    the corrected x-axis (output)  
+* `cr1` :  
+    count rate in channel 1  
+* `cr2` :  
+    count rate in channel 2  
+* `n_bins` :  
+    number of evenly spaced elements per block  
+* `n_casc` :  
+    number of blocks of increasing spacing  
+* `maximum_macro_time` :  
+    the maximum macro time  
+
+Returns
+-------  
+";
+
+// File: namespacepeulen.xml
+
+%feature("docstring") peulen::correlation_shell "
+";
+
+%feature("docstring") peulen::correlation_full "
+
+This function implements a correlation algorithm as described by Wahl 2003  
+
+M. Wahl, I. Gregor, M. Patting, and J. Enderlein, \"Fast calculation of
+fluorescence correlation data with asynchronous time-correlated single-photon
+counting,\" Opt. Express 11, 3583-3591 (2003).  
+
+Parameters
+----------
+* `n_casc` :  
+    the number of correlation blocks  
+* `n_bins` :  
+    the number of equaly spaced bins per corrleation block  
+* `taus` :  
+* `corr` :  
+* `t1` :  
+    array of photon arrival times in correlation channel 1  
+* `w1` :  
+    array of weights of the photons in correlation channel 1  
+* `nt1` :  
+    number of photons in correlation channel 1  
+* `t2` :  
+    array of photon arrival times in correlation channel 2  
+* `w2` :  
+    array of weights of the photons in correlation channel 2  
+* `nt2` :  
+    number of photons in correlation channel 2  
+";
+
+%feature("docstring") peulen::correlation_coarsen "
+
+Coarsens the time events  
+
+This function coarsens a set of time events by dividing the times by two. In
+case two consecutive time events in the array have the same time, the weights of
+the two events are added to the following weight element and the value of the
+previous weight is set to zero.  
+
+Parameters
+----------
+* `t` :  
+    A vector of the time events of the first channel  
+* `w` :  
+    A vector of weights for the time events of the first channel  
+* `nt` :  
+    The number of time events in the first channel  
+";
+
+%feature("docstring") peulen::correlation "
+
+Calculates the cross-correlation between two arrays containing time events.  
+
+Cross-correlates two weighted arrays of events using an approach that utilizes a
+linear spacing of the bins within a cascade and a logarithmic spacing of the
+cascades. The function works inplace on the input times, i.e, during the
+correlation the values of the input times and weights are changed to coarsen the
+times and weights for every correlation cascade.  
+
+The start position parameters  
+
+Parameters
+----------
+* `start_1` :  
+    and  
+* `start_2` :  
+    and the end position parameters  
+* `end_1` :  
+    and  
+* `end_1` :  
+    define which part of the time array of the first and second correlation
+    channel are used for the correlation analysis.  
+
+The correlation algorithm combines approaches of the following papers:  
+
+*   Fast calculation of fluorescence correlation data with asynchronous time-
+    correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias
+    Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383  
+*   Fast, flexible algorithm for calculating photon correlations, Ted A.
+    Laurence, Samantha Fore, Thomas Huser, Optics Express Vol. 31 No. 6, p.829  
+
+Parameters
+----------
+* `start_1` :  
+    The start position on the time event array of the first channel.  
+* `end_1` :  
+    The end position on the time event array of the first channel.  
+* `start_2` :  
+    The start position on the time event array of the second channel.  
+* `end_2` :  
+    The end position on the time event array of the second channel.  
+* `i_casc` :  
+    The number of the current cascade  
+* `n_bins` :  
+    The number of bins per cascase  
+* `taus` :  
+    A vector containing the correlation times of all cascades  
+* `corr` :  
+    A vector to that the correlation is written by the function  
+* `t1` :  
+    A vector of the time events of the first channel  
+* `w1` :  
+    A vector of weights for the time events of the first channel  
+* `nt1` :  
+    The number of time events in the first channel  
+* `t2` :  
+    A vector of the time events of the second channel  
+* `w2` :  
+    A vector of weights for the time events of the second channel  
+* `nt2` :  
+    The number of time events in the second channel  
+";
+
+%feature("docstring") peulen::correlation_normalize "
+
+Normalizes a correlation curve.  
+
+This normalization applied to correlation curves that were calculated using a
+linear/logrithmic binning as described in  
+
+*   Fast calculation of fluorescence correlation data with asynchronous time-
+    correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias
+    Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383  
+
+Parameters
+----------
+* `np1` :  
+    The sum of the weights in the first correlation channel  
+* `dt1` :  
+    The time difference between the first event and the last event in the first
+    correlation channel  
+* `np2` :  
+    The sum of the weights in the second correlation channel  
+* `dt2` :  
+    The time difference between the first event and the last event in the second
+    correlation channel  
+* `x_axis` :  
+    The x-axis of the correlation  
+* `corr` :  
+    The array that contains the original correlation that is modified in place.  
+* `n_bins` :  
+    The number of bins per cascade of the correlation  
+";
+
+%feature("docstring") peulen::make_fine_times "
+
+Changes the time events by adding the micro time to the macro time  
+
+Changes the time events by adding the micro time to the macro time. The micro
+times should match the macro time, i.e., the length of the micro time array
+should be the at least the same length as the macro time array.  
+
+Parameters
+----------
+* `t` :  
+    An array containing the time events (macro times)  
+* `n_times` :  
+    The number of macro times.  
+* `tac` :  
+    An array containing the micro times of the corresponding macro times  
+* `tac` :  
+    The number of micro time channels (TAC channels)  
+";
+
 // File: correlation_8h.xml
 
-// File: decay_8h.xml
+// File: correlation__lamb_8h.xml
+
+// File: correlation__peulen_8h.xml
 
 // File: header_8h.xml
 

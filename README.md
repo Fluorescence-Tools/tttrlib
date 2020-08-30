@@ -1,15 +1,25 @@
 # tttrlib
-[![Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg?branch=master)](https://travis-ci.org/fluorescence-tools/tttrlib)
+[![Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/fluorescence-tools/tttrlib)
 [![Build status](https://ci.appveyor.com/api/projects/status/wi1t2tlchmyaxxol/branch/master?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib/branch/master)
 [![Documentation Status](https://readthedocs.org/projects/tttrlib/badge/?version=latest)](https://tttrlib.readthedocs.io/en/latest/?badge=latest)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
-[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://conda.anaconda.org/tpeulen)
+[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://anaconda.org/tpeulen/tttrlib)
 
 ## General description
-tttrlib is a file format agnostic low level, high performance API to 
+tttrlib is a file format agnostic low level, high performance library to 
 read and process time-tagged-time resolved (TTTR) data acquired by 
-PicoQuant (PQ) and Becker&Hickl measurement devices/cards or TTTR 
+PicoQuant (PQ) and Becker & Hickl measurement devices/cards or TTTR 
 files in the open Photon-HDF format.
+
+8-<  -----  >-8
+One challenge concerning other libraries is their generality, or the ability of 
+existing solutions or software in one lab to be applied to the problems of another 
+labs. Because different groups use highly-tuned combinations of these standard 
+techniques to solve their imaging and single-molecule problems for specific 
+experiments and instrumentation, there is a barrier to sharing work and ideas in 
+this space.
+--- 
+8-<  -----  >-8
 
 The library tttrlib facilitates the work with files containing 
 time-tagged time resolved photon streams by providing 

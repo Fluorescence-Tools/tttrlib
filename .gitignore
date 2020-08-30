@@ -13,8 +13,11 @@ docs/_build
 test/stage
 
 # Documentation and tools
-doc/_*
-doc/paper*
+docs/_*
+docs/paper*
+docs/auto_examples
+docs/modules
+
 
 # JetBrains
 # User-specific stuff
