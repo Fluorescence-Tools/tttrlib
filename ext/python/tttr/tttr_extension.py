@@ -38,6 +38,31 @@ def __getitem__(self, key):
     return tttrlib.TTTR(self, sel)
 
 
+def __init__(self, *args, **kwargs):
+    import pathlib
+    if isinstance(args[0], str) or isinstance(args[0], pathlib.Path):
+        if len(args) == 1:
+            suffix = str(pathlib.Path(args[0]).suffix)[1:].upper()
+            obj = str(pathlib.Path(args[0]).absolute())
+            if suffix == 'HT3' or suffix == 'PTU':
+                tttr_container_type = suffix
+            elif suffix == 'HDF' or suffix == 'H5' or suffix == 'HDF5':
+                tttr_container_type = 'HDF'
+            else:
+                raise ValueError("The file type '{}' does not allow to determine "
+                                 "the container format. Specify the 'tttr_container_type' "
+                                 "parameter.".format(suffix))
+            this = _tttrlib.new_TTTR(obj, tttr_container_type)
+        else:
+            this = _tttrlib.new_TTTR(*args, **kwargs)
+    else:
+        this = _tttrlib.new_TTTR(*args, **kwargs)
+    try:
+        self.this.append(this)
+    except:
+        self.this = this
+
+
 def __repr__(self):
     return 'tttrlib.TTTR("%s", "%s")' % (
         self.get_filename(),
