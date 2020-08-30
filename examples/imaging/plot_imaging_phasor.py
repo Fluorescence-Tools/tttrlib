@@ -2,13 +2,17 @@
 =========================
 Phasor analysis of images
 =========================
+
+For phasor image analysis the library fit2x provides functions
 """
 from __future__ import print_function
 import tttrlib
+import fit2x
 import pylab as p
 
-data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/crn_clv_img.ht3', 'HT3')
-data_mirror = tttrlib.TTTR('../../test/data/imaging/pq/ht3/crn_clv_mirror.ht3', 'HT3')
+data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/crn_clv_img.ht3')
+data_mirror = tttrlib.TTTR('../../test/data/imaging/pq/ht3/crn_clv_mirror.ht3')
+data_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]
 
 ht3_reading_parameter = {
     "marker_frame_start": [4],
@@ -28,12 +32,12 @@ stack_frames = True
 frequency_mt = frequency / (1000. / data.header.micro_time_resolution)
 
 # No IRF correction
-phasor = image.get_phasor_image(
-    tttr_data=data,
+phasor = fit2x.phasor.get_phasor_image(
+    image=image,
     stack_frames=stack_frames,
-    frequency=frequency_mt,
-    minimum_number_of_photons=30
+    frequency=frequency_mt
 )
+
 n_frames = 1 if stack_frames else image.n_frames
 phasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))
 phasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]
@@ -61,8 +65,8 @@ ax[0,1].imshow(phasor_y[0,:,:])
 
 # IRF correction
 data_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]
-phasor = image.get_phasor_image(
-    tttr_data=data,
+phasor = fit2x.phasor.get_phasor_image(
+    image=image,
     tttr_irf=data_irf,
     stack_frames=stack_frames,
     frequency=frequency_mt,
