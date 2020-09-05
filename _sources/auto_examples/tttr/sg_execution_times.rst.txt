@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**00:00.844** total execution time for **auto_examples_tttr** files:
+**00:00.841** total execution time for **auto_examples_tttr** files:
 
 +------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py` (``plot_tttr_read_benchmark.py``)           | 00:00.636 | 0.0 MB |
 +------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py` (``plot_tttr_microtime_histogram.py``) | 00:00.208 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py` (``plot_tttr_microtime_histogram.py``) | 00:00.206 | 0.0 MB |
 +------------------------------------------------------------------------------------------------------------+-----------+--------+

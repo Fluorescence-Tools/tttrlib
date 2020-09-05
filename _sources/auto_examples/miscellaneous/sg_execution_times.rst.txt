@@ -5,12 +5,12 @@
 
 Computation times
 =================
-**00:05.611** total execution time for **auto_examples_miscellaneous** files:
+**00:05.565** total execution time for **auto_examples_miscellaneous** files:
 
 +-----------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``plot_histogram_benchmark.py``) | 00:04.528 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``plot_histogram_benchmark.py``) | 00:04.482 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)               | 00:01.001 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)               | 00:01.003 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py` (``plot_histogram_2D.py``)               | 00:00.082 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py` (``plot_histogram_2D.py``)               | 00:00.080 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------+-----------+--------+

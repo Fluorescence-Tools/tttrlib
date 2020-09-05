@@ -5,14 +5,14 @@
 
 Computation times
 =================
-**00:02.048** total execution time for **auto_examples_single_molecule** files:
+**00:02.020** total execution time for **auto_examples_single_molecule** files:
 
 +-------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py` (``plot_single_molecule_pda_2.py``)                     | 00:00.990 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py` (``plot_single_molecule_pda_2.py``)                     | 00:00.987 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_1.py` (``plot_single_molecule_pda_1.py``)                     | 00:00.417 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_1.py` (``plot_single_molecule_pda_1.py``)                     | 00:00.409 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py` (``plot_single_molecule_mcs.py``)                         | 00:00.350 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py` (``plot_single_molecule_mcs.py``)                         | 00:00.337 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py` (``plot_single_molecule_burst_selection.py``) | 00:00.292 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py` (``plot_single_molecule_burst_selection.py``) | 00:00.287 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+

@@ -51,22 +51,22 @@ optimized for general use cases.
 
     Testing linear histograms
     -------------------------
-    time(numpy) = 0.1601164209999979
-    time(tttrlib) = 0.004571703333340338
-    tttrlib speedup: 35.02
-    time(numpy) = 0.15851267133333144
-    time(tttrlib) = 0.05946847466664925
-    tttrlib speedup: 2.67
-    time(numpy) = 0.14384825266665757
-    time(tttrlib) = 0.2259374199999987
+    time(numpy) = 0.1584872246666388
+    time(tttrlib) = 0.004565348333320192
+    tttrlib speedup: 34.72
+    time(numpy) = 0.15727150899999742
+    time(tttrlib) = 0.059458165999975186
+    tttrlib speedup: 2.65
+    time(numpy) = 0.14279288633334394
+    time(tttrlib) = 0.22482457766667116
     tttrlib speedup: 0.64
 
 
     Testing 2D Histogram linear spacing
     ---------------------------------------
-    time(numpy) (ms) = 0.6264812189999702
-    time(tttrlib) (ms) = 0.12354526100000386
-    tttrlib speedup: 5.07
+    time(numpy) (ms) = 0.6173275710000325
+    time(tttrlib) (ms) = 0.11997551049995536
+    tttrlib speedup: 5.15
 
 
 
@@ -219,7 +219,7 @@ optimized for general use cases.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.528 seconds)
+   **Total running time of the script:** ( 0 minutes  4.482 seconds)
 
 
 .. _sphx_glr_download_auto_examples_miscellaneous_plot_histogram_benchmark.py:
