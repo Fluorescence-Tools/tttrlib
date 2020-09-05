@@ -2243,7 +2243,7 @@ A count rate (cr) filter that returns an array containing a list of indices
 where the cr was smaller than a specified cr.  
 
 The filter is applied to a series of consecutive time events. The time events
-are sliced into time windows (tw) which have at least a duration as specified by
+are sliced into time windows tw) which have at least a duration as specified by
 time_window. The tttr indices of the time windows are written to the output
 parameter output. Moreover, for every tw the number of photons is determined. If
 in a tw the number of photons exceeds n_ph_max and invert is false (default) the

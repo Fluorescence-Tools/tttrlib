@@ -35,7 +35,7 @@ env:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
   # unlink homebrew's boost so that is does not interfere with conda's boost in the build process
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew unlink hdf5; fi
   - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -86,7 +86,6 @@ after_success:
       conda deactivate
     fi
 
-
 # Tell Travis CI to copy the documentation to the gh-pages branch of
 # your GitHub repository.
 deploy:
@@ -98,7 +97,6 @@ deploy:
     branch: development
     condition: $TRAVIS_OS_NAME = linux
   local_dir: docs/_build/html/
-
 
 notifications:
   email:
