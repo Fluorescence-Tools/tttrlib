@@ -1,7 +1,6 @@
 ************
 TTTR-Objects
 ************
-
 General features
 ================
 The library tttrlib facilitates the work with files containing time-tagged time
@@ -121,7 +120,7 @@ The conversion tool `phconvert <https://phconvert.readthedocs.io/>`_
 that can open and be process TTTR data. phconvert uses `numba <https://numba.pydata.org/>`_
 to accelerate the interpretation of the binary data in TTTR files.
 
-.. plot:: plots/tttr_read_benchmark.py
+#.. plot:: plots/tttr_read_benchmark.py
 
 Overall ``tttrlib`` surpasses phconvert in performance. For cases where phconvert
 uses numba effectively, the reading performance of phconvert is comparable.
@@ -132,6 +131,26 @@ e.g., by `Photon-HDF5 <https://fretbursts.readthedocs.io/en/latest/>`_.
 
 ``tttrlib`` is intended as a library that allows to process TTTR data without
 prior conversion.
+
+Common operations
+-----------------
+Creating fluorescence decay histograms
+
+#.. plot:: plots/tttr_microtime_histogram.py
+
+    Fluorescence decay histograms with different coarsening factors
+
+
+Compute mean fluorescence lifetimes.
+TODO
+
+shift_macro_time
+
+
+get_used_routing_channels
+
+
+
 
 Create TTTR objects
 ===================
@@ -172,7 +191,6 @@ identifier as displayed in the table above (see :ref:`supported-file-types`).
 Both approaches are equivalent and demonstrated for the Becker&Hickl SPC-130 and
 the PicoQuant PTU file supplied in the example folder in the Python code below.
 
-
 .. code-block:: python
 
     import tttrlib
@@ -185,6 +203,17 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.
 Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
 be created based on existing files and selection.
+
+IF the container type is not specified `tttrlib` will try to infer the container
+type based on the file extension.
+
+.. code-block:: python
+
+    import tttrlib
+    ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu')
+
+This only works for PTU, HT3, and for HDF files. For SPC files the TTTR record
+types need to be specified.
 
 
 Slicing / subsets
@@ -230,7 +259,7 @@ can be joined into a single TTTR object as follows
 
     import os
     files = glob.glob('./data/BH/BH_SPC132_smDNA/*.spc')
-    sorted(glob.glob('*.png'), key=os.path.getmtime)
+    sorted(glob.glob('*.spc'), key=os.path.getmtime)
     data = tttrlib.TTTR(files[0], 'SPC-130')
     for d in files[1:]:
         data.append(tttrlib.TTTR(d, 'SPC-130'))

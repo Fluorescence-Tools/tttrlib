@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full correlation &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Correlation of sliced TTTR objects" href="plot_sliced_correlation.html" />
+    <link rel="prev" title="Count rate filtered correlation - 2" href="plot_correlation_cr_filter_2.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Full correlation</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="plot_correlation_cr_filter_2.html" title="Previous Chapter: Count rate filtered correlation - 2"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Count rate fi...</span>
+    </a>
+  </li>
+  <li>
+    <a href="plot_sliced_correlation.html" title="Next Chapter: Correlation of sliced TTTR objects"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Correlation o... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/auto_examples/correlation/plot_full_correlation.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-full-correlation-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="full-correlation">
+<span id="sphx-glr-auto-examples-correlation-plot-full-correlation-py"></span><h1>Full correlation<a class="headerlink" href="#full-correlation" title="Permalink to this headline">¶</a></h1>
+<p>When processes faster than the macro time clock are of interest, the micro time
+and the macro time can be combined into a united time axis. Using the combined
+time axis a so called full correlation can be performed using cw excitation.</p>
+<p>The example below illustrates how a full correlation can be computed. Note, in
+the example the full correlation is computed for a sample that was measured in a
+pulsed excitation experiment. However, the same procedure can be applied to cw data.</p>
+<img alt="plot full correlation" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_full_correlation_001.png" />
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+
+<span class="c1"># get the indices of the two channels</span>
+<span class="n">ch1_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">ch2_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="c1"># use the indices to create new TTTR objects</span>
+<span class="c1"># either by creating a new object and providing a selection</span>
+<span class="n">tttr_ch1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ch1_indeces</span><span class="p">)</span>
+<span class="c1"># or by slicing</span>
+<span class="n">tttr_ch2</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">ch2_indeces</span><span class="p">]</span>
+
+<span class="c1"># correlate with the new TTTR objects</span>
+<span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">,</span>
+    <span class="n">n_casc</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="p">(</span><span class="n">tttr_ch1</span><span class="p">,</span> <span class="n">tttr_ch2</span><span class="p">),</span>
+    <span class="n">make_fine</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">x_axis</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">correlation</span>
+
+<span class="c1"># use pylab to plot the data</span>
+<span class="n">p</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="c1"># p.show()</span>
+
+<span class="c1"># the above is equivalent to the following</span>
+<span class="n">correlator_ref</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">n_casc</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">6</span>
+<span class="p">)</span>
+<span class="n">t1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="n">ch1_indeces</span><span class="p">]</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="n">ch2_indeces</span><span class="p">]</span>
+<span class="n">mt1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">micro_times</span><span class="p">[</span><span class="n">ch1_indeces</span><span class="p">]</span>
+<span class="n">mt2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">micro_times</span><span class="p">[</span><span class="n">ch2_indeces</span><span class="p">]</span>
+<span class="n">w1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">correlator_ref</span><span class="o">.</span><span class="n">set_macrotimes</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+<span class="n">correlator_ref</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">)</span>
+<span class="n">n_microtime_channels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_number_of_micro_time_channels</span><span class="p">()</span>
+<span class="n">correlator_ref</span><span class="o">.</span><span class="n">set_microtimes</span><span class="p">(</span><span class="n">mt1</span><span class="p">,</span> <span class="n">mt2</span><span class="p">,</span> <span class="n">n_microtime_channels</span><span class="p">)</span>
+<span class="n">x_ref</span> <span class="o">=</span> <span class="n">correlator_ref</span><span class="o">.</span><span class="n">x_axis</span>
+<span class="n">y_ref</span> <span class="o">=</span> <span class="n">correlator_ref</span><span class="o">.</span><span class="n">correlation</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_ref</span><span class="p">,</span> <span class="n">y_ref</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.199 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-full-correlation-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b13687b0647ec619f3b0c37d468abad2/plot_full_correlation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_full_correlation.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0bd8c88fc82cac22b5ff731c0a51c594/plot_full_correlation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_full_correlation.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

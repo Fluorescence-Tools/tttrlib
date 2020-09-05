@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTTR reading benchmark &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Imaging" href="../../imaging.html" />
+    <link rel="prev" title="Micro time histograms" href="plot_tttr_microtime_histogram.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">TTTR reading benchmark</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="plot_tttr_microtime_histogram.html" title="Previous Chapter: Micro time histograms"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Micro time histograms</span>
+    </a>
+  </li>
+  <li>
+    <a href="../../imaging.html" title="Next Chapter: Imaging"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Imaging &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/auto_examples/tttr/plot_tttr_read_benchmark.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-plot-tttr-read-benchmark-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="tttr-reading-benchmark">
+<span id="sphx-glr-auto-examples-tttr-plot-tttr-read-benchmark-py"></span><h1>TTTR reading benchmark<a class="headerlink" href="#tttr-reading-benchmark" title="Permalink to this headline">¶</a></h1>
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py&quot;</span>, line <span class="m">73</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/pathlib.py&quot;</span>, line <span class="m">1178</span>, in <span class="n">stat</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessor</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gr">FileNotFoundError</span>: <span class="n">[Errno 2] No such file or directory: &#39;../../test/data/BH/BH_SPC630_256.spc&#39;</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/python</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;NUMBA_DISABLE_JIT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+
+<span class="kn">import</span> <span class="nn">timeit</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="c1">#############</span>
+<span class="c1"># Test the TTTR reading function</span>
+<span class="c1">#############</span>
+
+<span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="kn">import</span> <span class="nn">phconvert</span>
+<span class="kn">import</span> <span class="nn">phconvert.bhreader</span>
+<span class="kn">import</span> <span class="nn">phconvert.pqreader</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
+
+
+<span class="c1"># Load different file types</span>
+<span class="c1"># 0 = PQ-PTU</span>
+<span class="c1"># 1 = PQ-HT3</span>
+<span class="c1"># 2 = BH-Spc132</span>
+<span class="c1"># 3 = BH-Spc600_256</span>
+<span class="c1"># 4 = BH-Spc600_4096 (I don&#39;t have a sample file)</span>
+<span class="c1"># 5 = Photon-HDF5</span>
+
+<span class="n">benchmark_files</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spc132&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;bhreader.load_spc&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;spc_model=&#39;SPC-134&#39;&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spc630_256&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/BH/BH_SPC630_256.spc&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;bhreader.load_spc&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;spc_model=&#39;SPC-630&#39;&quot;</span>
+    <span class="p">},</span>
+    <span class="c1"># phconvert does not open the HT3 file</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ht3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;pqreader.load_ht3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;ovcfunc=None&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ptu&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;pqreader.load_ptu&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;ovcfunc=None&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">times_phconvert_numba</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">times_phconvert_python</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">times_tttrlib</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">benchmark_file</span> <span class="ow">in</span> <span class="n">benchmark_files</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">benchmark_file</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">benchmark_file</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span>
+    <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+    <span class="n">size_mb</span> <span class="o">=</span> <span class="n">size_bytes</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+
+    <span class="n">n_test_runs</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">time_phconvert_numba</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
+        <span class="s1">&#39;phconvert.</span><span class="si">%s</span><span class="s1">(&quot;</span><span class="si">%s</span><span class="s1">&quot;, </span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">benchmark_file</span><span class="p">[</span><span class="s2">&quot;phconvert&quot;</span><span class="p">],</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">benchmark_file</span><span class="p">[</span><span class="s2">&quot;phconvert_args&quot;</span><span class="p">]</span>
+        <span class="p">),</span>
+        <span class="n">number</span><span class="o">=</span><span class="n">n_test_runs</span><span class="p">,</span>
+        <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import phconvert&quot;</span>
+    <span class="p">)</span>
+    <span class="n">time_tttrlib</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
+        <span class="s1">&#39;tttrlib.TTTR(&quot;</span><span class="si">%s</span><span class="s1">&quot;, </span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">benchmark_file</span><span class="p">[</span><span class="s2">&quot;tttr_mode&quot;</span><span class="p">]</span>
+        <span class="p">),</span>
+        <span class="n">number</span><span class="o">=</span><span class="n">n_test_runs</span><span class="p">,</span>
+        <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import tttrlib&quot;</span>
+    <span class="p">)</span>
+    <span class="n">times_phconvert_numba</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_phconvert_numba</span> <span class="o">/</span> <span class="n">size_mb</span><span class="p">)</span>
+    <span class="n">times_tttrlib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time_tttrlib</span> <span class="o">/</span> <span class="n">size_mb</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time(phconvert.numba) = </span><span class="si">%s</span><span class="s2"> s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time_phconvert_numba</span> <span class="o">/</span> <span class="n">n_test_runs</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time(tttrlib) = </span><span class="si">%s</span><span class="s2"> s&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time_tttrlib</span> <span class="o">/</span> <span class="n">n_test_runs</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tttrlib speedup: </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time_phconvert_numba</span> <span class="o">/</span> <span class="n">time_tttrlib</span><span class="p">))</span>
+
+<span class="c1"># time(phconvert) = 5054 ms (without numba)</span>
+<span class="c1"># time(phconvert) = 1840 ms (with numba) # 270 MB file -&gt; 141 MB/sec</span>
+<span class="c1"># time(tttrlib)   = 690 ms               # 270 Mb file -&gt; 391 MB/sec</span>
+
+
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">benchmark_files</span><span class="p">]</span>
+
+<span class="n">n_file_tests</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">benchmark_files</span><span class="p">)</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mf">0.35</span>
+<span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_file_tests</span><span class="p">)</span>  <span class="c1"># the x locations for the groups</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;time (ms / mega byte)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Time to read file&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+<span class="n">rects2</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">times_phconvert_numba</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">rects3</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">times_tttrlib</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">times_phconvert_numba</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">times_tttrlib</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+<span class="c1"># zoom-in / limit the view to different portions of the data</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">)</span>  <span class="c1"># outliers only</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># most of the data</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">rects2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rects3</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">&#39;phconvert(numba)&#39;</span><span class="p">,</span> <span class="s1">&#39;tttrlib&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1">#ax.set_yscale(&#39;log&#39;)</span>
+
+<span class="c1"># hide the spines between ax and ax2</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;bottom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;top&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_top</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labeltop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># don&#39;t put tick labels at the top</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">tick_bottom</span><span class="p">()</span>
+
+
+<span class="n">d</span> <span class="o">=</span> <span class="o">.</span><span class="mi">01</span>
+<span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">+</span><span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">+</span><span class="n">d</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>        <span class="c1"># top-left diagonal</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">+</span><span class="n">d</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># top-right diagonal</span>
+
+<span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="n">ax2</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>  <span class="c1"># switch to the bottom axes</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">+</span><span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">d</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># bottom-left diagonal</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">d</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># bottom-right diagonal</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.636 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-read-benchmark-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/05e48e93e6ad3852d989cbb97450c50b/plot_tttr_read_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_read_benchmark.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/93b47991741e2d72842d7142cc34df68/plot_tttr_read_benchmark.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_tttr_read_benchmark.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

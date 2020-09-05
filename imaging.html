@@ -3,20 +3,26 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Imaging &#8212; tttrlib  documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="_static/gallery-dataframe.css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Single Molecule" href="single_molecule.html" />
-    <link rel="prev" title="TTTR-Objects" href="tttr_objects.html" />
+    <link rel="next" title="Tools" href="tools.html" />
+    <link rel="prev" title="TTTR reading benchmark" href="auto_examples/tttr/plot_tttr_read_benchmark.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -57,9 +63,8 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Applications</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Imaging</a></li>
-<li class="toctree-l1"><a class="reference internal" href="single_molecule.html">Single Molecule</a></li>
-<li class="toctree-l1"><a class="reference internal" href="correlation.html">Fluorescence correlation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cpp_api.html">C++ API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
@@ -84,19 +89,15 @@
 <li><a class="reference internal" href="#intensity">Intensity</a></li>
 <li><a class="reference internal" href="#mean-micro-time">Mean micro time</a></li>
 <li><a class="reference internal" href="#average-fluorescence-lifetime">Average fluorescence lifetime</a></li>
-<li><a class="reference internal" href="#phasor">Phasor</a><ul>
+<li><a class="reference internal" href="#phasor">Phasor</a></li>
 <li><a class="reference internal" href="#fluorescence-decay-histograms">Fluorescence decay histograms</a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#pixel-averaged-decays">Pixel averaged decays</a></li>
 <li><a class="reference internal" href="#correlation-function">Correlation function</a></li>
-<li><a class="reference internal" href="#estimation-of-the-image-resolution">Estimation of the image resolution</a></li>
+<li><a class="reference internal" href="#image-correlation-spectroscopy">Image correlation spectroscopy</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#image-markers-in-tttrs">Image markers in TTTRs</a><ul>
+<li><a class="reference internal" href="#image-markers">Image markers</a><ul>
 <li><a class="reference internal" href="#general">General</a></li>
-<li><a class="reference internal" href="#image-construction">Image construction</a></li>
-<li><a class="reference internal" href="#analyzing-clsm-marker">Analyzing CLSM marker</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#clsmimage">CLSMImage</a><ul>
@@ -122,11 +123,11 @@
               
                 
   <li>
-    <a href="tttr_objects.html" title="Previous Chapter: TTTR-Objects"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; TTTR-Objects</span>
+    <a href="auto_examples/tttr/plot_tttr_read_benchmark.html" title="Previous Chapter: TTTR reading benchmark"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; TTTR reading ...</span>
     </a>
   </li>
   <li>
-    <a href="single_molecule.html" title="Next Chapter: Single Molecule"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Single Molecule &raquo;</span>
+    <a href="tools.html" title="Next Chapter: Tools"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Tools &raquo;</span>
     </a>
   </li>
               
@@ -169,15 +170,15 @@ either by moving the sample over a parked (fixed) laser beam (stage scanning)
 or by deflecting the laser and moving the position of the exciting on a fixed
 sample (laser scanning). In both cases, the position of the detection volume
 within the sample needs to be saved in the recorded TTTR event stream. In the
-section <a href="#id3"><span class="problematic" id="id4">`Theory`_</span></a> the basics of CLSM data are described. In the section
-<a class="reference internal" href="#image-construction">Image construction</a> basic python functions are used to create an CLSM image
+section <a href="#id8"><span class="problematic" id="id9">`Theory`_</span></a> the basics of CLSM data are described. In the section
+<a href="#id10"><span class="problematic" id="id11">`Image construction`_</span></a> basic python functions are used to create an CLSM image
 using <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects. In the section <a class="reference internal" href="#clsmimage">CLSMImage</a> it is explained how to use
 <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>’s C++ interface to efficiently create CLSM images and different
-<a href="#id5"><span class="problematic" id="id6">`CLSM representations`_</span></a>, e.g., intensity images, mean micro time images are
+<a href="#id12"><span class="problematic" id="id13">`CLSM representations`_</span></a>, e.g., intensity images, mean micro time images are
 presented with a brief application and example source-code. Moreover, for an CLSM
 image the resolution is <a class="reference internal" href="#frc-image"><span class="std std-ref">estimated</span></a>) by Fourier
 Ring Correlation and it is described how CLSM markers can be analyezed only given
-the photon stream using data from an Leica SP8 a <a class="reference internal" href="#leicasp8marker"><span class="std std-ref">example</span></a>.</p>
+the photon stream using data from an Leica SP8 a <span class="xref std std-ref">example</span>.</p>
 </div>
 <div class="section" id="applications">
 <h2>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h2>
@@ -187,10 +188,7 @@ the photon stream using data from an Leica SP8 a <a class="reference internal" h
 analyzed. For instance, images can be computed where every pixel contains an average
 fluorescence lifetime or an intensity. A few representations for CLSM data and
 scripts how to generate these representations are outlined here.</p>
-<p>(<a class="reference external" href="./plots/imaging_representations.py">Source code</a>, <a class="reference external" href="./plots/imaging_representations.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_representations.png" src="_images/imaging_representations.png" />
-</div>
+<p>#.. plot:: ../examples/imaging/imaging_representations.py</p>
 <p>The figure displayed above corresponds to a live-cell FLIM measurement of eGFP. The
 fluorescent label eGFP is often used as an donor fluorophore in FRET experiments.
 In the image shown above, eGFP was measured in the absence of FRET. The intensity
@@ -233,10 +231,7 @@ averages in the code-block displayed above differ.</p>
 <h3>Average fluorescence lifetime<a class="headerlink" href="#average-fluorescence-lifetime" title="Permalink to this headline">¶</a></h3>
 <p>The moments of the fluorescence intensity decay can be directly computed also
 considering the instrument response function (IRF) <a class="bibtex reference internal" href="zreferences.html#isenberg-studies-1973" id="id1">[IDH73]</a>.</p>
-<p>(<a class="reference external" href="./plots/imaging_mean_tau.py">Source code</a>, <a class="reference external" href="./plots/imaging_mean_tau.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_mean_tau.png" src="_images/imaging_mean_tau.png" />
-</div>
+<p>#.. plot:: ../examples/imaging/imaging_mean_tau.py</p>
 <p>The shown example computes for every pixel a mean fluorescence lifetime considering
 the IRF that is provided as a <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR</span></code> object.</p>
 </div>
@@ -247,14 +242,12 @@ over conventional nonlinear curve fitting, which is computationally-intensive an
 can be sensitive to potential inaccuracies due to correlations between computed
 terms. The phasor analysis provides a robust approach to investigate variations
 in fluorescence lifetime measurements .</p>
-<p>(<a class="reference external" href="./plots/imaging_phasor.py">Source code</a>, <a class="reference external" href="./plots/imaging_phasor.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_phasor.png" src="_images/imaging_phasor.png" />
-</div>
+<p>#.. plot:: ../examples/imaging/imaging_phasor.py</p>
 <p>Top phasor without instrument response function (IRF) correction. Bottom phasor
 with IRF correction.</p>
+</div>
 <div class="section" id="fluorescence-decay-histograms">
-<h4>Fluorescence decay histograms<a class="headerlink" href="#fluorescence-decay-histograms" title="Permalink to this headline">¶</a></h4>
+<h3>Fluorescence decay histograms<a class="headerlink" href="#fluorescence-decay-histograms" title="Permalink to this headline">¶</a></h3>
 <p>The micro times of the photons in every pixel can be binned to yield a fluorescence
 decay histogram for every pixel in the CLSM image. This is implemented in the method
 <code class="docutils literal notranslate"><span class="pre">get_fluorescence_decay_image</span></code> of <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> objects.</p>
@@ -270,16 +263,12 @@ use appropriate values for the parameters of <code class="docutils literal notra
 to reduce the memory consumption.</p>
 </div>
 </div>
-</div>
 <div class="section" id="pixel-averaged-decays">
 <h3>Pixel averaged decays<a class="headerlink" href="#pixel-averaged-decays" title="Permalink to this headline">¶</a></h3>
 <p>Using selection masks the signal to noise of the fluorescence decays can be greatly
 improved to allow for a detailed analyis. Here it is briefly outlined, how pixels
 are selected and fluorescence decays of these pixel sub-populations can be created.</p>
-<p>(<a class="reference external" href="./plots/imaging_pixel_masks.py">Source code</a>, <a class="reference external" href="./plots/imaging_pixel_masks.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_pixel_masks.png" src="_images/imaging_pixel_masks.png" />
-</div>
+<p>#.. plot:: ../examples/imaging/imaging_pixel_masks.py</p>
 <p>Pixels are selected by a pixel mask, i.e., arrays of the same size as a CLSM image.
 The micro times of the photons associated to the selected pixels can be binned into
 fluorescence decay histograms. This way, fluorescence decays of regions of interest
@@ -298,29 +287,43 @@ mask.</p>
 <p>Every pixel is defined by a list of TTTR indices. To these indices a macro time
 and micro time are associtate. Hence, correlation functions can be computed.</p>
 </div>
-<div class="section" id="estimation-of-the-image-resolution">
-<h3>Estimation of the image resolution<a class="headerlink" href="#estimation-of-the-image-resolution" title="Permalink to this headline">¶</a></h3>
-<p>In electron microscopy the Fourier Ring Correlation (FRC) is widely used as a
-measure for the resolution of an image. This very practical approach for a quality
-measure begins to get traction in fluorescence microscopy. Briefly, the correlation
-between two subsets of the same images are Fourier transformed and their overlap
-in the Fourier space is measured. The FRC is the normalised cross-correlation
-coefficient between two images over corresponding shells in Fourier space transform.</p>
-<p>In CLSM usually multiple images of the sample sample are recoded. Thus, the
-resolution of the image can be estimated by the FRC. Below a few lines of python
-code are shown that read a CLSM image, split the image into two sets, and plot
-the FRC of the two subsets is shown for intensity images.</p>
-<p>(<a class="reference external" href="./plots/imaging_frc.py">Source code</a>, <a class="reference external" href="./plots/imaging_frc.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_frc.png" src="_images/imaging_frc.png" />
+<div class="section" id="image-correlation-spectroscopy">
+<span id="frc-image"></span><h3>Image correlation spectroscopy<a class="headerlink" href="#image-correlation-spectroscopy" title="Permalink to this headline">¶</a></h3>
+<p>Fluorescence fluctuation spectroscopy can be combined with fluorescence imaging.
+Image correlation spectroscopy (ICS) allows to extracted molecular properties from
+microscopy images <a class="bibtex reference internal" href="zreferences.html#petersen-quantitation-1993" id="id2">[PHW+93]</a>. There are many flavours of
+ICS. For conventional CLSM imaging the most relevant is raster image correlation
+spectroscopy (RICS) that can be used to study the molecular translational diffusion
+constant (D), absolute concentration (c), and intermolecular binding constants of
+diffusive molecules <a class="bibtex reference internal" href="zreferences.html#digman-measuring-2005" id="id3">[DBS+05]</a> <a class="bibtex reference internal" href="zreferences.html#digman-fluctuation-2005" id="id4">[DSW+05]</a>
+<a class="bibtex reference internal" href="zreferences.html#digman-detecting-2009" id="id5">[DWHG09]</a>. The static method <code class="docutils literal notranslate"><span class="pre">CLSMImage.compute_ics</span></code> allows
+to correlate <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> objects and stacks of images for ICS analysis.</p>
+<p>#.. plot:: ../examples/imaging/imaging_ics_tttrlib.py</p>
+<p>The figure above displays an image and the corresponding image correlation for a
+region of interest (ROI) that is highlighted by a red square. <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> supports
+squared ROIs that can be background corrected. However, in general ICS can be
+applied to arbitrarily shaped ROIs is <a class="bibtex reference internal" href="zreferences.html#hendrix-arbitrary-region-2016" id="id6">[HDSL16]</a>.</p>
+<p>With a few lines of python code the computed correlations can be analyzed and
+fitted to yield diffusion coefficients and concentrations.</p>
+<p>#.. plot:: ../examples/imaging/imaging_ics_fit.py</p>
+<p>The figure above displays an image, the corresponding ICS, and the weighted residuals
+of the model and the analysis results.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For RICS the line durations (line time) and the pixel duration (pixel time)
+need to be known. These parameters can be
+setup. Moreover, some setup configurations use “photons” event types to record
+special events. Different microscopes may use different markers. For common
+microscopes such as the Leica SP5 and Leica SP8 ready-to-use image processing
+routines are provided.</p>
 </div>
-<p>The above approach is used by the software <a class="reference external" href="https://github.com/fluorescence-tools/chisurf/">ChiSurf</a>.
-In practice, a set of CLSM images can be split into two subsets. The two subsets
-can be used to estimate the resolution of the image.</p>
+<p>Autocorrelations</p>
+<p>Spatiotemporal ICS (STICS)</p>
+<p>Cross-correlations (</p>
 </div>
 </div>
-<div class="section" id="image-markers-in-tttrs">
-<h2>Image markers in TTTRs<a class="headerlink" href="#image-markers-in-tttrs" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="image-markers">
+<h2>Image markers<a class="headerlink" href="#image-markers" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="general">
 <h3>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h3>
 <p>The position of the laser in the TTTR event stream is encoded by injecting
@@ -348,10 +351,7 @@ the pixel sizes may not be uniform.</p>
 microscope. Below it is briefly outlined how these markers can be assigned to
 channels.</p>
 <p>Below a typical traces of channel numbers for special events are shown.</p>
-<p>(<a class="reference external" href="./plots/imaging_special_markers.py">Source code</a>, <a class="reference external" href="./plots/imaging_special_markers.png">png</a>)</p>
-<div class="figure align-default">
-<img alt="_images/imaging_special_markers.png" src="_images/imaging_special_markers.png" />
-</div>
+<p>#.. plot:: ../examples/imaging/imaging_special_markers.py</p>
 <p>To the top a longer trace of special events channel numbers is shown. As can be
 seen by inspecting the traces of special events, channel number 4 is followed by
 an interleaved sequence of channel number 1 and channel number 2. This identifies
@@ -362,309 +362,6 @@ photons registered following the last frame number should be rejected, as they
 would result in an incomplete image.</p>
 <p>The markers markers and the photons between the markers need to be analyzed to
 form an image.</p>
-</div>
-<div class="section" id="image-construction">
-<h3>Image construction<a class="headerlink" href="#image-construction" title="Permalink to this headline">¶</a></h3>
-<p>Below, using a few lines of python code it is outlined how CLSM images can be
-constructured. For productive uses <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> provides a set of functions to
-create images based on CLSM TTTR data implemented in C/C++. To describe how this
-is actually implemented, it is outlined below in Python only using basic the basic
-functionality of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>. The presented outline presented below may serve to
-understand how the image construction in CLSM work and is not intended for
-productive use.</p>
-<p>Before creating an image the channel numbers of the frame and the line markers need
-to be determined. For the example that is shown above the frame, line start, and
-line stop markers are 4, 1, and 2, respectively. Next, the TTTR data needs to be
-loaded into memory, the number of frames, and the number of lines need to be determined
-in order to allocate memory for the image. In CLSM the number of pixels per line
-can be arbitrarily defined, as the laser beam is continuously displaced and the
-fluorescence of the sample is continuously recorded. Hence, the main experimental
-determinants of the image size in memory are the number of frames and the number
-of line scans per frame. Usually, the number of line scans per frame is constant
-within a TTTR file.</p>
-<p>The number of frames can be determined by counting extracting and counting the number
-of frame markers as shown below.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
-
-<span class="k">def</span> <span class="nf">count_marker</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">event_types</span><span class="p">,</span> <span class="n">marker</span><span class="p">,</span> <span class="n">event_type</span><span class="p">):</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ci</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channels</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">ci</span> <span class="o">==</span> <span class="n">marker</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">event_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">event_type</span><span class="p">):</span>
-            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">n</span>
-
-<span class="k">def</span> <span class="nf">find_marker</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">event_types</span><span class="p">,</span> <span class="n">maker</span><span class="p">,</span> <span class="n">event_type</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ci</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channels</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">ci</span> <span class="o">==</span> <span class="n">maker</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">event_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">event_type</span><span class="p">):</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-
-<span class="n">events</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/PQ/HT3/PQ_HT3_CLSM.ht3&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">e</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">get_routing_channel</span><span class="p">()</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
-
-<span class="n">frame_marker_list</span> <span class="o">=</span> <span class="n">find_marker</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-<span class="n">line_start_marker_list</span> <span class="o">=</span> <span class="n">find_marker</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">line_stop_marker_list</span> <span class="o">=</span> <span class="n">initialize</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">n_frames</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame_marker_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="c1"># 41</span>
-<span class="n">n_line_start_marker</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line_start_marker_list</span><span class="p">)</span> <span class="c1"># 10246</span>
-<span class="n">n_lines_per_frame</span> <span class="o">=</span> <span class="n">n_line_start_marker</span> <span class="o">/</span> <span class="n">n_frames</span> <span class="c1"># 256</span>
-<span class="n">line_duration_valid</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">line_stop_marker_list</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="n">line_start_marker_list</span><span class="p">]</span>
-<span class="n">line_duration_total</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">line_start_marker_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="n">line_start_marker_list</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-<span class="n">n_pixel</span> <span class="o">=</span> <span class="mi">256</span>
-<span class="n">pixel_duration</span> <span class="o">=</span> <span class="n">line_duration_valid</span> <span class="o">//</span> <span class="n">n_pixel</span>
-<span class="n">line_duration_valid</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">line_stop_marker_list</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="n">line_start_marker_list</span><span class="p">]</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The channel number of the frame makers (here 4) depends on the experimental
-setup. Moreover, some setup configurations use “photons” event types to record
-special events. Different microscopes may use different markers. For common
-microscopes such as the Leica SP5 and Leica SP8 ready-to-use image processing
-routines are provided.</p>
-</div>
-<p>In the example above, first the number of frames are counted. Next, the number of
-start line events are counted. In the example, there are overall 41 frames are present
-in the file each having 256 lines. As the last frame is often incomplete (see Figure
-above) the last frame is neglected (41 - 1 = 40). With the script above, the number
-of frames <code class="docutils literal notranslate"><span class="pre">n_frames</span></code> and the number of lines per frame <code class="docutils literal notranslate"><span class="pre">n_lines_per_frame</span></code> is
-determined. Next, the number of pixel per line <code class="docutils literal notranslate"><span class="pre">n_pixel</span></code> can be freely defined.
-Based on the time the laser spends in each line, the duration per pixel (the laser
-is constantly scanning) needs to be calculated. Here, there are two options: 1)
-either the total time from the beginning of each new line (line start) to the beginning
-of the next line is considered as a line or 2) the time between the line start and
-the line stop is considered as the time base to calculate the pixel duration. In
-the first case, the back movement of the laser to the line start can be visualized
-in the image. In the later case, only the <em>valid</em> region where the laser scans over
-the sample is visualized. For most applications the later approach is useful. To
-understand the microscope laser scanner the former approach is more useful. Above,
-<code class="docutils literal notranslate"><span class="pre">line_duration_valid</span></code> is the time the laser spends in every of the lines in a
-valid region and <code class="docutils literal notranslate"><span class="pre">line_duration_total</span></code> is the total time the laser spends in a
-line including the rewind to the line beginning. Above, <code class="docutils literal notranslate"><span class="pre">n_pixel</span></code> is the freely
-defined number of pixels per line and <code class="docutils literal notranslate"><span class="pre">pixel_duration</span></code> is the duration of every
-pixel. With the number of frames <code class="docutils literal notranslate"><span class="pre">n_frames</span></code>, the number of pixels <code class="docutils literal notranslate"><span class="pre">n_pixel</span></code>,
-and the number of lines <code class="docutils literal notranslate"><span class="pre">n_lines_per_frame</span></code> it is clear how much the memory for
-an image needs to be can be allocated and with the defined number of pixels per
-line the duration for the pixel can be calculated for all the lines of the frames.</p>
-<p>With these numbers an image for a certain set of detector channels <code class="docutils literal notranslate"><span class="pre">detector_channels</span></code>
-can be calculated. Below this is by the function <code class="docutils literal notranslate"><span class="pre">make_image</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">make_image</span><span class="p">(</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span>
-        <span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines_per_frame</span><span class="p">,</span> <span class="n">pixel_duration</span><span class="p">,</span>
-        <span class="n">channels</span><span class="p">,</span>
-        <span class="n">frame_marker</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-        <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">stop</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="n">n_pixel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">tac_coarsening</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-        <span class="n">n_tac_max</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">n_pixel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">n_pixel</span> <span class="o">=</span> <span class="n">n_lines_per_frame</span>  <span class="c1"># assume squared image</span>
-
-    <span class="n">n_tac</span> <span class="o">=</span> <span class="n">n_tac_max</span> <span class="o">/</span> <span class="n">tac_coarsening</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines_per_frame</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">,</span> <span class="n">n_tac</span><span class="p">))</span>
-    <span class="c1"># iterate through all photons in a line and add to image</span>
-
-    <span class="n">frame</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-    <span class="n">current_line</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">time_start_line</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">invalid_range</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">mask_invalid</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">for</span> <span class="n">ci</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">ti</span><span class="p">,</span> <span class="n">ei</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">ei</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># marker</span>
-            <span class="k">if</span> <span class="n">ci</span> <span class="o">==</span> <span class="n">frame_marker</span><span class="p">:</span>
-                <span class="n">frame</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">current_line</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">if</span> <span class="n">frame</span> <span class="o">&lt;</span> <span class="n">n_frames</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">break</span>
-            <span class="k">elif</span> <span class="n">ci</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
-                <span class="n">time_start_line</span> <span class="o">=</span> <span class="n">ti</span>
-                <span class="n">invalid_range</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">ci</span> <span class="o">==</span> <span class="n">stop</span><span class="p">:</span>
-                <span class="n">invalid_range</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">current_line</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">continue</span>
-        <span class="k">elif</span> <span class="n">ei</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># photon</span>
-            <span class="k">if</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">channels</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">invalid_range</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">mask_invalid</span><span class="p">):</span>
-                <span class="n">pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ti</span> <span class="o">-</span> <span class="n">time_start_line</span><span class="p">)</span> <span class="o">//</span> <span class="n">pixel_duration</span><span class="p">[</span><span class="n">current_line</span><span class="p">])</span>
-                <span class="k">if</span> <span class="n">pixel</span> <span class="o">&lt;</span> <span class="n">n_pixel</span><span class="p">:</span>
-                    <span class="n">tac</span> <span class="o">=</span> <span class="n">mi</span> <span class="o">/</span> <span class="n">tac_coarsening</span>
-                    <span class="n">image</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">current_line</span><span class="p">,</span> <span class="n">pixel</span><span class="p">,</span> <span class="n">tac</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">image</span>
-
-<span class="n">image</span> <span class="o">=</span> <span class="n">make_image</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines_per_frame</span><span class="p">,</span> <span class="n">pixel_duration</span><span class="p">,</span>
-    <span class="n">channels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>In the example function <code class="docutils literal notranslate"><span class="pre">make_image</span></code> the an 3D array is created that contains in
-every pixel a histogram of the micro times. An histogram of the micro time can be
-displayed by the code shown below:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;inferno&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">175</span><span class="p">,</span><span class="mi">128</span><span class="p">])</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>The outcome of such analysis for a complete working example is shown below including
-all necessary source code is <a class="reference external" href="https://github.com/Fluorescence-Tools/tttrlib/tree/master/docs/plots/imaging_python.py">here</a>.</p>
-<p>For any practical applications it is recommended the determine the images using
-the built-in functions of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>. Using this functions is illustrated below.</p>
-</div>
-<div class="section" id="analyzing-clsm-marker">
-<h3>Analyzing CLSM marker<a class="headerlink" href="#analyzing-clsm-marker" title="Permalink to this headline">¶</a></h3>
-<p>Not always it is completely documented by the manufacturer of a microscope how the
-laser scanning is implemented. Meaning, how the frame and line marker are integrated
-into the event data stream. Below, it is briefly outlined on a test case how for a
-given image the event stream can analyzed. The example data illustrated below, was
-recored on a Leica SP8 with three hybrid detectors and PicoQuant counting electronics.</p>
-<p>First, the data corresponding to the image needs to be exported from the Leica file
-container to yield a PTU file that contains the TTTR events. This file is loaded
-in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> and the event types, the routing channel numbers, the macro time,
-and the micro time are inspected.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/Leica/SP8_Hybrid_detectors.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
-
-<span class="n">e</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_routing_channel</span><span class="p">()</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>As a first step, the routing channels are inspected to determine the actual channel
-numbers of the detectors. By making a bincount of the channel numbers the number
-how often a channel occurs in the data stream and the channel numbers in the data
-stream can be determined.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Look for used channels</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>For the given dataset three channels were populated (channel 1, channel 2, channel 3,
-and channel 15). The microscopy is only equipped with three detectors. The counts
-per channel were as follows</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>1 - 2170040</p></li>
-<li><p>2 - 43020969</p></li>
-<li><p>3 - 198919134</p></li>
-<li><p>15 - 8194</p></li>
-</ul>
-</div></blockquote>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Usually, the TTTR records utilize the event type to distinguish markers from
-photons. Here, Leica decided to use the routing channel number to identify
-markers.</p>
-</div>
-<p>Based on these counts channel 15 very likely identifies the markers. The number
-of events 8090 closely matches a multiple of 2 (8194 = 4 * 1024 * 2 - 1 + 3). Note,
-there are 1024 lines in the images, 4 images in the file.</p>
-<p>By looking at the macro time one can also identify that there are four images in
-the file, as intensity within the image in non-uniform. Hence, the macro time
-fluctuates.</p>
-<img alt="_images/imaging_analyzing_clsm_marker_2.png" src="_images/imaging_analyzing_clsm_marker_2.png" />
-<p>To make sure that the routing channels 1, 2, and 3 are indeed detection channels,
-one can create (in a time-resolved experiment) a bincount of the associated micro
-times.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_1</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_2</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_3</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Next, to identify if in addition to the channel number 15 the markers are identified
-by non-photon event marker we make a bincount of the channel numbers, where the
-event type is 1 (photon events have the event type 0, non-photon events have the
-event type 1).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">e</span><span class="o">==</span><span class="mi">1</span><span class="p">)])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>The bin count yield the following:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>1 - 1950</p></li>
-<li><p>2 - 48349</p></li>
-<li><p>3 - 172871</p></li>
-</ul>
-</div></blockquote>
-<p>This means we never have events where the channel number is 15 and the event type
-is 1. Moreover, the number of special events scales with the number of counts in
-a channel. Thus, the special events are very likely to mark overflows or gaps in
-the stream.</p>
-<p>To sum up, channel 1, 2, and 3 were determined as the routing channels of the detectors.
-Channel 15 is the routing channel used to inject the special markers. Next, we inspect
-the micro time and the macro time of the events registered by the routing channel
-15.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m_ch_15</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">15</span><span class="p">)]</span>
-<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_ch_15</span><span class="p">)</span>
-<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<img alt="_images/imaging_analyzing_clsm_marker_3.png" src="_images/imaging_analyzing_clsm_marker_3.png" />
-<p>The plot of the micro times for the events of the routing channel 15 reveals, that
-the micro time is either 1, 2, or 4. A more close inspection reveals that a micro
-time value of 1 is always succeeded by a micro time value of 2.</p>
-<img alt="_images/imaging_analyzing_clsm_marker_3_1.png" src="_images/imaging_analyzing_clsm_marker_3_1.png" />
-<p>A micro time value of 4 is followed by a micro time value of 1.</p>
-<img alt="_images/imaging_analyzing_clsm_marker_3_2.png" src="_images/imaging_analyzing_clsm_marker_3_2.png" />
-<p>This means, that the micro time encodes the frame marker and the line start/stop
-markers.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>micro time 1 - line start</p></li>
-<li><p>micro time 2 - line stop</p></li>
-<li><p>micro time 4 - frame start</p></li>
-</ul>
-</div></blockquote>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The first frame does not have a frame start.</p>
-</div>
-<p>Next, the macro time of the events where the routing channel number equals 15 is
-inspected. As anticipated, the macro time increases on first glance continuously.
-On closer inspection, however, steps in the macro time are visible.</p>
-<img alt="_images/imaging_analyzing_clsm_marker_4.png" src="_images/imaging_analyzing_clsm_marker_4.png" />
-<p>To sum up, in the Leica SP8 PTU files</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>line and frame markers are treated as regular photons.</p></li>
-<li><p>the line and frame markers are identified by the routing channel number 15</p></li>
-<li><p>the type of a marker is encoded in the micro time of channels with a channel number 15</p></li>
-</ol>
-</div></blockquote>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Usually, the TTTR records utilize the event type to distinguish markers from
-photons. Here, Leica decided to use the routing channel number to identify markers.
-When opening an image in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> this special case is considered by specifying
-the reading routine.</p>
-</div>
 </div>
 </div>
 <div class="section" id="clsmimage">
@@ -737,8 +434,8 @@ reading routine needs to be specified.</p>
 <p>The last parameter (here 0) specifies the reading routine (parameter = <code class="docutils literal notranslate"><span class="pre">reading_routine</span></code>)
 for the line and frame markers. The supported marker types are shown in the table
 below.</p>
-<span id="marker-types"></span><table class="colwidths-auto docutils align-default" id="id2">
-<caption><span class="caption-text">Table of selections for reading routines for CLSMImages</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<span id="marker-types"></span><table class="colwidths-auto docutils align-default" id="id7">
+<caption><span class="caption-text">Table of selections for reading routines for CLSMImages</span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Line, Framer marker type</p></th>
 <th class="head" colspan="2"><p>Option</p></th>
@@ -1005,7 +702,7 @@ images are properly scaled and quantized before saving.</p>
     </p>
     <p>
         &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.3.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
     </p>
   </div>
 </footer>

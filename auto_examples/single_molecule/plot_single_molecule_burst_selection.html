@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burst selection routines &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Photon distribution analysis - 1" href="plot_single_molecule_pda_1.html" />
+    <link rel="prev" title="Intensity traces" href="plot_single_molecule_mcs.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Burst selection routines</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="plot_single_molecule_mcs.html" title="Previous Chapter: Intensity traces"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Intensity traces</span>
+    </a>
+  </li>
+  <li>
+    <a href="plot_single_molecule_pda_1.html" title="Next Chapter: Photon distribution analysis - 1"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Photon distri... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_burst_selection.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-burst-selection-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="burst-selection-routines">
+<span id="sphx-glr-auto-examples-single-molecule-plot-single-molecule-burst-selection-py"></span><h1>Burst selection routines<a class="headerlink" href="#burst-selection-routines" title="Permalink to this headline">¶</a></h1>
+<p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.ranges_by_time_window</span></code> can be used to define ranges in
+a photon stream based on time windows and a minimum number of photons within
+the time windows. The function has two main parameters that determine the
+selection of the ranges besides the stream of time events provided by the
+parameter <code class="docutils literal notranslate"><span class="pre">time</span></code>:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>The minimum time window size <code class="docutils literal notranslate"><span class="pre">tw_min</span></code></p></li>
+<li><p>The minimum number of photons per time window <code class="docutils literal notranslate"><span class="pre">n_ph_min</span></code></p></li>
+</ol>
+</div></blockquote>
+<p>Additional parameters to discriminate bursts are:</p>
+<blockquote>
+<div><ol class="arabic simple" start="3">
+<li><p>The maximum allowed time window <code class="docutils literal notranslate"><span class="pre">tw_max</span></code></p></li>
+<li><p>The maximum number of photons per time windows <code class="docutils literal notranslate"><span class="pre">n_ph_max</span></code></p></li>
+</ol>
+</div></blockquote>
+<p>The the parameters of the C function and the function header are shown below
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">ranges_by_time_window</span><span class="p">(</span>
+        <span class="nb">int</span> <span class="o">**</span><span class="n">ranges</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">n_range</span><span class="p">,</span>
+        <span class="n">unsigned</span> <span class="n">long</span> <span class="n">long</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="nb">int</span> <span class="n">n_time</span><span class="p">,</span>
+        <span class="nb">int</span> <span class="n">tw_min</span><span class="p">,</span> <span class="nb">int</span> <span class="n">tw_max</span><span class="p">,</span>
+        <span class="nb">int</span> <span class="n">n_ph_min</span><span class="p">,</span> <span class="nb">int</span> <span class="n">n_ph_max</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For a given TTTR object the functionality is provided by the TTTR object’s
+method <code class="docutils literal notranslate"><span class="pre">get_ranges_by_time_window</span></code>. A typical use case of this function is
+to select single molecule events confocal single-molecule FRET experiments as
+shown below.</p>
+<p>#.. plot:: ../examples/single_molecule/single_molecule_burst_selection.py</p>
+<p>Above, for a donor and acceptor detection channel a histogram trace for is shown
+in green and red. In blue the range based selection is shown.</p>
+<img alt="plot single molecule burst selection" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_single_molecule_burst_selection_001.png" />
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">mt</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
+<span class="n">time_in_ms</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">tw_ranges</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span>
+    <span class="n">minimum_window_length</span><span class="o">=</span><span class="n">time_in_ms</span><span class="p">,</span>
+    <span class="n">minimum_number_of_photons_in_time_window</span><span class="o">=</span><span class="mi">20</span>
+<span class="p">)</span>
+<span class="n">start_stop</span> <span class="o">=</span> <span class="n">tw_ranges</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">tw_ranges</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+<span class="n">sel</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">start_stop</span><span class="p">:</span>
+    <span class="n">sel</span> <span class="o">+=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+<span class="n">sel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+
+<span class="n">green_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+<span class="n">red_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">green_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">red_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">green_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">red_indeces</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="n">sel</span><span class="p">],</span> <span class="mi">30000</span><span class="p">),</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">wspace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.292 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-burst-selection-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/50668274e02a5d367c739b7503fbf251/plot_single_molecule_burst_selection.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_single_molecule_burst_selection.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4217f83f949a6f2f5476682928a14b4c/plot_single_molecule_burst_selection.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_single_molecule_burst_selection.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

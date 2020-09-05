@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyzing CLSM marker &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Marker in imaging" href="plot_imaging_special_markers.html" />
+    <link rel="prev" title="Correlation of sliced TTTR objects" href="../correlation/plot_sliced_correlation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Analyzing CLSM marker</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="../correlation/plot_sliced_correlation.html" title="Previous Chapter: Correlation of sliced TTTR objects"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Correlation o...</span>
+    </a>
+  </li>
+  <li>
+    <a href="plot_imaging_special_markers.html" title="Next Chapter: Marker in imaging"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Marker in imaging &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/auto_examples/imaging/plot_analyzing_markers.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-imaging-plot-analyzing-markers-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="analyzing-clsm-marker">
+<span id="sphx-glr-auto-examples-imaging-plot-analyzing-markers-py"></span><h1>Analyzing CLSM marker<a class="headerlink" href="#analyzing-clsm-marker" title="Permalink to this headline">¶</a></h1>
+<p>Not always it is completely documented by the manufacturer of a microscope how the
+laser scanning is implemented. Meaning, how the frame and line marker are integrated
+into the event data stream. Below, it is briefly outlined on a test case how for a
+given image the event stream can analyzed. The example data illustrated below, was
+recored on a Leica SP8 with three hybrid detectors and PicoQuant counting electronics.</p>
+<p>First, the data corresponding to the image needs to be exported from the Leica file
+container to yield a PTU file that contains the TTTR events. This file is loaded
+in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> and the event types, the routing channel numbers, the macro time,
+and the micro time are inspected.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">p</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/Leica/SP8_Hybrid_detectors.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_routing_channel</span><span class="p">()</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>As a first step, the routing channels are inspected to determine the actual channel
+numbers of the detectors. By making a bincount of the channel numbers the number
+how often a channel occurs in the data stream and the channel numbers in the data
+stream can be determined.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Look for used channels</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>For the given dataset three channels were populated (channel 1, channel 2, channel 3,
+and channel 15). The microscopy is only equipped with three detectors. The counts
+per channel were as follows</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1 - 2170040</p></li>
+<li><p>2 - 43020969</p></li>
+<li><p>3 - 198919134</p></li>
+<li><p>15 - 8194</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Usually, the TTTR records utilize the event type to distinguish markers from
+photons. Here, Leica decided to use the routing channel number to identify
+markers.</p>
+</div>
+<p>Based on these counts channel 15 very likely identifies the markers. The number
+of events 8090 closely matches a multiple of 2 (8194 = 4 * 1024 * 2 - 1 + 3). Note,
+there are 1024 lines in the images, 4 images in the file.</p>
+<p>By looking at the macro time one can also identify that there are four images in
+the file, as intensity within the image in non-uniform. Hence, the macro time
+fluctuates.</p>
+<img alt="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_2.png" src="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_2.png" />
+<p>To make sure that the routing channels 1, 2, and 3 are indeed detection channels,
+one can create (in a time-resolved experiment) a bincount of the associated micro
+times.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_1</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_2</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">m_ch_3</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Next, to identify if in addition to the channel number 15 the markers are identified
+by non-photon event marker we make a bincount of the channel numbers, where the
+event type is 1 (photon events have the event type 0, non-photon events have the
+event type 1).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">e</span><span class="o">==</span><span class="mi">1</span><span class="p">)])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The bin count yield the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1 - 1950</p></li>
+<li><p>2 - 48349</p></li>
+<li><p>3 - 172871</p></li>
+</ul>
+</div></blockquote>
+<p>This means we never have events where the channel number is 15 and the event type
+is 1. Moreover, the number of special events scales with the number of counts in
+a channel. Thus, the special events are very likely to mark overflows or gaps in
+the stream.</p>
+<p>To sum up, channel 1, 2, and 3 were determined as the routing channels of the detectors.
+Channel 15 is the routing channel used to inject the special markers. Next, we inspect
+the micro time and the macro time of the events registered by the routing channel
+15.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">m_ch_15</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="mi">15</span><span class="p">)]</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_ch_15</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3.png" src="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3.png" />
+<p>The plot of the micro times for the events of the routing channel 15 reveals, that
+the micro time is either 1, 2, or 4. A more close inspection reveals that a micro
+time value of 1 is always succeeded by a micro time value of 2.</p>
+<img alt="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3_1.png" src="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3_1.png" />
+<p>A micro time value of 4 is followed by a micro time value of 1.</p>
+<img alt="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3_2.png" src="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_3_2.png" />
+<p>This means, that the micro time encodes the frame marker and the line start/stop
+markers.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>micro time 1 - line start</p></li>
+<li><p>micro time 2 - line stop</p></li>
+<li><p>micro time 4 - frame start</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first frame does not have a frame start.</p>
+</div>
+<p>Next, the macro time of the events where the routing channel number equals 15 is
+inspected. As anticipated, the macro time increases on first glance continuously.
+On closer inspection, however, steps in the macro time are visible.</p>
+<img alt="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_4.png" src="auto_examples/imaging/./images/imaging_analyzing_clsm_marker_4.png" />
+<p>To sum up, in the Leica SP8 PTU files</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>line and frame markers are treated as regular photons.</p></li>
+<li><p>the line and frame markers are identified by the routing channel number 15</p></li>
+<li><p>the type of a marker is encoded in the micro time of channels with a channel number 15</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Usually, the TTTR records utilize the event type to distinguish markers from
+photons. Here, Leica decided to use the routing channel number to identify markers.
+When opening an image in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> this special case is considered by specifying
+the reading routine.</p>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-imaging-plot-analyzing-markers-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0ad7e1682a86f53d66321ed11902963c/plot_analyzing_markers.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_analyzing_markers.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6d3e415b7637d28d695cb12efb788dc2/plot_analyzing_markers.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_analyzing_markers.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

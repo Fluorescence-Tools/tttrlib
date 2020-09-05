@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications &#8212; tttrlib  documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix_rtd.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Intensity traces" href="single_molecule/plot_single_molecule_mcs.html" />
+    <link rel="prev" title="TTTR-Objects" href="../tttr_objects.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          tttrlib</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tttr_objects.html">TTTR-Objects</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imaging.html">Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cpp_api.html">C++ API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zreferences.html">References</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Applications</a><ul>
+<li><a class="reference internal" href="#single-molecule">Single-molecule</a><ul>
+<li><a class="reference internal" href="#id1">Applications</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fluorescence-correlation">Fluorescence correlation</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#correlators-options">Correlators options</a></li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#image-spectroscopy">Image spectroscopy</a><ul>
+<li><a class="reference internal" href="#id4">Examples</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#miscellaneous">Miscellaneous</a><ul>
+<li><a class="reference internal" href="#id6">Applications</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-tttr-objects">Working with TTTR objects</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="../tttr_objects.html" title="Previous Chapter: TTTR-Objects"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; TTTR-Objects</span>
+    </a>
+  </li>
+  <li>
+    <a href="single_molecule/plot_single_molecule_mcs.html" title="Next Chapter: Intensity traces"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Intensity traces &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/auto_examples/index.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="applications">
+<span id="general-examples"></span><span id="sphx-glr-auto-examples"></span><h1>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h1>
+<div class="sphx-glr-clear"></div><div class="section" id="single-molecule">
+<span id="miscellaneous-examples"></span><span id="sphx-glr-auto-examples-single-molecule"></span><h2>Single-molecule<a class="headerlink" href="#single-molecule" title="Permalink to this headline">¶</a></h2>
+<p>Application of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> to single-molecule data.</p>
+<div class="section" id="id1">
+<h3>Applications<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py"><div class="figure align-default" id="id7">
+<img alt="Intensity traces" src="../_images/sphx_glr_plot_single_molecule_mcs_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="single_molecule/plot_single_molecule_mcs.html#sphx-glr-auto-examples-single-molecule-plot-single-molecule-mcs-py"><span class="std std-ref">Intensity traces</span></a></span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="The function tttrlib.ranges_by_time_window can be used to define ranges in a photon stream base..."><div class="figure align-default" id="id8">
+<img alt="Burst selection routines" src="../_images/sphx_glr_plot_single_molecule_burst_selection_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="single_molecule/plot_single_molecule_burst_selection.html#sphx-glr-auto-examples-single-molecule-plot-single-molecule-burst-selection-py"><span class="std std-ref">Burst selection routines</span></a></span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================ Theory ------ The library tttrlib pro..."><div class="figure align-default" id="id9">
+<img alt="Photon distribution analysis - 1" src="../_images/sphx_glr_plot_single_molecule_pda_1_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="single_molecule/plot_single_molecule_pda_1.html#sphx-glr-auto-examples-single-molecule-plot-single-molecule-pda-1-py"><span class="std std-ref">Photon distribution analysis - 1</span></a></span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Single molecule photon distribution analysis - 2"><div class="figure align-default" id="id10">
+<img alt="Single molecule photon distribution analysis - 2" src="../_images/sphx_glr_plot_single_molecule_pda_2_thumb.png" />
+<p class="caption"><span class="caption-text"><span class="xref std std-ref">sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py</span></span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div></div>
+</div>
+<div class="section" id="fluorescence-correlation">
+<h2>Fluorescence correlation<a class="headerlink" href="#fluorescence-correlation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> offers a set of correlators via a unified interface for correlations
+of TTTR data. To correlate <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects, first a TTTR dataset should be
+loaded. Next, a <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> object needs to be created. There are different
+options to create a <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> object. The default correlator implements a
+multi-tau algorithm <a class="bibtex reference internal" href="../zreferences.html#wahl2003" id="id2">[WGPE03]</a> <a class="bibtex reference internal" href="../zreferences.html#laurence2006" id="id3">[LFH06]</a>. Some options of the
+correlator  are outlined in the code block below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+
+<span class="c1"># option 1</span>
+<span class="n">correlator_1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">()</span>
+
+<span class="c1"># option 2</span>
+<span class="n">correlator_2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span>
+<span class="p">)</span>
+
+<span class="c1"># option 3</span>
+<span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">tttr_ch1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">ch1</span><span class="p">))</span>
+<span class="n">tttr_ch2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">(</span><span class="n">ch2</span><span class="p">))</span>
+<span class="n">correlator_3</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="p">(</span><span class="n">tttr_ch1</span><span class="p">,</span> <span class="n">tttr_ch2</span><span class="p">),</span>
+    <span class="n">make_fine</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># True the full-correlation, False only macro times.</span>
+<span class="p">)</span>
+
+<span class="c1"># option 4</span>
+<span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">correlator_4</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">channels</span><span class="o">=</span><span class="p">(</span><span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">),</span>
+    <span class="n">make_fine</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># True the full-correlation, False only macro times.</span>
+<span class="p">)</span>
+
+<span class="c1"># specify macro times and weights for option 5, 6, and 7</span>
+<span class="c1"># this returns the indices with corresponding the channel numbers</span>
+<span class="n">ch1_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">ch2_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">t1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="n">ch1_indeces</span><span class="p">]</span>
+<span class="n">w1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="n">ch2_indeces</span><span class="p">]</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+<span class="c1"># option 5</span>
+<span class="n">correlator_5</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="s1">&#39;macro_times&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">),</span>
+    <span class="s1">&#39;weights&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># option 6</span>
+<span class="n">correlator_6</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">()</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">set_macrotimes</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">)</span>
+
+<span class="c1"># option 7</span>
+<span class="n">correlator_6</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">()</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">set_events</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">w2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Option 1 creates a Correlator object with default parameters. When constructing
+a correlator this way, all data inputs need to be specified manually. This way
+of creating a correlator provides the most flexibility. The other options are
+there for convenience. Option 2 creates a correlator that is aware of a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>
+object. No further information is provided to the correlator. Hence, all events
+reagrdless of the channel number will be correlated with equal weight. Option 3
+computes a cross-correlation function (CCF) of two TTTW objects. Using option 3
+Option 4 will compute the CCF between two channels as defined by the <code class="docutils literal notranslate"><span class="pre">channels</span></code>
+argument for the provided TTTR data set. When option 3 or 4 are used and the
+(optional) parameter (default is False) <code class="docutils literal notranslate"><span class="pre">make_fine</span></code> is set to True will
+correlator computes a full correlation considering the micro times of the TTTR
+objects. The fifth presented option initializes the correlator with a set of
+macro times with corresponding weights. The equivalent options 5, 6, and 7 are
+the most versatile, as the macro times and the weights can be set manually.</p>
+<p>The correlation will be computed when the correlation amplitude, that is accessed
+via the <code class="docutils literal notranslate"><span class="pre">correlation</span></code> attribute of the correlator is accessed.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+
+<span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">correlator_4</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">channels</span><span class="o">=</span><span class="p">(</span><span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">correlation_time</span> <span class="o">=</span> <span class="n">correlator_ref</span><span class="o">.</span><span class="n">x_axis</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">correlator_ref</span><span class="o">.</span><span class="n">correlation</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When a correlator is created using a TTTR object, the correlation time axis
+will be calibrated, i.e., the correlation axis will correspond to a real
+time axis. Otherwise, the time axis is in units of the macro time clock.
+This is the case for the fifth option above.</p>
+</div>
+</div>
+<div class="section" id="correlators-options">
+<h3>Correlators options<a class="headerlink" href="#correlators-options" title="Permalink to this headline">¶</a></h3>
+<p>The default correlation algorithm follows a multi-tau correlation algorithm. Here,
+two parameters control the correlation range, i.e, the maximum correlation time
+and the number of correlation points: <code class="docutils literal notranslate"><span class="pre">n_bins</span></code> and <code class="docutils literal notranslate"><span class="pre">n_casc</span></code>. In a multiple
+tau correlator the spacing of the correlation time axis increases from block to
+block, e.g., ((1, 2, 3, 4), (6, 8, 10, 12), …). Here, <code class="docutils literal notranslate"><span class="pre">n_bins</span></code> is the number
+of correlation points is a block and <code class="docutils literal notranslate"><span class="pre">n_casc</span></code> is the number of correlation
+blocks. The parameters can be set upon creation of a correlator or by changing
+the corresponding attributes after creation of a <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> object.</p>
+<p>The parameter/attribute <code class="docutils literal notranslate"><span class="pre">method</span></code> is used to specify the actual correlator that
+is used.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
+<span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
+    <span class="n">n_casc</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">n_bins</span> <span class="o">=</span> <span class="mi">17</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">n_casc</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">correlator</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;lamb&#39;</span> <span class="c1"># based on source code of the Lamb group</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>Below are a few examples how the correlator con be used in conjuncture with
+tttrlib. The given examples can be used as templates to develop other correlation
+analysis procedures.</p>
+<p>Fluorescence correlation spectroscopy applications to some medium sized datasets.</p>
+<div class="sphx-glr-thumbcontainer" tooltip="There are many approaches to calculate the noise in correlation functions (see: Wohland2001, Qi..."><div class="figure align-default" id="id11">
+<img alt="Estimating the noise of the correlation curves" src="../_images/sphx_glr_correlation_estimate_noise_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/correlation_estimate_noise.html#sphx-glr-auto-examples-correlation-correlation-estimate-noise-py"><span class="std std-ref">Estimating the noise of the correlation curves</span></a></span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="As described previously there are several analogous possibilities to compute correlations. Two ..."><div class="figure align-default" id="id12">
+<img alt="Normal multi-tau correlation" src="../_images/sphx_glr_plot_normal_correlation_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_normal_correlation.html#sphx-glr-auto-examples-correlation-plot-normal-correlation-py"><span class="std std-ref">Normal multi-tau correlation</span></a></span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="The micro time gating example can be easily modified to correlate the prompt and the delayed ex..."><div class="figure align-default" id="id13">
+<img alt="Micro time gated correlation" src="../_images/sphx_glr_plot_gated_correlation_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_gated_correlation.html#sphx-glr-auto-examples-correlation-plot-gated-correlation-py"><span class="std std-ref">Micro time gated correlation</span></a></span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Low count rate regions of a TTTR file can be discriminated. The example below displays the corr..."><div class="figure align-default" id="id14">
+<img alt="Count rate filtered correlation - 1" src="../_images/sphx_glr_plot_correlation_cr_filter_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_correlation_cr_filter.html#sphx-glr-auto-examples-correlation-plot-correlation-cr-filter-py"><span class="std std-ref">Count rate filtered correlation - 1</span></a></span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip=" Low count rate regions of a TTTR file can be discriminated. The example below displays the cor..."><div class="figure align-default" id="id15">
+<img alt="Count rate filtered correlation - 2" src="../_images/sphx_glr_plot_correlation_cr_filter_2_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_correlation_cr_filter_2.html#sphx-glr-auto-examples-correlation-plot-correlation-cr-filter-2-py"><span class="std std-ref">Count rate filtered correlation - 2</span></a></span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="When processes faster than the macro time clock are of interest, the micro time and the macro t..."><div class="figure align-default" id="id16">
+<img alt="Full correlation" src="../_images/sphx_glr_plot_full_correlation_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_full_correlation.html#sphx-glr-auto-examples-correlation-plot-full-correlation-py"><span class="std std-ref">Full correlation</span></a></span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="In some cases it can be advantages to slice the data into sub-sets and correlate the subsets in..."><div class="figure align-default" id="id17">
+<img alt="Correlation of sliced TTTR objects" src="../_images/sphx_glr_plot_sliced_correlation_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="correlation/plot_sliced_correlation.html#sphx-glr-auto-examples-correlation-plot-sliced-correlation-py"><span class="std std-ref">Correlation of sliced TTTR objects</span></a></span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div></div>
+</div>
+<div class="section" id="image-spectroscopy">
+<span id="imaging-examples"></span><span id="sphx-glr-auto-examples-imaging"></span><h2>Image spectroscopy<a class="headerlink" href="#image-spectroscopy" title="Permalink to this headline">¶</a></h2>
+<p>Time resolved imaging, e.g., Fluorescence lifetime imaging.</p>
+<div class="section" id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="sphx-glr-thumbcontainer" tooltip="Not always it is completely documented by the manufacturer of a microscope how the laser scanni..."><div class="figure align-default" id="id18">
+<img alt="Analyzing CLSM marker" src="../_images/sphx_glr_plot_analyzing_markers_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_analyzing_markers.html#sphx-glr-auto-examples-imaging-plot-analyzing-markers-py"><span class="std std-ref">Analyzing CLSM marker</span></a></span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Marker in imaging"><div class="figure align-default" id="id19">
+<img alt="Marker in imaging" src="../_images/sphx_glr_plot_imaging_special_markers_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_special_markers.html#sphx-glr-auto-examples-imaging-plot-imaging-special-markers-py"><span class="std std-ref">Marker in imaging</span></a></span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="This example opens a CLSM TTTR file and creates different image representations of the data con..."><div class="figure align-default" id="id20">
+<img alt="TTTR Image representations" src="../_images/sphx_glr_plot_imaging_representations_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_representations.html#sphx-glr-auto-examples-imaging-plot-imaging-representations-py"><span class="std std-ref">TTTR Image representations</span></a></span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation use CLS..."><div class="figure align-default" id="id21">
+<img alt="Computing ICS data by tttrlib" src="../_images/sphx_glr_plot_imaging_ics_tttrlib_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_ics_tttrlib.html#sphx-glr-auto-examples-imaging-plot-imaging-ics-tttrlib-py"><span class="std std-ref">Computing ICS data by tttrlib</span></a></span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks"><div class="figure align-default" id="id22">
+<img alt="Using Pixel masks" src="../_images/sphx_glr_plot_imaging_pixel_masks_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_pixel_masks.html#sphx-glr-auto-examples-imaging-plot-imaging-pixel-masks-py"><span class="std std-ref">Using Pixel masks</span></a></span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><div class="figure align-default" id="id23">
+<img alt="Mean lifetime images" src="../_images/sphx_glr_plot_imaging_mean_tau_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_mean_tau.html#sphx-glr-auto-examples-imaging-plot-imaging-mean-tau-py"><span class="std std-ref">Mean lifetime images</span></a></span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Estimation of the image resolution ---------------------------------- In electron microscopy th..."><div class="figure align-default" id="id24">
+<img alt="Fourier ring correlation of images" src="../_images/sphx_glr_plot_imaging_frc_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_frc.html#sphx-glr-auto-examples-imaging-plot-imaging-frc-py"><span class="std std-ref">Fourier ring correlation of images</span></a></span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="For phasor image analysis the library fit2x provides functions"><div class="figure align-default" id="id25">
+<img alt="Phasor analysis of images" src="../_images/sphx_glr_plot_imaging_phasor_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_phasor.html#sphx-glr-auto-examples-imaging-plot-imaging-phasor-py"><span class="std std-ref">Phasor analysis of images</span></a></span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when us..."><div class="figure align-default" id="id26">
+<img alt="Computing ICS data by numpy" src="../_images/sphx_glr_plot_imaging_ics_numpy_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_ics_numpy.html#sphx-glr-auto-examples-imaging-plot-imaging-ics-numpy-py"><span class="std std-ref">Computing ICS data by numpy</span></a></span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Below, using a few lines of python code it is outlined how CLSM images can be constructured. Fo..."><div class="figure align-default" id="id27">
+<img alt="Image construction" src="../_images/sphx_glr_plot_imaging_python_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_python.html#sphx-glr-auto-examples-imaging-plot-imaging-python-py"><span class="std std-ref">Image construction</span></a></span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Image correlation spectroscopy - benchmark"><div class="figure align-default" id="id28">
+<img alt="Image correlation spectroscopy - benchmark" src="../_images/sphx_glr_plot_imaging_ics_benchmark_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_ics_benchmark.html#sphx-glr-auto-examples-imaging-plot-imaging-ics-benchmark-py"><span class="std std-ref">Image correlation spectroscopy - benchmark</span></a></span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="Fitting ICS data by a RICS model"><div class="figure align-default" id="id29">
+<img alt="Fitting ICS data by a RICS model" src="../_images/sphx_glr_plot_imaging_ics_fit_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="imaging/plot_imaging_ics_fit.html#sphx-glr-auto-examples-imaging-plot-imaging-ics-fit-py"><span class="std std-ref">Fitting ICS data by a RICS model</span></a></span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div></div>
+</div>
+<div class="section" id="miscellaneous">
+<span id="id5"></span><h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h2>
+<p>Application of miscellaneous function part of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.</p>
+<div class="section" id="id6">
+<h3>Applications<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram"><div class="figure align-default" id="id30">
+<img alt="Make a 2D Histogram" src="../_images/sphx_glr_plot_histogram_2D_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="miscellaneous/plot_histogram_2D.html#sphx-glr-auto-examples-miscellaneous-plot-histogram-2d-py"><span class="std std-ref">Make a 2D Histogram</span></a></span><a class="headerlink" href="#id30" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttr..."><div class="figure align-default" id="id31">
+<img alt="Make a 1D Histogram" src="../_images/sphx_glr_plot_histogram_1D_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="miscellaneous/plot_histogram_1D.html#sphx-glr-auto-examples-miscellaneous-plot-histogram-1d-py"><span class="std std-ref">Make a 1D Histogram</span></a></span><a class="headerlink" href="#id31" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy v..."><div class="figure align-default" id="id32">
+<img alt="Benchmark of histogram routines" src="../_images/sphx_glr_plot_histogram_benchmark_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="miscellaneous/plot_histogram_benchmark.html#sphx-glr-auto-examples-miscellaneous-plot-histogram-benchmark-py"><span class="std std-ref">Benchmark of histogram routines</span></a></span><a class="headerlink" href="#id32" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div></div>
+</div>
+<div class="section" id="working-with-tttr-objects">
+<span id="tttr-examples"></span><span id="sphx-glr-auto-examples-tttr"></span><h2>Working with TTTR objects<a class="headerlink" href="#working-with-tttr-objects" title="Permalink to this headline">¶</a></h2>
+<p>Examples on working with <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR</span></code> objects.</p>
+<div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms"><div class="figure align-default" id="id33">
+<img alt="Micro time histograms" src="../_images/sphx_glr_plot_tttr_microtime_histogram_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="tttr/plot_tttr_microtime_histogram.html#sphx-glr-auto-examples-tttr-plot-tttr-microtime-histogram-py"><span class="std std-ref">Micro time histograms</span></a></span><a class="headerlink" href="#id33" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark"><div class="figure align-default" id="id34">
+<img alt="TTTR reading benchmark" src="../_images/sphx_glr_plot_tttr_read_benchmark_thumb.png" />
+<p class="caption"><span class="caption-text"><a class="reference internal" href="tttr/plot_tttr_read_benchmark.html#sphx-glr-auto-examples-tttr-plot-tttr-read-benchmark-py"><span class="std std-ref">TTTR reading benchmark</span></a></span><a class="headerlink" href="#id34" title="Permalink to this image">¶</a></p>
+</div>
+</div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-clear"></div><div class="sphx-glr-footer class sphx-glr-footer-gallery docutils container">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/07fcc19ba03226cd3d83d4e40ec44385/auto_examples_python.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">auto_examples_python.zip</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/6f1e7a639e0699d6164445b55e6c116d/auto_examples_jupyter.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Jupyter</span> <span class="pre">notebooks:</span> <span class="pre">auto_examples_jupyter.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Thomas-Otavio Peulen.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.1.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,849 @@
+:orphan:
+
+
+
+.. _sphx_glr_auto_examples:
+
+.. _general_examples:
+
+Applications
+============
+
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_single_molecule:
+
+.. _miscellaneous_examples:
+
+Single-molecule
+---------------
+
+Application of ``tttrlib`` to single-molecule data.
+
+Applications
+^^^^^^^^^^^^
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py">
+
+.. only:: html
+
+ .. figure:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_mcs_thumb.png
+     :alt: Intensity traces
+
+     :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_mcs
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The function tttrlib.ranges_by_time_window can be used to define ranges in a photon stream base...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_burst_selection_thumb.png
+     :alt: Burst selection routines
+
+     :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_burst_selection
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================ Theory ------ The library tttrlib pro...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_1_thumb.png
+     :alt: Photon distribution analysis - 1
+
+     :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_1.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_pda_1
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Single molecule photon distribution analysis - 2">
+
+.. only:: html
+
+ .. figure:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_2_thumb.png
+     :alt: Single molecule photon distribution analysis - 2
+
+     :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_pda_2
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_correlation:
+
+.. _fcs_examples:
+Fluorescence correlation
+------------------------
+
+Overview
+^^^^^^^^
+``tttrlib`` offers a set of correlators via a unified interface for correlations
+of TTTR data. To correlate ``TTTR`` objects, first a TTTR dataset should be
+loaded. Next, a ``Correlator`` object needs to be created. There are different
+options to create a ``Correlator`` object. The default correlator implements a
+multi-tau algorithm :cite:`Wahl2003` :cite:`Laurence2006`. Some options of the
+correlator  are outlined in the code block below:
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+
+    # option 1
+    correlator_1 = tttrlib.Correlator()
+
+    # option 2
+    correlator_2 = tttrlib.Correlator(
+        tttr=data
+    )
+
+    # option 3
+    ch1, ch2 = [8], [0]
+    tttr_ch1 = tttrlib.TTTR(data, data.get_selection_by_channel(ch1))
+    tttr_ch2 = tttrlib.TTTR(data, data.get_selection_by_channel(ch2))
+    correlator_3 = tttrlib.Correlator(
+        tttr=(tttr_ch1, tttr_ch2),
+        make_fine=True # True the full-correlation, False only macro times.
+    )
+
+    # option 4
+    ch1, ch2 = [8], [0]
+    correlator_4 = tttrlib.Correlator(
+        tttr=data,
+        channels=(ch1, ch2),
+        make_fine=True # True the full-correlation, False only macro times.
+    )
+
+    # specify macro times and weights for option 5, 6, and 7
+    # this returns the indices with corresponding the channel numbers
+    ch1_indeces = data.get_selection_by_channel([8])
+    ch2_indeces = data.get_selection_by_channel([0])
+    t1 = data.macro_times[ch1_indeces]
+    w1 = np.ones_like(t1, dtype=np.float)
+    t2 = data.macro_times[ch2_indeces]
+    w2 = np.ones_like(t2, dtype=np.float)
+
+    # option 5
+    correlator_5 = tttrlib.Correlator(
+        'macro_times': (t1, t2),
+        'weights': (w1, w2),
+    )
+
+    # option 6
+    correlator_6 = tttrlib.Correlator()
+    correlator.set_macrotimes(t1, t2)
+    correlator.set_weights(w1, w2)
+
+    # option 7
+    correlator_6 = tttrlib.Correlator()
+    correlator.set_events(t1, w1, t2, w2)
+
+
+Option 1 creates a Correlator object with default parameters. When constructing
+a correlator this way, all data inputs need to be specified manually. This way
+of creating a correlator provides the most flexibility. The other options are
+there for convenience. Option 2 creates a correlator that is aware of a ``TTTR``
+object. No further information is provided to the correlator. Hence, all events
+reagrdless of the channel number will be correlated with equal weight. Option 3
+computes a cross-correlation function (CCF) of two TTTW objects. Using option 3
+Option 4 will compute the CCF between two channels as defined by the ``channels``
+argument for the provided TTTR data set. When option 3 or 4 are used and the
+(optional) parameter (default is False) ``make_fine`` is set to True will
+correlator computes a full correlation considering the micro times of the TTTR
+objects. The fifth presented option initializes the correlator with a set of
+macro times with corresponding weights. The equivalent options 5, 6, and 7 are
+the most versatile, as the macro times and the weights can be set manually.
+
+The correlation will be computed when the correlation amplitude, that is accessed
+via the ``correlation`` attribute of the correlator is accessed.
+
+.. code-block:: python
+
+    import tttrlib
+    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+
+    ch1, ch2 = [8], [0]
+    correlator_4 = tttrlib.Correlator(
+        tttr=data,
+        channels=(ch1, ch2)
+    )
+    correlation_time = correlator_ref.x_axis
+    correlation = correlator_ref.correlation
+
+
+.. note::
+    When a correlator is created using a TTTR object, the correlation time axis
+    will be calibrated, i.e., the correlation axis will correspond to a real
+    time axis. Otherwise, the time axis is in units of the macro time clock.
+    This is the case for the fifth option above.
+
+Correlators options
+^^^^^^^^^^^^^^^^^^^
+The default correlation algorithm follows a multi-tau correlation algorithm. Here,
+two parameters control the correlation range, i.e, the maximum correlation time
+and the number of correlation points: ``n_bins`` and ``n_casc``. In a multiple
+tau correlator the spacing of the correlation time axis increases from block to
+block, e.g., ((1, 2, 3, 4), (6, 8, 10, 12), ...). Here, ``n_bins`` is the number
+of correlation points is a block and ``n_casc`` is the number of correlation
+blocks. The parameters can be set upon creation of a correlator or by changing
+the corresponding attributes after creation of a ``Correlator`` object.
+
+The parameter/attribute ``method`` is used to specify the actual correlator that
+is used.
+
+.. code-block:: python
+
+    import tttrlib
+    correlator = tttrlib.Correlator(
+        n_bins=17,
+        n_casc=25,
+        method='default',
+    )
+    correlator.n_bins = 17
+    correlator.n_casc = 25
+    correlator.method = 'lamb' # based on source code of the Lamb group
+
+
+
+Examples
+^^^^^^^^
+Below are a few examples how the correlator con be used in conjuncture with
+tttrlib. The given examples can be used as templates to develop other correlation
+analysis procedures.
+
+Fluorescence correlation spectroscopy applications to some medium sized datasets.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="There are many approaches to calculate the noise in correlation functions (see: Wohland2001, Qi...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_correlation_estimate_noise_thumb.png
+     :alt: Estimating the noise of the correlation curves
+
+     :ref:`sphx_glr_auto_examples_correlation_correlation_estimate_noise.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/correlation_estimate_noise
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="As described previously there are several analogous possibilities to compute correlations. Two ...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_normal_correlation_thumb.png
+     :alt: Normal multi-tau correlation
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_normal_correlation.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_normal_correlation
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The micro time gating example can be easily modified to correlate the prompt and the delayed ex...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_gated_correlation_thumb.png
+     :alt: Micro time gated correlation
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_gated_correlation
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Low count rate regions of a TTTR file can be discriminated. The example below displays the corr...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_correlation_cr_filter_thumb.png
+     :alt: Count rate filtered correlation - 1
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_correlation_cr_filter.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_correlation_cr_filter
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" Low count rate regions of a TTTR file can be discriminated. The example below displays the cor...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_correlation_cr_filter_2_thumb.png
+     :alt: Count rate filtered correlation - 2
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_correlation_cr_filter_2.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_correlation_cr_filter_2
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="When processes faster than the macro time clock are of interest, the micro time and the macro t...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+     :alt: Full correlation
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_full_correlation
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In some cases it can be advantages to slice the data into sub-sets and correlate the subsets in...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/correlation/images/thumb/sphx_glr_plot_sliced_correlation_thumb.png
+     :alt: Correlation of sliced TTTR objects
+
+     :ref:`sphx_glr_auto_examples_correlation_plot_sliced_correlation.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_sliced_correlation
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_imaging:
+
+.. _imaging_examples:
+
+Image spectroscopy
+------------------
+
+Time resolved imaging, e.g., Fluorescence lifetime imaging.
+
+Examples
+^^^^^^^^
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Not always it is completely documented by the manufacturer of a microscope how the laser scanni...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_analyzing_markers_thumb.png
+     :alt: Analyzing CLSM marker
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_analyzing_markers.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_analyzing_markers
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Marker in imaging">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_special_markers_thumb.png
+     :alt: Marker in imaging
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_special_markers.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_special_markers
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example opens a CLSM TTTR file and creates different image representations of the data con...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_representations_thumb.png
+     :alt: TTTR Image representations
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_representations.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_representations
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation use CLS...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_ics_tttrlib_thumb.png
+     :alt: Computing ICS data by tttrlib
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_tttrlib.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_ics_tttrlib
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_pixel_masks_thumb.png
+     :alt: Using Pixel masks
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_pixel_masks.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_pixel_masks
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_mean_tau_thumb.png
+     :alt: Mean lifetime images
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_mean_tau.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_mean_tau
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Estimation of the image resolution ---------------------------------- In electron microscopy th...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_frc_thumb.png
+     :alt: Fourier ring correlation of images
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_frc.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_frc
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="For phasor image analysis the library fit2x provides functions">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_phasor_thumb.png
+     :alt: Phasor analysis of images
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_phasor.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_phasor
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when us...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_ics_numpy_thumb.png
+     :alt: Computing ICS data by numpy
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_numpy.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_ics_numpy
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Below, using a few lines of python code it is outlined how CLSM images can be constructured. Fo...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_python_thumb.png
+     :alt: Image construction
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_python.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_python
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image correlation spectroscopy - benchmark">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_ics_benchmark_thumb.png
+     :alt: Image correlation spectroscopy - benchmark
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_benchmark.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_ics_benchmark
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fitting ICS data by a RICS model">
+
+.. only:: html
+
+ .. figure:: /auto_examples/imaging/images/thumb/sphx_glr_plot_imaging_ics_fit_thumb.png
+     :alt: Fitting ICS data by a RICS model
+
+     :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_fit.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/imaging/plot_imaging_ics_fit
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_miscellaneous:
+
+.. _miscellaneous_examples:
+
+Miscellaneous
+-------------
+
+Application of miscellaneous function part of ``tttrlib``.
+
+Applications
+^^^^^^^^^^^^
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram">
+
+.. only:: html
+
+ .. figure:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_2D_thumb.png
+     :alt: Make a 2D Histogram
+
+     :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/miscellaneous/plot_histogram_2D
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttr...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_1D_thumb.png
+     :alt: Make a 1D Histogram
+
+     :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/miscellaneous/plot_histogram_1D
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy v...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_benchmark_thumb.png
+     :alt: Benchmark of histogram routines
+
+     :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/miscellaneous/plot_histogram_benchmark
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. _sphx_glr_auto_examples_tttr:
+
+.. _tttr_examples:
+
+Working with TTTR objects
+-------------------------
+
+Examples on working with ``tttrlib.TTTR`` objects.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+     :alt: Micro time histograms
+
+     :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tttr/plot_tttr_microtime_histogram
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_read_benchmark_thumb.png
+     :alt: TTTR reading benchmark
+
+     :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tttr/plot_tttr_read_benchmark
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-gallery
+
+
+  .. container:: sphx-glr-download sphx-glr-download-python
+
+    :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_
