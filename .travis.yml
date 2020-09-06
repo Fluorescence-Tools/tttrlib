@@ -46,7 +46,8 @@ before_install:
   - source activate base
   - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client scipy
   - git fetch --unshallow --tags --force
-  - conda config --add channels tpeulen
+  - export CONDA_LABEL=$(if [ "TRAVIS_PULL_REQUEST_BRANCH" == "master" ]; then echo main; else echo nightly; fi)
+  - conda config --add channels tpeulen/label/$CONDA_LABEL
   - conda build conda-recipe --output-folder bld-dir
   - conda config --add channels "file://`pwd`/bld-dir"
 
@@ -73,7 +74,7 @@ after_success:
       # The documentation is only build using the linux conda dist
       # Hence only upload linux nightly
       conda activate base
-      anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l nightly bld-dir/$OS/*.tar.bz2 --force
+      anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l $CONDA_LABEL bld-dir/$OS/*.tar.bz2 --force
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
