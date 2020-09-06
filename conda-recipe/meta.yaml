@@ -18,16 +18,15 @@ requirements:
     - setuptools
     - git
     - cmake
-    - hdf5 1.10.2.*
   build:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
     - cmake
     - swig 3.0.12.*
-    - hdf5 1.10.2.*
     - boost 1.67.0.*
-    - libboost 1.67.0.* [not win]
     - fftw
+    - hdf5 1.10.2.*
+    - intel-openmp # [osx]
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
@@ -35,6 +34,7 @@ requirements:
     - boost 1.67.0.* [win]
     - libboost 1.67.0.* [not win]
     - fftw
+    - intel-openmp # [osx]
 
 test:
   imports:

@@ -115,16 +115,25 @@ LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 
+
 ## OpenMP
 ###########################
 if (APPLE)
+    # When using conda use CONDA_PREFIX
+    if(DEFINED ENV{CONDA_PREFIX})
+        SET(OMP_INCLUDE_DIR "$ENV{CONDA_PREFIX}/include")
+        SET(OMP_LIB_DIR "$ENV{CONDA_PREFIX}/lib")
+    else()
+        SET(OMP_INCLUDE_DIR "/usr/local/opt/libomp/include")
+        SET(OMP_LIB_DIR "/usr/local/opt/libomp/lib")
+    endif()
     # dirty hack to make OpenMP work see:
     # https://gitlab.kitware.com/cmake/cmake/issues/18098
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
     set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
     set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
-    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_omp_LIBRARY "${OMP_LIB_DIR}/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
     set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
     set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
     set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
