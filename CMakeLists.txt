@@ -52,6 +52,18 @@ if (MSVC)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 endif (MSVC)
 
+# Conda
+#######
+if(UNIX)
+    if(DEFINED ENV{CONDA_PREFIX})
+        LINK_DIRECTORIES("$ENV{CONDA_PREFIX}/lib")
+        INCLUDE_DIRECTORIES("$ENV{CONDA_PREFIX}/include")
+    else()
+        LINK_DIRECTORIES(/usr/local/lib)
+        INCLUDE_DIRECTORIES(/usr/local/include)
+    endif()
+endif()
+
 
 # MACOSX
 ##############
@@ -63,9 +75,12 @@ if (APPLE)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # Don't set MACOSX_RPATH by default
-    SET(CMAKE_MACOSX_RPATH 0)
-    LINK_DIRECTORIES(/usr/local/lib)
-    INCLUDE_DIRECTORIES(/usr/local/include)
+    # https://github.com/conda/conda/issues/3624
+    if(DEFINED ENV{CONDA_PREFIX})
+        set(MACOSX_RPATH OFF)
+        set(CMAKE_SKIP_RPATH TRUE)
+        set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+    endif()
 endif (APPLE)
 
 
@@ -75,9 +90,6 @@ FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
-## FIT2X
-# Not needed anymore
-# LINK_LIBRARIES(fit2x)
 
 ## Does not work on Windows and conda mkl
 ## maybe the pytorch people will resolve this issue in the future.
