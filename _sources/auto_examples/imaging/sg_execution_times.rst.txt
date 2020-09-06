@@ -5,30 +5,30 @@
 
 Computation times
 =================
-**00:57.414** total execution time for **auto_examples_imaging** files:
+**00:59.121** total execution time for **auto_examples_imaging** files:
 
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_benchmark.py` (``plot_imaging_ics_benchmark.py``)     | 00:37.755 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_benchmark.py` (``plot_imaging_ics_benchmark.py``)     | 00:38.134 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_frc.py` (``plot_imaging_frc.py``)                         | 00:04.102 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_phasor.py` (``plot_imaging_phasor.py``)                   | 00:04.848 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_phasor.py` (``plot_imaging_phasor.py``)                   | 00:03.828 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_frc.py` (``plot_imaging_frc.py``)                         | 00:04.213 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_python.py` (``plot_imaging_python.py``)                   | 00:02.426 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_python.py` (``plot_imaging_python.py``)                   | 00:02.440 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_tttrlib.py` (``plot_imaging_ics_tttrlib.py``)         | 00:02.316 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_tttrlib.py` (``plot_imaging_ics_tttrlib.py``)         | 00:02.337 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_representations.py` (``plot_imaging_representations.py``) | 00:02.057 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_representations.py` (``plot_imaging_representations.py``) | 00:02.105 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_numpy.py` (``plot_imaging_ics_numpy.py``)             | 00:01.748 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_numpy.py` (``plot_imaging_ics_numpy.py``)             | 00:01.825 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_mean_tau.py` (``plot_imaging_mean_tau.py``)               | 00:01.370 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_mean_tau.py` (``plot_imaging_mean_tau.py``)               | 00:01.376 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_pixel_masks.py` (``plot_imaging_pixel_masks.py``)         | 00:00.993 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_pixel_masks.py` (``plot_imaging_pixel_masks.py``)         | 00:01.012 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_special_markers.py` (``plot_imaging_special_markers.py``) | 00:00.501 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_special_markers.py` (``plot_imaging_special_markers.py``) | 00:00.511 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_fit.py` (``plot_imaging_ics_fit.py``)                 | 00:00.318 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_imaging_plot_imaging_ics_fit.py` (``plot_imaging_ics_fit.py``)                 | 00:00.321 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_auto_examples_imaging_plot_analyzing_markers.py` (``plot_analyzing_markers.py``)             | 00:00.000 | 0.0 MB |
 +-------------------------------------------------------------------------------------------------------------+-----------+--------+

@@ -109,7 +109,7 @@ Above, a two dimensional histogram with linear spaced bins is shown.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.003 seconds)
+   **Total running time of the script:** ( 0 minutes  1.021 seconds)
 
 
 .. _sphx_glr_download_auto_examples_miscellaneous_plot_histogram_1D.py:
