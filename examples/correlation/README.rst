@@ -14,7 +14,7 @@ correlator  are outlined in the code block below:
 .. code-block:: python
 
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+    data = tttrlib.TTTR('./examples/bh/bh_spc132.spc', 'SPC-132')
 
     # option 1
     correlator_1 = tttrlib.Correlator()
@@ -87,7 +87,7 @@ via the ``correlation`` attribute of the correlator is accessed.
 .. code-block:: python
 
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+    data = tttrlib.TTTR('./examples/bh/bh_spc132.spc', 'SPC-132')
 
     ch1, ch2 = [8], [0]
     correlator_4 = tttrlib.Correlator(

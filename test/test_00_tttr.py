@@ -203,7 +203,7 @@ class Tests(unittest.TestCase):
 
     def test_header_copy_constructor(self):
         # import tttrlib
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
         p1 = data.header
         p2 = tttrlib.Header(p1)
         self.assertEqual(
@@ -225,7 +225,7 @@ class Tests(unittest.TestCase):
 
     def test_tttr_copy_constructor(self):
         # import tttrlib
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
         d2 = tttrlib.TTTR(data)
         self.assertEqual(
             np.allclose(

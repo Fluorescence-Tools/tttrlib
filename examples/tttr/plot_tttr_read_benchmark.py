@@ -42,7 +42,7 @@ benchmark_files = [
     },
     {
         "name": "spc630_256",
-        "file": '../../test/data/BH/BH_SPC630_256.spc',
+        "file": '../../test/data/bh/bh_spc630_256.spc',
         "tttr_mode": 3,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-630'"
@@ -57,7 +57,7 @@ benchmark_files = [
     },
     {
         "name": "ptu",
-        "file": '../../test/data/PQ/PTU/PQ_PTU_HH_T3.ptu',
+        "file": '../../test/data/pq/ptu/pq_ptu_hh_t3.ptu',
         "tttr_mode": 0,
         "phconvert": "pqreader.load_ptu",
         "phconvert_args": "ovcfunc=None"
