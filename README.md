@@ -128,4 +128,4 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 tttrlib is released under the open source MPL 2.0 license.
 
-[3]: docs/_build/html/_images/imaging_tutorial.png "tttrlib FLIM"
+[3]: https://raw.githubusercontent.com/Fluorescence-Tools/tttrlib/gh-pages/_images/sphx_glr_plot_imaging_representations_001.png "tttrlib FLIM"
