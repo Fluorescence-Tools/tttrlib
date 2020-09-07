@@ -49,7 +49,7 @@ method ``fill_pixels`` of a ``CLSMImage`` instance.
 .. code-block::python
 
     import tttrlib
-    tttr_data = tttrlib.TTTR('./data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+    tttr_data = tttrlib.TTTR('./data/pq/ht3/PQ_HT3_CLSM.ht3', 'HT3')
     channels = (0, 1)
     reading_parameter = {
         "tttr_data": tttr_data,
@@ -93,7 +93,7 @@ to yield an average arrival time of the photons in a pixel.
 
 .. code-block::python
 
-    tttr_data = tttrlib.TTTR('./data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+    tttr_data = tttrlib.TTTR('./data/pq/ht3/PQ_HT3_CLSM.ht3', 'HT3')
     channels = (0, 1)
     reading_parameter = {
         "tttr_data": tttr_data,
@@ -220,7 +220,7 @@ can be used for each frame in an CLSM image.
     import tttrlib
     import numpy as np
 
-    tttr_data = tttrlib.TTTR('./data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3')
+    tttr_data = tttrlib.TTTR('./data/pq/ht3/PQ_HT3_CLSM.ht3', 'HT3')
     channels = (0, 1)
     reading_parameter = {
         "tttr_data": tttr_data,
@@ -404,7 +404,7 @@ object with a ``TTTR`` object that contains the photon stream a set of ``CLSMFra
     import numpy as np
     import pylab as p
 
-    data = tttrlib.TTTR('./examples/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
+    data = tttrlib.TTTR('./examples/pq/ht3/PQ_HT3_CLSM.ht3', 1)
 
     frame_marker = 4
     line_start_marker = 1

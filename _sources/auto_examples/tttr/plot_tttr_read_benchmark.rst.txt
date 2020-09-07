@@ -20,11 +20,20 @@ TTTR reading benchmark
 .. code-block:: pytb
 
     Traceback (most recent call last):
-      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py", line 73, in <module>
-        size_bytes = filename.stat().st_size
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/pathlib.py", line 1178, in stat
-        return self._accessor.stat(self)
-    FileNotFoundError: [Errno 2] No such file or directory: '../../test/data/BH/BH_SPC630_256.spc'
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py", line 84, in <module>
+        setup="import phconvert"
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py", line 232, in timeit
+        return Timer(stmt, setup, timer, globals).timeit(number)
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py", line 176, in timeit
+        timing = self.inner(it, self.timer)
+      File "<timeit-src>", line 6, in inner
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/phconvert/pqreader.py", line 123, in load_ht3
+        "%d/%m/%y %H:%M:%S")
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py", line 571, in _strptime_time
+        tt = _strptime(data_string, format)[0]
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py", line 359, in _strptime
+        (data_string, format))
+    ValueError: time data '10-04-14 08:58:56' does not match format '%d/%m/%y %H:%M:%S'
 
 
 
@@ -74,7 +83,7 @@ TTTR reading benchmark
         },
         {
             "name": "spc630_256",
-            "file": '../../test/data/BH/BH_SPC630_256.spc',
+            "file": '../../test/data/bh/bh_spc630_256.spc',
             "tttr_mode": 3,
             "phconvert": "bhreader.load_spc",
             "phconvert_args": "spc_model='SPC-630'"
@@ -89,7 +98,7 @@ TTTR reading benchmark
         },
         {
             "name": "ptu",
-            "file": '../../test/data/PQ/PTU/PQ_PTU_HH_T3.ptu',
+            "file": '../../test/data/pq/ptu/pq_ptu_hh_t3.ptu',
             "tttr_mode": 0,
             "phconvert": "pqreader.load_ptu",
             "phconvert_args": "ovcfunc=None"
@@ -186,7 +195,7 @@ TTTR reading benchmark
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.635 seconds)
+   **Total running time of the script:** ( 0 minutes  0.797 seconds)
 
 
 .. _sphx_glr_download_auto_examples_tttr_plot_tttr_read_benchmark.py:

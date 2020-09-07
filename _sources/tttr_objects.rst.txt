@@ -54,7 +54,7 @@ provides four getter methods to access the data contained in the associated file
 .. code-block:: python
 
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-132')
+    data = tttrlib.TTTR('./examples/bh/bh_spc132.spc', 'SPC-132')
     macro_time = data.get_macro_time()
     micro_time = data.get_micro_time()
     channel = data.get_channel()
@@ -102,7 +102,7 @@ opening the BH-SPC132 file provided in the test folder.
 .. code-block:: none
 
     READING TTTR FILE
-    -- Filename: ./data/BH/BH_SPC132.spc
+    -- Filename: ./data/bh/bh_spc132.spc
     -- Container type: 2
     -- TTTR record type: 7
     -- Number of records: 299999
@@ -197,8 +197,8 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.
     ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
     ptu = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu', 'PTU')
 
-    spc132 = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 2)
-    spc132 = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
+    spc132 = tttrlib.TTTR('./test/data/bh/bh_spc132.spc', 2)
+    spc132 = tttrlib.TTTR('./test/data/bh/bh_spc132.spc', 'SPC-130')
 
 Beyond opening files and processing the content contained in a TTTR file TTTR
 objects can be created that contain initially no data. Moreover, TTTR objects can
@@ -223,7 +223,7 @@ interested a subset of the data.
 
 .. code-block:: python
 
-    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
     data_sliced = data[:10]
 
 A slice of a ``TTTR`` object creates a copy, i.e., the routing channel, the
@@ -236,7 +236,7 @@ operator.
 
 .. code-block:: python
 
-    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
     d2 = data.append(
         other=data,
         shift_macro_time=True,
@@ -258,7 +258,7 @@ can be joined into a single TTTR object as follows
 .. code-block:: python
 
     import os
-    files = glob.glob('./data/BH/BH_SPC132_smDNA/*.spc')
+    files = glob.glob('./data/bh/bh_spc132_smDNA/*.spc')
     sorted(glob.glob('*.spc'), key=os.path.getmtime)
     data = tttrlib.TTTR(files[0], 'SPC-130')
     for d in files[1:]:
@@ -281,7 +281,7 @@ TTTR objects can be writen to files using the method ``write`` of TTTR objects.
 .. code-block:: python
 
     import tttrlib
-    data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
     data_sliced = data[:10]
     output = {
         'filename': 'sliced_data.spc'
@@ -308,7 +308,7 @@ of the type :class:`.Header`.
 .. code-block:: python
 
     import tttrlib
-    data = tttrlib.TTTR('./test/data/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./test/data/bh/bh_spc132.spc', 'SPC-130')
     # the header can be accesses by the method get_header or as an property
     header = data.get_header()
 
@@ -426,7 +426,7 @@ Channel selections
 A very typical use case in TCSPC experiments (either in fluorescence lifetime
 microscopy (FLIM) or multiparameteric fluorescence detection (MFD)) is to select
 a subset of the registered events based on the detection channel. The experimental
-example data provided by the file ``./examples/BH/BH_SPC132.spc`` four detectors
+example data provided by the file ``./examples/bh/bh_spc132.spc`` four detectors
 were used to register the fluorescence signal with two polarizations in a 'green'
 and 'red' spectral range. In the example file the detector numbers for the green
 fluorescence were (0, 8) and (1, 9) for the red detection window.
@@ -443,7 +443,7 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
     import numpy as np
     import tttrlib
 
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./examples/bh/bh_spc132.spc', 'SPC-130')
 
     green_indices = data.get_selection_by_channel([0, 8])
     red_indices = data.get_selection_by_channel([1, 9])
@@ -456,7 +456,7 @@ be created.
 
 .. code-block:: python
 
-        data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
         ch1_indeces = data.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data, ch1_indeces)
         # alternatively
@@ -476,7 +476,7 @@ given by the number of macro time steps.
 
     import numpy as np
     import tttrlib
-    data = tttrlib.TTTR('./examples/BH/BH_SPC132.spc', 'SPC-130')
+    data = tttrlib.TTTR('./examples/bh/bh_spc132.spc', 'SPC-130')
     cr_selection = data.get_time_window_ranges(1, 30)
 
 In the example shown above, the time window is 1200000 and 30 is the maximum

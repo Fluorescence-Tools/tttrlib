@@ -209,7 +209,7 @@ provided by the TTTR class. Opening and and accessing the information contained 
 TTTR files is demonstrated by the Python code examples shown below. A TTTR object
 provides four getter methods to access the data contained in the associated file.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
 <span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_time</span><span class="p">()</span>
 <span class="n">micro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_time</span><span class="p">()</span>
 <span class="n">channel</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_channel</span><span class="p">()</span>
@@ -255,7 +255,7 @@ the number of TTTR records in a file. This can be inspected on the command line
 for a <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> build debug mode <a class="reference internal" href="installation.html#compliation"><span class="std std-ref">Compliation</span></a> when
 opening the BH-SPC132 file provided in the test folder.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>READING TTTR FILE
--- Filename: ./data/BH/BH_SPC132.spc
+-- Filename: ./data/bh/bh_spc132.spc
 -- Container type: 2
 -- TTTR record type: 7
 -- Number of records: 299999
@@ -351,8 +351,8 @@ the PicoQuant PTU file supplied in the example folder in the Python code below.<
 <span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="n">ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
 
-<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">spc132</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Beyond opening files and processing the content contained in a TTTR file TTTR
@@ -371,7 +371,7 @@ types need to be specified.</p>
 <h3>Slicing / subsets<a class="headerlink" href="#slicing-subsets" title="Permalink to this headline">¶</a></h3>
 <p>New TTTR objects can be created by slicing existing objects, if you are
 interested a subset of the data.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">data_sliced</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -382,7 +382,7 @@ macro, and the micro times are copied including the header information.</p>
 <h3>Joining TTTRs<a class="headerlink" href="#joining-tttrs" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects can be joined either by the append method or by using the <code class="docutils literal notranslate"><span class="pre">+</span></code>
 operator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">d2</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
     <span class="n">other</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
     <span class="n">shift_macro_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -400,7 +400,7 @@ is set to zero by default.</p>
 <p>By appending TTTR objects to each other data that is splitted into multiple files
 can be joined into a single TTTR object as follows</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132_smDNA/*.spc&#39;</span><span class="p">)</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;./data/bh/bh_spc132_smDNA/*.spc&#39;</span><span class="p">)</span>
 <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.spc&#39;</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
@@ -422,7 +422,7 @@ lexical ordering adapt the code.</p>
 <h2>Writing TTTR-files<a class="headerlink" href="#writing-tttr-files" title="Permalink to this headline">¶</a></h2>
 <p>TTTR objects can be writen to files using the method <code class="docutils literal notranslate"><span class="pre">write</span></code> of TTTR objects.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">data_sliced</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="s1">&#39;sliced_data.spc&#39;</span>
@@ -448,7 +448,7 @@ lost when converting and saving data.</p>
 For that, a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object provides a header attribute. The header attribute is
 of the type <code class="xref py py-class docutils literal notranslate"><span class="pre">Header</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="c1"># the header can be accesses by the method get_header or as an property</span>
 <span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
 </pre></div>
@@ -593,7 +593,7 @@ channels are usually selected by <em>selections</em>.</p>
 <p>A very typical use case in TCSPC experiments (either in fluorescence lifetime
 microscopy (FLIM) or multiparameteric fluorescence detection (MFD)) is to select
 a subset of the registered events based on the detection channel. The experimental
-example data provided by the file <code class="docutils literal notranslate"><span class="pre">./examples/BH/BH_SPC132.spc</span></code> four detectors
+example data provided by the file <code class="docutils literal notranslate"><span class="pre">./examples/bh/bh_spc132.spc</span></code> four detectors
 were used to register the fluorescence signal with two polarizations in a ‘green’
 and ‘red’ spectral range. In the example file the detector numbers for the green
 fluorescence were (0, 8) and (1, 9) for the red detection window.</p>
@@ -606,7 +606,7 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tttrlib</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 
 <span class="n">green_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
 <span class="n">red_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
@@ -616,7 +616,7 @@ the indices of the green (channel = 0 or channel = 8) and the indeces of the red
 experimental setup.</p>
 <p>Selections can be made by channel with such a selection a new <cite>TTTR</cite> object can
 be created.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">ch1_indeces</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">8</span><span class="p">])</span>
 <span class="n">data_ch1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ch1_indeces</span><span class="p">)</span>
 <span class="c1"># alternatively</span>
@@ -634,7 +634,7 @@ less photons were detected within a specified time window. The time window is
 given by the number of macro time steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="n">cr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>

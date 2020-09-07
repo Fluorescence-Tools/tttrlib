@@ -205,7 +205,7 @@ options to create a <code class="docutils literal notranslate"><span class="pre"
 multi-tau algorithm <a class="bibtex reference internal" href="../zreferences.html#wahl2003" id="id2">[WGPE03]</a> <a class="bibtex reference internal" href="../zreferences.html#laurence2006" id="id3">[LFH06]</a>. Some options of the
 correlator  are outlined in the code block below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
 
 <span class="c1"># option 1</span>
 <span class="n">correlator_1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">()</span>
@@ -274,7 +274,7 @@ the most versatile, as the macro times and the weights can be set manually.</p>
 <p>The correlation will be computed when the correlation amplitude, that is accessed
 via the <code class="docutils literal notranslate"><span class="pre">correlation</span></code> attribute of the correlator is accessed.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/BH/BH_SPC132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./examples/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-132&#39;</span><span class="p">)</span>
 
 <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">correlator_4</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>

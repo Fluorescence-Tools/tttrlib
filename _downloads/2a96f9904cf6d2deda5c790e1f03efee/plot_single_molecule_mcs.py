@@ -19,7 +19,7 @@ computed using the function ``tttrlib.compute_intensity_trace`` or using the met
 
 .. code-block:: python
 
-    tttr_object = tttrlib.TTTR('../../test/data/BH/BH_SPC132.spc', 'SPC-130')
+    tttr_object = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
     # option 1
     tttr_object = tttrlib.compute_intensity_trace(
         data.macro_times,

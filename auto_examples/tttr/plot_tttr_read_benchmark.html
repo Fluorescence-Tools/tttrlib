@@ -137,11 +137,20 @@
 <div class="sphx-glr-example-title section" id="tttr-reading-benchmark">
 <span id="sphx-glr-auto-examples-tttr-plot-tttr-read-benchmark-py"></span><h1>TTTR reading benchmark<a class="headerlink" href="#tttr-reading-benchmark" title="Permalink to this headline">¶</a></h1>
 <div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py&quot;</span>, line <span class="m">73</span>, in <span class="n">&lt;module&gt;</span>
-    <span class="n">size_bytes</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/pathlib.py&quot;</span>, line <span class="m">1178</span>, in <span class="n">stat</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessor</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-<span class="gr">FileNotFoundError</span>: <span class="n">[Errno 2] No such file or directory: &#39;../../test/data/BH/BH_SPC630_256.spc&#39;</span>
+  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py&quot;</span>, line <span class="m">84</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import phconvert&quot;</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py&quot;</span>, line <span class="m">232</span>, in <span class="n">timeit</span>
+    <span class="k">return</span> <span class="n">Timer</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">setup</span><span class="p">,</span> <span class="n">timer</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py&quot;</span>, line <span class="m">176</span>, in <span class="n">timeit</span>
+    <span class="n">timing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">)</span>
+  File <span class="nb">&quot;&lt;timeit-src&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">inner</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/phconvert/pqreader.py&quot;</span>, line <span class="m">123</span>, in <span class="n">load_ht3</span>
+    <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%y %H:%M:%S&quot;</span><span class="p">)</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py&quot;</span>, line <span class="m">571</span>, in <span class="n">_strptime_time</span>
+    <span class="n">tt</span> <span class="o">=</span> <span class="n">_strptime</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="nb">format</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py&quot;</span>, line <span class="m">359</span>, in <span class="n">_strptime</span>
+    <span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="nb">format</span><span class="p">))</span>
+<span class="gr">ValueError</span>: <span class="n">time data &#39;10-04-14 08:58:56&#39; does not match format &#39;%d/%m/%y %H:%M:%S&#39;</span>
 </pre></div>
 </div>
 <div class="line-block">
@@ -185,7 +194,7 @@
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spc630_256&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/BH/BH_SPC630_256.spc&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/bh/bh_spc630_256.spc&#39;</span><span class="p">,</span>
         <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
         <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;bhreader.load_spc&quot;</span><span class="p">,</span>
         <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;spc_model=&#39;SPC-630&#39;&quot;</span>
@@ -200,7 +209,7 @@
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ptu&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/PQ/PTU/PQ_PTU_HH_T3.ptu&#39;</span><span class="p">,</span>
+        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/pq/ptu/pq_ptu_hh_t3.ptu&#39;</span><span class="p">,</span>
         <span class="s2">&quot;tttr_mode&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
         <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;pqreader.load_ptu&quot;</span><span class="p">,</span>
         <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;ovcfunc=None&quot;</span>
@@ -294,7 +303,7 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.635 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.797 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-read-benchmark-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/05e48e93e6ad3852d989cbb97450c50b/plot_tttr_read_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_read_benchmark.py</span></code></a></p>
