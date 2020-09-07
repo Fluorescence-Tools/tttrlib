@@ -21,14 +21,14 @@ Correlator::Correlator(TTTR *tttr,
         int n_bins,
         int n_casc
 ) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "CORRELATOR" << std::endl;
 #endif
     this->n_bins = n_bins;
     this->n_casc = n_casc;
     update_axis();
     if (tttr != nullptr) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Passed a TTTR object" << std::endl;
 #endif
         this->tttr = tttr;
@@ -44,7 +44,7 @@ Correlator::Correlator(TTTR *tttr,
 
 void Correlator::update_axis(){
     n_corr = n_casc * n_bins + 1;
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Updating x-axis..." << std::endl;
     std::clog << "-- n_casc: " << n_casc << std::endl;
     std::clog << "-- n_bins: " << n_bins << std::endl;
@@ -67,7 +67,7 @@ void Correlator::set_macrotimes(
         unsigned long long  *t2v, int n_t2v,
         bool inplace
 ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Setting macro times..." << std::endl;
     std::clog << "-- n_t1v, n_t2v: " << n_t1v << "," << n_t2v << std::endl;
 #endif
@@ -93,7 +93,7 @@ void Correlator::set_weights(
         double* weight_ch2, int n_weights_ch2,
         bool inplace
 ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Setting weights..." << std::endl;
     std::clog << "-- n_weights_ch1, n_weights_ch2: " <<
     n_weights_ch1 << "," << n_weights_ch2 << std::endl;
@@ -134,19 +134,19 @@ void Correlator::set_events(
 }
 
 void Correlator::normalize(){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Normalizing correlation curve..." << std::endl;
 #endif
     double np1 = std::accumulate(w1, w1+n_t1, 0.0);
     double np2 = std::accumulate(w2, w2+n_t2, 0.0);
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Sum of weights (Ch1): " << np1 << std::endl;
     std::clog << "-- Sum of weights (Ch2): " << np2 << std::endl;
 #endif
     // compute count rates for normalization
     double cr1 = (double) np1 / dt1;
     double cr2 = (double) np2 / dt2;
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Count rate in correlation channel 1: " << cr1 << std::endl;
     std::clog << "-- Count rate in correlation channel 2: " << cr2 << std::endl;
 #endif
@@ -173,24 +173,24 @@ void Correlator::normalize(){
 
 
 void Correlator::run(){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Running correlator..." << std::endl;
     std::clog << "-- Correlation mode: " << correlation_method << std::endl;
     std::clog << "-- Filling correlation vectors with zero." << std::endl;
 #endif
     if(is_valid){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "CORRELATOR::RUN" << std::endl;
         std::clog << "-- results are already valid." << std::endl;
 #endif
         return;
     }
     if((t1 == nullptr) || (t2== nullptr) || (w1 == nullptr) || (w2 == nullptr)){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- No time or weight arrays set." << std::endl;
 #endif
         if(tttr != nullptr){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
             std::clog << "-- Computing ACF for all macro times. " << std::endl;
 #endif
             int nt1; int nt2;
@@ -275,7 +275,7 @@ void Correlator::set_microtimes(
         unsigned short* tac_2, int n_tac_2,
         int n_tac
         ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Setting micro times..." << std::endl;
 #endif
     is_valid = false;
@@ -290,7 +290,7 @@ void Correlator::compute_dt(){
     dt1 = t1[n_t1 - 1] - t1[0];
     dt2 = t2[n_t2 - 1] - t2[0];
     maximum_macro_time = std::max(dt1, dt2);
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Maximum time (Ch1): " << dt1 << std::endl;
     std::clog << "-- Maximum time (Ch2): " << dt2 << std::endl;
     std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;

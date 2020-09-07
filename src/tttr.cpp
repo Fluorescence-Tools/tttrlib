@@ -1,9 +1,4 @@
-#include <include/record_types.h>
-#include <include/tttr.h>
-#include <boost/filesystem.hpp>
-
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include "tttr.h"
 
 
 TTTR::TTTR() :
@@ -42,7 +37,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            short *event_types, int n_event_types,
            bool find_used_channels
 ): TTTR() {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
 #endif
     this->filename = "NA";
@@ -78,7 +73,7 @@ TTTR::TTTR(
         int n_selection,
         bool find_used_channels) :  TTTR()
         {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
 #endif
     copy_from(parent, false);
@@ -179,7 +174,7 @@ void TTTR::find_used_routing_channels(){
             used_routing_channels.push_back(c);
         }
     }
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Used routing channels: ";
     for(auto c: used_routing_channels){
         std::clog << static_cast<unsigned>(c) << ", ";
@@ -215,7 +210,7 @@ int TTTR::read_hdf_file(const char *fn){
      * before storing the hdf5 file. */
     n_valid_events = dims[0];
     n_records_in_file = dims[0];
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
 #endif
 
@@ -249,12 +244,12 @@ int TTTR::read_file(
         const char *fn,
         int container_type
         ) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
 #endif
     if(boost::filesystem::exists(fn))
     {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Filename: " << fn << std::endl;
         std::clog << "-- Container type: " << container_type << std::endl;
 #endif
@@ -270,7 +265,7 @@ int TTTR::read_file(
             fp_records_begin = header->header_end;
             bytes_per_record = header->bytes_per_record;
             tttr_record_type = header->getTTTRRecordType();
-#if VERBOSE
+#if VERBOSE_TTTRLIB
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
             processRecord = processRecord_map[tttr_record_type];
@@ -283,7 +278,7 @@ int TTTR::read_file(
             read_records();
             fclose(fp);
         }
-#if VERBOSE
+#if VERBOSE_TTTRLIB
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
 #endif
             return 1;
@@ -311,7 +306,7 @@ std::string TTTR::get_filename() {
 
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 #endif
     if(tttr_container_type == 5) {
@@ -367,7 +362,7 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::cout << "-- Records that will be read : " << n_rec << std::endl;
 #endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
@@ -413,7 +408,7 @@ void TTTR::read_records() {
 
 
 Header TTTR::get_header() {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- TTTR::get_header" << std::endl;
 #endif
     if(header != nullptr){
@@ -465,11 +460,9 @@ unsigned int TTTR::get_n_valid_events(){
 }
 
 
-
 unsigned int TTTR::get_n_events(){
     return (int) n_valid_events;
 }
-
 
 
 void TTTR::get_selection_by_channel(
@@ -561,7 +554,7 @@ size_t determine_number_of_records_by_file_size(
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
     fseek(fp, (long) current_position, SEEK_SET);
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
 #endif
     return n_records_in_file;
@@ -580,7 +573,7 @@ void ranges_by_time_window(
 ) {
     auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
     auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
     std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
     std::clog << "-- maximum_window_length [ms]: " << maximum_window_length << std::endl;
@@ -767,7 +760,7 @@ bool TTTR::write(
                     // write overflows
                     while(MT_ov_last>1){
                         // we fit 65536 = 2**16 in each overflow record
-                        overflow.bits.cnt = MIN(65536, MT_ov_last);
+                        overflow.bits.cnt = std::min(65536ull, MT_ov_last);
                         fwrite(&overflow, 4, 1, fp);
                         MT_ov_last -= overflow.bits.cnt;
                     }
@@ -827,3 +820,74 @@ TTTRRange::TTTRRange(
     _tttr_indices.reserve(pre_reserve);
 }
 
+void TTTR::compute_microtime_histogram(
+        TTTR *tttr_data,
+        double** histogram, int* n_histogram,
+        double** time, int* n_time,
+        unsigned short micro_time_coarsening
+) {
+    // construct histogram
+    if (tttr_data != nullptr) {
+        auto header = tttr_data->get_header();
+        int n_channels = header.number_of_micro_time_channels / micro_time_coarsening;
+        double micro_time_resolution = header.micro_time_resolution;
+        unsigned short *micro_times; int n_micro_times;
+        tttr_data->get_micro_time(&micro_times, &n_micro_times);
+#if VERBOSE_TTTRLIB
+        std::cout << "compute_histogram" << std::endl;
+        std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
+        std::cout << "-- n_channels: " << n_channels << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        for(int i=0; i<n_micro_times;i++)
+            micro_times[i] /= micro_time_coarsening;
+#if VERBOSE_TTTRLIB
+        std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+        auto bin_edges = std::vector<unsigned short>(n_channels);
+        for (int i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
+        auto hist = (double *) malloc(n_channels * sizeof(double));
+        for(int i=0; i<n_channels;i++) hist[i] = 0.0;
+        histogram1D<unsigned short>(
+                micro_times, n_micro_times,
+                nullptr, 0,
+                bin_edges.data(), bin_edges.size(),
+                hist, n_channels,
+                "lin", false
+        );
+        *histogram = hist;
+        *n_histogram = n_channels;
+
+        auto t = (double *) malloc(n_channels * sizeof(double));
+        for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
+        *time = t;
+        *n_time = n_channels;
+        free(micro_times);
+    }
+}
+
+double TTTR::compute_mean_lifetime(
+        TTTR* tttr_data,
+        TTTR* tttr_irf,
+        int m0_irf, int m1_irf
+){
+    if(tttr_irf != nullptr){
+        unsigned short *micro_times_irf; int n_micro_times_irf;
+        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
+        m0_irf = n_micro_times_irf;
+        m1_irf = 0;
+        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+    }
+
+    unsigned short *micro_times_data; int n_micro_times_data;
+    tttr_data->get_micro_time(&micro_times_data, &n_micro_times_data);
+    double mu0 = n_micro_times_data;
+    double mu1 = 0.0;
+    for(int i=0; i< n_micro_times_data; i++) mu1 += micro_times_data[i];
+
+    double g1 = mu0 / m0_irf;
+    double g2 = (mu1 - g1 * m1_irf) / m0_irf;
+    double tau1 = g2 / g1;
+    return tau1 * tttr_data->get_header().micro_time_resolution;
+}

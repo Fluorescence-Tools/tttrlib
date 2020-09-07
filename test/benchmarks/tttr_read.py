@@ -14,9 +14,9 @@ import pylab as p
 
 
 test_files = [
-    ('../data/BH/BH_SPC132.spc', 'SPC-130'),
-    ('../data/BH/BH_SPC132.spc', 'SPC-130'),
-    ('../data/BH/BH_SPC630_256.spc', 'SPC-600_256'),
+    ('../data/bh/bh_spc132.spc', 'SPC-130'),
+    ('../data/bh/bh_spc132.spc', 'SPC-130'),
+    ('../data/bh/bh_spc630_256.spc', 'SPC-600_256'),
     ('../data/HDF/1a_1b_Mix.hdf5', 'PHOTON-HDF5'),
     ('../data/PQ/HT3/PQ_HT3_CLSM.ht3', 'HT3'),
     ('../data/PQ/PTU/PQ_PTU_HH_T2.ptu', 'PTU'),
@@ -34,8 +34,8 @@ test_files = [
 
 ptu = tttrlib.TTTR('../data/PQ/PTU/PQ_PTU_HH_T3.ptu', 0)
 ht3 = tttrlib.TTTR('../data/PQ/HT3/PQ_HT3_CLSM.ht3', 1)
-spc132 = tttrlib.TTTR('../data/BH/BH_SPC132.spc', 2)
-spc600_256 = tttrlib.TTTR('../data/BH/BH_SPC630_256.spc', 3)
+spc132 = tttrlib.TTTR('../data/bh/bh_spc132.spc', 2)
+spc600_256 = tttrlib.TTTR('../data/bh/bh_spc630_256.spc', 3)
 photon_hdf5 = tttrlib.TTTR('../data/HDF/1a_1b_Mix.hdf5', 5)
 
 # Compare speed to phconvert

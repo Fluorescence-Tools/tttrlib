@@ -2,18 +2,17 @@
 #define TTTRLIB_IMAGE_H
 
 #include <omp.h>
-#include "fftw3.h"
-//#include "mkl_dfti.h"
 #include <stdlib.h>
-#include <tttr.h>
 #include <vector>
 #include <iterator> // std::begin, std::end
 #include <list>
 #include <cstring>
 #include <numeric>      // std::accumulate
 #include <algorithm>
+#include "fftw3.h"
+
+#include "tttr.h"
 #include "correlation.h"
-#include "decay.h"
 
 
 class CLSMPixel : public TTTRRange{
@@ -171,6 +170,7 @@ public:
 
 
 class CLSMImage {
+
     friend class Correlator;
 
     friend class CLSMFrame;

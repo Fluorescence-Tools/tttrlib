@@ -28,6 +28,9 @@ static int myErr = 0; // flag to save error state
 %ignore CLSMImage();
 %ignore CLSMImage(const CLSMImage& p2, bool fill=false);
 
+// Use shared_prt for CLSMImage to pass CLSMImage around
+%shared_ptr(CLSMImage)
+
 %include "../include/tttr.h"
 %include "../include/image.h"
 

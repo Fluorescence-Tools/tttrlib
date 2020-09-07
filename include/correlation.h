@@ -14,9 +14,9 @@
 #include <map>
 //#include <taskflow/taskflow.hpp>
 
-#include <include/tttr.h>
-#include <include/correlation/peulen.h>
-#include <include/correlation/lamb.h>
+#include "tttr.h"
+#include "correlation_peulen.h"
+#include "correlation_lamb.h"
 
 
 class Correlator {
@@ -129,7 +129,7 @@ protected:
 
 public:
     void set_time_axis_calibration(double v) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Time axis calibration [ms/bin]: " << v << std::endl;
 #endif
         time_axis_calibration = v;

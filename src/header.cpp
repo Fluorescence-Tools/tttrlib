@@ -73,7 +73,6 @@ Header::Header(
             break;
         case PQ_HT3_CONTAINER:
             header_end = read_ht3_header(
-
                     fpin,
                     true,
                     tttr_record_type,
@@ -145,7 +144,7 @@ size_t read_bh132_header(
     macro_time_resolution = (double) rec.macro_time_clock / 10;
     data["Resolution"] = std::to_string(macro_time_resolution);
     data["Invalid"] = std::to_string(rec.invalid);
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- BH132 header reader " << std::endl;
     std::clog << "-- macro_time_resolution: " << macro_time_resolution << std::endl;
     std::clog << "-- micro_time_resolution: " << micro_time_resolution << std::endl;
@@ -206,7 +205,6 @@ size_t read_ht3_header(
     data["RepeatsPerCurve"] = std::to_string(ht3_header_binary.RepeatsPerCurve);
     data["RepeatTime"] = std::to_string(ht3_header_binary.RepeatTime);
     data["RepeatWaitTime"] = std::to_string(ht3_header_binary.RepeatWaitTime);
-
     data["HardwareIdent"] = std::string(ht3_header_board.HardwareIdent);
     data["HardwareVersion"] = std::string(ht3_header_board.HardwareVersion);
     data["HardwareSerial"] = std::to_string(ht3_header_board.HardwareSerial);
@@ -238,8 +236,8 @@ size_t read_ht3_header(
         data["Resolution"] = std::to_string(resolution);
     } else{
         data["Resolution"] = std::string("1");
+        resolution = 1.0;
     }
-
     macro_time_resolution = resolution;
     micro_time_resolution = 0.001;
 

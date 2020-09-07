@@ -28,21 +28,24 @@
 #include <array>
 #include <memory>
 #include <stdlib.h>     /* malloc, calloc, exit, free */
+#include <numeric>
 
-//#include "roaring.h"
 #include "omp.h"
 #include <boost/filesystem.hpp>
 #include <boost/bimap.hpp>
+#include <boost/filesystem.hpp>
 
 #include "hdf5.h"
 
-#include <record_reader.h>
-#include <header.h>
+#include "histogram.h"
+#include "header.h"
+#include "record_reader.h"
+#include "record_types.h"
 
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define VERSION                     "0.0.17"
+#define TTTRLIB_VERSION             "0.0.19"
 
 
 /*!
@@ -72,7 +75,7 @@ size_t determine_number_of_records_by_file_size(
  *
  *
  * @details The filter is applied to a series of consecutive time events. The time events
- * are sliced into time windows (tw) which have at least a duration as specified by
+ * are sliced into time windows tw) which have at least a duration as specified by
  * time_window. The tttr indices of the time windows are written to the
  * output parameter output. Moreover, for every tw the number of
  * photons is determined. If in a tw the number of photons exceeds n_ph_max
@@ -389,7 +392,7 @@ public:
             bool shift_macro_time=true,
             long long macro_time_offset=0
     ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::cout << "-- Appending number of records: " << other->n_valid_events << std::endl;
 #endif
         size_t n_rec = this->n_valid_events + other->n_valid_events;
@@ -658,7 +661,7 @@ public:
      * @return
      */
     bool write(
-            const char *filename,
+            const char* filename,
             const char* container_type
             );
 
@@ -668,7 +671,6 @@ public:
      */
     void shift_macro_time(int shift);
 
-
     TTTR* operator+(const TTTR* other) const
     {
         auto re = new TTTR();
@@ -677,6 +679,69 @@ public:
         return re;
     }
 
+    /*!
+     * Computes a histogram of the TTTR data's micro times
+     *
+     * @param tttr_data a pointer to the TTTR data
+     * @param histogram pointer to which the histogram will be written (the memory
+     * is allocated but the method)
+     * @param n_histogram the number of points in the histogram
+     * @param time pointer to the time axis of the histogram (the memory is allocated
+     * by the method)
+     * @param n_time the number of points in the time axis
+     * @param micro_time_coarsening a factor by which the micro times in the TTTR
+     * object are divided (default value is 1).
+     */
+    static void compute_microtime_histogram(
+            TTTR *tttr_data,
+            double **histogram, int *n_histogram,
+            double **time, int *n_time,
+            unsigned short micro_time_coarsening = 1
+    );
+
+    void microtime_histogram(
+            double **histogram, int *n_histogram,
+            double **time, int *n_time,
+            unsigned short micro_time_coarsening = 1
+    ){
+        compute_microtime_histogram(
+                this, histogram, n_histogram,
+                time, n_time,
+                micro_time_coarsening
+        );
+    }
+
+    /*!
+     * Compute a mean lifetime by the moments of the decay and the instrument
+     * response function.
+     *
+     * The computed lifetime is the first lifetime determined by the method of
+     * moments (Irvin Isenberg, 1973, Biophysical journal).
+     *
+     * @param tttr_data TTTR object for which the lifetime is computed
+     * @param tttr_irf TTTR object that is used as IRF
+     * @param m0_irf Number of counts in the IRF (used if no TTTR object for IRF
+     * provided.
+     * @param m1_irf First moment of the IRF (used if no TTTR object for IRF
+     * provided.
+     * @return The computed lifetime
+     */
+    static double compute_mean_lifetime(
+            TTTR *tttr_data,
+            TTTR *tttr_irf = nullptr,
+            int m0_irf = 1, int m1_irf = 1
+    );
+
+    /*!
+     * Compute the mean lifetime by the moments of the decay and the instrument
+     * response function.
+     */
+    double mean_lifetime(
+            TTTR *tttr_irf = nullptr,
+            int m0_irf = 1, int m1_irf = 1
+    ){
+        return compute_mean_lifetime(this, tttr_irf, m0_irf, m1_irf);
+    }
 };
 
 
@@ -708,13 +773,17 @@ public:
      * in memory upon creation of a TTTRRange object.
      */
     TTTRRange(
-            size_t start=0,
-            size_t stop=0,
+            size_t start = 0,
+            size_t stop = 0,
             unsigned int start_time = 0,
             unsigned int stop_time = 0,
-            TTTRRange* other = nullptr,
+            TTTRRange *other = nullptr,
             int pre_reserve = 8
     );
+
+    size_t size(){
+        return _tttr_indices.size();
+    }
 
     /// Copy constructor
     TTTRRange(const TTTRRange& p2);

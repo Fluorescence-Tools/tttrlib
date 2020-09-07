@@ -165,7 +165,7 @@ class Tests(unittest.TestCase):
         data = self.data
 
         # import tttrlib
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
 
         # if a correlator is initialized with a TTTR object the
         # correlation corresponds to the macro time correlation of all events
@@ -199,7 +199,7 @@ class Tests(unittest.TestCase):
 
         # import tttrlib
         # import pylab as p
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
 
         # get the indices of the two channels
         ch1_indeces = data.get_selection_by_channel([8])
@@ -258,7 +258,7 @@ class Tests(unittest.TestCase):
         data = self.data
 
         # import tttrlib
-        # data = tttrlib.TTTR('./data/BH/BH_SPC132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
 
         ch1, ch2 = [8], [0]
         tttr_ch1 = tttrlib.TTTR(data, data.get_selection_by_channel(ch1))

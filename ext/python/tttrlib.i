@@ -21,7 +21,7 @@
 %include "cpointer.i"
 %include "numpy.i"
 %include "exception.i"
-%include attribute.i
+%include "attribute.i"
 
 %init %{
 import_array();
@@ -63,7 +63,7 @@ import_array();
 %apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 
-/// Generic inplace arrays
+// Generic inplace arrays
 %apply(double* INPLACE_ARRAY1, int DIM1) {(double* inplace_output, int n_output)}
 
 // Templates
@@ -84,4 +84,3 @@ import_array();
 %include "correlation.i"
 %include "image.i"
 %include "pda.i"
-%include "decay.i"

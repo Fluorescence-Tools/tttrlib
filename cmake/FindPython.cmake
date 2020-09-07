@@ -1,20 +1,21 @@
-
-find_program(python_command python "python executable.")
-
+if (python_command)
+ELSE()
+    FIND_PROGRAM(python_command python "python executable.")
+ENDIF()
 IF(python_command)
     FIND_PACKAGE(PythonInterp)
     FIND_PACKAGE(PythonLibs)
     execute_process(
-            COMMAND python -c "from __future__ import print_function; import numpy; print(numpy.get_include())"
+            COMMAND ${python_command} -c "from __future__ import print_function; import numpy; print(numpy.get_include())"
             OUTPUT_VARIABLE Python_NumPy_PATH
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     execute_process(
-            COMMAND python -c "from sysconfig import get_paths as gp; print(gp()['include'])"
+            COMMAND ${python_command} -c "from sysconfig import get_paths as gp; print(gp()['include'])"
             OUTPUT_VARIABLE Python_INCLUDE_DIR
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    execute_process(COMMAND python -c "import sys; print(sys.executable)"
+    execute_process(COMMAND ${python_command} -c "import sys; print(sys.executable)"
             RESULT_VARIABLE retval
             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
             OUTPUT_VARIABLE python_full_path

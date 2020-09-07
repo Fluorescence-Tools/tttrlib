@@ -11,7 +11,7 @@ void Pda::get_1dhistogram(
         std::vector<double> species_amplitudes,
         std::vector<double> probabilities_ch1
 ) {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- RUN: get_1dhistogram..." << std::endl;
     std::clog << "-- x_min: " << x_min << std::endl;
     std::clog << "-- x_max: " << x_max << std::endl;
@@ -32,12 +32,12 @@ void Pda::get_1dhistogram(
         }
     }
     if(s1s2.empty()){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Using model s1s2 matrix! " << std::endl;
 #endif
         s1s2 = _S1S2;
     }
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     else{
         std::clog << "-- Using input s1s2 matrix! " << std::endl;
     }
@@ -59,7 +59,7 @@ void Pda::get_1dhistogram(
     double xmincorr = log_x ?
                       log(x_min) - 0.5 * bin_width :
                       x_min - 0.5 * bin_width;
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- n_max: " << n_max << std::endl;
     std::clog << "-- n_min: " << n_min << std::endl;
     std::clog << "-- bin_width: " << bin_width << std::endl;
@@ -92,7 +92,7 @@ void Pda::get_1dhistogram(
 
 
 void Pda::evaluate() {
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- evaluate PDA..." << std::endl;
     std::clog << "-- making sure array sizes match" << std::endl;
 #endif
@@ -116,7 +116,7 @@ void Pda::evaluate() {
             _amplitudes.emplace_back(0.0);
         }
     }
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Computing S1S2 matrix" << std::endl;
 #endif
     double bg_ch1 = get_ch1_background();
@@ -185,7 +185,7 @@ void Pda::S1S2_pF(
     for(size_t pg_idx = 0; pg_idx < p_ch1.size(); pg_idx++) {
         auto p = p_ch1[pg_idx];
         auto a = amplitudes[pg_idx];
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
 #endif
         tmp[0] = 1.;
@@ -240,7 +240,7 @@ void Pda::compute_experimental_histograms(
         int minimum_number_of_photons,
         double minimum_time_window_length
 ){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Make S1S2 matrix... " << std::endl;
     std::clog << "-- minimum_time_window_length: " << minimum_time_window_length << std::endl;
     std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons << std::endl;
@@ -265,7 +265,7 @@ void Pda::compute_experimental_histograms(
     tttr_data->get_routing_channel(
             &routing_channels, &n_routing_channels
     );
-#if VERBOSE
+#if VERBOSE_TTTRLIB
     std::clog << "-- Number of time windows: " << n_tw / 2 << std::endl;
     std::clog << "-- Getting routing channels... " << std::endl;
     std::clog << "-- Counting photons... " << std::endl;

@@ -244,7 +244,7 @@ public:
      * @param n_input[in]
      */
     void setPF(double *input, int n_input){
-#if VERBOSE
+#if VERBOSE_TTTRLIB
         std::clog << "-- Setting pF " << std::endl;
 #endif
         _is_valid_sgsr = false;

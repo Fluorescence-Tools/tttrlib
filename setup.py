@@ -15,14 +15,14 @@ def read_version(
     version = "0.0.0"
     with open(header_file, "r") as fp:
         for line in fp.readlines():
-            if "#define" in line and "VERSION" in line:
+            if "#define" in line and "TTTRLIB_VERSION" in line:
                 version = line.split()[-1]
     return version.replace('"', '')
 
 
 __name__ = "tttrlib"
 __version__ = read_version()
-__license__ = 'MPL v2.0'
+__license__ = 'Mozilla Public License 2.0 (MPL 2.0)'
 
 
 class CMakeExtension(Extension):
@@ -85,17 +85,21 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         # build the documentation.i file using doxygen and doxy2swig
-        working_directory = pathlib.Path(__file__).parent.absolute()
-        subprocess.check_call(
-            ["doxygen"],
-            cwd=str(working_directory / "docs"),
-            env=env
-        )
-        subprocess.check_call(
-            ["python", "doxy2swig.py", "../docs/_build/xml/index.xml", "../ext/python/documentation.i"],
-            cwd=str(working_directory / "utility"),
-            env=env
-        )
+        try:
+            # build the documentation.i file using doxygen and doxy2swig
+            working_directory = pathlib.Path(__file__).parent.absolute()
+            subprocess.check_call(
+                ["doxygen"],
+                cwd=str(working_directory / "docs"),
+                env=env
+            )
+            subprocess.check_call(
+                ["python", "doxy2swig.py", "../docs/_build/xml/index.xml", "../ext/python/documentation.i"],
+                cwd=str(working_directory / "utility"),
+                env=env
+            )
+        except:
+            print("Problem calling doxygen")
         print("cmake building: " + " ".join(cmake_args))
         subprocess.check_call(
             ['cmake', ext.sourcedir] + cmake_args,
@@ -110,10 +114,7 @@ class CMakeBuild(build_ext):
 
 # TODO: create console scripts for basic tasks
 console_scripts = {
-    "csc_tttr_decay_histogram": "chisurf.cmd_tools.tttr_decay_histogram:main",
-    "csc_tttr_correlate": "chisurf.cmd_tools.tttr_correlate:main",
-    "csc_fcs_convert": "chisurf.cmd_tools.fcs_convert:main",
-    "csc_protein_mc_fret": "csc_protein_mc_fret.cmd_tools.fcs_convert:main"
+#    "csc_tttr_decay_histogram": "chisurf.cmd_tools.tttr_decay_histogram:main",
 }
 
 setup(
