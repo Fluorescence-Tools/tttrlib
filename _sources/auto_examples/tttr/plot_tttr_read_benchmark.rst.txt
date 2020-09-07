@@ -26,18 +26,18 @@ TTTR reading benchmark
 
  .. code-block:: none
 
-    time(phconvert.numba) = 0.5206920440000431 s
-    time(tttrlib) = 0.0033451450000256955 s
-    tttrlib speedup: 155.66
-    time(phconvert.numba) = 0.002776908999976513 s
-    time(tttrlib) = 0.0032282029999350925 s
+    time(phconvert.numba) = 0.529055817000085 s
+    time(tttrlib) = 0.0033469830000285583 s
+    tttrlib speedup: 158.07
+    time(phconvert.numba) = 0.00289508699995622 s
+    time(tttrlib) = 0.003356294000013804 s
     tttrlib speedup: 0.86
-    time(phconvert.numba) = 0.15476385399995252 s
-    time(tttrlib) = 0.20317907000003288 s
-    tttrlib speedup: 0.76
-    time(phconvert.numba) = 0.08262702699994406 s
-    time(tttrlib) = 0.05385473900003035 s
-    tttrlib speedup: 1.53
+    time(phconvert.numba) = 0.15574203599999237 s
+    time(tttrlib) = 0.2063885879999816 s
+    tttrlib speedup: 0.75
+    time(phconvert.numba) = 0.08369594800001323 s
+    time(tttrlib) = 0.05416964899995946 s
+    tttrlib speedup: 1.55
 
 
 
@@ -198,7 +198,7 @@ TTTR reading benchmark
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.263 seconds)
+   **Total running time of the script:** ( 0 minutes  1.312 seconds)
 
 
 .. _sphx_glr_download_auto_examples_tttr_plot_tttr_read_benchmark.py:

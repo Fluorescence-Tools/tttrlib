@@ -90,7 +90,7 @@ of the data contained in the file. The example creates
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.067 seconds)
+   **Total running time of the script:** ( 0 minutes  2.141 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_representations.py:

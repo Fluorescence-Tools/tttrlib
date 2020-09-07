@@ -27,7 +27,7 @@ Using Pixel masks
  .. code-block:: none
 
 
-    <matplotlib.legend.Legend object at 0x7fc28d53ff10>
+    <matplotlib.legend.Legend object at 0x7fcecc543a10>
 
 
 
@@ -101,7 +101,7 @@ Using Pixel masks
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.001 seconds)
+   **Total running time of the script:** ( 0 minutes  1.031 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_pixel_masks.py:
