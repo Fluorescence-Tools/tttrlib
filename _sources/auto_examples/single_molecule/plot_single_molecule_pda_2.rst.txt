@@ -227,7 +227,7 @@ Single molecule photon distribution analysis - 2
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.004 seconds)
+   **Total running time of the script:** ( 0 minutes  0.992 seconds)
 
 
 .. _sphx_glr_download_auto_examples_single_molecule_plot_single_molecule_pda_2.py:

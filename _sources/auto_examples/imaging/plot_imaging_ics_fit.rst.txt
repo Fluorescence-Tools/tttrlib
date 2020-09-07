@@ -20,8 +20,25 @@ Fitting ICS data by a RICS model
     :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_ics_fit.py:60: RuntimeWarning: divide by zero encountered in double_scalars
+      (1 + 4 * diffusion_coefficient * mv / w_z**2)**(-0.5) * \
+    /home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/scipy/optimize/optimize.py:697: RuntimeWarning: invalid value encountered in double_scalars
+      df = (f(*((xk + d,) + args)) - f0) / d[k]
+    /home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_ics_fit.py:220: RuntimeWarning: divide by zero encountered in log
+      ax4.imshow(np.log(abs(model - ics_mean_select) / ics_std_select), cmap='gray')
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -247,7 +264,7 @@ Fitting ICS data by a RICS model
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.281 seconds)
+   **Total running time of the script:** ( 0 minutes  0.309 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_ics_fit.py:
