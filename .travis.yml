@@ -64,21 +64,20 @@ script:
 
 after_success:
   - OS=$TRAVIS_OS_NAME-64
-  - pip install codacy-coverage
-  - coverage xml
-  - python-codacy-coverage -r coverage.xml
   - conda activate base
   - anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l $CONDA_LABEL bld-dir/$OS/*.tar.bz2 --force
   # build the documentation only on linux
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
+      # Code coverage
+      pip install codacy-coverage
+      coverage xml
+      python-codacy-coverage -r coverage.xml
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
-      # Build Sphinx docs
-      make clean
-      make html
+      make clean; make html
       touch _build/html/.nojekyll
       cd ..
       conda deactivate
