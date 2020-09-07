@@ -51,22 +51,22 @@ optimized for general use cases.
 
     Testing linear histograms
     -------------------------
-    time(numpy) = 0.1588731373333303
-    time(tttrlib) = 0.00454259233333687
-    tttrlib speedup: 34.97
-    time(numpy) = 0.15750529366664523
-    time(tttrlib) = 0.05962484733333895
-    tttrlib speedup: 2.64
-    time(numpy) = 0.1429961620000313
-    time(tttrlib) = 0.2247369856666713
-    tttrlib speedup: 0.64
+    time(numpy) = 0.15983234166666685
+    time(tttrlib) = 0.0045334016666629395
+    tttrlib speedup: 35.26
+    time(numpy) = 0.15748618466663325
+    time(tttrlib) = 0.06050049166666819
+    tttrlib speedup: 2.60
+    time(numpy) = 0.1430703949999952
+    time(tttrlib) = 0.22568451666666078
+    tttrlib speedup: 0.63
 
 
     Testing 2D Histogram linear spacing
     ---------------------------------------
-    time(numpy) (ms) = 0.6158758065000143
-    time(tttrlib) (ms) = 0.12072440550002739
-    tttrlib speedup: 5.10
+    time(numpy) (ms) = 0.6103973610000253
+    time(tttrlib) (ms) = 0.11943707349996657
+    tttrlib speedup: 5.11
 
 
 

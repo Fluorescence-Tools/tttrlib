@@ -136,21 +136,20 @@
 </div>
 <div class="sphx-glr-example-title section" id="tttr-reading-benchmark">
 <span id="sphx-glr-auto-examples-tttr-plot-tttr-read-benchmark-py"></span><h1>TTTR reading benchmark<a class="headerlink" href="#tttr-reading-benchmark" title="Permalink to this headline">¶</a></h1>
-<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py&quot;</span>, line <span class="m">84</span>, in <span class="n">&lt;module&gt;</span>
-    <span class="n">setup</span><span class="o">=</span><span class="s2">&quot;import phconvert&quot;</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py&quot;</span>, line <span class="m">232</span>, in <span class="n">timeit</span>
-    <span class="k">return</span> <span class="n">Timer</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">setup</span><span class="p">,</span> <span class="n">timer</span><span class="p">,</span> <span class="nb">globals</span><span class="p">)</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py&quot;</span>, line <span class="m">176</span>, in <span class="n">timeit</span>
-    <span class="n">timing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">)</span>
-  File <span class="nb">&quot;&lt;timeit-src&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">inner</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/phconvert/pqreader.py&quot;</span>, line <span class="m">123</span>, in <span class="n">load_ht3</span>
-    <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%y %H:%M:%S&quot;</span><span class="p">)</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py&quot;</span>, line <span class="m">571</span>, in <span class="n">_strptime_time</span>
-    <span class="n">tt</span> <span class="o">=</span> <span class="n">_strptime</span><span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="nb">format</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py&quot;</span>, line <span class="m">359</span>, in <span class="n">_strptime</span>
-    <span class="p">(</span><span class="n">data_string</span><span class="p">,</span> <span class="nb">format</span><span class="p">))</span>
-<span class="gr">ValueError</span>: <span class="n">time data &#39;10-04-14 08:58:56&#39; does not match format &#39;%d/%m/%y %H:%M:%S&#39;</span>
+<img alt="Time to read file" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_tttr_read_benchmark_001.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>time(phconvert.numba) = 0.5206920440000431 s
+time(tttrlib) = 0.0033451450000256955 s
+tttrlib speedup: 155.66
+time(phconvert.numba) = 0.002776908999976513 s
+time(tttrlib) = 0.0032282029999350925 s
+tttrlib speedup: 0.86
+time(phconvert.numba) = 0.15476385399995252 s
+time(tttrlib) = 0.20317907000003288 s
+tttrlib speedup: 0.76
+time(phconvert.numba) = 0.08262702699994406 s
+time(tttrlib) = 0.05385473900003035 s
+tttrlib speedup: 1.53
 </pre></div>
 </div>
 <div class="line-block">
@@ -199,7 +198,6 @@
         <span class="s2">&quot;phconvert&quot;</span><span class="p">:</span> <span class="s2">&quot;bhreader.load_spc&quot;</span><span class="p">,</span>
         <span class="s2">&quot;phconvert_args&quot;</span><span class="p">:</span> <span class="s2">&quot;spc_model=&#39;SPC-630&#39;&quot;</span>
     <span class="p">},</span>
-    <span class="c1"># phconvert does not open the HT3 file</span>
     <span class="p">{</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ht3&quot;</span><span class="p">,</span>
         <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s1">&#39;../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3&#39;</span><span class="p">,</span>
@@ -303,7 +301,7 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.812 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  1.263 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-read-benchmark-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/05e48e93e6ad3852d989cbb97450c50b/plot_tttr_read_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_read_benchmark.py</span></code></a></p>

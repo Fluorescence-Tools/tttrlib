@@ -47,7 +47,6 @@ benchmark_files = [
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-630'"
     },
-    # phconvert does not open the HT3 file
     {
         "name": "ht3",
         "file": '../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3',

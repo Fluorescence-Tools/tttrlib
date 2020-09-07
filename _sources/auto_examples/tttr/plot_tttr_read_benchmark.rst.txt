@@ -14,26 +14,30 @@ TTTR reading benchmark
 ======================
 
 
+
+.. image:: /auto_examples/tttr/images/sphx_glr_plot_tttr_read_benchmark_001.png
+    :alt: Time to read file
+    :class: sphx-glr-single-img
+
+
 .. rst-class:: sphx-glr-script-out
 
+ Out:
 
-.. code-block:: pytb
+ .. code-block:: none
 
-    Traceback (most recent call last):
-      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py", line 84, in <module>
-        setup="import phconvert"
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py", line 232, in timeit
-        return Timer(stmt, setup, timer, globals).timeit(number)
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/timeit.py", line 176, in timeit
-        timing = self.inner(it, self.timer)
-      File "<timeit-src>", line 6, in inner
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/phconvert/pqreader.py", line 123, in load_ht3
-        "%d/%m/%y %H:%M:%S")
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py", line 571, in _strptime_time
-        tt = _strptime(data_string, format)[0]
-      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/_strptime.py", line 359, in _strptime
-        (data_string, format))
-    ValueError: time data '10-04-14 08:58:56' does not match format '%d/%m/%y %H:%M:%S'
+    time(phconvert.numba) = 0.5206920440000431 s
+    time(tttrlib) = 0.0033451450000256955 s
+    tttrlib speedup: 155.66
+    time(phconvert.numba) = 0.002776908999976513 s
+    time(tttrlib) = 0.0032282029999350925 s
+    tttrlib speedup: 0.86
+    time(phconvert.numba) = 0.15476385399995252 s
+    time(tttrlib) = 0.20317907000003288 s
+    tttrlib speedup: 0.76
+    time(phconvert.numba) = 0.08262702699994406 s
+    time(tttrlib) = 0.05385473900003035 s
+    tttrlib speedup: 1.53
 
 
 
@@ -88,7 +92,6 @@ TTTR reading benchmark
             "phconvert": "bhreader.load_spc",
             "phconvert_args": "spc_model='SPC-630'"
         },
-        # phconvert does not open the HT3 file
         {
             "name": "ht3",
             "file": '../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3',
@@ -195,7 +198,7 @@ TTTR reading benchmark
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.812 seconds)
+   **Total running time of the script:** ( 0 minutes  1.263 seconds)
 
 
 .. _sphx_glr_download_auto_examples_tttr_plot_tttr_read_benchmark.py:
