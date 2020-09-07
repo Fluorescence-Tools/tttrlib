@@ -11,16 +11,6 @@ read and process time-tagged-time resolved (TTTR) data acquired by
 PicoQuant (PQ) and Becker & Hickl measurement devices/cards or TTTR 
 files in the open Photon-HDF format.
 
-8-<  -----  >-8
-One challenge concerning other libraries is their generality, or the ability of 
-existing solutions or software in one lab to be applied to the problems of another 
-labs. Because different groups use highly-tuned combinations of these standard 
-techniques to solve their imaging and single-molecule problems for specific 
-experiments and instrumentation, there is a barrier to sharing work and ideas in 
-this space.
---- 
-8-<  -----  >-8
-
 The library tttrlib facilitates the work with files containing 
 time-tagged time resolved photon streams by providing 
 a vendor independent C++ application programming interface (API) 
