@@ -115,7 +115,7 @@ Mean lifetime images
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.386 seconds)
+   **Total running time of the script:** ( 0 minutes  1.381 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_mean_tau.py:
