@@ -50,7 +50,7 @@ Marker in imaging
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.523 seconds)
+   **Total running time of the script:** ( 0 minutes  0.528 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_special_markers.py:
