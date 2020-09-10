@@ -16,14 +16,22 @@ Phasor analysis of images
 For phasor image analysis the library fit2x provides functions
 
 
-
-.. image:: /auto_examples/imaging/images/sphx_glr_plot_imaging_phasor_001.png
-    :alt: No IRF correction, IRF correction
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_phasor.py", line 38, in <module>
+        frequency=frequency_mt
+    TypeError: get_phasor_image() missing 5 required positional arguments: 'output', 'dim1', 'dim2', 'dim3', and 'dim4'
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -126,7 +134,7 @@ For phasor image analysis the library fit2x provides functions
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.975 seconds)
+   **Total running time of the script:** ( 0 minutes  0.847 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_phasor.py:
