@@ -164,14 +164,12 @@ computed using the function <code class="docutils literal notranslate"><span cla
 provided. If the second option is used, the macro time calibration of the header
 information that was processes from the tttr file when the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object was
 created is already considered. The time window length are in units of milli seconds.</p>
-<img alt="plot single molecule mcs" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_single_molecule_mcs_001.png" />
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:64: RuntimeWarning: divide by zero encountered in true_divide
-  SgSr_ratio = (green_trace[:m] / red_trace[:m])
-/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:64: RuntimeWarning: invalid value encountered in true_divide
-  SgSr_ratio = (green_trace[:m] / red_trace[:m])
-/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:65: RuntimeWarning: invalid value encountered in multiply
-  SgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) &lt; 2)] *= 0
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py&quot;</span>, line <span class="m">44</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">tttrlib</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">_tttrlib</span>
+<span class="gr">ImportError</span>: <span class="n">libtttrlib.so: cannot open shared object file: No such file or directory</span>
 </pre></div>
 </div>
 <div class="line-block">
@@ -216,7 +214,7 @@ created is already considered. The time window length are in units of milli seco
 <span class="c1">#</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.367 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.094 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-mcs-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/2a96f9904cf6d2deda5c790e1f03efee/plot_single_molecule_mcs.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_single_molecule_mcs.py</span></code></a></p>

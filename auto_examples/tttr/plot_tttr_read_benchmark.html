@@ -136,20 +136,12 @@
 </div>
 <div class="sphx-glr-example-title section" id="tttr-reading-benchmark">
 <span id="sphx-glr-auto-examples-tttr-plot-tttr-read-benchmark-py"></span><h1>TTTR reading benchmark<a class="headerlink" href="#tttr-reading-benchmark" title="Permalink to this headline">¶</a></h1>
-<img alt="Time to read file" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_tttr_read_benchmark_001.png" />
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>time(phconvert.numba) = 0.5234369439999682 s
-time(tttrlib) = 0.003370971000094869 s
-tttrlib speedup: 155.28
-time(phconvert.numba) = 0.0030073469999933877 s
-time(tttrlib) = 0.0034599849999494836 s
-tttrlib speedup: 0.87
-time(phconvert.numba) = 0.16137915500007693 s
-time(tttrlib) = 0.20464628400009133 s
-tttrlib speedup: 0.79
-time(phconvert.numba) = 0.08667923200005134 s
-time(tttrlib) = 0.05481832099997064 s
-tttrlib speedup: 1.58
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/tttr/plot_tttr_read_benchmark.py&quot;</span>, line <span class="m">18</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">tttrlib</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">_tttrlib</span>
+<span class="gr">ImportError</span>: <span class="n">libtttrlib.so: cannot open shared object file: No such file or directory</span>
 </pre></div>
 </div>
 <div class="line-block">
@@ -301,7 +293,7 @@ tttrlib speedup: 1.58
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  1.307 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.007 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-read-benchmark-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/05e48e93e6ad3852d989cbb97450c50b/plot_tttr_read_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_read_benchmark.py</span></code></a></p>

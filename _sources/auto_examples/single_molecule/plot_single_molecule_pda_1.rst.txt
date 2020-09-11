@@ -488,14 +488,24 @@ function is more appropriate. Moreover, for data with considerable background P(
 needs to be deconvolved from the experimental P(S) :cite:`kalinin2007`.
 
 
-
-.. image:: /auto_examples/single_molecule/images/sphx_glr_plot_single_molecule_pda_1_001.png
-    :alt: plot single molecule pda 1
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_pda_1.py", line 486, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -612,7 +622,7 @@ needs to be deconvolved from the experimental P(S) :cite:`kalinin2007`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.441 seconds)
+   **Total running time of the script:** ( 0 minutes  0.006 seconds)
 
 
 .. _sphx_glr_download_auto_examples_single_molecule_plot_single_molecule_pda_1.py:

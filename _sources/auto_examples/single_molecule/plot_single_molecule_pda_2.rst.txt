@@ -11,21 +11,17 @@
 Single molecule photon distribution analysis - 2
 
 
-
-.. image:: /auto_examples/single_molecule/images/sphx_glr_plot_single_molecule_pda_2_001.png
-    :alt: Experimental S1S2, 1D Histograms, Signal count distribution, P(S), Model S1S2, Fluorescence decays, f(t)
-    :class: sphx-glr-single-img
-
-
 .. rst-class:: sphx-glr-script-out
 
- Out:
 
- .. code-block:: none
+.. code-block:: pytb
 
-    /home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_pda_2.py:125: RuntimeWarning: invalid value encountered in true_divide
-      fit_wres = (y_data - y_model_fit) / np.sqrt(y_data)
-    No handles with labels found to put in legend.
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_pda_2.py", line 7, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
 
@@ -227,7 +223,7 @@ Single molecule photon distribution analysis - 2
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.055 seconds)
+   **Total running time of the script:** ( 0 minutes  0.008 seconds)
 
 
 .. _sphx_glr_download_auto_examples_single_molecule_plot_single_molecule_pda_2.py:

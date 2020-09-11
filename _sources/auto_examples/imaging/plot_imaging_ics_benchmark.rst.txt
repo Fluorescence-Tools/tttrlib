@@ -14,14 +14,24 @@ Image correlation spectroscopy - benchmark
 ==========================================
 
 
-
-.. image:: /auto_examples/imaging/images/sphx_glr_plot_imaging_ics_benchmark_001.png
-    :alt: Time to compute ICS
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_ics_benchmark.py", line 7, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -145,7 +155,7 @@ Image correlation spectroscopy - benchmark
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  41.576 seconds)
+   **Total running time of the script:** ( 0 minutes  0.007 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_ics_benchmark.py:

@@ -14,20 +14,17 @@ Mean lifetime images
 ====================
 
 
-
-.. image:: /auto_examples/imaging/images/sphx_glr_plot_imaging_mean_tau_001.png
-    :alt: Green intensity, Red intensity, Mean green fl. lifetime, Pixel histogram
-    :class: sphx-glr-single-img
-
-
 .. rst-class:: sphx-glr-script-out
 
- Out:
 
- .. code-block:: none
+.. code-block:: pytb
 
-    /home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_mean_tau.py:59: RuntimeWarning: divide by zero encountered in log
-      lg_sg_sr = np.log(masked_green / masked_red)
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_mean_tau.py", line 7, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
 
@@ -115,7 +112,7 @@ Mean lifetime images
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.411 seconds)
+   **Total running time of the script:** ( 0 minutes  0.006 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_mean_tau.py:

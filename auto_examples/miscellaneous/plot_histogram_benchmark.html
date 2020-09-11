@@ -154,26 +154,12 @@ For other purposes than the applications tested for in <code class="docutils lit
 <a class="reference external" href="https://github.com/boostorg/histogram">Boost histogram</a> are a better
 choice.</p>
 </div>
-<img alt="Histogram performance" class="sphx-glr-single-img" src="../../_images/sphx_glr_plot_histogram_benchmark_001.png" />
-<p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Testing linear histograms
--------------------------
-time(numpy) = 0.1640345299999808
-time(tttrlib) = 0.004787346333311386
-tttrlib speedup: 34.26
-time(numpy) = 0.1681507530000014
-time(tttrlib) = 0.0630139263333452
-tttrlib speedup: 2.67
-time(numpy) = 0.14784021466668187
-time(tttrlib) = 0.22922264133330827
-tttrlib speedup: 0.64
-
-
-Testing 2D Histogram linear spacing
----------------------------------------
-time(numpy) (ms) = 0.6521674150000081
-time(tttrlib) (ms) = 0.12147747399995978
-tttrlib speedup: 5.37
+<div class="sphx-glr-script-out highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;/home/travis/build/Fluorescence-Tools/tttrlib/examples/miscellaneous/plot_histogram_benchmark.py&quot;</span>, line <span class="m">31</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">tttrlib</span>
+  File <span class="nb">&quot;/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py&quot;</span>, line <span class="m">9</span>, in <span class="n">&lt;module&gt;</span>
+    <span class="kn">import</span> <span class="nn">_tttrlib</span>
+<span class="gr">ImportError</span>: <span class="n">libtttrlib.so: cannot open shared object file: No such file or directory</span>
 </pre></div>
 </div>
 <div class="line-block">
@@ -317,7 +303,7 @@ tttrlib speedup: 5.37
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  4.667 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.008 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-miscellaneous-plot-histogram-benchmark-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/28ed7127172fa6f3fb6732a617efb223/plot_histogram_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_histogram_benchmark.py</span></code></a></p>

@@ -23,14 +23,24 @@ discriminates outlines. For details on how such a filter can be determined
 see :cite:`Ries2010`.
 
 
-
-.. image:: /auto_examples/correlation/images/sphx_glr_plot_sliced_correlation_001.png
-    :alt: plot sliced correlation
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/correlation/plot_sliced_correlation.py", line 18, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -95,7 +105,7 @@ see :cite:`Ries2010`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.353 seconds)
+   **Total running time of the script:** ( 0 minutes  0.006 seconds)
 
 
 .. _sphx_glr_download_auto_examples_correlation_plot_sliced_correlation.py:

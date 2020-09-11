@@ -21,14 +21,24 @@ of the data contained in the file. The example creates
 3. an fluorescence intensity decay of the micro times
 
 
-
-.. image:: /auto_examples/imaging/images/sphx_glr_plot_imaging_representations_001.png
-    :alt: Intensity of integrated frames, Intensity of a single frame, Mean average time of single frame / ns
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/imaging/plot_imaging_representations.py", line 15, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -90,7 +100,7 @@ of the data contained in the file. The example creates
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.173 seconds)
+   **Total running time of the script:** ( 0 minutes  0.006 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imaging_plot_imaging_representations.py:

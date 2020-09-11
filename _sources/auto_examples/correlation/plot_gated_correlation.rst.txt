@@ -18,14 +18,24 @@ the prompt and the delayed excitation in a pulsed interleaved excitation
 experiment by changing the selection on the weights.
 
 
-
-.. image:: /auto_examples/correlation/images/sphx_glr_plot_gated_correlation_001.png
-    :alt: plot gated correlation
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/correlation/plot_gated_correlation.py", line 12, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -101,7 +111,7 @@ experiment by changing the selection on the weights.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.376 seconds)
+   **Total running time of the script:** ( 0 minutes  0.011 seconds)
 
 
 .. _sphx_glr_download_auto_examples_correlation_plot_gated_correlation.py:

@@ -35,38 +35,17 @@ optimized for general use cases.
     choice.
 
 
-
-.. image:: /auto_examples/miscellaneous/images/sphx_glr_plot_histogram_benchmark_001.png
-    :alt: Histogram performance
-    :class: sphx-glr-single-img
-
-
 .. rst-class:: sphx-glr-script-out
 
- Out:
 
- .. code-block:: none
+.. code-block:: pytb
 
-
-
-    Testing linear histograms
-    -------------------------
-    time(numpy) = 0.1640345299999808
-    time(tttrlib) = 0.004787346333311386
-    tttrlib speedup: 34.26
-    time(numpy) = 0.1681507530000014
-    time(tttrlib) = 0.0630139263333452
-    tttrlib speedup: 2.67
-    time(numpy) = 0.14784021466668187
-    time(tttrlib) = 0.22922264133330827
-    tttrlib speedup: 0.64
-
-
-    Testing 2D Histogram linear spacing
-    ---------------------------------------
-    time(numpy) (ms) = 0.6521674150000081
-    time(tttrlib) (ms) = 0.12147747399995978
-    tttrlib speedup: 5.37
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/miscellaneous/plot_histogram_benchmark.py", line 31, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
 
@@ -219,7 +198,7 @@ optimized for general use cases.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.667 seconds)
+   **Total running time of the script:** ( 0 minutes  0.008 seconds)
 
 
 .. _sphx_glr_download_auto_examples_miscellaneous_plot_histogram_benchmark.py:

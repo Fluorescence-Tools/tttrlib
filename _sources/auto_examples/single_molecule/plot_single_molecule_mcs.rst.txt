@@ -47,24 +47,17 @@ information that was processes from the tttr file when the ``TTTR`` object was
 created is already considered. The time window length are in units of milli seconds.
 
 
-
-.. image:: /auto_examples/single_molecule/images/sphx_glr_plot_single_molecule_mcs_001.png
-    :alt: plot single molecule mcs
-    :class: sphx-glr-single-img
-
-
 .. rst-class:: sphx-glr-script-out
 
- Out:
 
- .. code-block:: none
+.. code-block:: pytb
 
-    /home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:64: RuntimeWarning: divide by zero encountered in true_divide
-      SgSr_ratio = (green_trace[:m] / red_trace[:m])
-    /home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:64: RuntimeWarning: invalid value encountered in true_divide
-      SgSr_ratio = (green_trace[:m] / red_trace[:m])
-    /home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py:65: RuntimeWarning: invalid value encountered in multiply
-      SgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) < 2)] *= 0
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_mcs.py", line 44, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
 
@@ -117,7 +110,7 @@ created is already considered. The time window length are in units of milli seco
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.367 seconds)
+   **Total running time of the script:** ( 0 minutes  0.094 seconds)
 
 
 .. _sphx_glr_download_auto_examples_single_molecule_plot_single_molecule_mcs.py:

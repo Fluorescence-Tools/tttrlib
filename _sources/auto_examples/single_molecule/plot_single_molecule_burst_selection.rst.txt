@@ -49,14 +49,24 @@ Above, for a donor and acceptor detection channel a histogram trace for is shown
 in green and red. In blue the range based selection is shown.
 
 
-
-.. image:: /auto_examples/single_molecule/images/sphx_glr_plot_single_molecule_burst_selection_001.png
-    :alt: plot single molecule burst selection
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-script-out
 
 
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/travis/build/Fluorescence-Tools/tttrlib/examples/single_molecule/plot_single_molecule_burst_selection.py", line 44, in <module>
+        import tttrlib
+      File "/home/travis/miniconda/envs/docs_env/lib/python3.7/site-packages/tttrlib.py", line 9, in <module>
+        import _tttrlib
+    ImportError: libtttrlib.so: cannot open shared object file: No such file or directory
 
 
+
+
+
+
+|
 
 
 .. code-block:: default
@@ -103,7 +113,7 @@ in green and red. In blue the range based selection is shown.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.305 seconds)
+   **Total running time of the script:** ( 0 minutes  0.014 seconds)
 
 
 .. _sphx_glr_download_auto_examples_single_molecule_plot_single_molecule_burst_selection.py:
