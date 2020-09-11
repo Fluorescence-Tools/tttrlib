@@ -1,8 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+ENABLE_LANGUAGE(CXX)
+SET(CMAKE_CXX_STANDARD 14)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
-ENABLE_LANGUAGE(CXX)
-SET(CMAKE_CXX_STANDARD 11)
 
 ################################################################################
 ###### OPTIONS
@@ -52,6 +52,14 @@ endif()
 ###### Compiler flags
 ################################################################################
 
+## Enable Compiler warnings
+#############################
+if(MSVC)
+    ADD_COMPILE_OPTIONS(/W4)
+else()
+    ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
+endif()
+
 # Debug build detection
 ###########################
 IF (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -65,7 +73,6 @@ ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
 # Windows
 ##############
 if (MSVC)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
     ADD_DEFINITIONS(-DMS_WIN64)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 endif (MSVC)
@@ -110,13 +117,17 @@ INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 #    message(WARNING "MKL libs not found")
 #endif ()
 
-
 ## Boost
 ###########################
 if (WIN32)
-    # use static Boost in Windows
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC ON)
+    IF(DEFINED ENV{CONDA_PREFIX})
+        # Conda uses static Boost linking
+        set(Boost_USE_STATIC_LIBS ON)
+        set(Boost_USE_STATIC ON)
+    ELSE()
+        set(Boost_USE_STATIC_LIBS OFF)
+        set(Boost_USE_STATIC OFF)
+    ENDIF()
     set(Boost_USE_MULTITHREAD)
 endif (WIN32)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
@@ -170,9 +181,7 @@ ENDIF ()
 ################################################################################
 ###### Targets
 ################################################################################
-FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
-        )
+FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -214,10 +223,3 @@ IF(INSTALL)
             )
 ENDIF(INSTALL)
 
-## Compiler warnings
-########################
-if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
-else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
-endif()

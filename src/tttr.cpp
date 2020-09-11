@@ -607,7 +607,7 @@ void ranges_by_time_window(
         tw_begin = tw_end;
     }
     *output = (int *) malloc(ss.size() * sizeof(int));
-    for(int i = 0; i<ss.size(); i++) (*output)[i] = ss[i];
+    for(size_t i = 0; i<ss.size(); i++) (*output)[i] = ss[i];
     int n_out = ss.size();
     *n_output = n_out;
 }
@@ -846,7 +846,7 @@ void TTTR::compute_microtime_histogram(
         std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
 #endif
         auto bin_edges = std::vector<unsigned short>(n_channels);
-        for (int i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
+        for (size_t i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
         auto hist = (double *) malloc(n_channels * sizeof(double));
         for(int i=0; i<n_channels;i++) hist[i] = 0.0;
         histogram1D<unsigned short>(

@@ -121,7 +121,7 @@ LICENSE = 'Mozilla Public License 2.0 (MPL 2.0)'
 
 
 setup(
-    name=__name__,
+    name=NAME,
     version=VERSION,
     license=LICENSE,
     author='Thomas-Otavio Peulen',
