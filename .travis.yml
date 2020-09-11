@@ -35,9 +35,6 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   # unlink homebrew's boost to interfere with conda boost
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; fi
-  # Add conda channels
-  - conda config --add channels tpeulen/label/$CONDA_LABEL
-  - conda update -q conda
   # Install conda packages necessary in the host to build the recipe
   - source activate base
   - conda install python=$BUILD_TARGET conda-build git
