@@ -23,17 +23,21 @@ requirements:
     - {{ pin_compatible('numpy') }}
     - cmake
     - swig 3.0.12.*
-    - boost 1.67.0.*
-    - fftw
-    - hdf5 1.10.2.*
+    - boost 1.67.0.* # [py < 38]
+    - boost 1.71.0.* # [py >= 38]
+    - fftw 3.3.8.*
+    - hdf5 1.10.2.* # [py < 38 and not linux64]
+    - hdf5 1.10.4.* # [py >= 38 or linux64]
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
     - {{ pin_compatible('numpy') }}
-    - hdf5 1.10.2.*
-    - boost 1.67.0.* [win]
-    - libboost 1.67.0.* [not win]
-    - fftw
+    - hdf5 1.10.2.* # [py < 38 and not linux64]
+    - hdf5 1.10.4.* # [py >= 38 or linux64]
+    - boost 1.67.0.* # [win]
+    - libboost 1.67.0.* # [not win and py < 38]
+    - libboost 1.71.0.* # [not win and py >= 38]
+    - fftw 3.3.8.*
     - llvm-openmp # [osx]
 
 test:
@@ -43,10 +47,10 @@ test:
 about:
   home: https://github.com/fluorescence-tools/tttrlib
   license: {{ data.get('license') }}
-  summary: Python bindings for tttrlib
+  summary: |
+    {{ data.get('description') }}
   description: |
-    tttrlib C++ library including Python wrapper to read time-tagged
-    time resolved data files.
+    {{ data.get('long_description') }}
   doc_url: https://fluorescence-tools.github.io/tttrlib/
 
 extra:

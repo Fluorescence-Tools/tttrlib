@@ -20,11 +20,6 @@ def read_version(
     return version.replace('"', '')
 
 
-__name__ = "tttrlib"
-__version__ = read_version()
-__license__ = 'Mozilla Public License 2.0 (MPL 2.0)'
-
-
 class CMakeExtension(Extension):
 
     def __init__(self, name, sourcedir=''):
@@ -94,7 +89,7 @@ class CMakeBuild(build_ext):
                 env=env
             )
             subprocess.check_call(
-                ["python", "doxy2swig.py", "../docs/_build/xml/index.xml", "../ext/python/documentation.i"],
+                ["python", "doxy2swig.py", "./docs/_build/xml/index.xml", "./ext/python/documentation.i"],
                 cwd=str(working_directory / "utility"),
                 env=env
             )
@@ -117,10 +112,18 @@ console_scripts = {
 #    "csc_tttr_decay_histogram": "chisurf.cmd_tools.tttr_decay_histogram:main",
 }
 
+NAME = "tttrlib"
+DESCRIPTION = "tttrlib process TTTR data"
+LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to \
+read and process time-tagged time resolved data files."""
+VERSION = read_version()
+LICENSE = 'Mozilla Public License 2.0 (MPL 2.0)'
+
+
 setup(
     name=__name__,
-    version=__version__,
-    license=__license__,
+    version=VERSION,
+    license=LICENSE,
     author='Thomas-Otavio Peulen',
     author_email='thomas.otavio.peulen@gmail.com',
     ext_modules=[
@@ -129,6 +132,8 @@ setup(
     cmdclass={
         'build_ext': CMakeBuild
     },
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
     install_requires=[
         'numpy'
     ],

@@ -17,37 +17,33 @@ matrix:
             - doxygen
           update: true
 
-# The Sphinx C++ docs are build with doxygen and breathe
-addons:
-  apt:
-    packages:
-      - doxygen
-  homebrew:
-    packages:
-      - doxygen
-    update: true
-
 env:
   # Build and test package on all supported python versions
   - BUILD_TARGET=3.7 MINICONDA_VERSION=latest
 
 before_install:
+  # export BRANCH environment variable to have unified names across different CI services
+  - export BRANCH=$TRAVIS_BRANCH
+  # Used to label the uploads
+  - export CONDA_LABEL=$(if [ "TRAVIS_PULL_REQUEST_BRANCH" == "master" ]; then echo main; else echo nightly; fi)
+  # Download and install miniconda
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then MINICONDA_OS=Linux; else MINICONDA_OS=MacOSX; fi
-  # unlink homebrew's boost so that is does not interfere with conda's boost in the build process
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; brew unlink hdf5; fi
   - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
+  # setup conda to always accept commands
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-  # scipy is used in some tests
-  - source activate base
-  - conda install python=$BUILD_TARGET conda-build anaconda-client jinja2 git nose coverage anaconda-client scipy
-  - git fetch --unshallow --tags --force
-  - export CONDA_LABEL=$(if [ "TRAVIS_PULL_REQUEST_BRANCH" == "master" ]; then echo main; else echo nightly; fi)
+  # unlink homebrew's boost to interfere with conda boost
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew unlink boost; fi
+  # Add conda channels
   - conda config --add channels tpeulen/label/$CONDA_LABEL
+  - conda update -q conda
+  # Install conda packages necessary in the host to build the recipe
+  - source activate base
+  - conda install python=$BUILD_TARGET conda-build git
+  # Make sure that the thirdparty gits are pulled
+  - git submodule update --init --force
+  # Build the recipe and add the build path to the channels
   - conda build conda-recipe --output-folder bld-dir
   - conda config --add channels "file://`pwd`/bld-dir"
 
@@ -55,25 +51,37 @@ install:
   - conda install tttrlib -c "file://`pwd`/bld-dir"
 
 script:
+  # Install packages necessary to test the recipe
+  - conda install nose coverage scipy
   # create a link from nosetests in test to make sure that the correct nosetests is used
   - ln -sf $(which nosetests) $(pwd)/test/
   - cd $(pwd)/test/
-  - echo $PWD
-  - nosetests --nocapture --with-coverage test_*.py
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]
+    then
+      nosetests --nocapture --with-coverage test_*.py
+      # Install codacy-coverage to upload the coverage results to codacy
+      pip install codacy-coverage
+      # Process and upload the coverage results
+      coverage xml && python-codacy-coverage -r coverage.xml
+    else
+      nosetests --nocapture test_*.py
+    fi
   - cd ..
 
 after_success:
   - OS=$TRAVIS_OS_NAME-64
   - conda activate base
-  - anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l $CONDA_LABEL bld-dir/$OS/*.tar.bz2 --force
-  # build the documentation only on linux
+  # Install conda client to upload the package
+  - conda install anaconda-client
+  # Define labels for the conda package upload
+  - if [[ "$BRANCH" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
+  # Upload the conda package
+  - anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l $ANACONDA_LABEL bld-dir/$OS/*.tar.bz2 --force
+  # Build the documentation
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
-      # Code coverage
-      pip install codacy-coverage
-      coverage xml
-      python-codacy-coverage -r coverage.xml
       cd docs
       conda env create -f environment.yml
       conda activate docs_env
