@@ -25,9 +25,8 @@ requirements:
     - swig 3.0.12.*
     - boost 1.67.0.* # [py < 38]
     - boost 1.71.0.* # [py >= 38]
-    - fftw 3.3.8.*
-    - hdf5 1.10.2.* # [py < 38 and not linux64]
-    - hdf5 1.10.4.* # [py >= 38 or linux64]
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
