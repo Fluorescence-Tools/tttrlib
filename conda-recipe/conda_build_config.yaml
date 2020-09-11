@@ -1,3 +1,6 @@
+hdf5:
+  - 1.10.2
+  - 1.10.4
 python:
   - 3.7
 c_compiler:
