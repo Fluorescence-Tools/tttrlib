@@ -9,7 +9,7 @@ source:
 
 build:
     number: 0
-    string: py{{ CONDA_PY }}np{{ CONDA_NPY }}boost{{ boost }}hdf5{{ hdf5 }}fftw{{ fftw }}
+    string: py{{ CONDA_PY }}np{{ CONDA_NPY }}boost{{ boost }}hdf5{{ hdf5 }}
 
 requirements:
   host:
