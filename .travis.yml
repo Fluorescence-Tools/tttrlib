@@ -79,6 +79,7 @@ after_success:
   - |
     if [ "TRAVIS_PULL_REQUEST_BRANCH" == "master" ];
       if [[ "$TRAVIS_OS_NAME" == "linux" ]]
+      export DEPLOY_DOCS="true"
       then
         cd docs
         conda env create -f environment.yml
@@ -100,7 +101,7 @@ deploy:
   keep-history: true
   on:
     branch: development
-    condition: $TRAVIS_OS_NAME = linux
+    condition: $DEPLOY_DOCS = true
   local_dir: docs/_build/html/
 
 notifications:
