@@ -11,6 +11,7 @@ dependencies:
     # the versions are all pinned to reduce the memory load by conda
     # without that, the docs would not build on read the docs
     - pillow
+    - mkl
     - sphinx-gallery
     - sphinx=3.1.1
     - nbsphinx=0.7.1
@@ -29,10 +30,6 @@ dependencies:
     - libedit=3.1.20181209
     - libffi=3.2.1
     - libiconv=1.15
-    - mkl=2019.4
-    - mkl-service=2.3.0
-    - mkl_fft=1.0.15
-    - mkl_random=1.1.0
     - ncurses=6.2
     - numpy=1.18.1
     - numpy-base=1.18.1

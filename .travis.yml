@@ -77,16 +77,19 @@ after_success:
   - anaconda -t $ANACONDA_API_TOKEN upload -u $CONDA_USER -l $ANACONDA_LABEL bld-dir/$OS/*.tar.bz2 --force
   # Build the documentation
   - |
-    if [[ "$TRAVIS_OS_NAME" == "linux" ]]
-    then
-      cd docs
-      conda env create -f environment.yml
-      conda activate docs_env
-      make clean; make html
-      touch _build/html/.nojekyll
-      cd ..
-      conda deactivate
+    if [ "TRAVIS_PULL_REQUEST_BRANCH" == "master" ];
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]
+      then
+        cd docs
+        conda env create -f environment.yml
+        conda activate docs_env
+        make clean; make html
+        touch _build/html/.nojekyll
+        cd ..
+        conda deactivate
+      fi
     fi
+
 
 # Tell Travis CI to copy the documentation to the gh-pages branch of
 # your GitHub repository.
