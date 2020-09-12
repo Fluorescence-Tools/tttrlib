@@ -24,7 +24,7 @@
 
 
 
-Header::~Header(){};
+Header::~Header(){}
 
 Header::Header() :
         micro_time_resolution(0),
