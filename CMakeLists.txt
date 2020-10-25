@@ -20,9 +20,11 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 ###########################
 IF(DEFINED ENV{CONDA_PREFIX})
     MESSAGE(STATUS "CONDA env seen: --[$ENV{CONDA_PREFIX}]--")
+    SET(CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
     SET(ENV{PATH} "$ENV{CONDA_PREFIX}/bin;$ENV{PATH}")
+    SET(CMAKE_MODULE_PATH "$ENV{CONDA_PREFIX}/include/cmake")
     # Define python_command that is used to call python and locate the python libraries
-    if (MSVC)
+    IF(MSVC)
         INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/Library/include)
         LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Library/lib)
         SET(python_command $ENV{CONDA_PREFIX}/python.exe)
@@ -35,6 +37,7 @@ ELSE()
     MESSAGE(STATUS "No conda environment defined")
 ENDIF()
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 
 ## Include and lib dir
 ###########################
@@ -54,11 +57,11 @@ endif()
 
 ## Enable Compiler warnings
 #############################
-if(MSVC)
+IF(MSVC)
     ADD_COMPILE_OPTIONS(/W4)
-else()
+ELSE()
     ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
-endif()
+ENDIF()
 
 # Debug build detection
 ###########################
@@ -99,6 +102,32 @@ endif (APPLE)
 ###### INCLUDES AND LIBRARIES
 ################################################################################
 
+## Boost
+###########################
+IF(DEFINED ENV{CONDA_PREFIX})
+    MESSAGE("Using Conda Boost")
+    SET(BOOST_ROOT $ENV{CONDA_PREFIX})
+    SET(Boost_NO_SYSTEM_PATHS ON)
+    SET(Boost_NO_BOOST_CMAKE ON)
+    IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        SET(Boost_DEBUG ON)
+        SET(Boost_DETAILED_FAILURE_MESSAGE ON)
+    ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    IF (WIN32)
+        # Win Boost Conda uses static linking
+        SET(Boost_USE_STATIC_LIBS ON)
+        SET(Boost_USE_STATIC ON)
+    ELSE()
+        SET(Boost_USE_STATIC_LIBS OFF)
+        SET(Boost_USE_STATIC OFF)
+        SET(Boost_USE_MULTITHREAD)
+    endif (WIN32)
+ENDIF()
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_LIBRARIES(${Boost_LIBRARIES})
+MESSAGE(${Boost_INCLUDE_DIRS})
+
 ## FFTW
 ##############
 FIND_PACKAGE(FFTW REQUIRED)
@@ -117,23 +146,6 @@ INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 #    message(WARNING "MKL libs not found")
 #endif ()
 
-## Boost
-###########################
-if (WIN32)
-    IF(DEFINED ENV{CONDA_PREFIX})
-        # Conda uses static Boost linking
-        set(Boost_USE_STATIC_LIBS ON)
-        set(Boost_USE_STATIC ON)
-    ELSE()
-        set(Boost_USE_STATIC_LIBS OFF)
-        set(Boost_USE_STATIC OFF)
-    ENDIF()
-    set(Boost_USE_MULTITHREAD)
-endif (WIN32)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES})
-MESSAGE(${Boost_INCLUDE_DIRS})
 
 ## HDF5
 ###########################
