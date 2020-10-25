@@ -48,7 +48,7 @@ sp5_reading_parameter = {
 
 class TestCLSM(unittest.TestCase):
 
-    # If this is set to True as set of files are wirtten as a
+    # If this is set to True as set of files are written as a
     # reference for future tests
     make_reference = False
 
@@ -90,24 +90,52 @@ class TestCLSM(unittest.TestCase):
             ),
             True
         )
+
         # Access the pixel
-        frame_nbr = 0
-        frame = clsm_image[frame_nbr]
+        frame_nbr = 1
         line_nbr = 200
-        line = frame[line_nbr]
         pixel_nbr = 200
+        frame = clsm_image[frame_nbr]
+        line = frame[line_nbr]
         pixel = line[pixel_nbr]
+
+        self.assertEqual(pixel.tttr_indices[0], 40940)
+        self.assertEqual(clsm_image[frame_nbr][line_nbr][pixel_nbr].tttr_indices[0], 40940)
         self.assertEqual(
-            pixel.tttr_indices[0],
-            40940
-        )
-        self.assertEqual(
-            clsm_image[0][200][200].tttr_indices[0],
-            40940
-        )
-        self.assertEqual(
-            clsm_image[0][200][200].tttr_indices[0],
+            clsm_image[frame_nbr][line_nbr][pixel_nbr].tttr_indices[0],
             pixel.tttr_indices[0]
+        )
+
+    def test_get_frame_edges(self):
+        # SP8
+        filename = "./data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
+        tttr = tttrlib.TTTR(filename)
+        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP8")
+        ref = np.array([0, 33529, 66704, 100007, 133448, 166819, 200246,
+                  233764, 266964, 300495, 334002, 367244, 400663, 433842,
+                  467465, 500897, 534214, 567481, 600787, 633652, 666928,
+                  699979, 733392, 766777, 800102, 833586, 866850, 900367,
+                  934006, 967652, 1001222, 1034729, 1068121, 1101315, 1134802,
+                  1168394, 1201654, 1235243, 1268487, 1301777, 1334909, 1368325,
+                  1401602, 1435125, 1468726, 1501850, 1535224, 1568731, 1602119,
+                  1635687, 1668901, 1702301, 1735680, 1769383, 1802764, 1836438,
+                  1869872, 1903322, 1936681, 1969938, 2003582, 2036774, 2070282,
+                  2103539, 2137239, 2170864, 2204452, 2237712, 2270818, 2304016,
+                  2337694, 2370946, 2404394, 2437620, 2471361, 2504707, 2538323,
+                  2571614, 2604919, 2638158, 2671470, 2704766, 2737823, 2770808,
+                  2804447, 2837775, 2871352, 2904614, 2937702, 2971088, 3004543,
+                  3037889, 3071241, 3104687, 3104829], dtype=np.uint32)
+        self.assertEqual(np.allclose(frame_marker, ref), True)
+
+        sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
+        sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP5")
+
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=sp5_data,
+            channels=[0],
+            fill=True,
+            reading_routine='SP5'
         )
 
     def test_copy_constructor(self):
@@ -125,5 +153,5 @@ class TestCLSM(unittest.TestCase):
 
     def test_open_clsm_ptu_read_header(self):
         for ptu_file in pq_test_files:
-            data = tttrlib.TTTR(ptu_file, 'PTU')
+            data = tttrlib.TTTR(ptu_file)
             clsm = tttrlib.CLSMImage(data)
