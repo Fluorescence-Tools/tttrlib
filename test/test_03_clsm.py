@@ -1,6 +1,5 @@
 from __future__ import division
 
-
 import unittest
 import tttrlib
 import numpy as np
@@ -62,17 +61,19 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[1]
         )
-        self.assertEqual(clsm_image.n_frames, 92)
+        self.assertEqual(clsm_image.n_frames, 93)
         self.assertEqual(clsm_image.n_lines, 512)
         self.assertEqual(clsm_image.n_lines, 512)
         # The string representation of a CLSMImage returns the
         # number of frames, lines, and pixels
         self.assertEqual(
             clsm_image.__str__(),
-            "tttrlib.CLSMImage(92, 512, 512)"
+            "tttrlib.CLSMImage(93, 512, 512)"
         )
 
     def test_leica_sp5_image(self):
+        """Leice SP5 tests
+        """
         filename = sp5_filename
         reading_parameter = sp5_reading_parameter
         data = tttrlib.TTTR(filename, 'PTU')
@@ -102,7 +103,6 @@ class TestCLSM(unittest.TestCase):
             ),
             dtype=np.uint8
         )
-
         decays = clsm_image.get_average_decay_of_pixels(
             tttr_data=data,
             mask=selection_mask,
@@ -115,7 +115,6 @@ class TestCLSM(unittest.TestCase):
             tac_coarsening=1,
             stack_frames=True
         )
-
         self.assertEqual(
             np.allclose(
                 decays.sum(axis=0),
@@ -126,7 +125,6 @@ class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_histogram(self):
         data = tttrlib.TTTR(sp8_filename, 'PTU')
-
         micro_time = data.micro_times
         mt_sel = micro_time
         counts = np.bincount(mt_sel // 4)
@@ -148,6 +146,8 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_clsm_intensity(self):
+        """Intensity images
+        """
         print("test_clsm_intensity")
         data = tttrlib.TTTR(ht3_filename, 'HT3')
         reading_parameter = ht3_reading_parameter
@@ -194,6 +194,8 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_mean_tau(self):
+        """Mean lifetime images (with IRF correction)
+        """
         data = tttrlib.TTTR(ht3_filename_img, 'HT3')
         irf = tttrlib.TTTR(ht3_filename_irf, 'HT3')
         irf_0 = irf[irf.get_selection_by_channel([0])]
