@@ -1,4 +1,4 @@
-#include "tttr.h"
+#include "TTTR.h"
 
 
 TTTR::TTTR() :
@@ -29,7 +29,6 @@ TTTR::TTTR() :
     container_names.insert({std::string("PHOTON-HDF5"), 5});
     header = new Header();
 }
-
 
 TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            unsigned int *micro_times, int n_microtimes,
@@ -65,7 +64,6 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
     }
     if(find_used_channels) find_used_routing_channels();
 }
-
 
 TTTR::TTTR(
         const TTTR &parent,
@@ -117,11 +115,9 @@ void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     }
 }
 
-
 TTTR::TTTR(const TTTR &p2){
     copy_from(p2, true);
 }
-
 
 TTTR::TTTR(
         const char *fn,
@@ -137,21 +133,31 @@ TTTR::TTTR(
     }
 }
 
-
 TTTR::TTTR(const char *fn, int container_type) :
     TTTR(fn, container_type, true) {
-    tttr_container_type_str.assign(
-            container_names.right.at(container_type)
-            );
+    try {
+        tttr_container_type_str.assign(
+                container_names.right.at(container_type)
+        );
+    }
+    catch(...) {
+        std::cerr << "Container type " << container_type
+        << " not supported." << std::endl;
+    }
 }
-
 
 TTTR::TTTR(const char *fn, const char *container_type) :
         TTTR() {
-    tttr_container_type_str.assign(container_type);
-    tttr_container_type = container_names.left.at(std::string(container_type));
-    filename.assign(fn);
-    if(read_file()) find_used_routing_channels();
+    try {
+        tttr_container_type_str.assign(container_type);
+        tttr_container_type = container_names.left.at(std::string(container_type));
+        filename.assign(fn);
+        if(read_file()) find_used_routing_channels();
+    }
+    catch(...) {
+        std::cerr << "Container type " << container_type
+        << " not supported." << std::endl;
+    }
 }
 
 void TTTR::shift_macro_time(int shift) {
@@ -239,7 +245,6 @@ int TTTR::read_hdf_file(const char *fn){
     return 1;
 }
 
-
 int TTTR::read_file(
         const char *fn,
         int container_type
@@ -288,22 +293,18 @@ int TTTR::read_file(
     }
 }
 
-
 int TTTR::read_file(){
     return read_file(filename.c_str(), tttr_container_type);
 }
-
 
 TTTR::~TTTR() {
     delete header;
     deallocate_memory_of_records();
 }
 
-
 std::string TTTR::get_filename() {
     return std::string(filename);
 }
-
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
 #if VERBOSE_TTTRLIB
@@ -338,7 +339,6 @@ void TTTR::allocate_memory_for_records(size_t n_rec){
     }
 }
 
-
 void TTTR::deallocate_memory_of_records(){
     if(tttr_container_type == PHOTON_HDF_CONTAINER) {
         H5free_memory(macro_times);
@@ -354,7 +354,6 @@ void TTTR::deallocate_memory_of_records(){
         free(event_types);
     }
 }
-
 
 void TTTR::read_records(
         size_t n_rec,
@@ -396,16 +395,13 @@ void TTTR::read_records(
     }while(number_of_objects > 0);
 }
 
-
 void TTTR::read_records(size_t n_rec){
     read_records(n_rec, true, 16384);
 }
 
-
 void TTTR::read_records() {
     read_records(n_records_in_file);
 }
-
 
 Header TTTR::get_header() {
 #if VERBOSE_TTTRLIB
@@ -419,21 +415,17 @@ Header TTTR::get_header() {
     }
 }
 
-
 void TTTR::get_macro_time(unsigned long long** output, int* n_output){
     get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
 }
-
 
 void TTTR::get_micro_time(unsigned short** output, int* n_output){
     get_array<unsigned short>(n_valid_events, micro_times, output, n_output);
 }
 
-
 void TTTR::get_routing_channel(signed char** output, int* n_output){
     get_array<signed char>(n_valid_events, routing_channels, output, n_output);
 }
-
 
 void TTTR::get_used_routing_channels(signed char** output, int* n_output){
     get_array<signed char>(
@@ -444,7 +436,6 @@ void TTTR::get_used_routing_channels(signed char** output, int* n_output){
     );
 }
 
-
 void TTTR::get_event_type(signed char** output, int* n_output){
     get_array<signed char>(
             n_valid_events,
@@ -454,16 +445,13 @@ void TTTR::get_event_type(signed char** output, int* n_output){
     );
 }
 
-
 unsigned int TTTR::get_n_valid_events(){
     return (int) n_valid_events;
 }
 
-
 unsigned int TTTR::get_n_events(){
     return (int) n_valid_events;
 }
-
 
 void TTTR::get_selection_by_channel(
         int **output, int *n_output,
@@ -474,7 +462,6 @@ void TTTR::get_selection_by_channel(
             routing_channels, get_n_events()
     );
 }
-
 
 void TTTR::get_selection_by_count_rate(
         int **output, int *n_output,
@@ -489,7 +476,6 @@ void TTTR::get_selection_by_count_rate(
             invert
     );
 }
-
 
 void TTTR::get_time_window_ranges(
         int **output, int *n_output,
@@ -513,11 +499,9 @@ void TTTR::get_time_window_ranges(
     );
 }
 
-
 TTTR* TTTR::select(int *selection, int n_selection) {
     return new TTTR(*this, selection, n_selection);
 }
-
 
 void selection_by_channels(
         int **output, int *n_output,
@@ -536,7 +520,6 @@ void selection_by_channels(
     }
     *n_output = (int) n_sel;
 }
-
 
 size_t determine_number_of_records_by_file_size(
         std::FILE *fp,
@@ -559,7 +542,6 @@ size_t determine_number_of_records_by_file_size(
 #endif
     return n_records_in_file;
 }
-
 
 void ranges_by_time_window(
         int **output, int *n_output,
@@ -612,7 +594,6 @@ void ranges_by_time_window(
     *n_output = n_out;
 }
 
-
 void selection_by_count_rate(
         int **output, int *n_output,
         unsigned long long *time, int n_time,
@@ -645,11 +626,9 @@ void selection_by_count_rate(
     }
 }
 
-
 unsigned int TTTR::get_number_of_micro_time_channels(){
     return header->get_effective_number_of_micro_time_channels();
 }
-
 
 void TTTR::intensity_trace(
         int **output, int *n_output,
@@ -662,8 +641,6 @@ void TTTR::intensity_trace(
             this->header->macro_time_resolution / 1e6
     );
 }
-
-
 
 void compute_intensity_trace(
         int **output, int *n_output,
@@ -690,7 +667,6 @@ void compute_intensity_trace(
         }
     }
 }
-
 
 void get_ranges_channel(
         unsigned int **ranges, int *n_range,
@@ -723,7 +699,6 @@ void get_ranges_channel(
             }
         }
     }
-
 }
 
 bool TTTR::write(
