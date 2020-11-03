@@ -37,15 +37,15 @@
 
 #include "hdf5.h"
 
-#include "histogram.h"
-#include "header.h"
-#include "record_reader.h"
-#include "record_types.h"
+#include "Histogram.h"
+#include "TTTRHeader.h"
+#include "TTTRRecordReader.h"
+#include "TTTRRecordTypes.h"
 
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define TTTRLIB_VERSION             "0.0.19"
+#define TTTRLIB_VERSION             "0.0.20"
 
 
 /*!
@@ -200,14 +200,9 @@ inline void get_array(
         T **out,
         int *n_out
         ){
-    try{
-        *n_out = (int) n_valid_events;
-        (*out) = (T*) malloc(sizeof(T) * n_valid_events);
-        for(size_t i=0; i<n_valid_events; i++) (*out)[i] = array[i];
-    }
-    catch (std::bad_typeid& bt){
-        std::cerr << "bad_typeid caught: " << bt.what() << '\n';
-    }
+    *n_out = (int) n_valid_events;
+    (*out) = (T*) malloc(sizeof(T) * n_valid_events);
+    for(size_t i=0; i<n_valid_events; i++) (*out)[i] = array[i];
 }
 
 
@@ -215,6 +210,7 @@ class TTTR {
 
     friend class CLSMImage;
     friend class TTTRRange;
+    friend class CorrelatorPhotonStream;
 
 private:
 
@@ -230,7 +226,7 @@ private:
     /// the input file
     std::string filename;
 
-    Header *header = nullptr;
+    TTTRHeader *header = nullptr;
 
     /// Global overflow counter that counts the total number of overflows in a
     /// TTTR file
@@ -322,16 +318,14 @@ private:
     /// The event type
     signed char *event_types;
 
-    /*!
-     * Reads the content of a Photon HDF file.
-     *
-     * WARNING: Only the micro time, the macro time, and the routing channel
-     * number are read. The meta data is not proccessed.
-     *
-     * @param fn filename pointing to the Photon HDF file
-     * @return
-     */
-    int read_hdf_file(const char *fn);
+    /// the number of time tagged data records in the TTTR file
+    size_t n_records_in_file = 0;
+
+    /// the number of read time tagged data
+    size_t n_records_read = 0;
+
+    /// the number of valid read records (excluded overflow and invalid records)
+    size_t n_valid_events = 0;
 
 
 protected:
@@ -362,14 +356,16 @@ protected:
     void read_records(size_t n_rec);
     void read_records();
 
-    /// the number of time tagged data records in the TTTR file
-    size_t n_records_in_file = 0;
-
-    /// the number of read time tagged data
-    size_t n_records_read = 0;
-
-    /// the number of valid read records (excluded overflow and invalid records)
-    size_t n_valid_events = 0;
+    /*!
+     * Reads the content of a Photon HDF file.
+     *
+     * WARNING: Only the micro time, the macro time, and the routing channel
+     * number are read. The meta data is not proccessed.
+     *
+     * @param fn filename pointing to the Photon HDF file
+     * @return
+     */
+    int read_hdf_file(const char *fn);
 
     /*!
      * Reads the TTTR data contained in a file into the TTTR object
@@ -410,6 +406,10 @@ public:
             event_types[i_rec + n_valid_events] = other->event_types[i_rec];
         }
         n_valid_events += other->n_valid_events;
+    }
+
+    size_t size(){
+        return get_n_valid_events();
     }
 
     /*!
@@ -480,7 +480,7 @@ public:
     /*!
      * @return number of valid events in the TTTR file
      */
-    unsigned int get_n_valid_events();
+    size_t get_n_valid_events();
 
     /*!
      * @return the container type that was used to open the file
@@ -642,14 +642,14 @@ public:
     );
 
     /// Get header returns the header (if present) as a map of strings.
-    Header get_header();
+    TTTRHeader get_header();
 
     /*!
      * Returns the number of events in the TTTR file for cases no selection
      * is specified otherwise the number of selected events is returned.
      * @return
      */
-    unsigned int get_n_events();
+    size_t get_n_events();
 
     /*!
      * Write the contents of a opened TTTR file to a new
@@ -742,171 +742,6 @@ public:
     ){
         return compute_mean_lifetime(this, tttr_irf, m0_irf, m1_irf);
     }
-};
-
-
-class TTTRRange {
-
-public:
-
-    /// The start index of the TTTRRange
-    int _start = -1;
-
-    /// The stop index of the TTTRRange
-    int _stop = -1;
-
-    /// The start time of the TTTRRange
-    unsigned int _start_time = 0;
-
-    /// The stop time of the TTTRRange
-    unsigned int _stop_time = 0;
-
-    std::vector<int> _tttr_indices = {};
-
-    /*!
-     *
-     * @param start start index of the TTTRRange
-     * @param stop stop index of the TTTRRange
-     * @param start_time start time of the TTTRRange
-     * @param stop_time stop time of the TTTRRange
-     * @param pre_reserve is the number of tttr indices that is pre-allocated in
-     * in memory upon creation of a TTTRRange object.
-     */
-    TTTRRange(
-            size_t start = 0,
-            size_t stop = 0,
-            unsigned int start_time = 0,
-            unsigned int stop_time = 0,
-            TTTRRange *other = nullptr,
-            int pre_reserve = 8
-    );
-
-    size_t size(){
-        return _tttr_indices.size();
-    }
-
-    /// Copy constructor
-    TTTRRange(const TTTRRange& p2);
-
-    /// A vector containing a set of TTTR indices that was assigned to the range
-    const std::vector<int>&  get_tttr_indices(){
-        return _tttr_indices;
-    }
-
-    /// A vector of the start and the stop TTTR index of the range
-    std::vector<int> get_start_stop(){
-        std::vector<int> v = {_start, _stop};
-        return v;
-    }
-
-    /// A vector of the start and stop time
-    std::vector<unsigned int> get_start_stop_time(){
-        std::vector<unsigned int> v = {_start_time, _stop_time};
-        return v;
-    }
-
-    /// The difference between the start and the stop time of a range
-    long long get_duration(){
-        return get_start_stop_time()[1] - get_start_stop_time()[0];
-    }
-
-    /// The start index of the TTTR range object
-    void set_start(int start_value){
-        _start = start_value;
-    }
-
-    /// The start index of the TTTR range object
-    long long get_start() const{
-        return _start;
-    }
-
-    /// The stop index of the TTTR range object
-    void set_stop(int stop_value){
-        _stop = stop_value;
-    }
-
-    /// The stop index of the TTTR range object
-    long long get_stop() const{
-        return _stop;
-    }
-
-    /// The stop time of the TTTR range object
-    void set_stop_time(unsigned int stop_time_value){
-        _stop_time = stop_time_value;
-    }
-
-    /// The stop time of the TTTR range object
-    unsigned int get_stop_time() const{
-        return _stop_time;
-    }
-
-    /// The start time of the TTTR range object
-    void set_start_time(unsigned int start_time_value){
-        _start_time = start_time_value;
-    }
-
-    /// The start time of the TTTR range object
-    unsigned int get_start_time() const{
-        return _start_time;
-    }
-
-    /// Append a index to the TTTR index vector
-    void append(int v){
-        _tttr_indices.emplace_back(v);
-    }
-
-    /// Clears the TTTR index vector
-    void clear(){
-        _tttr_indices.clear();
-    }
-
-    void shift_start_time(long time_shift=0){
-        _start_time += time_shift;
-        _stop_time += time_shift;
-    }
-
-    /*!
-     * Update start, stop and the start and stop using the tttr_indices
-     * attribute
-     *
-     * @param tttr_data [in] the TTTR dataset that is used to determine the start
-     * and stop time by the TTTR macro time.
-     * @param from_tttr_indices [in] if set to true (default is true) the start
-     * stop indices and the start stop time are updated from the tttr_indices
-     * attribute. Otherwise, the start stop times are updated from the tttr object
-     * using the current start stop
-     */
-    void update(
-            TTTR* tttr_data,
-            bool from_tttr_indices=true
-    ){
-        if(from_tttr_indices){
-            if(!_tttr_indices.empty()){
-                _start = _tttr_indices[0];
-                _stop = _tttr_indices[_tttr_indices.size() - 1];
-                _start_time = tttr_data->macro_times[_start];
-                _stop_time = tttr_data->macro_times[_stop];
-            }
-        } else{
-            _start_time = tttr_data->macro_times[_start];
-            _stop_time = tttr_data->macro_times[_stop];
-        }
-    }
-
-    bool operator==(const TTTRRange& other) const
-    {
-        return  (_tttr_indices == other._tttr_indices) &&
-                (_start == other._start) &&
-                (_stop == other._stop) &&
-                (_start_time == other._start_time) &&
-                (_stop_time == other._stop_time);
-    }
-
-    bool operator!=(const TTTRRange& other) const
-    {
-        return !operator==(other);
-    }
-
 };
 
 
