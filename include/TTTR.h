@@ -48,26 +48,6 @@
 #define TTTRLIB_VERSION             "0.0.20"
 
 
-/*!
- * Determines the number of records in a TTTR files (not for use with HDF5)
- *
- * Calculates the number of records in the file based on the file size.
- * if @param offset is passed the number of records is calculated by the file size
- * the number of bytes in the file - offset and @param bytes_per_record.
- * If @param offset is not specified the current location of the file pointer
- * is used as an offset. If @param bytes_per_record is not specified
- * the attribute value bytes_per_record of the class instance is used.
- *
- * @param offset
- * @param bytes_per_record
- */
-size_t determine_number_of_records_by_file_size(
-        std::FILE *fp,
-        size_t offset,
-        size_t bytes_per_record
-);
-
-
 
 /*!
  * @brief A count rate (cr) filter that returns an array containing a list of indices where
@@ -327,34 +307,11 @@ private:
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events = 0;
 
-
-protected:
-
-    /*!
-    * Traverses the routing channel array and lists the used routing channel
-    * numbers in the protected attribute used_routing_channels.
-    */
-    void find_used_routing_channels();
-
-    /// a vector containing the used routing channel numbers in the TTTR file
-    std::vector<signed char> used_routing_channels;
-
     /// allocates memory for the records. @param n_rec are the number of records.
     void allocate_memory_for_records(size_t n_rec);
 
     /// deallocate memory of records
     void deallocate_memory_of_records();
-
-    /// Reads n_records records of the file (n_records is the number of records)
-    /// @param n_rec is the number of records that are being read. If no number
-    /// of records to be read is specified all records in the file are being read.
-    /// If the parameter @param rewind is true (default behaviour) the file is read
-    /// from the beginning of the records till the end of the file or till n_red
-    /// records have been read. If @param rewind is false the records are being
-    /// read from the current location of the file pointer till the end of the file.
-    void read_records(size_t n_rec, bool rewind, size_t chunk);
-    void read_records(size_t n_rec);
-    void read_records();
 
     /*!
      * Reads the content of a Photon HDF file.
@@ -367,21 +324,64 @@ protected:
      */
     int read_hdf_file(const char *fn);
 
+    /// Reads n_records records of the file (n_records is the number of records)
+    /// @param n_rec is the number of records that are being read. If no number
+    /// of records to be read is specified all records in the file are being read.
+    /// If the parameter @param rewind is true (default behaviour) the file is read
+    /// from the beginning of the records till the end of the file or till n_red
+    /// records have been read. If @param rewind is false the records are being
+    /// read from the current location of the file pointer till the end of the file.
+    void read_records(size_t n_rec, bool rewind, size_t chunk);
+    void read_records(size_t n_rec);
+    void read_records();
+
+protected:
+
     /*!
-     * Reads the TTTR data contained in a file into the TTTR object
-     *
-     * @param fn The filename that is read. If fn is a nullptr (default value
-     * is nullptr) the filename attribute of the TTTR object is used as
-     * filename.
-     *
-     * @param container_type The container type.
-     * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
-     */
-    int read_file(const char *fn, int container_type);
-    int read_file();
+    * Traverses the routing channel array and lists the used routing channel
+    * numbers in the protected attribute used_routing_channels.
+    */
+    void find_used_routing_channels();
+
+    /// a vector containing the used routing channel numbers in the TTTR file
+    std::vector<signed char> used_routing_channels;
 
 
 public:
+
+    /*!
+    * Reads the TTTR data contained in a file into the TTTR object
+    *
+    * @param fn The filename that is read. If fn is a nullptr (default value
+    * is nullptr) the filename attribute of the TTTR object is used as
+    * filename.
+    *
+    * @param container_type The container type.
+    * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
+    */
+    int read_file(
+            const char *fn = nullptr,
+            int container_type = -1
+    );
+
+    /*!
+    * Determines the number of records in a TTTR files (not for use with HDF5)
+    *
+    * Calculates the number of records in the file based on the file size.
+    * if @param offset is passed the number of records is calculated by the file size
+    * the number of bytes in the file - offset and @param bytes_per_record.
+    * If @param offset is not specified the current location of the file pointer
+    * is used as an offset. If @param bytes_per_record is not specified
+    * the attribute value bytes_per_record of the class instance is used.
+    *
+    * @param offset
+    * @param bytes_per_record
+    */
+    static size_t determine_number_of_records_by_file_size(
+            std::FILE *fp,
+            size_t offset,
+            size_t bytes_per_record
+    );
 
     void append(
             const TTTR *other,

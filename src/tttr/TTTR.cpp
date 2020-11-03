@@ -1,4 +1,5 @@
-#include "TTTR.h"
+#include "include/TTTR.h"
+#include "TTTRRange.h"
 
 
 TTTR::TTTR() :
@@ -27,7 +28,7 @@ TTTR::TTTR() :
     container_names.insert({std::string("SPC-600_256"), 3});
     container_names.insert({std::string("SPC-600_4096"), 4});
     container_names.insert({std::string("PHOTON-HDF5"), 5});
-    header = new Header();
+    header = new TTTRHeader();
 }
 
 TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
@@ -93,7 +94,7 @@ TTTR::TTTR(
 
 void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     filename = p2.filename;
-    header = new Header(*p2.header);
+    header = new TTTRHeader(*p2.header);
     tttr_container_type = p2.tttr_container_type;
     tttr_container_type_str = p2.tttr_container_type_str;
     bytes_per_record = p2.bytes_per_record;
@@ -190,7 +191,7 @@ void TTTR::find_used_routing_channels(){
 }
 
 int TTTR::read_hdf_file(const char *fn){
-    header = new Header();
+    header = new TTTRHeader();
 
     /* handles */
     hid_t       ds_microtime, ds_n_sync_pulses, ds_routing_channels;
@@ -252,6 +253,13 @@ int TTTR::read_file(
 #if VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
 #endif
+    if(fn == nullptr){
+        fn = filename.c_str();
+    }
+    if(container_type < 0){
+        container_type = tttr_container_type;
+    }
+
     if(boost::filesystem::exists(fn))
     {
 #if VERBOSE_TTTRLIB
@@ -266,7 +274,7 @@ int TTTR::read_file(
             read_hdf_file(fn);
         } else{
             fp = fopen(fn, "rb");
-            header = new Header(fp, container_type);
+            header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->header_end;
             bytes_per_record = header->bytes_per_record;
             tttr_record_type = header->getTTTRRecordType();
@@ -293,9 +301,6 @@ int TTTR::read_file(
     }
 }
 
-int TTTR::read_file(){
-    return read_file(filename.c_str(), tttr_container_type);
-}
 
 TTTR::~TTTR() {
     delete header;
@@ -403,7 +408,7 @@ void TTTR::read_records() {
     read_records(n_records_in_file);
 }
 
-Header TTTR::get_header() {
+TTTRHeader TTTR::get_header() {
 #if VERBOSE_TTTRLIB
     std::clog << "-- TTTR::get_header" << std::endl;
 #endif
@@ -411,7 +416,7 @@ Header TTTR::get_header() {
         return *header;
     } else{
         std::clog << "WARNING: TTTR::header not initialized. Returning empty Header." << std::endl;
-        return Header();
+        return TTTRHeader();
     }
 }
 
@@ -445,11 +450,11 @@ void TTTR::get_event_type(signed char** output, int* n_output){
     );
 }
 
-unsigned int TTTR::get_n_valid_events(){
+size_t TTTR::get_n_valid_events(){
     return (int) n_valid_events;
 }
 
-unsigned int TTTR::get_n_events(){
+size_t TTTR::get_n_events(){
     return (int) n_valid_events;
 }
 
@@ -521,7 +526,7 @@ void selection_by_channels(
     *n_output = (int) n_sel;
 }
 
-size_t determine_number_of_records_by_file_size(
+size_t TTTR::determine_number_of_records_by_file_size(
         std::FILE *fp,
         size_t offset,
         size_t bytes_per_record
@@ -760,39 +765,6 @@ bool TTTR::write(
             break;
     }
     return true;
-}
-
-TTTRRange::TTTRRange(const TTTRRange& p2){
-    _start = p2._start;
-    _stop = p2._stop;
-    _start_time = p2._start_time;
-    _stop_time = p2._stop_time;
-    _tttr_indices.reserve(p2._tttr_indices.size());
-    for(auto &v: p2._tttr_indices){
-        _tttr_indices.emplace_back(v);
-    }
-}
-
-TTTRRange::TTTRRange(
-        size_t start,
-        size_t stop,
-        unsigned int start_time,
-        unsigned int stop_time,
-        TTTRRange* other,
-        int pre_reserve
-) {
-    if(other != nullptr){
-        this->_start = other->_start;
-        this->_stop = other->_stop;
-        this->_start_time = other->_start_time;
-        this->_stop_time = other->_stop_time;
-    } else {
-        this->_start = start;
-        this->_stop = stop;
-        this->_start_time = start_time;
-        this->_stop_time = stop_time;
-    }
-    _tttr_indices.reserve(pre_reserve);
 }
 
 void TTTR::compute_microtime_histogram(
