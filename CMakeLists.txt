@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
 ENABLE_LANGUAGE(CXX)
-SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD 11)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
@@ -55,21 +55,21 @@ endif()
 ###### Compiler flags
 ################################################################################
 
-## Enable Compiler warnings
-#############################
-IF(MSVC)
-    ADD_COMPILE_OPTIONS(/W4)
-ELSE()
-    ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
-ENDIF()
 
 # Debug build detection
 ###########################
 IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     MESSAGE("Release build")
-    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=0")
+    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
 ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE("Debug build")
+    ## Enable Compiler warnings
+    #############################
+    IF(MSVC)
+        ADD_COMPILE_OPTIONS(/W4)
+    ELSE()
+        ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
+    ENDIF()
     ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
 
@@ -193,7 +193,7 @@ ENDIF ()
 ################################################################################
 ###### Targets
 ################################################################################
-FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+FILE(GLOB_RECURSE SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -206,10 +206,15 @@ ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
 ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
 
 # Define which headers are going to be included in the install target
-FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
-FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
+FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h")
+FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.hpp")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+
+## Use precomplied headers if possible
+#target_precompile_headers(${PROJECT_NAME}Shared PUBLIC "${HEADERS_FILES}")
+#target_precompile_headers(${PROJECT_NAME}Static PUBLIC "${HEADERS_FILES}")
+
 
 # By default the output name is the target. To not have different names, i.e.,
 # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
