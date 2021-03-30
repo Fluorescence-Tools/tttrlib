@@ -7,7 +7,7 @@ import numpy as np
 print("Test: ", __file__)
 
 
-sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+sp8_filename = '../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 sp8_reading_parameter = {
     "marker_frame_start": [4, 6],
     "marker_line_start": 1,
@@ -18,9 +18,9 @@ sp8_reading_parameter = {
     "reading_routine": 'SP8',
 }
 
-ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
-ht3_filename_img = './data/imaging/pq/ht3/crn_clv_img.ht3'
-ht3_filename_irf = './data/imaging/pq/ht3/crn_clv_mirror.ht3'
+ht3_filename = '../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+ht3_filename_img = '../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
+ht3_filename_irf = '../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
 ht3_reading_parameter = {
     "marker_frame_start": [4],
     "marker_line_start": 1,
@@ -31,7 +31,7 @@ ht3_reading_parameter = {
     "skip_before_first_frame_marker": True
 }
 
-sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
+sp5_filename = '../tttr-data/imaging/leica/sp5/LSM_1.ptu'
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
 sp5_reading_parameter = {
     "marker_frame_start": [4, 6],
@@ -50,13 +50,12 @@ make_reference = False
 class TestCLSM(unittest.TestCase):
 
     def test_leica_sp8_image_2(self):
+        # BROKEN
         filename = sp8_filename
         reading_parameter = sp8_reading_parameter
 
         data = tttrlib.TTTR(filename, 'PTU')
-        clsm_image = tttrlib.CLSMImage(
-            tttr_data=data, **reading_parameter
-        )
+        clsm_image = tttrlib.CLSMImage(data, **reading_parameter)
         clsm_image.fill_pixels(
             tttr_data=data,
             channels=[1]
@@ -72,8 +71,8 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_leica_sp5_image(self):
-        """Leice SP5 tests
-        """
+        # BROKEN
+        # PROBLEM WITH LINE START/STOP
         filename = sp5_filename
         reading_parameter = sp5_reading_parameter
         data = tttrlib.TTTR(filename, 'PTU')
@@ -151,7 +150,6 @@ class TestCLSM(unittest.TestCase):
         print("test_clsm_intensity")
         data = tttrlib.TTTR(ht3_filename, 'HT3')
         reading_parameter = ht3_reading_parameter
-
         clsm_image_1 = tttrlib.CLSMImage(
             tttr_data=data,
             **reading_parameter

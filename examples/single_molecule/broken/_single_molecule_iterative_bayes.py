@@ -66,7 +66,7 @@ n_bins = 128  # number of bins in histogram
 time_window_size = 1.0  # size of time window used for burst selection
 minimum_number_of_photons_in_tw = 120
 
-data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 data_green = data[data.get_selection_by_channel([0, 8])]
 
 # low count rate for IRF

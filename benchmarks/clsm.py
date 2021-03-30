@@ -4,7 +4,7 @@ import timeit
 import tttrlib
 import numpy as np
 
-sp8_filename = '../data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+sp8_filename = '.../tttr-data/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 sp8_data = tttrlib.TTTR(sp8_filename, 'PTU')
 data = sp8_data
 

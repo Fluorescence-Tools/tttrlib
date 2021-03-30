@@ -40,7 +40,7 @@ def objective_function(
     return chi2_mle
 
 # Read TTTR
-files = glob.glob("../test/data/bh/bh_spc132_sm_dna/*.spc")
+files = glob.glob("../test/tttr-data/bh/bh_spc132_sm_dna/*.spc")
 sorted(glob.glob('*.spc'), key=os.path.getmtime)
 data = tttrlib.TTTR(files[0], 'SPC-130')
 for d in files[1:]:

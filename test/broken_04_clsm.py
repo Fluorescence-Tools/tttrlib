@@ -8,12 +8,12 @@ import numpy as np
 
 print("Test: ", __file__)
 
-sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
-sp8_filename = './data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+sp5_filename = '../tttr-data/imaging/leica/sp5/LSM_1.ptu'
+sp8_filename = '../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+ht3_filename = '../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 pq_test_files = [
-    './data/imaging/pq/Microtime200_HH400/beads.ptu',
-    './data/imaging/pq/Microtime200_TH260/beads.ptu'
+    '../tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
+    '../tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
 ]
 
 sp8_reading_parameter = {
@@ -68,10 +68,10 @@ class TestCLSM(unittest.TestCase):
             minimum_number_of_photons=1
         ).sum(axis=0)
         if self.make_reference:
-            np.save('./data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
+            np.save('../tttr-data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
         self.assertEqual(
             np.allclose(
-                np.load('./data/reference/img_ref_mean_tac_sp8.npy'), mean_tac_image
+                np.load('../tttr-data/reference/img_ref_mean_tac_sp8.npy'), mean_tac_image
             ),
             True
         )
@@ -108,7 +108,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_get_frame_edges(self):
         # SP8
-        filename = "./data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
+        filename = "../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
         tttr = tttrlib.TTTR(filename)
         frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP8")
         ref = np.array([0, 33529, 66704, 100007, 133448, 166819, 200246,
@@ -127,7 +127,7 @@ class TestCLSM(unittest.TestCase):
                   3037889, 3071241, 3104687, 3104829], dtype=np.uint32)
         self.assertEqual(np.allclose(frame_marker, ref), True)
 
-        sp5_filename = './data/imaging/leica/sp5/LSM_1.ptu'
+        sp5_filename = '../tttr-data/imaging/leica/sp5/LSM_1.ptu'
         sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
         frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP5")
 
