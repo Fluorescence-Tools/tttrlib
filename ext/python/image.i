@@ -1,9 +1,9 @@
 %{
-#include "../include/clsm/CLSMPixel.h"
-#include "../include/clsm/CLSMLine.h"
-#include "../include/clsm/CLSMFrame.h"
-#include "../include/clsm/CLSMImage.h"
-#include "../include/tttr.h"
+#include "../include/CLSMPixel.h"
+#include "../include/CLSMLine.h"
+#include "../include/CLSMFrame.h"
+#include "../include/CLSMImage.h"
+#include "../include/TTTR.h"
 static int myErr = 0; // flag to save error state
 %}
 
@@ -12,7 +12,7 @@ static int myErr = 0; // flag to save error state
 %template(vector_CLSMPixel) std::vector<CLSMPixel*>;
 
 %apply (unsigned char* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
-    (uint8_t* mask, int dmask1, int dmaks2, int dmask3)
+    (uint8_t* mask, int dmask1, int dmask2, int dmask3)
 }
 %apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {
     (double *images, int input_frames, int input_lines, int input_pixel),
@@ -34,10 +34,10 @@ static int myErr = 0; // flag to save error state
 // Use shared_prt for CLSMImage to pass CLSMImage around
 %shared_ptr(CLSMImage)
 
-%include "../include/clsm/CLSMPixel.h"
-%include "../include/clsm/CLSMLine.h"
-%include "../include/clsm/CLSMFrame.h"
-%include "../include/clsm/CLSMImage.h"
+%include "../include/CLSMPixel.h"
+%include "../include/CLSMLine.h"
+%include "../include/CLSMFrame.h"
+%include "../include/CLSMImage.h"
 
 // https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
 %exception CLSMImage::__getitem__ {

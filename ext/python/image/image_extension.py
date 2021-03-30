@@ -58,22 +58,32 @@ def __init__(
         }
     )
     if tttr_data is not None:
+        header = tttr_data.header
+        self.header = header
         if tttr_data.get_tttr_container_type() == 'PTU':
-            header = tttr_data.header
-            self.header = header
-            # Markers necessary to make FLIM image stack
             try:
-                kwargs["marker_frame_start"] = [2**(int(header.data['ImgHdr_Frame'])-1)]
+                kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
             except IndexError:
                 kwargs["marker_frame_start"] = [4]
             kwargs.update(
                 {
-                    "marker_line_start": 2**(int(header.data['ImgHdr_LineStart'])-1),
-                    "marker_line_stop": 2**(int(header.data['ImgHdr_LineStop'])-1),
-                    "n_pixel_per_line": int(header.data['ImgHdr_PixX']),
+                    "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"]) -1 ),
+                    "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
                     "marker_event_type": 1
                 }
             )
+        elif tttr_data.get_tttr_container_type() == 'HT3':
+            kwargs.update(
+                {
+                    "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
+                    "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                    "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
+                    "marker_event_type": 1
+                }
+            )
+
     if reading_routine == 'SP5':
         kwargs["marker_event_type"] = 1
         kwargs["marker_frame_start"] = [4, 6]
