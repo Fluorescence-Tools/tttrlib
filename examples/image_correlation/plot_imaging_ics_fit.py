@@ -138,7 +138,7 @@ def chi2(
     return chi2_s
 
 
-img = tifffile.imread('../../test/data/imaging/ics/RICS_EGFPGFP.tif')
+img = tifffile.imread('../../tttr-data/imaging/ics/RICS_EGFPGFP.tif')
 x_range = [100, 200]
 y_range = [100, 200]
 

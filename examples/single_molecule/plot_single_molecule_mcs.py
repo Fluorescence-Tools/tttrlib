@@ -19,7 +19,7 @@ computed using the function ``tttrlib.compute_intensity_trace`` or using the met
 
 .. code-block:: python
 
-    tttr_object = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+    tttr_object = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
     # option 1
     tttr_object = tttrlib.compute_intensity_trace(
         data.macro_times,
@@ -43,7 +43,7 @@ import numpy as np
 
 import tttrlib
 
-data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 mt = data.get_macro_time()
 
 green_indeces = data.get_selection_by_channel([0, 8])
@@ -54,11 +54,11 @@ fig, ax = p.subplots(3, 1, sharex=True, sharey=False)
 p.setp(ax[0].get_xticklabels(), visible=False)
 green_trace = tttrlib.compute_intensity_trace(
     mt[green_indeces],
-    time_window_length=1.0, # this is one millisecond
-    macro_time_resolution=data.get_header().macro_time_resolution / 1e6
+    time_window_length=1.0e-3, # this is one millisecond
+    macro_time_resolution=data.get_header().macro_time_resolution
 )
-red_trace = data[red_indeces].intensity_trace(
-    time_window_length=1.0
+red_trace = data[red_indeces].get_intensity_trace(
+    time_window_length=1.0e-3
 )
 m = min(len(green_trace), len(red_trace))
 SgSr_ratio = (green_trace[:m] / red_trace[:m])
@@ -71,7 +71,12 @@ ax[0].legend()
 ax[1].legend()
 ax[2].plot(SgSr_ratio, 'b', label='Sg/Sr')
 ax[2].legend()
-p.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0)
-
+p.subplots_adjust(
+    left=None,
+    bottom=None,
+    right=None,
+    top=None,
+    wspace=None, hspace=0
+)
 p.show()
 #

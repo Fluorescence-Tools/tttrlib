@@ -4,7 +4,7 @@ channels:
   - defaults
 
 dependencies:
-  - python 3.7.*
+  - python
   - cmake
   - swig 3.0.12.*
   - setuptools
@@ -16,6 +16,9 @@ dependencies:
   - nose
   - anaconda-client
   - conda-build
-  - fit2x
+  - fftw
+  - ninja
+  - scipy
+  - matplotlib
 #  - mkl
 #  - mkl-include

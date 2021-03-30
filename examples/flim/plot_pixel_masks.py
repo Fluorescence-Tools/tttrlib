@@ -4,12 +4,12 @@ Using Pixel masks
 =================
 
 """
-import pylab as p
+import pylab as plt
 from matplotlib.pyplot import imread
 import tttrlib
 import numpy as np
 
-tttr_data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
+tttr_data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
 channels = (0, 1)
 reading_parameter = {
     "tttr_data": tttr_data,
@@ -26,7 +26,7 @@ reading_parameter = {
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
 
 n_frames, n_lines, n_pixel = clsm_image.shape
-mask_template = imread("../../test/data/imaging/misc/clsm_mask.png").astype(np.uint8).T
+mask_template = imread("../../tttr-data/imaging/misc/clsm_mask.png").astype(np.uint8).T
 mask = np.empty((n_frames, n_lines, n_pixel), dtype=np.uint8)
 for i in range(n_frames):
     mask[i] = mask_template
@@ -36,7 +36,7 @@ kw = {
     "tac_coarsening": 16,
     "stack_frames": False
 }
-decay = clsm_image.get_average_decay_of_pixels(**kw)
+decay = clsm_image.get_decay_of_pixels(**kw)
 intensity = clsm_image.intensity
 intensity_stacked = intensity.sum(axis=0)
 
@@ -51,7 +51,7 @@ masked_intensity = np.ma.masked_where(
 )
 mask = np.ma.masked_where(mask < 0.9, mask)
 
-fig, ax = p.subplots(nrows=1, ncols=3)
+fig, ax = plt.subplots(nrows=1, ncols=3)
 im = ax[0].imshow(intensity_stacked)
 ax[0].set_title('Stacked frames')
 im = ax[0].imshow(mask[0], vmin=0.1)
@@ -63,3 +63,4 @@ ax[1].set_title('First frame')
 im = ax[1].imshow(mask[0], vmin=0.1)
 im = ax[2].semilogy(decay[0], label='Mask: First frame')
 ax[2].legend()
+plt.show()

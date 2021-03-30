@@ -12,7 +12,7 @@ import pylab as p
 import matplotlib.patches
 
 
-data = tttrlib.TTTR('../../test/data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
+data = tttrlib.TTTR('../../tttr-data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
 reading_parameter = {
     "tttr_data": data,
     "reading_routine": 'SP5',

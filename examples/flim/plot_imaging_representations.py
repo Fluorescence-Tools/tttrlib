@@ -1,9 +1,9 @@
 """
-=========================
+==========================
 TTTR Image representations
-=========================
+==========================
 
-This example opens a CLSM TTTR file and creates different image representations
+This example opens a CLSM TTTR file and creates different representations
 of the data contained in the file. The example creates
 
 1. an intensity image
@@ -15,7 +15,7 @@ from __future__ import print_function
 import tttrlib
 import pylab as p
 
-data = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
+data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3')
 
 frame_marker = [4]
 line_start_marker = 1

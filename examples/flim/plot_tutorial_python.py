@@ -1,7 +1,7 @@
 """
-==================
-Image construction
-==================
+============================
+Tutorial: Image construction
+============================
 
 Below, using a few lines of python code it is outlined how CLSM images can be
 constructured. For productive uses ``tttrlib`` provides a set of functions to
@@ -250,7 +250,7 @@ def make_image(
     return image
 
 
-events = tttrlib.TTTR('../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
+events = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
 e = events.get_event_type()
 c = events.get_routing_channel()
 t = events.get_macro_time()

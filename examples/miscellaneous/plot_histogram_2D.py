@@ -12,10 +12,10 @@ import pylab as p
 
 def histogram2d(data, bins):
     h = tttrlib.doubleHistogram()
-    h.setAxis(0, "x", -3, 3, bins, 'lin')
-    h.setAxis(1, "y", -3, 3, bins, 'lin')
+    h.set_axis(0, "x", -3, 3, bins, 'lin')
+    h.set_axis(1, "y", -3, 3, bins, 'lin')
     h.update(data.T)
-    return h.getHistogram().reshape((bins, bins))
+    return h.get_histogram().reshape((bins, bins))
 
 x = np.random.randn(10000)
 y = 0.2 * np.random.randn(10000)

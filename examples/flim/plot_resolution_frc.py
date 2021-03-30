@@ -27,8 +27,9 @@ can be used to estimate the resolution of the image.
 from __future__ import annotations
 
 import numpy as np
-import pylab as p
+import pylab as plt
 import tttrlib
+
 
 def compute_frc(
         image_1: np.ndarray,
@@ -82,7 +83,7 @@ def compute_frc(
     return density, bin_edges
 
 
-filename = '../../test/data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+filename = '../../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
 data = tttrlib.TTTR(filename, 'PTU')
 
 line_factor = 1
@@ -101,7 +102,7 @@ reading_parameter = {
 
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
 
-fig, ax = p.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
+fig, ax =plt.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
 ax[0].set_title('Intensity')
 ax[1].set_title('FRC')
 
@@ -112,4 +113,4 @@ frc, frc_bins = compute_frc(im1, im2)
 ax[1].plot(frc, label="Intensity")
 ax[0].imshow(img.mean(axis=0))
 
-p.show()
+plt.show()
