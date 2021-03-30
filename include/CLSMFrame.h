@@ -7,9 +7,10 @@
 
 #include <vector>
 
-#include "tttr.h" /* TTTRRange */
+#include "TTTR.h" /* TTTRRange */
 #include "CLSMPixel.h"
 #include "CLSMLine.h"
+#include "TTTRRange.h"
 
 class CLSMFrame: public TTTRRange{
 

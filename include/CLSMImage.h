@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/24/20.
-//
-
 #ifndef TTTRLIB_CLSMIMAGE_H
 #define TTTRLIB_CLSMIMAGE_H
 
@@ -9,8 +5,8 @@
 #include <cstring>
 #include "fftw3.h" /* FFT for ICS*/
 
-#include "tttr.h" /* TTTR */
-#include "include/correlation/Correlator.h"
+#include "TTTR.h" /* TTTR */
+#include "Correlator.h"
 #include "CLSMFrame.h"
 
 class CLSMImage {
@@ -21,6 +17,7 @@ class CLSMImage {
     friend class CLSMPixel;
 
 private:
+
     std::vector<CLSMFrame *> frames;
 
     void remove_incomplete_frames();
@@ -28,6 +25,7 @@ private:
     void create_pixels_in_lines();
 
 protected:
+
     /// The number of frames in an CLSMImage
     size_t n_frames = 0;
 
@@ -89,6 +87,13 @@ public:
     );
 
     /*!
+     * Clear tttr_indices stored in the pixels
+     *
+     * @param channels
+     */
+    void clear_pixels();
+
+    /*!
      * Computes the
      *
      * @param output[out]
@@ -112,20 +117,11 @@ public:
             int min_photons = 2
     );
 
-    /*!
-     * Clear tttr_indices stored in the pixels
-     *
-     * @param channels
-     */
-    void clear_pixels();
-
     std::vector<CLSMFrame *> get_frames() {
         return frames;
     }
 
-    void get_intensity_image(
-            unsigned int **output, int *dim1, int *dim2, int *dim3
-    );
+    void get_intensity_image(unsigned int **output, int *dim1, int *dim2, int *dim3);
 
     /*!
      * Computes an image stack where the value of each pixel corresponds to
@@ -176,7 +172,7 @@ public:
 
     /*!
      * Calculates an image stack where the value of each pixel corresponds
-     * to the mean micro time.
+     * to the mean micro time (in units of the micro channel resolution).
      *
      * Pixels with few photons can be discriminated. Discriminated pixels will
      * be filled with zeros.
@@ -237,6 +233,9 @@ public:
      *
      * Pixels with few photons can be discriminated. Discriminated pixels are
      * filled with zeros.
+     *
+     * By default the fluorescence lifetimes of the pixels are computed in
+     * units of nanoseconds.
      *
      * @param tttr_data[in] pointer to a TTTR object
      * @param tttr_irf[in] pointer to a TTTR object of the IRF
@@ -336,7 +335,7 @@ public:
             std::string reading_routine = "default",
             long long macro_time_shift = 0,
             CLSMImage *source = nullptr,
-            bool fill = false,
+            bool fill = true,
             std::vector<int> channels = std::vector<int>(),
             bool skip_before_first_frame_marker = false,
             bool skip_after_last_frame_marker = false

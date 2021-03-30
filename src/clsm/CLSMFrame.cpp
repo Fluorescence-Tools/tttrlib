@@ -2,9 +2,10 @@
 // Created by tpeulen on 10/24/20.
 //
 
-#include "clsm/CLSMPixel.h"
-#include "clsm/CLSMLine.h"
-#include "clsm/CLSMFrame.h"
+#include "include/CLSMPixel.h"
+#include "include/CLSMLine.h"
+#include "include/CLSMFrame.h"
+#include "TTTRRange.h"
 
 CLSMFrame::CLSMFrame():
 TTTRRange()

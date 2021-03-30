@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <cstdint>
-#include "record_types.h"
+#include "TTTRRecordTypes.h"
 
 
 /*********************************************/

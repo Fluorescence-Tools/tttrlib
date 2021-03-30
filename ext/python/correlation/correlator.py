@@ -6,7 +6,40 @@ def correlation(self):
 
 @property
 def x_axis(self):
-    return self.get_x_axis_normalized()
+    return self.get_x_axis()
+
+
+@property
+def tttr(self):
+    return self.get_tttr()
+
+
+@tttr.setter
+def tttr(self, v):
+    if isinstance(v, tttrlib.TTTR):
+        self.set_tttr(v, v)
+    else:
+        self.set_tttr(*v)
+
+
+@property
+def times(self):
+    return self.get_macrotimes()
+
+
+@times.setter
+def times(self, v):
+    return self.set_macrotimes(*v)
+
+
+@property
+def weights(self):
+    return self.get_weights()
+
+
+@weights.setter
+def weights(self, v):
+    return self.set_weights(*v)
 
 
 def __repr__(self):
@@ -28,11 +61,8 @@ def __init__(
         **kwargs
 ):
     # prepare kwargs
-    make_fine = kwargs.pop('make_fine', False)
-    if isinstance(tttr, tuple):
-        t1, t2 = tttr
-        kwargs['tttr'] = t1
-    elif isinstance(tttr, tttrlib.TTTR):
+    make_fine = kwargs.get('make_fine', False)
+    if isinstance(tttr, tttrlib.TTTR):
         kwargs['tttr'] = tttr
     this = _tttrlib.new_Correlator(**kwargs)
     try:

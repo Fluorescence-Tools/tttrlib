@@ -13,8 +13,9 @@
  ****************************************************************************/
 
 
-#include <include/tttr.h>
-#include <include/record_reader.h>
+#include <include/TTTR.h>
+#include <include/TTTRRecordReader.h>
+#include "info.h"
 
 
 /*! Processes PicoHarp T3 Tags
@@ -64,7 +65,6 @@ bool ProcessPHT3(
         }
     }
 }
-
 
 /// PicoHarp T2 input
 bool ProcessPHT2(
@@ -133,7 +133,6 @@ bool ProcessHHT2v1(
     }
 }
 
-
 /// HydraHarp/TimeHarp260 T2 input
 bool ProcessHHT2v2(
         uint32_t &TTTRRecord,
@@ -142,12 +141,10 @@ bool ProcessHHT2v2(
         uint32_t &micro_time,
         int16_t &channel,
         int16_t &record_type
-        ) {
-
+){
     const int64_t T2WRAPAROUND_V2 = 33554432;
     pq_hh_t2_record_t rec;
     rec.allbits = TTTRRecord;
-
     //an overflow record
     if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1))
     {
@@ -177,8 +174,6 @@ bool ProcessHHT2v2(
         }
     }
 }
-
-
 
 bool ProcessHHT3v2(
         uint32_t &TTTRRecord,

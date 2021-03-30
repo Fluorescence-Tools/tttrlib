@@ -5,7 +5,8 @@
 #ifndef TTTRLIB_CLSMPIXEL_H
 #define TTTRLIB_CLSMPIXEL_H
 
-#include "tttr.h"
+#include "TTTR.h"
+#include "TTTRRange.h"
 
 class CLSMPixel : public TTTRRange{
 

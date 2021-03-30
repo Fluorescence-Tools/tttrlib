@@ -4,21 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include "tttr.h"
-
-
-
-class PdaCallback{
-
-public:
-
-    virtual double run(double ch1, double ch2){
-        return ch1 / ch2;
-    }
-
-    PdaCallback() = default;
-    virtual ~PdaCallback() {};
-};
+#include "TTTR.h"
+#include "PdaCallback.h"
 
 
 class Pda {

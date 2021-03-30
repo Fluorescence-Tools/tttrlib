@@ -13,8 +13,8 @@
  ****************************************************************************/
 
 
-#ifndef TTTRLIB_RECORD_TYPES_H
-#define TTTRLIB_RECORD_TYPES_H
+#ifndef TTTRLIB_TTTRRECORDTYPES_H
+#define TTTRLIB_TTTRRECORDTYPES_H
 
 #include <cstdint>
 
@@ -29,12 +29,13 @@ typedef union pq_hh_t2_record {
     } bits;
 } pq_hh_t2_record_t;
 
+
 // HydraHarp/TimeHarp260 T3 record
 typedef union pq_hh_t3_record {
     uint32_t allbits;
     struct {
         unsigned n_sync    :10;    // number of sync period
-        unsigned dtime    :15;    // delay from last sync in units of chosen macrotime_resolution
+        unsigned dtime    :15;     // delay from last sync in units of chosen macrotime_resolution
         unsigned channel  :6;
         unsigned special  :1;
     } bits;
@@ -130,4 +131,4 @@ typedef union bh_overflow{
 
 
 
-#endif //TTTRLIB_RECORD_TYPES_H
+#endif //TTTRLIB_TTTRRECORDTYPES_H

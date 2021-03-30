@@ -1,4 +1,5 @@
-#include "clsm/CLSMImage.h"
+#include "include/CLSMImage.h"
+#include "info.h"
 
 void CLSMImage::copy(const CLSMImage& p2, bool fill){
 #if VERBOSE_TTTRLIB
@@ -22,9 +23,9 @@ void CLSMImage::copy(const CLSMImage& p2, bool fill){
     std::clog << std::endl;
 #endif
 #if VERBOSE_TTTRLIB
-    std::clog << "-- Linking TTTR: " << std::flush;
+    std::clog << "-- Linking TTTR: " << std::endl << std::flush;
 #endif
-    tttr = p2.tttr;
+    this->tttr = p2.tttr;
     // public attributes
     marker_frame = p2.marker_frame;
     marker_line_start = p2.marker_line_start;
@@ -121,13 +122,12 @@ CLSMImage::CLSMImage (
         determine_number_of_lines();
         remove_incomplete_frames();
         create_pixels_in_lines();
-
-        // fill pixel
-        if(fill && !channels.empty()){
-            fill_pixels(tttr_data.get(), channels, false);
-        }
     }
-    if(macro_time_shift!=0) shift_line_start(macro_time_shift);
+    // fill pixel
+    if(fill && !channels.empty())
+        fill_pixels(this->tttr.get(), channels, false);
+    if(macro_time_shift!=0)
+        shift_line_start(macro_time_shift);
 }
 
 void CLSMImage::create_pixels_in_lines() {
@@ -288,7 +288,7 @@ void CLSMImage::create_frames(bool clear_first){
     );
 #if VERBOSE_TTTRLIB
     std::clog << "-- CREATE_FRAMES" << std::endl;
-    std::cout << "-- Creating" << n_frame_edges - 1 << " frames: " << std::flush;
+    std::cout << "-- Creating " << n_frame_edges - 1 << " frames: " << std::flush;
 #endif
     for(int i=0; i < n_frame_edges - 1; i++){
         auto frame = new CLSMFrame(frame_edges[i]);
@@ -459,7 +459,7 @@ void CLSMImage::get_fluorescence_decay_image(
     std::clog << "Get decay image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
-    size_t n_tac = tttr_data->header->number_of_micro_time_channels / micro_time_coarsening;
+    size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / micro_time_coarsening;
     *dim1 = nf;
     *dim2 = n_lines;
     *dim3 = n_pixel;
@@ -511,9 +511,8 @@ void CLSMImage::get_fcs_image(
     std::clog << "Get fluorescence correlation image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
-    auto corr = Correlator(tttr.get(), correlation_method, n_bins, n_casc);
-    const int n_corr = corr.x_axis.size();
-
+    auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+    size_t n_corr = corr.curve.size();
     size_t n_cor_total = nf * n_lines * n_pixel * n_corr;
     auto t = (float*) calloc(n_cor_total, sizeof(float));
 #if VERBOSE_TTTRLIB
@@ -526,7 +525,7 @@ void CLSMImage::get_fcs_image(
     size_t o_frame = 0;
 //#pragma omp parallel for default(none) shared(tttr, o_frame, t, clsm_other)
     for(unsigned int i_frame=0; i_frame < n_frames; i_frame++){
-        auto corr = Correlator(tttr.get(), correlation_method, n_bins, n_casc);
+        auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
         auto frame = frames[i_frame];
         auto other_frame = clsm_other->frames[i_frame];
         for(unsigned int i_line=0; i_line < n_lines; i_line++){
@@ -551,7 +550,10 @@ void CLSMImage::get_fcs_image(
                             other_pixel->_tttr_indices.size(),
                             false
                     );
-                    corr.set_tttr(&tttr_1, &tttr_2);
+                    corr.set_tttr(
+                            std::make_shared<TTTR>(tttr_1),
+                            std::make_shared<TTTR>(tttr_2)
+                            );
                     double* correlation; int temp;
                     if(!normalized_correlation){
                         corr.get_corr(&correlation, &temp);
@@ -585,7 +587,7 @@ void CLSMImage::get_decay_of_pixels(
         bool stack_frames
 ){
     size_t n_decays = stack_frames ? 1 : n_frames;
-    size_t n_tac = tttr_data->header->number_of_micro_time_channels / tac_coarsening;
+    size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / tac_coarsening;
 #ifdef VERBOSE
     std::clog << "Get decays:" << std::endl;
     std::clog << "-- Number of frames: " << n_frames << std::endl;
@@ -631,12 +633,10 @@ void CLSMImage::get_mean_micro_time_image(
         int minimum_number_of_photons,
         bool stack_frames
 ){
-    double dt = tttr_data->header->micro_time_resolution;
 #if VERBOSE_TTTRLIB
     std::clog << "Get mean micro time image" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
-    std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
     std::clog << "-- Computing stack of mean micro times " << std::endl;
 #endif
     auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
@@ -654,7 +654,7 @@ void CLSMImage::get_mean_micro_time_image(
                         i++;
                     }
                 }
-                t[pixel_nbr] = value * dt;
+                t[pixel_nbr] = value;
             }
         }
     }
@@ -712,7 +712,7 @@ void CLSMImage::get_phasor_image(
     }
     int o_frames = stack_frames? 1: n_frames;
     if(frequency<0){
-        frequency = 1. / tttr_data->get_header().macro_time_resolution;
+        frequency = 1. / tttr_data->get_header()->get_macro_time_resolution();
     }
     double factor = (2. * frequency * M_PI);
 #if VERBOSE_TTTRLIB
@@ -772,7 +772,7 @@ void CLSMImage::get_mean_lifetime_image(
         double m1_irf,
         bool stack_frames
 ){
-    const double dt = tttr_data->header->micro_time_resolution;
+    const double dt = tttr_data->header->get_micro_time_resolution() * 1E9;
 #if VERBOSE_TTTRLIB
     std::clog << "Compute a mean lifetime image (Isenberg 1973)" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
@@ -783,8 +783,11 @@ void CLSMImage::get_mean_lifetime_image(
     if(tttr_irf != nullptr){
         unsigned short *micro_times_irf; int n_micro_times_irf;
         tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
-        m0_irf = n_micro_times_irf; m1_irf = 0;
-        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+        m0_irf = n_micro_times_irf; // number of photons
+        m1_irf = std::accumulate(
+                micro_times_irf,
+                micro_times_irf + n_micro_times_irf,
+                0.0); // sum of photon arrival times
     }
 #if VERBOSE_TTTRLIB
     std::clog << "-- IRF m0: " << m0_irf << std::endl;
@@ -792,34 +795,30 @@ void CLSMImage::get_mean_lifetime_image(
 #endif
     int o_frames = stack_frames? 1: n_frames;
     auto* t = (double *) calloc(o_frames * n_lines * n_pixel, sizeof(double));
-//#pragma omp parallel for default(none) shared(tttr_data, m0_irf, m1_irf, t, stack_frames)
-    for(int i_line = 0; i_line < n_lines; i_line++){
-        for(int i_pixel = 0; i_pixel < n_pixel; i_pixel++){
-            if(stack_frames){
-                size_t pixel_nbr = i_line  * (n_pixel) + i_pixel;
-                double mu0 = 0.0; double mu1 = 0.0;
-                for(auto &frame: frames){
-                    mu0 += frame->lines[i_line]->pixels[i_pixel]->_tttr_indices.size();
-                    for(auto &vi: frame->lines[i_line]->pixels[i_pixel]->_tttr_indices)
+
+    for(int i_frame = 0; i_frame < o_frames; i_frame++) {
+        for(int i_line = 0; i_line < n_lines; i_line++){
+            for(int i_pixel = 0; i_pixel < n_pixel; i_pixel++){
+                size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
+                double mu0 = 0.0; // total number of photons
+                double mu1 = 0.0; // sum of photon arrival times
+                if(stack_frames){
+                    for(auto &frame: frames){
+                        auto v = frame->lines[i_line]->pixels[i_pixel]->_tttr_indices;
+                        mu0 += v.size();
+                        for(auto &vi: v)
+                            mu1 += tttr_data->micro_times[vi];
+                    }
+                }
+                else{
+                    auto v = this->frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices;
+                    mu0 += v.size();
+                    for(auto &vi: v)
                         mu1 += tttr_data->micro_times[vi];
                 }
                 double g1 = mu0 / m0_irf;
                 double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-                double tau1 = g2 / g1 * dt;
-                t[pixel_nbr] = tau1 * (mu0 > minimum_number_of_photons);
-            } else{
-                for(int i_frame = 0; i_frame < n_frames; i_frame++){
-                    size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
-                    auto v = frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices;
-                    if (v.size() > minimum_number_of_photons){
-                        double mu0 = v.size(); double mu1 = 0.0;
-                        for(auto &vi: v) mu1 += tttr_data->micro_times[vi];
-                        double g1 = mu0 / m0_irf;
-                        double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-                        double tau1 = g2 / g1 * dt;
-                        t[pixel_nbr] = tau1;
-                    }
-                }
+                t[pixel_nbr] = g2 / g1 * dt * (mu0 > minimum_number_of_photons);
             }
         }
     }

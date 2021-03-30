@@ -6,8 +6,9 @@
 #define TTTRLIB_CLSMLINE_H
 
 #include <vector>
-#include "tttr.h" /* TTTRRange */
+#include "TTTR.h" /* TTTRRange */
 #include "CLSMPixel.h"
+#include "TTTRRange.h"
 
 class CLSMLine : public TTTRRange{
 
@@ -17,10 +18,9 @@ class CLSMLine : public TTTRRange{
 private:
 
     std::vector<CLSMPixel*> pixels;
+    int pixel_duration = 1;
 
 public:
-
-    int pixel_duration = 1;
 
     /// Get the number of pixels per line a frame of the CLSMImage
     size_t size() const {
