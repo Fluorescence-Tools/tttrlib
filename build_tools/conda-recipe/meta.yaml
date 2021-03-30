@@ -5,8 +5,8 @@ package:
   version: {{ data.get('version')|lower }}
 
 source:
-#  path: ../..
-  git_url: ../../
+  path: ../..
+#  git_url: ../../
 
 build:
     number: 0
@@ -24,7 +24,7 @@ requirements:
     - python {{ python }}
     - numpy {{ numpy }}.*
     - cmake
-    - swig 3.0.12.*
+    - swig {{ swig }}.*
     - boost {{ boost }}.*
     - fftw {{ fftw }}
     - hdf5 {{ hdf5 }}.*
