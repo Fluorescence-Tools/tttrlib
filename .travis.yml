@@ -56,6 +56,7 @@ script:
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]
     then
+      git clone https://gitlab.peulen.xyz/tpeulen/tttr-data.git ..
       nosetests --nocapture --with-coverage test_*.py
       # Install codacy-coverage to upload the coverage results to codacy
       pip install codacy-coverage
