@@ -1,0 +1,7 @@
+This folder contains examples on how tttrlib can be used. The
+python files (plot_*.py) are used to build the corresponding
+documentation via 'sphinx-gallery'.
+
+Files that start within a "broken" subfolder are ignored
+either because they are currently broken, outdated,
+or work in progress.
