@@ -1,26 +1,28 @@
-{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+{% set data = load_setup_py_data(setup_file='../../setup.py', from_recipe_dir=True) %}
 
 package:
   name: {{ data.get('name')|lower }}
   version: {{ data.get('version')|lower }}
 
 source:
-  path: ..
+#  path: ../..
+  git_url: ../../
 
 build:
     number: 0
-    string: py{{ CONDA_PY }}np{{ CONDA_NPY }}boost{{ boost }}hdf5{{ hdf5 }}
+    string: py{{ CONDA_PY }}np{{ numpy }}boost{{ boost }}hdf5{{ hdf5 }}
 
 requirements:
   host:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy {{ numpy }}.*
     - setuptools
     - git
     - cmake
+    - ninja
   build:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy {{ numpy }}.*
     - cmake
     - swig 3.0.12.*
     - boost {{ boost }}.*
@@ -29,7 +31,7 @@ requirements:
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy {{ numpy }}.*
     - boost {{ boost }}.* # [win]
     - libboost {{ boost }}.* # [not win]
     - fftw {{ fftw }}

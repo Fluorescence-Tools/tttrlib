@@ -1,13 +1,18 @@
 python:
   - 3.7
+  - 3.8
+  - 3.9
+numpy:
+  - 1.16                     # [py < 38]
+  - 1.20                     # [py >= 38]
 hdf5:
-  - 1.10.2
-  - 1.10.4
+  - 1.10.2                   # [py < 38 and not linux64]
+  - 1.10.4                   # [py >= 38 or linux64]
 fftw:
-  - 3.3.8
+  - 3.3.8.*
 boost:
-  - 1.67.0                     # [py < 38]
-  - 1.71.0                     # [py >= 38]
+  - 1.67                     # [py < 38]
+  - 1.71                     # [py >= 38]
 c_compiler:
   - gcc                        # [linux]
   - clang                      # [osx]
