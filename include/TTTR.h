@@ -26,8 +26,8 @@
 #include <cstdio>
 #include <map>
 #include <array>
-#include <memory>
-#include <stdlib.h>     /* malloc, calloc, exit, free */
+#include <memory>       /* shared_ptr */
+#include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
 
 #include "omp.h"
@@ -41,15 +41,11 @@
 #include "TTTRHeader.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
-
-
-#define RECORD_PHOTON               0
-#define RECORD_MARKER               1
-#define TTTRLIB_VERSION             "0.0.20"
-
+#include "info.h"
 
 
 /*!
+ *
  * @brief A count rate (cr) filter that returns an array containing a list of indices where
  * the cr was smaller than a specified cr.
  *
@@ -85,8 +81,6 @@ void selection_by_count_rate(
 /*!
 * @brief Returns time windows (tw), i.e., the start and the stop indices for a
 * minimum tw size, a minimum number of photons in a tw.
- *
- *
 *
 * @param output [out] Array containing the interleaved start and stop indices
 * of the tws in the TTTR object.
@@ -257,9 +251,6 @@ private:
     std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
     int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
-    /// The size in bytes per TTTR record.
-    size_t bytes_per_record;
-
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;
     hid_t      hdf5_file;                        /*HDF5 file handle */
@@ -359,10 +350,7 @@ public:
     * @param container_type The container type.
     * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
     */
-    int read_file(
-            const char *fn = nullptr,
-            int container_type = -1
-    );
+    int read_file(const char *fn = nullptr, int container_type = -1);
 
     /*!
     * Determines the number of records in a TTTR files (not for use with HDF5)
@@ -383,30 +371,29 @@ public:
             size_t bytes_per_record
     );
 
+    void append_events(
+            unsigned long long *macro_times, int n_macrotimes,
+            unsigned short *micro_times, int n_microtimes,
+            signed char *routing_channels, int n_routing_channels,
+            signed char *event_types, int n_event_types,
+            bool shift_macro_time = true,
+            long long macro_time_offset = 0
+    );
+
+    void append_event(
+            unsigned long long macro_time,
+            unsigned short micro_time,
+            signed char routing_channel,
+            signed char event_type,
+            bool shift_macro_time = true,
+            long long macro_time_offset = 0
+    );
+
     void append(
             const TTTR *other,
             bool shift_macro_time=true,
             long long macro_time_offset=0
-    ){
-#if VERBOSE_TTTRLIB
-        std::cout << "-- Appending number of records: " << other->n_valid_events << std::endl;
-#endif
-        size_t n_rec = this->n_valid_events + other->n_valid_events;
-        macro_times = (unsigned long long*) realloc(macro_times, n_rec * sizeof(unsigned long long));
-        micro_times = (unsigned short*) realloc(micro_times, n_rec * sizeof(unsigned short));
-        routing_channels = (signed char*) realloc(routing_channels, n_rec * sizeof(signed char));
-        event_types = (signed char*) realloc(event_types, n_rec * sizeof(signed char));
-        if(shift_macro_time){
-            macro_time_offset += macro_times[n_valid_events - 1];
-        }
-        for(size_t i_rec=0; i_rec<other->n_valid_events; i_rec++){
-            macro_times[i_rec + n_valid_events] = other->macro_times[i_rec] + macro_time_offset;
-            micro_times[i_rec + n_valid_events] = other->micro_times[i_rec];
-            routing_channels[i_rec + n_valid_events] = other->routing_channels[i_rec];
-            event_types[i_rec + n_valid_events] = other->event_types[i_rec];
-        }
-        n_valid_events += other->n_valid_events;
-    }
+    );
 
     size_t size(){
         return get_n_valid_events();
@@ -448,7 +435,7 @@ public:
      * @param time_window_length the length of the integration time windows in
      * units of milliseconds.
      */
-    void intensity_trace(
+    void get_intensity_trace(
             int **output, int *n_output,
             double time_window_length=1.0
     );
@@ -489,9 +476,7 @@ public:
         return tttr_container_type_str;
     }
 
-    TTTR* select(
-            int *selection, int n_selection
-    );
+    std::shared_ptr<TTTR> select(int *selection, int n_selection);
 
     /*! Constructor
      * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
@@ -553,9 +538,9 @@ public:
      * to find the used routing channels
      */
     TTTR(unsigned long long *macro_times, int n_macrotimes,
-         unsigned int *micro_times, int n_microtimes,
-         short *routing_channels, int n_routing_channels,
-         short *event_types, int n_event_types,
+         unsigned short *micro_times, int n_microtimes,
+         signed char *routing_channels, int n_routing_channels,
+         signed char *event_types, int n_event_types,
          bool find_used_channels = true
     );
 
@@ -589,15 +574,40 @@ public:
     std::string get_filename();
 
     /*!
-     * Returns a vector containing indices of records that
+     * Get a ptr to a TTTR object that is based on a selection on the current
+     * TTTR object. A selection is an array of indices of the TTTR events.
      *
-     * @param input channel number array used to select indices of photons
-     * @param n_input the length of the channel number list.
+     * @param selection
+     * @param n_selection
+     * @return
      */
+    std::shared_ptr<TTTR> get_tttr_by_selection(int *selection, int n_selection){
+        auto p = std::make_shared<TTTR>(*this, selection, n_selection, true);
+        return p;
+    }
+
+    /*!
+      * Get events indices by the routing channel number
+      *
+      * This method returns an array that contains the event / photon indices
+      * of events with routing channel numbers that are found in the selection
+      * input array.
+      *
+      * @param output indices of the events
+      * @param n_output number of selected events
+      * @param input routing channel number for selection of events
+      * @param n_input number of routing channels for selection of events
+      */
     void get_selection_by_channel(
             int **output, int *n_output,
             int *input, int n_input
     );
+
+    std::shared_ptr<TTTR> get_tttr_by_channel(int *input, int n_input){
+        int* sel; int nsel;
+        get_selection_by_channel(&sel, &nsel, input, n_input);
+        return get_tttr_by_selection(sel, nsel);
+    }
 
     /*!
      * List of indices where the count rate is smaller than a maximum count
@@ -617,6 +627,17 @@ public:
             bool invert=false
     );
 
+    std::shared_ptr<TTTR> get_tttr_by_count_rate(
+            double time_window, int n_ph_max,
+            bool invert=false
+    ){
+        int* sel; int nsel;
+        get_selection_by_count_rate(
+                &sel, &nsel,
+                time_window, n_ph_max, invert);
+        return get_tttr_by_selection(sel, nsel);
+    }
+
     /*!
     * Returns time windows (tw), i.e., the start and the stop indices for a
     * minimum tw size, a minimum number of photons in a tw.
@@ -627,7 +648,7 @@ public:
     * @param minimum_window_length[in] Minimum length of a tw in units of ms (mandatory).
     * @param maximum_window_length[in] Maximum length of a tw (optional).
     * @param minimum_number_of_photons_in_time_window[in] Minimum number of
-    * photons a selected tw contains (optional) in units of ms
+    * photons a selected tw contains (optional) in units of seconds
     * @param maximum_number_of_photons_in_time_window[in] Maximum number of
     * photons a selected tw contains (optional)
     * @param invert[in] If set to true, the selection criteria are inverted.
@@ -642,7 +663,7 @@ public:
     );
 
     /// Get header returns the header (if present) as a map of strings.
-    TTTRHeader get_header();
+    TTTRHeader* get_header();
 
     /*!
      * Returns the number of events in the TTTR file for cases no selection
@@ -658,11 +679,22 @@ public:
      * @param fn filename
      * @param container_type container type (PTU; HT3;
      * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+     * @oaram write_a_header if set to false no header is written - Writing correct
+     * headers is not implemented. Therefore, the default value is false.
      * @return
      */
     bool write(
-            const char* filename,
-            const char* container_type
+            std::string filename,
+            TTTRHeader* header = nullptr
+                    );
+
+    void write_spc132_events(FILE* fp, TTTR* tttr);
+
+    void write_hht3v2_events(FILE* fp, TTTR* tttr);
+
+    void write_header(
+            std::string &fn,
+            TTTRHeader* header = nullptr
             );
 
     /*!
