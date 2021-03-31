@@ -2,7 +2,7 @@
 
 package:
   name: {{ data.get('name')|lower }}
-  version: {{ data.get('version')|lower }}
+  version: 0.21.0 #{{ data.get('version')|lower }}
 
 source:
 #  path: ..
