@@ -1,12 +1,12 @@
-{% set data = load_setup_py_data(setup_file='../../setup.py', from_recipe_dir=True) %}
+{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
 
 package:
   name: {{ data.get('name')|lower }}
   version: {{ data.get('version')|lower }}
 
 source:
-  path: ../..
-#  git_url: ../../
+#  path: ..
+  git_url: ../
 
 build:
     number: 0
@@ -14,29 +14,14 @@ build:
 
 requirements:
   host:
-    - python {{ python }}
+    - python {{ python }}.*
     - numpy {{ numpy }}.*
     - setuptools
-    - git
-    - cmake
-    - ninja
   build:
-    - python {{ python }}
+    - python {{ python }}.*
     - numpy {{ numpy }}.*
-    - cmake
-    - swig {{ swig }}.*
-    - boost {{ boost }}.*
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}.*
-    - llvm-openmp # [osx]
   run:
-    - python {{ python }}
-    - numpy {{ numpy }}.*
-    - boost {{ boost }}.* # [win]
-    - libboost {{ boost }}.* # [not win]
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}.*
-    - llvm-openmp # [osx]
+    - python {{ python }}.*
 
 test:
   imports:
