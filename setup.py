@@ -78,7 +78,6 @@ class CMakeBuild(build_ext):
         )
 
 
-
 NAME = "tttrlib"
 DESCRIPTION = "tttrlib process TTTR data"
 LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to \
@@ -108,36 +107,36 @@ if "docs" in sys.argv:
         )
     except:
         print("Problem calling doxygen")
-if len(sys.argv) > 1:
-    setup(
-        name=NAME,
-        version=VERSION,
-        license=LICENSE,
-        author='Thomas-Otavio Peulen',
-        author_email='thomas@peulen.xyz',
-        ext_modules=[
-            CMakeExtension('tttrlib')
-        ],
-        cmdclass={
-            'build_ext': CMakeBuild
-        },
-        description=DESCRIPTION,
-        long_description=LONG_DESCRIPTION,
-        install_requires=[
-            'numpy'
-        ],
-        setup_requires=[
-            'setuptools'
-        ],
-        zip_safe=False,
-        classifiers=[
-            'Development Status :: 2 - Pre-Alpha',
-            'Intended Audience :: Science/Research',
-            'License :: OSI Approved :: MIT License',
-            'Natural Language :: English',
-            'Operating System :: Microsoft :: Windows',
-            'Operating System :: POSIX :: Linux',
-            'Programming Language :: Python',
-            'Topic :: Scientific/Engineering',
-        ]
-    )
+
+setup(
+    name=NAME,
+    version=VERSION,
+    license=LICENSE,
+    author='Thomas-Otavio Peulen',
+    author_email='thomas@peulen.xyz',
+    ext_modules=[
+        CMakeExtension('tttrlib')
+    ],
+    cmdclass={
+        'build_ext': CMakeBuild
+    },
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    install_requires=[
+        'numpy'
+    ],
+    setup_requires=[
+        'setuptools'
+    ],
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 2 - Pre-Alpha',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering',
+    ]
+)
