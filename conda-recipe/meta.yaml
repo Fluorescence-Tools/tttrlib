@@ -32,10 +32,10 @@ requirements:
   run:
     - python {{ python }}
     - numpy
-    - boost {{ boost }}.* # [win]
-    - libboost {{ boost }}.* # [not win]
     - fftw
     - hdf5
+    - boost # [win]
+    - libboost {{ boost }}.* # [not win]
     - llvm-openmp # [osx]
 
 test:
