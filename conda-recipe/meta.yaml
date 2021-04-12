@@ -19,23 +19,31 @@ requirements:
     - setuptools
     - git
   build:
+    - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - python {{ python }}
     - numpy
     - cmake
-    - swig {{ swig }}
-    - boost {{ boost }}
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}
-    - llvm-openmp # [osx]
+    - swig
+    - boost 1.67.0.* [py < 38]
+    - boost 1.71.0.* [py >= 38]
+    - hdf5 1.10.2.* [py < 38 and not linux64]
+    - hdf5 1.10.4.* [py >= 38 or linux64]
+    - fftw 3.3.4.* [win]
+    - fftw 3.3.8.* [not win]
+    - llvm-openmp [osx]
   run:
     - python {{ python }}
     - numpy
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}
-    - boost {{ boost }} # [win]
-    - libboost {{ boost }} # [not win]
-    - llvm-openmp # [osx]
+    - boost 1.67.0.* [py < 38]
+    - boost 1.71.0.* [py >= 38]
+    - libboost 1.71.0.* [py >= 38]
+    - libboost 1.67.0.* [py < 38]
+    - hdf5 1.10.2.* [py < 38 and not linux64]
+    - hdf5 1.10.4.* [py >= 38 or linux64]
+    - fftw 3.3.4.* [win]
+    - fftw 3.3.8.* [not win]
+    - llvm-openmp [osx]
 
 test:
   imports:
