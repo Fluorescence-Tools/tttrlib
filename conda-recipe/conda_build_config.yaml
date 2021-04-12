@@ -11,7 +11,3 @@ fftw:
 boost:
   - 1.67                   # [py < 38]
   - 1.71                   # [py >= 38]
-pin_run_as_build:
-  boost: x.x
-  hdf5: x.x
-  fftw: x.x.x

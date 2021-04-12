@@ -18,7 +18,6 @@ requirements:
     - numpy
     - setuptools
     - git
-    - cmake
   build:
     - {{ compiler('cxx') }}
     - python {{ python }}
@@ -32,10 +31,10 @@ requirements:
   run:
     - python {{ python }}
     - numpy
-    - fftw
-    - hdf5
-    - boost # [win]
-    - libboost {{ boost }}.* # [not win]
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
+    - boost {{ boost }} # [win]
+    - libboost {{ boost }} # [not win]
     - llvm-openmp # [osx]
 
 test:
