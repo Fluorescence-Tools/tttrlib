@@ -5,10 +5,11 @@ SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
 ################################################################################
-###### OPTIONS
+# BUILD OPTIONS
 ################################################################################
 option(INSTALL "Install the library and the include files" ON)
-option(BUILD_PYTHON_INTERFACE "Build the python interface" ON)
+OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
+OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
@@ -51,10 +52,9 @@ if(UNIX)
     endif()
 endif()
 
-################################################################################
-###### Compiler flags
-################################################################################
-
+#######################################
+# Compiler flags
+#######################################
 
 # Debug build detection
 ###########################
@@ -98,9 +98,9 @@ if (APPLE)
     endif()
 endif (APPLE)
 
-################################################################################
-###### INCLUDES AND LIBRARIES
-################################################################################
+#######################################
+# INCLUDES AND LIBRARIES
+#######################################
 
 ## Boost
 ###########################
@@ -190,9 +190,10 @@ IF (BUILD_DOC)
     ENDIF (DOXYGEN_FOUND)
 ENDIF ()
 
-################################################################################
-###### Targets
-################################################################################
+
+#######################################
+# Targets
+#######################################
 FILE(GLOB_RECURSE SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -213,7 +214,6 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_
 ## Use precomplied headers if possible
 #target_precompile_headers(${PROJECT_NAME}Shared PUBLIC "${HEADERS_FILES}")
 #target_precompile_headers(${PROJECT_NAME}Static PUBLIC "${HEADERS_FILES}")
-
 
 # By default the output name is the target. To not have different names, i.e.,
 # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.

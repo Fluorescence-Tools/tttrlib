@@ -1,0 +1,55 @@
+{% set data = load_setup_py_data(setup_file='../../setup.py', from_recipe_dir=True) %}
+
+package:
+  name: {{ data.get('name')|lower }}
+  version: {{ data.get('version')|lower }}
+
+source:
+#  path: ..
+  git_url: ../..
+
+build:
+    number: 0
+    string: py{{ python }}np{{ numpy }}boost{{ boost }}hdf5{{ hdf5 }}
+
+requirements:
+  host:
+    - python {{ python }}
+    - numpy {{ numpy }}
+    - setuptools
+    - git
+    - cmake
+  build:
+    - python {{ python }}
+    - numpy {{ numpy }}
+    - cmake
+    - swig {{ swig }}
+    - boost {{ boost }}
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
+    - llvm-openmp # [osx]
+  run:
+    - python {{ python }}
+    - numpy {{ numpy }}
+    - boost {{ boost }} # [win]
+    - libboost {{ boost }} # [not win]
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
+    - llvm-openmp # [osx]
+
+test:
+  imports:
+    - tttrlib
+
+about:
+  home: https://github.com/fluorescence-tools/tttrlib
+  license: {{ data.get('license') }}
+  summary: |
+    {{ data.get('description') }}
+  description: |
+    {{ data.get('long_description') }}
+  doc_url: https://fluorescence-tools.github.io/tttrlib/
+
+extra:
+  recipe-maintainers:
+    - tpeulen
