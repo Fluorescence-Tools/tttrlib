@@ -23,6 +23,8 @@ build:linux:
   tags:
     - linux
   image: continuumio/miniconda3:latest
+  before_script:
+    - apt update -yq && apt -yq install build-essential
   script:
     - echo "I am a build stage job for debian, running on docker using continuumio/miniconda3:latest image"
     - source activate
