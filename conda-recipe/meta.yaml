@@ -10,32 +10,32 @@ source:
 
 build:
     number: 0
-    string: py{{ python }}np{{ numpy }}boost{{ boost }}hdf5{{ hdf5 }}
+    string: py{{ python }}boost{{ boost }}hdf5{{ hdf5 }}
 
 requirements:
   host:
     - python {{ python }}
-    - numpy {{ numpy }}
+    - numpy
     - setuptools
     - git
     - cmake
   build:
     - {{ compiler('cxx') }}
     - python {{ python }}
-    - numpy {{ numpy }}
+    - numpy
     - cmake
-    - swig {{ swig }}.*
-    - boost {{ boost }}.*
-    - fftw {{ fftw }}.*
-    - hdf5 {{ hdf5 }}.*
+    - swig {{ swig }}
+    - boost {{ boost }}
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
-    - numpy {{ numpy }}
+    - numpy
     - boost {{ boost }}.* # [win]
     - libboost {{ boost }}.* # [not win]
-    - fftw {{ fftw }}.*
-    - hdf5 {{ hdf5 }}.*
+    - fftw
+    - hdf5
     - llvm-openmp # [osx]
 
 test:

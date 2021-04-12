@@ -29,7 +29,6 @@ build:linux:
     - echo "I am a build stage job for debian, running on docker using continuumio/miniconda3:latest image"
     - source activate
     - conda install mamba boa conda-verify -c conda-forge
-    - mamba update -y -n base -c defaults --all
     - |
       conda config --add channels salilab
       conda config --add channels conda-forge
