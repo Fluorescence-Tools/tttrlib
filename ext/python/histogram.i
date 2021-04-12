@@ -1,6 +1,7 @@
 %module tttrlib
 %{
-    #include "../include/histogram.h"
+#include "../include/Histogram.h"
+#include "../include/HistogramAxis.h"
 %}
 
 %apply (double* IN_ARRAY1, int DIM1) {
@@ -21,7 +22,8 @@
     (double** hist, int* dim)
 }
 
-%include "../include/histogram.h"
+%include "../include/Histogram.h"
+%include "../include/HistogramAxis.h"
 
 %template(histogram1D_int) histogram1D<int>;
 %template(histogram1D_double) histogram1D<double>;

@@ -3,25 +3,26 @@ from __future__ import division
 import os
 import tempfile
 import unittest
+import json
 import numpy as np
 
 import tttrlib
 
 
 print("Test: ", __file__)
-spc132_filename = './data/bh/bh_spc132.spc'
-spc630_filename = './data/bh/bh_spc630_256.spc'
-photon_hdf_filename = './data/hdf/1a_1b_Mix.hdf5'
-ptu_hh_t2_filename = './data/pq/ptu/pq_ptu_hh_t2.ptu'
-ptu_hh_t3_filename = './data/pq/ptu/pq_ptu_hh_t3.ptu'
-ht3_clsm_filename = './data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+spc132_filename = '../tttr-data/bh/bh_spc132.spc'
+spc630_filename = '../tttr-data/bh/bh_spc630_256.spc'
+photon_hdf_filename = '../tttr-data/hdf/1a_1b_Mix.hdf5'
+ptu_hh_t2_filename = '../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu'
+ptu_hh_t3_filename = '../tttr-data/pq/ptu/pq_ptu_hh_t3.ptu'
+ht3_clsm_filename = '../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 
 data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
 
 class Tests(unittest.TestCase):
 
-    make_references = False
+    make_references = True
 
     test_files = [
         (spc132_filename, 'SPC-130'),
@@ -31,6 +32,49 @@ class Tests(unittest.TestCase):
         (ptu_hh_t2_filename, 'PTU'),
         (ptu_hh_t3_filename, 'PTU')
     ]
+
+    def test_append_event(self):
+        data = tttrlib.TTTR()
+        data.append_event(10, 11, 3, 0)
+        data.append_event(11, 66, 4, 1)
+        data.append_event(11, 22, 5, 1, False)
+        self.assertListEqual(data.macro_times.tolist(), [10, 21, 11]) # macro times are shifted by default
+        self.assertListEqual(data.micro_times.tolist(), [11, 66, 22])
+        self.assertListEqual(data.routing_channels.tolist(), [3, 4, 5])
+        self.assertListEqual(data.event_types.tolist(), [0, 1, 1])
+
+    def test_tttr_header_ptu(self):
+        filename = ptu_hh_t3_filename
+        data = tttrlib.TTTR(filename, 'PTU')
+        json_str = data.header.get_json()
+        h2 = tttrlib.TTTRHeader()
+        h2.set_json(json_str)
+        d1 = json.loads(json_str)
+        d2 = json.loads(h2.get_json())
+        self.assertDictEqual(d1, d2)
+        # write PTU header
+        mode = 'wb'
+        tttrlib.TTTRHeader.write_ptu_header("test.ptu", h2, mode) # default is wb
+        # test if all info is still there
+        data2 = tttrlib.TTTR("test.ptu")
+        h3 = data2.header
+        d3 = json.loads(h3.get_json())
+        self.assertDictEqual(d2, d3)
+        h4 = tttrlib.TTTRHeader(filename, 0)
+        d4 = json.loads(h4.get_json())
+        self.assertDictEqual(d4, d3)
+
+        header = tttrlib.TTTRHeader(filename)
+        d5 = json.loads(header.get_json())
+        self.assertDictEqual(d4, d5)
+
+    def test_tttr_header_add_tags(self):
+        data = tttrlib.TTTR(spc132_filename, "SPC-130")
+        # add tags from another header
+        header2 = tttrlib.TTTRHeader(ptu_hh_t3_filename, 0) # 0 is the container type
+        self.assertEqual(len(data.header.tags) < len(header2.tags), True)
+        data.header.add_tags(header2)
+        self.assertEqual(len(data.header.tags) >= len(header2.tags), True)
 
     def test_reading(self):
         test_files = self.test_files
@@ -46,13 +90,11 @@ class Tests(unittest.TestCase):
                 micro_times = data.micro_times
                 macro_times = data.macro_times
                 np.savez_compressed(
-                    './references/' + file_root + ".npz",
+                    './data/references/' + file_root + ".npz",
                     routing_channels, micro_times, macro_times
                 )
-
-            reference_file = './references/' + file_root + '.npz'
+            reference_file = './data/references/' + file_root + '.npz'
             reference = np.load(reference_file)
-
             # routing channels
             self.assertEqual(
                 np.allclose(
@@ -77,7 +119,6 @@ class Tests(unittest.TestCase):
                 ),
                 True
             )
-
             # test __rep__
             file_path = os.path.abspath(file_type[0]).replace('\\', '/')
             container_type = file_type[1]
@@ -140,7 +181,7 @@ class Tests(unittest.TestCase):
              12.65625, 12.76171875, 12.8671875, 12.97265625, 13.078125,
              13.18359375, 13.2890625, 13.39453125
              ]
-        )
+        ) * 1e-9
         self.assertEqual(
             np.allclose(
                 h_ref, h
@@ -155,9 +196,7 @@ class Tests(unittest.TestCase):
     def test_header(self):
         data = tttrlib.TTTR(ptu_hh_t3_filename, 'PTU')
         header = data.header
-        self.assertEqual(
-            72, len(header.data.keys())
-        )
+        self.assertEqual(123, len(header.tags))
 
     def test_slicing(self):
         # single element
@@ -200,12 +239,15 @@ class Tests(unittest.TestCase):
             d2.macro_times[len(data)],
             int(data.macro_times[0] + 11)
         )
+        # merge by __add__
+        d3 = d + d
+        self.assertEqual(len(d3), len(d) * 2)
 
     def test_header_copy_constructor(self):
         # import tttrlib
-        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('../tttr-data/bh/bh_spc132.spc', 'SPC-130')
         p1 = data.header
-        p2 = tttrlib.Header(p1)
+        p2 = tttrlib.TTTRHeader(p1)
         self.assertEqual(
             p1.macro_time_resolution,
             p2.macro_time_resolution
@@ -225,7 +267,7 @@ class Tests(unittest.TestCase):
 
     def test_tttr_copy_constructor(self):
         # import tttrlib
-        # data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
+        # data = tttrlib.TTTR('../tttr-data/bh/bh_spc132.spc', 'SPC-130')
         d2 = tttrlib.TTTR(data)
         self.assertEqual(
             np.allclose(
@@ -276,6 +318,31 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             d2.macro_times[0], data.macro_times[-1]
         )
+
+    def test_tttr_by_selection(self):
+        ds = data.get_tttr_by_selection([1, 2])
+        self.assertEqual(
+            np.allclose(
+                ds.macro_times,
+                np.array([ 92675, 341107], dtype=np.uint64)
+            ),
+            True
+        )
+
+    def test_tttr_by_channel(self):
+        tttr1 = data.get_tttr_by_channel([0])
+        tttr2 = data.get_tttr_by_channel([8])
+        self.assertEqual(len(tttr1), 56499)
+        self.assertEqual(len(tttr2), 79468)
+
+    def test_tttr_by_count_rate(self):
+        filter_options = {
+            'n_ph_max': 60,
+            'time_window': 10.0e-3,  # = 10 ms (macro_time_resolution is in seconds)
+            'invert': True  # set invert to True to select TW with more than 60 ph
+        }
+        tttr_sel = data.get_tttr_by_count_rate(**filter_options)
+
 
     def test_constructor_with_array(self):
         macro_times = data.macro_times
@@ -353,12 +420,32 @@ class Tests(unittest.TestCase):
             header.getTTTRRecordType(), -1
         )
 
-    def test_write_spc(self):
+    def test_write_tttr(self):
         _, filename = tempfile.mkstemp(
-            suffix='.npy'
+            suffix='.spc'
         )
-        data.write(filename, 'SPC-130')
+        data.write(filename)
         d2 = tttrlib.TTTR(filename, 'SPC-130')
         self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
         self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
         self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)
+
+    def test_write_tttr_other_header(self):
+        _, filename = tempfile.mkstemp(suffix='.ptu')
+        # Read header from other TTTR file
+        other_header = tttrlib.TTTRHeader(ptu_hh_t3_filename, 0)
+        data.write(filename, other_header)
+        d2 = tttrlib.TTTR(filename)
+        self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
+        self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
+        self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)
+
+    # def test_write_tttr_new_header(self):
+    #     _, filename = tempfile.mkstemp(suffix='.ptu')
+    #     # Read header from other TTTR file
+    #     other_header = tttrlib.TTTRHeader()
+    #     data.write(filename, other_header)
+    #     d2 = tttrlib.TTTR(filename)
+    #     self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
+    #     self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
+    #     self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)

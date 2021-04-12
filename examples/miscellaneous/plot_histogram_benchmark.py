@@ -103,10 +103,10 @@ print("tttrlib speedup: %.2f" % (time_np_hist_arb / time_tttrlib_hist_arb))
 
 def histogram2d(data, bins):
     h = tttrlib.doubleHistogram()
-    h.setAxis(0, "x", -3, 3, bins, 'lin')
-    h.setAxis(1, "y", -3, 3, bins, 'lin')
+    h.set_axis(0, "x", -3, 3, bins, 'lin')
+    h.set_axis(1, "y", -3, 3, bins, 'lin')
     h.update(data.T)
-    return h.getHistogram().reshape((bins, bins))
+    return h.get_histogram().reshape((bins, bins))
 
 
 print("\n\nTesting 2D Histogram linear spacing")

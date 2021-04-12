@@ -1,16 +1,16 @@
 python:
   - 3.7
-c_compiler:
-  - gcc                        # [linux]
-  - clang                      # [osx]
-  - vs2015                     # [win]
-c_compiler_version:            # [unix]
-  - 4                          # [osx]
-  - 7                          # [linux64 or aarch64]
-cxx_compiler:
-  - gxx                        # [linux]
-  - clangxx                    # [osx]
-  - vs2015                     # [win]
-cxx_compiler_version:          # [unix]
-  - 4                          # [osx]
-  - 7                          # [linux64 or aarch64]
+  - 3.8
+swig:
+  - 3.0.12
+numpy:
+  - 1.16                     # [py < 38]
+  - 1.20                     # [py >= 38]
+hdf5:
+  - 1.10.2                   # [py < 38 and not linux64]
+  - 1.10.4                   # [py >= 38 or linux64]
+fftw:
+  - 3.3.8
+boost:
+  - 1.67                     # [py < 38]
+  - 1.71                     # [py >= 38]

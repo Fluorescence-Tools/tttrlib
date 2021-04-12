@@ -1,6 +1,9 @@
 %{
-#include "../include/image.h"
-#include "../include/tttr.h"
+#include "../include/CLSMPixel.h"
+#include "../include/CLSMLine.h"
+#include "../include/CLSMFrame.h"
+#include "../include/CLSMImage.h"
+#include "../include/TTTR.h"
 static int myErr = 0; // flag to save error state
 %}
 
@@ -9,7 +12,7 @@ static int myErr = 0; // flag to save error state
 %template(vector_CLSMPixel) std::vector<CLSMPixel*>;
 
 %apply (unsigned char* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
-    (uint8_t* mask, int dmask1, int dmaks2, int dmask3)
+    (uint8_t* mask, int dmask1, int dmask2, int dmask3)
 }
 %apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {
     (double *images, int input_frames, int input_lines, int input_pixel),
@@ -20,8 +23,8 @@ static int myErr = 0; // flag to save error state
 %attribute(CLSMImage, int, n_frames, get_n_frames);
 %attribute(CLSMImage, int, n_lines, get_n_lines);
 %attribute(CLSMImage, int, n_pixel, get_n_pixel);
-%attribute(CLSMFrame, int, n_lines, get_n_lines);
-%attribute(CLSMLine, int, n_pixel, get_n_pixel);
+%attribute(CLSMFrame, size_t, n_lines, size);
+%attribute(CLSMLine, size_t, n_pixel, size);
 %attribute(CLSMLine, unsigned long long, pixel_duration, get_pixel_duration);
 
 // Python does not support overloading. Thus, ignore the copy constructor
@@ -31,9 +34,10 @@ static int myErr = 0; // flag to save error state
 // Use shared_prt for CLSMImage to pass CLSMImage around
 %shared_ptr(CLSMImage)
 
-%include "../include/tttr.h"
-%include "../include/image.h"
-
+%include "../include/CLSMPixel.h"
+%include "../include/CLSMLine.h"
+%include "../include/CLSMFrame.h"
+%include "../include/CLSMImage.h"
 
 // https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
 %exception CLSMImage::__getitem__ {
@@ -49,19 +53,20 @@ static int myErr = 0; // flag to save error state
 %extend CLSMImage {
 
     CLSMFrame* __getitem__(int i) {
-        if (i >= $self->get_n_frames()){
+        if (i >= $self->size()){
             myErr = 1;
             return 0;
         }
         if (i < 0) {
-            i = $self->get_n_frames() + i;
+            i = $self->size() + i;
         }
         return (*($self))[i];
     }
 
     size_t __len__(){
-        return $self->get_n_frames();
+        return $self->size();
     }
+
 
     %pythoncode "./ext/python/image/image_extension.py"
 }
@@ -80,9 +85,9 @@ static int myErr = 0; // flag to save error state
 
     CLSMLine* __getitem__(int i) {
         if (i < 0){
-            i = $self->get_n_lines() + i;
+            i = $self->size() + i;
         }
-        if (i >= $self->get_n_lines()){
+        if (i >= $self->size()){
             myErr = 1;
             return 0;
         }
@@ -90,7 +95,7 @@ static int myErr = 0; // flag to save error state
     }
 
     size_t __len__(){
-        return $self->get_n_lines();
+        return $self->size();
     }
 }
 
@@ -108,16 +113,16 @@ static int myErr = 0; // flag to save error state
 
     CLSMPixel* __getitem__(int i) {
         if (i < 0){
-            i = $self->get_n_pixel() + i;
+            i = $self->size() + i;
         }
-        if (i >= $self->get_n_pixel()){
+        if (i >= $self->size()){
             myErr = 1;
             return 0;
         }
         return (*($self))[i];
     }
     size_t __len__(){
-        return $self->get_n_pixel();
+        return $self->size();
     }
 }
 

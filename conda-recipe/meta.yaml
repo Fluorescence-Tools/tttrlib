@@ -5,35 +5,36 @@ package:
   version: {{ data.get('version')|lower }}
 
 source:
-  path: ..
+#  path: ..
+  git_url: ..
 
 build:
     number: 0
-    string: np{{ CONDA_NPY }}py{{ CONDA_PY }}_{{ data.get('GIT_BUILD_STR', "0")|lower }}
+    string: py{{ python }}np{{ numpy }}boost{{ boost }}hdf5{{ hdf5 }}
 
 requirements:
   host:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy {{ numpy }}
     - setuptools
     - git
     - cmake
   build:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
+    - numpy {{ numpy }}
     - cmake
-    - swig 3.0.12.*
-    - boost 1.67.0.*
-    - fftw
-    - hdf5 1.10.2.*
+    - swig {{ swig }}
+    - boost {{ boost }}
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
-    - {{ pin_compatible('numpy') }}
-    - hdf5 1.10.2.*
-    - boost 1.67.0.* [win]
-    - libboost 1.67.0.* [not win]
-    - fftw
+    - numpy {{ numpy }}
+    - boost {{ boost }} # [win]
+    - libboost {{ boost }} # [not win]
+    - fftw {{ fftw }}
+    - hdf5 {{ hdf5 }}
     - llvm-openmp # [osx]
 
 test:
@@ -43,10 +44,10 @@ test:
 about:
   home: https://github.com/fluorescence-tools/tttrlib
   license: {{ data.get('license') }}
-  summary: Python bindings for tttrlib
+  summary: |
+    {{ data.get('description') }}
   description: |
-    tttrlib C++ library including Python wrapper to read time-tagged
-    time resolved data files.
+    {{ data.get('long_description') }}
   doc_url: https://fluorescence-tools.github.io/tttrlib/
 
 extra:

@@ -8,47 +8,46 @@ the prompt and the delayed excitation in a pulsed interleaved excitation
 experiment by changing the selection on the weights.
 
 """
-import pylab as p
+import matplotlib.pylab as plt
 import tttrlib
 import numpy as np
 
-fig, ax = p.subplots(nrows=1, ncols=2)
 
-#  Read the data data
+fig, ax = plt.subplots(1, 2, sharex='col', sharey='row')
 
-data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+#  Read the TTTR data
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
-# Create correlator
+# Create a correlator
+correlator = tttrlib.Correlator()
+
 B = 9
 n_casc = 25
-
-correlator = tttrlib.Correlator()
 correlator.n_bins = B
 correlator.n_casc = n_casc
 
 # Select the green channels (channel number 0 and 8)
-
 ch1_indeces = data.get_selection_by_channel([0])
 ch2_indeces = data.get_selection_by_channel([8])
 
 # green-red cross-correlation
-
-t = data.get_macro_time()
+t = data.macro_times
 
 t1 = t[ch1_indeces]
 w1 = np.ones_like(t1, dtype=np.float)
-
 t2 = t[ch2_indeces]
 w2 = np.ones_like(t2, dtype=np.float)
 
 correlator.set_events(t1, w1, t2, w2)
-correlator.run()
 
-x = correlator.get_x_axis_normalized()
-y = correlator.get_corr_normalized()
+x = correlator.x_axis
+y = correlator.correlation
 
-ax[0].semilogx(x, y)
-
+ax[0].semilogx(x, y, label="Gp/Gs")
+ax[0].set_title('RAW correlations')
+ax[0].set_xlabel('corr. time / ms')
+ax[0].set_ylabel('Correlation Amplitude')
+ax[0].legend()
 
 # Mask
 t = data.get_macro_time()
@@ -67,11 +66,13 @@ w2 = np.ones_like(t2, dtype=np.float)
 w2[np.where(mt2 < 1500)] *= 0.0
 
 correlator.set_events(t1, w1, t2, w2)
-correlator.run()
 
-x = correlator.get_x_axis_normalized()
-y = correlator.get_corr_normalized()
+x = correlator.x_axis
+y = correlator.correlation
 
-ax[1].semilogx(x, y)
+ax[1].semilogx(x, y, label="Gp/Gs")
+ax[1].set_xlabel('corr. time / ms')
+ax[1].set_title('Gated correlation')
+ax[1].legend()
 
-p.show()
+plt.show()

@@ -7,7 +7,7 @@ Micro time histograms
 import tttrlib
 import pylab as p
 
-data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 h, t = data.microtime_histogram(
     micro_time_coarsening=32
 )

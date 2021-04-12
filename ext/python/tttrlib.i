@@ -16,7 +16,7 @@
 %include "std_map.i";
 %include "std_vector.i";
 %include "std_list.i";
-%include "std_pair.i";
+%include "std_pair.i"; // tttrlib.Correlator.get_tttr
 %include "std_shared_ptr.i";
 %include "cpointer.i"
 %include "numpy.i"
@@ -67,6 +67,7 @@ import_array();
 %apply(double* INPLACE_ARRAY1, int DIM1) {(double* inplace_output, int n_output)}
 
 // Templates
+// Vector templates
 %template(VectorDouble) std::vector<double>;
 %template(VectorUint64) std::vector<unsigned long long>;
 %template(VectorInt64) std::vector<long long>;
@@ -77,7 +78,10 @@ import_array();
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
 %template(MapStringString) std::map<std::string, std::string>;
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
+// Pair templates
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
+%template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
+%template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 
 %include "tttr.i"
 %include "histogram.i"

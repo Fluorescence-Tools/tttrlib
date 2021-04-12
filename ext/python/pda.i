@@ -1,6 +1,7 @@
 %module tttrlib
 %{
-    #include "../include/pda.h"
+#include "../include/Pda.h"
+#include "../include/PdaCallback.h"
 %}
 
 //// internal
@@ -27,9 +28,10 @@
 %attribute(Pda, unsigned int, hist2d_nmin, get_min_number_of_photons, set_min_number_of_photons);
 %attribute(Pda, unsigned int, hist2d_nmax, get_max_number_of_photons, set_max_number_of_photons);
 %attribute(Pda, bool, hist2d_valid, is_valid_sgsr, set_valid_sgsr);
+%extend Pda{%pythoncode "./ext/python/pda/pda_extension.py"}
 
 // Used for PdaCallback
 // see https://github.com/swig/swig/tree/master/Examples/python/callback
 %feature("director") PdaCallback;
-%extend Pda{%pythoncode "./ext/python/pda/pda_extension.py"}
-%include "../include/pda.h"
+%include "../include/Pda.h"
+%include "../include/PdaCallback.h"

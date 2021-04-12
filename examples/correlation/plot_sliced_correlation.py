@@ -14,11 +14,11 @@ see :cite:`Ries2010`.
 
 
 """
-import pylab as p
+import pylab as plt
 import tttrlib
 import numpy as np
 
-data = tttrlib.TTTR('../../test/data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
 ch1 = [0]
 ch2 = [8]
@@ -52,8 +52,7 @@ for start, stop in start_stop:
     )
 
 # Plot the all correlations
-
-fig, ax = p.subplots(nrows=1, ncols=2)
+fig, ax = plt.subplots(nrows=1, ncols=2)
 
 # plot the unsliced correlation
 correlator = tttrlib.Correlator(
@@ -64,9 +63,11 @@ ax[0].semilogx(
     correlator.x_axis,
     correlator.correlation
 )
+ax[0].set_title('Correlation all data')
 
 # plot the individual correlations
+ax[1].set_title('Correlation of slices')
 for x, y in correlations:
     ax[1].semilogx(x, y)
 
-p.show()
+plt.show()

@@ -13,54 +13,64 @@ pulsed excitation experiment. However, the same procedure can be applied to cw d
 
 """
 import tttrlib
-import pylab as p
+import matplotlib.pylab as plt
 import numpy as np
 
-data = tttrlib.TTTR('../test/data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
-# get the indices of the two channels
-ch1_indeces = data.get_selection_by_channel([8])
-ch2_indeces = data.get_selection_by_channel([0])
-
-# use the indices to create new TTTR objects
-# either by creating a new object and providing a selection
+# create TTTR objects for the two channels
+ch1_indeces = data.get_selection_by_channel([8, 1])
 tttr_ch1 = tttrlib.TTTR(data, ch1_indeces)
-# or by slicing
-tttr_ch2 = data[ch2_indeces]
+tttr_ch2 = data.get_tttr_by_channel([0, 9])
 
 # correlate with the new TTTR objects
+full_corr_settings = {
+    "method":'default',
+    "n_casc": 37,
+    "n_bins": 7,
+    "make_fine":True
+}
 correlator = tttrlib.Correlator(
-    method='default',
-    n_casc=35,
-    n_bins=6,
+    **full_corr_settings,
     tttr=(tttr_ch1, tttr_ch2),
-    make_fine=True
 )
 x = correlator.x_axis
 y = correlator.correlation
 
-# use pylab to plot the data
-p.semilogx(x, y)
-# p.show()
+
+fig, ax = plt.subplots(1, 1, sharex='col', sharey='row')
+ax.semilogx(x, y, label="GpRp/GsRs - full")
 
 # the above is equivalent to the following
-correlator_ref = tttrlib.Correlator(
-    tttr=data,
-    n_casc=35,
-    n_bins=6
-)
-t1 = data.macro_times[ch1_indeces]
-t2 = data.macro_times[ch2_indeces]
-mt1 = data.micro_times[ch1_indeces]
-mt2 = data.micro_times[ch2_indeces]
-w1 = np.ones_like(t1, dtype=np.float)
-w2 = np.ones_like(t2, dtype=np.float)
+correlator_ref = tttrlib.Correlator(**full_corr_settings)
+t1, t2 = data.macro_times[ch1_indeces], tttr_ch2.macro_times
+mt1, mt2 = data.micro_times[ch1_indeces], tttr_ch2.micro_times
+w1, w2 = np.ones_like(t1, dtype=np.float), np.ones_like(t2, dtype=np.float)
 correlator_ref.set_macrotimes(t1, t2)
 correlator_ref.set_weights(w1, w2)
 n_microtime_channels = data.get_number_of_micro_time_channels()
 correlator_ref.set_microtimes(mt1, mt2, n_microtime_channels)
 x_ref = correlator_ref.x_axis
 y_ref = correlator_ref.correlation
+x_ref *= data.header.micro_time_resolution
+ax.semilogx(x_ref, y_ref, label="GpRp/GsRs - full 2")
 
-p.semilogx(x_ref, y_ref)
-p.show()
+"""
+For comparison a normal correlation (without considering the 
+micro times).
+"""
+correlator_ref = tttrlib.Correlator(
+    tttr=(tttr_ch1, tttr_ch2),
+    n_casc=25,
+    n_bins=7
+)
+
+x_normal = correlator_ref.x_axis
+y_normal = correlator_ref.correlation
+
+ax.semilogx(x_normal, y_normal, label="GpRp/GsRs - normal")
+ax.set_xlabel('corr. time / sec')
+ax.set_ylabel('Correlation Amplitude')
+ax.legend()
+
+plt.show()

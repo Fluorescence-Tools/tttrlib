@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+{% set title = 'TTTRlib: time-tagged time-resolved data processing' %}
+{% block content %}
+<div class="container-fluid sk-landing-bg py-3">
+  <div class="container sk-landing-container">
+    <div class="row">
+      <div class="col-md-6 mb-3 mb-md-0">
+        <h1 class="sk-landing-header text-white text-monospace">tttrlib</h1>
+        <h4 class="sk-landing-subheader text-white font-italic mb-3">time-tagged time-resolved data processing</h4>
+        <a class="btn sk-landing-btn mb-1" href="{{ pathto('getting_started') }}" role="button">Getting Started</a>
+        <a class="btn sk-landing-btn mb-1" href="{{ pathto(release_highlights) }}" role="button">Release Highlights for {{ release_highlights_version }}</a>
+        <a class="btn sk-landing-btn mb-1" href="https://github.com/fluorescence-tools/tttrlib" role="button">GitHub</a>
+      </div>
+      <div class="col-md-6 d-flex">
+        <ul class="sk-landing-header-body">
+          <li>Simple and efficient tools for TTTR data processing</li>
+          <li>Accessible to everybody, and reusable in various contexts</li>
+          <li>Built in C/C++ and wrapped for Python and NumPy</li>
+          <li>Open source, commercially usable - BSD license</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container sk-landing-container pt-3 body" role="main">
+  <div class="row no-gutters">
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="single_molecule.html#single-molecule_fluorescence"><h4 class="sk-card-title card-title">Single-molecule fluorescence spectroscopy</h4></a>
+          <p class="card-text">Process single-molecule fluorescence data.</p>
+          <p class="card-text"><strong>Applications:</strong> FRET, Anisotropy.</br>
+          <strong>Methods:</strong>
+          <a href="modules/burst_selection.html#burst_selection">Burst selection</a>,
+          <a href="modules/lifetime_analysis.html">Lifetime analysis</a>,
+          <a href="modules/pda.html#photon_distribution_analysis">Photon distribution analysis</a>,
+          and <a href="single_molecule.html#single-molecule_fluorescence">more...</a></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/single_molecule/plot_single_molecule_mcs.html"  aria-label="Single-molecule fluorescence">
+          <img src="_images/sphx_glr_plot_single_molecule_mcs_001.png" class="sk-index-img" style="width:initial;max-width:initial" alt="Single-molecule intensity trace">
+          </a>
+        </div>
+          <a href="auto_examples/index.html#single-molecule" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="modules/fcs.html"><h4 class="sk-card-title card-title">Fluorescence correlation spectroscopy</h4></a>
+          <p class="card-text">Determine kinetics, diffusion times, and particle numbers.</p>
+          <p class="card-text"><strong>Applications:</strong> Molecular kinetics, particle sizes, concentrations, affinities.</br>
+          <strong>Methods:</strong>
+          <a href="modules/fcs.html#fluorescence-correlation-spectroscopy">FCS</a>,
+          <a href="modules/fcs.html#gated-correlation">Gated correlation</a>,
+          <a href="modules/fcs.html#filtered-correlation">Filtered correlation</a>,
+          and <a href="modules/fcs.html">more...</a></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/correlation/plot_gated_correlation.html"  aria-label="Micro time gated correlation">
+          <img src="_images/sphx_glr_plot_gated_correlation_001.png" class="sk-index-img" alt="Micro time gated correlation">
+          </a>
+        </div>
+          <a href="auto_examples/index.html#fluorescence-correlation" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="imaging.html"><h4 class="sk-card-title card-title">Fluorescence imaging</h4></a>
+          <p class="card-text">Create and analyze fluorescence imaging data.</p>
+          <p class="card-text"><strong>Applications:</strong> Imaging, FRET, interaction studies, etc.</br>
+          <strong>Methods:</strong>
+          <a href="modules/flim.html#mean-lifetime">FLIM</a>,
+          <a href="modules/flim.html#phasor-analysis">Phasor analysis</a>,
+          <a href="modules/flim.html#sub-ensemble-decay-analysis">sub-ensemble analysis</a>,
+          and <a href="imaging.html">more...</a></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/flim/plot_imaging_representations.html"  aria-label="Time-resolved fluorescence imaging">
+          <img src="_images/sphx_glr_plot_imaging_representations_001.png" class="sk-index-img" alt="A demo of Time-resolved fluorescence imaging">
+          </a>
+        </div>
+          <a href="auto_examples/index.html#fluorescence-lifetime-imaging" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="modules/ics.html#decompositions"><h4 class="sk-card-title card-title">Image correlation spectroscopy</h4></a>
+          <p class="card-text">Analyze imaging data to determine species mobility and concentrations.</p>
+          <p class="card-text"><strong>Applications:</strong> Mobility & number analysis</br></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/image_correlation/sphx_glr_plot_imaging_ics_fit.html"  aria-label="Image correlation analysis">
+          <img src="_images/sphx_glr_plot_imaging_ics_fit_001.png" class="sk-index-img" alt="Image correlation analysis">
+          </a>
+        </div>
+          <a href="auto_examples/index.html#image-correlation-spectroscopy" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="model_selection.html#model-selection"><h4 class="sk-card-title card-title">Fluorescence decay analysis</h4></a>
+          <p class="card-text">Recover fluorescence lifetimes and distance distributions.</p>
+          <p class="card-text"><strong>Applications:</strong> Interaction studies, recover distances</br>
+          <strong>Methods:</strong>
+          <a href="modules/lifetime_analysis.html#maximum-likelihood-estimation">MLE</a>,
+          and <a href="modules/lifetime_analysis.html">more...</a></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/model_selection/plot_multi_metric_evaluation.html"  aria-label="Model selection">
+            <img src="_images/sphx_glr_plot_decay_fit_irf_bg_001.png" class="sk-index-img" alt="Demonstration of fluorescence decay analysis">
+          </a>
+        </div>
+          <a href="auto_examples/index.html#fluorescence-decay" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 px-md-2 sk-px-xl-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <a href="tttr.html"><h4 class="sk-card-title card-title">TTTR processing</h4></a>
+          <p class="card-text">Feature extraction and normalization.</p>
+          <p class="card-text"><strong>Applications:</strong>  Transforming input data such as text for use with machine learning algorithms.</br>
+          <strong>Algorithms:</strong>
+          <a href="modules/preprocessing.html#preprocessing">preprocessing</a>,
+          <a href="modules/feature_extraction.html#feature-extraction">feature extraction</a>,
+          and <a href="modules/preprocessing.html#preprocessing">more...</a></p>
+        </div>
+        <div class="overflow-hidden mx-2 text-center flex-fill">
+          <a href="auto_examples/model_selection/plot_multi_metric_evaluation.html"  aria-label="Model selection">
+            <img src="_images/sphx_glr_plot_tttr_microtime_histogram_001.png" class="sk-index-img" alt="Demonstration of fluorescence decay analysis">
+          </a>
+        </div>
+        <a href="auto_examples/index.html#working-with-tttr-objects" class="sk-btn-primary btn text-white btn-block" role="button">Examples</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid sk-landing-bg-more-info py-3">
+  <div class="container sk-landing-container">
+    <div class="row">
+      <div class="col-md-4">
+        <h4 class="sk-landing-call-header">News</h4>
+        <ul class="sk-landing-call-list list-unstyled">
+          <li><strong>On-going development:</strong>
+            <a href="whats_new.html"><strong>What's new</strong> (Changelog)</a>
+          <li><strong>April 2021.</strong> tttrlib 0.0.20 is available for download (<a href="whats_new/v0.0.20.html#version-0-0-20">Changelog</a>).
+          <li><strong>tttrlib from 0.21 requires Python 3.7 or greater.</strong>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-4">
+        <h4 class="sk-landing-call-header">Community</h4>
+        <ul class="sk-landing-call-list list-unstyled">
+          <li><strong>About us:</strong> See <a href="about.html#authors">about</a></li>
+          <li><strong>Questions?</strong> See <a href="faq.html">FAQ</a></li>
+          <li>Communication on all channels should respect <a href="https://www.python.org/psf/conduct/">PSF's code of conduct.</a></li>
+        </ul>
+        <a class="btn btn-warning btn-big mb-1" href="about.html#citing-tttrlib"><strong>Cite us!</strong></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

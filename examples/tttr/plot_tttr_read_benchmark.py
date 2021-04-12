@@ -35,28 +35,28 @@ import pylab as p
 benchmark_files = [
     {
         "name": "spc132",
-        "file": '../../test/data/bh/bh_spc132.spc',
+        "file": '../../tttr-data/bh/bh_spc132.spc',
         "tttr_mode": 2,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-134'"
     },
     {
         "name": "spc630_256",
-        "file": '../../test/data/bh/bh_spc630_256.spc',
+        "file": '../../tttr-data/bh/bh_spc630_256.spc',
         "tttr_mode": 3,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-630'"
     },
     {
         "name": "ht3",
-        "file": '../../test/data/imaging/pq/ht3/pq_ht3_clsm.ht3',
+        "file": '../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3',
         "tttr_mode": 1,
         "phconvert": "pqreader.load_ht3",
         "phconvert_args": "ovcfunc=None"
     },
     {
         "name": "ptu",
-        "file": '../../test/data/pq/ptu/pq_ptu_hh_t3.ptu',
+        "file": '../../tttr-data/pq/ptu/pq_ptu_hh_t3.ptu',
         "tttr_mode": 0,
         "phconvert": "pqreader.load_ptu",
         "phconvert_args": "ovcfunc=None"

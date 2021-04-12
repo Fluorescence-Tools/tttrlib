@@ -1,26 +1,33 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
-
-SET(PROJECT_NAME tttrlib)
-PROJECT(${PROJECT_NAME})
 ENABLE_LANGUAGE(CXX)
 SET(CMAKE_CXX_STANDARD 11)
+SET(PROJECT_NAME tttrlib)
+PROJECT(${PROJECT_NAME})
 
-OPTION(BUILD_DOC "Build documentation" OFF)
+################################################################################
+# BUILD OPTIONS
+################################################################################
+option(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
+OPTION(INSTALL "Install the library and the include files" ON)
+OPTION(BUILD_DOC "Build documentation" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
+
+################################################################################
+###### Conda
+################################################################################
 
 ## Check for Conda
 ###########################
 IF(DEFINED ENV{CONDA_PREFIX})
     MESSAGE(STATUS "CONDA env seen: --[$ENV{CONDA_PREFIX}]--")
+    SET(CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
     SET(ENV{PATH} "$ENV{CONDA_PREFIX}/bin;$ENV{PATH}")
+    SET(CMAKE_MODULE_PATH "$ENV{CONDA_PREFIX}/include/cmake")
     # Define python_command that is used to call python and locate the python libraries
-    if (MSVC)
+    IF(MSVC)
         INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/Library/include)
         LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Library/lib)
-        # dlls can also be in bin folder
-        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Library/bin)
-        LINK_DIRECTORIES($ENV{CONDA_PREFIX}/Lib/static)
         SET(python_command $ENV{CONDA_PREFIX}/python.exe)
     ELSE()
         INCLUDE_DIRECTORIES($ENV{CONDA_PREFIX}/include)
@@ -31,29 +38,10 @@ ELSE()
     MESSAGE(STATUS "No conda environment defined")
 ENDIF()
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 
-
-# Debug build detection
+## Include and lib dir
 ###########################
-IF (CMAKE_BUILD_TYPE STREQUAL "Release")
-    MESSAGE("Release build")
-    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=0")
-ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    MESSAGE("Debug build")
-    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
-ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
-
-
-# Windows
-##############decay.irf_shift_channels
-if (MSVC)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
-    ADD_DEFINITIONS(-DMS_WIN64)
-    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-endif (MSVC)
-
-# Conda
-#######
 if(UNIX)
     if(DEFINED ENV{CONDA_PREFIX})
         LINK_DIRECTORIES("$ENV{CONDA_PREFIX}/lib")
@@ -64,6 +52,33 @@ if(UNIX)
     endif()
 endif()
 
+#######################################
+# Compiler flags
+#######################################
+
+# Debug build detection
+###########################
+IF (CMAKE_BUILD_TYPE STREQUAL "Release")
+    MESSAGE("Release build")
+    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
+ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    MESSAGE("Debug build")
+    ## Enable Compiler warnings
+    #############################
+    IF(MSVC)
+        ADD_COMPILE_OPTIONS(/W4)
+    ELSE()
+        ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
+    ENDIF()
+    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
+ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
+
+# Windows
+##############
+if (MSVC)
+    ADD_DEFINITIONS(-DMS_WIN64)
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+endif (MSVC)
 
 # MACOSX
 ##############
@@ -83,13 +98,41 @@ if (APPLE)
     endif()
 endif (APPLE)
 
+#######################################
+# INCLUDES AND LIBRARIES
+#######################################
+
+## Boost
+###########################
+IF(DEFINED ENV{CONDA_PREFIX})
+    MESSAGE("Using Conda Boost")
+    SET(BOOST_ROOT $ENV{CONDA_PREFIX})
+    SET(Boost_NO_SYSTEM_PATHS ON)
+    SET(Boost_NO_BOOST_CMAKE ON)
+    IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        SET(Boost_DEBUG ON)
+        SET(Boost_DETAILED_FAILURE_MESSAGE ON)
+    ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    IF (WIN32)
+        # Win Boost Conda uses static linking
+        SET(Boost_USE_STATIC_LIBS ON)
+        SET(Boost_USE_STATIC ON)
+    ELSE()
+        SET(Boost_USE_STATIC_LIBS OFF)
+        SET(Boost_USE_STATIC OFF)
+        SET(Boost_USE_MULTITHREAD)
+    endif (WIN32)
+ENDIF()
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams locale)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_LIBRARIES(${Boost_LIBRARIES})
+MESSAGE(${Boost_INCLUDE_DIRS})
 
 ## FFTW
 ##############
 FIND_PACKAGE(FFTW REQUIRED)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
-
 
 ## Does not work on Windows and conda mkl
 ## maybe the pytorch people will resolve this issue in the future.
@@ -104,20 +147,6 @@ INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 #endif ()
 
 
-## Boost
-###########################
-if (WIN32)
-    # use static Boost in Windows
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC ON)
-    set(Boost_USE_MULTITHREAD)
-endif (WIN32)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES})
-MESSAGE(${Boost_INCLUDE_DIRS})
-
-
 ## HDF5
 ###########################
 FIND_PACKAGE(HDF5 1.10 REQUIRED COMPONENTS C)
@@ -125,8 +154,6 @@ INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 LINK_LIBRARIES(${HDF5_LIBRARIES})
 # needed for build on Windows
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
-
-
 
 ## OpenMP
 ###########################
@@ -153,21 +180,6 @@ endif ()
 FIND_PACKAGE(OpenMP REQUIRED)
 LINK_LIBRARIES(OpenMP::OpenMP_CXX)
 
-
-## Boost
-###########################
-if (WIN32)
-    # use static Boost in Windows
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC ON)
-    set(Boost_USE_MULTITHREAD)
-endif (WIN32)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS date_time filesystem iostreams)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES})
-MESSAGE(${Boost_INCLUDE_DIRS})
-
-
 # Doxygen
 ###########################
 IF (BUILD_DOC)
@@ -178,26 +190,30 @@ IF (BUILD_DOC)
     ENDIF (DOXYGEN_FOUND)
 ENDIF ()
 
-FILE(GLOB SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/src/correlation/*.cpp"
-)
+
+#######################################
+# Targets
+#######################################
+FILE(GLOB_RECURSE SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(ext)
 
-
-## Shared / static library target
+## Shared / static library
 ###########################
 # cmake needs unique target name, thus place shared in front of project
 ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
 ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
 
 # Define which headers are going to be included in the install target
-FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
-FILE(GLOB HEADERS_FILES "${CMAKE_SOURCE_DIR}/include/*.h")
+FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+
+## Use precomplied headers if possible
+#target_precompile_headers(${PROJECT_NAME}Shared PUBLIC "${HEADERS_FILES}")
+#target_precompile_headers(${PROJECT_NAME}Static PUBLIC "${HEADERS_FILES}")
 
 # By default the output name is the target. To not have different names, i.e.,
 # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
@@ -206,19 +222,20 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NA
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 
-
 # Add install target
 #######################
-INSTALL(TARGETS ${PROJECT_NAME}Shared
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-        )
-INSTALL(TARGETS ${PROJECT_NAME}Static
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-        )
+IF(INSTALL)
+    INSTALL(TARGETS ${PROJECT_NAME}Shared
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+            )
+    INSTALL(TARGETS ${PROJECT_NAME}Static
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+            )
+ENDIF(INSTALL)
 

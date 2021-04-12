@@ -8,13 +8,13 @@ import numpy as np
 print("Test: ", __file__)
 
 test_files = [
-    ('./data/bh/bh_spc132.spc', 'SPC-130'),
-    ('./data/bh/bh_spc132.spc', 'SPC-130'),
-    ('./data/bh/bh_spc630_256.spc', 'SPC-600_256'),
-    ('./data/hdf/1a_1b_Mix.hdf5', 'PHOTON-HDF5'),
-    ('./data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3'),
-    ('./data/pq/ptu/pq_ptu_hh_t2.ptu', 'PTU'),
-    ('./data/pq/ptu/pq_ptu_hh_t3.ptu', 'PTU')
+    ('../tttr-data/bh/bh_spc132.spc', 'SPC-130'),
+    ('../tttr-data/bh/bh_spc132.spc', 'SPC-130'),
+    ('../tttr-data/bh/bh_spc630_256.spc', 'SPC-600_256'),
+    ('../tttr-data/hdf/1a_1b_Mix.hdf5', 'PHOTON-HDF5'),
+    ('../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3'),
+    ('../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu', 'PTU'),
+    ('../tttr-data/pq/ptu/pq_ptu_hh_t3.ptu', 'PTU')
 ]
 
 

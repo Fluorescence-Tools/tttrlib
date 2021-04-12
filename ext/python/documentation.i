@@ -12,7 +12,7 @@
 
 Becker&Hickl SPC132 Header.  
 
-C++ includes: header.h
+C++ includes: TTTRHeaderTypes.h
 ";
 
 // File: unionbh__spc600__256__record.xml
@@ -28,9 +28,9 @@ C++ includes: header.h
 %feature("docstring") CLSMFrame::get_lines "
 ";
 
-%feature("docstring") CLSMFrame::get_n_lines "
+%feature("docstring") CLSMFrame::size "
 
-Get the number of lines per frame in the CLSMImage.  
+Get the number of lines in the CLSMFrame.  
 ";
 
 %feature("docstring") CLSMFrame::CLSMFrame "
@@ -58,6 +58,11 @@ Parameters
 
 
 %feature("docstring") CLSMImage "
+";
+
+%feature("docstring") CLSMImage::size "
+
+Get the number of frames in the CLSMImage.  
 ";
 
 %feature("docstring") CLSMImage::fill_pixels "
@@ -133,7 +138,7 @@ Parameters
     if True the frames are stacked.  
 ";
 
-%feature("docstring") CLSMImage::get_average_decay_of_pixels "
+%feature("docstring") CLSMImage::get_decay_of_pixels "
 
 Computes micro time histograms for the stacks of images and a selection of
 pixels. Photons in pixels that are selected by the selection array contribute to
@@ -487,21 +492,42 @@ Parameters
     number of pixels per line in the mask.  
 ";
 
+%feature("docstring") CLSMImage::get_frame_edges "
+
+Get the tttr indices of frame markers for a SP8  
+
+Parameters
+----------
+* `tttr` :  
+    pointer to the TTTR object that is inspected  
+* `marker_frame` :  
+    vector of  
+* `marker_event` :  
+* `start_event` :  
+* `stop_event` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") CLSMImage::get_line_edges "
+";
+
 // File: class_c_l_s_m_line.xml
 
 
 %feature("docstring") CLSMLine "
 ";
 
+%feature("docstring") CLSMLine::size "
+
+Get the number of pixels per line a frame of the CLSMImage.  
+";
+
 %feature("docstring") CLSMLine::get_pixels "
 ";
 
 %feature("docstring") CLSMLine::get_pixel_duration "
-";
-
-%feature("docstring") CLSMLine::get_n_pixel "
-
-Get the number of pixels per line a frame of the CLSMImage.  
 ";
 
 %feature("docstring") CLSMLine::CLSMLine "
@@ -528,13 +554,27 @@ Get the number of pixels per line a frame of the CLSMImage.
 %feature("docstring") CLSMPixel "
 ";
 
+// File: struct_correlation_curve_settings.xml
+
+
+%feature("docstring") CorrelationCurveSettings "
+";
+
+%feature("docstring") CorrelationCurveSettings::get_ncorr "
+
+The number of points in a correlation curve.  
+";
+
 // File: class_correlator.xml
 
 
 %feature("docstring") Correlator "
 ";
 
-%feature("docstring") Correlator::set_time_axis_calibration "
+%feature("docstring") Correlator::dt "
+
+Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t is the
+difference between the first and the last photon.  
 ";
 
 %feature("docstring") Correlator::Correlator "
@@ -542,7 +582,7 @@ Get the number of pixels per line a frame of the CLSMImage.
 Parameters
 ----------
 * `tttr` :  
-    an optional TTTR object. The macro and micro time calibdation of the header
+    an optional TTTR object. The macro and micro time calibration of the header
     in the TTTR object calibrate the correlator.  
 * `method` :  
     name of correlation method that is used by the correlator  
@@ -567,6 +607,9 @@ Parameters
 * `n_casc` :  
 ";
 
+%feature("docstring") Correlator::get_curve "
+";
+
 %feature("docstring") Correlator::get_n_casc "
 
 Returns
@@ -587,13 +630,6 @@ Parameters
 Returns
 -------
 the number of equally spaced correlation channels per block  
-";
-
-%feature("docstring") Correlator::get_n_corr "
-
-Returns
--------
-the overall (total number) of correlation channels  
 ";
 
 %feature("docstring") Correlator::set_correlation_method "
@@ -627,7 +663,7 @@ Parameters
     The micro times of the second correlation channel  
 * `n_tac_2` :  
     The number of events in the second correlation channel  
-* `n_tac` :  
+* `number_of_microtime_channels` :  
     The maximum number of TAC channels of the micro times.  
 ";
 
@@ -643,8 +679,9 @@ Parameters
     time events in the the second correlation channel  
 * `n_t2` :  
     The number of time events in the second channel  
-* `inplace` :  
-    If true (default false) the arrays are modified in place  
+";
+
+%feature("docstring") Correlator::get_macrotimes "
 ";
 
 %feature("docstring") Correlator::set_events "
@@ -667,20 +704,6 @@ Parameters
     A vector of weights for the time events of the second channel  
 * `n_weights_ch2` :  
     The number of weights of the second channel  
-* `inplace` :  
-    If true (default false) the arrays are modified in place  
-";
-
-%feature("docstring") Correlator::get_x_axis_normalized "
-
-Get the normalized x-axis of the correlation  
-
-Parameters
-----------
-* `output` :  
-    x_axis / time axis of the correlation  
-* `n_out` :  
-    number of elements in the axis of the x-axis  
 ";
 
 %feature("docstring") Correlator::set_weights "
@@ -697,8 +720,21 @@ Parameters
     A vector of weights for the time events of the second channel  
 * `n_weights_ch2` :  
     The number of weights of the second channel  
-* `inplace` :  
-    If true (default false) the arrays are modified in place  
+";
+
+%feature("docstring") Correlator::get_weights "
+";
+
+%feature("docstring") Correlator::get_x_axis "
+
+Get the normalized x-axis of the correlation  
+
+Parameters
+----------
+* `output` :  
+    x_axis / time axis of the correlation  
+* `n_out` :  
+    number of elements in the axis of the x-axis  
 ";
 
 %feature("docstring") Correlator::get_corr_normalized "
@@ -738,7 +774,8 @@ is_valid.
 This method sets the time and the weights using TTTR objects.  
 
 The header of the first TTTR object is used for calibration. Both TTTR objects
-should have the same calibration (this is not checked).  
+should have the same calibration (this is not checked). Weights are set to one
+by default.  
 
 Parameters
 ----------
@@ -747,8 +784,9 @@ Parameters
 * `make_fine` :  
     if true a full correlation is computed that uses the micro time in the TTTR
     objects (default is false).  
-* `set_weights` :  
-    if set to true (default) the weights for all passed events is set to one.  
+";
+
+%feature("docstring") Correlator::get_tttr "
 ";
 
 %feature("docstring") Correlator::set_filter "
@@ -764,6 +802,166 @@ Parameters
     map of filters the first element in the map is the routing channel number,
     the second element of the map is a vector that maps a micro time to a filter
     value.  
+";
+
+// File: class_correlator_curve.xml
+
+
+%feature("docstring") CorrelatorCurve "
+";
+
+%feature("docstring") CorrelatorCurve::size "
+";
+
+%feature("docstring") CorrelatorCurve::get_x_axis "
+
+Get the x-axis of the correlation  
+
+Parameters
+----------
+* `x_axis` :  
+    a pointer to an array that will contain the x-axis  
+* `n_out` :  
+    a pointer to the an integer that will contain the number of elements of the
+    x-axis  
+";
+
+%feature("docstring") CorrelatorCurve::set_n_bins "
+
+Parameters
+----------
+* `v` :  
+    the number of equally spaced correaltion channels per block  
+";
+
+%feature("docstring") CorrelatorCurve::get_n_bins "
+";
+
+%feature("docstring") CorrelatorCurve::set_n_casc "
+
+Sets the number of cascades (also called blocks) of the correlation curve and
+updates the correlation axis.  
+
+Parameters
+----------
+* `n_casc` :  
+";
+
+%feature("docstring") CorrelatorCurve::get_n_casc "
+
+Returns
+-------
+number of correlation blocks  
+";
+
+%feature("docstring") CorrelatorCurve::get_corr "
+";
+
+%feature("docstring") CorrelatorCurve::get_corr_normalized "
+";
+
+// File: class_correlator_photon_stream.xml
+
+
+%feature("docstring") CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::~CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::empty "
+";
+
+%feature("docstring") CorrelatorPhotonStream::size "
+";
+
+%feature("docstring") CorrelatorPhotonStream::clear "
+";
+
+%feature("docstring") CorrelatorPhotonStream::resize "
+
+Parameters
+----------
+* `n` :  
+* `x` :  
+    initial value of the weights  
+";
+
+%feature("docstring") CorrelatorPhotonStream::make_fine "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_weights "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_events "
+";
+
+%feature("docstring") CorrelatorPhotonStream::coarsen "
+
+Coarsens the time events  
+
+This method coarsens the time events by dividing the times by two. In case two
+consecutive time events in the array have the same time, the weights of the two
+events are added to the following weight element and the value of the previous
+weight is set to zero.  
+";
+
+%feature("docstring") CorrelatorPhotonStream::dt "
+";
+
+%feature("docstring") CorrelatorPhotonStream::sum_of_weights "
+";
+
+%feature("docstring") CorrelatorPhotonStream::mean_count_rate "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_time_axis_calibration "
+
+Set time axis calibration. The time axis calibration if the duration of between
+two sync signals (macro time clock)  
+
+Parameters
+----------
+* `v` :  
+    time axis calibration (duration between sync clock signals) in seconds  
+";
+
+%feature("docstring") CorrelatorPhotonStream::get_time_axis_calibration "
+
+Returns
+-------
+The calibration of the time axis in seconds. The time axis calibration is the
+duration of a sync signal (macro time clock).  
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_tttr "
+";
+
+%feature("docstring") CorrelatorPhotonStream::get_tttr "
+";
+
+%feature("docstring") CorrelatorPhotonStream::make_fine_times "
+
+Changes the time events by adding the micro time to the macro time  
+
+Changes the time events by adding the micro time to the macro time. The micro
+times should match the macro time, i.e., the length of the micro time array
+should be the at least the same length as the macro time array.  
+
+Parameters
+----------
+* `t` :  
+    An array containing the time events (macro times)  
+* `n_times` :  
+    The number of macro times.  
+* `tac` :  
+    An array containing the micro times of the corresponding macro times !  
 ";
 
 // File: struct_curve_mapping__t.xml
@@ -793,65 +991,25 @@ Parameters
     the container type  
 ";
 
-%feature("docstring") Header::get_effective_number_of_micro_time_channels "
-
-The number of micro time channels that fit between two macro times.  
-
-The total (possible) number of TAC channels can exceed the number that fit
-between two macro time channels. This function returns the effective number,
-i.e., the number of micro time channels between two macro times. The micro time
-channels that are outside of this bound should (usually) not be filled.  
-
-Returns
--------
-effective_tac_channels (that fit between to macro times)  
-";
-
-%feature("docstring") Header::getTTTRRecordType "
-
-Returns
--------
-The TTTR container type of the associated TTTR file as a char  
-";
-
-%feature("docstring") Header::Header "
-
-Default constructor  
-";
-
-%feature("docstring") Header::Header "
-
-Copy constructor.  
-";
-
-%feature("docstring") Header::Header "
-";
-
-%feature("docstring") Header::~Header "
-";
-
 // File: class_histogram.xml
 
 
 %feature("docstring") Histogram "
 ";
 
-%feature("docstring") Histogram::getAxisDimensions "
-";
-
 %feature("docstring") Histogram::update "
 ";
 
-%feature("docstring") Histogram::getHistogram "
+%feature("docstring") Histogram::get_histogram "
 ";
 
-%feature("docstring") Histogram::setAxis "
+%feature("docstring") Histogram::set_axis "
 ";
 
-%feature("docstring") Histogram::setAxis "
+%feature("docstring") Histogram::set_axis "
 ";
 
-%feature("docstring") Histogram::getAxis "
+%feature("docstring") Histogram::get_axis "
 ";
 
 %feature("docstring") Histogram::Histogram "
@@ -1269,42 +1427,32 @@ Parameters
 
 // File: unionpq__hh__t3__record.xml
 
-// File: structpq__ht3__ascii__t.xml
-
-
-%feature("docstring") pq_ht3_ascii_t "
-
-The following represents the readable ASCII file header portion.  
-
-C++ includes: header.h
-";
-
-// File: structpq__ht3___bin_hdr__t.xml
-
-
-%feature("docstring") pq_ht3_BinHdr_t "
-
-The following is binary file header information.  
-
-C++ includes: header.h
-";
-
 // File: structpq__ht3__board__settings__t.xml
 
 
 %feature("docstring") pq_ht3_board_settings_t "
 ";
 
-// File: structpq__ht3___board_hdr.xml
+// File: structpq__ht3___channel_header__t.xml
 
 
-%feature("docstring") pq_ht3_BoardHdr "
+%feature("docstring") pq_ht3_ChannelHeader_t "
 ";
 
-// File: structpq__ht3___t_t_t_r_hdr.xml
+// File: structpq__ht3___header__t.xml
 
 
-%feature("docstring") pq_ht3_TTTRHdr "
+%feature("docstring") pq_ht3_Header_t "
+
+The following represents the readable ASCII file header portion in a HT3 file.  
+
+C++ includes: TTTRHeaderTypes.h
+";
+
+// File: structpq__ht3___t_t_mode_header__t.xml
+
+
+%feature("docstring") pq_ht3_TTModeHeader_t "
 ";
 
 // File: unionpq__ph__t3__record.xml
@@ -1316,7 +1464,7 @@ C++ includes: header.h
 
 A Header Tag entry of a PTU file.  
 
-C++ includes: header.h
+C++ includes: TTTRHeaderTypes.h
 ";
 
 // File: class_t_t_t_r.xml
@@ -1325,7 +1473,33 @@ C++ includes: header.h
 %feature("docstring") TTTR "
 ";
 
+%feature("docstring") TTTR::read_file "
+
+Reads the TTTR data contained in a file into the TTTR object  
+
+Parameters
+----------
+* `fn` :  
+    The filename that is read. If fn is a nullptr (default value is nullptr) the
+    filename attribute of the TTTR object is used as filename.  
+* `container_type` :  
+    The container type.  
+
+Returns
+-------
+Returns 1 in case the file was read without errors. Otherwise 0 is returned.  
+";
+
+%feature("docstring") TTTR::append_events "
+";
+
+%feature("docstring") TTTR::append_event "
+";
+
 %feature("docstring") TTTR::append "
+";
+
+%feature("docstring") TTTR::size "
 ";
 
 %feature("docstring") TTTR::get_used_routing_channels "
@@ -1365,7 +1539,7 @@ Parameters
     Pointer to the number of elements in the output array  
 ";
 
-%feature("docstring") TTTR::intensity_trace "
+%feature("docstring") TTTR::get_intensity_trace "
 
 Returns a intensity trace that is computed for a specified integration window  
 
@@ -1549,14 +1723,21 @@ The filename of the TTTR file
 
 %feature("docstring") TTTR::get_selection_by_channel "
 
-Returns a vector containing indices of records that  
+Get events indices by the routing channel number  
+
+This method returns an array that contains the event / photon indices of events
+with routing channel numbers that are found in the selection input array.  
 
 Parameters
 ----------
+* `output` :  
+    indices of the events  
+* `n_output` :  
+    number of selected events  
 * `input` :  
-    channel number array used to select indices of photons  
+    routing channel number for selection of events  
 * `n_input` :  
-    the length of the channel number list.  
+    number of routing channels for selection of events  
 ";
 
 %feature("docstring") TTTR::get_selection_by_count_rate "
@@ -1595,7 +1776,8 @@ Parameters
 * `maximum_window_length[in]` :  
     Maximum length of a tw (optional).  
 * `minimum_number_of_photons_in_time_window[in]` :  
-    Minimum number of photons a selected tw contains (optional) in units of ms  
+    Minimum number of photons a selected tw contains (optional) in units of
+    seconds  
 * `maximum_number_of_photons_in_time_window[in]` :  
     Maximum number of photons a selected tw contains (optional)  
 * `invert[in]` :  
@@ -1625,10 +1807,21 @@ Parameters
 * `fn` :  
     filename  
 * `container_type` :  
-    container type (PTU; HT3; SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)  
+    container type (PTU; HT3; SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+    @oaram write_a_header if set to false no header is written - Writing correct
+    headers is not implemented. Therefore, the default value is false.  
 
 Returns
 -------  
+";
+
+%feature("docstring") TTTR::write_spc132_events "
+";
+
+%feature("docstring") TTTR::write_hht3v2_events "
+";
+
+%feature("docstring") TTTR::write_header "
 ";
 
 %feature("docstring") TTTR::shift_macro_time "
@@ -1647,6 +1840,29 @@ Parameters
 
 Compute the mean lifetime by the moments of the decay and the instrument
 response function.  
+";
+
+%feature("docstring") TTTR::determine_number_of_records_by_file_size "
+
+Determines the number of records in a TTTR files (not for use with HDF5)  
+
+Calculates the number of records in the file based on the file size. if  
+
+Parameters
+----------
+* `offset` :  
+    is passed the number of records is calculated by the file size the number of
+    bytes in the file - offset and  
+* `bytes_per_record.` :  
+    If  
+* `offset` :  
+    is not specified the current location of the file pointer is used as an
+    offset. If  
+* `bytes_per_record` :  
+    is not specified the attribute value bytes_per_record of the class instance
+    is used.  
+* `offset` :  
+* `bytes_per_record` :  
 ";
 
 %feature("docstring") TTTR::compute_microtime_histogram "
@@ -1694,6 +1910,284 @@ Parameters
 Returns
 -------
 The computed lifetime  
+";
+
+// File: class_t_t_t_r_header.xml
+
+
+%feature("docstring") TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::get_tttr_record_type "
+
+TTTR record type  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_tttr_record_type "
+
+Parameters
+----------
+* `v` :  
+    record type  
+";
+
+%feature("docstring") TTTRHeader::get_tttr_container_type "
+
+The container type  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_tttr_container_type "
+
+Parameters
+----------
+* `v` :  
+    container type  
+";
+
+%feature("docstring") TTTRHeader::get_bytes_per_record "
+
+Stores the bytes per TTTR record of the associated TTTR file This attribute is
+changed when a header is read  
+";
+
+%feature("docstring") TTTRHeader::end "
+";
+
+%feature("docstring") TTTRHeader::size "
+
+Number of meta data entries  
+";
+
+%feature("docstring") TTTRHeader::get_number_of_micro_time_channels "
+
+The total (possible) number of micro time channels.  
+
+The number of TAC channels (TAC - Time to analog converter) refers to the number
+of micro time channels.  
+";
+
+%feature("docstring") TTTRHeader::get_macro_time_resolution "
+
+Resolution for the macro time in nanoseconds.  
+";
+
+%feature("docstring") TTTRHeader::get_micro_time_resolution "
+
+Resolution for the micro time in nanoseconds.  
+";
+
+%feature("docstring") TTTRHeader::get_effective_number_of_micro_time_channels "
+
+The number of micro time channels that fit between two macro times.  
+
+The total (possible) number of TAC channels can exceed the number that fit
+between two macro time channels. This function returns the effective number,
+i.e., the number of micro time channels between two macro times. The micro time
+channels that are outside of this bound should (usually) not be filled.  
+
+Returns
+-------
+effective_tac_channels (that fit between to macro times)  
+";
+
+%feature("docstring") TTTRHeader::getTTTRRecordType "
+
+Returns
+-------
+The TTTR container type of the associated TTTR file as a char  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+
+Default constructor  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+
+Copy constructor.  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::~TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::get_json "
+
+Get a representation of the TTTRHeader meta data as a JSON string  
+
+Parameters
+----------
+* `tag_name` :  
+    name of requested tag (if no name is provided) the entire information in the
+    TTTRHeader is returned  
+* `idx` :  
+    index of the tag  
+* `indent` :  
+    an integer that controls the indent in the returned JSON string  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_json "
+
+Set / update the TTTRHeader meta data using a JSON string  
+
+Parameters
+----------
+* `json_string` :  
+";
+
+%feature("docstring") TTTRHeader::get_tag "
+
+Get a tag / entry from the meta data list in a JSON dict  
+
+Parameters
+----------
+* `json_data` :  
+* `name` :  
+* `idx` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::find_tag "
+
+Find the index of a tag in the JSON data by name type and index  
+
+Parameters
+----------
+* `json_data` :  
+* `name` :  
+* `type` :  
+* `idx` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::add_tag "
+
+Add a meta data tag. If the tag already exists the value of the meta data tag is
+replaced.  
+
+Parameters
+----------
+* `json_data` :  
+* `name` :  
+* `value` :  
+* `type` :  
+* `idx` :  
+";
+
+%feature("docstring") TTTRHeader::read_ptu_header "
+
+Reads the header of a ptu file and sets the reading routing for  
+
+Parameters
+----------
+* `fpin` :  
+* `rewind` :  
+* `tttr_record_type` :  
+* `json_data` :  
+* `macro_time_resolution` :  
+* `micro_time_resolution` :  
+
+Returns
+-------
+The position of the file pointer at the end of the header  
+";
+
+%feature("docstring") TTTRHeader::read_ht3_header "
+
+Reads the header of a ht3 file and sets the reading routing for  
+
+Parameters
+----------
+* `fpin` :  
+* `rewind` :  
+* `tttr_record_type` :  
+* `data` :  
+
+Returns
+-------
+The position of the file pointer at the end of the header  
+";
+
+%feature("docstring") TTTRHeader::read_bh132_header "
+
+Reads the header of a Becker&Hickel SPC132 file and sets the reading routing  
+
+Parameters
+----------
+* `fpin` :  
+* `rewind` :  
+* `tttr_record_type` :  
+* `data` :  
+    JSON dictionary that will contain the header information  
+";
+
+%feature("docstring") TTTRHeader::write_spc132_header "
+
+Write a spc132 header to a file  
+
+WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
+
+Parameters
+----------
+* `fn` :  
+    filename  
+* `header` :  
+    pointer to the TTTRHeader object that is written to the file  
+* `modes` :  
+    the writing modes (default 'wb')  
+";
+
+%feature("docstring") TTTRHeader::write_ptu_header "
+
+Write a PTU header to a file  
+
+WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
+
+Parameters
+----------
+* `fn` :  
+    filename  
+* `header` :  
+    pointer to the TTTRHeader object that is written to the file  
+* `modes` :  
+    the writing modes (default 'wb')  
+";
+
+%feature("docstring") TTTRHeader::write_ht3_header "
+
+Write a HT3 header to a file  
+
+WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
+
+Parameters
+----------
+* `fn` :  
+    filename  
+* `header` :  
+    pointer to the TTTRHeader object that is written to the file  
+* `modes` :  
+    the writing modes (default 'wb')  
 ";
 
 // File: class_t_t_t_r_range.xml
@@ -1815,337 +2309,23 @@ Parameters
     stop times are updated from the tttr object using the current start stop  
 ";
 
-// File: namespacelamb.xml
+// File: _c_l_s_m_frame_8h.xml
 
-%feature("docstring") lamb::CCF "
+// File: _c_l_s_m_image_8h.xml
 
-CAUTION: the arrays t1 and t2 are modified inplace by this function!!  
+// File: _c_l_s_m_line_8h.xml
 
-Parameters
-----------
-* `t1` :  
-    macrotime vector  
-* `t2` :  
-    macrotime vector  
-* `photons1` :  
-* `photons2` :  
-* `nc` :  
-    number of evenly spaced elements per block  
-* `nb` :  
-    number of blocks of increasing spacing  
-* `np1` :  
-    number of photons in first channel  
-* `np2` :  
-    number of photons in second channel  
-* `xdat` :  
-    correlation time bins (timeaxis)  
-* `corrl` :  
-    pointer to correlation output  
-";
+// File: _c_l_s_m_pixel_8h.xml
 
-%feature("docstring") lamb::normalize "
+// File: _correlator_8h.xml
 
-Parameters
-----------
-* `x_axis` :  
-    the uncorrected x-axis (the correlation times)  
-* `corr` :  
-    the uncorrected correlation amplitudes  
-* `corr_normalized` :  
-    the corrected correlation amplitudes (output)  
-* `x_axis_normalized` :  
-    the corrected x-axis (output)  
-* `cr1` :  
-    count rate in channel 1  
-* `cr2` :  
-    count rate in channel 2  
-* `n_bins` :  
-    number of evenly spaced elements per block  
-* `n_casc` :  
-    number of blocks of increasing spacing  
-* `maximum_macro_time` :  
-    the maximum macro time  
+// File: _correlator_curve_8h.xml
 
-Returns
--------  
-";
+// File: _correlator_photon_stream_8h.xml
 
-// File: namespacepeulen.xml
+// File: _histogram_8h.xml
 
-%feature("docstring") peulen::correlation_shell "
-";
-
-%feature("docstring") peulen::correlation_full "
-
-This function implements a correlation algorithm as described by Wahl 2003  
-
-M. Wahl, I. Gregor, M. Patting, and J. Enderlein, \"Fast calculation of
-fluorescence correlation data with asynchronous time-correlated single-photon
-counting,\" Opt. Express 11, 3583-3591 (2003).  
-
-Parameters
-----------
-* `n_casc` :  
-    the number of correlation blocks  
-* `n_bins` :  
-    the number of equaly spaced bins per corrleation block  
-* `taus` :  
-* `corr` :  
-* `t1` :  
-    array of photon arrival times in correlation channel 1  
-* `w1` :  
-    array of weights of the photons in correlation channel 1  
-* `nt1` :  
-    number of photons in correlation channel 1  
-* `t2` :  
-    array of photon arrival times in correlation channel 2  
-* `w2` :  
-    array of weights of the photons in correlation channel 2  
-* `nt2` :  
-    number of photons in correlation channel 2  
-";
-
-%feature("docstring") peulen::correlation_coarsen "
-
-Coarsens the time events  
-
-This function coarsens a set of time events by dividing the times by two. In
-case two consecutive time events in the array have the same time, the weights of
-the two events are added to the following weight element and the value of the
-previous weight is set to zero.  
-
-Parameters
-----------
-* `t` :  
-    A vector of the time events of the first channel  
-* `w` :  
-    A vector of weights for the time events of the first channel  
-* `nt` :  
-    The number of time events in the first channel  
-";
-
-%feature("docstring") peulen::correlation "
-
-Calculates the cross-correlation between two arrays containing time events.  
-
-Cross-correlates two weighted arrays of events using an approach that utilizes a
-linear spacing of the bins within a cascade and a logarithmic spacing of the
-cascades. The function works inplace on the input times, i.e, during the
-correlation the values of the input times and weights are changed to coarsen the
-times and weights for every correlation cascade.  
-
-The start position parameters  
-
-Parameters
-----------
-* `start_1` :  
-    and  
-* `start_2` :  
-    and the end position parameters  
-* `end_1` :  
-    and  
-* `end_1` :  
-    define which part of the time array of the first and second correlation
-    channel are used for the correlation analysis.  
-
-The correlation algorithm combines approaches of the following papers:  
-
-*   Fast calculation of fluorescence correlation data with asynchronous time-
-    correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias
-    Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383  
-*   Fast, flexible algorithm for calculating photon correlations, Ted A.
-    Laurence, Samantha Fore, Thomas Huser, Optics Express Vol. 31 No. 6, p.829  
-
-Parameters
-----------
-* `start_1` :  
-    The start position on the time event array of the first channel.  
-* `end_1` :  
-    The end position on the time event array of the first channel.  
-* `start_2` :  
-    The start position on the time event array of the second channel.  
-* `end_2` :  
-    The end position on the time event array of the second channel.  
-* `i_casc` :  
-    The number of the current cascade  
-* `n_bins` :  
-    The number of bins per cascase  
-* `taus` :  
-    A vector containing the correlation times of all cascades  
-* `corr` :  
-    A vector to that the correlation is written by the function  
-* `t1` :  
-    A vector of the time events of the first channel  
-* `w1` :  
-    A vector of weights for the time events of the first channel  
-* `nt1` :  
-    The number of time events in the first channel  
-* `t2` :  
-    A vector of the time events of the second channel  
-* `w2` :  
-    A vector of weights for the time events of the second channel  
-* `nt2` :  
-    The number of time events in the second channel  
-";
-
-%feature("docstring") peulen::correlation_normalize "
-
-Normalizes a correlation curve.  
-
-This normalization applied to correlation curves that were calculated using a
-linear/logrithmic binning as described in  
-
-*   Fast calculation of fluorescence correlation data with asynchronous time-
-    correlated single-photon counting, Michael Wahl, Ingo Gregor, Matthias
-    Patting, Joerg Enderlein, Optics Express Vol. 11, No. 26, p. 3383  
-
-Parameters
-----------
-* `np1` :  
-    The sum of the weights in the first correlation channel  
-* `dt1` :  
-    The time difference between the first event and the last event in the first
-    correlation channel  
-* `np2` :  
-    The sum of the weights in the second correlation channel  
-* `dt2` :  
-    The time difference between the first event and the last event in the second
-    correlation channel  
-* `x_axis` :  
-    The x-axis of the correlation  
-* `corr` :  
-    The array that contains the original correlation that is modified in place.  
-* `n_bins` :  
-    The number of bins per cascade of the correlation  
-";
-
-%feature("docstring") peulen::make_fine_times "
-
-Changes the time events by adding the micro time to the macro time  
-
-Changes the time events by adding the micro time to the macro time. The micro
-times should match the macro time, i.e., the length of the micro time array
-should be the at least the same length as the macro time array.  
-
-Parameters
-----------
-* `t` :  
-    An array containing the time events (macro times)  
-* `n_times` :  
-    The number of macro times.  
-* `tac` :  
-    An array containing the micro times of the corresponding macro times  
-* `tac` :  
-    The number of micro time channels (TAC channels)  
-";
-
-// File: correlation_8h.xml
-
-// File: correlation__lamb_8h.xml
-
-// File: correlation__peulen_8h.xml
-
-// File: header_8h.xml
-
-%feature("docstring") read_ptu_header "
-
-Reads the header of a ptu file and sets the reading routing for  
-
-Parameters
-----------
-* `fpin` :  
-* `rewind` :  
-* `tttr_record_type` :  
-* `data` :  
-* `macro_time_resolution` :  
-* `micro_time_resolution` :  
-
-Returns
--------
-The position of the file pointer at the end of the header  
-";
-
-%feature("docstring") read_ht3_header "
-
-Reads the header of a ht3 file and sets the reading routing for  
-
-Parameters
-----------
-* `fpin` :  
-* `rewind` :  
-* `tttr_record_type` :  
-* `data` :  
-* `macro_time_resolution` :  
-* `micro_time_resolution` :  
-
-Returns
--------
-The position of the file pointer at the end of the header  
-";
-
-%feature("docstring") read_bh132_header "
-
-Reads the header of a Becker&Hickel SPC132 file and sets the reading routing for  
-
-Parameters
-----------
-* `fpin` :  
-* `rewind` :  
-* `tttr_record_type` :  
-* `data` :  
-* `macro_time_resolution` :  
-* `micro_time_resolution` :  
-";
-
-// File: histogram_8h.xml
-
-%feature("docstring") search_bin_idx "
-
-Searches for the bin index of a value within a list of bin edges  
-
-If a value is inside the bounds find the bin. The search partitions the
-bin_edges in upper and lower ranges and adapts the edge for the upper and lower
-range depending if the target value is bigger or smaller than the bin in the
-middle.  
-
-templateparam
--------------
-* `T` :  
-
-Parameters
-----------
-* `value` :  
-* `bin_edges` :  
-* `n_bins` :  
-
-Returns
--------
-negative value if the search value is out of the bounds. Otherwise the bin
-number is returned.  
-";
-
-%feature("docstring") linspace "
-";
-
-%feature("docstring") logspace "
-";
-
-%feature("docstring") calc_bin_idx "
-
-Calculates for a linear axis the bin index for a particular value.  
-
-templateparam
--------------
-* `T` :  
-
-Parameters
-----------
-* `begin` :  
-* `bin_width` :  
-* `value` :  
-
-Returns
--------  
+%feature("docstring") bincount1D "
 ";
 
 %feature("docstring") histogram1D "
@@ -2174,68 +2354,64 @@ Parameters
     frequency.  
 ";
 
-%feature("docstring") bincount1D "
+// File: _histogram_axis_8h.xml
+
+%feature("docstring") linspace "
 ";
 
-// File: image_8h.xml
-
-// File: pda_8h.xml
-
-// File: record__reader_8h.xml
-
-%feature("docstring") ProcessSPC130 "
+%feature("docstring") logspace "
 ";
 
-%feature("docstring") ProcessSPC600_4096 "
-";
+%feature("docstring") search_bin_idx "
 
-%feature("docstring") ProcessSPC600_256 "
-";
+Searches for the bin index of a value within a list of bin edges  
 
-%feature("docstring") ProcessHHT2v2 "
-";
+If a value is inside the bounds find the bin. The search partitions the
+bin_edges in upper and lower ranges and adapts the edge for the upper and lower
+range depending if the target value is bigger or smaller than the bin in the
+middle.  
 
-%feature("docstring") ProcessHHT2v1 "
-";
-
-%feature("docstring") ProcessHHT3v2 "
-";
-
-%feature("docstring") ProcessHHT3v1 "
-";
-
-%feature("docstring") ProcessPHT3 "
-";
-
-%feature("docstring") ProcessPHT2 "
-";
-
-// File: record__types_8h.xml
-
-// File: tttr_8h.xml
-
-%feature("docstring") determine_number_of_records_by_file_size "
-
-Determines the number of records in a TTTR files (not for use with HDF5)  
-
-Calculates the number of records in the file based on the file size. if  
+templateparam
+-------------
+* `T` :  
 
 Parameters
 ----------
-* `offset` :  
-    is passed the number of records is calculated by the file size the number of
-    bytes in the file - offset and  
-* `bytes_per_record.` :  
-    If  
-* `offset` :  
-    is not specified the current location of the file pointer is used as an
-    offset. If  
-* `bytes_per_record` :  
-    is not specified the attribute value bytes_per_record of the class instance
-    is used.  
-* `offset` :  
-* `bytes_per_record` :  
+* `value` :  
+* `bin_edges` :  
+* `n_bins` :  
+
+Returns
+-------
+negative value if the search value is out of the bounds. Otherwise the bin
+number is returned.  
 ";
+
+%feature("docstring") calc_bin_idx "
+
+Calculates for a linear axis the bin index for a particular value.  
+
+templateparam
+-------------
+* `T` :  
+
+Parameters
+----------
+* `begin` :  
+* `bin_width` :  
+* `value` :  
+
+Returns
+-------  
+";
+
+// File: info_8h.xml
+
+// File: _pda_8h.xml
+
+// File: _pda_callback_8h.xml
+
+// File: _t_t_t_r_8h.xml
 
 %feature("docstring") selection_by_count_rate "
 
@@ -2359,6 +2535,43 @@ Parameters
 
 %feature("docstring") get_array "
 ";
+
+// File: _t_t_t_r_header_8h.xml
+
+// File: _t_t_t_r_header_types_8h.xml
+
+// File: _t_t_t_r_range_8h.xml
+
+// File: _t_t_t_r_record_reader_8h.xml
+
+%feature("docstring") ProcessSPC130 "
+";
+
+%feature("docstring") ProcessSPC600_4096 "
+";
+
+%feature("docstring") ProcessSPC600_256 "
+";
+
+%feature("docstring") ProcessHHT2v2 "
+";
+
+%feature("docstring") ProcessHHT2v1 "
+";
+
+%feature("docstring") ProcessHHT3v2 "
+";
+
+%feature("docstring") ProcessHHT3v1 "
+";
+
+%feature("docstring") ProcessPHT3 "
+";
+
+%feature("docstring") ProcessPHT2 "
+";
+
+// File: _t_t_t_r_record_types_8h.xml
 
 // File: dir_d44c64559bbebec7f509842c48db8b23.xml
 

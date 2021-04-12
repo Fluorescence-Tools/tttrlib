@@ -7,16 +7,16 @@ CMakeLists.txt.user
 CMakeLists.txt.user.*
 cmake-build-*
 playground
-temp
+temp/
 *.egg-info
-docs/_build
-test/stage
+doc/_build
+tttr-data
 
 # Documentation and tools
-docs/_*
-docs/paper*
-docs/auto_examples
-docs/modules
+doc/_*
+doc/paper*
+doc/auto_examples
+
 
 
 # JetBrains
