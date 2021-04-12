@@ -74,10 +74,6 @@ test:linux:
       conda config --add channels tpeulen/label/nightly
       conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - ssh-keyscan gitlab.peulen.xyz >> ~/.ssh/known_hosts
-    - ssh -o StrictHostKeyChecking=no gitlab.peulen.xyz
-    - ssh-keygen -F gitlab.peulen.xyz || ssh-keyscan gitlab.peulen.xyz >> ~/.ssh/known_hosts
-    - git clone --bare tttr-data ssh://gitlab.peulen.xyz:/tpeulen/tttr-data.git
     - mamba create -n test python=3.7 ${CONDA_PACKAGE} nose
     - conda activate test
     - |
