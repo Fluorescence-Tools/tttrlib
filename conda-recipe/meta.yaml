@@ -6,7 +6,7 @@ package:
 
 source:
 #  path: ..
-  git_url: ../..
+  git_url: ..
 
 build:
     number: 0
