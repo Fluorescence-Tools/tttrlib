@@ -4,6 +4,7 @@
 #define SWIG_FILE_WITH_INIT
 %}
 %module(directors="1", package="tttrlib") tttrlib
+#pragma SWIG nowarn=501,505,401,511
 %feature("kwargs", 1);
 %include "documentation.i"
 
