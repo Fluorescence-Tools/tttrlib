@@ -10,7 +10,7 @@ source:
 
 build:
     number: 0
-    string: py{{ python }}boost{{ boost }}hdf5{{ hdf5 }}
+    string: py{{ python }}
 
 requirements:
   host:
