@@ -15,26 +15,27 @@ build:
 requirements:
   host:
     - python {{ python }}
-    - numpy {{ numpy }}
+    - numpy {{ numpy }}.*
     - setuptools
     - git
     - cmake
   build:
+    - {{ compiler('cxx') }}
     - python {{ python }}
-    - numpy {{ numpy }}
+    - numpy {{ numpy }}.*
     - cmake
-    - swig {{ swig }}
-    - boost {{ boost }}
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}
+    - swig {{ swig }}.*
+    - boost {{ boost }}.*
+    - fftw {{ fftw }}.*
+    - hdf5 {{ hdf5 }}.*
     - llvm-openmp # [osx]
   run:
     - python {{ python }}
-    - numpy {{ numpy }}
-    - boost {{ boost }} # [win]
-    - libboost {{ boost }} # [not win]
-    - fftw {{ fftw }}
-    - hdf5 {{ hdf5 }}
+    - numpy {{ numpy }}.*
+    - boost {{ boost }}.* # [win]
+    - libboost {{ boost }}.* # [not win]
+    - fftw {{ fftw }}.*
+    - hdf5 {{ hdf5 }}.*
     - llvm-openmp # [osx]
 
 test:
