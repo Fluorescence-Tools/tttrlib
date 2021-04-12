@@ -1,10 +1,5 @@
 name: Mirroring
-
-on:
-  [push, delete]
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    - cron:  '* */6 * * *'
+on:  [push, delete]
 
 jobs:
   to_gitlab:
