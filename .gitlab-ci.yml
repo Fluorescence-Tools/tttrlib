@@ -73,7 +73,7 @@ test:linux:
         conda config --add channels tpeulen
         conda config --add channels tpeulen/label/nightly
         conda config --add channels "file://`pwd`/bld-dir"
-    - git clone gitlab.peulen.xyz/tttr-data
+    - git clone gitlab.peulen.xyz/tpeulen/tttr-data
     - mamba create -n test python=3.7 ${CONDA_PACKAGE} nose
     - conda activate test
     - |
