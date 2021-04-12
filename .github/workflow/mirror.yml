@@ -1,5 +1,9 @@
 name: Mirroring
-on:  [push, delete]
+on:
+  push:
+    branches:
+      - development
+      - master
 
 jobs:
   to_gitlab:
