@@ -60,7 +60,11 @@ endif()
 ###########################
 IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     MESSAGE("Release build")
-    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
+    IF(MSVC)
+        ADD_COMPILE_OPTIONS(/w)
+    ELSE()
+        ADD_COMPILE_OPTIONS(-w)
+    ENDIF()
 ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE("Debug build")
     ## Enable Compiler warnings
