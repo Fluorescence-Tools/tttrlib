@@ -48,10 +48,6 @@ test:linux:
     - linux
   image: ubuntu:latest
   before_script:
-    # Issue with OpenGL and X11 display
-    # See: https://stackoverflow.com/questions/65675765/is-it-possible-to-run-x11-on-gitlab-ci
-    # See: https://github.com/conda-forge/pygridgen-feedstock/issues/10
-    # procps is used to grep the process by name to kill it when needed
     - export DEBIAN_FRONTEND=noninteractive
     - apt update -yq
     - apt install -yq procps wget git git-lfs
