@@ -22,21 +22,11 @@ build:linux:
   stage: build
   tags:
     - linux
-  image: ubuntu:18.04
-  variables:
-    MINICONDA_OS: "Linux"
+  image: continuumio/miniconda3:latest
   before_script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt update -yq
-    - apt install -yq procps wget git git-lfs build-essential doxygen
-    # Download and install miniconda
-    - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
-    - bash miniconda.sh -b -p $HOME/miniconda
-    - export PATH="$HOME/miniconda/bin:$PATH"
-    # setup conda to always accept commands
-    - conda config --set always_yes yes --set changeps1 no
+    - apt update -yq && apt -yq install build-essential
   script:
-    - echo "I am a build stage job."
+    - echo "I am the build stage."
     - source activate
     - conda install mamba boa conda-verify -c conda-forge
     - |
@@ -56,7 +46,7 @@ test:linux:
   stage: test
   tags:
     - linux
-  image: ubuntu:18.04
+  image: ubuntu:latest
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt update -yq
