@@ -28,7 +28,7 @@ build:linux:
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt update -yq
-    - apt install -yq procps wget git git-lfs cmake build-essential doxygen
+    - apt install -yq procps wget git git-lfs build-essential doxygen
     # Download and install miniconda
     - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
