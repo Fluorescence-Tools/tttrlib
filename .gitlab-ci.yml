@@ -26,7 +26,7 @@ build:linux:
   before_script:
     - apt update -yq && apt -yq install build-essential
   script:
-    - echo "I am a build stage job for debian, running on docker using continuumio/miniconda3:latest image"
+    - echo "I am a build stage job."
     - source activate
     - conda install mamba boa conda-verify -c conda-forge
     - |
