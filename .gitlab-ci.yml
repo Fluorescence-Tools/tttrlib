@@ -24,7 +24,7 @@ build:linux:
     - linux
   image: continuumio/miniconda3:latest
   before_script:
-    - apt update -yq && apt -yq install build-essential
+    - apt update -yq && apt -yq install build-essential doxygen cmake git
   script:
     - echo "I am a build stage job."
     - source activate

@@ -17,13 +17,11 @@ requirements:
     - python {{ python }}
     - numpy
     - setuptools
-    - git
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - python {{ python }}
     - numpy
-    - cmake
     - swig
     - boost 1.67.0.* [py < 38]
     - boost 1.71.0.* [py >= 38]
@@ -45,9 +43,9 @@ requirements:
     - fftw 3.3.8.* [not win]
     - llvm-openmp [osx]
 
-test:
-  imports:
-    - tttrlib
+#test:
+#  imports:
+#    - tttrlib
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib

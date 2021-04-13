@@ -1,9 +1,8 @@
 # tttrlib
-[![Build Status](https://travis-ci.org/fluorescence-tools/tttrlib.svg)](https://travis-ci.org/fluorescence-tools/tttrlib)
-[![Build status](https://ci.appveyor.com/api/projects/status/wi1t2tlchmyaxxol/branch/master?svg=true)](https://ci.appveyor.com/project/tpeulen/tttrlib/branch/master)
-[![Documentation Status](https://readthedocs.org/projects/tttrlib/badge/?version=latest)](https://tttrlib.readthedocs.io/en/latest/?badge=latest)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
+[![pipeline status](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)
 [![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://anaconda.org/tpeulen/tttrlib)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
+[![Documentation Status](https://readthedocs.org/projects/tttrlib/badge/?version=latest)](https://tttrlib.readthedocs.io/en/latest/?badge=latest)
 
 ## General description
 tttrlib is a file format agnostic low level, high performance library to 
