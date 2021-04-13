@@ -56,7 +56,6 @@ about:
     {{ data.get('description') }}
   description: |
     {{ data.get('long_description') }}
-  doc_url: https://fluorescence-tools.github.io/tttrlib/
 
 extra:
   recipe-maintainers:
