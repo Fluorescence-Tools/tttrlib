@@ -1,4 +1,6 @@
 {% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+{% set PY_VER_MAJOR = PY_VER[0] %}
+{% set PY_VER_MINOR = PY_VER[2] %}
 
 package:
   name: {{ data.get('name')|lower }}
@@ -10,18 +12,18 @@ source:
 
 build:
     number: 0
-    string: py{{ python }}
+    string: py{{ PY_VER_MAJOR }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
 
 requirements:
   host:
     - python {{ python }}
     - numpy
     - setuptools
-    - pathlib2 [py27]
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake >=3.13
+    - pathlib2 [py27]
     - python {{ python }}
     - numpy
     - swig
