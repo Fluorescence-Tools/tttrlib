@@ -61,9 +61,6 @@ test:linux:
     - mamba update -y -n base -c defaults --all
     - |
       conda config --add channels salilab
-      conda config --add channels conda-forge
-      conda config --add channels tpeulen
-      conda config --add channels tpeulen/label/nightly
       conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba create -n test python=3.7 tttrlib nose scipy
