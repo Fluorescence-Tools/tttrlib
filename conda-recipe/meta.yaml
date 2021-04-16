@@ -17,7 +17,7 @@ requirements:
     - python {{ python }}
     - numpy
     - setuptools
-    - git
+    - pathlib2 [py27]
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
