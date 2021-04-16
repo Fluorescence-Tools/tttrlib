@@ -16,36 +16,28 @@ build:
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - pathlib2 [py27]
     - numpy
     - setuptools
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - cmake >=3.13
-    - pathlib2 [py27]
     - python {{ python }}
-    - numpy
+    - setuptools
+    - pathlib2 [py27]
+    - cmake >=3.13
     - swig
-    - boost 1.67.0.* [py < 38]
-    - boost 1.71.0.* [py >= 38]
-    - hdf5 1.10.2.* [py < 38 and not linux64]
-    - hdf5 1.10.4.* [py >= 38 or linux64]
-    - fftw 3.3.4.* [win]
-    - fftw 3.3.8.* [not win]
-    - llvm-openmp [osx]
+    - numpy
+    - boost
+    - hdf5
+    - fftw
   run:
     - python {{ python }}
     - numpy
-    - boost 1.67.0.* [py < 38]
-    - boost 1.71.0.* [py >= 38]
-    - libboost 1.71.0.* [py >= 38]
-    - libboost 1.67.0.* [py < 38]
-    - hdf5 1.10.2.* [py < 38 and not linux64]
-    - hdf5 1.10.4.* [py >= 38 or linux64]
-    - fftw 3.3.4.* [win]
-    - fftw 3.3.8.* [not win]
+    - {{ pin_compatible('boost', max_pin='x.x.x') }}
+    - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
+    - {{ pin_compatible('fftw', max_pin='x.x') }}
     - llvm-openmp [osx]
 
 #test:
