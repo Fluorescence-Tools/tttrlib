@@ -1,16 +1,18 @@
-build
-dist
+build/
+bld-dir/
+dist/
 *.pro.user
 *.pro.user.*
 scratch.py
 CMakeLists.txt.user
 CMakeLists.txt.user.*
-cmake-build-*
+cmake-build-*/
 playground
 temp/
-*.egg-info
-doc/_build
-tttr-data
+*.egg-info/
+doc/_build/
+tttr-data/
+__pycache__
 
 # Documentation and tools
 doc/_*
