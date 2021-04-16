@@ -4,7 +4,10 @@ import os
 import sys
 import platform
 import subprocess
-import pathlib
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
