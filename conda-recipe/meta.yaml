@@ -17,6 +17,7 @@ build:
 requirements:
   host:
     - python
+    - pathlib2 [py27]
     - numpy
     - setuptools
   build:
