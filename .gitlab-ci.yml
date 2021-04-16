@@ -84,11 +84,11 @@ deploy:
 
 
 # Downstream projects
-TTTRConvert:
+tttrconvert:
   stage: Trigger-cross-projects
   trigger: tpeulen/tttrconvert
 
-Fit2X:
+fit2x:
   stage: Trigger-cross-projects
   trigger: tpeulen/fit2x
 
