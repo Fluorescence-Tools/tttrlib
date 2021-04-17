@@ -25,7 +25,7 @@ build:linux:
     - | 
       cd doc && doxygen
       cd ../build_tools
-      python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i
+      python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i && cd ..
     - conda install mamba boa conda-verify -c conda-forge
     - conda config --add channels salilab
     - conda mambabuild conda-recipe --output-folder bld-dir
