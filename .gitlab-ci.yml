@@ -1,3 +1,10 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+      variables:
+        DEPLOY_VARIABLE: "main"  # Override globally-defined DEPLOY_VARIABLE
+    - when: always               # Run the pipeline in other cases
+
 stages:
 - build
 - test
@@ -10,13 +17,6 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   DEPLOY_VARIABLE: "nightly"
   MINICONDA_VERSION: "latest"
-
-workflow:
-  rules:
-    - if: $CI_COMMIT_REF_NAME =~ /master/
-      variables:
-        DEPLOY_VARIABLE: "main"  # Override globally-defined DEPLOY_VARIABLE
-    - when: always               # Run the pipeline in other cases
 
 build:linux:
   stage: build
