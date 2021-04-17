@@ -24,7 +24,7 @@ build:linux:
     # Create documentation.i for python
     - | 
       cd doc && doxygen
-      cd ..build_tools
+      cd ../build_tools
       python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i
     - conda install mamba boa conda-verify -c conda-forge
     - conda config --add channels salilab
