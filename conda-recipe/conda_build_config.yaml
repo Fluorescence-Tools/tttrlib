@@ -3,6 +3,12 @@ python:
   - 3.7
   - 3.8
 pin_run_as_build:
-    boost: x.x.x
-    hdf: x.x.x
-    fftw: x.x
+    boost: 
+      min_pin: x.x.x
+      max_pin: x.x.x
+    hdf: 
+      min_pin: x.x.x
+      max_pin: x.x.x
+    fftw:
+      min_pin: x.x
+      max_pin: x.x
