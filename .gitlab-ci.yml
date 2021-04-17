@@ -17,11 +17,11 @@ build:linux:
     - linux
   image: continuumio/miniconda3:latest
   before_script:
-    - apt update -yq && apt -yq install build-essential   
+    - apt update -yq && apt -yq install build-essential doxygen   
   script:
     - echo "I am the build stage."
     - source activate base
-    - conda install mamba boa conda-verify numpy cmake doxygen -c conda-forge
+    - conda install mamba boa conda-verify -c conda-forge
     - |
       conda config --add channels salilab
     - conda mambabuild conda-recipe --output-folder bld-dir

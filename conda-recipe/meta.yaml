@@ -18,11 +18,17 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python {{ python }}
+    - python
     - setuptools
-    - pathlib2 [py27]
     - cmake >=3.13
     - swig
+    - numpy
+    - boost
+    - hdf5
+    - fftw
+  host:
+    - python {{ python }}
+    - pathlib2 [py27]
     - numpy
     - boost
     - hdf5
