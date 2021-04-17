@@ -28,7 +28,7 @@ build:linux:
       python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i && cd ..
     - conda install mamba boa conda-verify -c conda-forge    
     # Take care that linked against same libraries as IMP
-    - conda create -n imp python && conda activate imp && mamba install imp -c salilab
+    - conda create -n imp python=3.8 && conda activate imp && mamba install imp -c salilab
     - if [[ python -c "import IMP;print(IMP.__version__ < '2.15.0')" == "True" ]]; then mv meta_imp_2.14.yaml meta.yaml; fi
     - conda activate base
     # Build the recipe
