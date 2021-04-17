@@ -73,6 +73,7 @@ deploy:
     - echo "I am a depolyment stage job for debian, running on docker using continuumio/miniconda3:latest image"
     - source activate
     - conda install anaconda-client
+    - echo $CI_COMMIT_REF_NAME
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then DEPLOY_VARIABLE=main; else DEPLOY_VARIABLE=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${DEPLOY_VARIABLE} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
