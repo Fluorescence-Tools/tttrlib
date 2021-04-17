@@ -78,8 +78,7 @@ class CMakeBuild(build_ext):
 
 NAME = "tttrlib"
 DESCRIPTION = "tttrlib read/process/write TTTR data"
-LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to \
-read, write and process time-tagged time resolved data."""
+LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to read, write and process time-tagged time resolved data."""
 VERSION = read_version(
     os.path.dirname(os.path.abspath(__file__)) + '/include/info.h'
 )
