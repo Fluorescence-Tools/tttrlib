@@ -1,6 +1,13 @@
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DEPLOY_VARIABLE: "nightly"
+  MINICONDA_VERSION: "latest"
+
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_REF_NAME == "master"
       variables:
         DEPLOY_VARIABLE: "main"  # Override globally-defined DEPLOY_VARIABLE
     - when: always               # Run the pipeline in other cases
@@ -10,13 +17,6 @@ stages:
 - test
 - deploy
 - Trigger-cross-projects
-
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  DEPLOY_VARIABLE: "nightly"
-  MINICONDA_VERSION: "latest"
 
 build:linux:
   stage: build
