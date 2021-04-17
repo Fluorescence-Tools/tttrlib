@@ -18,13 +18,13 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python
+    - python {{ python }}
     - setuptools
     - cmake >=3.13
     - swig
     - numpy
     - boost
-    - hdf5
+    - hdf5 {{ hdf5 }}
     - fftw
   host:
     - python {{ python }}
