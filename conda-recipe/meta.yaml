@@ -35,9 +35,9 @@ requirements:
   run:
     - python {{ python }}
     - numpy
-    - {{ pin_compatible('boost', max_pin='x.x.x') }}
-    - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
-    - {{ pin_compatible('fftw', max_pin='x.x') }}
+    - boost
+    - hdf5
+    - fftw
     - llvm-openmp [osx]
 
 #test:
