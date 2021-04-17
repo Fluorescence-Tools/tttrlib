@@ -21,10 +21,10 @@ build:linux:
   script:
     - echo "I am the build stage."
     - source activate base
-    - conda install conda-build conda-verify
+    - conda install mamba boa conda-verify
     - |
       conda config --add channels salilab
-    - conda build conda-recipe --output-folder bld-dir
+    - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     expire_in: 7 days
     paths:
