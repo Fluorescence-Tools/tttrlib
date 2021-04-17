@@ -28,6 +28,10 @@ build:linux:
       python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i && cd ..
     - conda install mamba boa conda-verify -c conda-forge
     - conda config --add channels salilab
+    # Take care that linked against same libraries as IMP
+    - mamba install imp
+    - if [[ python -c "import IMP;print(IMP.__version__ < '2.15.0')" == "True" ]]; then mv meta_imp_2.14.yaml meta.yaml; fi      
+    # Build the recipe
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     expire_in: 7 days
@@ -81,11 +85,14 @@ deploy:
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then DEPLOY_VARIABLE=main; else DEPLOY_VARIABLE=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${DEPLOY_VARIABLE} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
+# TODO
 # doc:
 #   stage: deploy
+#   image: continuumio/miniconda3:latest
 #   tags:
 #     - linux
-#   image: continuumio/miniconda3:latest
+#   dependencies:
+#     - build:linux
 #   before_script:
 #     - apt-get update -qy
 #     - apt-get install -y lftp  
