@@ -4,10 +4,6 @@ import os
 import sys
 import platform
 import subprocess
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -76,7 +72,6 @@ class CMakeBuild(build_ext):
         )
         subprocess.check_call(
             ['cmake', '--build', '.'] + build_args,
-            # ['ninja'], # + build_args,
             cwd=self.build_temp
         )
 
@@ -90,26 +85,6 @@ VERSION = read_version(
 )
 print("TTTRLIB VERSION:", VERSION)
 LICENSE = 'BSD 3-Clause License'
-
-# update the documentation.i file using doxygen and doxy2swig
-if "docs" in sys.argv:
-    sys.argv.remove('doc')
-    try:
-        env = os.environ.copy()
-        # build the documentation.i file using doxygen and doxy2swig
-        working_directory = pathlib.Path(__file__).parent.absolute()
-        subprocess.check_call(
-            ["doxygen"],
-            cwd=str(working_directory / "docs"),
-            env=env
-        )
-        subprocess.check_call(
-            ["python", "doxy2swig.py", "../docs/_build/xml/index.xml", "../ext/python/documentation.i"],
-            cwd=str(working_directory / "build_tools"),
-            env=env
-        )
-    except:
-        print("Problem calling doxygen")
 
 setup(
     name=NAME,
