@@ -19,6 +19,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - python
+    - pathlib2 [py27]
     - setuptools
     - cmake >=3.13
     - swig
@@ -28,7 +29,6 @@ requirements:
     - fftw
   host:
     - python {{ python }}
-    - pathlib2 [py27]
     - numpy
     - boost
     - hdf5
