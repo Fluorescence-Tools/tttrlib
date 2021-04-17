@@ -5,3 +5,4 @@ python:
 pin_run_as_build:
     boost: x.x.x
     hdf: x.x.x
+    fftw: x.x
