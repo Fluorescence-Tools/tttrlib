@@ -20,8 +20,8 @@ build:linux:
     - apt update -yq && apt -yq install build-essential
   script:
     - echo "I am the build stage."
-    - source activate
-    - conda install mamba boa conda-verify -c conda-forge
+    - source activate base
+    - conda install conda-verify
     - |
       conda config --add channels salilab
     - conda build conda-recipe --output-folder bld-dir
