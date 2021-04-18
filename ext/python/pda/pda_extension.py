@@ -1,8 +1,7 @@
 
 
-def histogram_function(
-        self,
-        cb: typing.Callable) -> None:
+def histogram_function(self, cb):
+    # type: (Callable) -> None
     """Set the callback function that is used to compute 1D histograms
 
     :param cb: the callback function
