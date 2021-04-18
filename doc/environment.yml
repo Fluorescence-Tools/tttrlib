@@ -1,19 +1,16 @@
 name: doc
 channels:
     - tpeulen
-    - tpeulen/label/nightly
     - defaults
+    - salilab
     - conda-forge
 dependencies:
-    - tttrlib >=0.0.19
+    - tttrlib
     - phconvert
     - doxygen
     - numba
     - scipy
-    # the versions are all pinned to reduce the memory load by conda
-    # without that, the docs would not build on read the docs
     - pillow
-    - fit2x
     - sphinx-gallery
     - sphinx=3.1.1
     - nbsphinx=0.7.1
@@ -48,8 +45,6 @@ dependencies:
       - kiwisolver==1.1.0
       - latexcodec==2.0.0
       - markupsafe==1.1.1
-      # matplotlib=2.2.3 because matplotlib.sphinxext was removed in matplotlib 3.x.x
-        #      - matplotlib==2.2.3
       - matplotlib==3.3.2
       - numpy==1.18.1
       - numpydoc==0.9.2

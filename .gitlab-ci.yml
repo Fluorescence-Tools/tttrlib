@@ -86,28 +86,27 @@ deploy:
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then DEPLOY_VARIABLE=main; else DEPLOY_VARIABLE=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${DEPLOY_VARIABLE} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
-# TODO
-# doc:
-#   stage: deploy
-#   image: continuumio/miniconda3:latest
-#   tags:
-#     - linux
-#   dependencies:
-#     - build:linux
-#   before_script:
-#     - apt-get update -qy
-#     - apt-get install -y lftp  
-#   script:
-#     - echo "I am a deploy stage... Building documentation."
-#     - source activate base
-#     - conda env create -f doc/environment.yml
-#     - conda activate doc
-#     - | 
-#       cd doc
-#       doxygen
-#       make html
-#     - echo "I am a deploy stage... Uploading documentation."
-#     - lftp -e "open sftp://192.168.124.254; user $FTP_USERNAME $FTP_PASSWORD; mirror -X .* -X .*/ --reverse --verbose --delete local-folder/ destination-folder/; bye"
+doc:
+  stage: deploy
+  image: continuumio/miniconda3:latest
+  tags:
+    - linux
+  dependencies:
+    - build:linux
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y lftp  
+  script:
+    - echo "I am a deploy stage... Building documentation."
+    - source activate base
+    - conda install mamba -c conda-forge
+    - | 
+      mamba env create -f doc/environment.yml
+      conda activate doc
+      cd doc      
+      make html
+    - echo "I am a deploy stage... Uploading documentation."
+    - lftp -e "open sftp://192.168.124.254; user $FTP_USERNAME $FTP_PASSWORD; mirror -X .* -X .*/ --reverse --verbose --delete doc/_build/html/ www/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:

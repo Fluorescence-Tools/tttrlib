@@ -24,11 +24,12 @@ Alternatively, ``tttrlib`` can be installed via ``pip``.
     pip install tttrlib
 
 
-Compliation
+Compilation
 ===========
 
 ``tttrlib`` can be compiled and installed using the source code provided in the
-git repository.
+git repository. ``tttrlib`` is compiled in Docker environments. The continuous 
+integration pipeline can be used as a reference to setup a compilation machine
 
 .. code-block:: bash
 

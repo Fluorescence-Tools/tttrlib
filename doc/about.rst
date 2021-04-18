@@ -6,8 +6,9 @@ About us
 History
 -------
 
-This project was started in 2019 by Thomas Peulen at the UCSF.
-Later that year, Katherina Hemmen started to
+This project was started in 2019 by Thomas Peulen at the UCSF
+to integrate fluorescence spectroscopy into the integrative 
+modeling platform. Later that year, Katherina Hemmen started to
 contribute to project as part of a research project at the
 Rudulf Virchov Centre (Wuerzburg).
 
@@ -45,8 +46,6 @@ citations to the following paper.
      pages={xxx--xxx},
      year={2021}
     }
-
-
 
 
 License

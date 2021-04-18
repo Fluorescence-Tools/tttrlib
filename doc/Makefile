@@ -39,6 +39,9 @@ clean:
 	-rm -rf auto_examples/
 
 html:
+	# Use Doxygen to build xml files (used to breathe for sphinx docs)
+	doxygen
+
 	# These two lines make the build a bit more lengthy, and the
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
@@ -48,6 +51,8 @@ html:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable"
 
 html-noplot:
+	# Use Doxygen to build xml files (used to breathe for sphinx docs)
+	doxygen
 	$(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable."
