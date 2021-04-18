@@ -2,9 +2,9 @@
 rm -r -f build
 cd doc
 doxygen
-$PYTHON doxy2swig.py _build/xml/index.xml ../ext/python/documentation.i
+python doxy2swig.py _build/xml/index.xml ../ext/python/documentation.i
 cd ..
-$PYTHON setup.py install --single-version-externally-managed --record=record.txt
+python setup.py install --single-version-externally-managed --record=record.txt
 
 cd build
 cmake \

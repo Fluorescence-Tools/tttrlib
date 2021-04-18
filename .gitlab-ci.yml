@@ -21,11 +21,6 @@ build:linux:
   script:
     - echo "I am the build stage."
     - source activate base
-    # Create documentation.i for python
-    - | 
-      cd doc && doxygen
-      cd ../build_tools
-      python doxy2swig.py ../doc/_build/xml/index.xml ../ext/python/documentation.i && cd ..
     - conda install mamba boa conda-verify -c conda-forge    
     # Take care that linked against same libraries as IMP
     - conda create -n imp python=3.8 && conda activate imp && mamba install imp -c salilab
@@ -71,7 +66,7 @@ test:linux:
       cd test
       nosetests
 
-deploy:
+deploy:conda:
   stage: deploy
   image: continuumio/miniconda3:latest
   tags:
@@ -86,7 +81,7 @@ deploy:
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then DEPLOY_VARIABLE=main; else DEPLOY_VARIABLE=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${DEPLOY_VARIABLE} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
-doc:
+deploy:doc:
   stage: deploy
   image: continuumio/miniconda3:latest
   tags:
