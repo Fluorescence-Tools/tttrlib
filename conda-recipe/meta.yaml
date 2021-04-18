@@ -21,7 +21,7 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python
+    - python {{ python }}
     - setuptools
     - cmake
     - swig
@@ -29,13 +29,7 @@ requirements:
     - boost
     - hdf5
     - fftw
-  host:
-    - python {{ python }}
-    - numpy
-    - boost
-    - hdf5
-    - fftw
-    - imp {{ imp }}
+    - imp {{ imp }} # install imp to make sure boost, etc. match
   run:
     - python {{ python }}
     - numpy
