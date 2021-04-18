@@ -21,8 +21,7 @@ def read_version(header_file):
 NAME = "tttrlib"
 DESCRIPTION = "tttrlib read/process/write TTTR data"
 LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to read, write and process time-tagged time resolved data."""
-VERSION = read_version(
-    os.path.join(os.path.dirname(__file__) , '/include/info.h'))
+VERSION = read_version(os.path.dirname(os.path.abspath(__file__)) + '/include/info.h')
 LICENSE = 'BSD 3-Clause License'
 
 
