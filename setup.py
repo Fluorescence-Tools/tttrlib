@@ -25,6 +25,20 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 
+def build_swig_documentation():
+    # build the documentation.i file using doxygen and doxy2swig
+    if not os.path.isfile("./ext/python/documentation.i"):
+        print("-- building documentation.i using doxygen and doxy2swig")
+        path = os.path.dirname(os.path.abspath(__file__)) 
+        env = os.environ.copy()
+        subprocess.check_call(["doxygen"], cwd=path + "/doc", env=env)
+        subprocess.check_call(
+            ["python", "doxy2swig.py", "../doc/_build/xml/index.xml", "../ext/python/documentation.i"],
+            cwd= path + "/build_tools",
+            env=env
+        )
+
+
 class CMakeBuild(build_ext):
 
     def run(self):
@@ -78,13 +92,15 @@ class CMakeBuild(build_ext):
 
 NAME = "tttrlib"
 DESCRIPTION = "tttrlib read/process/write TTTR data"
-LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to read, write and process time-tagged time resolved data."""
+LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to \
+read, write and process time-tagged time resolved data."""
 VERSION = read_version(
     os.path.dirname(os.path.abspath(__file__)) + '/include/info.h'
 )
 print("TTTRLIB VERSION:", VERSION)
+build_swig_documentation()
 LICENSE = 'BSD 3-Clause License'
-
+build_swig_documentation()
 setup(
     name=NAME,
     version=VERSION,
