@@ -10,9 +10,10 @@ def histogram_function(self, cb):
     class PdaCallbackPython(tttrlib.PdaCallback):
         def __init__(
                 self,
-                cb_function: typing.Callable,
+                cb_function,
                 *args, **kwargs
         ):
+        # type: (typing.Callable) -> None
             super().__init__(*args, **kwargs)
             self._cb = cb_function
 
