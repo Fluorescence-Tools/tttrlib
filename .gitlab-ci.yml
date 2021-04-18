@@ -62,7 +62,7 @@ test:linux:
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - conda create -n test
     - conda activate test
-    - mamba install -y -n python tttrlib nose scipy
+    - mamba install python tttrlib nose scipy
     - |
       cd test
       nosetests
