@@ -2,6 +2,9 @@
 {% set PY_VER_MAJOR = PY_VER[0] %}
 {% set PY_VER_MINOR = PY_VER[2] %}
 
+# This conda recipe makes sure that hdf5 and boost is linked as in version(IMP) <= 2.14
+# Later IMP versions use more generic linking and should work with meta.yaml
+
 package:
   name: {{ data.get('name')|lower }}
   version: {{ data.get('version')|lower }}
@@ -20,7 +23,7 @@ requirements:
     - {{ compiler('cxx') }}
     - python
     - setuptools
-    - cmake >=3.13
+    - cmake
     - swig
     - numpy
     - boost
@@ -32,6 +35,7 @@ requirements:
     - boost
     - hdf5
     - fftw
+    - imp {{ imp }}
   run:
     - python {{ python }}
     - numpy

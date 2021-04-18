@@ -18,6 +18,14 @@ def read_version(header_file):
     return version.replace('"', '')
 
 
+NAME = "tttrlib"
+DESCRIPTION = "tttrlib read/process/write TTTR data"
+LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to read, write and process time-tagged time resolved data."""
+VERSION = read_version(
+    os.path.join(os.path.dirname(__file__) , '/include/info.h'))
+LICENSE = 'BSD 3-Clause License'
+
+
 class CMakeExtension(Extension):
 
     def __init__(self, name, sourcedir=''):
@@ -46,6 +54,7 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        print("TTTRLIB VERSION:", VERSION)
         extdir = os.path.abspath(
             os.path.dirname(
                 self.get_ext_fullpath(ext.name)
@@ -89,17 +98,6 @@ class CMakeBuild(build_ext):
             cwd=self.build_temp
         )
 
-
-NAME = "tttrlib"
-DESCRIPTION = "tttrlib read/process/write TTTR data"
-LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to \
-read, write and process time-tagged time resolved data."""
-VERSION = read_version(
-    os.path.dirname(os.path.abspath(__file__)) + '/include/info.h'
-)
-print("TTTRLIB VERSION:", VERSION)
-build_swig_documentation()
-LICENSE = 'BSD 3-Clause License'
 build_swig_documentation()
 setup(
     name=NAME,
