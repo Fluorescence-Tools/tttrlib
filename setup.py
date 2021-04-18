@@ -29,12 +29,12 @@ def build_swig_documentation():
     # build the documentation.i file using doxygen and doxy2swig
     if not os.path.isfile("./ext/python/documentation.i"):
         print("-- building documentation.i using doxygen and doxy2swig")
-        path = os.path.dirname(os.path.abspath(__file__)) 
+        path = os.path.dirname(os.path.abspath(__file__)) + "/doc"
         env = os.environ.copy()
-        subprocess.check_call(["doxygen"], cwd=path + "/doc", env=env)
+        subprocess.check_call(["doxygen"], cwd=path, env=env)
         subprocess.check_call(
             ["python", "doxy2swig.py", "../doc/_build/xml/index.xml", "../ext/python/documentation.i"],
-            cwd= path + "/build_tools",
+            cwd=path,
             env=env
         )
 
