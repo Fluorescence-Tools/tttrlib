@@ -7,10 +7,10 @@ powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compressi
 set PATH=%cd%\doxygen;%PATH%
 cd doc
 doxygen
-python doxy2swig.py ./_build/xml/index.xml ../ext/python/documentation.i
+$PYTHON doxy2swig.py ./_build/xml/index.xml ../ext/python/documentation.i
 cd ..
 
-python setup.py install --single-version-externally-managed --record=record.txt
+$PYTHON setup.py install --single-version-externally-managed --record=record.txt
 REM remove potentially existing build dir to avoid conflicts with previous builds
 rmdir build /s /q
 "%PYTHON%" setup.py install --single-version-externally-managed --record=record.txt
