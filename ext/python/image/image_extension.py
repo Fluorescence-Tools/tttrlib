@@ -41,16 +41,17 @@ def shape(self):
 
 def __init__(
         self,
-        tttr_data: tttrlib.TTTR = None,
-        marker_frame_start: int = None,
-        marker_line_start: int = None,
-        marker_line_stop: int = None,
-        marker_event_type: int = 1,
-        n_pixel_per_line: int = None,
-        reading_routine: str = 'default',
-        skip_before_first_frame_marker: bool = False,
+        tttr_data = None,
+        marker_frame_start = None,
+        marker_line_start = None,
+        marker_line_stop = None,
+        marker_event_type = 1,
+        n_pixel_per_line = None,
+        reading_routine = 'default',
+        skip_before_first_frame_marker = False,
         **kwargs
 ):
+# type: (tttrlib.TTTR, int, int, int, int, int, str, bool) -> None
     kwargs.update(
         {
             "reading_routine": reading_routine,
