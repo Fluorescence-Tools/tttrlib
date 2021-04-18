@@ -60,8 +60,9 @@ test:linux:
       conda config --add channels salilab
       conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - mamba create -n test python tttrlib nose scipy
+    - conda create -n test
     - conda activate test
+    - mamba install -y -n python tttrlib nose scipy
     - |
       cd test
       nosetests
