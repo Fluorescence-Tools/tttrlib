@@ -91,12 +91,12 @@ deploy:doc:
     - build:linux
   before_script:
     - apt-get update -qy
-    - apt-get install -y lftp  
+    - apt-get install -y lftp build-essential
   script:
     - echo "I am a deploy stage... Building documentation."
     - source activate base
     - conda install mamba -c conda-forge
-    - | 
+    - conda config --add channels "file://`pwd`/bld-dir"
       mamba env create -f doc/environment.yml
       conda activate doc
       cd doc      
