@@ -78,7 +78,7 @@ source_suffix = '.rst'
 # -- Project information -----------------------------------------------------
 project = u'tttrlib'
 copyright = (
-    f'2019 - {datetime.now().year}, scikit-learn developers (BSD License)'
+    f'2021 - {datetime.now().year}, tttrlib developers (BSD License)'
 )
 import tttrlib
 version = tttrlib.__version__
