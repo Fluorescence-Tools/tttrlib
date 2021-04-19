@@ -30,17 +30,24 @@ requirements:
     - hdf5
     - fftw
     - imp {{ imp }} # install imp to make sure boost, etc. match
+  host: 
+    - python {{ python }}
+    - boost
+    - hdf5
+    - fftw
+    - imp {{ imp }} # install imp to make sure boost, etc. match
   run:
     - python {{ python }}
+    - typing [py27]
     - numpy
     - {{ pin_compatible('boost', max_pin='x.x.x') }}
     - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
     - {{ pin_compatible('fftw', max_pin='x.x') }}
     - llvm-openmp [osx]
 
-#test:
-#  imports:
-#    - tttrlib
+test:
+ imports:
+   - tttrlib
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
