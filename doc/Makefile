@@ -19,7 +19,7 @@ ALLSPHINXOPTS   = -T -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS)\
 
 .PHONY: help clean html dirhtml ziphtml pickle json latex latexpdf changes linkcheck doctest optipng
 
-all: html-noplot
+all: html #html-noplot html latex
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -39,13 +39,20 @@ clean:
 	-rm -rf auto_examples/
 
 html:
-	# Use Doxygen to build xml files (used to breathe for sphinx docs)
-	doxygen
-
 	# These two lines make the build a bit more lengthy, and the
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
 	#rm -rf _build/doctrees/
+
+	# Create conda env that contains all dependencies
+	# Clone the TTTR-example data rep
+	@if [ ! -d "../tttr-data/" ]; then \
+		git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1 ..; \
+	fi
+
+	# Use Doxygen to build xml files (used to breathe for sphinx docs)
+	doxygen
+
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable"

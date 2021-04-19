@@ -108,8 +108,7 @@ relates to the FRET efficiency by
 
 .. math::
 
-    p_G = \left( 1 + \alpha + \frac{\gamma E}{(1-E)} \right)^{-1}
-    \text{with} \gamma = \frac{g_R \Phi_A}{g_R \Phi_D}
+    p_G = \left( 1 + \alpha + \frac{\gamma E}{(1-E)} \right)^{-1} \text{ with } \gamma = \frac{g_R \Phi_A}{g_R \Phi_D}
 
 where :math:`g_G`, :math:`g_R` are the detection efficiencies in the green and
 red detection channel, respectively. :math:`\Phi_A`, :math:`\Phi_D` are the
