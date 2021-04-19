@@ -92,7 +92,7 @@ deploy:doc:
   before_script:
     - apt-get update -qy
     # Latex documentation
-    - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+    - apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
     # Make command
     - apt-get install -y build-essential
     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
