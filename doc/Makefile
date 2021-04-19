@@ -47,7 +47,7 @@ html:
 	# Create conda env that contains all dependencies
 	# Clone the TTTR-example data rep
 	@if [ ! -d "../tttr-data/" ]; then \
-		git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1 ..; \
+		git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1 ../tttr-data; \
 	fi
 
 	# Use Doxygen to build xml files (used to breathe for sphinx docs)
