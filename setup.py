@@ -40,7 +40,7 @@ def build_swig_documentation():
         env = os.environ.copy()
         subprocess.check_call(["doxygen"], cwd=path, env=env)
         subprocess.check_call(
-            ["python", "doxy2swig.py", "../doc/_build/xml/index.xml", "../ext/python/documentation.i"],
+            ["python", "doxy2swig.py", "./_build/xml/index.xml", "../ext/python/documentation.i"],
             cwd=path,
             env=env
         )
