@@ -95,8 +95,9 @@ deploy:doc:
   script:
     - echo "I am a deploy stage... Building documentation."
     - source activate base
-    - conda install mamba -c conda-forge
-    - conda config --add channels "file://`pwd`/bld-dir"
+    - |
+      conda install mamba -c conda-forge
+      conda config --add channels "file://`pwd`/bld-dir"
       mamba env create -f doc/environment.yml
       conda activate doc
       cd doc      
