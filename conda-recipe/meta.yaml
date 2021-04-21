@@ -26,15 +26,15 @@ requirements:
     - cmake
     - swig
     - numpy
-    # - boost
-    # - hdf5
-    # - fftw
+    - boost
+    - hdf5
+    - fftw
     - imp {{ imp }} # install imp to make sure boost, etc. match
   host: 
     - python {{ python }}
-    # - boost
-    # - hdf5
-    # - fftw
+    - boost
+    - hdf5
+    - fftw
     - imp {{ imp }} # install imp to make sure boost, etc. match
   run:
     - python {{ python }}

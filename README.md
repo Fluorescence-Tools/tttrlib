@@ -121,11 +121,6 @@ on its [web page](https://fluorescence-tools.github.io/tttrlib)
 Note, tttrlib is highly experimental library in current development. In
 case you notice unusual behaviour do not hesitate to contact the authors.
 
-## Help
-
-For help either raise a GitHub issue [issue](https://github.com/fluorescence-tools/tttrlib/issues)>.
-or join the tttrlib Discord [group](https://discord.gg/ghP9QqWUaK).
-
 ## License
 
 tttrlib is released under the open source MPL 2.0 license.
