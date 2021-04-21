@@ -46,16 +46,12 @@ test:linux:
     # setup conda to always accept commands
     - conda config --set always_yes yes --set changeps1 no
   script:
-    - echo "I am a test stage job for debian, running on docker"
     - source activate base
-    - conda install mamba=$MAMBA_VERSION -c conda-forge
-    - |
-      conda config --add channels salilab
-      conda config --add channels "file://`pwd`/bld-dir"
+    - cp .condarc ~/.condarc
+    - conda install mamba=$MAMBA_VERSION 
+    - conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - conda create -n test
-    - conda activate test
-    - mamba install python tttrlib nose scipy
+    - mamba create -n test python tttrlib nose scipy
     - |
       cd test
       nosetests
@@ -105,7 +101,7 @@ deploy:conda:
 # Downstream projects
 tttrconvert:
   stage: Trigger-cross-projects
-  trigger: tpeulen/tttrconvert
+  trigger: chisurf/tttrconvert
 
 fit2x:
   stage: Trigger-cross-projects
@@ -113,7 +109,7 @@ fit2x:
 
 clsmview:
   stage: Trigger-cross-projects
-  trigger: tpeulen/clsmview
+  trigger: chisurf/clsmview
 
 scikit-fluorescence:
   stage: Trigger-cross-projects
