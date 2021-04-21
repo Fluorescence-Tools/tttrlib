@@ -48,3 +48,10 @@ Generally, tttrlib is intended as a library for all kinds of TTTR data.
 If you data is not supported, contact the authors and provide the authors
 with a dataset that can be integrated into a public repository.
 
+How can I get help?
+-------------------------------------------------
+
+For help either raise a GitHub issue `issue <https://github.com/fluorescence-tools/tttrlib/issues>`_.
+or join the tttrlib Discord `group <https://discord.gg/ghP9QqWUaK>`_.
+
+
