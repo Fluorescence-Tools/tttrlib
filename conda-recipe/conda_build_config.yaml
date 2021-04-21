@@ -1,9 +1,9 @@
 python:
-  - 2.7
+  # - 2.7
   - 3.7
-  - 3.8
+  # - 3.8
 # Use this to make sure that tttrlib links against 
 # same libraries as IMP (Integrative modeling platform)
 imp:
   - 2.13
-  - 2.14
+  # - 2.14
