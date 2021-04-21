@@ -2,7 +2,6 @@
 # only cache local items.
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  DEPLOY_VARIABLE: "nightly"
   MINICONDA_VERSION: "latest"
   MAMBA_VERSION: "0.10"
 
@@ -20,15 +19,9 @@ build:linux:
   before_script:
     - apt update -yq && apt -yq install build-essential doxygen   
   script:
-    - echo "I am the build stage."
     - source activate base
-    - conda install mamba=$MAMBA_VERSION boa conda-verify -c conda-forge    
-    # # Take care that linked against same libraries as IMP - now managed via conda recipe
-    # - conda create -n imp python=3.8 && conda activate imp && mamba install imp -c salilab
-    # - if ($(python -c "import IMP;exit(IMP.__version__ > '2.15.0')")); then cp conda-recipe/meta_imp_2.14.yaml conda-recipe/meta.yaml; fi
-    # - conda activate base
-    # Build the recipe
-    - conda config --add channels salilab
+    - cp .condarc ~/.condarc
+    - conda install mamba=$MAMBA_VERSION boa conda-verify
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     expire_in: 7 days
