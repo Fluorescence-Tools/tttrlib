@@ -1,4 +1,6 @@
 channels:
   - conda-forge
   - defaults
+  # depends IMP build stage for compatible linking
+  - salilab
 channel_priority: strict
