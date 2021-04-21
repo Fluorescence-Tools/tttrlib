@@ -4,6 +4,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   DEPLOY_VARIABLE: "nightly"
   MINICONDA_VERSION: "latest"
+  MAMBA_VERSION: "0.10"
 
 stages:
 - build
@@ -21,7 +22,7 @@ build:linux:
   script:
     - echo "I am the build stage."
     - source activate base
-    - conda install mamba boa conda-verify -c conda-forge    
+    - conda install mamba=$MAMBA_VERSION boa conda-verify -c conda-forge    
     # # Take care that linked against same libraries as IMP - now managed via conda recipe
     # - conda create -n imp python=3.8 && conda activate imp && mamba install imp -c salilab
     # - if ($(python -c "import IMP;exit(IMP.__version__ > '2.15.0')")); then cp conda-recipe/meta_imp_2.14.yaml conda-recipe/meta.yaml; fi
@@ -54,8 +55,7 @@ test:linux:
   script:
     - echo "I am a test stage job for debian, running on docker"
     - source activate base
-    - conda install mamba conda-verify -c conda-forge
-    - mamba update -y -n base -c defaults --all
+    - conda install mamba=$MAMBA_VERSION -c conda-forge
     - |
       conda config --add channels salilab
       conda config --add channels "file://`pwd`/bld-dir"
