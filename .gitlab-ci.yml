@@ -4,6 +4,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   DEPLOY_VARIABLE: "nightly"
   MINICONDA_VERSION: "latest"
+  MAMBA_VERSION: "0.10"
 
 stages:
 - build
@@ -21,7 +22,7 @@ build:linux:
   script:
     - echo "I am the build stage."
     - source activate base
-    - conda install mamba boa conda-verify -c conda-forge    
+    - conda install mamba=$MAMBA_VERSION boa conda-verify -c conda-forge    
     # # Take care that linked against same libraries as IMP - now managed via conda recipe
     # - conda create -n imp python=3.8 && conda activate imp && mamba install imp -c salilab
     # - if ($(python -c "import IMP;exit(IMP.__version__ > '2.15.0')")); then cp conda-recipe/meta_imp_2.14.yaml conda-recipe/meta.yaml; fi
@@ -54,8 +55,7 @@ test:linux:
   script:
     - echo "I am a test stage job for debian, running on docker"
     - source activate base
-    - conda install mamba conda-verify -c conda-forge
-    - mamba update -y -n base -c defaults --all
+    - conda install mamba=$MAMBA_VERSION -c conda-forge
     - |
       conda config --add channels salilab
       conda config --add channels "file://`pwd`/bld-dir"
@@ -79,35 +79,35 @@ deploy:conda:
     - source activate
     - conda install anaconda-client
     - echo $CI_COMMIT_REF_NAME
-    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then DEPLOY_VARIABLE=main; else DEPLOY_VARIABLE=nightly; fi
-    - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${DEPLOY_VARIABLE} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
+    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
+    - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
-deploy:doc:
-  stage: deploy
-  image: continuumio/miniconda3:latest
-  tags:
-    - linux
-  dependencies:
-    - build:linux
-  before_script:
-    - apt-get update -qy
-    # Latex documentation
-    - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
-    # Make command
-    - apt-get install -y build-essential lftp
-    # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
-    # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
-  script:
-    - echo "I am a deploy stage... Building documentation."
-    - source activate base
-    - conda config --add channels "file://`pwd`/bld-dir"
-    - cd doc
-    - conda install mamba -c conda-forge
-    - mamba env update --file environment.yml
-    - conda activate doc
-    - echo "I am a deploy stage... Uploading documentation."
-    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then make all; else exit; fi
-    - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/html/stable/ ./www/tttrlib/; bye"
+# deploy:doc:
+#   stage: deploy
+#   image: continuumio/miniconda3:latest
+#   tags:
+#     - linux
+#   dependencies:
+#     - build:linux
+#   before_script:
+#     - apt-get update -qy
+#     # Latex documentation
+#     - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+#     # Make command
+#     - apt-get install -y build-essential lftp
+#     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
+#     # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
+#   script:
+#     - echo "I am a deploy stage... Building documentation."
+#     - source activate base
+#     - conda config --add channels "file://`pwd`/bld-dir"
+#     - cd doc
+#     - conda install mamba -c conda-forge
+#     - mamba env update --file environment.yml
+#     - conda activate doc
+#     - echo "I am a deploy stage... Uploading documentation."
+#     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then make all; else exit; fi
+#     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/html/stable/ ./www/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:
