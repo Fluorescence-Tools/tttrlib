@@ -82,32 +82,32 @@ deploy:conda:
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
 
-deploy:doc:
-  stage: deploy
-  image: continuumio/miniconda3:latest
-  tags:
-    - linux
-  dependencies:
-    - build:linux
-  before_script:
-    - apt-get update -qy
-    # Latex documentation
-    - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
-    # Make command
-    - apt-get install -y build-essential lftp
-    # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
-    # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
-  script:
-    - echo "I am a deploy stage... Building documentation."
-    - source activate base
-    - conda config --add channels "file://`pwd`/bld-dir"
-    - cd doc
-    - conda install mamba -c conda-forge
-    - mamba env update --file environment.yml
-    - conda activate doc
-    - echo "I am a deploy stage... Uploading documentation."
-    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then make all; else exit; fi
-    - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/html/stable/ ./www/tttrlib/; bye"
+# deploy:doc:
+#   stage: deploy
+#   image: continuumio/miniconda3:latest
+#   tags:
+#     - linux
+#   dependencies:
+#     - build:linux
+#   before_script:
+#     - apt-get update -qy
+#     # Latex documentation
+#     - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+#     # Make command
+#     - apt-get install -y build-essential lftp
+#     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
+#     # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
+#   script:
+#     - echo "I am a deploy stage... Building documentation."
+#     - source activate base
+#     - conda config --add channels "file://`pwd`/bld-dir"
+#     - cd doc
+#     - conda install mamba -c conda-forge
+#     - mamba env update --file environment.yml
+#     - conda activate doc
+#     - echo "I am a deploy stage... Uploading documentation."
+#     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then make all; else exit; fi
+#     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/html/stable/ ./www/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:
