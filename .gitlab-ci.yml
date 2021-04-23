@@ -58,7 +58,7 @@ deploy:conda:
 
 # deploy:doc:
 #   stage: deploy
-#   image: continuumio/miniconda3:latest
+#   image: condaforge/mambaforge:latest
 #   tags:
 #     - linux
 #   dependencies:
@@ -76,7 +76,6 @@ deploy:conda:
 #     - source activate base
 #     - conda config --add channels "file://`pwd`/bld-dir"
 #     - cd doc
-#     - conda install mamba -c conda-forge
 #     - mamba env update --file environment.yml
 #     - conda activate doc
 #     - echo "I am a deploy stage... Uploading documentation."
