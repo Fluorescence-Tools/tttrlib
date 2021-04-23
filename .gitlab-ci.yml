@@ -38,7 +38,7 @@ test:linux:
     - cp .condarc ~/.condarc
     - conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - mamba create -n test python tttrlib nose scipy
+    - mamba install tttrlib nose scipy
     - |
       cd test
       nosetests
@@ -51,7 +51,6 @@ deploy:conda:
   dependencies:
     - build:linux
   script:
-    - echo "I am a deploy stage."
     - mamba install anaconda-client
     - echo $CI_COMMIT_REF_NAME
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
