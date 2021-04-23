@@ -1,5 +1,4 @@
 channels:
   - conda-forge
   - tpeulen
-  - defaults
 channel_priority: strict
