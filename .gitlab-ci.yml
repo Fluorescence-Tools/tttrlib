@@ -37,6 +37,7 @@ test:linux:
   script:
     - cp .condarc ~/.condarc
     - conda config --add channels "file://`pwd`/bld-dir"
+    - mamba install git-lfs
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba install tttrlib nose scipy
     - |
