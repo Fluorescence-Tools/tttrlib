@@ -49,7 +49,7 @@ test:linux:
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
     - conda config --add channels conda-forge
-    - conda install mamba=$MAMBA_VERSION -c     
+    - conda install mamba=$MAMBA_VERSION
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba install python tttrlib nose scipy
     - |
