@@ -26,12 +26,12 @@ requirements:
     - cmake
     - swig
     - numpy
-    - boost {{ boost }}
+    - boost
     - hdf5 {{ hdf5 }}
     - fftw
   host: 
     - python {{ python }}
-    - boost {{ boost }}
+    - boost
     - hdf5 {{ hdf5 }}
     - fftw
   run:
