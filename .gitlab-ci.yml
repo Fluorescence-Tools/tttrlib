@@ -33,16 +33,32 @@ test:linux:
   stage: test
   tags:
     - linux
-  image: condaforge/mambaforge:latest
+  image: ubuntu:latest
+  before_script:
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt update -yq
+    - apt install -yq procps wget git git-lfs
+    # Download and install miniconda
+    - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    # setup conda to always accept commands
+    - conda config --set always_yes yes --set changeps1 no
   script:
-    - cp .condarc ~/.condarc
-    - conda config --add channels "file://`pwd`/bld-dir"
-    - mamba install git-lfs
+    - echo "I am a test stage job for debian, running on docker"
+    - source activate base
+    - conda install mamba=$MAMBA_VERSION -c conda-forge
+    - |
+      conda config --add channels salilab
+      conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - mamba install tttrlib nose scipy
+    - conda create -n test
+    - conda activate test
+    - mamba install python tttrlib nose scipy
     - |
       cd test
       nosetests
+
 
 deploy:conda:
   stage: deploy
