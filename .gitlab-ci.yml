@@ -103,7 +103,7 @@ tttrconvert:
 
 fit2x:
   stage: Trigger-cross-projects
-  trigger: tpeulen/fit2x
+  trigger: skf/fit2x
 
 # Depends via fit2x on tttrlib
 #scikit-fluorescence:
