@@ -15,13 +15,12 @@ build:linux:
   stage: build
   tags:
     - linux
-  image: continuumio/miniconda3:latest
+  image: condaforge/mambaforge:latest
   before_script:
-    - apt update -yq && apt -yq install build-essential doxygen   
+    - apt -yq install build-essential doxygen   
   script:
     - source activate base
     - cp .condarc ~/.condarc
-    - conda install mamba=$MAMBA_VERSION boa conda-verify -c conda-forge
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     expire_in: 7 days
@@ -34,21 +33,9 @@ test:linux:
   stage: test
   tags:
     - linux
-  image: ubuntu:latest
-  before_script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt update -yq
-    - apt install -yq procps wget git git-lfs
-    # Download and install miniconda
-    - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
-    - bash miniconda.sh -b -p $HOME/miniconda
-    - export PATH="$HOME/miniconda/bin:$PATH"
-    # setup conda to always accept commands
-    - conda config --set always_yes yes --set changeps1 no
+  image: condaforge/mambaforge:latest
   script:
-    - source activate base
     - cp .condarc ~/.condarc
-    - conda install mamba=$MAMBA_VERSION -c conda-forge nose
     - conda config --add channels "file://`pwd`/bld-dir"
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba create -n test python tttrlib nose scipy
@@ -58,15 +45,14 @@ test:linux:
 
 deploy:conda:
   stage: deploy
-  image: continuumio/miniconda3:latest
+  image: condaforge/mambaforge:latest
   tags:
     - linux
   dependencies:
     - build:linux
   script:
     - echo "I am a deploy stage."
-    - source activate
-    - conda install anaconda-client
+    - mamba install anaconda-client
     - echo $CI_COMMIT_REF_NAME
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
