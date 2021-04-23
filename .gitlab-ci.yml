@@ -105,6 +105,7 @@ fit2x:
   stage: Trigger-cross-projects
   trigger: tpeulen/fit2x
 
-scikit-fluorescence:
-  stage: Trigger-cross-projects
-  trigger: skf/scikit-fluorescence
+# Depends via fit2x on tttrlib
+#scikit-fluorescence:
+#  stage: Trigger-cross-projects
+#  trigger: skf/scikit-fluorescence
