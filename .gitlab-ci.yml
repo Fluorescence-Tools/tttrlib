@@ -19,7 +19,7 @@ build:linux:
   before_script:
     - apt update -yq && apt -yq install build-essential doxygen   
   script:
-    - source activate base
+    - micromamba install boa
     - cp .condarc ~/.condarc
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
