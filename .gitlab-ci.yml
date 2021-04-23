@@ -47,11 +47,10 @@ test:linux:
   script:
     - echo "I am a test stage job for debian, running on docker"
     - source activate base
-    - conda install mamba=$MAMBA_VERSION -c conda-forge
     - conda config --add channels "file://`pwd`/bld-dir"
+    - conda config --add channels conda-forge
+    - conda install mamba=$MAMBA_VERSION -c     
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
-    - conda create -n test
-    - conda activate test
     - mamba install python tttrlib nose scipy
     - |
       cd test
