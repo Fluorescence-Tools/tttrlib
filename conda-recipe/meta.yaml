@@ -15,7 +15,7 @@ source:
 
 build:
     number: 0
-    string: py{{ PY_VER_MAJOR }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
+    string: py{{ PY_VER_MAJOR }}boost{{ boost }}hdf5{{ hdf5 }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
 
 requirements:
   build:
@@ -26,16 +26,16 @@ requirements:
     - cmake
     - swig
     - numpy
-    - boost
-    - hdf5 {{ hdf5 }}
     - fftw
-  host: 
-    - python {{ python }}
-    - boost
+    - boost {{ boost }}
     - hdf5 {{ hdf5 }}
+  host: 
+    - python
+    - boost
+    - hdf5
     - fftw
   run:
-    - python {{ python }}
+    - python
     - typing [py27]
     - numpy
     - {{ pin_compatible('boost', max_pin='x.x.x') }}
