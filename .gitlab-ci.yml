@@ -17,7 +17,7 @@ build:linux:
     - linux
   image: condaforge/mambaforge:latest
   before_script:
-    - apt update -yq && apt -yq install build-essential doxygen   
+    - apt update -yq && apt -yq install build-essential   
   script:
     - mamba install boa
     - cp .condarc ~/.condarc
