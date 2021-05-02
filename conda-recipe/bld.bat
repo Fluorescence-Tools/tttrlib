@@ -2,9 +2,9 @@
 rmdir build /s /q
 cd doc
 doxygen
-$PYTHON doxy2swig.py ./_build/xml/index.xml ../ext/python/documentation.i
+%PYTHON% doxy2swig.py ./_build/xml/index.xml ../ext/python/documentation.i
 cd ..
-$PYTHON setup.py install --single-version-externally-managed --record=record.txt
+%PYTHON% setup.py install --single-version-externally-managed --record=record.txt
 
 cd build
 cmake .. -G "NMake Makefiles" ^

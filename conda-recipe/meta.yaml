@@ -32,6 +32,7 @@ requirements:
     - hdf5 {{ hdf5 }}
   host: 
     - python
+    - doxygen
     - boost
     - hdf5
     - fftw
