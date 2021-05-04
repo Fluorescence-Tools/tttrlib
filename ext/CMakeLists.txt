@@ -37,9 +37,7 @@ IF(BUILD_PYTHON_INTERFACE)
             ${HDF5_LIBRARIES}
             ${PYTHON_LIBRARY}
             ${CMAKE_THREAD_LIBS_INIT}
-            Boost::date_time
-            Boost::filesystem
-            Boost::iostreams
+			${Boost_LIBRARIES}
     )
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)
