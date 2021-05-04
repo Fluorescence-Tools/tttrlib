@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>  /* std::max */
 #include <cmath> /* pow */
 
 
