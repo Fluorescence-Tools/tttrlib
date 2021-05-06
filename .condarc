@@ -1,4 +1,0 @@
-channels:
-  - conda-forge
-  - tpeulen
-channel_priority: strict

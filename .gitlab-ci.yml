@@ -1,10 +1,3 @@
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  MINICONDA_VERSION: "latest"
-  MAMBA_VERSION: "0.10"
-
 stages:
 - build
 - test
@@ -20,10 +13,21 @@ build:linux:
     - apt update -yq && apt -yq install build-essential   
   script:
     - mamba install boa
-    - cp .condarc ~/.condarc
+    - conda config --add channels tpeulen
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
-    expire_in: 7 days
+    paths:
+      - bld-dir/
+
+build:windows:
+  stage: build
+  tags:
+    - win
+  script:
+    - mamba install boa
+    - conda config --add channels tpeulen
+    - conda mambabuild conda-recipe --output-folder bld-dir
+  artifacts:
     paths:
       - bld-dir/
 
@@ -33,31 +37,22 @@ test:linux:
   stage: test
   tags:
     - linux
-  image: ubuntu:latest
+  image: condaforge/mambaforge:latest
   before_script:
     - export DEBIAN_FRONTEND=noninteractive
     - apt update -yq
     - apt install -yq procps wget git git-lfs
-    # Download and install miniconda
-    - wget https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-$MINICONDA_OS-x86_64.sh -O miniconda.sh
-    - bash miniconda.sh -b -p $HOME/miniconda
-    - export PATH="$HOME/miniconda/bin:$PATH"
-    # setup conda to always accept commands
-    - conda config --set always_yes yes --set changeps1 no
   script:
-    - echo "I am a test stage job for debian, running on docker"
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
-    - conda config --add channels conda-forge
-    - conda install mamba=$MAMBA_VERSION
+    - conda install mamba
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba install python tttrlib nose scipy
     - |
       cd test
       nosetests
 
-
-deploy:conda:
+deploy:linux:
   stage: deploy
   image: condaforge/mambaforge:latest
   tags:
@@ -69,6 +64,18 @@ deploy:conda:
     - echo $CI_COMMIT_REF_NAME
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
     - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
+
+deploy:windows:
+  stage: deploy
+  tags:
+    - win
+  dependencies:
+    - build:windows
+  script:
+    - mamba install anaconda-client
+    - $ANACONDA_LABEL = "nightly"
+    - if ($CI_COMMIT_REF_NAME -eq "master"){$ANACONDA_LABEL = "main"}
+    - anaconda -t $ANACONDA_API_TOKEN upload -l $ANACONDA_LABEL -u $CONDA_USER bld-dir/win-64/*.tar.bz2 --force
 
 # deploy:doc:
 #   stage: deploy
