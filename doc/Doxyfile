@@ -771,7 +771,7 @@ WARNINGS               = NO
 # will automatically be disabled.
 # The default value is: YES.
 
-WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_UNDOCUMENTED   = NO
 
 # If the WARN_IF_DOC_ERROR tag is set to YES, doxygen will generate warnings for
 # potential errors in the documentation, such as not documenting some parameters
@@ -779,7 +779,7 @@ WARN_IF_UNDOCUMENTED   = YES
 # markup commands wrongly.
 # The default value is: YES.
 
-WARN_IF_DOC_ERROR      = YES
+WARN_IF_DOC_ERROR      = NO
 
 # This WARN_NO_PARAMDOC option can be enabled to get warnings for functions that
 # are documented, but have no documentation for their parameters or return
@@ -1114,12 +1114,6 @@ VERBATIM_HEADERS       = YES
 
 ALPHABETICAL_INDEX     = YES
 
-# The COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns in
-# which the alphabetical index list will be split.
-# Minimum value: 1, maximum value: 20, default value: 5.
-# This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
-
-COLS_IN_ALPHA_INDEX    = 5
 
 # In case all classes in a project start with a common prefix, all classes will
 # be put under the same header in the alphabetical index. The IGNORE_PREFIX tag

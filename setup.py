@@ -70,7 +70,6 @@ class CMakeBuild(build_ext):
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         if platform.system() == "Windows":
             cmake_args += [
-                '-DBUILD_PYTHON_INTERFACE=ON',
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
                 '-GVisual Studio 14 2015 Win64'
             ]
@@ -83,12 +82,6 @@ class CMakeBuild(build_ext):
             build_args += ['--', '-j8']
 
         env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get(
-                'CXXFLAGS', ''
-            ),
-            self.distribution.get_version()
-        )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         print("BUILDING::CMAKE: " + " ".join(cmake_args))
