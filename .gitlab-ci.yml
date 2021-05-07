@@ -29,7 +29,7 @@ build:windows:
     paths:
       - bld-dir/
 
-build:windows:
+build:osx:
   stage: build
   tags:
     - osx
