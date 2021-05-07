@@ -1,3 +1,5 @@
+CONDA_BUILD_SYSROOT:
+  - /opt/MacOSX10.10.sdk # [osx]
 boost: 
   # # For Python27
   # - 1.60.0

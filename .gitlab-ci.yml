@@ -13,7 +13,6 @@ build:linux:
     - apt update -yq && apt -yq install build-essential   
   script:
     - mamba install boa
-    - conda config --add channels tpeulen
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     paths:
@@ -25,57 +24,52 @@ build:windows:
     - win
   script:
     - mamba install boa
-    - conda config --add channels tpeulen
+    - conda mambabuild conda-recipe --output-folder bld-dir
+  artifacts:
+    paths:
+      - bld-dir/
+
+build:windows:
+  stage: build
+  tags:
+    - osx
+  script:
+    - mamba install boa
     - conda mambabuild conda-recipe --output-folder bld-dir
   artifacts:
     paths:
       - bld-dir/
 
 test:linux:
-  variables:
-    MINICONDA_OS: "Linux"
   stage: test
   tags:
     - linux
   image: condaforge/mambaforge:latest
   before_script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt update -yq
     - apt install -yq procps wget git git-lfs
   script:
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
-    - conda install mamba
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - mamba install python tttrlib nose scipy
     - |
       cd test
       nosetests
 
-deploy:linux:
+deploy:conda:
   stage: deploy
   image: condaforge/mambaforge:latest
   tags:
     - linux
   dependencies:
     - build:linux
+    - build:windows
+    - build:osx
   script:
     - mamba install anaconda-client
     - echo $CI_COMMIT_REF_NAME
     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
-    - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/linux-64/*.tar.bz2
-
-deploy:windows:
-  stage: deploy
-  tags:
-    - win
-  dependencies:
-    - build:windows
-  script:
-    - mamba install anaconda-client
-    - $ANACONDA_LABEL = "nightly"
-    - if ($CI_COMMIT_REF_NAME -eq "master"){$ANACONDA_LABEL = "main"}
-    - anaconda -t $ANACONDA_API_TOKEN upload -l $ANACONDA_LABEL -u $CONDA_USER bld-dir/win-64/*.tar.bz2 --force
+    - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/**/*.tar.bz2
 
 # deploy:doc:
 #   stage: deploy
