@@ -28,6 +28,7 @@ requirements:
     - swig
     - numpy
     - fftw
+    - llvm-openmp # [osx]
     - boost {{ boost }}
     - hdf5 {{ hdf5 }}
   run:
@@ -37,7 +38,7 @@ requirements:
     - {{ pin_compatible('boost', max_pin='x.x.x') }}
     - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
     - {{ pin_compatible('fftw', max_pin='x.x') }}
-    - llvm-openmp [osx]
+    - llvm-openmp # [osx]
 
 test:
  imports:

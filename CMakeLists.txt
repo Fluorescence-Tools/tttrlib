@@ -142,18 +142,20 @@ LINK_LIBRARIES(${HDF5_LIBRARIES})
 ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 ## OpenMP
+## macOS install OMP via: brew install libomp
 ###########################
 IF (APPLE)
     # When using conda use CONDA_PREFIX
-    if(DEFINED ENV{CONDA_PREFIX})
-        SET(OMP_INCLUDE_DIR "${CONDA_PATH}/include")
-        SET(OMP_LIB_DIR "${CONDA_PATH}/lib")
+    if(DEFINED $ENV{CONDA_PREFIX})
+        SET(OMP_INCLUDE_DIR ${CONDA_PATH}/include)
+        SET(OMP_LIB_DIR ${CONDA_PATH}/lib)
     else()
         SET(OMP_INCLUDE_DIR "/usr/local/opt/libomp/include")
         SET(OMP_LIB_DIR "/usr/local/opt/libomp/lib")
     endif()
-    # Make OpenMP work see:
-    # https://gitlab.kitware.com/cmake/cmake/issues/18098
+    # see: https://gitlab.kitware.com/cmake/cmake/issues/18098
+    MESSAGE(STATUS "-- OMP_INCLUDE_DIR: ${OMP_INCLUDE_DIR}")
+    MESSAGE(STATUS "-- OMP_LIB_DIR: ${OMP_LIB_DIR}")
     set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
     set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
     set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
