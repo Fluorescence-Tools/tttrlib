@@ -18,7 +18,7 @@ build:
     string: py{{ PY_VER_MAJOR }}boost{{ boost }}hdf5{{ hdf5 }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
 
 requirements:
-  build:
+  host:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - python {{ python }}
@@ -30,12 +30,6 @@ requirements:
     - fftw
     - boost {{ boost }}
     - hdf5 {{ hdf5 }}
-  host: 
-    - python
-    - doxygen
-    - boost
-    - hdf5
-    - fftw
   run:
     - python
     - typing [py27]

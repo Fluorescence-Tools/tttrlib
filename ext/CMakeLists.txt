@@ -4,15 +4,12 @@ cmake_policy(SET CMP0086 OLD)
 FIND_PACKAGE(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(.)
-
 SET(MODULE_NAME ${PROJECT_NAME})
 
-SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
-
-
 IF(BUILD_PYTHON_INTERFACE)
-    FIND_PACKAGE(Python)
     MESSAGE("Building Python interface")
+    FIND_PACKAGE(Python)
+    SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
     INCLUDE_DIRECTORIES(${Python_INCLUDE_DIR})
     INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
     SWIG_ADD_LIBRARY(
@@ -37,7 +34,7 @@ IF(BUILD_PYTHON_INTERFACE)
             ${HDF5_LIBRARIES}
             ${PYTHON_LIBRARY}
             ${CMAKE_THREAD_LIBS_INIT}
-			${Boost_LIBRARIES}
+            ${Boost_LIBRARIES}
     )
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)
@@ -62,25 +59,9 @@ IF(BUILD_R_INTERFACE)
             ${HDF5_LIBRARIES}
             ${R_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
-            Boost::date_time
-            Boost::filesystem
-            Boost::iostreams
+            ${Boost_LIBRARIES}
     )
 ENDIF()
 
 
-get_property(dirs DIRECTORY . PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-    message(STATUS "INCLUDE_DIRECTORY='${dir}'")
-endforeach()
-
-get_property(dirs DIRECTORY . PROPERTY LINK_LIBRARIES)
-foreach(dir ${dirs})
-    message(STATUS "LINK_LIBRARIES='${dir}'")
-endforeach()
-
-get_property(dirs DIRECTORY . PROPERTY LINK_DIRECTORIES)
-foreach(dir ${dirs})
-    message(STATUS "LINK_DIRECTORIES='${dir}'")
-endforeach()
 
