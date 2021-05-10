@@ -48,7 +48,7 @@ def build_swig_documentation():
 class CMakeBuild(build_ext):
 
     def run(self):
-        build_swig_documentation()
+        build_swig_documentation()        
         for ext in self.extensions:
             self.build_extension(ext)
 
