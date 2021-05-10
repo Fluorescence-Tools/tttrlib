@@ -33,7 +33,7 @@ requirements:
   run:
     - python
     - typing [py27]
-    - numpy
+    - {{ pin_compatible('numpy') }}
     - {{ pin_compatible('boost', max_pin='x.x.x') }}
     - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
     - {{ pin_compatible('fftw', max_pin='x.x') }}

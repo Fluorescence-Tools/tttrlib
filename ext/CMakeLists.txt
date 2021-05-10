@@ -10,24 +10,11 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE("Building Python interface")
     FIND_PACKAGE(Python)
     SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
-    INCLUDE_DIRECTORIES(${Python_INCLUDE_DIR})
-    INCLUDE_DIRECTORIES(${Python_NumPy_PATH})
     SWIG_ADD_LIBRARY(
         ${MODULE_NAME}
         LANGUAGE python
         SOURCES python/tttrlib.i ${SRC_files}
     )
-
-    EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"
-            RESULT_VARIABLE PYTHON_CVPY_PROCESS
-            OUTPUT_VARIABLE PYTHON_LDSHARED
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-    IF ("${PYTHON_LDSHARED}" MATCHES "dynamic_lookup")
-        MESSAGE("Using static linking for Python")
-        SET(PYTHON_LINK_LIBRARIES "NO")
-    ELSE()
-        SET(PYTHON_LINK_LIBRARIES "${PYTHON_LIBRARIES}")
-    ENDIF()
 
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}

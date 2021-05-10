@@ -22,6 +22,18 @@ IF(python_command)
             OUTPUT_STRIP_TRAILING_WHITESPACE)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIR})
     LINK_LIBRARIES(${PYTHON_LIBRARY})
+
+    EXECUTE_PROCESS(COMMAND ${python_command} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"
+            RESULT_VARIABLE PYTHON_CVPY_PROCESS
+            OUTPUT_VARIABLE PYTHON_LDSHARED
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+    IF ("${PYTHON_LDSHARED}" MATCHES "dynamic_lookup")
+        MESSAGE("Using static linking for Python")
+        SET(PYTHON_LINK_LIBRARIES "NO")
+    ELSE()
+        SET(PYTHON_LINK_LIBRARIES "${PYTHON_LIBRARIES}")
+    ENDIF()
+
     MESSAGE(STATUS "Python_NumPy_PATH='${Python_NumPy_PATH}'")
     MESSAGE(STATUS "Python_INCLUDE_DIR='${Python_INCLUDE_DIR}'")
     MESSAGE(STATUS "PYTHON_LIBRARIES='${PYTHON_LIBRARIES}'")
