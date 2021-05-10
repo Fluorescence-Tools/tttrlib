@@ -146,13 +146,13 @@ ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 ###########################
 IF (APPLE)
     # When using conda use CONDA_PREFIX
-    if(DEFINED ENV{CONDA_PREFIX})
-      SET(OMP_INCLUDE_DIR ${CONDA_PATH}/include)
-      SET(OMP_LIB_DIR ${CONDA_PATH}/lib)
-    else()
+#    if(DEFINED ENV{CONDA_PREFIX})
+#     SET(OMP_INCLUDE_DIR ${CONDA_PATH}/include)
+#      SET(OMP_LIB_DIR ${CONDA_PATH}/lib)
+#    else()
       SET(OMP_INCLUDE_DIR "/usr/local/opt/libomp/include")
       SET(OMP_LIB_DIR "/usr/local/opt/libomp/lib")
-    endif()
+#    endif()
     # see: https://gitlab.kitware.com/cmake/cmake/issues/18098
     MESSAGE(STATUS "OMP_INCLUDE_DIR: ${OMP_INCLUDE_DIR}")
     MESSAGE(STATUS "OMP_LIB_DIR: ${OMP_LIB_DIR}")

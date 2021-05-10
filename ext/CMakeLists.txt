@@ -7,7 +7,7 @@ INCLUDE_DIRECTORIES(.)
 SET(MODULE_NAME ${PROJECT_NAME})
 
 IF(BUILD_PYTHON_INTERFACE)
-    MESSAGE("Building Python interface")
+    MESSAGE(STATUS "Building Python interface")
     FIND_PACKAGE(Python)
     SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON)
     SWIG_ADD_LIBRARY(
@@ -22,6 +22,7 @@ IF(BUILD_PYTHON_INTERFACE)
             ${PYTHON_LIBRARY}
             ${CMAKE_THREAD_LIBS_INIT}
             ${Boost_LIBRARIES}
+            OpenMP::OpenMP_CXX
     )
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)
@@ -32,7 +33,8 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 
 IF(BUILD_R_INTERFACE)
-    MESSAGE("Building R interface")
+    MESSAGE(STATUS "Building R interface")
+    MESSAGE("!!!WARNING THE R INTERFACE IS NOT READY!!!")
     FIND_PACKAGE(R REQUIRED)
     INCLUDE_DIRECTORIES(${R_INCLUDE_DIR})
     INCLUDE(${SWIG_USE_FILE})
@@ -47,6 +49,7 @@ IF(BUILD_R_INTERFACE)
             ${R_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
             ${Boost_LIBRARIES}
+            OpenMP::OpenMP_CXX
     )
 ENDIF()
 
