@@ -26,6 +26,7 @@ IF(DEFINED ENV{CONDA_PREFIX})
     SET(CMAKE_MODULE_PATH "${CONDA_PATH}/include/cmake")
     # Define python_command that is used to call python and locate the python libraries
     SET(python_command FILE(TO_CMAKE_PATH $ENV{PYTHON}))
+    MESSAGE(STATUS "CONDA PYTHON:" ${python_command})
     IF(MSVC)
         INCLUDE_DIRECTORIES(${CONDA_PATH}/Library/include)
         LINK_DIRECTORIES(${CONDA_PATH}/Library/lib)
