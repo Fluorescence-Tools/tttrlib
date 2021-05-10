@@ -28,7 +28,6 @@ requirements:
     - swig
     - numpy
     - fftw
-    - llvm-openmp # [osx]
     - boost {{ boost }}
     - hdf5 {{ hdf5 }}
   run:
