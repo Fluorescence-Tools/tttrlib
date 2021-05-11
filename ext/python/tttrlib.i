@@ -84,6 +84,7 @@ import_array();
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 
+%include "../include/info.h"
 %include "tttr.i"
 %include "histogram.i"
 %include "correlation.i"
