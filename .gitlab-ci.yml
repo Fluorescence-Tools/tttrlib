@@ -48,11 +48,13 @@ test:linux:
     - linux
   image: condaforge/mambaforge:latest
   before_script:
+    - apt update -yq
+    - apt install -yq procps wget git git-lfs
     - git submodule update --init --recursive --remote
   script:
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
-    - mamba install wget git git-lfs python tttrlib nose scipy
+    - mamba install python tttrlib nose scipy
     - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
     - |
       cd test
