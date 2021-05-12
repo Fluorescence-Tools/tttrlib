@@ -25,7 +25,7 @@ build:windows:
   before_script:
     - git submodule update --init --recursive --remote
   script:
-    - .\tools\build.sh
+    - .\tools\build.bat
   artifacts:
     paths:
       - bld-dir/
