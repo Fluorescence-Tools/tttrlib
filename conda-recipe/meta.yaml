@@ -28,6 +28,7 @@ requirements:
     - swig
     - numpy
     - fftw
+    - pkg-config
     - boost {{ boost }}
     - hdf5 {{ hdf5 }}
   run:
