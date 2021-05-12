@@ -11,9 +11,9 @@ build:linux:
   image: condaforge/mambaforge:latest
   before_script:
     - apt update -yq && apt -yq install build-essential   
+    - git submodule update --init --recursive --remote
   script:
-    - mamba install boa
-    - conda mambabuild conda-recipe --output-folder bld-dir
+    - ./tools/build.sh
   artifacts:
     paths:
       - bld-dir/
@@ -22,9 +22,10 @@ build:windows:
   stage: build
   tags:
     - win
+  before_script:
+    - git submodule update --init --recursive --remote
   script:
-    - mamba install boa
-    - conda mambabuild conda-recipe --output-folder bld-dir
+    - .\tools\build.sh
   artifacts:
     paths:
       - bld-dir/
@@ -33,9 +34,10 @@ build:osx:
   stage: build
   tags:
     - osx
+  before_script:
+    - git submodule update --init --recursive --remote
   script:
-    - mamba install boa
-    - conda mambabuild conda-recipe --output-folder bld-dir
+    - ./tools/build.sh
   artifacts:
     paths:
       - bld-dir/
@@ -45,6 +47,8 @@ test:linux:
   tags:
     - linux
   image: condaforge/mambaforge:latest
+  before_script:
+    - git submodule update --init --recursive --remote
   script:
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
@@ -63,11 +67,10 @@ deploy:conda:
     - build:linux
     - build:windows
     - build:osx
+  before_script:
+    - git submodule update --init --recursive --remote
   script:
-    - mamba install anaconda-client
-    - echo $CI_COMMIT_REF_NAME
-    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then ANACONDA_LABEL=main; else ANACONDA_LABEL=nightly; fi
-    - anaconda -t ${ANACONDA_API_TOKEN} upload -l ${ANACONDA_LABEL} -u ${CONDA_USER} --force bld-dir/**/*.tar.bz2
+    - ./tools/deploy.sh
 
 # deploy:doc:
 #   stage: deploy

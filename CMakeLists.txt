@@ -4,6 +4,11 @@ SET(CMAKE_CXX_STANDARD 11)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
+# CMAKE
+###########
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
+
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
@@ -15,33 +20,7 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 ################################################################################
 ###### Conda
 ################################################################################
-
-## Check for Conda
-###########################
-IF(DEFINED ENV{CONDA_PREFIX})
-    MESSAGE(STATUS "CONDA env seen: $ENV{CONDA_PREFIX}")
-    FILE(TO_CMAKE_PATH "$ENV{CONDA_PREFIX}" CONDA_PATH)
-    SET(CMAKE_PREFIX_PATH "${CONDA_PATH}")
-    SET(ENV{PATH} "${CONDA_PATH}/bin;$ENV{PATH}")
-    # Define python_command that is used to call python and locate the python libraries
-    FILE(TO_CMAKE_PATH $ENV{PYTHON} python_command)
-    MESSAGE(STATUS "CONDA PYTHON:" ${python_command})
-    IF(MSVC)
-        SET(CMAKE_MODULE_PATH "${CONDA_PATH}/Library/cmake")
-        INCLUDE_DIRECTORIES(${CONDA_PATH}/Library/include)
-        LINK_DIRECTORIES(${CONDA_PATH}/Library/lib)
-    ELSE()
-        SET(CMAKE_MODULE_PATH "${CONDA_PATH}/include/cmake")
-        INCLUDE_DIRECTORIES(${CONDA_PATH}/include)
-        LINK_DIRECTORIES(${CONDA_PATH}}/lib)
-    ENDIF()
-    MESSAGE(STATUS "CONDA env seen: --[${CONDA_PATH}]--")
-ELSE()
-    MESSAGE(STATUS "No conda environment defined")
-ENDIF()
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
-MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
-
+FIND_PACKAGE(Conda)
 
 #######################################
 # Compiler flags
@@ -49,25 +28,21 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 
 # Debug build detection
 ###########################
-IF (CMAKE_BUILD_TYPE STREQUAL "Release")
-    MESSAGE("Release build")
-    IF(MSVC)
-        # see: https://stackoverflow.com/questions/58708772/cmake-project-in-visual-studio-gives-flag-override-warnings-command-line-warnin
-        string(REGEX REPLACE "/W[1||3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    ELSE()
-        ADD_COMPILE_OPTIONS(-w)
-    ENDIF()
-ELSE (CMAKE_BUILD_TYPE STREQUAL "Debug")
+IF(MSVC)
+    # see: https://stackoverflow.com/questions/58708772/cmake-project-in-visual-studio-gives-flag-override-warnings-command-line-warnin
+    string(REGEX REPLACE "/W[1||3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+ELSE()
+    ADD_COMPILE_OPTIONS(-w)
+ENDIF()
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE("Debug build")
-    ## Enable Compiler warnings
-    #############################
     IF(MSVC)
         ADD_COMPILE_OPTIONS(/W4)
     ELSE()
         ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
     ENDIF()
     ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
-ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
+ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # Windows
 ##############
@@ -87,7 +62,7 @@ if (APPLE)
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # Don't set MACOSX_RPATH by default
     # https://github.com/conda/conda/issues/3624
-    if(DEFINED ENV{CONDA_PREFIX})
+    if(DEFINED $ENV{CONDA_PREFIX})
         set(MACOSX_RPATH OFF)
         set(CMAKE_SKIP_RPATH TRUE)
         set(CMAKE_SKIP_INSTALL_RPATH TRUE)
@@ -100,31 +75,7 @@ endif (APPLE)
 
 ## Boost
 ###########################
-IF(DEFINED ENV{CONDA_PREFIX})
-    MESSAGE("Using Conda Boost")
-    SET($ENV{BOOST_ROOT} ${CONDA_PATH})
-    SET(Boost_NO_SYSTEM_PATHS ON)
-    SET(Boost_NO_BOOST_CMAKE ON)
-    SET($ENV{BOOST_INCLUDEDIR} ${CONDA_PATH}/lib)
-    IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      SET(Boost_DEBUG ON)
-      SET(Boost_DETAILED_FAILURE_MESSAGE ON)
-    ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    IF (WIN32)
-      # Other root dir location
-      SET(BOOST_ROOT ${CONDA_PATH}/Library)
-      SET(Boost_INCLUDE_DIR ${CONDA_PATH}/Library/include)
-      SET(Boost_LIBRARY_DIR ${CONDA_PATH}/Library/lib)
-      # Win Boost Conda uses static linking
-      # SET(Boost_USE_STATIC_LIBS ON)
-      # SET(Boost_USE_STATIC ON)
-    ELSE()
-        SET(Boost_USE_STATIC_LIBS OFF)
-        SET(Boost_USE_STATIC OFF)
-        SET(Boost_USE_MULTITHREAD)
-    ENDIF (WIN32)
-ENDIF()
-
+FIND_PACKAGE(CondaBoost)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
