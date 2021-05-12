@@ -5,9 +5,9 @@ tmp/
 cmake-build-*/
 temp/
 *.egg-info/
-tttr-data/
 __pycache__
 .vscode/
+tttr-data
 
 # Documentation and tools
 doc/_*
