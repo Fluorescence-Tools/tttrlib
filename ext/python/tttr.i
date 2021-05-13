@@ -46,7 +46,6 @@
 // Use shared_prt for TTTR to pass TTTR around
 %shared_ptr(TTTR)
 
-%include "../include/info.h"
 %include "../include/TTTRHeader.h"
 %include "../include/TTTR.h"
 %include "../include/TTTRRange.h"

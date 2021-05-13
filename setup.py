@@ -3,6 +3,7 @@ import os
 import sys
 import platform
 import subprocess
+import multiprocessing
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -39,7 +40,7 @@ def build_swig_documentation():
         env = os.environ.copy()
         subprocess.check_call(["doxygen"], cwd=path, env=env)
         subprocess.check_call(
-            ["python", "doxy2swig.py", "./_build/xml/index.xml", "../ext/python/documentation.i"],
+            ["python", "../tools/doxy2swig.py", "./_build/xml/index.xml", "../ext/python/documentation.i"],
             cwd=path,
             env=env
         )
@@ -70,20 +71,15 @@ class CMakeBuild(build_ext):
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         if platform.system() == "Windows":
             cmake_args += [
-                '-DBUILD_PYTHON_INTERFACE=ON',
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
                 '-GVisual Studio 14 2015 Win64'
             ]
         else:
-            build_args += ['--', '-j8']
-
+            build_args += [
+                '--',
+                '-j%s' % int(multiprocessing.cpu_count() * 1.5)
+            ]
         env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get(
-                'CXXFLAGS', ''
-            ),
-            self.distribution.get_version()
-        )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         print("BUILDING::CMAKE: " + " ".join(cmake_args))
