@@ -17,11 +17,6 @@ OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 
-################################################################################
-###### Conda
-################################################################################
-FIND_PACKAGE(Conda)
-
 #######################################
 # Compiler flags
 #######################################
@@ -30,7 +25,7 @@ FIND_PACKAGE(Conda)
 ###########################
 IF(MSVC)
     # see: https://stackoverflow.com/questions/58708772/cmake-project-in-visual-studio-gives-flag-override-warnings-command-line-warnin
-    string(REGEX REPLACE "/W[1||3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/W[1|2|3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 ELSE()
     ADD_COMPILE_OPTIONS(-w)
 ENDIF()
@@ -72,6 +67,10 @@ endif (APPLE)
 #######################################
 # INCLUDES AND LIBRARIES
 #######################################
+
+# Conda
+#######################################
+FIND_PACKAGE(Conda)
 
 ## Boost
 ###########################
