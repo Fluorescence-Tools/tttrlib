@@ -4,7 +4,17 @@
 #define SWIG_FILE_WITH_INIT
 %}
 %module(directors="1", package="tttrlib") tttrlib
-#pragma SWIG nowarn=501,505,401,511
+
+
+#ifdef VERBOSE_TTTRLIB
+// Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
+// Warning 389: operator[] ignored (consider using %extend)
+// Warning 401: Nothing known about base class
+// Warning 453: Can't apply (double *IN_ARRAY2,int DIM1,DIM2). No typemaps are defined.
+// Warning 511: Ignore overloaded functions
+#pragma SWIG nowarn= 302, 389, 401, 453, 501, 505, 511
+#endif
+
 %feature("kwargs", 1);
 %include "documentation.i"
 

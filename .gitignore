@@ -8,10 +8,12 @@ temp/
 __pycache__
 .vscode/
 tttr-data
+.idea/
+cmake/
+tools/
 
 # Documentation and tools
 doc/_*
 doc/_build/
 doc/paper*
 doc/auto_examples
-documentation.i
