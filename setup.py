@@ -32,24 +32,9 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 
-def build_swig_documentation():
-    # build the documentation.i file using doxygen and doxy2swig
-    if not os.path.isfile("./ext/python/documentation.i"):
-        print("-- building documentation.i using doxygen and doxy2swig")
-        path = os.path.dirname(os.path.abspath(__file__)) + "/doc"
-        env = os.environ.copy()
-        subprocess.check_call(["doxygen"], cwd=path, env=env)
-        subprocess.check_call(
-            ["python", "../tools/doxy2swig.py", "./_build/xml/index.xml", "../ext/python/documentation.i"],
-            cwd=path,
-            env=env
-        )
-
-
 class CMakeBuild(build_ext):
 
     def run(self):
-        build_swig_documentation()        
         for ext in self.extensions:
             self.build_extension(ext)
 

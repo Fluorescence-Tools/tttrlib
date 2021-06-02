@@ -12,10 +12,11 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-option(INSTALL "Install the library and the include files" ON)
-OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
+OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
+OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
+OPTION(INSTALL "Install the library and the include files" ON)
 
 #######################################
 # Compiler flags
@@ -78,7 +79,6 @@ FIND_PACKAGE(CondaBoost)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
-MESSAGE(${Boost_INCLUDE_DIRS})
 
 ## FFTW
 ##############

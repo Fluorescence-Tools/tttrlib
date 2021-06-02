@@ -55,7 +55,7 @@ test:linux:
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
     - mamba install python tttrlib nose scipy
-    - git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1
+    - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
     - |
       cd test
       nosetests

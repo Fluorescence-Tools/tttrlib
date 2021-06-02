@@ -32,7 +32,6 @@
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/bimap.hpp>
 #include <boost/locale.hpp>
 
 #include "json.hpp"
