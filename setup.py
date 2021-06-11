@@ -96,9 +96,6 @@ setup(
     install_requires=[
         'numpy'
     ],
-    setup_requires=[
-        'setuptools'
-    ],
     zip_safe=False,
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
