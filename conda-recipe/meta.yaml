@@ -28,11 +28,11 @@ requirements:
     - swig
     - numpy
     - pkg-config
-    - boost {{ boost }}
   host:
-    - python
+    - python {{ python }}
+    - setuptools
     - numpy
-    - boost
+    - boost {{ boost }}
     - hdf5 {{ hdf5 }}
     - fftw
   run:
