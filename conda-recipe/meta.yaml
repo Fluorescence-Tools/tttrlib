@@ -21,29 +21,24 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python {{ python }}
-    - setuptools
     - doxygen
     - cmake
     - swig
+    - python {{ python }}
     - numpy
-    - fftw
-    - pkg-config
-    - boost {{ boost }}
-    - hdf5 {{ hdf5 }}
   host:
     - python
     - numpy
-    - boost
-    - hdf5
+    - boost {{ boost }}
+    - hdf5 {{ hdf5 }}
     - fftw
   run:
     - python
     - typing [py27]
-    - {{ pin_compatible('numpy') }}
-    - {{ pin_compatible('boost', max_pin='x.x.x') }}
-    - {{ pin_compatible('hdf5', max_pin='x.x.x') }}
-    - {{ pin_compatible('fftw', max_pin='x.x') }}
+    - numpy
+    - boost
+    - hdf5
+    - fftw
     - llvm-openmp # [osx]
 
 test:
