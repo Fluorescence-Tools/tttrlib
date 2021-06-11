@@ -21,16 +21,21 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
+    - python {{ python }}
+    - setuptools
     - doxygen
     - cmake
     - swig
-    - python {{ python }}
     - numpy
+    - fftw
+    - pkg-config
+    - boost {{ boost }}
+    - hdf5 {{ hdf5 }}
   host:
     - python
     - numpy
-    - boost {{ boost }}
-    - hdf5 {{ hdf5 }}
+    - boost
+    - hdf5
     - fftw
   run:
     - python
