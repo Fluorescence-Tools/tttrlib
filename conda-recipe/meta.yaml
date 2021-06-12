@@ -21,11 +21,9 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - setuptools
     - doxygen
     - cmake
     - swig
-    - pkg-config
   host:
     - python {{ python }}
     - setuptools
