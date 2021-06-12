@@ -21,12 +21,10 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python {{ python }}
     - setuptools
     - doxygen
     - cmake
     - swig
-    - numpy
     - pkg-config
   host:
     - python {{ python }}
