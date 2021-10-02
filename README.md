@@ -2,7 +2,6 @@
 
 [![pipeline status](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)
 [![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://anaconda.org/tpeulen/tttrlib)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1f727cbedb48433ea256cc81cca58fb2)](https://www.codacy.com/manual/tpeulen/tttrlib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Fluorescence-Tools/tttrlib&amp;utm_campaign=Badge_Grade)
 
 ## General description
 
@@ -116,7 +115,7 @@ are not supported.
 ## Documentation
 
 The API of tttrlib as well as some use cases are documented
-on its [web page](https://fluorescence-tools.github.io/tttrlib)
+on its [web page](https://docs.peulen.xyz/tttrlib)
 
 Note, tttrlib is highly experimental library in current development. In
 case you notice unusual behaviour do not hesitate to contact the authors.
@@ -125,4 +124,4 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 tttrlib is released under the open source MPL 2.0 license.
 
-[3]: https://raw.githubusercontent.com/Fluorescence-Tools/tttrlib/gh-pages/_images/sphx_glr_plot_imaging_representations_001.png "tttrlib FLIM"
+[3]: https://docs.peulen.xyz/tttrlib/_images/sphx_glr_plot_imaging_representations_001.png "tttrlib FLIM"
