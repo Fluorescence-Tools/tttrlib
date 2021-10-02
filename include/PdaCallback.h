@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/28/20.
-//
-
 #ifndef TTTRLIB_PDACALLBACK_H
 #define TTTRLIB_PDACALLBACK_H
 

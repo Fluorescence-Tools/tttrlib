@@ -44,6 +44,9 @@ Get the number of lines in the CLSMFrame.
 %feature("docstring") CLSMFrame::CLSMFrame "
 ";
 
+%feature("docstring") CLSMFrame::~CLSMFrame "
+";
+
 %feature("docstring") CLSMFrame::append "
 
 Append a line to the current frame  
@@ -51,9 +54,6 @@ Append a line to the current frame
 Parameters
 ----------
 * `line` :  
-";
-
-%feature("docstring") CLSMFrame::~CLSMFrame "
 ";
 
 // File: class_c_l_s_m_image.xml
@@ -64,26 +64,82 @@ Parameters
 C++ includes: CLSMImage.h
 ";
 
-%feature("docstring") CLSMImage::shift_line_start "
+%feature("docstring") CLSMImage::size "
 
-Shift the line starts at least by a specified number of macro time clock counts  
+Get the number of frames in the CLSMImage.  
+";
+
+%feature("docstring") CLSMImage::fill_pixels "
+
+Fill the tttr_indices of the pixels with the indices of the channels that are
+within a pixel  
+
+Parameters
+----------
+* `channels[in]` :  
+    list of routing channels. Events that have routing channels in this vector
+    are added to pixels of corresponding time.  
+* `clear_pixel[in]` :  
+    if set to true (default) the pixels are cleared before they are filled. If
+    set to false new tttr indices are added to the pixels  
+";
+
+%feature("docstring") CLSMImage::clear_pixels "
+
+Clear tttr_indices stored in the pixels  
+
+Parameters
+----------
+* `channels` :  
+";
+
+%feature("docstring") CLSMImage::get_fcs_image "
+
+Computes the  
+
+Parameters
+----------
+* `output[out]` :  
+* `dim1[out]` :  
+* `dim2[out]` :  
+* `dim3[out]` :  
+* `dim4[out]` :  
+* `tttr_self` :  
+* `tac_coarsening` :  
+* `stack_frames` :  
+";
+
+%feature("docstring") CLSMImage::get_frames "
+";
+
+%feature("docstring") CLSMImage::get_intensity_image "
+";
+
+%feature("docstring") CLSMImage::get_fluorescence_decay_image "
+
+Computes an image stack where the value of each pixel corresponds to a histogram
+of micro times in each pixel. The micro times can be coarsened by integer
+numbers.  
 
 Parameters
 ----------
 * `tttr_data` :  
-    pointer [in] to the TTTR object used to construct the CLSM object that is
-    shifted  
-* `macro_time_shift` :  
-    [in] the number of macro time counts that which which the lines are at least
-    shifted.  
-";
-
-%feature("docstring") CLSMImage::get_n_pixel "
-
-Get the number of pixels per line a frame of the CLSMImage.  
-";
-
-%feature("docstring") CLSMImage::get_frames "
+    pointer to a TTTR object  
+* `out` :  
+    pointer to output array of unsigned chars that will contain the image stack  
+* `dim1` :  
+    number of frames  
+* `dim2` :  
+    number of lines  
+* `dim3` :  
+    number of pixels  
+* `dim4` :  
+    number of micro time channels in the histogram  
+* `micro_time_coarsening` :  
+    constant used to coarsen the micro times. The default value is 1 and the
+    micro times are binned without coarsening.  
+* `stack_frames` :  
+    if True the frames are stacked.  
 ";
 
 %feature("docstring") CLSMImage::get_decay_of_pixels "
@@ -114,6 +170,210 @@ Parameters
     constant used to coarsen the micro times  
 * `stack_frames` :  
     if True the frames are stacked.  
+";
+
+%feature("docstring") CLSMImage::get_mean_micro_time_image "
+
+Calculates an image stack where the value of each pixel corresponds to the mean
+micro time (in units of the micro channel resolution).  
+
+Pixels with few photons can be discriminated. Discriminated pixels will be
+filled with zeros.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `out[out]` :  
+    pointer to output array that will contain the image stack  
+* `dim1[out]` :  
+    returns the number of frames  
+* `dim2[out]` :  
+    returns the number of lines  
+* `dim3[out]` :  
+    returns the number of pixels per line  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time  
+* `stack_frames[in]` :  
+    if true the frames are stacked (default value is false). If stack frames is
+    set to true the mean arrival time is computed using the tttr indices of all
+    pixels (this corresponds to the photon weighted mean arrival time).  
+";
+
+%feature("docstring") CLSMImage::get_phasor_image "
+
+Computes the phasor values for every pixel  
+
+Pixels with few photons can be discriminated. Discriminated pixels will be
+filled with zeros.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `out[out]` :  
+    pointer to output array that will contain the image stack  
+* `dim1[out]` :  
+    returns the number of frames  
+* `dim2[out]` :  
+    returns the number of lines  
+* `dim3[out]` :  
+    returns the number of pixels per line  
+* `dim4[out]` :  
+    returns 2 (first is the g phasor value (cos), second the s phasor (sin)  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time (only used if frames are not
+    stacked)  
+* `stack_frames[in]` :  
+    if true the frames are stacked (default value is false). If stack frames is
+    set to true the mean arrival time is computed using the tttr indices of all
+    pixels (this corresponds to the photon weighted mean arrival time).  
+";
+
+%feature("docstring") CLSMImage::get_mean_lifetime_image "
+
+Computes an image of average lifetimes  
+
+The average lifetimes are computed (not fitted) by the methods of moments (Irvin
+Isenberg, 1973, Biophysical journal). This approach does not consider scattered
+light.  
+
+Pixels with few photons can be discriminated. Discriminated pixels are filled
+with zeros.  
+
+By default the fluorescence lifetimes of the pixels are computed in units of
+nanoseconds.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `tttr_irf[in]` :  
+    pointer to a TTTR object of the IRF  
+* `out[out]` :  
+    pointer to output array that will contain the image stack  
+* `dim1[out]` :  
+    returns the number of frames  
+* `dim2[out]` :  
+    returns the number of lines  
+* `dim3[out]` :  
+    returns the number of pixels per line  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time  
+* `m0_irf` :  
+    is the zero moment of the IRF (optional, default=1)  
+* `m1_irf` :  
+    is the first moment of the IRF (optional, default=1)  
+";
+
+%feature("docstring") CLSMImage::get_n_frames "
+
+Get the number of frames in the CLSM image.  
+";
+
+%feature("docstring") CLSMImage::get_n_lines "
+
+Get the number of lines per frame in the CLSMImage.  
+";
+
+%feature("docstring") CLSMImage::get_n_pixel "
+
+Get the number of pixels per line a frame of the CLSMImage.  
+";
+
+%feature("docstring") CLSMImage::copy "
+
+Copy the information from another CLSMImage object  
+
+Parameters
+----------
+* `p2` :  
+    The information from this object is copied.  
+* `fill` :  
+    If this is set to true (default is false) the tttr indices of the pixels are
+    copied.  
+
+Returns
+-------  
+";
+
+%feature("docstring") CLSMImage::append "
+
+Append a frame to the CLSM image.  
+
+Parameters
+----------
+* `frame` :  
+";
+
+%feature("docstring") CLSMImage::CLSMImage "
+
+Copy constructor.  
+";
+
+%feature("docstring") CLSMImage::CLSMImage "
+
+Parameters
+----------
+* `tttr_data` :  
+    pointer to TTTR object  
+* `marker_frame_start` :  
+    routing channel numbers (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on a new
+    frame in the TTTR data stream.  
+* `marker_line_start` :  
+    routing channel number (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on the start
+    of a new line in a frame within the TTTR data stream  
+* `marker_line_stop` :  
+    routing channel number (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on the stop
+    of a new line in a frame within the TTTR data stream  
+* `marker_event_type` :  
+    event types that are interpreted as markers for frames and lines.  
+* `n_pixel_per_line` :  
+    number of pixels into which each line is separated. If the number of pixels
+    per line is set to zero. The number of pixels per line will correspond to
+    the number of lines in the first frame.  
+* `reading_routine` :  
+    an integer that specifies the reading routine used to read a CLSM image out
+    of a TTTR data stream. A CLSM image can be encoded by several ways in a TTTR
+    stream. Leica encodes frame and line markers in micro time channel numbers.
+    PicoQuant and others use a more 'traditional' encoding for frame and line
+    markers marking TTTR events as marker events and using the channel number to
+    differentiate the different marker types.  
+* `macro_time_shift` :  
+    Number of macro time counts a line start is shifted relative to the line
+    start marker in the TTTR object (default 0)  
+* `source` :  
+    A CLSMImage object that is used as a template for the created object. All
+    frames and lines are copied and empty pixels are created. If the parameter
+    fill is set to true moreover the content of the pixels is copied.  
+* `fill` :  
+    if set to true (default) is false the lines are filled with pixels that will
+    contain either the photons of the specified channels or the photons from the
+    source CLSMImage instance.  
+* `channels` :  
+    The channel number of the events that will be used to fill the pixels.  
+";
+
+%feature("docstring") CLSMImage::~CLSMImage "
+
+Destructor.  
+";
+
+%feature("docstring") CLSMImage::shift_line_start "
+
+Shift the line starts at least by a specified number of macro time clock counts  
+
+Parameters
+----------
+* `tttr_data` :  
+    pointer [in] to the TTTR object used to construct the CLSM object that is
+    shifted  
+* `macro_time_shift` :  
+    [in] the number of macro time counts that which which the lines are at least
+    shifted.  
 ";
 
 %feature("docstring") CLSMImage::compute_ics "
@@ -172,175 +432,6 @@ Parameters
     number of lines  
 * `dmask3` :  
     number of pixels per line  
-";
-
-%feature("docstring") CLSMImage::get_line_edges "
-";
-
-%feature("docstring") CLSMImage::get_phasor_image "
-
-Computes the phasor values for every pixel  
-
-Pixels with few photons can be discriminated. Discriminated pixels will be
-filled with zeros.  
-
-Parameters
-----------
-* `tttr_data[in]` :  
-    pointer to a TTTR object  
-* `out[out]` :  
-    pointer to output array that will contain the image stack  
-* `dim1[out]` :  
-    returns the number of frames  
-* `dim2[out]` :  
-    returns the number of lines  
-* `dim3[out]` :  
-    returns the number of pixels per line  
-* `dim4[out]` :  
-    returns 2 (first is the g phasor value (cos), second the s phasor (sin)  
-* `minimum_number_of_photons[in]` :  
-    the minimum number of photons in a micro time (only used if frames are not
-    stacked)  
-* `stack_frames[in]` :  
-    if true the frames are stacked (default value is false). If stack frames is
-    set to true the mean arrival time is computed using the tttr indices of all
-    pixels (this corresponds to the photon weighted mean arrival time).  
-";
-
-%feature("docstring") CLSMImage::get_fluorescence_decay_image "
-
-Computes an image stack where the value of each pixel corresponds to a histogram
-of micro times in each pixel. The micro times can be coarsened by integer
-numbers.  
-
-Parameters
-----------
-* `tttr_data` :  
-    pointer to a TTTR object  
-* `out` :  
-    pointer to output array of unsigned chars that will contain the image stack  
-* `dim1` :  
-    number of frames  
-* `dim2` :  
-    number of lines  
-* `dim3` :  
-    number of pixels  
-* `dim4` :  
-    number of micro time channels in the histogram  
-* `micro_time_coarsening` :  
-    constant used to coarsen the micro times. The default value is 1 and the
-    micro times are binned without coarsening.  
-* `stack_frames` :  
-    if True the frames are stacked.  
-";
-
-%feature("docstring") CLSMImage::get_mean_micro_time_image "
-
-Calculates an image stack where the value of each pixel corresponds to the mean
-micro time (in units of the micro channel resolution).  
-
-Pixels with few photons can be discriminated. Discriminated pixels will be
-filled with zeros.  
-
-Parameters
-----------
-* `tttr_data[in]` :  
-    pointer to a TTTR object  
-* `out[out]` :  
-    pointer to output array that will contain the image stack  
-* `dim1[out]` :  
-    returns the number of frames  
-* `dim2[out]` :  
-    returns the number of lines  
-* `dim3[out]` :  
-    returns the number of pixels per line  
-* `minimum_number_of_photons[in]` :  
-    the minimum number of photons in a micro time  
-* `stack_frames[in]` :  
-    if true the frames are stacked (default value is false). If stack frames is
-    set to true the mean arrival time is computed using the tttr indices of all
-    pixels (this corresponds to the photon weighted mean arrival time).  
-";
-
-%feature("docstring") CLSMImage::get_n_lines "
-
-Get the number of lines per frame in the CLSMImage.  
-";
-
-%feature("docstring") CLSMImage::get_frame_edges "
-
-Get the tttr indices of frame markers for a SP8  
-
-Parameters
-----------
-* `tttr` :  
-    pointer to the TTTR object that is inspected  
-* `marker_frame` :  
-    vector of  
-* `marker_event` :  
-* `start_event` :  
-* `stop_event` :  
-
-Returns
--------  
-";
-
-%feature("docstring") CLSMImage::get_mean_lifetime_image "
-
-Computes an image of average lifetimes  
-
-The average lifetimes are computed (not fitted) by the methods of moments (Irvin
-Isenberg, 1973, Biophysical journal). This approach does not consider scattered
-light.  
-
-Pixels with few photons can be discriminated. Discriminated pixels are filled
-with zeros.  
-
-By default the fluorescence lifetimes of the pixels are computed in units of
-nanoseconds.  
-
-Parameters
-----------
-* `tttr_data[in]` :  
-    pointer to a TTTR object  
-* `tttr_irf[in]` :  
-    pointer to a TTTR object of the IRF  
-* `out[out]` :  
-    pointer to output array that will contain the image stack  
-* `dim1[out]` :  
-    returns the number of frames  
-* `dim2[out]` :  
-    returns the number of lines  
-* `dim3[out]` :  
-    returns the number of pixels per line  
-* `minimum_number_of_photons[in]` :  
-    the minimum number of photons in a micro time  
-* `m0_irf` :  
-    is the zero moment of the IRF (optional, default=1)  
-* `m1_irf` :  
-    is the first moment of the IRF (optional, default=1)  
-";
-
-%feature("docstring") CLSMImage::get_n_frames "
-
-Get the number of frames in the CLSM image.  
-";
-
-%feature("docstring") CLSMImage::get_intensity_image "
-";
-
-%feature("docstring") CLSMImage::append "
-
-Append a frame to the CLSM image.  
-
-Parameters
-----------
-* `frame` :  
-";
-
-%feature("docstring") CLSMImage::~CLSMImage "
-
-Destructor.  
 ";
 
 %feature("docstring") CLSMImage::get_roi "
@@ -408,116 +499,25 @@ Parameters
     number of pixels per line in the mask.  
 ";
 
-%feature("docstring") CLSMImage::clear_pixels "
+%feature("docstring") CLSMImage::get_frame_edges "
 
-Clear tttr_indices stored in the pixels  
-
-Parameters
-----------
-* `channels` :  
-";
-
-%feature("docstring") CLSMImage::get_fcs_image "
-
-Computes the  
+Get the tttr indices of frame markers for a SP8  
 
 Parameters
 ----------
-* `output[out]` :  
-* `dim1[out]` :  
-* `dim2[out]` :  
-* `dim3[out]` :  
-* `dim4[out]` :  
-* `tttr_self` :  
-* `tac_coarsening` :  
-* `stack_frames` :  
-";
-
-%feature("docstring") CLSMImage::CLSMImage "
-
-Copy constructor.  
-";
-
-%feature("docstring") CLSMImage::CLSMImage "
-
-Parameters
-----------
-* `tttr_data` :  
-    pointer to TTTR object  
-* `marker_frame_start` :  
-    routing channel numbers (default reading routine) or micro time channel
-    number (SP8 reading routine) that serves as a marker informing on a new
-    frame in the TTTR data stream.  
-* `marker_line_start` :  
-    routing channel number (default reading routine) or micro time channel
-    number (SP8 reading routine) that serves as a marker informing on the start
-    of a new line in a frame within the TTTR data stream  
-* `marker_line_stop` :  
-    routing channel number (default reading routine) or micro time channel
-    number (SP8 reading routine) that serves as a marker informing on the stop
-    of a new line in a frame within the TTTR data stream  
-* `marker_event_type` :  
-    event types that are interpreted as markers for frames and lines.  
-* `n_pixel_per_line` :  
-    number of pixels into which each line is separated. If the number of pixels
-    per line is set to zero. The number of pixels per line will correspond to
-    the number of lines in the first frame.  
-* `reading_routine` :  
-    an integer that specifies the reading routine used to read a CLSM image out
-    of a TTTR data stream. A CLSM image can be encoded by several ways in a TTTR
-    stream. Leica encodes frame and line markers in micro time channel numbers.
-    PicoQuant and others use a more 'traditional' encoding for frame and line
-    markers marking TTTR events as marker events and using the channel number to
-    differentiate the different marker types.  
-* `macro_time_shift` :  
-    Number of macro time counts a line start is shifted relative to the line
-    start marker in the TTTR object (default 0)  
-* `source` :  
-    A CLSMImage object that is used as a template for the created object. All
-    frames and lines are copied and empty pixels are created. If the parameter
-    fill is set to true moreover the content of the pixels is copied.  
-* `fill` :  
-    if set to true (default) is false the lines are filled with pixels that will
-    contain either the photons of the specified channels or the photons from the
-    source CLSMImage instance.  
-* `channels` :  
-    The channel number of the events that will be used to fill the pixels.  
-";
-
-%feature("docstring") CLSMImage::copy "
-
-Copy the information from another CLSMImage object  
-
-Parameters
-----------
-* `p2` :  
-    The information from this object is copied.  
-* `fill` :  
-    If this is set to true (default is false) the tttr indices of the pixels are
-    copied.  
+* `tttr` :  
+    pointer to the TTTR object that is inspected  
+* `marker_frame` :  
+    vector of  
+* `marker_event` :  
+* `start_event` :  
+* `stop_event` :  
 
 Returns
 -------  
 ";
 
-%feature("docstring") CLSMImage::size "
-
-Get the number of frames in the CLSMImage.  
-";
-
-%feature("docstring") CLSMImage::fill_pixels "
-
-Fill the tttr_indices of the pixels with the indices of the channels that are
-within a pixel  
-
-Parameters
-----------
-* `channels[in]` :  
-    list of routing channels. Events that have routing channels in this vector
-    are added to pixels of corresponding time.  
-* `clear_pixel[in]` :  
-    if set to true (default) the pixels are cleared before they are filled. If
-    set to false new tttr indices are added to the pixels  
+%feature("docstring") CLSMImage::get_line_edges "
 ";
 
 // File: class_c_l_s_m_line.xml
@@ -526,6 +526,14 @@ Parameters
 %feature("docstring") CLSMLine "
 
 C++ includes: CLSMLine.h
+";
+
+%feature("docstring") CLSMLine::size "
+
+Get the number of pixels per line a frame of the CLSMImage.  
+";
+
+%feature("docstring") CLSMLine::get_pixels "
 ";
 
 %feature("docstring") CLSMLine::get_pixel_duration "
@@ -543,18 +551,10 @@ C++ includes: CLSMLine.h
 %feature("docstring") CLSMLine::CLSMLine "
 ";
 
-%feature("docstring") CLSMLine::get_pixels "
-";
-
-%feature("docstring") CLSMLine::append "
-";
-
 %feature("docstring") CLSMLine::~CLSMLine "
 ";
 
-%feature("docstring") CLSMLine::size "
-
-Get the number of pixels per line a frame of the CLSMImage.  
+%feature("docstring") CLSMLine::append "
 ";
 
 // File: class_c_l_s_m_pixel.xml
@@ -586,6 +586,12 @@ The number of points in a correlation curve.
 C++ includes: Correlator.h
 ";
 
+%feature("docstring") Correlator::dt "
+
+Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t is the
+difference between the first and the last photon.  
+";
+
 %feature("docstring") Correlator::Correlator "
 
 Parameters
@@ -601,77 +607,22 @@ Parameters
     the number of blocks  
 ";
 
-%feature("docstring") Correlator::set_n_bins "
-
-Parameters
-----------
-* `v` :  
-    the number of equally spaced correaltion channels per block  
-";
-
-%feature("docstring") Correlator::get_tttr "
-";
-
 %feature("docstring") Correlator::~Correlator "
 
 Destructor.  
 ";
 
-%feature("docstring") Correlator::set_filter "
+%feature("docstring") Correlator::set_n_casc "
 
-Updates the weights. Non-zero weights are assigned a filter value that is
-defined by a filter map and the micro time of the event.  
-
-Parameters
-----------
-* `micro_times[in]` :  
-* `routing_channels[in]` :  
-* `filter[in]` :  
-    map of filters the first element in the map is the routing channel number,
-    the second element of the map is a vector that maps a micro time to a filter
-    value.  
-";
-
-%feature("docstring") Correlator::set_weights "
-
-Set the weights that are used in the correlation channels  
+Sets the number of cascades (also called blocks) of the correlation curve and
+updates the correlation axis.  
 
 Parameters
 ----------
-* `w1` :  
-    A vector of weights for the time events of the first channel  
-* `n_weights_ch1` :  
-    The number of weights of the first channel  
-* `w2` :  
-    A vector of weights for the time events of the second channel  
-* `n_weights_ch2` :  
-    The number of weights of the second channel  
+* `n_casc` :  
 ";
 
 %feature("docstring") Correlator::get_curve "
-";
-
-%feature("docstring") Correlator::get_correlation_method "
-
-Returns
--------
-name of the used correlation method  
-";
-
-%feature("docstring") Correlator::dt "
-
-Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t is the
-difference between the first and the last photon.  
-";
-
-%feature("docstring") Correlator::get_macrotimes "
-";
-
-%feature("docstring") Correlator::get_n_bins "
-
-Returns
--------
-the number of equally spaced correlation channels per block  
 ";
 
 %feature("docstring") Correlator::get_n_casc "
@@ -681,21 +632,19 @@ Returns
 number of correlation blocks  
 ";
 
-%feature("docstring") Correlator::set_tttr "
-
-This method sets the time and the weights using TTTR objects.  
-
-The header of the first TTTR object is used for calibration. Both TTTR objects
-should have the same calibration (this is not checked). Weights are set to one
-by default.  
+%feature("docstring") Correlator::set_n_bins "
 
 Parameters
 ----------
-* `tttr_1` :  
-* `tttr_2` :  
-* `make_fine` :  
-    if true a full correlation is computed that uses the micro time in the TTTR
-    objects (default is false).  
+* `v` :  
+    the number of equally spaced correaltion channels per block  
+";
+
+%feature("docstring") Correlator::get_n_bins "
+
+Returns
+-------
+the number of equally spaced correlation channels per block  
 ";
 
 %feature("docstring") Correlator::set_correlation_method "
@@ -706,6 +655,48 @@ Parameters
 ----------
 * `cm` :  
     the name of the method  
+";
+
+%feature("docstring") Correlator::get_correlation_method "
+
+Returns
+-------
+name of the used correlation method  
+";
+
+%feature("docstring") Correlator::set_microtimes "
+
+Changes the time axis to consider the micro times.  
+
+Parameters
+----------
+* `tac_1` :  
+    The micro times of the first correlation channel  
+* `n_tac_1` :  
+    The number of events in the first correlation channel  
+* `tac_2` :  
+    The micro times of the second correlation channel  
+* `n_tac_2` :  
+    The number of events in the second correlation channel  
+* `number_of_microtime_channels` :  
+    The maximum number of TAC channels of the micro times.  
+";
+
+%feature("docstring") Correlator::set_macrotimes "
+
+Parameters
+----------
+* `t1` :  
+    time events in the the first correlation channel  
+* `n_t1` :  
+    The number of time events in the first channel  
+* `t1` :  
+    time events in the the second correlation channel  
+* `n_t2` :  
+    The number of time events in the second channel  
+";
+
+%feature("docstring") Correlator::get_macrotimes "
 ";
 
 %feature("docstring") Correlator::set_events "
@@ -730,81 +721,23 @@ Parameters
     The number of weights of the second channel  
 ";
 
-%feature("docstring") Correlator::get_corr "
+%feature("docstring") Correlator::set_weights "
 
-Get the correlation.  
-
-Parameters
-----------
-* `output` :  
-    a pointer to an array that will contain the correlation  
-* `n_output` :  
-    a pointer to the an integer that will contain the number of elements of the
-    x-axis  
-";
-
-%feature("docstring") Correlator::set_macrotimes "
+Set the weights that are used in the correlation channels  
 
 Parameters
 ----------
-* `t1` :  
-    time events in the the first correlation channel  
-* `n_t1` :  
-    The number of time events in the first channel  
-* `t1` :  
-    time events in the the second correlation channel  
-* `n_t2` :  
-    The number of time events in the second channel  
+* `w1` :  
+    A vector of weights for the time events of the first channel  
+* `n_weights_ch1` :  
+    The number of weights of the first channel  
+* `w2` :  
+    A vector of weights for the time events of the second channel  
+* `n_weights_ch2` :  
+    The number of weights of the second channel  
 ";
 
 %feature("docstring") Correlator::get_weights "
-";
-
-%feature("docstring") Correlator::get_corr_normalized "
-
-Get the normalized correlation.  
-
-Parameters
-----------
-* `output` :  
-    an array that containing normalized correlation  
-* `n_output` :  
-    the number of elements of output  
-";
-
-%feature("docstring") Correlator::set_microtimes "
-
-Changes the time axis to consider the micro times.  
-
-Parameters
-----------
-* `tac_1` :  
-    The micro times of the first correlation channel  
-* `n_tac_1` :  
-    The number of events in the first correlation channel  
-* `tac_2` :  
-    The micro times of the second correlation channel  
-* `n_tac_2` :  
-    The number of events in the second correlation channel  
-* `number_of_microtime_channels` :  
-    The maximum number of TAC channels of the micro times.  
-";
-
-%feature("docstring") Correlator::set_n_casc "
-
-Sets the number of cascades (also called blocks) of the correlation curve and
-updates the correlation axis.  
-
-Parameters
-----------
-* `n_casc` :  
-";
-
-%feature("docstring") Correlator::run "
-
-Compute the correlation function. Usually calling this method is not necessary
-the the validity of the correlation function is tracked by the attribute
-is_valid.  
 ";
 
 %feature("docstring") Correlator::get_x_axis "
@@ -819,6 +752,73 @@ Parameters
     number of elements in the axis of the x-axis  
 ";
 
+%feature("docstring") Correlator::get_corr_normalized "
+
+Get the normalized correlation.  
+
+Parameters
+----------
+* `output` :  
+    an array that containing normalized correlation  
+* `n_output` :  
+    the number of elements of output  
+";
+
+%feature("docstring") Correlator::get_corr "
+
+Get the correlation.  
+
+Parameters
+----------
+* `output` :  
+    a pointer to an array that will contain the correlation  
+* `n_output` :  
+    a pointer to the an integer that will contain the number of elements of the
+    x-axis  
+";
+
+%feature("docstring") Correlator::run "
+
+Compute the correlation function. Usually calling this method is not necessary
+the the validity of the correlation function is tracked by the attribute
+is_valid.  
+";
+
+%feature("docstring") Correlator::set_tttr "
+
+This method sets the time and the weights using TTTR objects.  
+
+The header of the first TTTR object is used for calibration. Both TTTR objects
+should have the same calibration (this is not checked). Weights are set to one
+by default.  
+
+Parameters
+----------
+* `tttr_1` :  
+* `tttr_2` :  
+* `make_fine` :  
+    if true a full correlation is computed that uses the micro time in the TTTR
+    objects (default is false).  
+";
+
+%feature("docstring") Correlator::get_tttr "
+";
+
+%feature("docstring") Correlator::set_filter "
+
+Updates the weights. Non-zero weights are assigned a filter value that is
+defined by a filter map and the micro time of the event.  
+
+Parameters
+----------
+* `micro_times[in]` :  
+* `routing_channels[in]` :  
+* `filter[in]` :  
+    map of filters the first element in the map is the routing channel number,
+    the second element of the map is a vector that maps a micro time to a filter
+    value.  
+";
+
 // File: class_correlator_curve.xml
 
 
@@ -827,18 +827,7 @@ Parameters
 C++ includes: CorrelatorCurve.h
 ";
 
-%feature("docstring") CorrelatorCurve::get_n_bins "
-";
-
 %feature("docstring") CorrelatorCurve::size "
-";
-
-%feature("docstring") CorrelatorCurve::set_n_bins "
-
-Parameters
-----------
-* `v` :  
-    the number of equally spaced correaltion channels per block  
 ";
 
 %feature("docstring") CorrelatorCurve::get_x_axis "
@@ -854,17 +843,15 @@ Parameters
     x-axis  
 ";
 
-%feature("docstring") CorrelatorCurve::get_corr_normalized "
+%feature("docstring") CorrelatorCurve::set_n_bins "
+
+Parameters
+----------
+* `v` :  
+    the number of equally spaced correaltion channels per block  
 ";
 
-%feature("docstring") CorrelatorCurve::get_n_casc "
-
-Returns
--------
-number of correlation blocks  
-";
-
-%feature("docstring") CorrelatorCurve::get_corr "
+%feature("docstring") CorrelatorCurve::get_n_bins "
 ";
 
 %feature("docstring") CorrelatorCurve::set_n_casc "
@@ -877,6 +864,19 @@ Parameters
 * `n_casc` :  
 ";
 
+%feature("docstring") CorrelatorCurve::get_n_casc "
+
+Returns
+-------
+number of correlation blocks  
+";
+
+%feature("docstring") CorrelatorCurve::get_corr "
+";
+
+%feature("docstring") CorrelatorCurve::get_corr_normalized "
+";
+
 // File: class_correlator_photon_stream.xml
 
 
@@ -885,16 +885,70 @@ Parameters
 C++ includes: CorrelatorPhotonStream.h
 ";
 
+%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::~CorrelatorPhotonStream "
+";
+
+%feature("docstring") CorrelatorPhotonStream::empty "
+";
+
 %feature("docstring") CorrelatorPhotonStream::size "
 ";
 
-%feature("docstring") CorrelatorPhotonStream::set_tttr "
+%feature("docstring") CorrelatorPhotonStream::clear "
+";
+
+%feature("docstring") CorrelatorPhotonStream::resize "
+
+Parameters
+----------
+* `n` :  
+* `x` :  
+    initial value of the weights  
+";
+
+%feature("docstring") CorrelatorPhotonStream::make_fine "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_weights "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_events "
+";
+
+%feature("docstring") CorrelatorPhotonStream::coarsen "
+
+Coarsens the time events  
+
+This method coarsens the time events by dividing the times by two. In case two
+consecutive time events in the array have the same time, the weights of the two
+events are added to the following weight element and the value of the previous
+weight is set to zero.  
+";
+
+%feature("docstring") CorrelatorPhotonStream::dt "
 ";
 
 %feature("docstring") CorrelatorPhotonStream::sum_of_weights "
 ";
 
-%feature("docstring") CorrelatorPhotonStream::set_events "
+%feature("docstring") CorrelatorPhotonStream::mean_count_rate "
+";
+
+%feature("docstring") CorrelatorPhotonStream::set_time_axis_calibration "
+
+Set time axis calibration. The time axis calibration if the duration of between
+two sync signals (macro time clock)  
+
+Parameters
+----------
+* `v` :  
+    time axis calibration (duration between sync clock signals) in seconds  
 ";
 
 %feature("docstring") CorrelatorPhotonStream::get_time_axis_calibration "
@@ -905,25 +959,7 @@ The calibration of the time axis in seconds. The time axis calibration is the
 duration of a sync signal (macro time clock).  
 ";
 
-%feature("docstring") CorrelatorPhotonStream::mean_count_rate "
-";
-
-%feature("docstring") CorrelatorPhotonStream::~CorrelatorPhotonStream "
-";
-
-%feature("docstring") CorrelatorPhotonStream::make_fine "
-";
-
-%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
-";
-
-%feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
-";
-
-%feature("docstring") CorrelatorPhotonStream::clear "
-";
-
-%feature("docstring") CorrelatorPhotonStream::dt "
+%feature("docstring") CorrelatorPhotonStream::set_tttr "
 ";
 
 %feature("docstring") CorrelatorPhotonStream::get_tttr "
@@ -945,42 +981,6 @@ Parameters
     The number of macro times.  
 * `tac` :  
     An array containing the micro times of the corresponding macro times !  
-";
-
-%feature("docstring") CorrelatorPhotonStream::set_time_axis_calibration "
-
-Set time axis calibration. The time axis calibration if the duration of between
-two sync signals (macro time clock)  
-
-Parameters
-----------
-* `v` :  
-    time axis calibration (duration between sync clock signals) in seconds  
-";
-
-%feature("docstring") CorrelatorPhotonStream::set_weights "
-";
-
-%feature("docstring") CorrelatorPhotonStream::resize "
-
-Parameters
-----------
-* `n` :  
-* `x` :  
-    initial value of the weights  
-";
-
-%feature("docstring") CorrelatorPhotonStream::coarsen "
-
-Coarsens the time events  
-
-This method coarsens the time events by dividing the times by two. In case two
-consecutive time events in the array have the same time, the weights of the two
-events are added to the following weight element and the value of the previous
-weight is set to zero.  
-";
-
-%feature("docstring") CorrelatorPhotonStream::empty "
 ";
 
 // File: struct_curve_mapping__t.xml
@@ -1020,22 +1020,22 @@ Parameters
 C++ includes: Histogram.h
 ";
 
-%feature("docstring") Histogram::get_axis "
-";
-
-%feature("docstring") Histogram::Histogram "
-";
-
-%feature("docstring") Histogram::set_axis "
-";
-
-%feature("docstring") Histogram::set_axis "
+%feature("docstring") Histogram::update "
 ";
 
 %feature("docstring") Histogram::get_histogram "
 ";
 
-%feature("docstring") Histogram::update "
+%feature("docstring") Histogram::set_axis "
+";
+
+%feature("docstring") Histogram::set_axis "
+";
+
+%feature("docstring") Histogram::get_axis "
+";
+
+%feature("docstring") Histogram::Histogram "
 ";
 
 %feature("docstring") Histogram::~Histogram "
@@ -1049,18 +1049,12 @@ C++ includes: Histogram.h
 C++ includes: HistogramAxis.h
 ";
 
-%feature("docstring") HistogramAxis::HistogramAxis "
-";
-
-%feature("docstring") HistogramAxis::HistogramAxis "
-";
-
-%feature("docstring") HistogramAxis::setAxisType "
-";
-
 %feature("docstring") HistogramAxis::update "
 
 Recalculates the bin edges of the axis  
+";
+
+%feature("docstring") HistogramAxis::setAxisType "
 ";
 
 %feature("docstring") HistogramAxis::getNumberOfBins "
@@ -1069,16 +1063,22 @@ Recalculates the bin edges of the axis
 %feature("docstring") HistogramAxis::getBinIdx "
 ";
 
+%feature("docstring") HistogramAxis::getBins "
+";
+
+%feature("docstring") HistogramAxis::getBins "
+";
+
 %feature("docstring") HistogramAxis::getName "
 ";
 
 %feature("docstring") HistogramAxis::setName "
 ";
 
-%feature("docstring") HistogramAxis::getBins "
+%feature("docstring") HistogramAxis::HistogramAxis "
 ";
 
-%feature("docstring") HistogramAxis::getBins "
+%feature("docstring") HistogramAxis::HistogramAxis "
 ";
 
 // File: struct_param_struct__t.xml
@@ -1097,82 +1097,26 @@ C++ includes: TTTRHeaderTypes.h
 C++ includes: Pda.h
 ";
 
-%feature("docstring") Pda::set_callback "
-
-Set the callback (cb) for the computation of a 1D histogram.  
-
-The cb function recudes two dimensional values, i.e., the intensity in channel
-(ch1) and ch2 to a one dimensional number. The cb is used to compute either FRET
-efficiencies, etc.  
-
-Parameters
-----------
-* `callback[in]` :  
-    object that computes the value on a 1D histogram.  
-";
-
 %feature("docstring") Pda::evaluate "
 
 Computes the S1S2 histogram.  
 ";
 
-%feature("docstring") Pda::S1S2_pF "
+%feature("docstring") Pda::Pda "
 
-calculating p(G,R), several ratios using the same same P(F)  
+Constructor creating a new Pda object  
 
-Parameters
-----------
-* `S1S2[]` :  
-    see sgsr_pN  
-* `pF[in]` :  
-    input: p(F)  
-* `Nmax[in]` :  
-* `background_ch1[in]` :  
-* `background_ch2[in]` :  
-* `p_ch1[in]` :  
-* `amplitudes[in]` :  
-    corresponding amplitudes  
-";
-
-%feature("docstring") Pda::get_probabilities_ch1 "
-
-Returns the amplitudes of the species  
+A Pda object can be used to compute Photon Distribution Analysis histograms.  
 
 Parameters
 ----------
-* `output[out]` :  
-    A C type array containing the amplitude of the species  
-* `n_output[out]` :  
-    The number of species  
-";
-
-%feature("docstring") Pda::set_min_number_of_photons "
-
-Set the minimum number of photons in the SgSr matrix.  
-";
-
-%feature("docstring") Pda::set_ch2_background "
-
-Set the background in the red channel.  
+* `hist2d_nmax` :  
+    the maximum number of photons  
+* `hist2d_nmin` :  
+    the minimum number of photons considered  
 ";
 
 %feature("docstring") Pda::~Pda "
-";
-
-%feature("docstring") Pda::get_probability_spectrum_ch1 "
-
-Get the theoretical probability spectrum of detecting a photon in the first
-channel  
-
-The probability spectrum is an interleaved array of the amplitudes and the
-probabilities of detecting a photon in the first channel  
-
-Parameters
-----------
-* `output[out]` :  
-    array containing the probability spectrum  
-* `n_output[out]` :  
-    number of elements in the output array  
 ";
 
 %feature("docstring") Pda::append "
@@ -1188,6 +1132,63 @@ Parameters
     the amplitude (fraction) of the species  
 * `probability_ch1` :  
     the probability of detecting the species in the first detection channel  
+";
+
+%feature("docstring") Pda::clear_probability_ch1 "
+
+Clears the model and removes all species.  
+";
+
+%feature("docstring") Pda::get_amplitudes "
+
+Returns the amplitudes of the species  
+
+Parameters
+----------
+* `output[out]` :  
+    A C type array containing the amplitude of the species  
+* `n_output[out]` :  
+    The number of species  
+";
+
+%feature("docstring") Pda::set_amplitudes "
+
+Sets the amplitudes of the species.  
+
+Parameters
+----------
+* `input[in]` :  
+    A C type array that contains the amplitude of the species  
+* `n_input[in]` :  
+    The number of species  
+";
+
+%feature("docstring") Pda::set_callback "
+
+Set the callback (cb) for the computation of a 1D histogram.  
+
+The cb function recudes two dimensional values, i.e., the intensity in channel
+(ch1) and ch2 to a one dimensional number. The cb is used to compute either FRET
+efficiencies, etc.  
+
+Parameters
+----------
+* `callback[in]` :  
+    object that computes the value on a 1D histogram.  
+";
+
+%feature("docstring") Pda::get_S1S2_matrix "
+
+Returns the S1S2 matrix that contains the photon counts in the two channels  
+
+Parameters
+----------
+* `output[out]` :  
+    the S1S2 matrix  
+* `n_output1[out]` :  
+    dimension 1 of the matrix  
+* `n_output2[out]` :  
+    dimension 2 of the matrix  
 ";
 
 %feature("docstring") Pda::set_probability_spectrum_ch1 "
@@ -1206,120 +1207,7 @@ Parameters
     the number of array elements  
 ";
 
-%feature("docstring") Pda::setPF "
-
-Set the probability P(F)  
-
-Parameters
-----------
-* `input[in]` :  
-* `n_input[in]` :  
-";
-
-%feature("docstring") Pda::compute_experimental_histograms "
-
-Parameters
-----------
-* `tttr_data[in]` :  
-* `s1s2[out]` :  
-* `dim1[out]` :  
-* `dim2[out]` :  
-* `ps[out]` :  
-* `dim_ps[out]` :  
-* `channels_1` :  
-    routing channel numbers that are used for the first channel in the S1S2
-    matrix. Photons with this channel number are counted and increment values in
-    the S1S2 matrix.  
-* `channels_2` :  
-    routing channel numbers that are used for the second channel in the S1S2
-    matrix.Photons with this channel number are counted and increment values in
-    the S1S2 matrix.  
-* `maximum_number_of_photons` :  
-    The maximum number of photons in the computed S1S2 matrix  
-* `minimum_number_of_photons` :  
-    The minimum number of photons in a time window and in the S1S2 matrix  
-* `minimum_time_window_length` :  
-    The minimum length of a time windows in units of milli seconds.  
-";
-
-%feature("docstring") Pda::set_valid_sgsr "
-
-Set the SgSr histogram to valid (only used for testing)  
-";
-
-%feature("docstring") Pda::poisson_0toN "
-
-Writes a Poisson distribution with an average lam, for 0..N into a vector
-starting at a specified index.  
-
-Parameters
-----------
-* `return_p[in`, `out]` :  
-* `lam[in]` :  
-* `return_dim[in]` :  
-";
-
-%feature("docstring") Pda::set_max_number_of_photons "
-
-Set the maximum number of photons in the S1S2 matrix  
-
-Note: the size of the pF array must agree with the maximum number of photons!  
-
-Parameters
-----------
-* `nmax[in]` :  
-    the maximum number of photons  
-";
-
-%feature("docstring") Pda::set_ch1_background "
-
-Set the background in the green channel.  
-";
-
-%feature("docstring") Pda::get_S1S2_matrix "
-
-Returns the S1S2 matrix that contains the photon counts in the two channels  
-
-Parameters
-----------
-* `output[out]` :  
-    the S1S2 matrix  
-* `n_output1[out]` :  
-    dimension 1 of the matrix  
-* `n_output2[out]` :  
-    dimension 2 of the matrix  
-";
-
-%feature("docstring") Pda::get_min_number_of_photons "
-
-The minimum number of photons in the SgSr matrix.  
-";
-
-%feature("docstring") Pda::clear_probability_ch1 "
-
-Clears the model and removes all species.  
-";
-
-%feature("docstring") Pda::Pda "
-
-Constructor creating a new Pda object  
-
-A Pda object can be used to compute Photon Distribution Analysis histograms.  
-
-Parameters
-----------
-* `hist2d_nmax` :  
-    the maximum number of photons  
-* `hist2d_nmin` :  
-    the minimum number of photons considered  
-";
-
-%feature("docstring") Pda::getPF "
-
-Set the probability P(F)  
-";
-
-%feature("docstring") Pda::get_amplitudes "
+%feature("docstring") Pda::get_probabilities_ch1 "
 
 Returns the amplitudes of the species  
 
@@ -1342,6 +1230,37 @@ Parameters
     A C type array that contains the probabilities of the species  
 * `n_input[in]` :  
     The number of species  
+";
+
+%feature("docstring") Pda::get_probability_spectrum_ch1 "
+
+Get the theoretical probability spectrum of detecting a photon in the first
+channel  
+
+The probability spectrum is an interleaved array of the amplitudes and the
+probabilities of detecting a photon in the first channel  
+
+Parameters
+----------
+* `output[out]` :  
+    array containing the probability spectrum  
+* `n_output[out]` :  
+    number of elements in the output array  
+";
+
+%feature("docstring") Pda::setPF "
+
+Set the probability P(F)  
+
+Parameters
+----------
+* `input[in]` :  
+* `n_input[in]` :  
+";
+
+%feature("docstring") Pda::getPF "
+
+Set the probability P(F)  
 ";
 
 %feature("docstring") Pda::get_1dhistogram "
@@ -1388,16 +1307,106 @@ Parameters
     1(optional)This updates the s1s2 matrix of the object.  
 ";
 
-%feature("docstring") Pda::set_amplitudes "
+%feature("docstring") Pda::get_max_number_of_photons "
 
-Sets the amplitudes of the species.  
+The maximum number of photons in the SgSr matrix.  
+";
+
+%feature("docstring") Pda::set_max_number_of_photons "
+
+Set the maximum number of photons in the S1S2 matrix  
+
+Note: the size of the pF array must agree with the maximum number of photons!  
 
 Parameters
 ----------
-* `input[in]` :  
-    A C type array that contains the amplitude of the species  
-* `n_input[in]` :  
-    The number of species  
+* `nmax[in]` :  
+    the maximum number of photons  
+";
+
+%feature("docstring") Pda::get_min_number_of_photons "
+
+The minimum number of photons in the SgSr matrix.  
+";
+
+%feature("docstring") Pda::set_min_number_of_photons "
+
+Set the minimum number of photons in the SgSr matrix.  
+";
+
+%feature("docstring") Pda::get_ch1_background "
+
+Get the background in the green channel.  
+";
+
+%feature("docstring") Pda::set_ch1_background "
+
+Set the background in the green channel.  
+";
+
+%feature("docstring") Pda::get_ch2_background "
+
+Get the background in the red channel.  
+";
+
+%feature("docstring") Pda::set_ch2_background "
+
+Set the background in the red channel.  
+";
+
+%feature("docstring") Pda::is_valid_sgsr "
+
+Returns true if the SgSr histogram is valid, i.e., if output is correct for the
+input parameter. This value is set to true by evaluate.  
+";
+
+%feature("docstring") Pda::set_valid_sgsr "
+
+Set the SgSr histogram to valid (only used for testing)  
+";
+
+%feature("docstring") Pda::compute_experimental_histograms "
+
+Parameters
+----------
+* `tttr_data[in]` :  
+* `s1s2[out]` :  
+* `dim1[out]` :  
+* `dim2[out]` :  
+* `ps[out]` :  
+* `dim_ps[out]` :  
+* `channels_1` :  
+    routing channel numbers that are used for the first channel in the S1S2
+    matrix. Photons with this channel number are counted and increment values in
+    the S1S2 matrix.  
+* `channels_2` :  
+    routing channel numbers that are used for the second channel in the S1S2
+    matrix.Photons with this channel number are counted and increment values in
+    the S1S2 matrix.  
+* `maximum_number_of_photons` :  
+    The maximum number of photons in the computed S1S2 matrix  
+* `minimum_number_of_photons` :  
+    The minimum number of photons in a time window and in the S1S2 matrix  
+* `minimum_time_window_length` :  
+    The minimum length of a time windows in units of milli seconds.  
+";
+
+%feature("docstring") Pda::S1S2_pF "
+
+calculating p(G,R), several ratios using the same same P(F)  
+
+Parameters
+----------
+* `S1S2[]` :  
+    see sgsr_pN  
+* `pF[in]` :  
+    input: p(F)  
+* `Nmax[in]` :  
+* `background_ch1[in]` :  
+* `background_ch2[in]` :  
+* `p_ch1[in]` :  
+* `amplitudes[in]` :  
+    corresponding amplitudes  
 ";
 
 %feature("docstring") Pda::conv_pF "
@@ -1414,25 +1423,16 @@ Parameters
 * `background_ch2` :  
 ";
 
-%feature("docstring") Pda::is_valid_sgsr "
+%feature("docstring") Pda::poisson_0toN "
 
-Returns true if the SgSr histogram is valid, i.e., if output is correct for the
-input parameter. This value is set to true by evaluate.  
-";
+Writes a Poisson distribution with an average lam, for 0..N into a vector
+starting at a specified index.  
 
-%feature("docstring") Pda::get_max_number_of_photons "
-
-The maximum number of photons in the SgSr matrix.  
-";
-
-%feature("docstring") Pda::get_ch2_background "
-
-Get the background in the red channel.  
-";
-
-%feature("docstring") Pda::get_ch1_background "
-
-Get the background in the green channel.  
+Parameters
+----------
+* `return_p[in`, `out]` :  
+* `lam[in]` :  
+* `return_dim[in]` :  
 ";
 
 // File: class_pda_callback.xml
@@ -1512,144 +1512,6 @@ C++ includes: TTTRHeaderTypes.h
 C++ includes: TTTR.h
 ";
 
-%feature("docstring") TTTR::get_filename "
-
-getFilename Getter for the filename of the TTTR file  
-
-Returns
--------
-The filename of the TTTR file  
-";
-
-%feature("docstring") TTTR::get_selection_by_count_rate "
-
-List of indices where the count rate is smaller than a maximum count rate  
-
-The count rate is specified by providing a time window that slides over the time
-array and the maximum number of photons within the time window.  
-
-Parameters
-----------
-* `output` :  
-    the output array that will contain the selected indices  
-* `n_output` :  
-    the number of elements in the output array  
-* `time_window` :  
-    the length of the time window in milliseconds  
-* `n_ph_max` :  
-    the maximum number of photons within a time window  
-";
-
-%feature("docstring") TTTR::get_event_type "
-
-Parameters
-----------
-* `output` :  
-    Pointer to the output array  
-* `n_output` :  
-    Pointer to the number of elements in the output array  
-";
-
-%feature("docstring") TTTR::shift_macro_time "
-
-Shift the macro time by a constant  
-
-Parameters
-----------
-* `shift` :  
-";
-
-%feature("docstring") TTTR::get_tttr_by_selection "
-
-Get a ptr to a TTTR object that is based on a selection on the current TTTR
-object. A selection is an array of indices of the TTTR events.  
-
-Parameters
-----------
-* `selection` :  
-* `n_selection` :  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTR::compute_mean_lifetime "
-
-Compute a mean lifetime by the moments of the decay and the instrument response
-function.  
-
-The computed lifetime is the first lifetime determined by the method of moments
-(Irvin Isenberg, 1973, Biophysical journal).  
-
-Parameters
-----------
-* `tttr_data` :  
-    TTTR object for which the lifetime is computed  
-* `tttr_irf` :  
-    TTTR object that is used as IRF  
-* `m0_irf` :  
-    Number of counts in the IRF (used if no TTTR object for IRF provided.  
-* `m1_irf` :  
-    First moment of the IRF (used if no TTTR object for IRF provided.  
-
-Returns
--------
-The computed lifetime  
-";
-
-%feature("docstring") TTTR::write "
-
-Write the contents of a opened TTTR file to a new TTTR file.  
-
-Parameters
-----------
-* `fn` :  
-    filename  
-* `container_type` :  
-    container type (PTU; HT3; SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
-    @oaram write_a_header if set to false no header is written - Writing correct
-    headers is not implemented. Therefore, the default value is false.  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTR::get_tttr_by_count_rate "
-";
-
-%feature("docstring") TTTR::compute_microtime_histogram "
-
-Computes a histogram of the TTTR data's micro times  
-
-Parameters
-----------
-* `tttr_data` :  
-    a pointer to the TTTR data  
-* `histogram` :  
-    pointer to which the histogram will be written (the memory is allocated but
-    the method)  
-* `n_histogram` :  
-    the number of points in the histogram  
-* `time` :  
-    pointer to the time axis of the histogram (the memory is allocated by the
-    method)  
-* `n_time` :  
-    the number of points in the time axis  
-* `micro_time_coarsening` :  
-    a factor by which the micro times in the TTTR object are divided (default
-    value is 1).  
-";
-
-%feature("docstring") TTTR::append "
-";
-
-%feature("docstring") TTTR::get_tttr_container_type "
-
-Returns
--------
-the container type that was used to open the file  
-";
-
 %feature("docstring") TTTR::read_file "
 
 Reads the TTTR data contained in a file into the TTTR object  
@@ -1667,13 +1529,29 @@ Returns
 Returns 1 in case the file was read without errors. Otherwise 0 is returned.  
 ";
 
-%feature("docstring") TTTR::write_hht3v2_events "
+%feature("docstring") TTTR::append_events "
 ";
 
-%feature("docstring") TTTR::microtime_histogram "
+%feature("docstring") TTTR::append_event "
 ";
 
-%feature("docstring") TTTR::select "
+%feature("docstring") TTTR::append "
+";
+
+%feature("docstring") TTTR::size "
+";
+
+%feature("docstring") TTTR::get_used_routing_channels "
+
+Returns an array containing the routing channel numbers that are contained
+(used) in the TTTR file.  
+
+Parameters
+----------
+* `output` :  
+    Pointer to the output array  
+* `n_output` :  
+    Pointer to the number of elements in the output array  
 ";
 
 %feature("docstring") TTTR::get_macro_time "
@@ -1688,44 +1566,16 @@ Parameters
     Pointer to the number of elements in the output array  
 ";
 
-%feature("docstring") TTTR::write_spc132_events "
-";
+%feature("docstring") TTTR::get_micro_time "
 
-%feature("docstring") TTTR::get_n_events "
-
-Returns the number of events in the TTTR file for cases no selection is
-specified otherwise the number of selected events is returned.  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTR::get_time_window_ranges "
-
-Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
-size, a minimum number of photons in a tw.  
+Returns an array containing the micro times of the valid TTTR events.  
 
 Parameters
 ----------
-* `output[out]` :  
-    Array containing the interleaved start and stop indices of the tws in the
-    TTTR object.  
-* `n_output[out]` :  
-    Length of the output array  
-* `minimum_window_length[in]` :  
-    Minimum length of a tw in units of ms (mandatory).  
-* `maximum_window_length[in]` :  
-    Maximum length of a tw (optional).  
-* `minimum_number_of_photons_in_time_window[in]` :  
-    Minimum number of photons a selected tw contains (optional) in units of
-    seconds  
-* `maximum_number_of_photons_in_time_window[in]` :  
-    Maximum number of photons a selected tw contains (optional)  
-* `invert[in]` :  
-    If set to true, the selection criteria are inverted.  
-";
-
-%feature("docstring") TTTR::size "
+* `output` :  
+    Pointer to the output array  
+* `n_output` :  
+    Pointer to the number of elements in the output array  
 ";
 
 %feature("docstring") TTTR::get_intensity_trace "
@@ -1742,51 +1592,27 @@ Parameters
     the length of the integration time windows in units of milliseconds.  
 ";
 
-%feature("docstring") TTTR::get_selection_by_channel "
+%feature("docstring") TTTR::get_routing_channel "
 
-Get events indices by the routing channel number  
-
-This method returns an array that contains the event / photon indices of events
-with routing channel numbers that are found in the selection input array.  
+Returns an array containing the routing channel numbers of the valid TTTR
+events.  
 
 Parameters
 ----------
 * `output` :  
-    indices of the events  
+    Pointer to the output array  
 * `n_output` :  
-    number of selected events  
-* `input` :  
-    routing channel number for selection of events  
-* `n_input` :  
-    number of routing channels for selection of events  
+    Pointer to the number of elements in the output array  
 ";
 
-%feature("docstring") TTTR::determine_number_of_records_by_file_size "
-
-Determines the number of records in a TTTR files (not for use with HDF5)  
-
-Calculates the number of records in the file based on the file size. if  
+%feature("docstring") TTTR::get_event_type "
 
 Parameters
 ----------
-* `offset` :  
-    is passed the number of records is calculated by the file size the number of
-    bytes in the file - offset and  
-* `bytes_per_record.` :  
-    If  
-* `offset` :  
-    is not specified the current location of the file pointer is used as an
-    offset. If  
-* `bytes_per_record` :  
-    is not specified the attribute value bytes_per_record of the class instance
-    is used.  
-* `offset` :  
-* `bytes_per_record` :  
-";
-
-%feature("docstring") TTTR::~TTTR "
-
-Destructor.  
+* `output` :  
+    Pointer to the output array  
+* `n_output` :  
+    Pointer to the number of elements in the output array  
 ";
 
 %feature("docstring") TTTR::get_number_of_micro_time_channels "
@@ -1797,6 +1623,23 @@ clocks.
 Returns
 -------
 maximum valid number of micro time channels  
+";
+
+%feature("docstring") TTTR::get_n_valid_events "
+
+Returns
+-------
+number of valid events in the TTTR file  
+";
+
+%feature("docstring") TTTR::get_tttr_container_type "
+
+Returns
+-------
+the container type that was used to open the file  
+";
+
+%feature("docstring") TTTR::select "
 ";
 
 %feature("docstring") TTTR::TTTR "
@@ -1903,19 +1746,153 @@ Parameters
     channels  
 ";
 
-%feature("docstring") TTTR::get_micro_time "
+%feature("docstring") TTTR::~TTTR "
 
-Returns an array containing the micro times of the valid TTTR events.  
+Destructor.  
+";
+
+%feature("docstring") TTTR::get_filename "
+
+getFilename Getter for the filename of the TTTR file  
+
+Returns
+-------
+The filename of the TTTR file  
+";
+
+%feature("docstring") TTTR::get_tttr_by_selection "
+
+Get a ptr to a TTTR object that is based on a selection on the current TTTR
+object. A selection is an array of indices of the TTTR events.  
+
+Parameters
+----------
+* `selection` :  
+* `n_selection` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTR::get_selection_by_channel "
+
+Get events indices by the routing channel number  
+
+This method returns an array that contains the event / photon indices of events
+with routing channel numbers that are found in the selection input array.  
 
 Parameters
 ----------
 * `output` :  
-    Pointer to the output array  
+    indices of the events  
 * `n_output` :  
-    Pointer to the number of elements in the output array  
+    number of selected events  
+* `input` :  
+    routing channel number for selection of events  
+* `n_input` :  
+    number of routing channels for selection of events  
+";
+
+%feature("docstring") TTTR::get_tttr_by_channel "
+";
+
+%feature("docstring") TTTR::get_selection_by_count_rate "
+
+List of indices where the count rate is smaller than a maximum count rate  
+
+The count rate is specified by providing a time window that slides over the time
+array and the maximum number of photons within the time window.  
+
+Parameters
+----------
+* `output` :  
+    the output array that will contain the selected indices  
+* `n_output` :  
+    the number of elements in the output array  
+* `time_window` :  
+    the length of the time window in milliseconds  
+* `n_ph_max` :  
+    the maximum number of photons within a time window  
+";
+
+%feature("docstring") TTTR::get_tttr_by_count_rate "
+";
+
+%feature("docstring") TTTR::get_time_window_ranges "
+
+Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
+size, a minimum number of photons in a tw.  
+
+Parameters
+----------
+* `output[out]` :  
+    Array containing the interleaved start and stop indices of the tws in the
+    TTTR object.  
+* `n_output[out]` :  
+    Length of the output array  
+* `minimum_window_length[in]` :  
+    Minimum length of a tw in units of ms (mandatory).  
+* `maximum_window_length[in]` :  
+    Maximum length of a tw (optional).  
+* `minimum_number_of_photons_in_time_window[in]` :  
+    Minimum number of photons a selected tw contains (optional) in units of
+    seconds  
+* `maximum_number_of_photons_in_time_window[in]` :  
+    Maximum number of photons a selected tw contains (optional)  
+* `invert[in]` :  
+    If set to true, the selection criteria are inverted.  
+";
+
+%feature("docstring") TTTR::get_header "
+
+Get header returns the header (if present) as a map of strings.  
+";
+
+%feature("docstring") TTTR::get_n_events "
+
+Returns the number of events in the TTTR file for cases no selection is
+specified otherwise the number of selected events is returned.  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTR::write "
+
+Write the contents of a opened TTTR file to a new TTTR file.  
+
+Parameters
+----------
+* `fn` :  
+    filename  
+* `container_type` :  
+    container type (PTU; HT3; SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+    write_a_header if set to false no header is written - Writing correct
+    headers is not implemented. Therefore, the default value is false.  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTR::write_spc132_events "
+";
+
+%feature("docstring") TTTR::write_hht3v2_events "
 ";
 
 %feature("docstring") TTTR::write_header "
+";
+
+%feature("docstring") TTTR::shift_macro_time "
+
+Shift the macro time by a constant  
+
+Parameters
+----------
+* `shift` :  
+";
+
+%feature("docstring") TTTR::microtime_histogram "
 ";
 
 %feature("docstring") TTTR::mean_lifetime "
@@ -1924,51 +1901,74 @@ Compute the mean lifetime by the moments of the decay and the instrument
 response function.  
 ";
 
-%feature("docstring") TTTR::get_n_valid_events "
+%feature("docstring") TTTR::determine_number_of_records_by_file_size "
+
+Determines the number of records in a TTTR files (not for use with HDF5)  
+
+Calculates the number of records in the file based on the file size. if  
+
+Parameters
+----------
+* `offset` :  
+    is passed the number of records is calculated by the file size the number of
+    bytes in the file - offset and  
+* `bytes_per_record.` :  
+    If  
+* `offset` :  
+    is not specified the current location of the file pointer is used as an
+    offset. If  
+* `bytes_per_record` :  
+    is not specified the attribute value bytes_per_record of the class instance
+    is used.  
+* `offset` :  
+* `bytes_per_record` :  
+";
+
+%feature("docstring") TTTR::compute_microtime_histogram "
+
+Computes a histogram of the TTTR data's micro times  
+
+Parameters
+----------
+* `tttr_data` :  
+    a pointer to the TTTR data  
+* `histogram` :  
+    pointer to which the histogram will be written (the memory is allocated but
+    the method)  
+* `n_histogram` :  
+    the number of points in the histogram  
+* `time` :  
+    pointer to the time axis of the histogram (the memory is allocated by the
+    method)  
+* `n_time` :  
+    the number of points in the time axis  
+* `micro_time_coarsening` :  
+    a factor by which the micro times in the TTTR object are divided (default
+    value is 1).  
+";
+
+%feature("docstring") TTTR::compute_mean_lifetime "
+
+Compute a mean lifetime by the moments of the decay and the instrument response
+function.  
+
+The computed lifetime is the first lifetime determined by the method of moments
+(Irvin Isenberg, 1973, Biophysical journal).  
+
+Parameters
+----------
+* `tttr_data` :  
+    TTTR object for which the lifetime is computed  
+* `tttr_irf` :  
+    TTTR object that is used as IRF  
+* `m0_irf` :  
+    Number of counts in the IRF (used if no TTTR object for IRF provided.  
+* `m1_irf` :  
+    First moment of the IRF (used if no TTTR object for IRF provided.  
 
 Returns
 -------
-number of valid events in the TTTR file  
-";
-
-%feature("docstring") TTTR::get_routing_channel "
-
-Returns an array containing the routing channel numbers of the valid TTTR
-events.  
-
-Parameters
-----------
-* `output` :  
-    Pointer to the output array  
-* `n_output` :  
-    Pointer to the number of elements in the output array  
-";
-
-%feature("docstring") TTTR::get_used_routing_channels "
-
-Returns an array containing the routing channel numbers that are contained
-(used) in the TTTR file.  
-
-Parameters
-----------
-* `output` :  
-    Pointer to the output array  
-* `n_output` :  
-    Pointer to the number of elements in the output array  
-";
-
-%feature("docstring") TTTR::get_tttr_by_channel "
-";
-
-%feature("docstring") TTTR::append_events "
-";
-
-%feature("docstring") TTTR::get_header "
-
-Get header returns the header (if present) as a map of strings.  
-";
-
-%feature("docstring") TTTR::append_event "
+The computed lifetime  
 ";
 
 // File: class_t_t_t_r_header.xml
@@ -1977,6 +1977,154 @@ Get header returns the header (if present) as a map of strings.
 %feature("docstring") TTTRHeader "
 
 C++ includes: TTTRHeader.h
+";
+
+%feature("docstring") TTTRHeader::get_tttr_record_type "
+
+TTTR record type  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_tttr_record_type "
+
+Parameters
+----------
+* `v` :  
+    record type  
+";
+
+%feature("docstring") TTTRHeader::get_tttr_container_type "
+
+The container type  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_tttr_container_type "
+
+Parameters
+----------
+* `v` :  
+    container type  
+";
+
+%feature("docstring") TTTRHeader::get_bytes_per_record "
+
+Stores the bytes per TTTR record of the associated TTTR file This attribute is
+changed when a header is read  
+";
+
+%feature("docstring") TTTRHeader::end "
+";
+
+%feature("docstring") TTTRHeader::size "
+
+Number of meta data entries  
+";
+
+%feature("docstring") TTTRHeader::get_number_of_micro_time_channels "
+
+The total (possible) number of micro time channels.  
+
+The number of TAC channels (TAC - Time to analog converter) refers to the number
+of micro time channels.  
+";
+
+%feature("docstring") TTTRHeader::get_macro_time_resolution "
+
+Resolution for the macro time in nanoseconds.  
+";
+
+%feature("docstring") TTTRHeader::get_micro_time_resolution "
+
+Resolution for the micro time in nanoseconds.  
+";
+
+%feature("docstring") TTTRHeader::get_effective_number_of_micro_time_channels "
+
+The number of micro time channels that fit between two macro times.  
+
+The total (possible) number of TAC channels can exceed the number that fit
+between two macro time channels. This function returns the effective number,
+i.e., the number of micro time channels between two macro times. The micro time
+channels that are outside of this bound should (usually) not be filled.  
+
+Returns
+-------
+effective_tac_channels (that fit between to macro times)  
+";
+
+%feature("docstring") TTTRHeader::getTTTRRecordType "
+
+Returns
+-------
+The TTTR container type of the associated TTTR file as a char  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+
+Default constructor  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+
+Copy constructor.  
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::~TTTRHeader "
+";
+
+%feature("docstring") TTTRHeader::get_json "
+
+Get a representation of the TTTRHeader meta data as a JSON string  
+
+Parameters
+----------
+* `tag_name` :  
+    name of requested tag (if no name is provided) the entire information in the
+    TTTRHeader is returned  
+* `idx` :  
+    index of the tag  
+* `indent` :  
+    an integer that controls the indent in the returned JSON string  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRHeader::set_json "
+
+Set / update the TTTRHeader meta data using a JSON string  
+
+Parameters
+----------
+* `json_string` :  
+";
+
+%feature("docstring") TTTRHeader::get_tag "
+
+Get a tag / entry from the meta data list in a JSON dict  
+
+Parameters
+----------
+* `json_data` :  
+* `name` :  
+* `idx` :  
+
+Returns
+-------  
 ";
 
 %feature("docstring") TTTRHeader::find_tag "
@@ -2008,84 +2156,6 @@ Parameters
 * `idx` :  
 ";
 
-%feature("docstring") TTTRHeader::end "
-";
-
-%feature("docstring") TTTRHeader::get_macro_time_resolution "
-
-Resolution for the macro time in nanoseconds.  
-";
-
-%feature("docstring") TTTRHeader::write_spc132_header "
-
-Write a spc132 header to a file  
-
-WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
-
-Parameters
-----------
-* `fn` :  
-    filename  
-* `header` :  
-    pointer to the TTTRHeader object that is written to the file  
-* `modes` :  
-    the writing modes (default 'wb')  
-";
-
-%feature("docstring") TTTRHeader::read_bh132_header "
-
-Reads the header of a Becker&Hickel SPC132 file and sets the reading routing  
-
-Parameters
-----------
-* `fpin` :  
-* `rewind` :  
-* `tttr_record_type` :  
-* `data` :  
-    JSON dictionary that will contain the header information  
-";
-
-%feature("docstring") TTTRHeader::get_json "
-
-Get a representation of the TTTRHeader meta data as a JSON string  
-
-Parameters
-----------
-* `tag_name` :  
-    name of requested tag (if no name is provided) the entire information in the
-    TTTRHeader is returned  
-* `idx` :  
-    index of the tag  
-* `indent` :  
-    an integer that controls the indent in the returned JSON string  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTRHeader::get_tag "
-
-Get a tag / entry from the meta data list in a JSON dict  
-
-Parameters
-----------
-* `json_data` :  
-* `name` :  
-* `idx` :  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTRHeader::set_json "
-
-Set / update the TTTRHeader meta data using a JSON string  
-
-Parameters
-----------
-* `json_string` :  
-";
-
 %feature("docstring") TTTRHeader::read_ptu_header "
 
 Reads the header of a ptu file and sets the reading routing for  
@@ -2104,23 +2174,38 @@ Returns
 The position of the file pointer at the end of the header  
 ";
 
-%feature("docstring") TTTRHeader::get_effective_number_of_micro_time_channels "
+%feature("docstring") TTTRHeader::read_ht3_header "
 
-The number of micro time channels that fit between two macro times.  
+Reads the header of a ht3 file and sets the reading routing for  
 
-The total (possible) number of TAC channels can exceed the number that fit
-between two macro time channels. This function returns the effective number,
-i.e., the number of micro time channels between two macro times. The micro time
-channels that are outside of this bound should (usually) not be filled.  
+Parameters
+----------
+* `fpin` :  
+* `rewind` :  
+* `tttr_record_type` :  
+* `data` :  
 
 Returns
 -------
-effective_tac_channels (that fit between to macro times)  
+The position of the file pointer at the end of the header  
 ";
 
-%feature("docstring") TTTRHeader::write_ht3_header "
+%feature("docstring") TTTRHeader::read_bh132_header "
 
-Write a HT3 header to a file  
+Reads the header of a Becker&Hickel SPC132 file and sets the reading routing  
+
+Parameters
+----------
+* `fpin` :  
+* `rewind` :  
+* `tttr_record_type` :  
+* `data` :  
+    JSON dictionary that will contain the header information  
+";
+
+%feature("docstring") TTTRHeader::write_spc132_header "
+
+Write a spc132 header to a file  
 
 WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
 
@@ -2132,12 +2217,6 @@ Parameters
     pointer to the TTTRHeader object that is written to the file  
 * `modes` :  
     the writing modes (default 'wb')  
-";
-
-%feature("docstring") TTTRHeader::get_bytes_per_record "
-
-Stores the bytes per TTTR record of the associated TTTR file This attribute is
-changed when a header is read  
 ";
 
 %feature("docstring") TTTRHeader::write_ptu_header "
@@ -2156,99 +2235,20 @@ Parameters
     the writing modes (default 'wb')  
 ";
 
-%feature("docstring") TTTRHeader::set_tttr_container_type "
+%feature("docstring") TTTRHeader::write_ht3_header "
+
+Write a HT3 header to a file  
+
+WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
 
 Parameters
 ----------
-* `v` :  
-    container type  
-";
-
-%feature("docstring") TTTRHeader::TTTRHeader "
-
-Default constructor  
-";
-
-%feature("docstring") TTTRHeader::TTTRHeader "
-";
-
-%feature("docstring") TTTRHeader::TTTRHeader "
-
-Copy constructor.  
-";
-
-%feature("docstring") TTTRHeader::TTTRHeader "
-";
-
-%feature("docstring") TTTRHeader::TTTRHeader "
-";
-
-%feature("docstring") TTTRHeader::set_tttr_record_type "
-
-Parameters
-----------
-* `v` :  
-    record type  
-";
-
-%feature("docstring") TTTRHeader::get_tttr_record_type "
-
-TTTR record type  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTRHeader::getTTTRRecordType "
-
-Returns
--------
-The TTTR container type of the associated TTTR file as a char  
-";
-
-%feature("docstring") TTTRHeader::get_number_of_micro_time_channels "
-
-The total (possible) number of micro time channels.  
-
-The number of TAC channels (TAC - Time to analog converter) refers to the number
-of micro time channels.  
-";
-
-%feature("docstring") TTTRHeader::size "
-
-Number of meta data entries  
-";
-
-%feature("docstring") TTTRHeader::get_tttr_container_type "
-
-The container type  
-
-Returns
--------  
-";
-
-%feature("docstring") TTTRHeader::~TTTRHeader "
-";
-
-%feature("docstring") TTTRHeader::get_micro_time_resolution "
-
-Resolution for the micro time in nanoseconds.  
-";
-
-%feature("docstring") TTTRHeader::read_ht3_header "
-
-Reads the header of a ht3 file and sets the reading routing for  
-
-Parameters
-----------
-* `fpin` :  
-* `rewind` :  
-* `tttr_record_type` :  
-* `data` :  
-
-Returns
--------
-The position of the file pointer at the end of the header  
+* `fn` :  
+    filename  
+* `header` :  
+    pointer to the TTTRHeader object that is written to the file  
+* `modes` :  
+    the writing modes (default 'wb')  
 ";
 
 // File: class_t_t_t_r_range.xml
@@ -2257,72 +2257,6 @@ The position of the file pointer at the end of the header
 %feature("docstring") TTTRRange "
 
 C++ includes: TTTRRange.h
-";
-
-%feature("docstring") TTTRRange::get_stop_time "
-
-The stop time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_start_time "
-
-The start time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::shift_start_time "
-";
-
-%feature("docstring") TTTRRange::set_start_time "
-
-The start time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::update "
-
-Update start, stop and the start and stop using the tttr_indices attribute  
-
-Parameters
-----------
-* `tttr_data` :  
-    [in] the TTTR dataset that is used to determine the start and stop time by
-    the TTTR macro time.  
-* `from_tttr_indices` :  
-    [in] if set to true (default is true) the start stop indices and the start
-    stop time are updated from the tttr_indices attribute. Otherwise, the start
-    stop times are updated from the tttr object using the current start stop  
-";
-
-%feature("docstring") TTTRRange::get_stop "
-
-The stop index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::set_stop_time "
-
-The stop time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::size "
-";
-
-%feature("docstring") TTTRRange::clear "
-
-Clears the TTTR index vector.  
-";
-
-%feature("docstring") TTTRRange::set_stop "
-
-The stop index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_start_stop "
-
-A vector of the start and the stop TTTR index of the range.  
-";
-
-%feature("docstring") TTTRRange::get_start_stop_time "
-
-A vector of the start and stop time.  
 ";
 
 %feature("docstring") TTTRRange::TTTRRange "
@@ -2347,14 +2281,22 @@ Parameters
 Copy constructor.  
 ";
 
-%feature("docstring") TTTRRange::get_start "
-
-The start index of the TTTR range object.  
+%feature("docstring") TTTRRange::size "
 ";
 
-%feature("docstring") TTTRRange::append "
+%feature("docstring") TTTRRange::get_tttr_indices "
 
-Append a index to the TTTR index vector.  
+A vector containing a set of TTTR indices that was assigned to the range.  
+";
+
+%feature("docstring") TTTRRange::get_start_stop "
+
+A vector of the start and the stop TTTR index of the range.  
+";
+
+%feature("docstring") TTTRRange::get_start_stop_time "
+
+A vector of the start and stop time.  
 ";
 
 %feature("docstring") TTTRRange::get_duration "
@@ -2367,9 +2309,67 @@ The difference between the start and the stop time of a range.
 The start index of the TTTR range object.  
 ";
 
-%feature("docstring") TTTRRange::get_tttr_indices "
+%feature("docstring") TTTRRange::get_start "
 
-A vector containing a set of TTTR indices that was assigned to the range.  
+The start index of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::set_stop "
+
+The stop index of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::get_stop "
+
+The stop index of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::set_stop_time "
+
+The stop time of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::get_stop_time "
+
+The stop time of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::set_start_time "
+
+The start time of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::get_start_time "
+
+The start time of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::append "
+
+Append a index to the TTTR index vector.  
+";
+
+%feature("docstring") TTTRRange::clear "
+
+Clears the TTTR index vector.  
+";
+
+%feature("docstring") TTTRRange::shift_start_time "
+";
+
+%feature("docstring") TTTRRange::update "
+
+Update start, stop and the start and stop using the tttr_indices attribute  
+
+Parameters
+----------
+* `tttr_data` :  
+    [in] the TTTR dataset that is used to determine the start and stop time by
+    the TTTR macro time.  
+* `from_tttr_indices` :  
+    [in] if set to true (default is true) the start stop indices and the start
+    stop time are updated from the tttr_indices attribute. Otherwise, the start
+    stop times are updated from the tttr object using the current start stop  
 ";
 
 // File: _c_l_s_m_frame_8h.xml
@@ -2419,6 +2419,12 @@ Parameters
 
 // File: _histogram_axis_8h.xml
 
+%feature("docstring") linspace "
+";
+
+%feature("docstring") logspace "
+";
+
 %feature("docstring") search_bin_idx "
 
 Searches for the bin index of a value within a list of bin edges  
@@ -2442,12 +2448,6 @@ Returns
 -------
 negative value if the search value is out of the bounds. Otherwise the bin
 number is returned.  
-";
-
-%feature("docstring") logspace "
-";
-
-%feature("docstring") linspace "
 ";
 
 %feature("docstring") calc_bin_idx "
@@ -2475,30 +2475,6 @@ Returns
 // File: _pda_callback_8h.xml
 
 // File: _t_t_t_r_8h.xml
-
-%feature("docstring") compute_intensity_trace "
-
-Computes a intensity trace for a sequence of time events  
-
-The intensity trace is computed by splitting the trace of time events into time
-windows (tws) with a minimum specified length and counts the number of photons
-in each tw.  
-
-Parameters
-----------
-* `output` :  
-    number of photons in each time window  
-* `n_output` :  
-    number of time windows  
-* `input` :  
-    array of time points  
-* `n_input` :  
-    number number of time points  
-* `time_window` :  
-    time window size in units of the macro time resolution  
-* `macro_time_resolution` :  
-    the resolution of the macro time clock  
-";
 
 %feature("docstring") selection_by_count_rate "
 
@@ -2531,6 +2507,58 @@ Parameters
 * `invert` :  
     if invert is true (default false) only indices where the number of photons
     exceeds n_ph_max are selected  
+";
+
+%feature("docstring") ranges_by_time_window "
+
+Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
+size, a minimum number of photons in a tw.  
+
+Parameters
+----------
+* `output` :  
+    [out] Array containing the interleaved start and stop indices of the tws in
+    the TTTR object.  
+* `n_output` :  
+    [out] Length of the output array  
+* `input` :  
+    [in] Array containing the macro times  
+* `n_input` :  
+    [in] Number of macro times  
+* `minimum_window_length` :  
+    [in] Minimum length of a tw (mandatory).  
+* `maximum_window_length` :  
+    [in] Maximum length of a tw (optional).  
+* `minimum_number_of_photons_in_time_window` :  
+    [in] Minimum number of photons a selected tw contains (optional)  
+* `maximum_number_of_photons_in_time_window` :  
+    [in] Maximum number of photons a selected tw contains (optional)  
+* `invert` :  
+    [in] If set to true, the selection criteria are inverted.  
+";
+
+%feature("docstring") compute_intensity_trace "
+
+Computes a intensity trace for a sequence of time events  
+
+The intensity trace is computed by splitting the trace of time events into time
+windows (tws) with a minimum specified length and counts the number of photons
+in each tw.  
+
+Parameters
+----------
+* `output` :  
+    number of photons in each time window  
+* `n_output` :  
+    number of time windows  
+* `input` :  
+    array of time points  
+* `n_input` :  
+    number number of time points  
+* `time_window` :  
+    time window size in units of the macro time resolution  
+* `macro_time_resolution` :  
+    the resolution of the macro time clock  
 ";
 
 %feature("docstring") get_ranges_channel "
@@ -2571,34 +2599,6 @@ Parameters
 %feature("docstring") get_array "
 ";
 
-%feature("docstring") ranges_by_time_window "
-
-Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
-size, a minimum number of photons in a tw.  
-
-Parameters
-----------
-* `output` :  
-    [out] Array containing the interleaved start and stop indices of the tws in
-    the TTTR object.  
-* `n_output` :  
-    [out] Length of the output array  
-* `input` :  
-    [in] Array containing the macro times  
-* `n_input` :  
-    [in] Number of macro times  
-* `minimum_window_length` :  
-    [in] Minimum length of a tw (mandatory).  
-* `maximum_window_length` :  
-    [in] Maximum length of a tw (optional).  
-* `minimum_number_of_photons_in_time_window` :  
-    [in] Minimum number of photons a selected tw contains (optional)  
-* `maximum_number_of_photons_in_time_window` :  
-    [in] Maximum number of photons a selected tw contains (optional)  
-* `invert` :  
-    [in] If set to true, the selection criteria are inverted.  
-";
-
 // File: _t_t_t_r_header_8h.xml
 
 // File: _t_t_t_r_header_types_8h.xml
@@ -2607,19 +2607,13 @@ Parameters
 
 // File: _t_t_t_r_record_reader_8h.xml
 
-%feature("docstring") ProcessPHT2 "
+%feature("docstring") ProcessSPC130 "
 ";
 
-%feature("docstring") ProcessPHT3 "
+%feature("docstring") ProcessSPC600_4096 "
 ";
 
 %feature("docstring") ProcessSPC600_256 "
-";
-
-%feature("docstring") ProcessHHT3v2 "
-";
-
-%feature("docstring") ProcessHHT3v1 "
 ";
 
 %feature("docstring") ProcessHHT2v2 "
@@ -2628,10 +2622,16 @@ Parameters
 %feature("docstring") ProcessHHT2v1 "
 ";
 
-%feature("docstring") ProcessSPC600_4096 "
+%feature("docstring") ProcessHHT3v2 "
 ";
 
-%feature("docstring") ProcessSPC130 "
+%feature("docstring") ProcessHHT3v1 "
+";
+
+%feature("docstring") ProcessPHT3 "
+";
+
+%feature("docstring") ProcessPHT2 "
 ";
 
 // File: _t_t_t_r_record_types_8h.xml

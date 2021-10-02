@@ -219,13 +219,8 @@ void CLSMImage::get_line_edges(
         int marker_event,
         std::string reading_routine
 ) {
-    signed char *routing_channels;
-    int n_events;
-    tttr->get_routing_channel(&routing_channels, &n_events);
-    unsigned short *micro_times;
-    tttr->get_micro_time(&micro_times, &n_events);
     std::vector<int> line_edges;
-    if (stop_event < 0) stop_event = n_events;
+    if (stop_event < 0) stop_event = tttr->n_valid_events;
 
     if (reading_routine == "SP5"){
         line_edges.emplace_back(start_event);
@@ -395,12 +390,14 @@ void CLSMImage::fill_pixels(
             size_t n_pixels_in_line = line->pixels.size();
 
             // iterate though events in the line
-            for(auto event_i=line->_start; event_i < line->_stop; event_i++){
+            int start_idx = line->get_start();
+            int stop_idx = line->get_stop();
+            for(auto event_i=start_idx; event_i < stop_idx; event_i++){
                 if (tttr_data->event_types[event_i] != RECORD_PHOTON) continue;
                 auto c = tttr_data->routing_channels[event_i];
                 for(auto &ci : channels){
                     if(c == ci){
-                        auto line_time = (tttr_data->macro_times[event_i] - line->_start_time);
+                        auto line_time = (tttr_data->macro_times[event_i] - line->get_start_time());
                         auto pixel_nbr = line_time / pixel_duration;
                         if(pixel_nbr < n_pixels_in_line) line->pixels[pixel_nbr]->append(event_i);
                         break;

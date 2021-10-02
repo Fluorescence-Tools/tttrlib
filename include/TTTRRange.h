@@ -48,7 +48,7 @@ public:
             unsigned int start_time = 0,
             unsigned int stop_time = 0,
             TTTRRange *other = nullptr,
-            int pre_reserve = 8
+            int pre_reserve = 4
     );
 
     virtual size_t size(){
