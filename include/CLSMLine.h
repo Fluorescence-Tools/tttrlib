@@ -17,7 +17,7 @@ class CLSMLine : public TTTRRange{
 
 private:
 
-    std::vector<CLSMPixel*> pixels;
+    std::vector<CLSMPixel> pixels;
     int pixel_duration = 1;
 
 public:
@@ -27,7 +27,7 @@ public:
         return pixels.size();
     }
 
-    std::vector<CLSMPixel*> get_pixels(){
+    std::vector<CLSMPixel> get_pixels(){
         return pixels;
     }
 
@@ -37,15 +37,12 @@ public:
 
     CLSMLine() = default;
 
-    CLSMLine(const CLSMLine& old_line, bool fill = false) : TTTRRange(old_line){
+    CLSMLine(const CLSMLine& old_line) : TTTRRange(old_line){
         // private attributes
-        for(auto p: old_line.pixels){
-            if(fill){
-                pixels.emplace_back(new CLSMPixel(*p));
-            }
-            else{
-                pixels.emplace_back(new CLSMPixel());
-            }
+        pixels.resize(old_line.pixels.size());
+        int i = 0;
+        for(auto const p: old_line.pixels){
+            pixels[++i] = p;
         }
     }
 
@@ -58,25 +55,19 @@ public:
             unsigned int n_pixel
     ){
         this->_start = line_start;
-        while(pixels.size() < n_pixel){
-            auto* pixel = new CLSMPixel();
-            pixels.emplace_back(pixel);
-        }
+        pixels.resize(n_pixel);
     }
 
     virtual ~CLSMLine(){
-        for(auto p: pixels){
-            delete(p);
-        }
     }
 
-    void append(CLSMPixel* pixel){
+    void append(CLSMPixel pixel){
         pixels.emplace_back(pixel);
         pixel_duration = (int) (get_duration() / size());
     }
 
     CLSMPixel* operator[](unsigned int i_pixel){
-        return pixels[i_pixel];
+        return &pixels[i_pixel];
     }
 
 };

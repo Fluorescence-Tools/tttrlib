@@ -13,6 +13,7 @@ class CLSMPixel : public TTTRRange{
     friend class CLSMLine;
     friend class CLSMImage;
 
+public:
     virtual ~CLSMPixel() = default;
 
     CLSMPixel(const CLSMPixel& p2) : TTTRRange(p2){};
