@@ -57,8 +57,7 @@ test:linux:
     - mamba install python tttrlib nose scipy
     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
     - |
-      cd test
-      nosetests
+      nosetests test
 
 deploy:conda:
   stage: deploy
