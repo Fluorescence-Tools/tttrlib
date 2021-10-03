@@ -1,0 +1,18 @@
+{
+  "spc132_filename" : "./tttr-data/bh/bh_spc132.spc",
+  "spc630_filename" : "./tttr-data/bh/bh_spc630_256.spc",
+  "photon_hdf_filename" : "./tttr-data/hdf/1a_1b_Mix.hdf5",
+  "ptu_hh_t2_filename" : "./tttr-data/pq/ptu/pq_ptu_hh_t2.ptu",
+  "ptu_hh_t3_filename" : "./tttr-data/pq/ptu/pq_ptu_hh_t3.ptu",
+  "ht3_clsm_filename" : "./tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3",
+  "make_references": false,
+  "test_files": [
+      ["./tttr-data/bh/bh_spc132.spc", "SPC-130"],
+      ["./tttr-data/bh/bh_spc132.spc", "SPC-130"],
+      ["./tttr-data/bh/bh_spc630_256.spc", "SPC-600_256"],
+      ["./tttr-data/hdf/1a_1b_Mix.hdf5", "PHOTON-HDF5"],
+      ["./tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3", "HT3"],
+      ["./tttr-data/pq/ptu/pq_ptu_hh_t2.ptu", "PTU"],
+      ["./tttr-data/pq/ptu/pq_ptu_hh_t3.ptu", "PTU"]
+  ]
+}
