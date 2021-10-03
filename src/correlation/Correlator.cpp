@@ -338,7 +338,6 @@ inline void ccf_correlate(
     start_2 = std::max(start_2, (size_t) 0);
     end_1 = std::min(nt1, end_1);
     end_2 = std::min(nt2, end_2);
-    std::clog << i_casc << std::endl;
     auto scale = (unsigned long long) pow(2.0, i_casc);
     size_t tau_offset = taus[i_casc * n_bins];
     size_t offset = tau_offset / scale;
