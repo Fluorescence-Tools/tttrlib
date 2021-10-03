@@ -41,8 +41,9 @@ public:
         // private attributes
         pixels.resize(old_line.pixels.size());
         int i = 0;
-        for(auto const p: old_line.pixels){
-            pixels[++i] = p;
+        for(auto &p: old_line.pixels){
+            pixels[i] = p;
+            i += 1;
         }
     }
 

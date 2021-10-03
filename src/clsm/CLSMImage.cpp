@@ -336,10 +336,7 @@ void CLSMImage::remove_incomplete_frames(){
         if(frame->lines.size() == n_lines){
             complete_frames.push_back(frame);
         } else{
-            std::clog << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() <<
-                      " is incomplete only "<<
-                      frame->lines.size() << " / " << n_lines << " lines."
-                      << std::endl;
+            std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() << " incomplete only "<< frame->lines.size() << " / " << n_lines << " lines." << std::endl;
             delete(frame);
         }
         i_frame++;
@@ -476,7 +473,6 @@ void CLSMImage::get_fluorescence_decay_image(
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
                                    i_line  * (n_pixel * n_tac) +
                                    i_pixel * (n_tac);
-
                 for(auto i : pixel._tttr_indices){
                     size_t i_tac = tttr_data->micro_times[i] / micro_time_coarsening;
                     t[pixel_nbr + i_tac] += 1;
@@ -811,7 +807,11 @@ void CLSMImage::get_mean_lifetime_image(
                 }
                 double g1 = mu0 / m0_irf;
                 double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-                t[pixel_nbr] = g2 / g1 * dt * (mu0 > minimum_number_of_photons);
+                if (mu0 > minimum_number_of_photons){
+                    t[pixel_nbr] = g2 / g1 * dt;
+                } else{
+                    t[pixel_nbr] = -1;
+                }
             }
         }
     }
