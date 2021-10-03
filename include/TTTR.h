@@ -669,19 +669,13 @@ public:
      * headers is not implemented. Therefore, the default value is false.
      * @return
      */
-    bool write(
-            std::string filename,
-            TTTRHeader* header = nullptr
-                    );
+    bool write(std::string filename, TTTRHeader* header = nullptr);
 
     void write_spc132_events(FILE* fp, TTTR* tttr);
 
     void write_hht3v2_events(FILE* fp, TTTR* tttr);
 
-    void write_header(
-            std::string &fn,
-            TTTRHeader* header = nullptr
-            );
+    void write_header(std::string &fn, TTTRHeader* header = nullptr);
 
     /*!
      * Shift the macro time by a constant
