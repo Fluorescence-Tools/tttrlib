@@ -60,7 +60,6 @@ protected:
     int tttr_container_type;
     int tttr_record_type;
 
-
     /*!
      * Marks the end of the header in the file (position in file)
      */
@@ -113,24 +112,7 @@ public:
             nlohmann::json json_data,
             const std::string &name,
             int idx = -1
-            ){
-#ifdef VERBOSE_TTTRLIB
-        std::clog << "-- GET_TAG" << name << std::endl;
-#endif
-        for (auto& it : json_data["tags"].items()) {
-#ifdef VERBOSE_TTTRLIB
-            std::clog << it << "\n";
-#endif
-            if(it.value()["name"] == name){
-                if((idx < 0) || (idx == it.value()["idx"])){
-                    return it.value();
-                }
-            }
-        }
-        std::cerr << "ERROR: TTTR-TAG " << name << ":" << idx << " not found." << std::endl;
-        nlohmann::json re = {};
-        return re;
-    }
+    );
 
     /*!
      * Find the index of a tag in the JSON data by name type and index
@@ -144,24 +126,7 @@ public:
         nlohmann::json &json_data,
         const std::string &name,
         int idx = -1
-    ){
-//#ifdef VERBOSE_TTTRLIB
-//        std::clog << "FIND_TAG: " << name << ":" << idx << std::endl;
-//#endif
-        int tag_idx = -1;
-        int curr_idx = 0;
-        for (auto& it : json_data["tags"].items()) {
-            if((it.value()["name"] == name) && (it.value()["idx"] == idx)){
-                tag_idx = curr_idx;
-                break;
-            }
-            curr_idx++;
-        }
-//#ifdef VERBOSE_TTTRLIB
-//        std::clog << "Found at idx: " << tag_idx << std::endl;
-//#endif
-        return tag_idx;
-    }
+    );
 
     /*!
      * Add a meta data tag. If the tag already exists the value of the meta data
@@ -179,41 +144,7 @@ public:
             boost::any value,
             unsigned int type = tyAnsiString,
             int idx = -1
-    ){
-        nlohmann::json tag;
-        tag["type"] = type;
-        tag["name"] = name;
-        tag["idx"] = idx;
-        if(type == tyEmpty8){
-            tag["value"] = nullptr;
-        } else if(type == tyBool8) {
-            tag["value"] = boost::any_cast<bool>(value);
-        } else if((type == tyInt8) || (type == tyBitSet64) || (type == tyColor8)) {
-            tag["value"] = boost::any_cast<int>(value);
-        } else if((type == tyFloat8) || (type == tyTDateTime)) {
-            tag["value"] = boost::any_cast<double>(value);
-        } else if(type == tyFloat8Array) {
-            tag["value"] = boost::any_cast<std::vector<double>>(value);
-        } else if(type == tyAnsiString){
-            tag["value"] = boost::any_cast<std::string>(value);
-        } else if(type == tyWideString){
-            //
-            tag["value"] = boost::any_cast<std::string>(value);
-        } else if(type == tyBinaryBlob){
-            tag["value"] = boost::any_cast<std::vector<int32_t>>(value);
-        } else{
-            tag["value"] = std::to_string(boost::any_cast<int>(value));
-        }
-        int tag_idx = find_tag(json_data, name, idx);
-        if(tag_idx < 0){
-            json_data["tags"].emplace_back(tag);
-        } else{
-            json_data["tags"][tag_idx] = tag;
-        }
-#ifdef VERBOSE_TTTRLIB
-        std::clog << "ADD_TAG: " << tag << std::endl;
-#endif
-    }
+    );
 
     /*!
      * Stores the bytes per TTTR record of the associated TTTR file
@@ -288,9 +219,7 @@ public:
      * Default constructor
      */
     TTTRHeader();
-    TTTRHeader(int tttr_container_type) : TTTRHeader(){
-        this->tttr_container_type = tttr_container_type;
-    };
+    TTTRHeader(int tttr_container_type);
 
     /// Copy constructor
     TTTRHeader(const TTTRHeader &p2);
@@ -410,16 +339,7 @@ public:
      * JSON string
      * @return
      */
-    std::string get_json(std::string tag_name="", int idx=-1, int indent=1){
-        std::string s;
-        if(tag_name.empty()){
-            s = json_data.dump(indent);
-        } else{
-            int tag_idx = find_tag(json_data, tag_name, idx);
-            s = json_data["tags"][tag_idx].dump(indent);
-        }
-        return s;
-    }
+    std::string get_json(std::string tag_name="", int idx=-1, int indent=1);
 
     /*!
      * Set / update the TTTRHeader meta data using a JSON string
