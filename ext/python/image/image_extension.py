@@ -41,69 +41,86 @@ def shape(self):
 
 def __init__(
         self,
-        tttr_data = None,
-        marker_frame_start = None,
-        marker_line_start = None,
-        marker_line_stop = None,
-        marker_event_type = 1,
-        n_pixel_per_line = None,
-        reading_routine = 'default',
-        skip_before_first_frame_marker = False,
+        tttr_data=None,
+        marker_frame_start=None,
+        marker_line_start=None,
+        marker_line_stop=None,
+        marker_event_type=1,
+        n_pixel_per_line=None,
+        reading_routine='default',
+        skip_before_first_frame_marker=False,
         **kwargs
 ):
-# type: (tttrlib.TTTR, int, int, int, int, int, str, bool) -> None
-    kwargs.update(
-        {
-            "reading_routine": reading_routine,
-            "skip_before_first_frame_marker": skip_before_first_frame_marker
-        }
-    )
-    if tttr_data is not None:
-        header = tttr_data.header
-        self.header = header
-        if tttr_data.get_tttr_container_type() == 'PTU':
-            try:
-                kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
-            except IndexError:
-                kwargs["marker_frame_start"] = [4]
-            kwargs.update(
-                {
-                    "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"]) -1 ),
-                    "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
-                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                    "marker_event_type": 1
-                }
-            )
-        elif tttr_data.get_tttr_container_type() == 'HT3':
-            kwargs.update(
-                {
-                    "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
-                    "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
-                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                    "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
-                    "marker_event_type": 1
-                }
-            )
+    source = kwargs.get('source', None)
+    if not isinstance(source, tttrlib.CLSMImage):
+        kwargs.update(
+            {
+                "marker_frame_start": marker_frame_start,
+                "marker_line_start": marker_line_start,
+                "marker_line_stop": marker_line_stop,
+                "marker_event_type": marker_event_type,
+                "n_pixel_per_line": n_pixel_per_line,
+                "reading_routine": reading_routine,
+                "skip_before_first_frame_marker": skip_before_first_frame_marker
+            }
+        )
+        if tttr_data is not None:
+            header = tttr_data.header
+            self.header = header
+            if tttr_data.get_tttr_container_type() == 'PTU':
+                try:
+                    kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+                except:
+                    kwargs["marker_frame_start"] = [8]
+                kwargs.update(
+                    {
+                        "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
+                        "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
+                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                        "marker_event_type": 1
+                    }
+                )
+            elif tttr_data.get_tttr_container_type() == 'HT3':
+                kwargs.update(
+                    {
+                        "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
+                        "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
+                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                        "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
+                        "marker_event_type": 1
+                    }
+                )
 
-    if reading_routine == 'SP5':
-        kwargs["marker_event_type"] = 1
-        kwargs["marker_frame_start"] = [4, 6]
-    elif reading_routine == 'SP8':
-        kwargs["marker_event_type"] = 15
-        kwargs["marker_frame_start"] = [4, 6]
-    if isinstance(marker_frame_start, int):
-        kwargs['marker_frame_start'] = [marker_frame_start]
-    if isinstance(marker_frame_start, list):
-        kwargs['marker_frame_start'] = marker_frame_start
-    if isinstance(marker_line_start, int):
-        kwargs['marker_line_start'] = marker_line_start
-    if isinstance(marker_line_stop, int):
-        kwargs['marker_line_stop'] = marker_line_stop
-    if isinstance(marker_event_type, int):
-        kwargs['marker_event_type'] = marker_event_type
-    if isinstance(n_pixel_per_line, int):
-        kwargs['n_pixel_per_line'] = n_pixel_per_line
-    kwargs['tttr_data'] = tttr_data
+        # Overwrite if user defined inputs make sense
+        if isinstance(marker_frame_start, int):
+            kwargs['marker_frame_start'] = [marker_frame_start]
+        if isinstance(marker_frame_start, list):
+            kwargs['marker_frame_start'] = marker_frame_start
+        if isinstance(marker_line_start, int):
+            kwargs['marker_line_start'] = marker_line_start
+        if isinstance(marker_line_stop, int):
+            kwargs['marker_line_stop'] = marker_line_stop
+        if isinstance(marker_event_type, int):
+            kwargs['marker_event_type'] = marker_event_type
+        if isinstance(n_pixel_per_line, int):
+            kwargs['n_pixel_per_line'] = n_pixel_per_line
+        kwargs['tttr_data'] = tttr_data
+
+        # Defined setups overrule all setting
+        if reading_routine == 'SP5':
+            kwargs["marker_event_type"] = 1
+            kwargs["marker_frame_start"] = [4, 6]
+            kwargs["marker_line_start"] = 1
+            kwargs["marker_line_stop"] = 2
+        elif reading_routine == 'SP8':
+            kwargs["marker_event_type"] = 15
+            kwargs["marker_frame_start"] = [4, 6]
+            kwargs["marker_line_start"] = 1
+            kwargs["marker_line_stop"] = 2
+            if tttr_data is not None:
+                header = tttr_data.header
+                kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
+                kwargs["marker_line_stop"] = int(header.tag('ImgHdr_LineStop')["value"])
     this = _tttrlib.new_CLSMImage(**kwargs)
     try:
         self.this.append(this)
