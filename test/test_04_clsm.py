@@ -2,26 +2,22 @@ from __future__ import division
 
 
 import unittest
+
+import json
 import tttrlib
 import numpy as np
 
+settings = json.load(open(file="./test/settings.json"))
 
-print("Test: ", __file__)
-
-sp5_filename = '../tttr-data/imaging/leica/sp5/LSM_1.ptu'
-sp8_filename = '../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = '../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
+sp8_filename = './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+ht3_filename = './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
 pq_test_files = [
-    '../tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
-    '../tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
+    './tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
+    './tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
 ]
 
 sp8_reading_parameter = {
-    "marker_frame_start": [4, 6],
-    "marker_line_start": 1,
-    "marker_line_stop": 2,
-    "marker_event_type": 15,
-    "n_pixel_per_line": 0,
     "reading_routine": 'SP8',
 }
 
@@ -37,11 +33,6 @@ ht3_reading_parameter = {
 
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
 sp5_reading_parameter = {
-    "marker_frame_start": [4, 6],
-    "marker_line_start": 1,
-    "marker_line_stop": 2,
-    "marker_event_type": 1,
-    "n_pixel_per_line": 256,
     "reading_routine": 'SP5'
 }
 
@@ -50,7 +41,7 @@ class TestCLSM(unittest.TestCase):
 
     # If this is set to True as set of files are written as a
     # reference for future tests
-    make_reference = False
+    make_reference = settings['make_reference']
 
     def test_leica_sp8_image_1(self):
         data = tttrlib.TTTR(sp8_filename, 'PTU')
@@ -67,11 +58,12 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             minimum_number_of_photons=1
         ).sum(axis=0)
+        fn = './test/data/reference/img_ref_mean_tac_sp8.npy'
         if self.make_reference:
-            np.save('../tttr-data/reference/img_ref_mean_tac_sp8.npy', mean_tac_image)
+            np.save(fn, mean_tac_image)
         self.assertEqual(
             np.allclose(
-                np.load('../tttr-data/reference/img_ref_mean_tac_sp8.npy'), mean_tac_image
+                np.load(fn), mean_tac_image
             ),
             True
         )
@@ -81,11 +73,12 @@ class TestCLSM(unittest.TestCase):
             micro_time_coarsening=256,
             stack_frames=True
         )
+        fn = './test/data/reference/img_ref_decay_image_sp8.npy'
         if self.make_reference:
-            np.save('./data/reference/img_ref_decay_image_sp8.npy', decay_image)
+            np.save(fn, decay_image)
         self.assertEqual(
             np.allclose(
-                np.load('./data/reference/img_ref_decay_image_sp8.npy'),
+                np.load(fn),
                 decay_image
             ),
             True
@@ -108,7 +101,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_get_frame_edges(self):
         # SP8
-        filename = "../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
+        filename = "./tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
         tttr = tttrlib.TTTR(filename)
         frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP8")
         ref = np.array([0, 33529, 66704, 100007, 133448, 166819, 200246,
@@ -127,10 +120,9 @@ class TestCLSM(unittest.TestCase):
                   3037889, 3071241, 3104687, 3104829], dtype=np.uint32)
         self.assertEqual(np.allclose(frame_marker, ref), True)
 
-        sp5_filename = '../tttr-data/imaging/leica/sp5/LSM_1.ptu'
+        sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
         sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
         frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP5")
-
         clsm_image = tttrlib.CLSMImage(
             tttr_data=sp5_data,
             channels=[0],

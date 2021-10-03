@@ -1,12 +1,15 @@
 from __future__ import division
 
 import unittest
-import tttrlib
+import json
 import numpy as np
 import scipy.spatial
 
-print("Test: ", __file__)
-spc132_filename = '../tttr-data/bh/bh_spc132.spc'
+import tttrlib
+
+
+settings = json.load(open(file="./test/settings.json"))
+spc132_filename = settings["spc132_filename"]
 
 
 class Tests(unittest.TestCase):
@@ -95,7 +98,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = '../tttr-data/bh/bh_spc132.spc'
+        spc132_filename = './tttr-data/bh/bh_spc132.spc'
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         ch1_indeces = data.get_selection_by_channel([8])
@@ -151,7 +154,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = '../tttr-data/bh/bh_spc132.spc'
+        spc132_filename = './tttr-data/bh/bh_spc132.spc'
 
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
@@ -169,7 +172,7 @@ class Tests(unittest.TestCase):
         y = correlator.correlation
 
         # load a file correlated using Kristine as a reference
-        ref = np.loadtxt("../tttr-data/BH/correlator_references/BH_SPC132/08/MCSg_s--g_p.cor").T
+        ref = np.loadtxt("./tttr-data/BH/correlator_references/BH_SPC132/08/MCSg_s--g_p.cor").T
         x_kristine, y_kristine, cr, err = ref
         # p.semilogx(x, y)
         # p.semilogx(x_kristine, y_kristine)
@@ -248,7 +251,7 @@ class Tests(unittest.TestCase):
     #     data = self.data
     #
     #     # import tttrlib
-    #     # data = tttrlib.TTTR('../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+    #     # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
     #
     #     # if a correlator is initialized with a TTTR object the
     #     # correlation corresponds to the macro time correlation of all events
@@ -282,7 +285,7 @@ class Tests(unittest.TestCase):
     #
     #     # import tttrlib
     #     # import pylab as p
-    #     # data = tttrlib.TTTR('../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+    #     # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
     #
     #     # get the indices of the two channels
     #     ch1_indeces = data.get_selection_by_channel([8])
@@ -341,7 +344,7 @@ class Tests(unittest.TestCase):
     #     data = self.data
     #
     #     # import tttrlib
-    #     # data = tttrlib.TTTR('../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+    #     # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
     #
     #     ch1, ch2 = [8], [0]
     #     tttr_ch1 = tttrlib.TTTR(data, data.get_selection_by_channel(ch1))
