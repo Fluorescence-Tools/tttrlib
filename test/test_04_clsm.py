@@ -41,7 +41,7 @@ class TestCLSM(unittest.TestCase):
 
     # If this is set to True as set of files are written as a
     # reference for future tests
-    make_reference = settings['make_reference']
+    make_reference = settings['make_references']
 
     def test_leica_sp8_image_1(self):
         data = tttrlib.TTTR(sp8_filename, 'PTU')
