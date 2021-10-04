@@ -24,17 +24,13 @@ requirements:
     - doxygen
     - cmake
     - swig
+    - pkg-config
   host:
     - python {{ python }}
     - setuptools
     - numpy
     - boost {{ boost }}
     - hdf5 {{ hdf5 }}
-  host:
-    - python
-    - numpy
-    - boost
-    - hdf5
     - fftw
   run:
     - python
