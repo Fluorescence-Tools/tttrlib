@@ -50,8 +50,9 @@ test:linux:
   before_script:
     - apt update -yq
     - apt install -yq procps wget git git-lfs
-    - git submodule update --init --recursive --remote
   script:
+    - git clone https://gitlab.peulen.xyz/skf/tttrlib
+    - git submodule update --init --recursive --remote
     - source activate base
     - conda config --add channels "file://`pwd`/bld-dir"
     - mamba install python tttrlib nose scipy
