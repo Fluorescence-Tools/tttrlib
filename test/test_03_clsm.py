@@ -158,6 +158,18 @@ class TestCLSM(unittest.TestCase):
             np.save(fn, img)
         self.assertEqual(np.allclose(img, np.load(fn,)), True)
 
+    def test_clsm_mean_microtime(self):
+        filename = clsm['seidel_ht3_sample_1']['filename']
+        reading_parameter = clsm['seidel_ht3_sample_1']['reading_parameter']
+        data = tttrlib.TTTR(filename)
+        clsm_image_1 = tttrlib.CLSMImage(
+            tttr_data=data,
+            **reading_parameter
+        )
+        clsm_image_1.fill_pixels(
+            tttr_data=data,
+            channels=[0]
+        )
         fn = './test/data/reference/img_ref_mean_tac.npy'
         img = clsm_image_1.get_mean_micro_time_image(tttr_data=data, minimum_number_of_photons=1).sum(axis=0)
         if make_reference:
@@ -169,13 +181,12 @@ class TestCLSM(unittest.TestCase):
             micro_time_coarsening=tac_coarsening,
             stack_frames=True
         ).sum(axis=0)
-        print("tac_image.shape:", img.shape)
         fn = './test/data/reference/img_ref_decay_image.npy'
         if make_reference:
             np.save(fn, img)
         self.assertEqual(np.allclose(img, np.load(fn)), True)
 
-    def test_mean_tau(self):
+    def test_mean_tau_stack(self):
         """Mean lifetime images (with IRF correction)
         """
         data = tttrlib.TTTR(clsm['seidel_ht3_sample_2']['filename'], 'HT3')
@@ -193,6 +204,31 @@ class TestCLSM(unittest.TestCase):
             stack_frames=True
         )
         fn = './test/data/reference/img_decay_mean_tau.npy'
+        if make_reference:
+            np.save(fn, img)
+        self.assertEqual(
+            np.allclose(img, np.load(fn)),
+            True
+        )
+
+    def test_mean_tau(self):
+        """Mean lifetime images (with IRF correction)
+        """
+        data = tttrlib.TTTR(clsm['seidel_ht3_sample_2']['filename'], 'HT3')
+        irf = tttrlib.TTTR(clsm['seidel_ht3_sample_2']['irf'], 'HT3')
+        irf_0 = irf[irf.get_selection_by_channel([0])]
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=data,
+            **clsm['seidel_ht3_sample_2']['reading_parameter']
+        )
+        clsm_image.fill_pixels(data, channels=[0, 2])
+        img = clsm_image.get_mean_lifetime_image(
+            tttr_irf=irf_0,
+            tttr_data=data,
+            minimum_number_of_photons=4,
+            stack_frames=False
+        )
+        fn = './test/data/reference/img_decay_mean_tau_2.npy'
         if make_reference:
             np.save(fn, img)
         self.assertEqual(

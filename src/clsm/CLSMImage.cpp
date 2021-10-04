@@ -633,17 +633,8 @@ void CLSMImage::get_mean_micro_time_image(
         for(size_t i_line = 0; i_line < n_lines; i_line++){
             for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
-                auto v = frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices;
-                // calculate the mean arrival time iteratively
-                double value = 0.0;
-                if (v.size() > minimum_number_of_photons){
-                    double i = 1.0;
-                    for(auto event_i: v){
-                        value = value + 1. / (i + 1.) * (double) (tttr_data->micro_times[event_i] - value);
-                        i++;
-                    }
-                }
-                t[pixel_nbr] = value;
+                CLSMPixel px = frames[i_frame]->lines[i_line]->pixels[i_pixel];
+                t[pixel_nbr] = px.get_mean_microtime(tttr_data, minimum_number_of_photons);
             }
         }
     }
@@ -671,8 +662,6 @@ void CLSMImage::get_mean_micro_time_image(
                     r[pixel_nbr] += n_photons * t[i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel];
                 }
                 r[pixel_nbr] /= std::max(1, n_photons_total);
-                //if(n_photons_total > 0)
-                //    r[pixel_nbr] /= n_photons_total;
             }
         }
         *dim1 = (int) w_frame;
@@ -773,10 +762,7 @@ void CLSMImage::get_mean_lifetime_image(
         unsigned short *micro_times_irf; int n_micro_times_irf;
         tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
         m0_irf = n_micro_times_irf; // number of photons
-        m1_irf = std::accumulate(
-                micro_times_irf,
-                micro_times_irf + n_micro_times_irf,
-                0.0); // sum of photon arrival times
+        m1_irf = std::accumulate(micro_times_irf, micro_times_irf + n_micro_times_irf,0.0); // sum of photon arrival times
     }
 #if VERBOSE_TTTRLIB
     std::clog << "-- IRF m0: " << m0_irf << std::endl;
@@ -784,33 +770,25 @@ void CLSMImage::get_mean_lifetime_image(
 #endif
     int o_frames = stack_frames? 1: n_frames;
     auto* t = (double *) calloc(o_frames * n_lines * n_pixel, sizeof(double));
-
     for(int i_frame = 0; i_frame < o_frames; i_frame++) {
         for(int i_line = 0; i_line < n_lines; i_line++){
             for(int i_pixel = 0; i_pixel < n_pixel; i_pixel++){
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
-                double mu0 = 0.0; // total number of photons
-                double mu1 = 0.0; // sum of photon arrival times
                 if(stack_frames){
+                    std::vector<int> tttr_indices;
                     for(auto &frame: frames){
-                        auto v = frame->lines[i_line]->pixels[i_pixel]._tttr_indices;
-                        mu0 += v.size();
-                        for(auto &vi: v)
-                            mu1 += tttr_data->micro_times[vi];
+                        auto px = frame->lines[i_line]->pixels[i_pixel];
+                        tttr_indices.insert(tttr_indices.end(), px._tttr_indices.begin(), px._tttr_indices.end());
                     }
+                    // use nullptr for tttr_irf as m0_irf, m1_irf are precomputed
+                    t[pixel_nbr] = TTTRRange::compute_mean_lifetime(tttr_indices, tttr_data, minimum_number_of_photons,
+                                                                    nullptr, m0_irf, m1_irf, dt);
                 }
                 else{
-                    auto v = this->frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices;
-                    mu0 += v.size();
-                    for(auto &vi: v)
-                        mu1 += tttr_data->micro_times[vi];
-                }
-                double g1 = mu0 / m0_irf;
-                double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-                if (mu0 > minimum_number_of_photons){
-                    t[pixel_nbr] = g2 / g1 * dt;
-                } else{
-                    t[pixel_nbr] = -1;
+                    auto px = this->frames[i_frame]->lines[i_line]->pixels[i_pixel];
+                    // use nullptr for tttr_irf as m0_irf, m1_irf are precomputed
+                    t[pixel_nbr] = px.get_mean_lifetime(tttr_data, minimum_number_of_photons,
+                                                        nullptr, m0_irf, m1_irf, dt);
                 }
             }
         }
