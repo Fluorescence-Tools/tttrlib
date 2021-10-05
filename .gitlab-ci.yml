@@ -83,6 +83,7 @@ deploy:conda:
     - build:linux
     - build:windows
     - build:osx
+    - build:ppc64le
   before_script:
     - git submodule update --init --recursive --remote
   script:
