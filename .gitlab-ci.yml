@@ -22,8 +22,8 @@ build:ppc64le:
   stage: build
   tags:
     - ppc64le
+  image: condaforge/mambaforge:latest
   before_script:
-    - conda activate
     - apt update -yq && apt -yq install build-essential   
     - git submodule update --init --recursive --remote
   script:
