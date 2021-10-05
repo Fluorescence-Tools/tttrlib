@@ -1,17 +1,3 @@
-/****************************************************************************
- * Copyright (C) 2020 by Thomas-Otavio Peulen                               *
- *                                                                          *
- * This file is part of the library tttrlib.                                *
- *                                                                          *
- *   tttrlib is free software: you can redistribute it and/or modify it     *
- *   under the terms of the MIT License.                                    *
- *                                                                          *
- *   tttrlib is distributed in the hope that it will be useful,             *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                   *
- *                                                                          *
- ****************************************************************************/
-
 #include "TTTR.h"
 #include "TTTRRange.h"
 #include "TTTRHeader.h"
@@ -344,11 +330,11 @@ size_t TTTRHeader::read_ptu_header(
                       WideBuffer = (wchar_t *) calloc((size_t) TagHead.TagValue, 1);
                       Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
                       std::cerr << "ERROR: reading of tyWideString currently not supported" << std::endl;
-//                    if (Result != TagHead.TagValue) {
-//                        free(WideBuffer);
-//                        throw std::string("Incomplete File");
-//                    }
-//                    add_tag(json_data, key, AnsiBuffer, TagHead.Typ, TagHead.Idx);
+                      if (Result != TagHead.TagValue) {
+                          free(WideBuffer);
+                          throw std::string("Incomplete File");
+                      }
+                      add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
                       free(WideBuffer);
                     break;
                 case tyBinaryBlob:

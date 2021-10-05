@@ -336,7 +336,8 @@ void CLSMImage::remove_incomplete_frames(){
         if(frame->lines.size() == n_lines){
             complete_frames.push_back(frame);
         } else{
-            std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() << " incomplete only "<< frame->lines.size() << " / " << n_lines << " lines." << std::endl;
+            std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() <<
+            " incomplete only "<< frame->lines.size() << " / " << n_lines << " lines." << std::endl;
             delete(frame);
         }
         i_frame++;
@@ -424,7 +425,7 @@ void CLSMImage::get_intensity_image(
         size_t i_line = 0;
         for(auto line : frame->lines){
             size_t i_pixel = 0;
-            for(auto pixel : line->pixels){
+            for(auto &pixel : line->pixels){
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
                                    i_line * (n_pixel) +
                                    i_pixel;

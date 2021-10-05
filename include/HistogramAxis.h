@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/28/20.
-//
-
 #ifndef TTTRLIB_HISTOGRAMAXIS_H
 #define TTTRLIB_HISTOGRAMAXIS_H
 

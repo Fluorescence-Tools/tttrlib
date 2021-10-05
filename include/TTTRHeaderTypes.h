@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 19/11/2020.
-//
-
 #ifndef TTTRLIB_TTTRHEADERTYPES_H
 #define TTTRLIB_TTTRHEADERTYPES_H
 

@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/24/20.
-//
-
 #ifndef TTTRLIB_CLSMLINE_H
 #define TTTRLIB_CLSMLINE_H
 

@@ -1,7 +1,6 @@
 #include "include/Pda.h"
 
 
-
 void Pda::get_1dhistogram(
         double **histogram_x, int *n_histogram_x,
         double **histogram_y, int *n_histogram_y,

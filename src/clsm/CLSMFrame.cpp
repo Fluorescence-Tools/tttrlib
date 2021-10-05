@@ -7,9 +7,7 @@
 #include "include/CLSMFrame.h"
 #include "TTTRRange.h"
 
-CLSMFrame::CLSMFrame():
-TTTRRange()
-{}
+CLSMFrame::CLSMFrame(): TTTRRange() {}
 
 CLSMFrame::CLSMFrame(size_t frame_start) : CLSMFrame()
 {

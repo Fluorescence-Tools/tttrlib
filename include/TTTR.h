@@ -17,9 +17,8 @@
 #include <numeric>
 
 #include "omp.h"
-// std::filesystem is not in osx 10.14
 #include <boost/bimap.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #include "hdf5.h"
 
