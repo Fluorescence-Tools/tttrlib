@@ -18,6 +18,19 @@ build:linux:
     paths:
       - bld-dir/
 
+build:ppc64le:
+  stage: build
+  tags:
+    - ppc64le
+  before_script:
+    - apt update -yq && apt -yq install build-essential   
+    - git submodule update --init --recursive --remote
+  script:
+    - ./tools/build.sh
+  artifacts:
+    paths:
+      - bld-dir/
+
 build:windows:
   stage: build
   tags:
