@@ -928,26 +928,43 @@ void TTTR::compute_microtime_histogram(
 double TTTR::compute_mean_lifetime(
         TTTR* tttr_data,
         TTTR* tttr_irf,
-        int m0_irf, int m1_irf
+        double m0_irf, double m1_irf,
+        std::vector<int> *tttr_indices,
+        double dt,
+        int minimum_number_of_photons
 ){
     if(tttr_irf != nullptr){
-        unsigned short *micro_times_irf; int n_micro_times_irf;
-        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
-        m0_irf = n_micro_times_irf;
-        m1_irf = 0;
-        for(int i=0; i< n_micro_times_irf; i++) m1_irf += micro_times_irf[i];
+        // number of photons
+        m0_irf = (double) tttr_irf->n_valid_events;
+        // sum of photon arrival times
+        m1_irf = (double) std::accumulate(
+                tttr_irf->micro_times,
+                tttr_irf->micro_times + tttr_irf->n_valid_events, 0.0);
+    }
+    if(dt < 0.0){
+        dt = tttr_data->header->get_micro_time_resolution();
     }
 
-    unsigned short *micro_times_data; int n_micro_times_data;
-    tttr_data->get_micro_time(&micro_times_data, &n_micro_times_data);
-    double mu0 = n_micro_times_data;
-    double mu1 = 0.0;
-    for(int i=0; i< n_micro_times_data; i++) mu1 += micro_times_data[i];
+    double lt = -1.0;
+    double mu0 = 0.0; // total number of photons
+    double mu1 = 0.0; // sum of photon arrival times
+    if(tttr_indices == nullptr){
+        mu0 += (double) tttr_data->n_valid_events;
+        for(int i=0; i< tttr_data->n_valid_events; i++)
+            mu1 += tttr_data->micro_times[i];
+    } else{
+        mu0 += (double) tttr_indices->size();
+        for (auto &vi: *tttr_indices)
+            mu1 += tttr_data->micro_times[vi];
+    }
 
     double g1 = mu0 / m0_irf;
     double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-    double tau1 = g2 / g1;
-    return tau1 * tttr_data->header->get_micro_time_resolution();
+    if (mu0 > minimum_number_of_photons) {
+        lt = g2 / g1 * dt;
+    }
+
+    return lt;
 }
 
 

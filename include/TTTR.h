@@ -741,7 +741,10 @@ public:
     static double compute_mean_lifetime(
             TTTR *tttr_data,
             TTTR *tttr_irf = nullptr,
-            int m0_irf = 1, int m1_irf = 1
+            double m0_irf = 1, double m1_irf = 1,
+            std::vector<int> *tttr_indices = nullptr,
+            double dt = -1.0,
+            int minimum_number_of_photons = 1
     );
 
     /*!

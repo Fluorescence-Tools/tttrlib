@@ -10,7 +10,6 @@ class TTTRRange {
 
 private:
 
-    // TODO: reduce memory footprint by using / refering to TTTR object
     std::shared_ptr<TTTR> tttr = nullptr;
 
 public:

@@ -58,27 +58,12 @@ double TTTRRange::compute_mean_lifetime(
         double m1_irf,
         double dt
 ) {
-    if (tttr_irf != nullptr) {
-        unsigned short *micro_times_irf; int n_micro_times_irf;
-        micro_times_irf = tttr_irf->micro_times;
-        n_micro_times_irf = tttr_irf->n_valid_events;
-        // number of photons
-        m0_irf = n_micro_times_irf;
-        // sum of photon arrival times
-        m1_irf = std::accumulate(micro_times_irf,micro_times_irf + n_micro_times_irf,0.0);
-    }
-    double lt = -1.0;
-    double mu0 = 0.0; // total number of photons
-    double mu1 = 0.0; // sum of photon arrival times
-    mu0 += (double) tttr_indices.size();
-    for (auto &vi: tttr_indices)
-        mu1 += tttr_data->micro_times[vi];
-    double g1 = mu0 / m0_irf;
-    double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-    if (mu0 > minimum_number_of_photons) {
-        lt = g2 / g1 * dt;
-    }
-    return lt;
+    return TTTR::compute_mean_lifetime(
+            tttr_data, tttr_irf,
+            m0_irf, m1_irf,
+            &tttr_indices,
+            dt, minimum_number_of_photons
+    );
 }
 
 
