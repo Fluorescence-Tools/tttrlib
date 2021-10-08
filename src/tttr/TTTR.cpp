@@ -1038,3 +1038,64 @@ void TTTR::append_event(
             shift_macro_time, macro_time_offset
     );
 }
+
+
+double TTTR::compute_count_rate(
+        TTTR *tttr_data,
+        std::vector<int> *tttr_indices,
+        double macrotime_resolution
+){
+    double t_min = 1e60;
+    double t_max = 0.0;
+    std::vector<int> v;
+    if(tttr_indices == nullptr){
+        v.resize(tttr_data->n_valid_events);
+        for(int i = 0; i < tttr_data->n_valid_events; i++) v[i] = i;
+    } else{
+        v = *tttr_indices;
+    }
+    for(auto &i: v){
+        t_min = std::min((double) tttr_data->macro_times[i], t_min);
+        t_max = std::max((double) tttr_data->macro_times[i], t_max);
+    }
+    if(macrotime_resolution < 0) {
+        macrotime_resolution = tttr_data->header->get_macro_time_resolution();
+    }
+    auto n = (double) v.size();
+    double dT = (t_max - t_min);
+#if VERBOSE_TTTRLIB
+    std::clog << "COMPUTE_COUNT_RATE" << std::endl;
+    std::clog << "-- dT [mT units]:" << dT << std::endl;
+    std::clog << "-- number of photons:" << n << std::endl;
+    std::clog << "-- macrotime_resolution:" << macrotime_resolution << std::endl;
+#endif
+    return n  / (dT * macrotime_resolution);
+}
+
+
+double TTTR::compute_mean_microtime(
+        TTTR *tttr_data,
+        std::vector<int> *tttr_indices,
+        double microtime_resolution,
+        int minimum_number_of_photons
+){
+    if(microtime_resolution < 0)
+        microtime_resolution = tttr_data->header->get_micro_time_resolution();
+    std::vector<int> v;
+    if(tttr_indices == nullptr){
+        v.resize(tttr_data->n_valid_events);
+        for(int i = 0; i < tttr_data->n_valid_events; i++) v[i] = i;
+    } else{
+        v = *tttr_indices;
+    }
+    // calculate the mean arrival time iteratively
+    double value = 0.0;
+    if (v.size() > minimum_number_of_photons){
+        double i = 1.0;
+        for(auto event_i: v){
+            value = value + 1. / (i + 1.) * (double) (tttr_data->micro_times[event_i] - value);
+            i = i + 1.0;
+        }
+    }
+    return value * microtime_resolution;
+}

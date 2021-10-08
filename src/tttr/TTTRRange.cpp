@@ -34,21 +34,6 @@ TTTRRange::TTTRRange(
 }
 
 
-double TTTRRange::get_mean_microtime(TTTR* tttr_data, int minimum_number_of_photons){
-    auto v = _tttr_indices;
-    // calculate the mean arrival time iteratively
-    double value = 0.0;
-    if (v.size() > minimum_number_of_photons){
-        double i = 1.0;
-        for(auto event_i: v){
-            value = value + 1. / (i + 1.) * (double) (tttr_data->micro_times[event_i] - value);
-            i++;
-        }
-    }
-    return value;
-}
-
-
 double TTTRRange::compute_mean_lifetime(
         std::vector<int> &tttr_indices,
         TTTR *tttr_data,

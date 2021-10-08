@@ -134,7 +134,13 @@ public:
      * @param tttr_data[in] pointer to a TTTR object
      * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
      */
-    double get_mean_microtime(TTTR* tttr_data, int minimum_number_of_photons = 1);
+    double get_mean_microtime(
+            TTTR* tttr_data,
+            double microtime_resolution = -1.0,
+            int minimum_number_of_photons = 1
+    ){
+        return tttr_data->get_mean_microtime(&_tttr_indices, microtime_resolution, minimum_number_of_photons);
+    }
 
 
     /*!

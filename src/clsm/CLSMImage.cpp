@@ -620,6 +620,7 @@ void CLSMImage::get_decay_of_pixels(
 void CLSMImage::get_mean_micro_time_image(
         TTTR* tttr_data,
         double** output, int* dim1, int* dim2, int* dim3,
+        double microtime_resolution,
         int minimum_number_of_photons,
         bool stack_frames
 ){
@@ -656,13 +657,15 @@ void CLSMImage::get_mean_micro_time_image(
                 size_t pixel_nbr = i_line  * n_pixel + i_pixel;
                 // average the arrival times over the frames
                 r[pixel_nbr] = 0.0;
-                int n_photons_total = 0;
+                std::vector<int> tr;
                 for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
-                    auto n_photons = frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices.size();
-                    n_photons_total += n_photons;
-                    r[pixel_nbr] += n_photons * t[i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel];
+                    auto temp = frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices;
+                    tr.insert(tr.end(), temp.begin(), temp.end());
                 }
-                r[pixel_nbr] /= std::max(1, n_photons_total);
+                r[pixel_nbr] = TTTR::compute_mean_microtime(
+                        tttr_data, &tr,
+                        microtime_resolution, minimum_number_of_photons
+                );
             }
         }
         *dim1 = (int) w_frame;
