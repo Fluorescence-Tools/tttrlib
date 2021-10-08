@@ -13,6 +13,8 @@ Changelog
 * Added support for a PQ FLIM equipped Zeiss LSM 980
 * Fixed memory issues
 * Computation of mean lifetime & mean arrival times for TTTRRanges
+* Compute average count rates for TTTR objects
+* Compute mean micro time in TTTRRange and TTTR
 
 
 API changes summary
