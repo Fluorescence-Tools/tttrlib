@@ -32,6 +32,20 @@ build:ppc64le:
     paths:
       - bld-dir/
 
+build:aarch64:
+  stage: build
+  tags:
+    - aarch64
+  image: condaforge/mambaforge:latest
+  before_script:
+    - apt update -yq && apt -yq install build-essential   
+    - git submodule update --init --recursive --remote
+  script:
+    - ./tools/build.sh
+  artifacts:
+    paths:
+      - bld-dir/
+
 build:windows:
   stage: build
   tags:
