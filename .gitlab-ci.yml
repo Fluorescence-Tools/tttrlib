@@ -10,6 +10,7 @@ build:linux:
     - linux
   image: condaforge/mambaforge:latest
   before_script:
+    - apt update -yq && apt -yq install build-essential 
     - git submodule update --init --recursive --remote
   script:
     - ./tools/build.sh
@@ -23,6 +24,7 @@ build:ppc64le:
     - ppc64le
   image: condaforge/mambaforge:latest
   before_script:
+    - apt update -yq && apt -yq install build-essential 
     - git submodule update --init --recursive --remote
   script:
     - ./tools/build.sh
@@ -36,6 +38,7 @@ build:aarch64:
     - aarch64
   image: condaforge/mambaforge:latest
   before_script:
+    - apt update -yq && apt -yq install build-essential 
     - git submodule update --init --recursive --remote
   script:
     - ./tools/build.sh
