@@ -27,7 +27,7 @@ build:ppc64le:
     - ppc64le
 
 build:aarch64:
-  <<: build_linux
+  <<: *build_linux
   tags:
     - aarch64
 
