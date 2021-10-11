@@ -17,17 +17,17 @@ stages:
       - bld-dir/
 
 build:x86_64:
-  <<: build:linux
+  <<: *build:linux
   tags:
     - x86_64
 
 build:ppc64le:
-  <<: build:linux
+  <<: *build:linux
   tags:
     - ppc64le
 
 build:aarch64:
-  <<: build:linux
+  <<: *build:linux
   tags:
     - aarch64
 
