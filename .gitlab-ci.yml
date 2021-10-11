@@ -4,10 +4,8 @@ stages:
 - deploy
 - Trigger-cross-projects
 
-build:linux:
+.build:linux: &build:linux
   stage: build
-  tags:
-    - linux
   image: condaforge/mambaforge:latest
   before_script:
     - apt update -yq && apt -yq install build-essential 
@@ -17,34 +15,21 @@ build:linux:
   artifacts:
     paths:
       - bld-dir/
+
+build:x86_64:
+  <<: build:linux
+  tags:
+    - x86_64
 
 build:ppc64le:
-  stage: build
+  <<: build:linux
   tags:
     - ppc64le
-  image: condaforge/mambaforge:latest
-  before_script:
-    - apt update -yq && apt -yq install build-essential 
-    - git submodule update --init --recursive --remote
-  script:
-    - ./tools/build.sh
-  artifacts:
-    paths:
-      - bld-dir/
 
 build:aarch64:
-  stage: build
+  <<: build:linux
   tags:
     - aarch64
-  image: condaforge/mambaforge:latest
-  before_script:
-    - apt update -yq && apt -yq install build-essential 
-    - git submodule update --init --recursive --remote
-  script:
-    - ./tools/build.sh
-  artifacts:
-    paths:
-      - bld-dir/
 
 build:windows:
   stage: build
