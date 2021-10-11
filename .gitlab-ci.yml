@@ -4,7 +4,7 @@ stages:
 - deploy
 - Trigger-cross-projects
 
-.build_posix: &build:linux
+.build_posix: &build_linux
   stage: build
   image: condaforge/mambaforge:latest
   before_script:
@@ -17,17 +17,17 @@ stages:
       - bld-dir/
 
 build:x86_64:
-  <<: *build:linux
+  <<: *build_linux
   tags:
     - x86_64
 
 build:ppc64le:
-  <<: *build:linux
+  <<: *build_linux
   tags:
     - ppc64le
 
 build:aarch64:
-  <<: *build:linux
+  <<: build_linux
   tags:
     - aarch64
 
