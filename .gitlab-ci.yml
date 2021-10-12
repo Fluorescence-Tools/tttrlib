@@ -4,9 +4,14 @@ stages:
 - deploy
 - Trigger-cross-projects
 
-.build_posix: &build_linux
+build:linux:
   stage: build
   image: condaforge/mambaforge:latest
+  parallel:
+    tags:
+      - x86_64
+      - ppc64le
+      - aarch64
   before_script:
     - apt update -yq && apt -yq install build-essential 
     - git submodule update --init --recursive --remote
@@ -15,21 +20,6 @@ stages:
   artifacts:
     paths:
       - bld-dir/
-
-build:x86_64:
-  <<: *build_linux
-  tags:
-    - x86_64
-
-build:ppc64le:
-  <<: *build_linux
-  tags:
-    - ppc64le
-
-build:aarch64:
-  <<: *build_linux
-  tags:
-    - aarch64
 
 build:windows:
   stage: build
