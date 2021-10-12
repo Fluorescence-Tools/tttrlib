@@ -8,10 +8,8 @@ build:linux:
   stage: build
   image: condaforge/mambaforge:latest
   parallel:
-    tags:
-      - x86_64
-      - ppc64le
-      - aarch64
+    matrix:
+      - tags: [x86_64, ppc64le, aarch64]
   before_script:
     - apt update -yq && apt -yq install build-essential 
     - git submodule update --init --recursive --remote
