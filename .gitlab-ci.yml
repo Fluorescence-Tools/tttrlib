@@ -1,7 +1,6 @@
 stages:
 - build
 - test
-- doc
 - deploy
 - Trigger-cross-projects
 
@@ -76,24 +75,18 @@ deploy:conda:
   image: condaforge/mambaforge
   tags:
     - linux
-  dependencies:
-    - build:lnx_x86_64
-    - build:lnx_ppc64le
-    - build:lnx_ppc64le
-    - build:windows
-    - build:osx
+  needs: ["test"]
   before_script:
     - git submodule update --init --recursive --remote
   script:
     - ./tools/deploy.sh
 
 deploy:doc:
-   stage: doc
+   stage: deploy
    image: condaforge/mambaforge
    tags:
      - linux
-   dependencies:
-     - build:lnx_x86_64
+   needs: ["build:lnx_x86_64"]
    before_script:
      - apt-get update -qy
      # Latex documentation
