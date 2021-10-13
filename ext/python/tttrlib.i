@@ -95,5 +95,6 @@ import_array();
 %include "TTTR.i"
 %include "Histogram.i"
 %include "Correlator.i"
+%include "DecayPhasor.i"
 %include "CLSM.i"
 %include "Pda.i"

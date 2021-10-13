@@ -71,19 +71,21 @@ for benchmark_file in benchmark_files:
     filename = pathlib.Path(benchmark_file["file"])
     size_bytes = filename.stat().st_size
     size_mb = size_bytes / (1024 * 1024)
+    filename = str(filename.absolute().as_posix())
 
     n_test_runs = 1
+    ph_str = 'phconvert.{:}("{:}", {:})'.format(
+        benchmark_file["phconvert"],
+        filename,
+        benchmark_file["phconvert_args"]
+    )
     time_phconvert_numba = timeit.timeit(
-        'phconvert.%s("%s", %s)' % (
-            benchmark_file["phconvert"],
-            filename,
-            benchmark_file["phconvert_args"]
-        ),
+        ph_str,
         number=n_test_runs,
         setup="import phconvert"
     )
     time_tttrlib = timeit.timeit(
-        'tttrlib.TTTR("%s", %s)' % (
+        u'tttrlib.TTTR("%s", %s)' % (
             filename,
             benchmark_file["tttr_mode"]
         ),
@@ -92,7 +94,6 @@ for benchmark_file in benchmark_files:
     )
     times_phconvert_numba.append(time_phconvert_numba / size_mb)
     times_tttrlib.append(time_tttrlib / size_mb)
-
     print("time(phconvert.numba) = %s s" % (time_phconvert_numba / n_test_runs))
     print("time(tttrlib) = %s s" % (time_tttrlib / n_test_runs))
     print("tttrlib speedup: %.2f" % (time_phconvert_numba / time_tttrlib))
@@ -137,8 +138,7 @@ ax.xaxis.tick_top()
 ax.tick_params(labeltop=False)  # don't put tick labels at the top
 ax2.xaxis.tick_bottom()
 
-
-d = .01
+d = 0.01
 kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
 ax.plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
 ax.plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
