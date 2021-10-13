@@ -1,6 +1,7 @@
 stages:
 - build
 - test
+- doc
 - deploy
 - Trigger-cross-projects
 
@@ -87,7 +88,7 @@ deploy:conda:
     - ./tools/deploy.sh
 
 deploy:doc:
-   stage: deploy
+   stage: doc
    image: condaforge/mambaforge
    tags:
      - linux
