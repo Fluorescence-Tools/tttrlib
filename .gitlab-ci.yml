@@ -4,7 +4,7 @@ stages:
 - deploy
 - Trigger-cross-projects
 
-.build_linux: &build_linux
+.build_lnx: &build_linux
   stage: build
   image: condaforge/mambaforge
   before_script:
