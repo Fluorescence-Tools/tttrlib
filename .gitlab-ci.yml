@@ -84,7 +84,7 @@ deploy:conda:
   script:
     - ./tools/deploy.sh
 
- deploy:doc:
+deploy:doc:
    stage: deploy
    image: condaforge/mambaforge
    tags:
