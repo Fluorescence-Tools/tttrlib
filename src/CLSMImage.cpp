@@ -686,11 +686,11 @@ void CLSMImage::get_phasor_image(
 ) {
     double g_irf=1.0, s_irf=0.0;
     if(tttr_irf!= nullptr){
-//        std::vector<double> gs = Phasor::compute_phasor_all(
-//                tttr_irf->micro_times, tttr_irf->n_valid_events,
-//                frequency);
-//        g_irf = gs[0];
-//        s_irf = gs[1];
+        std::vector<double> gs = DecayPhasor::compute_phasor_all(
+                tttr_irf->micro_times, tttr_irf->n_valid_events,
+                frequency);
+        g_irf = gs[0];
+        s_irf = gs[1];
     }
     int o_frames = stack_frames? 1: n_frames;
     if(frequency<0){
@@ -713,27 +713,27 @@ void CLSMImage::get_phasor_image(
                     auto n = frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices;
                     idxs.insert(idxs.end(), n.begin(), n.end());
                 }
-//                auto r = Phasor::compute_phasor(
-//                        tttr_data->micro_times,
-//                        idxs,
-//                        frequency,
-//                        minimum_number_of_photons,
-//                        g_irf, s_irf
-//                );
-//                t[pixel_nbr + 0] = r[0];
-//                t[pixel_nbr + 1] = r[1];
+                auto r = DecayPhasor::compute_phasor(
+                        tttr_data->micro_times,
+                        idxs,
+                        frequency,
+                        minimum_number_of_photons,
+                        g_irf, s_irf
+                );
+                t[pixel_nbr + 0] = r[0];
+                t[pixel_nbr + 1] = r[1];
             } else{
                 for(int i_frame=0; i_frame < n_frames; i_frame++){
                     size_t pixel_nbr = i_frame * (n_lines * n_pixel * 2) + i_line  * (n_pixel * 2) + i_pixel * 2;
-//                    auto r = Phasor::compute_phasor(
-//                            tttr_data->micro_times,
-//                            frames[i_frame]->lines[i_line]->pixels[i_pixel]->_tttr_indices,
-//                            frequency,
-//                            minimum_number_of_photons,
-//                            g_irf, s_irf
-//                    );
-//                    t[pixel_nbr + 0] = r[0];
-//                    t[pixel_nbr + 1] = r[1];
+                    auto r = DecayPhasor::compute_phasor(
+                            tttr_data->micro_times,
+                            frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices,
+                            frequency,
+                            minimum_number_of_photons,
+                            g_irf, s_irf
+                    );
+                    t[pixel_nbr + 0] = r[0];
+                    t[pixel_nbr + 1] = r[1];
                 }
             }
         }

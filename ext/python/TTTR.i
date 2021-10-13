@@ -40,8 +40,8 @@
 
 // Python does not support overloading. Thus, ignore the copy constructor
 %ignore TTTRRange(const TTTRRange& p2);
-%extend TTTR{%pythoncode "./ext/python/tttr/tttr_extension.py"}
-%extend TTTRHeader{%pythoncode "./ext/python/tttr/tttrheader_extension.py"}
+%extend TTTR{%pythoncode "./ext/python/TTTR_ext.py"}
+%extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader_ext.py"}
 
 // Use shared_prt for TTTR to pass TTTR around
 %shared_ptr(TTTR)

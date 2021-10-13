@@ -1,10 +1,7 @@
 %{
-// This is needed for numpy as you need SWIG_FILE_WITH_INIT
-// if you have an init section
 #define SWIG_FILE_WITH_INIT
 %}
 %module(directors="1", package="tttrlib") tttrlib
-
 
 #ifdef VERBOSE_TTTRLIB
 // Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
@@ -18,7 +15,7 @@
 %feature("kwargs", 1);
 %include "documentation.i"
 
-%pythonbegin "./ext/python/python_imports.py"
+%pythonbegin "./ext/python/tttrlib_ext.py"
 
 %include "typemaps.i";
 %include "stl.i";
@@ -95,8 +92,8 @@ import_array();
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 
 %include "../include/info.h"
-%include "tttr.i"
-%include "histogram.i"
-%include "correlation.i"
-%include "image.i"
-%include "pda.i"
+%include "TTTR.i"
+%include "Histogram.i"
+%include "Correlator.i"
+%include "CLSM.i"
+%include "Pda.i"

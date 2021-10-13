@@ -8,6 +8,8 @@
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"
 #include "CLSMFrame.h"
+#include "DecayPhasor.h"
+
 
 class CLSMImage {
 

@@ -565,6 +565,15 @@ Get the number of pixels per line a frame of the CLSMImage.
 C++ includes: CLSMPixel.h
 ";
 
+%feature("docstring") CLSMPixel::~CLSMPixel "
+";
+
+%feature("docstring") CLSMPixel::CLSMPixel "
+";
+
+%feature("docstring") CLSMPixel::CLSMPixel "
+";
+
 // File: struct_correlation_curve_settings.xml
 
 
@@ -989,6 +998,92 @@ Parameters
 %feature("docstring") CurveMapping_t "
 
 C++ includes: TTTRHeaderTypes.h
+";
+
+// File: class_decay_phasor.xml
+
+
+%feature("docstring") DecayPhasor "
+
+C++ includes: DecayPhasor.h
+";
+
+%feature("docstring") DecayPhasor::compute_phasor "
+
+Compute the phasor (g,s) for a selection of micro times  
+
+This function computes the phasor (g,s) for a set of micro times that are
+selected out of an vector. The microtimes are selected by a second vector. The
+second vector speciefies which indices of the microtime vector are used to
+compute the phasor.  
+
+Parameters
+----------
+* `micro_times` :  
+    vector of micro times  
+* `idxs` :  
+    vector of selected indices  
+* `minimum_number_of_photons` :  
+* `frequency` :  
+    the frequency of the phasor  
+* `g_irf` :  
+    g-value of instrument response phasor  
+* `s_irf` :  
+    s-value of instrument response phasor  
+
+Returns
+-------
+vector of length 2: first element g-value, second element s-value  
+";
+
+%feature("docstring") DecayPhasor::compute_phasor_all "
+
+Compute the phasor (g,s) for a all passed micro times  
+
+Parameters
+----------
+* `micro_times` :  
+    vector of micro times  
+* `n_microtimes` :  
+    number of elements in the micro time array  
+* `frequency` :  
+    the frequency of the phasor  
+
+Returns
+-------
+vector of length 2: first element g-value, second element s-value  
+";
+
+%feature("docstring") DecayPhasor::g "
+
+https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001  
+
+Parameters
+----------
+* `g_irf` :  
+    g-value of instrument response phasor  
+* `s_irf` :  
+    s-value of instrument response phasor  
+* `g_exp` :  
+* `s_exp` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayPhasor::s "
+
+https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001  
+
+Parameters
+----------
+* `g_irf` :  
+* `s_irf` :  
+* `g_exp` :  
+* `s_exp` :  
+
+Returns
+-------  
 ";
 
 // File: class_header.xml
@@ -1512,6 +1607,19 @@ C++ includes: TTTRHeaderTypes.h
 C++ includes: TTTR.h
 ";
 
+%feature("docstring") TTTR::copy_from "
+
+Copy the information from another TTTR object  
+
+Parameters
+----------
+* `p2` :  
+    the TTTR object which which the information is copied from  
+* `include_big_data` :  
+    if this is true also the macro time, micro time etc. are copied. Otherwise
+    all other is copied  
+";
+
 %feature("docstring") TTTR::read_file "
 
 Reads the TTTR data contained in a file into the TTTR object  
@@ -1645,16 +1753,6 @@ the container type that was used to open the file
 %feature("docstring") TTTR::TTTR "
 
 Constructor  
-
-Parameters
-----------
-* `filename` :  
-    is the filename of the TTTR file.  
-* `container_type` :  
-    specifies the file type. parent->children.push_back()  
-
-PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2
-BH_SPC600_256_CONTAINER 3 BH_SPC600_4096_CONTAINER 4  
 ";
 
 %feature("docstring") TTTR::TTTR "
@@ -1663,6 +1761,8 @@ Copy constructor.
 ";
 
 %feature("docstring") TTTR::TTTR "
+
+Constructor that can read a file  
 
 Parameters
 ----------
@@ -1673,6 +1773,9 @@ Parameters
     SPC-600_4096; 5 = PHOTON-HDF5)  
 * `read_input` :  
     if true reads the content of the file  
+
+PQ_PTU_CONTAINER 0 PQ_HT3_CONTAINER 1 BH_SPC130_CONTAINER 2
+BH_SPC600_256_CONTAINER 3 BH_SPC600_4096_CONTAINER 4  
 ";
 
 %feature("docstring") TTTR::TTTR "
@@ -1901,6 +2004,12 @@ Compute the mean lifetime by the moments of the decay and the instrument
 response function.  
 ";
 
+%feature("docstring") TTTR::get_count_rate "
+";
+
+%feature("docstring") TTTR::get_mean_microtime "
+";
+
 %feature("docstring") TTTR::determine_number_of_records_by_file_size "
 
 Determines the number of records in a TTTR files (not for use with HDF5)  
@@ -1961,14 +2070,41 @@ Parameters
     TTTR object for which the lifetime is computed  
 * `tttr_irf` :  
     TTTR object that is used as IRF  
-* `m0_irf` :  
+* `m0_irf[in]` :  
     Number of counts in the IRF (used if no TTTR object for IRF provided.  
-* `m1_irf` :  
+* `m1_irf[in]` :  
     First moment of the IRF (used if no TTTR object for IRF provided.  
+* `tttr_indices[in]` :  
+    Optional list of indices for selecting a subset of the TTTR  
+* `dt[in]` :  
+    Time resolution of the micro time. If not provided extracted from the header
+    (slow)  
+* `minimum_number_of_photons[in]` :  
+    Minimum number of photons. If less photons are in the dataset returns -1 as
+    computed lifetime  
 
 Returns
 -------
 The computed lifetime  
+";
+
+%feature("docstring") TTTR::compute_count_rate "
+
+Compute the count rate  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    TTTR object for which the lifetime is computed  
+* `macrotime_resolution[in]` :  
+    If negative (default) reads macrotime resolution from header (slow)  
+
+Returns
+-------
+Count rate  
+";
+
+%feature("docstring") TTTR::compute_mean_microtime "
 ";
 
 // File: class_t_t_t_r_header.xml
@@ -2354,6 +2490,46 @@ Append a index to the TTTR index vector.
 Clears the TTTR index vector.  
 ";
 
+%feature("docstring") TTTRRange::get_mean_microtime "
+
+Computes to the mean micro time (in units of the micro channel resolution).  
+
+If there are less then the minimum number of photons in a TTTRRange the function
+returns zero.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time  
+";
+
+%feature("docstring") TTTRRange::get_mean_lifetime "
+
+Return the average lifetime  
+
+If a TTTRRange has not enough photons return -1  
+
+By default the fluorescence lifetimes are computed in units of the micro time if
+no dt is provided.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `tttr_irf[in]` :  
+    pointer to a TTTR object of the IRF  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time  
+* `m0_irf` :  
+    is the zero moment of the IRF (optional, default=1)  
+* `m1_irf` :  
+    is the first moment of the IRF (optional, default=1)  
+* `dt` :  
+    time resolution of the micro time  
+";
+
 %feature("docstring") TTTRRange::shift_start_time "
 ";
 
@@ -2372,6 +2548,35 @@ Parameters
     stop times are updated from the tttr object using the current start stop  
 ";
 
+%feature("docstring") TTTRRange::compute_mean_lifetime "
+
+Compute the average lifetime for a set of TTTR indices  
+
+The average lifetimes are computed (not fitted) by the methods of moments (Irvin
+Isenberg, 1973, Biophysical journal). This approach does not consider scattered
+light.  
+
+If a TTTRRange has not enough photons it is filled with zeros.  
+
+By default the fluorescence lifetimes are computed in units of the micro time if
+no dt is provided.  
+
+Parameters
+----------
+* `tttr_data[in]` :  
+    pointer to a TTTR object  
+* `tttr_irf[in]` :  
+    pointer to a TTTR object of the IRF  
+* `minimum_number_of_photons[in]` :  
+    the minimum number of photons in a micro time  
+* `m0_irf` :  
+    is the zero moment of the IRF (optional, default=1)  
+* `m1_irf` :  
+    is the first moment of the IRF (optional, default=1)  
+* `dt` :  
+    time resolution of the micro time  
+";
+
 // File: _c_l_s_m_frame_8h.xml
 
 // File: _c_l_s_m_image_8h.xml
@@ -2385,6 +2590,8 @@ Parameters
 // File: _correlator_curve_8h.xml
 
 // File: _correlator_photon_stream_8h.xml
+
+// File: _decay_phasor_8h.xml
 
 // File: _histogram_8h.xml
 
@@ -2563,12 +2770,14 @@ Parameters
 
 %feature("docstring") get_ranges_channel "
 
+Get the ranges in for a specific channel number  
+
 Parameters
 ----------
 * `ranges` :  
 * `n_range` :  
-* `time` :  
-* `n_time` :  
+* `channel` :  
+* `n_channel` :  
 * `channel` :  
 ";
 
