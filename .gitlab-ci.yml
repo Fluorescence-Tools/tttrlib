@@ -75,7 +75,6 @@ deploy:conda:
   image: condaforge/mambaforge
   tags:
     - linux
-  needs: ["test"]
   before_script:
     - git submodule update --init --recursive --remote
   script:
