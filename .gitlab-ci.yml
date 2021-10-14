@@ -57,6 +57,7 @@ test:linux:
   tags:
     - linux
   image: condaforge/mambaforge
+  needs: ["build:lnx_x86_64"]  
   before_script:
     - apt update -yq
     - apt install -yq procps wget git git-lfs
@@ -75,7 +76,6 @@ deploy:conda:
   image: condaforge/mambaforge
   tags:
     - linux
-  needs: ["test"]
   before_script:
     - git submodule update --init --recursive --remote
   script:
