@@ -67,7 +67,7 @@ static int myErr = 0; // flag to save error state
         return $self->size();
     }
 
-    %pythoncode "./ext/python/CLSMImage_ext.py"
+    %pythoncode "./ext/python/CLSMImage.py"
 }
 
 %exception CLSMFrame::__getitem__ {

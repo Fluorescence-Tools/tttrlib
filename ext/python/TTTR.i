@@ -31,6 +31,7 @@
 %attribute(TTTRRange, int, stop, get_stop, set_stop);
 %attribute(TTTRRange, unsigned int, start_time, get_start_time, set_start_time);
 %attribute(TTTRRange, unsigned int, stop_time, get_stop_time, set_stop_time);
+
 // TTTRHeader
 %attribute(TTTRHeader, size_t, number_of_micro_time_channels, get_number_of_micro_time_channels);
 %attribute(TTTRHeader, double, macro_time_resolution, get_macro_time_resolution);
@@ -40,8 +41,8 @@
 
 // Python does not support overloading. Thus, ignore the copy constructor
 %ignore TTTRRange(const TTTRRange& p2);
-%extend TTTR{%pythoncode "./ext/python/TTTR_ext.py"}
-%extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader_ext.py"}
+%extend TTTR{%pythoncode "./ext/python/TTTR.py"}
+%extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader.py"}
 
 // Use shared_prt for TTTR to pass TTTR around
 %shared_ptr(TTTR)
