@@ -29,6 +29,7 @@
 // check the output of this program and consult the tag dictionary if you need more
 const std::string TTTRTagRes = "MeasDesc_Resolution";              // Resolution for the Dtime (T3 Only) - in seconds
 const std::string TTTRTagGlobRes = "MeasDesc_GlobalResolution";    // Global Resolution of TimeTag(T2) /NSync (T3) - in seconds
+const std::string TTTRSyncRate = "SyncRate";                       // SyncRate - in Hz
 const std::string TTTRNMicroTimes = "MeasDesc_NumberMicrotimes";   // The number of micro time channels
 const std::string TTTRRecordType = "MeasDesc_RecordType";         // Internal record type (see tttrlib record type identifier definitions)
 const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
@@ -169,9 +170,7 @@ public:
      }
 
     /// Resolution for the macro time in nanoseconds
-    double get_macro_time_resolution(){
-        return get_tag(json_data, TTTRTagGlobRes)["value"];
-    }
+    double get_macro_time_resolution();
 
     /// Resolution for the micro time in nanoseconds
     double get_micro_time_resolution(){

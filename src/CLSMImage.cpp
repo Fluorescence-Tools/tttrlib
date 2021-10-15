@@ -685,24 +685,22 @@ void CLSMImage::get_phasor_image(
         bool stack_frames
 ) {
     double g_irf=1.0, s_irf=0.0;
+    if(frequency<0){
+        auto header = tttr_data->get_header();
+        auto macro_time_res = header->get_macro_time_resolution();
+        auto micro_time_res = header->get_micro_time_resolution();
+        frequency = micro_time_res / macro_time_res;
+    }
     if(tttr_irf!= nullptr){
         std::vector<double> gs = DecayPhasor::compute_phasor_all(
-                tttr_irf->micro_times, tttr_irf->n_valid_events,
-                frequency);
+                tttr_irf->micro_times,
+                tttr_irf->n_valid_events, frequency
+                );
         g_irf = gs[0];
         s_irf = gs[1];
     }
     int o_frames = stack_frames? 1: n_frames;
-    if(frequency<0){
-        frequency = 1. / tttr_data->get_header()->get_macro_time_resolution();
-    }
     double factor = (2. * frequency * M_PI);
-#if VERBOSE_TTTRLIB
-    std::clog << "GET_PHASOR_IMAGE..." << std::endl;
-    std::clog << "-- frequency [GHz]: " << frequency << std::endl;
-    std::clog << "-- stack_frames: " << stack_frames << std::endl;
-    std::clog << "-- minimum_number_of_photons: " << minimum_number_of_photons << std::endl;
-#endif
     auto* t = (float *) calloc(o_frames * n_lines * n_pixel * 2, sizeof(float));
     for(int i_line=0; i_line < n_lines; i_line++){
         for(int i_pixel=0; i_pixel < n_pixel; i_pixel++){
@@ -738,6 +736,12 @@ void CLSMImage::get_phasor_image(
             }
         }
     }
+#if VERBOSE_TTTRLIB
+    std::clog << "GET_PHASOR_IMAGE..." << std::endl;
+    std::clog << "-- frequency [GHz]: " << frequency << std::endl;
+    std::clog << "-- stack_frames: " << stack_frames << std::endl;
+    std::clog << "-- minimum_number_of_photons: " << minimum_number_of_photons << std::endl;
+#endif
     *dim1 = (int) o_frames;
     *dim2 = (int) n_lines;
     *dim3 = (int) n_pixel;

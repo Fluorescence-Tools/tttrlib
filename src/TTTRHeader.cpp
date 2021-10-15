@@ -620,8 +620,24 @@ nlohmann::json TTTRHeader::get_tag(
         }
     }
     std::cerr << "ERROR: TTTR-TAG " << name << ":" << idx << " not found." << std::endl;
-    nlohmann::json re = {};
+    nlohmann::json re = {
+            {"value", -1.0},
+            {"idx", -1},
+            {"name", "NONE"}
+    };
     return re;
+}
+
+
+double TTTRHeader::get_macro_time_resolution(){
+    double res;
+    auto tag = get_tag(json_data, TTTRTagGlobRes);
+    if(tag["name"] == "NONE"){
+        res = 1. / (double) get_tag(json_data, TTTRSyncRate)["value"];
+    } else{
+        res = tag["value"];
+    }
+    return res;
 }
 
 
