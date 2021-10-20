@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/30/20.
-//
-
 #ifndef TTTRLIB_CORRELATORCURVE_H
 #define TTTRLIB_CORRELATORCURVE_H
 

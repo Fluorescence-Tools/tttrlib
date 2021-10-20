@@ -8,6 +8,8 @@
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"
 #include "CLSMFrame.h"
+#include "DecayPhasor.h"
+
 
 class CLSMImage {
 
@@ -191,6 +193,7 @@ public:
     void get_mean_micro_time_image(
             TTTR *tttr_data,
             double **output, int *dim1, int *dim2, int *dim3,
+            double microtime_resolution = -1.0,
             int minimum_number_of_photons = 2,
             bool stack_frames = false
     );

@@ -4,19 +4,29 @@ stages:
 - deploy
 - Trigger-cross-projects
 
-build:linux:
+.build_lnx: &build_linux
   stage: build
-  tags:
-    - linux
-  image: condaforge/mambaforge:latest
+  image: condaforge/mambaforge
   before_script:
-    - apt update -yq && apt -yq install build-essential   
+    - apt update -yq && apt -yq install build-essential
     - git submodule update --init --recursive --remote
   script:
     - ./tools/build.sh
   artifacts:
     paths:
       - bld-dir/
+build:lnx_x86_64:
+  <<: *build_linux
+  tags:
+    - x86_64
+build:lnx_ppc64le:
+  <<: *build_linux
+  tags:
+    - ppc64le
+build:lnx_aarch64:
+  <<: *build_linux
+  tags:
+    - aarch64
 
 build:windows:
   stage: build
@@ -46,7 +56,8 @@ test:linux:
   stage: test
   tags:
     - linux
-  image: condaforge/mambaforge:latest
+  image: condaforge/mambaforge
+  needs: ["build:lnx_x86_64"]  
   before_script:
     - apt update -yq
     - apt install -yq procps wget git git-lfs
@@ -62,43 +73,38 @@ test:linux:
 
 deploy:conda:
   stage: deploy
-  image: condaforge/mambaforge:latest
+  image: condaforge/mambaforge
   tags:
     - linux
-  dependencies:
-    - build:linux
-    - build:windows
-    - build:osx
   before_script:
     - git submodule update --init --recursive --remote
   script:
     - ./tools/deploy.sh
 
-# deploy:doc:
-#   stage: deploy
-#   image: condaforge/mambaforge:latest
-#   tags:
-#     - linux
-#   dependencies:
-#     - build:linux
-#   before_script:
-#     - apt-get update -qy
-#     # Latex documentation
-#     - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
-#     # Make command
-#     - apt-get install -y build-essential lftp
-#     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
-#     # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
-#   script:
-#     - echo "I am a deploy stage... Building documentation."
-#     - source activate base
-#     - conda config --add channels "file://`pwd`/bld-dir"
-#     - cd doc
-#     - mamba env update --file environment.yml
-#     - conda activate doc
-#     - echo "I am a deploy stage... Uploading documentation."
-#     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then make all; else exit; fi
-#     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/html/stable/ ./www/tttrlib/; bye"
+deploy:doc:
+   stage: deploy
+   image: condaforge/mambaforge
+   tags:
+     - linux
+   needs: ["build:lnx_x86_64"]
+   before_script:
+     - apt-get update -qy
+     # Latex documentation
+     - apt-get install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+     # Make command
+     - apt-get install -y build-essential lftp
+     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
+     # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
+   script:
+     - echo "I am a deploy stage... Building documentation."
+     - source activate base
+     - conda config --add channels "file://`pwd`/bld-dir"
+     - cd doc
+     - mamba env update --file environment.yml
+     - conda activate doc
+     - echo "I am a deploy stage... Uploading documentation."
+     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build . _build; else exit; fi
+     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:

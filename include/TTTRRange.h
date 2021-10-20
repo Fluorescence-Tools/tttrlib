@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/28/20.
-//
-
 #ifndef TTTRLIB_TTTRRANGE_H
 #define TTTRLIB_TTTRRANGE_H
 
@@ -14,7 +10,6 @@ class TTTRRange {
 
 private:
 
-    // TODO: reduce memory footprint by using / refering to TTTR object
     std::shared_ptr<TTTR> tttr = nullptr;
 
 public:
@@ -129,6 +124,77 @@ public:
     void clear(){
         _tttr_indices.clear();
     }
+
+    /*!
+     * Computes to the mean micro time (in units of the micro channel resolution).
+     *
+     * If there are less then the minimum number of photons in a TTTRRange
+     * the function returns zero.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     */
+    double get_mean_microtime(
+            TTTR* tttr_data,
+            double microtime_resolution = -1.0,
+            int minimum_number_of_photons = 1
+    ){
+        return tttr_data->get_mean_microtime(&_tttr_indices, microtime_resolution, minimum_number_of_photons);
+    }
+
+
+    /*!
+     *  Return the average lifetime
+     *
+     * If a TTTRRange has not enough photons return -1
+     *
+     * By default the fluorescence lifetimes are computed in units of the micro time
+     * if no dt is provided.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param tttr_irf[in] pointer to a TTTR object of the IRF
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     * @param m0_irf is the zero moment of the IRF (optional, default=1)
+     * @param m1_irf is the first moment of the IRF (optional, default=1)
+     * @param dt time resolution of the micro time
+     */
+    double get_mean_lifetime(
+            TTTR *tttr_data,
+            int minimum_number_of_photons = 3,
+            TTTR *tttr_irf = nullptr,
+            double m0_irf = 1.0, double m1_irf = 1.0,
+            double dt = 1.0
+    );
+
+
+    /*!
+     *  Compute the average lifetime for a set of TTTR indices
+     *
+     * The average lifetimes are computed (not fitted) by the methods of
+     * moments (Irvin Isenberg, 1973, Biophysical journal). This approach
+     * does not consider scattered light.
+     *
+     * If a TTTRRange has not enough photons it is filled with zeros.
+     *
+     * By default the fluorescence lifetimes are computed in units of the micro time
+     * if no dt is provided.
+     *
+     * @param tttr_data[in] pointer to a TTTR object
+     * @param tttr_irf[in] pointer to a TTTR object of the IRF
+     * @param minimum_number_of_photons[in] the minimum number of photons in a micro time
+     * @param m0_irf is the zero moment of the IRF (optional, default=1)
+     * @param m1_irf is the first moment of the IRF (optional, default=1)
+     * @param dt time resolution of the micro time
+     */
+    static double compute_mean_lifetime(
+            std::vector<int> &tttr_indices,
+            TTTR *tttr_data,
+            int minimum_number_of_photons = 3,
+            TTTR *tttr_irf = nullptr,
+            double m0_irf = 1.0, double m1_irf = 1.0,
+            double dt = 1.0
+    );
+
 
     void shift_start_time(long time_shift=0){
         _start_time += time_shift;

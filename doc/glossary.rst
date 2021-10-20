@@ -90,3 +90,50 @@ Glossary
         Go language, Java, Octave, and R. SWIG is free software and the code that SWIG generates is compatible with
         both commercial and non-commercial projects. ``tttrlib`` is C/C++ based to provide the capability for a
         broad variety of languages to interface its provided functionality.
+
+    Scatter fraction
+        The scatter fraction :math:`gamma` is defined by the number of photons
+        that
+
+    Anisotropy
+        The steady-state anisotropy :math:`r_G` in the detection channel :math:`G`
+        is formally given by the fluorescence intensity weighted integral of the
+        time-resolved anisotropy.
+
+        :math:`r_G=\int F_G(t) \cdot r(t) dt \cdot \frac{1}{\int F_G(t) dt}`
+
+        where the time-resolved anisotropy is defined by unperturbed the fluorescence
+        intensities of an ideal detection system.
+
+        :math:`r_G(t)=\frac{F_{G,p}(t)-F_{G,s}(t)}{F_{G,p}(t)+2F_{G,s}(t)}`
+
+        Through out ``fit2x`` two distinct anisotropies are computed: (1)
+        background corrected anisotropies, and (2) anisotropies not accounting for
+        the background. In single-molecule experiments the background is mainly
+        scattered light (Raman scattering). The uncorrected anisotropy (without
+        background correction) is computed by:
+
+        :math:`r = (S_p - g \cdot S_s) / (S_p \cdot (1 - 3 \cdot l_2) + (2 - 3 \cdot l_1) \cdot g \cdot Ss)`
+
+        where :math:`S_p` is the signal in the parallel (German: parallel=p) detection
+        channel, :math`S_s` the signal in the perpendicular decection channel
+        (German: senkrecht=s), :math:`g` is the g-factor, :math:`l_1` and
+        :math:`l_2` are factor mixing that determine the mixing of the parallel
+        and perpendicular detection channel, respectively :cite:`koshioka_time-dependent_1995`.
+
+        The scatter corrected steady-state anisotropy is computed using the scatter /
+        background corrected signals parallel :math:`F_p = (S_p - \gamma \cdot B_p) / (1. - \gamma)`
+        and perpendicular :math:`F_s = (S_s - \gamma \cdot B_s) / (1. - \gamma)`
+        fluorescence intensity.
+        :math:`r = (F_p - g \cdot F_s) / (F_p \cdot (1 - 3 \cdot l_2) + (2 - 3 \cdot l_1) \cdot g \cdot F_s)`
+        The scatter corrected and anisotropy not corrected for scatter are computed
+        by most fits of ``fit2x``.
+
+    Jordi-format
+        In the Jordi format is a format for fluorescence decays. In the Jordi
+        format fluorescence decays are stacked in a one dimensional array.
+        In a typical polarization resolved Jordi file the first decay is
+        the parallel and the subsequent decay is the perpendicular decay. In the
+        Jordi format both decays must have the same length, i.e., the same number
+        of micro time counting channels.
+

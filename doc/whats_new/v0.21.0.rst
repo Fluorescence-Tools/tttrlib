@@ -1,0 +1,23 @@
+.. currentmodule:: tttrlib
+
+.. _changes_0_21:
+
+Version 0.21
+============
+
+**April, 2021**
+
+Changelog
+---------
+
+* Added support for a PQ FLIM equipped Zeiss LSM 980
+* Fixed memory issues
+* Computation of mean lifetime & mean arrival times for TTTRRanges
+* Compute average count rates for TTTR objects
+* Compute mean micro time in TTTRRange and TTTR
+* Added arm64 (Raspberry Pi) and PPC64LE builds
+* reintroduced phasor
+
+
+API changes summary
+-------------------

@@ -17,9 +17,8 @@
 #include <numeric>
 
 #include "omp.h"
-// std::filesystem is not in osx 10.14
 #include <boost/bimap.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #include "hdf5.h"
 
@@ -116,14 +115,13 @@ void compute_intensity_trace(
 
 
 /*!
+ * Get the ranges in for a specific channel number
  *
- *
- *
- * @param ranges
- * @param n_range
- * @param time
- * @param n_time
- * @param channel
+ * @param[out] ranges
+ * @param[out] n_range
+ * @param[in] channel
+ * @param[in] n_channel
+ * @param[in] channel
  */
 void get_ranges_channel(
         unsigned int **ranges, int *n_range,
@@ -174,22 +172,12 @@ class TTTR {
 
 private:
 
-    /*!
-     * Copy the information from another TTTR object
-     *
-     * @param p2 the TTTR object which which the information is copied from
-     * @param include_big_data if this is true also the macro time, micro time
-     * etc. are copied. Otherwise all other is copied
-     */
-    void copy_from(const TTTR &p2, bool include_big_data=true);
-
     /// the input file
     std::string filename;
 
     TTTRHeader *header = nullptr;
 
-    /// Global overflow counter that counts the total number of overflows in a
-    /// TTTR file
+    /// Global overflow counter that counts the total number of overflows in a TTTR file
     uint64_t overflow_counter;
 
     /// map to translates string container types to int container types
@@ -238,11 +226,10 @@ private:
     int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
     /// The input file, i.e., the TTTR file, and the output file for the header
-    std::FILE *fp;
-    hid_t      hdf5_file;                        /*HDF5 file handle */
+    std::FILE *fp;                          /* File handle for all other file types */
+    hid_t hdf5_file;                        /*HDF5 file handle */
 
-    /// marks the end of the header in the input file used
-    /// to seek the begining of the tttr records
+    /// End the end of the header the begining of the tttr records in the input file
     size_t fp_records_begin;
 
     /// the data contained in the current TTTRRecord
@@ -325,6 +312,16 @@ protected:
 
 
 public:
+
+    /*!
+    * Copy the information from another TTTR object
+    *
+    * @param p2 the TTTR object which which the information is copied from
+    * @param include_big_data if this is true also the macro time, micro time
+    * etc. are copied. Otherwise all other is copied
+    */
+    void copy_from(const TTTR &p2, bool include_big_data = true);
+
 
     /*!
     * Reads the TTTR data contained in a file into the TTTR object
@@ -421,10 +418,7 @@ public:
      * @param time_window_length the length of the integration time windows in
      * units of milliseconds.
      */
-    void get_intensity_trace(
-            int **output, int *n_output,
-            double time_window_length=1.0
-    );
+    void get_intensity_trace(int **output, int *n_output, double time_window_length=1.0);
 
     /*!
      * Returns an array containing the routing channel numbers of the
@@ -465,14 +459,6 @@ public:
     std::shared_ptr<TTTR> select(int *selection, int n_selection);
 
     /*! Constructor
-     * @param filename is the filename of the TTTR file. @param container_type specifies the file type.
-     *        parent->children.push_back()
-     *
-     * PQ_PTU_CONTAINER          0
-     * PQ_HT3_CONTAINER          1
-     * BH_SPC130_CONTAINER       2
-     * BH_SPC600_256_CONTAINER   3
-     * BH_SPC600_4096_CONTAINER  4
      */
     TTTR();
 
@@ -480,11 +466,18 @@ public:
     TTTR(const TTTR &p2);
 
     /*!
+     * Constructor that can read a file
      *
      * @param filename TTTR filename
      * @param container_type container type as int (0 = PTU; 1 = HT3;
      * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
      * @param read_input if true reads the content of the file
+     *
+     * PQ_PTU_CONTAINER          0
+     * PQ_HT3_CONTAINER          1
+     * BH_SPC130_CONTAINER       2
+     * BH_SPC600_256_CONTAINER   3
+     * BH_SPC600_4096_CONTAINER  4
      */
     TTTR(const char *filename, int container_type, bool read_input);
 
@@ -732,16 +725,21 @@ public:
      *
      * @param tttr_data TTTR object for which the lifetime is computed
      * @param tttr_irf TTTR object that is used as IRF
-     * @param m0_irf Number of counts in the IRF (used if no TTTR object for IRF
-     * provided.
-     * @param m1_irf First moment of the IRF (used if no TTTR object for IRF
-     * provided.
+     * @param m0_irf[in] Number of counts in the IRF (used if no TTTR object for IRF provided.
+     * @param m1_irf[in] First moment of the IRF (used if no TTTR object for IRF provided.
+     * @param tttr_indices[in] Optional list of indices for selecting a subset of the TTTR
+     * @param dt[in] Time resolution of the micro time. If not provided extracted from the header (slow)
+     * @param minimum_number_of_photons[in] Minimum number of photons. If less photons are in the dataset
+     * returns -1 as computed lifetime
      * @return The computed lifetime
      */
     static double compute_mean_lifetime(
             TTTR *tttr_data,
             TTTR *tttr_irf = nullptr,
-            int m0_irf = 1, int m1_irf = 1
+            double m0_irf = 1, double m1_irf = 1,
+            std::vector<int> *tttr_indices = nullptr,
+            double dt = -1.0,
+            int minimum_number_of_photons = 1
     );
 
     /*!
@@ -750,10 +748,54 @@ public:
      */
     double mean_lifetime(
             TTTR *tttr_irf = nullptr,
-            int m0_irf = 1, int m1_irf = 1
+            int m0_irf = 1, int m1_irf = 1,
+            std::vector<int> *tttr_indices = nullptr,
+            double dt = -1.0,
+            int minimum_number_of_photons = 1
     ){
-        return compute_mean_lifetime(this, tttr_irf, m0_irf, m1_irf);
+        return compute_mean_lifetime(
+                this,
+                tttr_irf, m0_irf, m1_irf,
+                tttr_indices, dt, minimum_number_of_photons
+        );
     }
+
+    /*!
+     * Compute the count rate
+     *
+     * @param tttr_data[in] TTTR object for which the lifetime is computed
+     * @param macrotime_resolution[in] If negative (default) reads macrotime resolution from header (slow)
+     * @return Count rate
+     */
+    static double compute_count_rate(
+            TTTR *tttr_data,
+            std::vector<int> *tttr_indices = nullptr,
+            double macrotime_resolution = -1.0
+    );
+
+    double get_count_rate(
+            std::vector<int> *tttr_indices = nullptr,
+            double macrotime_resolution = -1.0
+    ){
+        return compute_count_rate(this, tttr_indices, macrotime_resolution);
+    }
+
+    static double compute_mean_microtime(
+            TTTR *tttr_data,
+            std::vector<int> *tttr_indices = nullptr,
+            double microtime_resolution = -1.0,
+            int minimum_number_of_photons = 1
+    );
+
+    double get_mean_microtime(
+            std::vector<int> *tttr_indices = nullptr,
+            double microtime_resolution = -1.0,
+            int minimum_number_of_photons = 1
+    ){
+        return compute_mean_microtime(this, tttr_indices, microtime_resolution, minimum_number_of_photons);
+    }
+
+
 };
 
 

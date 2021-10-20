@@ -403,6 +403,9 @@ class Tests(unittest.TestCase):
             tttr_range_2, tttr_range_3
         )
 
+    def test_mean_microtime(self):
+        self.assertAlmostEqual(data.get_mean_microtime(), 4.351471044638555e-09)
+
     def test_open_non_existing_file(self):
         # make sure that opening an non-exisitng file does not crash
         d = tttrlib.TTTR('NOFILE', 'PTU')
