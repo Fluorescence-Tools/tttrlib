@@ -12,11 +12,11 @@ A common practice is to record multiple FCS curves and reject
 manually FCS curves. When recording TTTR data that is later correlated
 the processing of the data, i.e., the computation of FCS curves
 and the sorting based on certain criteria :cite:`Ries2010` can be
-automated to greatly simplify and accelerates the data analysis.
+automated to greatly simplify and accelerate the data analysis.
 
 Here, we demonstrate how to use tttrlib to slice data into subsets
-and correlate the subsets individually. The output of such procedure
-can be used an an input to select and discriminate perturbed FCS
+and correlate the subsets individually. The output of such a procedure
+can be used as an input to select and discriminate perturbed FCS
 curves for automated suppression of sample-related artifacts in
 Fluorescence Correlation Spectroscopy.
 """
@@ -37,7 +37,7 @@ data = tttrlib.TTTR('../../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu')
 print(data.header.get_json())
 
 #%%
-# Here, we manually compute the calibration. This many cases it may not be
+# Here, we manually compute the calibration. This may not be
 # necessary in many cases.
 time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 
@@ -65,13 +65,13 @@ correlator = tttrlib.Correlator(**corr_settings)
 
 #%%
 # We print the used routing channels and define the routing channels
-# that should be used in the correlation as a first an second correlation
+# that should be used in the correlation as a first and second correlation
 # channel.
 print(data.get_used_routing_channels())
 ch1 = [0]
 ch2 = [2]
 
-# use start stop to create new TTTR objects that are correlated
+# use start-stop to create new TTTR objects that are correlated
 correlations = list()
 for start, stop in start_stop:
     indices = np.arange(start, stop, dtype=np.int64)
@@ -87,7 +87,7 @@ for start, stop in start_stop:
     )
 
 #%%
-# Finally, we compute the correlation for all data and plot the all correlations
+# Finally, we compute the correlation for all data and plot all correlations
 # for all subsets.
 correlator = tttrlib.Correlator(
     tttr=data,
@@ -113,6 +113,6 @@ plt.show()
 
 #%%
 # Slicing data and correlating photon traces of data subsets can be
-# useful to discrimiate artifacts or to estimate the noise of experimental
+# useful to discriminate artifacts or to estimate the noise of experimental
 # correlation curves.
 

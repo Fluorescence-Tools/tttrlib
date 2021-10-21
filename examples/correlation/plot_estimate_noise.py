@@ -16,7 +16,7 @@ of correlation functions that is used to yield an estimate for the expected
 correlation function and the associated noise by the mean and the standard
 deviation :cite:`Kapusta2007`, :cite:`Enderlein1997`, :cite:`Bohmer2002`.
 
-Here it is illustrate how data is split into multiple subsets to estimate the
+Here it is illustrated how the data is split into multiple subsets to estimate the
 noise for quantitative analysis of correlation curves.
 
 """
@@ -26,7 +26,7 @@ noise for quantitative analysis of correlation curves.
 # --------------
 # First, we import libraries read the data into a new TTTR container.
 # We inspect the header information to find header tags that inform
-# in the macro time calibration.
+# on the macro time calibration.
 
 import pylab as plt
 import tttrlib
@@ -35,7 +35,7 @@ import numpy as np
 data = tttrlib.TTTR('../../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu')
 
 #%%
-# Here, we manually compute the calibration. This many cases it may not be
+# Here, we manually compute the calibration. This may not be
 # necessary in many cases.
 time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 
@@ -57,7 +57,7 @@ corr_settings = {
 }
 correlator = tttrlib.Correlator(**corr_settings)
 
-# use start stop to create new TTTR objects that are correlated
+# use start-stop to create new TTTR objects that are correlated
 correlations = list()
 for i in range(0, len(data), n_ph):
     tttr_slice = data[i: i + n_ph]

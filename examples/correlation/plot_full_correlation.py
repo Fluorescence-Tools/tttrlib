@@ -4,14 +4,14 @@ Full correlation
 ================
 When processes faster than the macro time clock are of interest, the micro time
 and the macro time can be combined into a united time axis. Using the combined
-time axis a so called full correlation can be performed in continuous wave excitation
+time axis of a so called full correlation can be performed in continuous wave excitation
 experiments in contrast to the usually performed pulsed excitation.
 
 The example below illustrates how a full correlation can be computed. Note, in
 the example the full correlation is computed for a sample that was measured in a
 pulsed excitation experiment. However, the same procedure can be applied to cw data.
 
-This example illustrates a normal correlation and demonstrate two approaches
+This example illustrates a normal correlation and demonstrates two approaches
 how to compute full correlations with ``tttrlib``.
 
 """
@@ -34,8 +34,8 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 # (8, 1) to (0, 9). There are two options how to create TTTR objects for
 # the channels. A new TTTR object can be created with an existing object
 # by providing a list of indices.
-ch1_indeces = data.get_selection_by_channel([8, 1])
-tttr_ch1 = tttrlib.TTTR(data, ch1_indeces)
+ch1_indices = data.get_selection_by_channel([8, 1])
+tttr_ch1 = tttrlib.TTTR(data, ch1_indices)
 
 #%%
 # Alternatively, there is a method that creates new TTTR objects for a
@@ -43,7 +43,7 @@ tttr_ch1 = tttrlib.TTTR(data, ch1_indeces)
 tttr_ch2 = data.get_tttr_by_channel([0, 9])
 
 #%%
-# Two TTTR objects can be direcly cross-correlated. Here, by default the micro times
+# The two TTTR objects can be directly cross-correlated. Here, by default the micro times
 # are not considered in the correlation.
 correlator_ref = tttrlib.Correlator(
     tttr=(tttr_ch1, tttr_ch2),
@@ -92,7 +92,7 @@ y_ref = correlator_ref.correlation
 x_ref *= data.header.micro_time_resolution
 
 #%%
-# When the macro and the micro times are combined the correlation
+# When the macro and the micro times are combined, the correlation
 # curves can be computed for shorter correlation times as illustrated
 # below.
 

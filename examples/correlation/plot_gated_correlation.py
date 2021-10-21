@@ -6,7 +6,7 @@ Micro time gated correlation
 The background in the fluorescence intensity traces affects the computed
 fluorescence correlation functions. In single-molecule spectroscopy the
 background is mainly caused by scattered light. Thus, by discriminating
-photons with small micro times a large fraction of the back can be eliminated.
+photons with small micro times a large fraction of the background can be eliminated.
 
 Note, the example that used the micro times of the detected photons to gate
 away the scattered light fraction in a single-molecule experiment can be easily
@@ -20,27 +20,29 @@ import numpy as np
 
 #%%
 # First, the TTTR data is read into a new container. The TTTR data
-# in the example is to multiparameter fluorescence detection data
+# in the example is a multiparameter fluorescence detection data
 # with two green and two red detectors for polarization resolved
 # fluorescence detection.
 data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
 #%%
-# Here, we compute cross correlation function between the parallel (P)
+# Here, we compute the cross correlation function between the parallel (P)
 # and the perpendicular (S) green detection channels. We first find
 # the indices of the respective channels. In the example the channel
 # numbers of the green parallel and perpendicular detection are 0 and 8.
-ch1_indeces = data.get_selection_by_channel([0])
-ch2_indeces = data.get_selection_by_channel([8])
+ch1_indices = data.get_selection_by_channel([0])
+ch2_indices = data.get_selection_by_channel([8])
 
 #%%
 # For illustrating the scattered light, we create histogram of micro times
 # and define a lower bound to mask photons.
 n_micro = data.header.number_of_micro_time_channels
 x_hist = np.arange(n_micro)
-y_hist_0 = np.bincount(data.micro_times[ch1_indeces], minlength=n_micro)
-y_hist_8 = np.bincount(data.micro_times[ch2_indeces], minlength=n_micro)
-n_lower = 1200
+y_hist_0 = np.bincount(data.micro_times[ch1_indices], minlength=n_micro)
+y_hist_8 = np.bincount(data.micro_times[ch2_indices], minlength=n_micro)
+n_lower = 1200  # n_lower will be used below in the actual correlation calculation
+# Here, n_lower is set based on the micro time histograms, i.e. only bins with
+# significant amount of fluorescence photons are used.
 
 #%%
 # Next, we create a new correlator and set the numbers of bin and correlation
@@ -71,9 +73,9 @@ correlator.curve.settings.macro_time_duration = data.header.macro_time_resolutio
 # We get the macrotimes and set the weights, the weights will = 1, i.e.
 # no weighting will be used
 t = data.macro_times
-t1 = t[ch1_indeces]
+t1 = t[ch1_indices]
 w1 = np.ones_like(t1, dtype=np.float)
-t2 = t[ch2_indeces]
+t2 = t[ch2_indices]
 w2 = np.ones_like(t2, dtype=np.float)
 correlator.set_events(t1, w1, t2, w2)
 
@@ -86,19 +88,19 @@ y_raw = correlator.correlation
 # photons with a micro time is smaller than n_lower to zero.
 t = data.get_macro_time()
 mt = data.get_micro_time()
-t1 = t[ch1_indeces]
-mt1 = mt[ch1_indeces]
+t1 = t[ch1_indices]
+mt1 = mt[ch1_indices]
 w1 = np.ones_like(t1, dtype=np.float)
 w1[np.where(mt1 < n_lower)] *= 0.0
 
 #%%
-# Mask the data using the microtime information. We mask values by
+# Mask also the data for ch2 using the microtime information. We mask values by
 # setting the weights where the micro time is smaller than 1500
 # to zero and masks the photons, i.e. this corresponds to only taking
 # the green photon emitted in the "delay" tine window of the PIE experiment
 # into account for the correlation
-t2 = t[ch2_indeces]
-mt2 = mt[ch2_indeces]
+t2 = t[ch2_indices]
+mt2 = mt[ch2_indices]
 w2 = np.ones_like(t2, dtype=np.float)
 w2[np.where(mt2 < n_lower)] *= 0.0
 

@@ -51,7 +51,7 @@ settings = {
 #%%
 # In the TTTR data the channel number 0 and 8 correspond to the green detectors.
 # Here, ([0], [8]) is a correlation of the photons in the channel [0] and the photons
-# channel [8].
+# in channel [8].
 corr_channels_green = ([0], [8])  # green detectors
 correlator_green = tttrlib.Correlator(
     tttr=data,
