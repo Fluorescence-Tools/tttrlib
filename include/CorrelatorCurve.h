@@ -46,9 +46,6 @@ private:
 
 protected:
 
-    /// Stores the settings of the correlation curve, i.e., the number of correlation bins
-    CorrelationCurveSettings settings;
-
     /// The x-axis (the time axis) of the correlation
     std::vector<unsigned long long> x_axis;
 
@@ -69,6 +66,9 @@ protected:
     }
 
 public:
+
+    /// Stores the settings of the correlation curve, i.e., the number of correlation bins
+    CorrelationCurveSettings settings;
 
     size_t size(){
         return x_axis.size();

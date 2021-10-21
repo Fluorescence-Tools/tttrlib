@@ -31,10 +31,6 @@ private:
     /// if the correlation function corresponds to the input
     bool is_valid = false;
 
-    CorrelatorPhotonStream p1;
-    CorrelatorPhotonStream p2;
-    CorrelatorCurve curve;
-
 protected:
 
     /*!
@@ -177,6 +173,10 @@ protected:
             );
 
 public:
+
+    CorrelatorPhotonStream p1;
+    CorrelatorPhotonStream p2;
+    CorrelatorCurve curve;
 
     /*!
      * Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t
