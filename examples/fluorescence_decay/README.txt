@@ -1,6 +1,5 @@
 .. _fluorescence_decay_examples:
 
-Fluorescence decay
-------------------
+Fluorescence decays
+-------------------
 
-Fluorescence decay applications.

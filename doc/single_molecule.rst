@@ -15,6 +15,6 @@ Single-molecule fluorescence
     modules/burst_selection.rst
     modules/intensity.rst
     modules/decay.rst
-    modules/fcs.rst
-    modules/fcs_filtered.rst
+    modules/fcs_basics.rst
+    modules/fcs_advanced.rst
 

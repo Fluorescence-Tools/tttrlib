@@ -11,26 +11,24 @@ import tttrlib
 
 data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
-"""
-TTTR attributes
-===============
-For convenience, tttrlib provides a unified way of accessing the TTTR data
-independently of the vendor data format via the class :class:`TTTR`. In memory
-the TTTR data are handled by tttrlib in :class:`TTTR` objects as follows:
-
-    1. Macro time - 64 bit unsigned integer
-    2. Micro time - 16 bit unsigned integer
-    3. Channel number - 8 bit signed integer
-    4. Event type - 8 bit signed integer
-    5. TTTR Header data - dedicated class
-
-TTTR files are handled by creating :class:`TTTR` objects that contain the TTTR
-data of the files. The data contained in the files can be accessed by the methods
-provided by the TTTR class. Opening and and accessing the information contained in
-TTTR files is demonstrated by the Python code examples shown below. A TTTR object
-provides getter methods to access the data contained in the associated file.
-
-"""
+#%%
+# TTTR attributes
+# ===============
+# For convenience, tttrlib provides a unified way of accessing the TTTR data
+# independently of the vendor data format via the class :class:`TTTR`. In memory
+# the TTTR data are handled by tttrlib in :class:`TTTR` objects as follows:
+#
+#     1. Macro time - 64 bit unsigned integer
+#     2. Micro time - 16 bit unsigned integer
+#     3. Channel number - 8 bit signed integer
+#     4. Event type - 8 bit signed integer
+#     5. TTTR Header data - dedicated class
+#
+# TTTR files are handled by creating :class:`TTTR` objects that contain the TTTR
+# data of the files. The data contained in the files can be accessed by the methods
+# provided by the TTTR class. Opening and and accessing the information contained in
+# TTTR files is demonstrated by the Python code examples shown below. A TTTR object
+# provides getter methods to access the data contained in the associated file.
 
 macro_time = data.get_macro_time()
 micro_time = data.get_micro_time()
@@ -38,13 +36,13 @@ channel = data.get_routing_channel()
 event_type = data.get_event_type()
 header = data.get_header()
 
-"""
-In Python, the getter methods for the macro time, micro time, the channel, and the
-event type return `NumPy <http://www.numpy.org/>`_ arrays. The returned header is
-of the type :class:`TTTRHeader`.
+#%%
+# In Python, the getter methods for the macro time, micro time, the channel, and the
+# event type return `NumPy <http://www.numpy.org/>`_ arrays. The returned header is
+# of the type :class:`TTTRHeader`.
+#
+# Alternatively, the data can be accesses by corresponding the (write-only) attributes.
 
-Alternatively, the data can be accesses by corresponding the (write-only) attributes.
-"""
 macro_time = data.macro_times
 micro_time = data.micro_times
 channel = data.routing_channels

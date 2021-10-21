@@ -1,6 +1,6 @@
 """
 ========================================
-Release Highlights for tttrlib 0.20
+Release Highlights for tttrlib 0.21
 ========================================
 
 .. currentmodule:: tttrlib

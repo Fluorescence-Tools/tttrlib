@@ -3,15 +3,27 @@
 Normal multi-tau correlation
 ============================
 
-As described previously there are several analogous possibilities to compute
-correlations. Two possibilities are shown in the example below.
+An alternative approach is to calculate the FCS curve by software
+on the basis of the directly recorded asynchronous photon count data.
+The straightforward approach would be to generate a continuous file of
+fluorescence intensity values in consecutive time bins of fixed bin
+width, and to use this file for a conventional autocorrelation calculation.
+But then again, one encounters the same unreasonably large amount of data
+as when directly recording fluorescence intensity values in a synchronous
+data acquisition mode.
 
-Analysing such correlation functions informs on diffusion and fast kinetics. Such
-correlation functions can be analyzed by dedicated open tools for fluorescence
-such as `ChiSurf <https://github.com/fluorescence-tools/chisurf/>`_,
-`PyCorrFit <https://github.com/FCS-analysis/PyCorrFit>`_, and
-`PAM <https://github.com/fluorescence-tools/pam>`_ or generic curve analysis
-software.
+
+When applying the algorithm only at the increasingly spaced lag
+times as given by Eq. (2), it will completely miss, e.g., the strong
+autocorrelation of any periodic signal with a repetition time not
+included within the vector of used lag times. To avoid that, one usually
+applies an averaging procedure by coarsening the time resolution of the photon
+detection times tj when coming to the calculation of the autocorrelation
+function at increasingly larger lag time. This is equivalent to the multiple-tau
+and multiple-sampling time correlation method employed in hardware
+correlators [12].
+
+:cite:`Wahl2003`.
 
 
 """
