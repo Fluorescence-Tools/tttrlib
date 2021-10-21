@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm> /* std::max */
-
+#include <string.h> /* strcmp */
 
 #include "omp.h"
 
