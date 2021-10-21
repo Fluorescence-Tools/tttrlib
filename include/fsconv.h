@@ -4,9 +4,11 @@
 #define FIT2X_FSCONV_H
 
 #include <cmath>  /* std::ceil */
-#include <numeric> /* accumulate */
+#include <numeric> /* std::accumulate */
 #include <iostream>
 #include <vector>
+#include <algorithm> /* std::max */
+
 
 #include "omp.h"
 

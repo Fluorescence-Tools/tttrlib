@@ -50,7 +50,7 @@ public:
      * @param s_irf s-value of instrument response phasor
      * @return vector of length 2: first element g-value, second element s-value
      */
-    static std::vector<double> DecayPhasor::compute_phasor_bincounts(
+    static std::vector<double> compute_phasor_bincounts(
             std::vector<int> &bincounts,
             double frequency,
             int minimum_number_of_photons,

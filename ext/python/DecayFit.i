@@ -25,7 +25,7 @@
 }
 
 /* Fits */
-%pythoncode "../ext/python/fit2x.py"
+%pythoncode "../ext/python/Fit2x.py"
 %include "DecayFit23.i"
 %include "DecayFit24.i"
 %include "DecayFit25.i"
