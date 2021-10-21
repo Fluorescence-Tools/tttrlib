@@ -238,10 +238,7 @@ int TTTR::read_hdf_file(const char *fn){
     return 1;
 }
 
-int TTTR::read_file(
-        const char *fn,
-        int container_type
-        ) {
+int TTTR::read_file(const char *fn, int container_type) {
 #if VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
 #endif
@@ -251,14 +248,13 @@ int TTTR::read_file(
     if(container_type < 0){
         container_type = tttr_container_type;
     }
-    if(boost::filesystem::exists(fn))
-    {
+    if(boost::filesystem::exists(fn)){
 #if VERBOSE_TTTRLIB
         std::clog << "-- Filename: " << fn << std::endl;
         std::clog << "-- Container type: " << container_type << std::endl;
 #endif
         // clean up filename
-        boost::filesystem::path p = fn;
+        // boost::filesystem::path p = fn;
         //filename = boost::filesystem::canonical(boost::filesystem::absolute(p)).generic_string();
         fn = filename.c_str();
         if (container_type == PHOTON_HDF_CONTAINER) {
@@ -272,10 +268,8 @@ int TTTR::read_file(
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
             processRecord = processRecord_map[tttr_record_type];
-            n_records_in_file = determine_number_of_records_by_file_size(
-                    fp,
-                    header->header_end,
-                    header->get_bytes_per_record()
+            n_records_in_file = get_number_of_records_by_file_size(
+                    fp, header->header_end, header->get_bytes_per_record()
             );
             allocate_memory_for_records(n_records_in_file);
             read_records();
@@ -372,7 +366,7 @@ void TTTR::read_records(
     size_t number_of_objects;
     size_t bytes_per_record = header->get_bytes_per_record();
     do{
-        signed char* tmp = (signed char*) malloc(bytes_per_record * (chunk + 1));
+        auto tmp = (signed char*) malloc(bytes_per_record * (chunk + 1));
         number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
         for (size_t j = 0; j < number_of_objects; j++) {
             offset = bytes_per_record * j;
@@ -479,11 +473,12 @@ void TTTR::get_time_window_ranges(
         int minimum_number_of_photons_in_time_window,
         int maximum_number_of_photons_in_time_window,
         double maximum_window_length,
+        double macro_time_calibration,
         bool invert
         ){
-    // macro_time_resolution is in ns minimum_window_length selection
-    // is in units of seconds
-    double macro_time_calibration = header->get_macro_time_resolution();
+    if(macro_time_calibration < 0){
+        macro_time_calibration = header->get_macro_time_resolution();
+    }
     ranges_by_time_window(
             output, n_output,
             macro_times, (int) n_valid_events,
@@ -517,7 +512,7 @@ void selection_by_channels(
     *n_output = (int) n_sel;
 }
 
-size_t TTTR::determine_number_of_records_by_file_size(
+size_t TTTR::get_number_of_records_by_file_size(
         std::FILE *fp,
         size_t offset,
         size_t bytes_per_record
@@ -541,7 +536,7 @@ size_t TTTR::determine_number_of_records_by_file_size(
 
 void ranges_by_time_window(
         int **output, int *n_output,
-        unsigned long long *input, int n_input,
+        uint64_t *input, uint32_t n_input,
         double minimum_window_length,
         double maximum_window_length,
         int minimum_number_of_photons_in_time_window,
@@ -549,8 +544,8 @@ void ranges_by_time_window(
         double macro_time_calibration,
         bool invert
 ) {
-    auto tw_min = (unsigned long) (minimum_window_length / macro_time_calibration);
-    auto tw_max = (unsigned long) (maximum_window_length / macro_time_calibration);
+    auto tw_min = (uint64_t) (minimum_window_length / macro_time_calibration);
+    auto tw_max = (uint64_t) (maximum_window_length / macro_time_calibration);
 #if VERBOSE_TTTRLIB
     std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
     std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
@@ -563,12 +558,13 @@ void ranges_by_time_window(
 #endif
     std::vector<int> ss;
     ss.reserve(200);
+
     size_t tw_begin = 0;
     while (tw_begin < n_input) {
         // search for the end of a time window
-        size_t tw_end;
-        unsigned long long dt;
-        for (tw_end = tw_begin; tw_end < n_input; tw_end++){
+        size_t tw_end = tw_begin;
+        uint64_t dt;
+        for (; tw_end < n_input; tw_end++){
             dt = input[tw_end] - input[tw_begin];
             if(dt >= tw_min) break;
         }

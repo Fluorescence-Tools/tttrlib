@@ -15,6 +15,7 @@
 #include <memory>       /* shared_ptr */
 #include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
+#include <cinttypes>    /* uint64, int64, etc */
 
 #include "omp.h"
 #include <boost/bimap.hpp>
@@ -82,7 +83,7 @@ void selection_by_count_rate(
 */
 void ranges_by_time_window(
         int **output, int *n_output,
-        unsigned long long *input, int n_input,
+        uint64_t *input, uint32_t n_input,
         double minimum_window_length,
         double maximum_window_length=-1,
         int minimum_number_of_photons_in_time_window=-1,
@@ -348,7 +349,7 @@ public:
     * @param offset
     * @param bytes_per_record
     */
-    static size_t determine_number_of_records_by_file_size(
+    static size_t get_number_of_records_by_file_size(
             std::FILE *fp,
             size_t offset,
             size_t bytes_per_record
@@ -566,6 +567,45 @@ public:
     }
 
     /*!
+    * @brief Returns time windows (tw), i.e., the start and the stop indices for a
+    * minimum tw size, a minimum number of photons in a tw.
+    *
+    * @param output [out] Array containing the interleaved start and stop indices
+    * of the tws in the TTTR object.
+    * @param n_output [out] Length of the output array
+    * @param minimum_window_length [in] Minimum length of a tw (mandatory).
+    * @param maximum_window_length [in] Maximum length of a tw (optional).
+    * @param minimum_number_of_photons_in_time_window [in] Minimum number of
+    * photons a selected tw contains (optional)
+    * @param maximum_number_of_photons_in_time_window [in] Maximum number of
+    * photons a selected tw contains (optional)
+    * @param invert [in] If set to true, the selection criteria are inverted.
+    */
+    void get_ranges_by_time_window(
+            int **output, int *n_output,
+            double minimum_window_length,
+            double maximum_window_length=-1,
+            int minimum_number_of_photons_in_time_window=-1,
+            int maximum_number_of_photons_in_time_window=-1,
+            double macro_time_calibration = -1,
+            bool invert=false
+    ){
+        if(macro_time_calibration < 0){
+            macro_time_calibration = header->get_macro_time_resolution();
+        }
+        ranges_by_time_window(
+                output, n_output,
+                macro_times, n_valid_events,
+                minimum_window_length,
+                maximum_window_length,
+                minimum_number_of_photons_in_time_window,
+                maximum_number_of_photons_in_time_window,
+                macro_time_calibration,
+                invert
+        );
+    }
+
+    /*!
       * Get events indices by the routing channel number
       *
       * This method returns an array that contains the event / photon indices
@@ -638,6 +678,7 @@ public:
             int minimum_number_of_photons_in_time_window,
             int maximum_number_of_photons_in_time_window=-1,
             double maximum_window_length=-1.0,
+            double macro_time_calibration=-1,
             bool invert = false
     );
 
