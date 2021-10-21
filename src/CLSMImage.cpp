@@ -630,23 +630,24 @@ void CLSMImage::get_mean_micro_time_image(
     std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
     std::clog << "-- Computing stack of mean micro times " << std::endl;
 #endif
-    auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
-    for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
-        for(size_t i_line = 0; i_line < n_lines; i_line++){
-            for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
-                size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
-                CLSMPixel px = frames[i_frame]->lines[i_line]->pixels[i_pixel];
-                t[pixel_nbr] = px.get_mean_microtime(tttr_data, minimum_number_of_photons);
+    if(microtime_resolution < 0)
+        microtime_resolution = tttr_data->header->get_micro_time_resolution();
+    if(!stack_frames) {
+        auto* t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
+        for(size_t i_frame = 0; i_frame < n_frames; i_frame++){
+            for(size_t i_line = 0; i_line < n_lines; i_line++){
+                for(size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++){
+                    size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
+                    CLSMPixel px = frames[i_frame]->lines[i_line]->pixels[i_pixel];
+                    t[pixel_nbr] = px.get_mean_microtime(tttr_data, microtime_resolution, minimum_number_of_photons);
+                }
             }
         }
-    }
-    if(!stack_frames) {
         *dim1 = (int) n_frames;
         *dim2 = (int) n_lines;
         *dim3 = (int) n_pixel;
         *output = t;
     } else{
-        // average over the arrival times
         int w_frame = 1;
 #if VERBOSE_TTTRLIB
         std::clog << "-- Compute photon weighted average over frames" << std::endl;
@@ -672,7 +673,6 @@ void CLSMImage::get_mean_micro_time_image(
         *dim2 = (int) n_lines;
         *dim3 = (int) n_pixel;
         *output = r;
-        free(t);
     }
 }
 

@@ -19,14 +19,14 @@ build:lnx_x86_64:
   <<: *build_linux
   tags:
     - x86_64
-build:lnx_ppc64le:
-  <<: *build_linux
-  tags:
-    - ppc64le
-build:lnx_aarch64:
-  <<: *build_linux
-  tags:
-    - aarch64
+#build:lnx_ppc64le:
+#  <<: *build_linux
+#  tags:
+#    - ppc64le
+#build:lnx_aarch64:
+#  <<: *build_linux
+#  tags:
+#    - aarch64
 
 build:windows:
   stage: build

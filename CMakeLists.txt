@@ -18,44 +18,29 @@ OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 
-#######################################
-# Compiler flags
-#######################################
-
-# Debug build detection
-###########################
-IF(MSVC)
-    # see: https://stackoverflow.com/questions/58708772/cmake-project-in-visual-studio-gives-flag-override-warnings-command-line-warnin
-    string(REGEX REPLACE "/W[1|2|3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-ELSE()
-    ADD_COMPILE_OPTIONS(-w)
-ENDIF()
+## Compiler flags
+########################
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    MESSAGE("Debug build")
-    IF(MSVC)
-        ADD_COMPILE_OPTIONS(/W4)
-    ELSE()
+    if(MSVC)
+        ADD_COMPILE_OPTIONS(/Wall)
+    else()
         ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
-    ENDIF()
-    ADD_DEFINITIONS("-DVERBOSE_TTTRLIB=1")
+    endif()
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-# Windows
-##############
-if (MSVC)
-    ADD_DEFINITIONS(-DMS_WIN64)
-    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-endif (MSVC)
-
-# MACOSX
-##############
-FIND_PACKAGE(Threads)
-if (APPLE)
+if(LINUX)
+    STRING(APPEND CMAKE_CXX_FLAGS " -march=native -Ofast -mavx -ffast-math -funroll-loops")
+    STRING(APPEND CMAKE_C_FLAGS " -march=native -Ofast -mavx -ffast-math -funroll-loops")
+endif()
+if(APPLE)
+    FIND_PACKAGE(Threads)
     # explicit link to libc++ for recent osx versions
     MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
     ADD_DEFINITIONS(-stdlib=libc++)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    # Requires AVX and FMA
+    STRING(APPEND CMAKE_CXX_FLAGS " -march=native -Ofast -mavx -mfma -ffast-math -funroll-loops")
+    STRING(APPEND CMAKE_C_FLAGS " -march=native -Ofast -mavx -mfma -ffast-math -funroll-loops")
     # Don't set MACOSX_RPATH by default
     # https://github.com/conda/conda/issues/3624
     if(DEFINED $ENV{CONDA_PREFIX})
@@ -63,7 +48,14 @@ if (APPLE)
         set(CMAKE_SKIP_RPATH TRUE)
         set(CMAKE_SKIP_INSTALL_RPATH TRUE)
     endif()
-endif (APPLE)
+endif()
+if (MSVC)
+    ADD_DEFINITIONS(-DMS_WIN64)
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
+    # /Oi is for intrinsics
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi /O2")
+endif (MSVC)
 
 #######################################
 # INCLUDES AND LIBRARIES
