@@ -83,7 +83,7 @@ void selection_by_count_rate(
 */
 void ranges_by_time_window(
         int **output, int *n_output,
-        uint64_t *input, uint32_t n_input,
+        unsigned long long *input, int n_input,
         double minimum_window_length,
         double maximum_window_length=-1,
         int minimum_number_of_photons_in_time_window=-1,
