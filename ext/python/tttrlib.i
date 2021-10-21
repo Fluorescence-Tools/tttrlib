@@ -28,13 +28,22 @@
 %include "info.h"
 %include "TTTR.i"
 %include "Histogram.i"
-%include "Correlator.i"
-%include "DecayPhasor.i"
-%include "CLSM.i"
 
-// Photon distribution analysis
+/* Correlation of data */
+%include "Correlator.i"
+
+/* Microscopy */
+%include "CLSM.i"
+%include "Localization.i"
+
+/* Phasor analysis */
+%include "DecayPhasor.i"
+
+/* Photon distribution analysis */
 %include "Pda.i"
 
-// Decay analysis
 /* convolution */
 %include "fsconv.i"
+
+/* DecayFit(s) */
+%include "DecayFit.i"
