@@ -1077,21 +1077,24 @@ double TTTR::compute_mean_microtime(
 ){
     if(microtime_resolution < 0)
         microtime_resolution = tttr_data->header->get_micro_time_resolution();
-    std::vector<int> v;
-    if(tttr_indices == nullptr){
-        v.resize(tttr_data->n_valid_events);
-        for(int i = 0; i < tttr_data->n_valid_events; i++) v[i] = i;
-    } else{
-        v = *tttr_indices;
-    }
-    // calculate the mean arrival time iteratively
     double value = 0.0;
-    if (v.size() > minimum_number_of_photons){
-        double i = 1.0;
-        for(auto event_i: v){
-            value = value + 1. / (i + 1.) * (double) (tttr_data->micro_times[event_i] - value);
-            i = i + 1.0;
+    double n = 0.0;
+    if(tttr_indices == nullptr){
+        // calculate mean arrival time iteratively
+        for(int i = 0; i < tttr_data->n_valid_events; i++){
+            value = value + 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
+            n += 1.0;
+        }
+    } else{
+        // calculate mean arrival time iteratively
+        for(auto i: *tttr_indices){
+            value = value + 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
+            n += 1.0;
         }
     }
-    return value * microtime_resolution;
+    value *= microtime_resolution;
+    if (n < minimum_number_of_photons){
+        value = -1.0;
+    }
+    return value;
 }

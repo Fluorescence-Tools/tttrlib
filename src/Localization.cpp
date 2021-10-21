@@ -234,7 +234,7 @@ int localization::Gauss2D_analysis_Ani(
     double bg = 0., i0d;
 
     // first 4 bytes contain the array size -- must skip. See LabView help.
-    ResultsCluster *results = (ResultsCluster *) ((__int64 *) (*presults) + 1);
+    ResultsCluster *results = (ResultsCluster *) ((uint64_t *) (*presults) + 1);
 
     ////////////////////////////////// search for close neighbours ////////////////////////////////
     int *badpeaks = new int[NPEAKS_MAX * NPEAKS_FACTOR];

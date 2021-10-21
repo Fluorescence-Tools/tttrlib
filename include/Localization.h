@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <cinttypes>    /* uint64, int64, etc */
 
 #include "i_lbfgs.h"
 #include "LvArrays.h"
