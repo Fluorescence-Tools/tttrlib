@@ -49,7 +49,7 @@ Glossary
         time-resolved anisotropy defined by the ratio of the donor fluorescence decay in the presence and the
         absence of FRET (see: :cite:`peulen2017`).
 
-    Instrument response function (IRF)
+    IRF
         IRF stands for instrument response function. In time-resolved fluorescence measurements the IRF is the temporal
         response of the fluorescence spectrometer to a delta-pulse. Suppose a initially sharp pulse defines the time of
         excitation / triggers the laser, then recorded response of the fluorescence spectrometer is broadened due to:
@@ -59,7 +59,7 @@ Glossary
         The IRF is typically recorded by minimising the contribution of (3), e.g., by measuring the response of the
         instrument using a scattering sample, or a short lived dye.
 
-    Time-tagged time resolved (TTTR)
+    TTTR
          TTTR stands for time tagged time-resolved data or experiments. In TTTR-datasets the events, e.g., the detection
          of a photon, are tagged by a detection channel number. Moreover, the recording clock usually registers the
          events with a high time resolution of a few picoseconds. For long recording times of the detected events,
