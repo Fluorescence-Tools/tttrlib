@@ -39,6 +39,25 @@ public:
     );
 
     /*!
+     * Compute the phasor (g,s) for a histogram / bincounts
+     *
+     * This function computes the phasor (g,s) for bincounted micro times
+     *
+     * @param bincounts vector bincounts
+     * @param minimum_number_of_photons
+     * @param frequency the frequency of the phasor
+     * @param g_irf g-value of instrument response phasor
+     * @param s_irf s-value of instrument response phasor
+     * @return vector of length 2: first element g-value, second element s-value
+     */
+    static std::vector<double> DecayPhasor::compute_phasor_bincounts(
+            std::vector<int> &bincounts,
+            double frequency,
+            int minimum_number_of_photons,
+            double g_irf, double s_irf
+    );
+
+    /*!
      * Compute the phasor (g,s) for a all passed micro times
      *
      * @param micro_times vector of micro times

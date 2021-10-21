@@ -2,6 +2,35 @@
 #include "fsconv.h"
 %}
 
+
+
+// manually added instead of including header file as all other functions
+%apply (double* INPLACE_ARRAY1, int DIM1) {
+    (double* fit, int n_fit),
+    (double *model, int n_model),
+    (double *time_axis, int n_time_axis),
+    (double *lifetime_spectrum, int n_lifetime_spectrum),
+    (double *data, int n_data),
+    (double* w_sq, int n_w_sq),
+    (double* x, int n_x),
+    (double* decay, int n_decay),
+    (double* irf, int n_irf),
+    (double* lamp, int n_lamp),
+    (double* lampsh, int n_lampsh)
+}
+
+void add_pile_up_to_model(
+        double* model, int n_model,
+        double* decay, int n_decay,
+        double repetition_rate,
+        double instrument_dead_time,
+        double measurement_time,
+        std::string pile_up_model = "coates",
+        int start = 0,
+        int stop = -1
+);
+
+
 //// rescale
 //////////////
 %ignore rescale;
@@ -453,30 +482,6 @@ void my_shift_lamp(
 }
 %}
 
-void add_pile_up_to_model(
-        double* model, int n_model,
-        double* data, int n_data,
-        double repetition_rate,
-        double instrument_dead_time,
-        double measurement_time,
-        std::string pile_up_model = "coates",
-        int start = 0,
-        int stop = -1
-);
 
-// manually added instead of including header file as all other functions
-%apply (double* INPLACE_ARRAY1, int DIM1) {
-    (double* fit, int n_fit),
-    (double *model, int n_model),
-    (double *time_axis, int n_time_axis),
-    (double *lifetime_spectrum, int n_lifetime_spectrum),
-    (double *data, int n_data),
-    (double* w_sq, int n_w_sq),
-    (double* x, int n_x),
-    (double* decay, int n_decay),
-    (double* irf, int n_irf),
-    (double* lamp, int n_lamp),
-    (double* lampsh, int n_lampsh)
-}
 
 %include "fsconv.h"

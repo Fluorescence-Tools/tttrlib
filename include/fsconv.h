@@ -231,7 +231,7 @@ void fconv_ref(double *fit, double *x, double *lamp, int numexp, int start, int 
 
 
 /*!
- * @brief Convolve fluorescence decay curve with irf - slow convolution
+ * @brief Convolve fluorescence decay curve with irf
  *
  * This function computes a convolved model function for a fluorescence decay
  * curve.
