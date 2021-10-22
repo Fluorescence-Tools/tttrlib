@@ -57,16 +57,16 @@ class TestCLSM(unittest.TestCase):
         mean_tac_image = clsm_image.get_mean_micro_time_image(
             tttr_data=data,
             minimum_number_of_photons=1
-        ).sum(axis=0)
+        )
+        mean_tac_image = np.clip(mean_tac_image, 0, 1280000)
+        mean_tac_image = mean_tac_image.sum(axis=0)
         fn = './test/data/reference/img_ref_mean_tac_sp8.npy'
         if self.make_reference:
             np.save(fn, mean_tac_image)
-        self.assertEqual(
-            np.allclose(
-                np.load(fn), mean_tac_image
-            ),
-            True
-        )
+        # Pixel with less than minimum_number_of_photons have negative numbers
+        mean_tac_image = np.clip(mean_tac_image, 0, 1280000)
+        np.testing.assert_array_almost_equal(np.load(fn), mean_tac_image)
+
         # Test decay image
         decay_image = clsm_image.get_fluorescence_decay_image(
             tttr_data=data,
@@ -76,13 +76,7 @@ class TestCLSM(unittest.TestCase):
         fn = './test/data/reference/img_ref_decay_image_sp8.npy'
         if self.make_reference:
             np.save(fn, decay_image)
-        self.assertEqual(
-            np.allclose(
-                np.load(fn),
-                decay_image
-            ),
-            True
-        )
+        np.testing.assert_array_almost_equal(np.load(fn), decay_image)
 
         # Access the pixel
         frame_nbr = 1

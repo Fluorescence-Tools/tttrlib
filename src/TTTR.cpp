@@ -1082,13 +1082,13 @@ double TTTR::compute_mean_microtime(
     if(tttr_indices == nullptr){
         // calculate mean arrival time iteratively
         for(int i = 0; i < tttr_data->n_valid_events; i++){
-            value = value + 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
+            value += 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
             n += 1.0;
         }
     } else{
         // calculate mean arrival time iteratively
         for(auto i: *tttr_indices){
-            value = value + 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
+            value += 1. / (n + 1.) * (double) (tttr_data->micro_times[i] - value);
             n += 1.0;
         }
     }

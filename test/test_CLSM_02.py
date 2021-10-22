@@ -171,10 +171,11 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
         fn = './test/data/reference/img_ref_mean_tac.npy'
-        img = clsm_image_1.get_mean_micro_time_image(tttr_data=data, minimum_number_of_photons=1).sum(axis=0)
+        img = clsm_image_1.get_mean_micro_time_image(tttr_data=data, minimum_number_of_photons=1)
+        img = np.clip(img, 0, np.inf).sum(axis=0)
         if make_reference:
             np.save(fn, img)
-        self.assertEqual(np.allclose(img, np.load(fn,)), True)
+        np.testing.assert_array_almost_equal(img, np.load(fn))
         tac_coarsening = 512
         img = clsm_image_1.get_fluorescence_decay_image(
             tttr_data=data,
@@ -184,7 +185,7 @@ class TestCLSM(unittest.TestCase):
         fn = './test/data/reference/img_ref_decay_image.npy'
         if make_reference:
             np.save(fn, img)
-        self.assertEqual(np.allclose(img, np.load(fn)), True)
+        np.testing.assert_array_almost_equal(img, np.load(fn))
 
     def test_mean_tau_stack(self):
         """Mean lifetime images (with IRF correction)

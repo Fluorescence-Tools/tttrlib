@@ -663,10 +663,7 @@ void CLSMImage::get_mean_micro_time_image(
                     auto temp = frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices;
                     tr.insert(tr.end(), temp.begin(), temp.end());
                 }
-                r[pixel_nbr] = TTTR::compute_mean_microtime(
-                        tttr_data, &tr,
-                        microtime_resolution, minimum_number_of_photons
-                );
+                r[pixel_nbr] = tttr_data->get_mean_microtime(&tr, microtime_resolution, minimum_number_of_photons);
             }
         }
         *dim1 = (int) w_frame;
