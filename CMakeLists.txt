@@ -27,19 +27,26 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
         ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
     endif()
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-if(LINUX)
-    ADD_COMPILE_OPTIONS(-Ofast -mavx -mfma -ffast-math -funroll-loops)
-endif()
-if(APPLE)
-    FIND_PACKAGE(Threads)
-    # explicit link to libc++ for recent osx versions
-    MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
-    ADD_DEFINITIONS(-stdlib=libc++)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+if (MSVC)
+    ADD_DEFINITIONS(-DMS_WIN64)
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
+    # /Oi is for intrinsics
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi /O2")
+else()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=haswell")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=haswell")
     # Requires AVX and FMA
     STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
     STRING(APPEND CMAKE_C_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
+endif (MSVC)
+if(APPLE)
+    FIND_PACKAGE(Threads)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    # explicit link to libc++ for recent osx versions
+    MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
+    ADD_DEFINITIONS(-stdlib=libc++)
     # Don't set MACOSX_RPATH by default
     # https://github.com/conda/conda/issues/3624
     if(DEFINED ENV{CONDA_PREFIX})
@@ -48,13 +55,6 @@ if(APPLE)
         set(CMAKE_SKIP_INSTALL_RPATH TRUE)
     endif()
 endif()
-if (MSVC)
-    ADD_DEFINITIONS(-DMS_WIN64)
-    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-    # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
-    # /Oi is for intrinsics
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi /O2")
-endif (MSVC)
 
 #######################################
 # INCLUDES AND LIBRARIES
