@@ -83,7 +83,7 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
 
     // make sure that there are always multiple of 4 in the lifetimes
     const int chunk_size = 4; // the number of lifetimes per AVX register
-    int n_chunks = std::ceil((double) numexp / chunk_size);
+    int n_chunks = (int) std::ceil((double) numexp / chunk_size);
     int n_ele = n_chunks * chunk_size;
 
     // copy the interleaved lifetime spectrum to vectors
@@ -198,7 +198,7 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
     stop = (stop < 0) ? n_points: stop;
     // make sure that there are always multiple of the AVX register size
     const int chunk_size = 4; // the number of lifetimes per AVX register
-    int n_chunks = std::ceil((double) numexp / chunk_size);
+    int n_chunks = (int) std::ceil((double) numexp / chunk_size);
     int n_ele = n_chunks * chunk_size;
 
     // Number of time channels in period
@@ -422,7 +422,7 @@ void add_pile_up_to_model(
         instrument_dead_time *= 1e-9;
         std::vector<double> cum_sum(n_data);
         std::partial_sum(data, data + n_data, cum_sum.begin(), std::plus<double>());
-        long n_pulse_detected = cum_sum[cum_sum.size() - 1];
+        long n_pulse_detected = (long) cum_sum[cum_sum.size() - 1];
         double total_dead_time = n_pulse_detected * instrument_dead_time;
         double live_time = measurement_time - total_dead_time;
         double n_excitation_pulses = std::max(live_time * repetition_rate, (double) n_pulse_detected);
@@ -495,7 +495,7 @@ void fconv_per_cs_time_axis(
     fconv_per_avx(
             model,
             lifetime_spectrum,
-            instrument_response_function,
+            irf,
             (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop,
             n_model,
@@ -515,7 +515,7 @@ void fconv_per_cs_time_axis(
 void fconv_cs_time_axis(
         double* output, int n_output,
         double* time_axis, int n_time_axis,
-        double *instrument_response_function, int n_instrument_response_function,
+        double *irf, int n_irf,
         double* lifetime_spectrum, int n_lifetime_spectrum,
         int convolution_start,
         int convolution_stop
@@ -525,7 +525,7 @@ void fconv_cs_time_axis(
     fconv_avx(
             output,
             lifetime_spectrum,
-            instrument_response_function,
+            irf,
             (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, dt
     );
@@ -534,7 +534,7 @@ void fconv_cs_time_axis(
     fconv(
             output,
             lifetime_spectrum,
-            instrument_response_function,
+            irf,
             (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, dt
     );
@@ -545,7 +545,7 @@ void fconv_cs_time_axis(
 void fconv_cs_time_axis_old(
         double* output, int n_output,
         double* time_axis, int n_time_axis,
-        double *instrument_response_function, int n_instrument_response_function,
+        double *irf, int n_irf,
         double* lifetime_spectrum, int n_lifetime_spectrum,
         int convolution_start,
         int convolution_stop
@@ -572,8 +572,8 @@ void fconv_cs_time_axis_old(
             }
             double dt_2 = dt / 2.0;
             double current_exponential = std::exp(-dt / current_lifetime);
-            current_model_value = (current_model_value + dt_2 * instrument_response_function[pre]) *
-                                  current_exponential + dt_2 * instrument_response_function[i];
+            current_model_value = (current_model_value + dt_2 * irf[pre]) *
+                                  current_exponential + dt_2 * irf[i];
             output[i] += current_model_value * a;
         }
     }

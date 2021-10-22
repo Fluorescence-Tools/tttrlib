@@ -1,5 +1,3 @@
-//!  Convolution, scaling, and lamp shift routines
-
 #ifndef FIT2X_FSCONV_H
 #define FIT2X_FSCONV_H
 
@@ -9,8 +7,6 @@
 #include <vector>
 #include <algorithm> /* std::max */
 #include <string.h> /* strcmp */
-
-#include "omp.h"
 
 #if defined(_MSC_VER)
 /* Microsoft C/C++-compatible compiler */

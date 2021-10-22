@@ -129,7 +129,7 @@ double DecayFit23::targetf(double *x, void *pv) {
         w = Wcm(expdata->data, M->data, Nchannels);
 
     if (fit_settings.softbifl && (fit_signals.Bexpected > 0.)) {
-        w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(Bgamma + 1.);
+        w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(fit_signals.Bexpected + 1.);
     }
     double v = w / Nchannels + fit_settings.penalty;
 #if VERBOSE_FIT2X
