@@ -86,7 +86,7 @@ deploy:doc:
    image: condaforge/mambaforge
    tags:
      - linux
-   needs: ["build:lnx_x86_64"]
+   needs: ["test:linux"]
    before_script:
      - apt-get update -qy
      # Latex documentation
