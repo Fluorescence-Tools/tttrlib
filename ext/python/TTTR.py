@@ -3,35 +3,44 @@
 def micro_times(self):
     return self.get_micro_time()
 
-
 @property
 def routing_channels(self):
     return self.get_routing_channel()
-
 
 @property
 def macro_times(self):
     return self.get_macro_time()
 
-
 @property
 def event_types(self):
     return self.get_event_type()
+#
+# @property
+# def header(self):
+#     return self.get_header()
+#
+# @property
+# def filename(self):
+#     return self.get_filename()
 
+def __getattr__(self, item):
+    """
+    If an attribute `attribute` is accesses that does not exist
+    the corresponding getter by calling 'get_attribute' is called
 
-@property
-def header(self):
-    return self.get_header()
-
-
-@property
-def filename(self):
-    return self.get_filename()
-
+    :param self:
+    :param item:
+    :return:
+    """
+    try:
+        item = "get_" + str(item)
+        call = getattr(self, item)
+        return call()
+    except:
+        raise AttributeError
 
 def __len__(self):
     return self.get_n_valid_events()
-
 
 def __getitem__(self, key):
     if isinstance(key, slice):
@@ -42,12 +51,10 @@ def __getitem__(self, key):
         sel = np.array([key], dtype=np.int32)
     return tttrlib.TTTR(self, sel)
 
-
 def __add__(self, value):
     t = tttrlib.TTTR(self)
     t.append(value)
     return t
-
 
 def __init__(self, *args, **kwargs):
     if len(args) > 0:
@@ -71,18 +78,13 @@ def __init__(self, *args, **kwargs):
             this = _tttrlib.new_TTTR(*args, **kwargs)
     else:
         this = _tttrlib.new_TTTR(*args, **kwargs)
-    try:
-        self.this.append(this)
-    except:
-        self.this = this
-
+    self.this = this
 
 def __repr__(self):
     return 'tttrlib.TTTR("%s", "%s")' % (
         self.get_filename(),
         self.get_tttr_container_type()
     )
-
 
 def __str__(self):
     s = "Filename: %s \n" % self.get_filename()

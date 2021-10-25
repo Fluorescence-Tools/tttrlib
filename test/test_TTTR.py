@@ -271,6 +271,16 @@ class Tests(unittest.TestCase):
             True
         )
 
+    def test_getter_as_attributes(self):
+        # Test exposure of getters as attributes
+        # If an attribute is accesses that does not exist, e.g.,
+        # used_routing_channels, TTTR objects fallback to
+        # the corresponding getter by calling 'get_accessed_attribute'
+        np.testing.assert_array_equal(
+            data.used_routing_channels,
+            data.get_used_routing_channels()
+        )
+
     def test_constructor(self):
         # first element is the filename
         # second element is the name of the container
@@ -349,13 +359,7 @@ class Tests(unittest.TestCase):
             routing_channels,
             event_types
         )
-        self.assertEqual(
-            np.allclose(
-                data.macro_times,
-                data2.macro_times
-            ),
-            True
-        )
+        np.testing.assert_array_equal(data.macro_times, data2.macro_times)
 
     def test_TTTRRange(self):
         # empty range object
@@ -366,7 +370,6 @@ class Tests(unittest.TestCase):
         self.assertEqual(tttr_range_1.stop_time, 0)
         self.assertTupleEqual(tuple(tttr_range_1.start_stop), (0, 0))
         self.assertEqual(len(tttr_range_1.tttr_indices), 0)
-
         d = {
             "start": 11,
             "stop": 898,
@@ -399,9 +402,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             tttr_range_1, tttr_range_2
         )
-        self.assertEqual(
-            tttr_range_2, tttr_range_3
-        )
+        self.assertEqual(tttr_range_2, tttr_range_3)
+
+        # strip/remove indices
+        tr = tttrlib.TTTRRange()
+        tr.append(81)
+        tr.append(233)
+        tr.append(232223)
+        tr.append(44444443)
+        idx = tr.strip([233, 232223])
+        print(list(tr.tttr_indices))
+        self.assertTupleEqual(tuple(tr.tttr_indices), (81, 44444443,))
+        self.assertEqual(1, idx)
 
     def test_mean_microtime(self):
         self.assertAlmostEqual(data.get_mean_microtime(), 4.351471044638555e-09)
