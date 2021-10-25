@@ -15,7 +15,7 @@ private:
 public:
 
     /// The start index of the TTTRRange
-    int _start = -1;
+    int _start = 0;
 
     /// The stop index of the TTTRRange
     int _stop = -1;
@@ -118,12 +118,18 @@ public:
     /// Append a index to the TTTR index vector
     void append(int v){
         _tttr_indices.emplace_back(v);
+        _stop = std::max(v, _stop);
+        _start = std::min(v, _start);
     }
 
     /// Clears the TTTR index vector
     void clear(){
         _tttr_indices.clear();
     }
+
+    /// Strip tttr_indices from a range starting at tttr_indices[offset]
+    /// the tttr_indices need to be sorted in ascending size
+    int strip(const std::vector<int> &tttr_indices, int first=0);
 
     /*!
      * Computes to the mean micro time (in units of the micro channel resolution).
@@ -141,7 +147,6 @@ public:
     ){
         return tttr_data->get_mean_microtime(&_tttr_indices, microtime_resolution, minimum_number_of_photons);
     }
-
 
     /*!
      *  Return the average lifetime
@@ -165,7 +170,6 @@ public:
             double m0_irf = 1.0, double m1_irf = 1.0,
             double dt = 1.0
     );
-
 
     /*!
      *  Compute the average lifetime for a set of TTTR indices
@@ -194,7 +198,6 @@ public:
             double m0_irf = 1.0, double m1_irf = 1.0,
             double dt = 1.0
     );
-
 
     void shift_start_time(long time_shift=0){
         _start_time += time_shift;

@@ -33,7 +33,6 @@ TTTRRange::TTTRRange(
     _tttr_indices.reserve(pre_reserve);
 }
 
-
 double TTTRRange::compute_mean_lifetime(
         std::vector<int> &tttr_indices,
         TTTR *tttr_data,
@@ -52,6 +51,7 @@ double TTTRRange::compute_mean_lifetime(
 }
 
 
+
 double TTTRRange::get_mean_lifetime(
         TTTR *tttr_data,
         int minimum_number_of_photons,
@@ -67,4 +67,27 @@ double TTTRRange::get_mean_lifetime(
             m0_irf, m1_irf,
             dt
     );
+}
+
+int TTTRRange::strip(const std::vector<int> &tttr_indices, int first){
+    auto al = std::vector<int>();
+    int offset = first;
+    al.reserve(_tttr_indices.size());
+    for(auto &idx1: _tttr_indices){
+        bool include = true;
+        int i = first;
+        for(;i < tttr_indices.size(); i++){
+            auto idx2 = tttr_indices[i];
+            if(idx2 == idx1){
+                include = false;
+                first = i;
+            }
+            if(idx2 > _stop){
+                break;
+            }
+        }
+        if(include) al.emplace_back(idx1);
+    }
+    _tttr_indices = al;
+    return first;
 }
