@@ -7,8 +7,11 @@
 
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"
-#include "CLSMFrame.h"
 #include "DecayPhasor.h"
+
+#include "CLSMFrame.h"
+#include "CLSMLine.h"
+#include "CLSMPixel.h"
 
 
 class CLSMImage {
@@ -37,7 +40,8 @@ protected:
     /// The number if pixels per line
     size_t n_pixel = 0;
 
-protected:
+    /// Pointer to tttr data that was used to construct the Image
+    std::shared_ptr<TTTR> tttr = nullptr;
 
     void create_frames(bool clear_first = true);
 
@@ -64,8 +68,6 @@ public:
     /// The event type used for the marker
     int marker_event;
 
-    std::shared_ptr<TTTR> tttr;
-
     std::string reading_routine = "default";
 
     bool skip_before_first_frame_marker = false;
@@ -82,18 +84,51 @@ public:
      * before they are filled. If set to false new tttr indices are added to
      * the pixels
      */
+    void fill(
+            TTTR *tttr_data = nullptr,
+            std::vector<int> channels = std::vector<int>(),
+            bool clear = true,
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
+    );
+
     void fill_pixels(
             TTTR *tttr_data,
             std::vector<int> channels,
-            bool clear_pixel = true
-    );
+            bool clear_pixel = true,
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
+    ){
+        std::clog << "WARNING: 'fill_pixels' deprecated.  Use 'fill'." << std::endl;
+        fill(tttr_data, channels, clear_pixel, micro_time_ranges);
+    }
 
     /*!
      * Clear tttr_indices stored in the pixels
-     *
-     * @param channels
      */
-    void clear_pixels();
+    void clear();
+
+    /*!
+    * Clear tttr_indices stored in the pixels
+    * Deprecated use clear() instead.
+    */
+    void clear_pixels(){
+        std::clog << "WARNING: 'clear_pixels' deprecated.  Use 'clear'." << std::endl;
+        clear();
+    }
+
+    /*!
+     * Strips tttr_indices from all pixels in Image
+     * assumes that each tttr index is only once in an image
+     */
+    void strip(const std::vector<int> &tttr_indices);
+
+    /// Get tttr indices of photons in
+    std::vector<int>  get_tttr_indices(){
+        auto idx = std::vector<int>();
+        for(auto &f: get_frames()){
+
+        }
+        return idx;
+    }
 
     /*!
      * Computes the
@@ -119,9 +154,31 @@ public:
             int min_photons = 2
     );
 
+    /// Get the frames in the CLSMImage
     std::vector<CLSMFrame *> get_frames() {
         return frames;
     }
+
+//    /// Get stacked lines in CLSMImage
+//    std::vector<CLSMLine *> get_lines() {
+//        auto l = std::vector<CLSMLine *>();
+//        for(auto &f: get_frames()){
+//            auto b = f->get_lines();
+//            l.insert( l.end(), b.begin(), b.end() );
+//        }
+//        return l;
+//    }
+//
+//    /// Get stacked lines in CLSMImage
+//    std::vector<CLSMPixel *> get_pixel() {
+//        auto p = std::vector<CLSMPixel *>();
+//        for(auto &l: get_lines()){
+//            for(int i = 0; i < l->pixels.size(); i++){
+//                p.emplace_back(l[i]);
+//            }
+//        }
+//        return p;
+//    }
 
     void get_intensity_image(unsigned int **output, int *dim1, int *dim2, int *dim3);
 

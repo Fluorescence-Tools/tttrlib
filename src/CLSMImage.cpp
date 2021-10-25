@@ -349,7 +349,8 @@ void CLSMImage::remove_incomplete_frames(){
 #endif
 }
 
-void CLSMImage::clear_pixels() {
+
+void CLSMImage::clear() {
 #if VERBOSE_TTTRLIB
     std::clog << "Clear pixels of photons" << std::endl;
 #endif
@@ -362,17 +363,35 @@ void CLSMImage::clear_pixels() {
     }
 }
 
-void CLSMImage::fill_pixels(
+void CLSMImage::fill(
         TTTR* tttr_data,
         std::vector<int> channels,
-        bool clear_pixel
+        bool clear_pixel,
+        std::vector<std::pair<int,int>> micro_time_ranges
         ) {
 #if VERBOSE_TTTRLIB
     std::clog << "-- Filling pixels..." << std::endl;
     std::clog << "-- Channels: "; for(auto ch: channels) std::clog << ch << " "; std::clog << std::endl;
     std::clog << "-- Clear pixel before fill: " << clear_pixel << std::endl;
     std::clog << "-- Assign photons to pixels" << std::endl;
+    std::clog << "-- Micro time ranges:";
+    for(auto r : micro_time_ranges){
+        std::clog << "(" << r.first << "," << r.second << ") ";
+    }
+    std::clog << std::endl;
 #endif
+    if(tttr_data == nullptr){
+        tttr_data = tttr.get();
+    }
+    if(channels.empty()){
+        std::clog << "WARNING: Image filled without channel numbers. Using all channels." << std::endl;
+        signed char *chs; int nchs;
+        tttr_data->get_used_routing_channels(&chs, &nchs);
+        for(int i = 0; i < nchs; i++){
+            channels.emplace_back(chs[i]);
+        }
+        free(chs);
+    }
     for(auto frame : frames){
         for(auto line : frame->lines){
             if(line->pixels.empty()){
@@ -393,14 +412,39 @@ void CLSMImage::fill_pixels(
                     if(c == ci){
                         auto line_time = (tttr_data->macro_times[event_i] - line->get_start_time());
                         auto pixel_nbr = line_time / pixel_duration;
-                        if(pixel_nbr < n_pixels_in_line) line->pixels[pixel_nbr].append(event_i);
-                        break;
+                        if(pixel_nbr < n_pixels_in_line) {
+                            bool add_ph = true;
+                            auto micro_time = tttr_data->micro_times[event_i];
+                            for(auto r: micro_time_ranges){
+                                add_ph &= micro_time >= r.first;
+                                add_ph &= micro_time <= r.second;
+                            }
+                            if(add_ph){
+                                line->pixels[pixel_nbr].append(event_i);
+                            }
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
             // update start, stop indices and times
             for(auto pixel : line->get_pixels()){
                 pixel.update(tttr_data);
+            }
+        }
+    }
+}
+
+void CLSMImage::strip(const std::vector<int> &tttr_indices){
+    int offset = 0;
+//    for(auto &p: get_pixel()){
+//        offset = p->strip(tttr_indices, offset);
+//    }
+    for(auto &f: get_frames()){
+        for(auto &l: f->get_lines()){
+            for(auto &p: l->get_pixels()){
+                offset = p.strip(tttr_indices, offset);
             }
         }
     }
@@ -773,7 +817,7 @@ void CLSMImage::get_mean_lifetime_image(
     std::clog << "-- IRF m0: " << m0_irf << std::endl;
     std::clog << "-- IRF m1: " << m1_irf << std::endl;
 #endif
-    int o_frames = stack_frames? 1: n_frames;
+    size_t o_frames = stack_frames? 1: n_frames;
     auto* t = (double *) calloc(o_frames * n_lines * n_pixel, sizeof(double));
     for(int i_frame = 0; i_frame < o_frames; i_frame++) {
         for(int i_line = 0; i_line < n_lines; i_line++){
@@ -820,7 +864,7 @@ void CLSMImage::get_roi(
     std::clog << "CREATE ROI" << std::endl;
 #endif
     // determine the total number of frames, lines, and pixel in the input
-    int nf, nl, np; // the number frames, lines, and pixel in the input
+    size_t nf, nl, np; // the number frames, lines, and pixel in the input
     TTTR* tttr_data = nullptr;
     if(clsm != nullptr){
 #if VERBOSE_TTTRLIB
@@ -928,7 +972,7 @@ void CLSMImage::get_roi(
                     if(clsm != nullptr) {
                         auto frame = clsm->frames[f];
                         auto line = frame->lines[l];
-                        value = line->pixels[p]._tttr_indices.size();
+                        value = (double) line->pixels[p]._tttr_indices.size();
                     } else if(images != nullptr){
                         value = images[f * (nl * np) + l * nl + p];
                     }

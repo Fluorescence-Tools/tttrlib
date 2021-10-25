@@ -23,7 +23,7 @@ public:
         return pixels.size();
     }
 
-    std::vector<CLSMPixel> get_pixels(){
+    std::vector<CLSMPixel>& get_pixels(){
         return pixels;
     }
 

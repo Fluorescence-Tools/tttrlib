@@ -236,3 +236,38 @@ class TestCLSM(unittest.TestCase):
             np.allclose(img, np.load(fn)),
             True
         )
+
+    def strip_tttr_indices(self):
+        # Test stripping of photons from clsm image by index
+        data = tttrlib.TTTR(clsm['seidel_ht3_sample_2']['filename'], 'HT3')
+        clsm_image = tttrlib.CLSMImage(
+            tttr_data=data,
+            **clsm['seidel_ht3_sample_2']['reading_parameter']
+        )
+        clsm_image.fill(channels=[0,1])
+        idx = list()
+        for pixel in clsm_image[0][0]:
+            idx += list(pixel.tttr_indices)
+        idx = np.array(idx)
+        tn1 = data[idx]
+        np.testing.assert_array_equal(
+            np.array([0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1,
+                   0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1,
+                   1, 1, 1, 0], dtype=np.int8),
+            tn1.routing_channels
+        )
+
+        # Find idxs with routing = 1
+        tttr_indices_ch0 = data.get_selection_by_channel([1])
+        # strip from clsm
+        clsm_image.strip(tttr_indices=tttr_indices_ch0)
+
+        idx = list()
+        for pixel in clsm_image[0][0]:
+            idx += list(pixel.tttr_indices)
+        idx = np.array(idx)
+        tn = data[idx]
+        np.testing.assert_array_equal(
+            np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int8),
+            tn.routing_channels
+        )

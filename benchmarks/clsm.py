@@ -72,8 +72,8 @@ def test_get_decays():
 
 
 def test_fill_pixels():
-    clsm_image.clear_pixels()
-    clsm_image.fill_pixels(
+    clsm_image.clear()
+    clsm_image.fill(
         tttr_data=data,
         channels=[1]
     )
