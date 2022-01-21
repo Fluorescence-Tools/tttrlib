@@ -22,7 +22,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - doxygen
-    - cmake
+    - cmake >=3.14
     - swig
     - pkg-config
   host:
