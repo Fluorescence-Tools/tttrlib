@@ -660,38 +660,40 @@ void compute_intensity_trace(
     }
 }
 
-void get_ranges_channel(
-        unsigned int **ranges, int *n_range,
-        short *channel, int n_channel,
-        int selection_channel
-        ){
-    *n_range = 0;
-    *ranges = (unsigned int *) malloc(2 * n_channel * sizeof(unsigned int));
+// Seems unused
+//void get_ranges_channel(
+//        unsigned int **ranges, int *n_range,
+//        short *channel, int n_channel,
+//        int selection_channel
+//        ){
+//    *n_range = 0;
+//    *ranges = (unsigned int *) malloc(2 * n_channel * sizeof(unsigned int));
+//
+//    int previous_marker_position = 0;
+//    int next_marker_position;
+//    int i;
+//    // find first marker position
+//    for(i=0; i<n_channel; i++){
+//        if(channel[i] == selection_channel){
+//            previous_marker_position = i;
+//            break;
+//        }
+//    }
+//    while(i<n_channel){
+//        // find next marker position
+//        for(; i<n_channel; i++) {
+//            if (channel[i] == selection_channel) {
+//                next_marker_position = i;
+//                *ranges[2 * (*n_range) + 0] = previous_marker_position;
+//                *ranges[2 * (*n_range) + 1] = next_marker_position;
+//                *n_range += 1;
+//                previous_marker_position = next_marker_position;
+//                break;
+//            }
+//        }
+//    }
+//}
 
-    int previous_marker_position = 0;
-    int next_marker_position;
-    int i;
-    // find first marker position
-    for(i=0; i<n_channel; i++){
-        if(channel[i] == selection_channel){
-            previous_marker_position = i;
-            break;
-        }
-    }
-    while(i<n_channel){
-        // find next marker position
-        for(; i<n_channel; i++) {
-            if (channel[i] == selection_channel) {
-                next_marker_position = i;
-                *ranges[2 * (*n_range) + 0] = previous_marker_position;
-                *ranges[2 * (*n_range) + 1] = next_marker_position;
-                *n_range += 1;
-                previous_marker_position = next_marker_position;
-                break;
-            }
-        }
-    }
-}
 
 void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     bh_overflow_t overflow;

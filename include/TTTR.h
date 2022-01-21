@@ -115,21 +115,22 @@ void compute_intensity_trace(
 );
 
 
-/*!
- * Get the ranges in for a specific channel number
- *
- * @param[out] ranges
- * @param[out] n_range
- * @param[in] channel
- * @param[in] n_channel
- * @param[in] channel
- */
-void get_ranges_channel(
-        unsigned int **ranges, int *n_range,
-        short *channel, int n_channel,
-        int selection_channel
-);
 
+// Seems unused
+// * Get the ranges in for a specific channel number
+// *
+// * @param[out] ranges
+// * @param[out] n_range
+// * @param[in] channel
+// * @param[in] n_channel
+// * @param[in] channel
+// */
+//void get_ranges_channel(
+//        unsigned int **ranges, int *n_range,
+//        short *channel, int n_channel,
+//        int selection_channel
+//);
+//
 
 /*!
  * Selects a subset of indices by a  list of routing channel numbers.
@@ -153,12 +154,7 @@ void selection_by_channels(
 
 
 template <typename T>
-inline void get_array(
-        size_t n_valid_events,
-        T *array,
-        T **out,
-        int *n_out
-        ){
+inline void get_array(size_t n_valid_events, T *array, T **out, int *n_out){
     *n_out = (int) n_valid_events;
     (*out) = (T*) malloc(sizeof(T) * n_valid_events);
     for(size_t i=0; i<n_valid_events; i++) (*out)[i] = array[i];
@@ -322,7 +318,6 @@ public:
     * etc. are copied. Otherwise all other is copied
     */
     void copy_from(const TTTR &p2, bool include_big_data = true);
-
 
     /*!
     * Reads the TTTR data contained in a file into the TTTR object
@@ -745,7 +740,7 @@ public:
             unsigned short micro_time_coarsening = 1
     );
 
-    void microtime_histogram(
+    void get_microtime_histogram(
             double **histogram, int *n_histogram,
             double **time, int *n_time,
             unsigned short micro_time_coarsening = 1
@@ -835,7 +830,6 @@ public:
     ){
         return compute_mean_microtime(this, tttr_indices, microtime_resolution, minimum_number_of_photons);
     }
-
 
 };
 
