@@ -125,7 +125,7 @@ CLSMImage::CLSMImage (
     }
     // fill pixel
     if(fill && !channels.empty())
-        fill_pixels(this->tttr.get(), channels, false);
+        this->fill(this->tttr.get(), channels, false);
     if(macro_time_shift!=0)
         shift_line_start(macro_time_shift);
 }
@@ -825,19 +825,18 @@ void CLSMImage::get_mean_lifetime_image(
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line  * (n_pixel) + i_pixel;
                 if(stack_frames){
                     std::vector<int> tttr_indices;
-                    for(auto &frame: frames){
+                    for (auto &frame: frames) {
                         auto px = frame->lines[i_line]->pixels[i_pixel];
                         tttr_indices.insert(tttr_indices.end(), px._tttr_indices.begin(), px._tttr_indices.end());
                     }
-                    // use nullptr for tttr_irf as m0_irf, m1_irf are precomputed
-                    t[pixel_nbr] = TTTRRange::compute_mean_lifetime(tttr_indices, tttr_data, minimum_number_of_photons,
-                                                                    nullptr, m0_irf, m1_irf, dt);
-                }
-                else{
+                    t[pixel_nbr] = TTTRRange::compute_mean_lifetime(
+                            tttr_indices, tttr_data, minimum_number_of_photons,
+                            nullptr, m0_irf, m1_irf, dt); // m0_irf, m1_irf precomputed => tttr_irf=nullptr
+                } else {
                     auto px = this->frames[i_frame]->lines[i_line]->pixels[i_pixel];
-                    // use nullptr for tttr_irf as m0_irf, m1_irf are precomputed
-                    t[pixel_nbr] = px.get_mean_lifetime(tttr_data, minimum_number_of_photons,
-                                                        nullptr, m0_irf, m1_irf, dt);
+                    t[pixel_nbr] = px.get_mean_lifetime(
+                            tttr_data, minimum_number_of_photons,
+                            nullptr, m0_irf, m1_irf, dt);// m0_irf, m1_irf precomputed => tttr_irf=nullptr
                 }
             }
         }

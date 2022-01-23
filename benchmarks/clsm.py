@@ -24,7 +24,7 @@ clsm_image = tttrlib.CLSMImage(
     pixel_per_line,
     reading_routine
 )
-clsm_image.fill_pixels(
+clsm_image.fill(
     tttr_data=data,
     channels=[1]
 )
@@ -71,7 +71,7 @@ def test_get_decays():
     )
 
 
-def test_fill_pixels():
+def test_fill():
     clsm_image.clear()
     clsm_image.fill(
         tttr_data=data,
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # )
     #
     # test_fill_pixels_time = timeit.timeit(
-    #     "test_fill_pixels()",
+    #     "test_fill()",
     #     setup="from __main__ import test_fill_pixels",
     #     number=n_test_runs
     # )

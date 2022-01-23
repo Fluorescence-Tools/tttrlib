@@ -70,7 +70,7 @@ class TestCLSM(unittest.TestCase):
         reading_parameter = clsm['sp8']['reading_parameter']
         data = tttrlib.TTTR(filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(data, **reading_parameter)
-        clsm_image.fill_pixels(
+        clsm_image.fill(
             tttr_data=data,
             channels=[1]
         )

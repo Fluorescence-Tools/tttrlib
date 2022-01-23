@@ -49,7 +49,7 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             **sp8_reading_parameter
         )
-        clsm_image.fill_pixels(
+        clsm_image.fill(
             tttr_data=data,
             channels=[1]
         )
