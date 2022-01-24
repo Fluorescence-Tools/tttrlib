@@ -2,7 +2,10 @@
 #include "../include/TTTR.h"
 #include "../include/TTTRHeader.h"
 #include "../include/TTTRRange.h"
+#include "../include/TTTRSelection.h"
 %}
+// Use shared_prt for TTTR to pass TTTR around
+%shared_ptr(TTTR)
 
 // used in selection and ranges
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}
@@ -44,9 +47,8 @@
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}
 %extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader.py"}
 
-// Use shared_prt for TTTR to pass TTTR around
-%shared_ptr(TTTR)
-
 %include "../include/TTTRHeader.h"
 %include "../include/TTTR.h"
 %include "../include/TTTRRange.h"
+%include "../include/TTTRSelection.h"
+

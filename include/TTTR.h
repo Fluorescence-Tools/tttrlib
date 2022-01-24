@@ -161,7 +161,7 @@ inline void get_array(size_t n_valid_events, T *array, T **out, int *n_out){
 }
 
 
-class TTTR {
+class TTTR : public std::enable_shared_from_this<TTTR>{
 
     friend class CLSMImage;
     friend class TTTRRange;
@@ -309,6 +309,9 @@ protected:
 
 
 public:
+
+    /// Make shared pointer
+    std::shared_ptr<TTTR> Get() {return shared_from_this();}
 
     /*!
     * Copy the information from another TTTR object
