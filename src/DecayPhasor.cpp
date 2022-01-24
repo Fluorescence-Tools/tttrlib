@@ -2,22 +2,31 @@
 
 
 std::vector<double> DecayPhasor::compute_phasor(
-        unsigned short *micro_times,
-        std::vector<int> &idxs,
+        unsigned short* microtimes, int n_microtimes,
         double frequency,
         int minimum_number_of_photons,
         double g_irf,
-        double s_irf
+        double s_irf,
+        std::vector<int>* idxs
 ){
     double factor = (2. * frequency * M_PI);
     std::vector<double> re{-1, -1};
     double g_sum = 0.0;
     double s_sum = 0.0;
-    double sum = (double) idxs.size();
-    for(auto &idx: idxs){
-        auto mt = micro_times[idx];
-        g_sum += std::cos(mt * factor);
-        s_sum += std::sin(mt * factor);
+    double sum;
+    if(idxs == nullptr){
+        sum = n_microtimes;
+        for(int i=0;i<n_microtimes;i++){
+            g_sum += std::cos(microtimes[i] * factor);
+            s_sum += std::sin(microtimes[i] * factor);
+        }
+    } else{
+        sum = (double) idxs->size();
+        for(auto &idx: *idxs){
+            auto mt = microtimes[idx];
+            g_sum += std::cos(mt * factor);
+            s_sum += std::sin(mt * factor);
+        }
     }
     if(sum > minimum_number_of_photons){
         double g_exp = g_sum / std::max(1., sum);
@@ -27,6 +36,7 @@ std::vector<double> DecayPhasor::compute_phasor(
     }
     return re;
 }
+
 
 std::vector<double> DecayPhasor::compute_phasor_bincounts(
         std::vector<int> &bincounts,
@@ -54,22 +64,6 @@ std::vector<double> DecayPhasor::compute_phasor_bincounts(
     return re;
 }
 
-
-
-std::vector<double> DecayPhasor::compute_phasor_all(
-        unsigned short* microtimes, int n_microtimes,
-        double frequency
-){
-    double factor = (2. * frequency * M_PI);
-    double sum = n_microtimes;
-    double g_sum = 0.0; double s_sum = 0.0;
-    for(int i=0;i<n_microtimes;i++){
-        g_sum += std::cos(microtimes[i] * factor);
-        s_sum += std::sin(microtimes[i] * factor);
-    }
-    std::vector<double> re{g_sum / sum, s_sum / sum};
-    return re;
-}
 
 
 double DecayPhasor::g(
