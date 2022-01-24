@@ -336,8 +336,10 @@ void CLSMImage::remove_incomplete_frames(){
         if(frame->lines.size() == n_lines){
             complete_frames.push_back(frame);
         } else{
+#if VERBOSE_TTTRLIB
             std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() <<
             " incomplete only "<< frame->lines.size() << " / " << n_lines << " lines." << std::endl;
+#endif
             delete(frame);
         }
         i_frame++;
@@ -450,12 +452,10 @@ void CLSMImage::strip(const std::vector<int> &tttr_indices){
     }
 }
 
-void CLSMImage::get_intensity_image(
-        unsigned int**output, int* dim1, int* dim2, int* dim3
-        ){
-    *dim1 = n_frames;
-    *dim2 = n_lines;
-    *dim3 = n_pixel;
+void CLSMImage::get_intensity(unsigned int**output, int* dim1, int* dim2, int* dim3){
+    *dim1 = (int) n_frames;
+    *dim2 = (int) n_lines;
+    *dim3 = (int) n_pixel;
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
 #if VERBOSE_TTTRLIB
     std::clog << "Get intensity image" << std::endl;
@@ -465,9 +465,9 @@ void CLSMImage::get_intensity_image(
     auto* t = (unsigned int*) calloc(n_pixel_total+1, sizeof(unsigned int));
     size_t i_frame = 0;
     size_t t_pixel = 0;
-    for(auto frame : frames){
+    for(auto &frame : frames){
         size_t i_line = 0;
-        for(auto line : frame->lines){
+        for(auto &line : frame->lines){
             size_t i_pixel = 0;
             for(auto &pixel : line->pixels){
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
@@ -717,7 +717,7 @@ void CLSMImage::get_mean_micro_time_image(
     }
 }
 
-void CLSMImage::get_phasor_image(
+void CLSMImage::get_phasor(
         float **output, int *dim1, int *dim2, int *dim3, int *dim4,
         TTTR *tttr_data,
         TTTR *tttr_irf,
@@ -733,9 +733,9 @@ void CLSMImage::get_phasor_image(
         frequency = micro_time_res / macro_time_res;
     }
     if(tttr_irf!= nullptr){
-        std::vector<double> gs = DecayPhasor::compute_phasor_all(
-                tttr_irf->micro_times,
-                tttr_irf->n_valid_events, frequency
+        std::vector<double> gs = DecayPhasor::compute_phasor(
+                tttr_irf->micro_times, tttr_irf->n_valid_events,
+                frequency
                 );
         g_irf = gs[0];
         s_irf = gs[1];
@@ -753,26 +753,26 @@ void CLSMImage::get_phasor_image(
                     idxs.insert(idxs.end(), n.begin(), n.end());
                 }
                 auto r = DecayPhasor::compute_phasor(
-                        tttr_data->micro_times,
-                        idxs,
+                        tttr_data->micro_times, tttr_data->n_valid_events,
                         frequency,
                         minimum_number_of_photons,
-                        g_irf, s_irf
+                        g_irf, s_irf,
+                        &idxs
                 );
-                t[pixel_nbr + 0] = r[0];
-                t[pixel_nbr + 1] = r[1];
+                t[pixel_nbr + 0] = (float) r[0];
+                t[pixel_nbr + 1] = (float) r[1];
             } else{
                 for(int i_frame=0; i_frame < n_frames; i_frame++){
                     size_t pixel_nbr = i_frame * (n_lines * n_pixel * 2) + i_line  * (n_pixel * 2) + i_pixel * 2;
                     auto r = DecayPhasor::compute_phasor(
-                            tttr_data->micro_times,
-                            frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices,
+                            tttr_data->micro_times, tttr_data->n_valid_events,
                             frequency,
                             minimum_number_of_photons,
-                            g_irf, s_irf
+                            g_irf, s_irf,
+                            &frames[i_frame]->lines[i_line]->pixels[i_pixel]._tttr_indices
                     );
-                    t[pixel_nbr + 0] = r[0];
-                    t[pixel_nbr + 1] = r[1];
+                    t[pixel_nbr + 0] = (float) r[0];
+                    t[pixel_nbr + 1] = (float) r[1];
                 }
             }
         }
@@ -1190,4 +1190,43 @@ void CLSMImage::compute_ics(
     *dim2 = (int) nl;
     *dim3 = (int) np;
     *output = out_tmp;
+}
+
+void CLSMImage::transform(int* input, int n_input){
+    //
+}
+
+
+void CLSMImage::crop(
+        int frame_start, int frame_stop,
+        int line_start, int line_stop,
+        int pixel_start, int pixel_stop
+){
+    frame_stop = std::min(std::max(0, frame_stop), (int) size());
+    frame_start = std::max(0, frame_start);
+
+    #if VERBOSE_TTTRLIB
+    std::clog << "Crop image" << std::endl;
+    std::clog << "-- Frame range: " << frame_start << ", " << frame_stop << std::endl;
+    std::clog << "-- Line range: " << line_start << ", " << line_stop << std::endl;
+    std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
+    #endif
+
+    std::vector<CLSMFrame*> frs;
+    for(int i = 0; i < frame_start; i++){
+        delete frames[i];
+    }
+    for(int i = frame_start; i < frame_stop; i++){
+        auto f = frames[i];
+        f->crop(line_start, line_stop, pixel_start, pixel_stop);
+        frs.emplace_back(f);
+    }
+    for(int i = frame_stop; i < n_frames; i++){
+        delete frames[i];
+    }
+    frames = frs;
+
+    n_frames = frs.size();
+    n_lines = frs[0]->lines.size();
+    n_pixel = frs[0]->lines[0]->pixels.size();
 }

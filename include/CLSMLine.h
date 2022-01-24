@@ -19,7 +19,7 @@ private:
 public:
 
     /// Get the number of pixels per line a frame of the CLSMImage
-    size_t size() const {
+    size_t size() final{
         return pixels.size();
     }
 
@@ -47,10 +47,7 @@ public:
         _start = line_start;
     }
 
-    CLSMLine(
-            int line_start,
-            unsigned int n_pixel
-    ){
+    CLSMLine(int line_start,unsigned int n_pixel){
         this->_start = line_start;
         pixels.resize(n_pixel);
     }
@@ -65,6 +62,21 @@ public:
 
     CLSMPixel* operator[](unsigned int i_pixel){
         return &pixels[i_pixel];
+    }
+
+    void crop(
+            int pixel_start, int pixel_stop
+    ){
+        pixel_stop = std::min(pixel_stop, (int) size());
+        pixel_start = std::max(0, pixel_start);
+
+        #if VERBOSE_TTTRLIB
+        std::clog << "Crop line" << std::endl;
+        std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
+        #endif
+
+        pixels.erase(pixels.begin() + pixel_stop, pixels.end());
+        pixels.erase(pixels.begin(), pixels.begin() + pixel_start);
     }
 
 };

@@ -180,7 +180,7 @@ public:
 //        return p;
 //    }
 
-    void get_intensity_image(unsigned int **output, int *dim1, int *dim2, int *dim3);
+    void get_intensity(unsigned int **output, int *dim1, int *dim2, int *dim3);
 
     /*!
      * Computes an image stack where the value of each pixel corresponds to
@@ -275,7 +275,7 @@ public:
      * using the tttr indices of all pixels (this corresponds to the photon weighted
      * mean arrival time).
      */
-    void get_phasor_image(
+    void get_phasor(
             float **output, int *dim1, int *dim2, int *dim3, int *dim4,
             TTTR *tttr_data,
             TTTR *tttr_irf = nullptr,
@@ -347,6 +347,19 @@ public:
      * @param frame
      */
     void append(CLSMFrame *frame);
+
+    /*!
+     * Moves the content of the Pixels
+     * @param index
+     * @param n_index
+     */
+    void transform(int* input, int n_input);
+
+    void crop(
+            int frame_start, int frame_stop,
+            int line_start, int line_stop,
+            int pixel_start, int pixel_stop
+    );
 
     /// Copy constructor
     CLSMImage(const CLSMImage &p2, bool fill = false);
