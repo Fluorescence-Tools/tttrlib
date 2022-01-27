@@ -8,7 +8,7 @@
 
 class TTTRRange {
 
-private:
+protected:
 
     std::shared_ptr<TTTR> tttr = nullptr;
 
@@ -43,7 +43,8 @@ public:
             unsigned int start_time = 0,
             unsigned int stop_time = 0,
             TTTRRange *other = nullptr,
-            int pre_reserve = 4
+            int pre_reserve = 4,
+            TTTR* tttr = nullptr
     );
 
     virtual size_t size(){
