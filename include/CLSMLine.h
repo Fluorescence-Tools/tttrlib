@@ -33,13 +33,12 @@ public:
 
     CLSMLine() = default;
 
-    CLSMLine(const CLSMLine& old_line) : TTTRRange(old_line){
+    CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRRange(old_line){
         // private attributes
         pixels.resize(old_line.pixels.size());
-        int i = 0;
-        for(auto &p: old_line.pixels){
-            pixels[i] = p;
-            i += 1;
+        pixels = old_line.pixels;
+        if(!fill){
+            for(auto &p: pixels) p.clear();
         }
     }
 

@@ -35,7 +35,7 @@ public:
     ) : TTTRRange(old_frame){
         // private attributes
         for(auto l: old_frame.lines){
-            lines.emplace_back(new CLSMLine(*l));
+            lines.emplace_back(new CLSMLine(*l, fill));
         }
     }
 
