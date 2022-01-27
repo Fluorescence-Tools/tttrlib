@@ -17,7 +17,8 @@ TTTRRange::TTTRRange(
         unsigned int start_time,
         unsigned int stop_time,
         TTTRRange* other,
-        int pre_reserve
+        int pre_reserve,
+        TTTR* tttr
 ) {
     if(other != nullptr){
         this->_start = other->_start;
@@ -31,6 +32,11 @@ TTTRRange::TTTRRange(
         this->_stop_time = stop_time;
     }
     _tttr_indices.reserve(pre_reserve);
+    if(tttr != nullptr){
+        this->tttr = tttr->Get();
+    } else{
+        this->tttr = nullptr;
+    }
 }
 
 double TTTRRange::compute_mean_lifetime(
