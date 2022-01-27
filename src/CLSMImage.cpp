@@ -357,8 +357,8 @@ void CLSMImage::clear() {
     std::clog << "Clear pixels of photons" << std::endl;
 #endif
     for(auto *frame : frames){
-        for(auto line : frame->lines){
-            for(auto pixel: line->pixels){
+        for(auto &line : frame->lines){
+            for(auto &pixel: line->pixels){
                 pixel._tttr_indices.clear();
             }
         }
@@ -1170,7 +1170,7 @@ void CLSMImage::compute_ics(
         for(int pix=0; pix < pixel_in_roi; pix++){
             // We need to normalize by the mean intensity and the number of
             // pixels. A forward and backward FFT by fftw3 introduce a factor
-            // N=nx*ny. THus, it is enough to divide by total_intensity_2.
+            // N=nx*ny. Thus, it is enough to divide by total_intensity_2.
             double denom = (first_frame_total_intensity * second_frame_total_intensity);
             out_tmp[frame_pos + pix] = first_out[pix][0] / denom - 1.0;
         }
@@ -1193,26 +1193,22 @@ void CLSMImage::compute_ics(
 }
 
 
-CLSMImage* CLSMImage::transform(int* input, int n_input){
-    auto r = new CLSMImage(*this, false);
+void CLSMImage::transform(unsigned int* input, int n_input){
+    CLSMImage* source = new CLSMImage(*this, true);
+    CLSMImage* target = this;
+
+    target->clear();
     for(int i=0; i<n_input; i = i + 2){
         // source (s)
-        auto s_v = this->to3D(input[i + 0]);
-        auto s_frame = *r->frames[s_v[0]];
-        auto s_line  = *s_frame[s_v[1]];
-        auto s_pixel = s_line[s_v[2]];
-
-        //  target (t)
-        auto t_v = this->to3D(input[i + 1]);
-        auto t_frame = *r->frames[t_v[0]];
-        auto t_line  = *t_frame[t_v[1]];
-        auto t_pixel = t_line[t_v[2]];
-
-        for(auto &v: s_pixel->_tttr_indices){
-            t_pixel->_tttr_indices.emplace_back(v);
-        }
+        CLSMPixel* source_pixel = source->getPixel(input[i + 0]);
+        CLSMPixel* target_pixel = target->getPixel(input[i + 1]);
+        // Append tttr indices to pixel
+        target_pixel->_tttr_indices.insert(
+                std::end(target_pixel->_tttr_indices),
+                std::begin(source_pixel->_tttr_indices),
+                std::end(source_pixel->_tttr_indices)
+        );
     }
-    return r;
 }
 
 
