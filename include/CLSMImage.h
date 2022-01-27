@@ -330,6 +330,20 @@ public:
         return std::vector<int>{ frame, line, pixel};
     }
 
+    CLSMPixel* getPixel(unsigned int idx){
+        int frame, line, pixel;
+
+        frame = idx / (n_lines * n_pixel);
+        idx -= (frame * n_lines * n_pixel);
+        line = idx / n_lines;
+        pixel = idx % n_pixel;
+
+        CLSMFrame* s_frame = frames[frame];
+        CLSMLine*  s_line  = s_frame->lines[line];
+        CLSMPixel* s_pixel = &(s_line->pixels[pixel]);
+        return s_pixel;
+    }
+
     /// Get the number of frames in the CLSM image
     int get_n_frames() const {
         return n_frames;
@@ -372,7 +386,7 @@ public:
      * @param index
      * @param n_index
      */
-    CLSMImage* transform(int* input, int n_input);
+    void transform(unsigned int* input, int n_input);
 
     /*!
      * Crop the image
@@ -606,7 +620,6 @@ public:
             int marker_event = 15,
             std::string reading_routine = "SP8"
     );
-
 
 };
 
