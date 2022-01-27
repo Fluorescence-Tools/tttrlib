@@ -484,7 +484,7 @@ void CLSMImage::get_intensity(unsigned int**output, int* dim1, int* dim2, int* d
     *output = t;
 }
 
-void CLSMImage::get_fluorescence_decay_image(
+void CLSMImage::get_fluorescence_decay(
         TTTR* tttr_data,
         unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4,
         int micro_time_coarsening,
@@ -661,7 +661,7 @@ void CLSMImage::get_decay_of_pixels(
     *output = t;
 }
 
-void CLSMImage::get_mean_micro_time_image(
+void CLSMImage::get_mean_micro_time(
         TTTR* tttr_data,
         double** output, int* dim1, int* dim2, int* dim3,
         double microtime_resolution,
@@ -790,7 +790,7 @@ void CLSMImage::get_phasor(
     *output = t;
 }
 
-void CLSMImage::get_mean_lifetime_image(
+void CLSMImage::get_mean_lifetime(
         TTTR* tttr_data,
         double** output, int* dim1, int* dim2, int* dim3,
         const int minimum_number_of_photons,
@@ -1192,8 +1192,27 @@ void CLSMImage::compute_ics(
     *output = out_tmp;
 }
 
-void CLSMImage::transform(int* input, int n_input){
-    //
+
+CLSMImage* CLSMImage::transform(int* input, int n_input){
+    auto r = new CLSMImage(*this, false);
+    for(int i=0; i<n_input; i = i + 2){
+        // source (s)
+        auto s_v = this->to3D(input[i + 0]);
+        auto s_frame = *r->frames[s_v[0]];
+        auto s_line  = *s_frame[s_v[1]];
+        auto s_pixel = s_line[s_v[2]];
+
+        //  target (t)
+        auto t_v = this->to3D(input[i + 1]);
+        auto t_frame = *r->frames[t_v[0]];
+        auto t_line  = *t_frame[t_v[1]];
+        auto t_pixel = t_line[t_v[2]];
+
+        for(auto &v: s_pixel->_tttr_indices){
+            t_pixel->_tttr_indices.emplace_back(v);
+        }
+    }
+    return r;
 }
 
 

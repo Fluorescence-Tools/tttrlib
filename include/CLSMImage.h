@@ -198,7 +198,7 @@ public:
      * value is 1 and the micro times are binned without coarsening.
      * @param stack_frames if True the frames are stacked.
      */
-    void get_fluorescence_decay_image(
+    void get_fluorescence_decay(
             TTTR *tttr_data,
             unsigned char **output, int *dim1, int *dim2, int *dim3, int *dim4,
             int micro_time_coarsening = 1,
@@ -247,7 +247,7 @@ public:
      * using the tttr indices of all pixels (this corresponds to the photon weighted
      * mean arrival time).
      */
-    void get_mean_micro_time_image(
+    void get_mean_micro_time(
             TTTR *tttr_data,
             double **output, int *dim1, int *dim2, int *dim3,
             double microtime_resolution = -1.0,
@@ -307,7 +307,7 @@ public:
      * @param m0_irf is the zero moment of the IRF (optional, default=1)
      * @param m1_irf is the first moment of the IRF (optional, default=1)
      */
-    void get_mean_lifetime_image(
+    void get_mean_lifetime(
             TTTR *tttr_data,
             double **output, int *dim1, int *dim2, int *dim3,
             int minimum_number_of_photons = 3,
@@ -315,6 +315,20 @@ public:
             double m0_irf = 1.0, double m1_irf = 1.0,
             bool stack_frames = false
     );
+
+    /// Convert frame, line, and pixel to 1D index
+    int to1D(int frame, int line, int pixel) {
+        return (frame * n_lines * n_pixel) + (line * n_lines) + pixel;
+    }
+
+    /// Convert 1D index to frame, line, and pixel
+    std::vector<int> to3D(int idx) {
+        int frame = idx / (n_lines * n_pixel);
+        idx -= (frame * n_lines * n_pixel);
+        int line = idx / n_lines;
+        int pixel = idx % n_pixel;
+        return std::vector<int>{ frame, line, pixel};
+    }
 
     /// Get the number of frames in the CLSM image
     int get_n_frames() const {
@@ -350,11 +364,25 @@ public:
 
     /*!
      * Moves the content of the Pixels
+     *
+     * The input is an interleaved array or source and target
+     * pixel indices. A pixel index is a mapping from a frames,
+     * lines, and pixel combination to an index.
+     *
      * @param index
      * @param n_index
      */
-    void transform(int* input, int n_input);
+    CLSMImage* transform(int* input, int n_input);
 
+    /*!
+     * Crop the image
+     * @param frame_start
+     * @param frame_stop
+     * @param line_start
+     * @param line_stop
+     * @param pixel_start
+     * @param pixel_stop
+     */
     void crop(
             int frame_start, int frame_stop,
             int line_start, int line_stop,
