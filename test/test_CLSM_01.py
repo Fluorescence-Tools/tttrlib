@@ -30,6 +30,7 @@ ht3_reading_parameter = {
     "reading_routine": 'default',
     "skip_before_first_frame_marker": True
 }
+ht3_data = tttrlib.TTTR(ht3_filename)
 
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
 sp5_reading_parameter = {
@@ -54,7 +55,7 @@ class TestCLSM(unittest.TestCase):
             channels=[1]
         )
         # Test mean TAC image
-        mean_tac_image = clsm_image.get_mean_micro_time_image(
+        mean_tac_image = clsm_image.get_mean_micro_time(
             tttr_data=data,
             minimum_number_of_photons=1
         )
@@ -68,7 +69,7 @@ class TestCLSM(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.load(fn), mean_tac_image)
 
         # Test decay image
-        decay_image = clsm_image.get_fluorescence_decay_image(
+        decay_image = clsm_image.get_fluorescence_decay(
             tttr_data=data,
             micro_time_coarsening=256,
             stack_frames=True
@@ -125,10 +126,9 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_copy_constructor(self):
-        data = tttrlib.TTTR(ht3_filename, 'HT3')
         reading_parameter = ht3_reading_parameter
         clsm_image_1 = tttrlib.CLSMImage(
-            tttr_data=data,
+            tttr_data=ht3_data,
             **reading_parameter
         )
         clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
@@ -141,3 +141,43 @@ class TestCLSM(unittest.TestCase):
         for ptu_file in pq_test_files:
             data = tttrlib.TTTR(ptu_file)
             clsm = tttrlib.CLSMImage(data)
+
+    def test_crop(self):
+        # Read contents of file into new CLSMImage
+        settings = {
+            "channels": [0, 1],
+            "fill": True,
+        }
+        image = tttrlib.CLSMImage(ht3_data, **settings)
+        self.assertTupleEqual(image.shape, (40, 256, 256))
+        self.assertTupleEqual(image.intensity.shape, (40, 256, 256))
+        # Cropping
+        image.crop(5, 20, 0, 128, 0, 96)
+        self.assertTupleEqual(image.shape, (15, 128, 96))
+        self.assertTupleEqual(image.intensity.shape, (15, 128, 96))
+
+    def test_index_transform(self):
+        settings = {
+            "channels": [0, 1],
+            "fill": True,
+        }
+        image = tttrlib.CLSMImage(ht3_data, **settings)
+        n_frames, n_lines, n_pixel = image.shape
+        self.assertEqual(
+            image.to1D(1, 0, 0),
+            n_lines * n_pixel
+        )
+        self.assertEqual(
+            image.to1D(1, 0, 1),
+            n_lines * n_pixel + 1
+        )
+        self.assertEqual(
+            image.to1D(1, 2, 1),
+            n_lines * n_pixel + n_lines * 2 + 1
+        )
+        idx = (2, 0, 1)
+        self.assertTupleEqual(
+            image.to3D(image.to1D(*idx)),
+            idx
+        )
+

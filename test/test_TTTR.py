@@ -127,7 +127,7 @@ class Tests(unittest.TestCase):
 
     def test_microtime_histogram(self):
         data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
-        h, t = data.microtime_histogram(32)
+        h, t = data.get_microtime_histogram(32)
         h_ref = np.array(
             [0., 0., 0., 0., 0., 0., 0., 0.,
              0., 0., 0., 0., 0., 0., 74., 394.,
@@ -346,7 +346,6 @@ class Tests(unittest.TestCase):
             'invert': True  # set invert to True to select TW with more than 60 ph
         }
         tttr_sel = data.get_tttr_by_count_rate(**filter_options)
-
 
     def test_constructor_with_array(self):
         macro_times = data.macro_times

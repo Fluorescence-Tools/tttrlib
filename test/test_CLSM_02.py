@@ -147,13 +147,13 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             **reading_parameter
         )
-        clsm_image_1.fill_pixels(
+        clsm_image_1.fill(
             tttr_data=data,
             channels=[0]
         )
 
         fn = './test/data/reference/img_ref_intensity.npy'
-        img = clsm_image_1.get_intensity_image().sum(axis=0)
+        img = clsm_image_1.get_intensity().sum(axis=0)
         if make_reference:
             np.save(fn, img)
         self.assertEqual(np.allclose(img, np.load(fn,)), True)
@@ -166,18 +166,18 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             **reading_parameter
         )
-        clsm_image_1.fill_pixels(
+        clsm_image_1.fill(
             tttr_data=data,
             channels=[0]
         )
         fn = './test/data/reference/img_ref_mean_tac.npy'
-        img = clsm_image_1.get_mean_micro_time_image(tttr_data=data, minimum_number_of_photons=1)
+        img = clsm_image_1.get_mean_micro_time(tttr_data=data, minimum_number_of_photons=1)
         img = np.clip(img, 0, np.inf).sum(axis=0)
         if make_reference:
             np.save(fn, img)
         np.testing.assert_array_almost_equal(img, np.load(fn))
         tac_coarsening = 512
-        img = clsm_image_1.get_fluorescence_decay_image(
+        img = clsm_image_1.get_fluorescence_decay(
             tttr_data=data,
             micro_time_coarsening=tac_coarsening,
             stack_frames=True
@@ -197,8 +197,8 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             **clsm['seidel_ht3_sample_2']['reading_parameter']
         )
-        clsm_image.fill_pixels(data, channels=[0, 2])
-        img = clsm_image.get_mean_lifetime_image(
+        clsm_image.fill(data, channels=[0, 2])
+        img = clsm_image.get_mean_lifetime(
             tttr_irf=irf_0,
             tttr_data=data,
             minimum_number_of_photons=4,
@@ -222,8 +222,8 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             **clsm['seidel_ht3_sample_2']['reading_parameter']
         )
-        clsm_image.fill_pixels(data, channels=[0, 2])
-        img = clsm_image.get_mean_lifetime_image(
+        clsm_image.fill(data, channels=[0, 2])
+        img = clsm_image.get_mean_lifetime(
             tttr_irf=irf_0,
             tttr_data=data,
             minimum_number_of_photons=4,
