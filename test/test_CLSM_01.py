@@ -176,8 +176,5 @@ class TestCLSM(unittest.TestCase):
             n_lines * n_pixel + n_lines * 2 + 1
         )
         idx = (2, 0, 1)
-        self.assertTupleEqual(
-            image.to3D(image.to1D(*idx)),
-            idx
-        )
+        self.assertTupleEqual(image.to3D(image.to1D(*idx)), idx)
 
