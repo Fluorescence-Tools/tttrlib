@@ -29,11 +29,12 @@ public:
 
     CLSMFrame();
 
-    CLSMFrame(
-            const CLSMFrame& old_frame,
-            bool fill = false
-    ) : TTTRRange(old_frame){
-        // private attributes
+    /*!
+     * Copy constructor
+     *
+     * @param fill if set to false the content of the pixels is not copied
+     */
+    CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRRange(old_frame){
         for(auto l: old_frame.lines){
             lines.emplace_back(new CLSMLine(*l, fill));
         }
@@ -62,33 +63,13 @@ public:
         return lines[i_line];
     }
 
+    /*!
+     * Crops a frame
+     */
     void crop(
             int line_start, int line_stop,
             int pixel_start, int pixel_stop
-    ){
-        line_stop = std::min(line_stop, (int) size());
-        line_start = std::max(0, line_start);
-
-        #if VERBOSE_TTTRLIB
-        std::clog << "Crop frame" << std::endl;
-        std::clog << "-- Line range: " << line_start << ", " << line_stop << std::endl;
-        std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
-        #endif
-
-        std::vector<CLSMLine*> lns;
-        for(int i = 0; i < line_start; i++){
-            delete lines[i];
-        }
-        for(int i = line_start; i < line_stop; i++){
-            auto l = lines[i];
-            l->crop(pixel_start, pixel_stop);
-            lns.emplace_back(l);
-        }
-        for(int i = line_stop; i < size(); i++){
-            delete lines[i];
-        }
-        lines = lns;
-    }
+    );
 };
 
 
