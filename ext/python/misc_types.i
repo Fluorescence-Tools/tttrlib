@@ -6,8 +6,8 @@
 %include "std_vector.i";
 %include "std_list.i";
 %include "std_pair.i"; // tttrlib.Correlator.get_tttr
+%include <std_shared_ptr.i>
 
-%include "std_shared_ptr.i";
 %include "cpointer.i"
 %include "attribute.i"
 %include "exception.i"
@@ -64,6 +64,7 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply(short* IN_ARRAY1, int DIM1) {(short* input, int n_input)}
 %apply(unsigned short* IN_ARRAY1, int DIM1) {(unsigned short* input, int n_input)}
 %apply(int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
+%apply(unsigned int* IN_ARRAY1, int DIM1) {(unsigned int* input, int n_input)}
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
 
