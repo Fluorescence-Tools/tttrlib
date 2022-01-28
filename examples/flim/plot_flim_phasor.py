@@ -46,7 +46,7 @@ stack_frames = True
 minimum_number_of_photons = 30
 
 # No IRF correction
-phasor = image.get_phasor_image(
+phasor = image.get_phasor(
     tttr_data=data,
     stack_frames=stack_frames,
     minimum_number_of_photons=minimum_number_of_photons
@@ -62,7 +62,7 @@ phasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]
 # IRF correction
 data_mirror = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3')
 data_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]
-phasor = image.get_phasor_image(
+phasor = image.get_phasor(
     tttr_irf=data_irf,
     tttr_data=data,
     stack_frames=stack_frames,
@@ -89,19 +89,23 @@ circle_settings = {
     "fill": False,
     "color": 'w'
 }
+
 fig, ax = plt.subplots(nrows=2, ncols=3)
 ax[0, 2].set(xlim=(0, 1), ylim=(0, 0.6))
-a_circle = plt.Circle(**circle_settings)
-ax[0, 2].add_artist(a_circle)
-ax[1, 2].hist2d(phasor_x_1d_1, phasor_y_1d_1, **hist_settings)
+ax[0, 2].hist2d(phasor_x_1d_1, phasor_y_1d_1, **hist_settings)
 ax[0, 0].imshow(phasor_x[0, :, :])
 ax[0, 1].imshow(phasor_y[0, :, :])
-ax[0, 2].set_title('No IRF correction')
-ax[1, 2].set_title('IRF correction')
 ax[1, 2].set(xlim=(0, 1), ylim=(0, 0.6))
-a_circle = plt.Circle(**circle_settings)
-ax[1, 2].add_artist(a_circle)
 ax[1, 2].hist2d(phasor_x_1d_2, phasor_y_1d_2, **hist_settings)
 ax[1, 0].imshow(phasor_x[0, :, :])
 ax[1, 1].imshow(phasor_y[0, :, :])
+
+a_circle = plt.Circle(**circle_settings)
+ax[1, 2].add_artist(a_circle)
+a_circle = plt.Circle(**circle_settings)
+ax[0, 2].add_artist(a_circle)
+
+ax[0, 2].set_title('No IRF correction')
+ax[1, 2].set_title('IRF correction')
+
 plt.show()
