@@ -317,8 +317,8 @@ size_t TTTRHeader::read_ptu_header(
                     free(b);
                     break;
                 case tyAnsiString:
-                      AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
-                      Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
+                    AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
+                    Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
                     if (Result != TagHead.TagValue) {
                         free(AnsiBuffer);
                         throw std::string("Incomplete File.");
@@ -425,7 +425,6 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     fwrite(&version, sizeof(version), 1, fp);
     // write header tags
     // variables for writing
-    tag_head_t TagHead;
     double tmp_d;
     uint64_t tmp_i;
     uint64_t tmp_s;
@@ -435,13 +434,15 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     wchar_t *WideBuffer;
     // Flag to check if the header end tag was written
     bool header_end_written = false;
-
     for(auto &it: header->json_data["tags"].items()){
         auto tag = it.value();
 #if VERBOSE_TTTRLIB
         std::clog << tag << std::endl;
 #endif
+        tag_head_t TagHead;
+        tmp_str.clear();
         tmp_str = tag["name"];
+        memset(TagHead.Ident, 0, 32);
         strcpy(TagHead.Ident, tmp_str.c_str());
         TagHead.Idx = tag["idx"];
         TagHead.Typ = tag["type"];
@@ -490,9 +491,10 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
             case tyAnsiString:
                 // write tag that marks the beginning of tyAnsiString
                 tmp_str = tag["value"];
+                tmp_str.resize(tmp_str.length() + tmp_str.length() % 32);
                 TagHead.TagValue = tmp_str.length();
                 fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                fwrite(tmp_str.c_str(), sizeof(char), tmp_str.length(), fp);
+                fwrite(tmp_str.c_str(), 1, TagHead.TagValue, fp);
                 break;
             case tyWideString:
                 std::cerr << "ERROR: writing of tyWideString currently not supported" << std::endl;
@@ -516,6 +518,7 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
 #if VERBOSE_TTTRLIB
         std::clog << "Header_End is missing. Adding Header_End to tag list." << std::endl;
 #endif
+        tag_head_t TagHead;
         TagHead.TagValue = 0;
         strcpy(TagHead.Ident, FileTagEnd.c_str());
         TagHead.Idx = -1;
