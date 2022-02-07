@@ -1,27 +1,13 @@
 
-@property
-def micro_times(self):
-    return self.get_micro_time()
 
 @property
 def routing_channels(self):
     return self.get_routing_channel()
 
 @property
-def macro_times(self):
-    return self.get_macro_time()
-
-@property
 def event_types(self):
     return self.get_event_type()
-#
-# @property
-# def header(self):
-#     return self.get_header()
-#
-# @property
-# def filename(self):
-#     return self.get_filename()
+
 
 def __getattr__(self, item):
     """
