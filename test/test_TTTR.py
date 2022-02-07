@@ -4,6 +4,7 @@ import os
 import unittest
 import json
 import numpy as np
+import tempfile
 
 import tttrlib
 
@@ -45,26 +46,32 @@ class Tests(unittest.TestCase):
         d2 = json.loads(h2.get_json())
         self.assertDictEqual(d1, d2)
 
-        # write PTU header
-        # BROKEN
-        # mode = 'wb'
-        # tttrlib.TTTRHeader.write_ptu_header("test.ptu", h2, mode) # default is wb
-        # # test if all info is still there
-        # data2 = tttrlib.TTTR("test.ptu")
-        # h3 = data2.header
-        # d3 = json.loads(h3.get_json())
-        # self.assertDictEqual(d2, d3)
-        # h4 = tttrlib.TTTRHeader(filename, 0)
-        # d4 = json.loads(h4.get_json())
-        # self.assertDictEqual(d4, d3)
-        #
-        # header = tttrlib.TTTRHeader(filename)
-        # d5 = json.loads(header.get_json())
-        # self.assertDictEqual(d4, d5)
+    def test_write_ptu_header(self):
+        filename = settings["ptu_hh_t3_filename"]
+        file = tempfile.NamedTemporaryFile()
+        test_fn = file.name + '.ptu'
+        data = tttrlib.TTTR(filename)
+        header_original = data.header
+        mode = 'wb'  # default is wb
+        tttrlib.TTTRHeader.write_ptu_header(test_fn, header_original, mode)
+        # test if all info is still there
+        data_test = tttrlib.TTTR(test_fn)
+        header_test = data_test.header
+        d2 = json.loads(header_original.get_json())
+        d3 = json.loads(header_test.get_json())
+        all_tags = True
+        for t3 in d3['tags']:
+            if t3 not in d2['tags']:
+                all_tags = False
+                break
+        for t2 in d2['tags']:
+            if t2 not in d3['tags']:
+                all_tags = False
+                break
+        self.assertEqual(all_tags, True)
 
     def test_tttr_header_add_tags(self):
         data = tttrlib.TTTR(settings["spc132_filename"], "SPC-130")
-        # add tags from another header
         header2 = tttrlib.TTTRHeader(settings["ptu_hh_t3_filename"], 0) # 0 is the container type
         self.assertEqual(len(data.header.tags) < len(header2.tags), True)
         data.header.add_tags(header2)
@@ -424,6 +431,4 @@ class Tests(unittest.TestCase):
             len(d.macro_times), 0
         )
         header = d.header
-        self.assertEqual(
-            header.getTTTRRecordType(), -1
-        )
+        self.assertEqual(header.tttr_record_type, -1)
