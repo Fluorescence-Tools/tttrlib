@@ -8,12 +8,12 @@
 
 
 TTTRHeader::TTTRHeader() :
-        tttr_container_type(0),
-        tttr_record_type(-1),
         header_end(0)
 {
     json_data = nlohmann::json::object();
     json_data["tags"] = nlohmann::json::array();
+    json_data[TTTRContainerType] = 0;
+    json_data[TTTRRecordType] = -1;
 #if VERBOSE_TTTRLIB
     std::clog << "-- TTTRHeader::TTTRHeader" << std::endl;
 #endif
@@ -26,8 +26,6 @@ TTTRHeader::TTTRHeader(const TTTRHeader &p2)
 #endif
     json_data = p2.json_data;
     header_end = p2.header_end;
-    tttr_record_type = p2.tttr_record_type;
-    tttr_container_type = p2.tttr_container_type;
 }
 
 TTTRHeader::TTTRHeader(
@@ -40,8 +38,39 @@ TTTRHeader::TTTRHeader(
     std::clog << "-- TTTRHeader::TTTRHeader - Opening file" << std::endl;
     std::clog << "reading header" << std::endl;
 #endif
+    int tttr_record_type;
     if(tttr_container_type == PQ_PTU_CONTAINER){
         header_end = read_ptu_header(fpin, tttr_record_type, json_data);
+        int RecordType = get_tag(json_data, "TTResultFormat_TTTRRecType")["value"];
+        switch (RecordType)
+        {
+            case rtPicoHarpT2:
+                tttr_record_type = PQ_RECORD_TYPE_PHT2;
+                break;
+            case rtPicoHarpT3:
+                tttr_record_type = PQ_RECORD_TYPE_PHT3;
+                break;
+            case rtHydraHarpT2:
+                tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
+                break;
+            case rtHydraHarpT3:
+                tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
+                break;
+            case rtMultiHarpT2:
+            case rtHydraHarp2T2:
+            case rtTimeHarp260NT2:
+            case rtTimeHarp260PT2:
+                tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
+                break;
+            case rtMultiHarpT3:
+            case rtHydraHarp2T3:
+            case rtTimeHarp260NT3:
+            case rtTimeHarp260PT3:
+                tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+                break;
+            default:
+                tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+        }
     } else if(tttr_container_type == PQ_HT3_CONTAINER){
         header_end = read_ht3_header(fpin, json_data);
         tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
@@ -59,12 +88,13 @@ TTTRHeader::TTTRHeader(
         tttr_record_type = BH_RECORD_TYPE_SPC600_4096;
     } else if(tttr_container_type == BH_SPC130_CONTAINER){
         header_end = read_bh132_header(fpin, json_data);
-        tttr_record_type = (int) BH_RECORD_TYPE_SPC130;
+        tttr_record_type = BH_RECORD_TYPE_SPC130;
     } else{
         header_end = 0;
         add_tag(json_data, TTTRTagBits, 32, tyInt8);
         tttr_record_type = BH_RECORD_TYPE_SPC130;
     }
+    set_tttr_record_type(tttr_record_type);
     if(close_file) fclose(fpin);
 #if VERBOSE_TTTRLIB
     std::clog << "End of header: " << header_end << std::endl;
@@ -76,17 +106,14 @@ TTTRHeader::TTTRHeader(
 TTTRHeader::TTTRHeader(
         std::string fn,
         int tttr_container_type
-) : TTTRHeader(fopen(fn.c_str(), "r"), tttr_container_type, true) {}
+) : TTTRHeader(fopen(fn.c_str(), "r"), tttr_container_type, true) {
+
+}
 
 
 TTTRHeader::TTTRHeader(int tttr_container_type) : TTTRHeader(){
-    this->tttr_container_type = tttr_container_type;
+    set_tttr_container_type(tttr_container_type);
 };
-
-
-int TTTRHeader::getTTTRRecordType(){
-    return this->tttr_record_type;
-}
 
 
 size_t TTTRHeader::read_bh132_header(
@@ -97,7 +124,7 @@ size_t TTTRHeader::read_bh132_header(
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
     bh_spc132_header_t rec;
     fread(&rec, sizeof(rec),1, fpin);
-    double mt_clk = (double) rec.macro_time_clock / 10.0e9; // divide by 10.0e9 to get units of seconds
+    double mt_clk = (double) rec.bits.macro_time_clock / 10.0e9; // divide by 10.0e9 to get units of seconds
     double mi_clk = mt_clk / 4096.0;
     add_tag(data, TTTRTagRes, mi_clk, tyFloat8);
     add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
@@ -360,14 +387,14 @@ size_t TTTRHeader::read_ptu_header(
         case rtHydraHarpT2:
             tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
             break;
-        case rtMultiHarpNT2:
+        case rtMultiHarpT2:
         case rtHydraHarp2T2:
         case rtTimeHarp260NT2:
         case rtTimeHarp260PT2:
             tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
             break;
         case rtHydraHarpT3:
-        case rtMultiHarpNT3:
+        case rtMultiHarpT3:
         case rtHydraHarp2T3:
         case rtTimeHarp260NT3:
         case rtTimeHarp260PT3:
@@ -387,17 +414,18 @@ size_t TTTRHeader::read_ptu_header(
 }
 
 void TTTRHeader::write_spc132_header(
-        std::string fn,
-        TTTRHeader* header,
-        std::string mode
-        ){
+        std::string fn, TTTRHeader* header, std::string mode){
     // write header
-    FILE* fp = fopen(fn.c_str(), mode.c_str());
     bh_spc132_header_t head;
+    head.allbits = 0;
+    head.bits.unused = 0;
+    head.bits.invalid = true;
+
     nlohmann::json tag = get_tag(header->json_data, TTTRTagGlobRes);
-    head.invalid = true;
-    head.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
-    fwrite(&head, sizeof(bh_spc132_header_t), 1, fp);
+    head.bits.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
+
+    FILE* fp = fopen(fn.c_str(), mode.c_str());
+    fwrite(&head, 4, 1, fp);
     fclose(fp);
 }
 

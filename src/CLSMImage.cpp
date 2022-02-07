@@ -809,7 +809,7 @@ void CLSMImage::get_mean_lifetime(
 #endif
     if(tttr_irf != nullptr){
         unsigned short *micro_times_irf; int n_micro_times_irf;
-        tttr_irf->get_micro_time(&micro_times_irf, &n_micro_times_irf);
+        tttr_irf->get_micro_times(&micro_times_irf, &n_micro_times_irf);
         m0_irf = n_micro_times_irf; // number of photons
         m1_irf = std::accumulate(micro_times_irf, micro_times_irf + n_micro_times_irf,0.0); // sum of photon arrival times
     }
@@ -1209,6 +1209,16 @@ void CLSMImage::transform(unsigned int* input, int n_input){
                 std::end(source_pixel->_tttr_indices)
         );
     }
+}
+
+
+void CLSMImage::distribute(
+        unsigned int pixel_id,
+        CLSMImage* target,
+        std::vector<int> &target_pixel_ids,
+        std::vector<int> &target_probabilities
+){
+    std::cout << "TODO" << std::endl;
 }
 
 

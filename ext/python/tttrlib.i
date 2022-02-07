@@ -1,6 +1,6 @@
 %module(directors="1", package="tttrlib") tttrlib
 %feature("kwargs", 1);
-%feature("autodoc", "3");
+%feature("autodoc", "2");
 %include "documentation.i"
 
 %{
@@ -23,10 +23,14 @@
 
 %pythonbegin "./ext/python/tttrlib.py"
 
+%include "info.h"
 %include "misc_types.i"
 
-%include "info.h"
+%include "TTTRHeader.i"
+%include "TTTRRange.i"
+%include "TTTRSelection.i"
 %include "TTTR.i"
+
 %include "Histogram.i"
 
 /* Correlation of data */

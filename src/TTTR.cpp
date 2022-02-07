@@ -146,7 +146,8 @@ TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
         tttr_container_type_str.assign(container_type);
         tttr_container_type = container_names.left.at(std::string(container_type));
         filename.assign(fn);
-        if(read_file()) find_used_routing_channels();
+        if(read_file())
+            find_used_routing_channels();
 //    }
 //    catch(...) {
 //        std::cerr << "Container type " << container_type
@@ -263,13 +264,15 @@ int TTTR::read_file(const char *fn, int container_type) {
             fp = fopen(fn, "rb");
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
-            tttr_record_type = header->getTTTRRecordType();
+            tttr_record_type = header->get_tttr_record_type();
 #if VERBOSE_TTTRLIB
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
             processRecord = processRecord_map[tttr_record_type];
             n_records_in_file = get_number_of_records_by_file_size(
-                    fp, header->header_end, header->get_bytes_per_record()
+                    fp,
+                    header->header_end,
+                    header->get_bytes_per_record()
             );
             allocate_memory_for_records(n_records_in_file);
             read_records();
@@ -362,7 +365,7 @@ void TTTR::read_records(
     n_valid_events = 0;
     size_t offset;
 
-    // read if possible the data in chunks to speed up the access
+    // read data in chunks to speed up the access
     size_t number_of_objects;
     size_t bytes_per_record = header->get_bytes_per_record();
     do{
@@ -405,11 +408,11 @@ TTTRHeader* TTTR::get_header() {
     }
 }
 
-void TTTR::get_macro_time(unsigned long long** output, int* n_output){
+void TTTR::get_macro_times(unsigned long long** output, int* n_output){
     get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
 }
 
-void TTTR::get_micro_time(unsigned short** output, int* n_output){
+void TTTR::get_micro_times(unsigned short** output, int* n_output){
     get_array<unsigned short>(n_valid_events, micro_times, output, n_output);
 }
 
@@ -705,7 +708,7 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     unsigned dMT;
     unsigned long long MT_ov_last;
     unsigned long long MT_ov = 0;
-    for (size_t n = 0; n < tttr->size();) {
+    for (size_t n = 0; n < tttr->size(); n++) {
         // time since last macro_time record
         dMT = tttr->macro_times[n] - MT_ov * 4096;
         // Count the number of MT overflows
@@ -731,7 +734,6 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
             record.bits.mtov = (MT_ov_last == 1);
             record.bits.invalid = 0;
             fwrite(&record, 4, 1, fp);
-            n++;
         }
     }
 }
@@ -782,12 +784,9 @@ void update_ptu_header(FILE* fpin, char Ident[32], uint64_t TagValue){
     } while ((strncmp(TagHead.Ident, FileTagEnd.c_str(), sizeof(FileTagEnd))) != 0);
 }
 
-void TTTR::write_header(
-        std::string &fn,
-        TTTRHeader* header
-){
+void TTTR::write_header(std::string &fn, TTTRHeader* header){
     if(header == nullptr) header = this->header;
-    int container_type = header->tttr_container_type;
+    int container_type = header->get_tttr_container_type();
     if(container_type < 0)
         container_type = this->tttr_container_type;
     if(container_type == BH_SPC130_CONTAINER){
@@ -847,8 +846,8 @@ bool TTTR::write(
 ){
     //
     if(header == nullptr) header=this->header;
-    int record_type =header->tttr_record_type;
-    int container_type = header->tttr_container_type;
+    int record_type =header->get_tttr_record_type();
+    int container_type = header->get_tttr_container_type();
     if(!valid_container_record_pair(container_type, record_type)){
         std::cerr << "ERROR in TTTR::write: combination of "
                      "container and record "
@@ -888,7 +887,7 @@ void TTTR::compute_microtime_histogram(
         int n_channels = header.get_number_of_micro_time_channels() / micro_time_coarsening;
         double micro_time_resolution = header.get_micro_time_resolution();
         unsigned short *micro_times; int n_micro_times;
-        tttr_data->get_micro_time(&micro_times, &n_micro_times);
+        tttr_data->get_micro_times(&micro_times, &n_micro_times);
 #if VERBOSE_TTTRLIB
         std::cout << "compute_histogram" << std::endl;
         std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;

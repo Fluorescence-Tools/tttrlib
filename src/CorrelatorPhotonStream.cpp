@@ -73,7 +73,7 @@ void CorrelatorPhotonStream::set_tttr(
     if(make_fine){
         unsigned int number_of_microtime_channels = tttr->get_number_of_micro_time_channels();
         unsigned short* tac; int n_tac;
-        tttr->get_micro_time(&tac, &n_tac);
+        tttr->get_micro_times(&tac, &n_tac);
         this->make_fine(tac, n_tac, number_of_microtime_channels);
     }
 }

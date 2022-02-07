@@ -397,7 +397,7 @@ public:
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_macro_time(unsigned long long **output, int *n_output);
+    void get_macro_times(unsigned long long **output, int *n_output);
 
     /*!
      * Returns an array containing the micro times of the valid TTTR
@@ -406,7 +406,7 @@ public:
      * @param output Pointer to the output array
      * @param n_output Pointer to the number of elements in the output array
      */
-    void get_micro_time(unsigned short **output, int *n_output);
+    void get_micro_times(unsigned short **output, int *n_output);
 
     /*!
      * Returns a intensity trace that is computed for a specified integration
@@ -738,7 +738,7 @@ public:
      */
     static void compute_microtime_histogram(
             TTTR *tttr_data,
-            double **histogram, int *n_histogram,
+            double** output, int* n_output,
             double **time, int *n_time,
             unsigned short micro_time_coarsening = 1
     );

@@ -27,8 +27,8 @@
 #define rtTimeHarp260NT2 0x00010205    // (SubID = $00 ,RecFmt: $01) (V2), T-Mode: $02 (T2), HW: $05 (TimeHarp260N)
 #define rtTimeHarp260PT3 0x00010306    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T3), HW: $06 (TimeHarp260P)
 #define rtTimeHarp260PT2 0x00010206    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T2), HW: $06 (TimeHarp260P)
-#define rtMultiHarpNT3   0x00010307    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T3), HW: $07 (MultiHarp150N)
-#define rtMultiHarpNT2   0x00010207    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T2), HW: $07 (MultiHarp150N)
+#define rtMultiHarpT3    0x00010307    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T3), HW: $07 (MultiHarp)
+#define rtMultiHarpT2    0x00010207    // (SubID = $00 ,RecFmt: $01) (V1), T-Mode: $02 (T2), HW: $07 (MultiHarp)
 
 // tttrlib internal container identifier definitions
 #define PQ_PTU_CONTAINER          0
@@ -140,10 +140,13 @@ typedef struct {
 
 
 /// Becker&Hickl SPC132 Header
-typedef struct {
-    unsigned macro_time_clock :24;   // the resolution of the macro time
-    unsigned unused           :7;    // unclear usage
-    bool invalid              :1;    // true if dataset is marked as invalid
+typedef union bh_spc132_header{
+    uint32_t allbits;
+    struct{
+        unsigned macro_time_clock :24;   // the resolution of the macro time
+        unsigned unused           :7;    // unclear usage
+        bool invalid              :1;    // true if dataset is marked as invalid
+    } bits;
 } bh_spc132_header_t;
 
 

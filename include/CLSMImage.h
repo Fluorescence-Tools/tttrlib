@@ -389,6 +389,18 @@ public:
     void transform(unsigned int* input, int n_input);
 
     /*!
+     * Distribute the photons of a pixel_id to a set of
+     * pixel ids in a target image according to provided probabilities
+     *
+     */
+    void distribute(
+            unsigned int pixel_id,
+            CLSMImage* target,
+            std::vector<int> &target_pixel_ids,
+            std::vector<int> &target_probabilities
+    );
+
+    /*!
      * Crop the image
      * @param frame_start
      * @param frame_stop

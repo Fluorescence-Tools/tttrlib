@@ -32,9 +32,11 @@ const std::string TTTRTagGlobRes = "MeasDesc_GlobalResolution";    // Global Res
 const std::string TTTRSyncRate = "SyncRate";                       // SyncRate - in Hz
 const std::string TTTRNMicroTimes = "MeasDesc_NumberMicrotimes";   // The number of micro time channels
 const std::string TTTRRecordType = "MeasDesc_RecordType";         // Internal record type (see tttrlib record type identifier definitions)
+const std::string TTTRContainerType = "MeasDesc_ContainerType";   // Internal container type (see tttrlib record type identifier definitions)
 const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
 const std::string TTTRTagBits = "TTResultFormat_BitsPerRecord";    // Bits per TTTR record
 const std::string FileTagEnd = "Header_End";                       // Always appended as last tag (BLOCKEND)
+
 
 class TTTRHeader {
 
@@ -43,8 +45,6 @@ class TTTRHeader {
 protected:
     // JSON object used to store all the header information
     nlohmann::json json_data;
-    int tttr_container_type;
-    int tttr_record_type;
 
     /*!
      * Marks the end of the header in the file (position in file)
@@ -54,12 +54,10 @@ protected:
 public:
 
     /*!
-     * TTTR record type
-     *
-     * @return
+     * @return The TTTR container type of the associated TTTR file as a char
      */
     int get_tttr_record_type(){
-        return tttr_record_type;
+        return (int) json_data[TTTRRecordType];
     }
 
     /*!
@@ -67,7 +65,7 @@ public:
      * @param v record type
      */
     void set_tttr_record_type(int v){
-        tttr_record_type = v;
+        json_data[TTTRRecordType] = v;
     }
 
     /*!
@@ -75,7 +73,7 @@ public:
      * @return
      */
     int get_tttr_container_type(){
-        return tttr_container_type;
+        return (int) json_data[TTTRContainerType];
     }
 
     /*!
@@ -83,7 +81,7 @@ public:
      * @param v container type
      */
     void set_tttr_container_type(int v){
-        tttr_container_type = v;
+        json_data[TTTRContainerType] = v;
     }
 
     /*!
@@ -195,11 +193,6 @@ public:
     }
 
     /*!
-     * @return The TTTR container type of the associated TTTR file as a char
-     */
-    int getTTTRRecordType();
-
-    /*!
      * Default constructor
      */
     TTTRHeader();
@@ -275,12 +268,12 @@ public:
      *
      * @param fn filename
      * @param header pointer to the TTTRHeader object that is written to the file
-     * @param modes the writing modes (default 'wb')
+     * @param modes the writing modes (default 'w+b')
      */
     static void write_spc132_header(
             std::string fn,
             TTTRHeader* header,
-            std::string modes = "wb"
+            std::string modes = "w"
     );
 
     /*!
