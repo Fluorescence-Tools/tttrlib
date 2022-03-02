@@ -1,7 +1,7 @@
 """
-============================
-Fluorescence intensity image
-============================
+===============
+Intensity image
+===============
 
 """
 import pylab as plt

@@ -2,6 +2,12 @@
 ===============
 Image transform
 ===============
+TTTR CLSM images are constructed of photons that are grouped into pixels. For each photon the micro time, the macro
+time and the registering detector is stored as additional information, w. A transformation is a function that maps one
+set to another set after performing some operations. An image transform is a function that maps one image to another
+image. Instead of operating on gray level intensity of and image at any point. Photons (including their additional
+information) are mapped to a new image. Such a mapping can eg for non-affine and affine transforamtions (rotations,
+streching, etc.). Below a very simple image transformation (scaling/streching) is illustrated.
 """
 from __future__ import print_function
 import tttrlib
@@ -42,14 +48,14 @@ for f in range(0, n_frames):
             i += 2
 
 # Any other arbitrary mapping cloud be used
-#plt.plot(mapping)
-#plt.show()
+plt.plot(mapping)
+plt.show()
 
 image.transform(mapping)
 img_transformed = image.intensity.sum(axis=0)
 
 # Plot the results
-f, axs = plt.subplots(1, 2)
+fig, axs = plt.subplots(1, 2)
 axs[0].imshow(img_original)
 axs[1].imshow(img_transformed)
 plt.show()
@@ -58,7 +64,7 @@ plt.show()
 image.crop(0, n_frames, 0, n_lines // bin_line, 0, n_pixel // bin_pixel)
 img_transformed_cropped = image.intensity.sum(axis=0)
 # Plot the results
-f, axs = plt.subplots(1, 2)
+fig, axs = plt.subplots(1, 2)
 axs[0].imshow(img_original)
 axs[1].imshow(img_transformed_cropped)
 plt.show()
