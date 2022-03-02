@@ -2,7 +2,8 @@
 ====================
 Mean lifetime images
 ====================
-
+Compute the mean lifetime in a pixel using the method of moments
+(Irvin Isenberg, 1973, Biophysical journal).
 """
 import tttrlib
 import numpy as np
@@ -10,37 +11,37 @@ import pylab as plt
 
 filename = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
 filename_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
+channels_green = [0, 2]
+channels_red = [1, 3]
 
 data = tttrlib.TTTR(filename)
 irf = tttrlib.TTTR(filename_irf)
 
-# Create a new CLSM Image. This image will be used
-# as a template for the green and red image. This avoids
-# passing through the TTTR screen multiple times. The frame
-# line, and pixel locations will be copied for the green and
-# red image from this template
+#%%
+# Create a new CLSM Image. This image will be used as a template for the green and red image.
+# This avoids passing through the TTTR screen multiple times. The frame line, and pixel locations
+# will be copied for the green and red image from this template.
 clsm_template = tttrlib.CLSMImage(data)
 clsm_green = tttrlib.CLSMImage(
     source=clsm_template,
-    channels=[0, 2]
+    channels=channels_green
 )
 clsm_red = tttrlib.CLSMImage(
     source=clsm_template,
-    channels=[1, 3]
+    channels=channels_red
 )
 
-green = clsm_green.intensity.sum(axis=0)
-red = clsm_red.intensity.sum(axis=0)
-
-
-mean_tau_green = clsm_green.get_mean_lifetime_image(
-    tttr_irf=irf[irf.get_selection_by_channel([0, 2])],
+mean_tau_green = clsm_green.get_mean_lifetime(
+    tttr_irf=irf[irf.get_selection_by_channel(channels_green)],
     tttr_data=data,
     minimum_number_of_photons=20,
     stack_frames=True
 )
 
-mask = (green < 30) + (red < 30)
+green = clsm_green.intensity.sum(axis=0)
+red = clsm_red.intensity.sum(axis=0)
+
+mask = (green < 20) + (red < 20)
 masked_green = np.ma.masked_where(mask, green)
 masked_red = np.ma.masked_where(mask, red)
 masked_tau = np.ma.masked_where(mask, mean_tau_green.mean(axis=0))
