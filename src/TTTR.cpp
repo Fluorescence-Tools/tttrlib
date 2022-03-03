@@ -785,7 +785,8 @@ void update_ptu_header(FILE* fpin, char Ident[32], uint64_t TagValue){
 }
 
 void TTTR::write_header(std::string &fn, TTTRHeader* header){
-    if(header == nullptr) header = this->header;
+    if(header == nullptr)
+        header = this->header;
     int container_type = header->get_tttr_container_type();
     if(container_type < 0)
         container_type = this->tttr_container_type;
@@ -793,7 +794,9 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
         TTTRHeader::write_spc132_header(fn, header);
     } else if(container_type == PQ_PTU_CONTAINER){
         TTTRHeader::write_ptu_header(fn, header);
-    } else{
+    } else if(container_type == PQ_HT3_CONTAINER){
+        TTTRHeader::write_ht3_header(fn, header);
+    }else{
         std::cerr << "Error in TTTR::write, writing of headers not implemented" << std::endl;
     }
 }
@@ -840,11 +843,7 @@ bool valid_container_record_pair(int container_type, int record_type){
     return false;
 }
 
-bool TTTR::write(
-        std::string filename,
-        TTTRHeader* header
-){
-    //
+bool TTTR::write(std::string filename, TTTRHeader* header){
     if(header == nullptr) header=this->header;
     int record_type =header->get_tttr_record_type();
     int container_type = header->get_tttr_container_type();
@@ -942,7 +941,7 @@ double TTTR::compute_mean_lifetime(
         dt = tttr_data->header->get_micro_time_resolution();
     }
 
-    double lt = -1.0;
+    double lt = 0.0;
     double mu0 = 0.0; // total number of photons
     double mu1 = 0.0; // sum of photon arrival times
     if(tttr_indices == nullptr){

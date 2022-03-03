@@ -165,6 +165,7 @@ class TTTR : public std::enable_shared_from_this<TTTR>{
 
     friend class CLSMImage;
     friend class TTTRRange;
+    friend class TTTRMask;
     friend class CorrelatorPhotonStream;
 
 private:
