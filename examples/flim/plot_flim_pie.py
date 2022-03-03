@@ -61,9 +61,11 @@ sum_all = green_ch + red_ch
 # the IRFs of the two separate the fluorescence of the first (prompt) and the second (delay) excitation pulse.
 # The two excitation pulses define two micro time detection windows for the prompt and the delay pulse.
 filename_irf = '../../tttr-data/imaging/pq/ht3/mGBP_IRF.ht3'
+
 irf = tttrlib.TTTR(filename_irf)
 tttr_irf_green = irf.get_tttr_by_channel(green_ch)
 tttr_irf_red = irf.get_tttr_by_channel(red_ch)
+
 tttr_green = tttr_data.get_tttr_by_channel(green_ch)
 tttr_red = tttr_data.get_tttr_by_channel(red_ch)
 microtime_hist_green = tttr_green.microtime_histogram
@@ -89,8 +91,33 @@ ax[1].set_xlim(0, 25000)
 plt.show()
 
 #%%
-# 4. Intensity imaging
-# --------------------
+# Create a mask to select photons in certain channel and in micro time range to
+# split the photons in prompt and delay.
+mask_irf_green_prompt = tttrlib.TTTRMask()
+mask_irf_green_prompt.select_channels(irf, green_ch)
+mask_irf_green_prompt.select_microtime_ranges(irf, [prompt_range])
+tttr_irf_green_prompt = irf[mask_irf_green_prompt.indices]
+
+mask_irf_red_prompt = tttrlib.TTTRMask()
+mask_irf_red_prompt.select_channels(irf, red_ch)
+mask_irf_red_prompt.select_microtime_ranges(irf, [prompt_range])
+tttr_irf_red_prompt = irf[mask_irf_red_prompt.indices]
+
+mask_irf_red_delay = tttrlib.TTTRMask()
+mask_irf_red_delay.select_channels(irf, red_ch)
+mask_irf_red_delay.select_microtime_ranges(irf, [delay_range])
+tttr_irf_red_delay = irf[mask_irf_red_delay.indices]
+
+fig, ax = plt.subplots(nrows=1, ncols=3, sharex=True, sharey=True)
+fig.tight_layout()
+ax[0].semilogy(*tttr_irf_green_prompt.microtime_histogram[::-1], color='blue')
+ax[1].semilogy(*tttr_irf_red_prompt.microtime_histogram[::-1], color='orange')
+ax[2].semilogy(*tttr_irf_red_delay.microtime_histogram[::-1], color='red')
+fig.show()
+
+#%%
+# Intensity imaging
+# -----------------
 # Fills the CLSM image container with intensities. The green CLSM container gets filled
 # with all photons (independent of the excitation pulse), as the red laser does not excite
 # the sample.
@@ -123,5 +150,40 @@ fig, _ = plot_images(
     cmaps=['inferno', 'inferno', 'inferno', 'inferno'],
     nrows=2, ncols=2, sharex=True, sharey=True
 )
-plt.show()
+fig.show()
 
+#%%
+# Intensity imaging
+# -----------------
+settings_lt = {
+    "tttr_data": tttr_data,
+    "minimum_number_of_photons": 30,
+    "stack_frames": True
+}
+mean_tau_green = clsm_green.get_mean_lifetime(
+    tttr_irf=tttr_irf_green_prompt, **settings_lt
+)
+
+mean_tau_red_prompt = clsm_red_prompt.get_mean_lifetime(
+    tttr_irf=tttr_irf_red_prompt, **settings_lt
+)
+
+mean_tau_red_delay = clsm_red_delay.get_mean_lifetime(
+    tttr_irf=tttr_irf_red_delay, **settings_lt
+)
+
+fig, _ = plot_images(
+    [
+        mean_tau_green.sum(axis=0),
+        mean_tau_red_prompt.sum(axis=0),
+        mean_tau_red_delay.sum(axis=0)
+    ],
+    titles=[
+        'tau (green)',
+        'tau (red, prompt)',
+        'tau (red, delay)'
+    ],
+    cmaps=['inferno', 'inferno', 'inferno'],
+    nrows=1, ncols=3, sharex=True, sharey=True
+)
+plt.show()
