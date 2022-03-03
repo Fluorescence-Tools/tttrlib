@@ -40,11 +40,11 @@ def __getattr__(self, item):
     :param item:
     :return:
     """
-    try:
-        item = "get_" + str(item)
+    item = "get_" + str(item)
+    if hasattr(self.__class__, item):
         call = getattr(self, item)
         return call()
-    except:
+    else:
         raise AttributeError
 
 def __init__(
