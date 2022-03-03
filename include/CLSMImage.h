@@ -311,8 +311,7 @@ public:
             TTTR *tttr_data,
             double **output, int *dim1, int *dim2, int *dim3,
             int minimum_number_of_photons = 3,
-            TTTR *tttr_irf = nullptr,
-            double m0_irf = 1.0, double m1_irf = 1.0,
+            TTTR *tttr_irf = nullptr, double m0_irf = 1.0, double m1_irf = 1.0,
             bool stack_frames = false
     );
 
@@ -465,7 +464,8 @@ public:
             bool fill = true,
             std::vector<int> channels = std::vector<int>(),
             bool skip_before_first_frame_marker = false,
-            bool skip_after_last_frame_marker = false
+            bool skip_after_last_frame_marker = false,
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
     );
 
     /// Destructor

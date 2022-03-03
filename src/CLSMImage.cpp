@@ -75,7 +75,8 @@ CLSMImage::CLSMImage (
         bool fill,
         std::vector<int> channels,
         bool skip_before_first_frame_marker,
-        bool skip_after_last_frame_marker
+        bool skip_after_last_frame_marker,
+        std::vector<std::pair<int,int>> micro_time_ranges
 ) {
 #if VERBOSE_TTTRLIB
     std::clog << "Initializing CLSM image" << std::endl;
@@ -125,7 +126,7 @@ CLSMImage::CLSMImage (
     }
     // fill pixel
     if(fill && !channels.empty())
-        this->fill(this->tttr.get(), channels, false);
+        this->fill(this->tttr.get(), channels, false, micro_time_ranges);
     if(macro_time_shift!=0)
         shift_line_start(macro_time_shift);
 }
@@ -794,9 +795,7 @@ void CLSMImage::get_mean_lifetime(
         TTTR* tttr_data,
         double** output, int* dim1, int* dim2, int* dim3,
         const int minimum_number_of_photons,
-        TTTR* tttr_irf,
-        double m0_irf,
-        double m1_irf,
+        TTTR* tttr_irf, double m0_irf, double m1_irf,
         bool stack_frames
 ){
     const double dt = tttr_data->header->get_micro_time_resolution() * 1E9;
@@ -805,13 +804,18 @@ void CLSMImage::get_mean_lifetime(
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
     std::clog << "-- Micro time resolution [ns]: " << dt << std::endl;
-    std::clog << "-- Computing stack of mean micro times " << std::endl;
 #endif
     if(tttr_irf != nullptr){
         unsigned short *micro_times_irf; int n_micro_times_irf;
         tttr_irf->get_micro_times(&micro_times_irf, &n_micro_times_irf);
+#if VERBOSE_TTTRLIB
+        std::clog << "-- Computing first moments (m0, m1) of IRF using TTTR data " << std::endl;
+        std::clog << "-- n_micro_times_irf:" << n_micro_times_irf << std::endl;
+#endif
         m0_irf = n_micro_times_irf; // number of photons
-        m1_irf = std::accumulate(micro_times_irf, micro_times_irf + n_micro_times_irf,0.0); // sum of photon arrival times
+        m1_irf = 0.0;
+        for(int i=0; i<n_micro_times_irf;i++) m1_irf += (double) micro_times_irf[i];
+        //m1_irf = std::accumulate(micro_times_irf, micro_times_irf + n_micro_times_irf,0.0); // sum of photon arrival times
     }
 #if VERBOSE_TTTRLIB
     std::clog << "-- IRF m0: " << m0_irf << std::endl;
@@ -834,9 +838,8 @@ void CLSMImage::get_mean_lifetime(
                             nullptr, m0_irf, m1_irf, dt); // m0_irf, m1_irf precomputed => tttr_irf=nullptr
                 } else {
                     auto px = this->frames[i_frame]->lines[i_line]->pixels[i_pixel];
-                    t[pixel_nbr] = px.get_mean_lifetime(
-                            tttr_data, minimum_number_of_photons,
-                            nullptr, m0_irf, m1_irf, dt);// m0_irf, m1_irf precomputed => tttr_irf=nullptr
+                    t[pixel_nbr] =
+                            px.get_mean_lifetime(tttr_data, minimum_number_of_photons,nullptr, m0_irf, m1_irf, dt);
                 }
             }
         }
