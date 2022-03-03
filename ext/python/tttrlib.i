@@ -30,6 +30,7 @@
 %include "TTTRRange.i"
 %include "TTTRSelection.i"
 %include "TTTR.i"
+%include "TTTRMask.i"
 
 %include "Histogram.i"
 
