@@ -8,7 +8,6 @@ def routing_channels(self):
 def event_types(self):
     return self.get_event_type()
 
-
 def __getattr__(self, item):
     """
     If an attribute `attribute` is accesses that does not exist
@@ -18,20 +17,22 @@ def __getattr__(self, item):
     :param item:
     :return:
     """
-    try:
-        item = "get_" + str(item)
+    item = "get_" + str(item)
+    if hasattr(self.__class__, item):
         call = getattr(self, item)
         return call()
-    except:
+    else:
         raise AttributeError
 
 def __len__(self):
     return self.get_n_valid_events()
 
 def __getitem__(self, key):
+    if isinstance(key, tuple):
+        key = np.array(key)
     if isinstance(key, slice):
         sel = np.arange(*key.indices(self.get_n_valid_events()), dtype=np.int32)
-    elif isinstance(key, np.ndarray):
+    if isinstance(key, np.ndarray):
         sel = key.astype(np.int32)
     else:
         sel = np.array([key], dtype=np.int32)
@@ -54,9 +55,11 @@ def __init__(self, *args, **kwargs):
                 elif suffix == 'HDF' or suffix == 'H5' or suffix == 'HDF5':
                     tttr_container_type = 'HDF'
                 else:
-                    raise ValueError("The file type '{}' does not allow to determine "
-                                     "the container format. Specify the 'tttr_container_type' "
-                                     "parameter.".format(suffix))
+                    raise ValueError(
+                        "The file type '{}' does not allow to determine "
+                        "the container format. Specify the 'tttr_container_type' "
+                        "parameter.".format(suffix)
+                    )
                 this = _tttrlib.new_TTTR(obj, tttr_container_type)
             else:
                 this = _tttrlib.new_TTTR(*args, **kwargs)
