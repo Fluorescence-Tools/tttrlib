@@ -207,10 +207,8 @@ class TestCLSM(unittest.TestCase):
         fn = './test/data/reference/img_decay_mean_tau.npy'
         if make_reference:
             np.save(fn, img)
-        self.assertEqual(
-            np.allclose(img, np.load(fn)),
-            True
-        )
+        ref = np.load(fn)
+        np.testing.assert_array_almost_equal(img, ref)
 
     def test_mean_tau(self):
         """Mean lifetime images (with IRF correction)
@@ -232,10 +230,8 @@ class TestCLSM(unittest.TestCase):
         fn = './test/data/reference/img_decay_mean_tau_2.npy'
         if make_reference:
             np.save(fn, img)
-        self.assertEqual(
-            np.allclose(img, np.load(fn)),
-            True
-        )
+        ref = np.load(fn)
+        np.testing.assert_array_almost_equal(img, ref)
 
     def strip_tttr_indices(self):
         # Test stripping of photons from clsm image by index
