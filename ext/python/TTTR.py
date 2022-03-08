@@ -32,7 +32,7 @@ def __getitem__(self, key):
         key = np.array(key)
     if isinstance(key, slice):
         sel = np.arange(*key.indices(self.get_n_valid_events()), dtype=np.int32)
-    if isinstance(key, np.ndarray):
+    elif isinstance(key, np.ndarray):
         sel = key.astype(np.int32)
     else:
         sel = np.array([key], dtype=np.int32)
