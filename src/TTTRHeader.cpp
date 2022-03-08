@@ -170,7 +170,7 @@ size_t TTTRHeader::read_ht3_header(
     add_tag(data, "Offset", ht3_header_begin.Offset, tyInt8);
     add_tag(data, "AquisitionTime", ht3_header_begin.AquisitionTime, tyInt8);
     add_tag(data, "StopAt", (int) ht3_header_begin.StopAt, tyInt8);
-    add_tag(data, "StopOnOvfl", (bool) ht3_header_begin.StopAt, tyBool8);
+    add_tag(data, "StopOnOvfl", (bool) ht3_header_begin.StopOnOvfl, tyBool8);
     add_tag(data, "Restart", (bool) ht3_header_begin.Restart, tyBool8);
     add_tag(data, "DispLinLog", (bool) ht3_header_begin.DispLinLog, tyBool8);
     add_tag(data, "DispTimeFrom", ht3_header_begin.DispTimeFrom, tyInt8);
@@ -458,8 +458,6 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     uint64_t tmp_s;
     std::string tmp_str;
     std::wstring tmp_wstr;
-    char *AnsiBuffer;
-    wchar_t *WideBuffer;
     // Flag to check if the header end tag was written
     bool header_end_written = false;
     for(auto &it: header->json_data["tags"].items()){
@@ -576,12 +574,101 @@ int TTTRHeader::find_tag(
 }
 
 
-void TTTRHeader::write_ht3_header(
-        std::string fn,
-        TTTRHeader* header,
-        std::string modes
-        ){
-    std::clog << "WARNING: HT3 header not fully supported." << std::endl;
+void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes){
+//#ifdef VERBOSE_TTTRLIB
+//    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
+//#endif
+//    if(boost::filesystem::exists(fn)){
+//        std::clog << "WARNING: File exists" << fn << "." << std::endl;
+//    }
+//    auto json = header->json_data;
+//    std::string s;
+//    FILE* fp = fopen(fn.c_str(), modes.c_str());
+//    // Header of HT3 file
+//    pq_ht3_Header_t ht3_header_begin;
+//    strcpy(ht3_header_begin.FormatVersion, "1.0");
+//
+//    //
+//    s = TTTRHeader::get_tag("Ident", json)["value"];
+//    strcpy(ht3_header_begin.Ident, s.c_str());
+//    //
+//    s = TTTRHeader::get_tag("FormatVersion", json)["value"];
+//    strcpy(ht3_header_begin.FormatVersion, s.c_str());
+//    //
+//    s = TTTRHeader::get_tag("CreatorName", json)["value"];
+//    strcpy(ht3_header_begin.CreatorName, s.c_str());
+//    //
+//    s = TTTRHeader::get_tag("CreatorVersion", json)["value"];
+//    strcpy(ht3_header_begin.CreatorVersion, s.c_str());
+//    //
+//    s = TTTRHeader::get_tag("FileTime", json)["value"];
+//    strcpy(ht3_header_begin.FileTime, s.c_str());
+//    //
+//    s = TTTRHeader::get_tag("Comment", json)["value"];
+//    strcpy(ht3_header_begin.CommentField, s.c_str());
+//    //
+//    ht3_header_begin.NumberOfCurves = TTTRHeader::get_tag("NumberOfCurves", json)["value"];
+//    ht3_header_begin.BitsPerRecord = TTTRHeader::get_tag(TTTRTagBits, json)["value"];
+//    ht3_header_begin.ActiveCurve = TTTRHeader::get_tag("ActiveCurve", json)["value"];
+//    ht3_header_begin.MeasurementMode = TTTRHeader::get_tag("MeasurementMode", json)["value"];
+//    ht3_header_begin.SubMode = TTTRHeader::get_tag("SubMode", json)["value"];
+//    ht3_header_begin.Binning = TTTRHeader::get_tag("Binning", json)["value"];
+//    ht3_header_begin.Resolution = TTTRHeader::get_tag("Resolution", json)["value"];
+//    ht3_header_begin.Offset = TTTRHeader::get_tag("Offset", json)["value"];
+//    ht3_header_begin.AquisitionTime = TTTRHeader::get_tag("AquisitionTime", json)["value"];
+//    ht3_header_begin.StopAt = TTTRHeader::get_tag("StopAt", json)["value"];
+//    ht3_header_begin.StopOnOvfl = TTTRHeader::get_tag("StopOnOvfl", json)["value"];
+//    ht3_header_begin.Restart = TTTRHeader::get_tag("Restart", json)["value"];
+//    ht3_header_begin.DispLinLog = TTTRHeader::get_tag("DispLinLog", json)["value"];
+//    ht3_header_begin.DispTimeFrom = TTTRHeader::get_tag("DispTimeFrom", json)["value"];
+//    ht3_header_begin.DispTimeTo = TTTRHeader::get_tag("DispTimeTo", json)["value"];
+//    ht3_header_begin.DispCountsFrom = TTTRHeader::get_tag("DispCountsFrom", json)["value"];
+//    ht3_header_begin.DispCountsTo = TTTRHeader::get_tag("DispCountsTo", json)["value"];
+//
+//    std::vector<pq_ht3_ChannelHeader_t> channel_settings;
+//    channel_settings.resize(ht3_header_begin.InpChansPresent);
+//    for(int i=0; i<ht3_header_begin.InpChansPresent; i++){
+//        channel_settings[i].InputCFDLevel = TTTRHeader::get_tag("InputCFDLevel", json, i)["value"];
+//        channel_settings[i].InputCFDZeroCross = TTTRHeader::get_tag("InputCFDZeroCross", json, i)["value"];
+//        channel_settings[i].InputOffset = TTTRHeader::get_tag("InputOffset", json, i)["value"];
+//        channel_settings[i].InputRate = TTTRHeader::get_tag("InputRate", json, i)["value"];
+//    }
+//
+//    // pq_ht3_TTModeHeader_t
+//    pq_ht3_TTModeHeader_t tt_mode_hdr;
+//    fread(&tt_mode_hdr, 1, sizeof(tt_mode_hdr), fpin);
+//    add_tag(data, "SyncRate", tt_mode_hdr.SyncRate, tyInt8);
+//    add_tag(data, "StopAfter", tt_mode_hdr.StopAfter, tyInt8);
+//    add_tag(data, "StopReason", tt_mode_hdr.StopReason, tyInt8);
+//    add_tag(data, "ImgHdrSize", tt_mode_hdr.ImgHdrSize, tyInt8);
+//    add_tag(data, "nRecords", (int) tt_mode_hdr.nRecords, tyInt8);
+//
+//    // ImgHdr
+////    fseek(fpin, (long) tt_mode_hdr.ImgHdrSize, SEEK_CUR);
+//    int ImgHdrSize = tt_mode_hdr.ImgHdrSize;
+//    if(ImgHdrSize > 0){
+//        auto imgHdr_array = (int32_t*) calloc(ImgHdrSize, sizeof(int32_t));
+//        fread(imgHdr_array, sizeof(int32_t), ImgHdrSize, fpin);
+//        std::vector<int32_t> v;
+//        for (int i=0; i<ImgHdrSize; i++) {
+//            v.emplace_back(imgHdr_array[i]);
+//        };
+//        free(imgHdr_array);
+//        add_tag(data, "ImgHdr", v, tyBinaryBlob);
+//        add_tag(data, "ImgHdr", v, tyBinaryBlob);
+//
+//        add_tag(data, "ImgHdr_Frame", v[2] + 1, tyInt8);
+//        add_tag(data, "ImgHdr_LineStart", v[3], tyInt8);
+//        add_tag(data, "ImgHdr_LineStop", v[4], tyInt8);
+//        add_tag(data, "ImgHdr_PixX", v[6], tyInt8);
+//        add_tag(data, "ImgHdr_PixY", v[7], tyInt8);
+//    }
+//
+//    double resolution = std::max(1.0, ht3_header_begin.Resolution) * 1e-12;
+//    add_tag(data, TTTRTagRes, resolution, tyFloat8);
+//
+//    //return 880; // guessed by inspecting several ht3 files
+//    return (size_t) ftell(fpin);
 }
 
 
