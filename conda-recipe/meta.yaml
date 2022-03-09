@@ -29,8 +29,8 @@ requirements:
     - python {{ python }}
     - setuptools
     - numpy
-    - boost {{ boost }}
-    - hdf5 {{ hdf5 }}
+    - boost
+    - hdf5
     - fftw
   run:
     - python
