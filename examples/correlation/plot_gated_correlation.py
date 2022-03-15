@@ -36,13 +36,13 @@ ch2_indices = data.get_selection_by_channel([8])
 #%%
 # For illustrating the scattered light, we create histogram of micro times
 # and define a lower bound to mask photons.
+# Here, ``n_lower`` is set based on the micro time histograms, i.e. only bins with
+# significant amount of fluorescence photons are used.
 n_micro = data.header.number_of_micro_time_channels
 x_hist = np.arange(n_micro)
 y_hist_0 = np.bincount(data.micro_times[ch1_indices], minlength=n_micro)
 y_hist_8 = np.bincount(data.micro_times[ch2_indices], minlength=n_micro)
 n_lower = 1200  # n_lower will be used below in the actual correlation calculation
-# Here, n_lower is set based on the micro time histograms, i.e. only bins with
-# significant amount of fluorescence photons are used.
 
 #%%
 # Next, we create a new correlator and set the numbers of bin and correlation
@@ -86,8 +86,8 @@ y_raw = correlator.correlation
 # Now, we compute a correlation function where we want to discriminate
 # photons that have a small micro time. For that, we set the weight of
 # photons with a micro time is smaller than n_lower to zero.
-t = data.get_macro_time()
-mt = data.get_micro_time()
+t = data.get_macro_times()
+mt = data.get_micro_times()
 t1 = t[ch1_indices]
 mt1 = mt[ch1_indices]
 w1 = np.ones_like(t1, dtype=np.float)

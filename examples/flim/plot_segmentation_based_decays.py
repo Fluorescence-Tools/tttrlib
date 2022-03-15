@@ -51,7 +51,7 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 
 #%%
 # 1. Loading data and creating the intensity images
-#----------------------------------------------
+#--------------------------------------------------
 # First, read the TTTR data.
 # Define used channels
 filename_data = '../../tttr-data/imaging/pq/ht3/mGBP_DA.ht3'
@@ -78,13 +78,7 @@ delay_range = 11000, 25000
 
 #%%
 # 2. Create CLSM image container
-#----------------------------------------------
-# 4. Intensity imaging
-# --------------------
-# Fills the CLSM image container with intensities
-# An intensity image the number of counts in a pixel corresponds to the number of photons
-# Red intensity is toatal intenstiy, ie, prompt + delayed excitation
-# Fig. 4B Green, red prompt, red delay
+#-------------------------------
 
 # In the green channel we use all photons
 clsm_green = tttrlib.CLSMImage(tttr_data=tttr_data, channels=green_ch)
@@ -92,6 +86,12 @@ clsm_red_prompt = tttrlib.CLSMImage(tttr_data=tttr_data, channels=red_ch, micro_
 clsm_red_delay = tttrlib.CLSMImage(tttr_data=tttr_data, channels=red_ch, micro_time_ranges=[delay_range])
 
 #%%
+# 3. Intensity imaging
+# --------------------
+# Fills the CLSM image container with intensities
+# An intensity image the number of counts in a pixel corresponds to the number of photons
+# Red intensity is toatal intenstiy, ie, prompt + delayed excitation
+# Fig. 4B Green, red prompt, red delay
 # Sum over all frames
 # The intensity images are a time-series (multiple frames). We sum over
 # all frames to improve the counting statistics
@@ -251,7 +251,7 @@ for image in range(*filled_frames):
     binary_img_nucleus.append(dilated_combination)
 
 # I. Average over all frames to get a smoother nucleus
-averaged_img_nucleus = np.sum(binary_img_nucleus, axis=0)
+averaged_img_nucleus = np.sum(binary_img_nucleus, axis=0).astype(dtype=np.int64)
 Otsu_thresh = ski.filters.threshold_otsu(averaged_img_nucleus)
 thresholded_img = averaged_img_nucleus > Otsu_thresh
 # J. Maybe required to removed smaller stuff

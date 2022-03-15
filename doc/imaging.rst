@@ -13,5 +13,6 @@ Fluorescence imaging
     :maxdepth: 2
 
     modules/flim_intro
+    modules/flim_formats
     modules/flim
     modules/ics

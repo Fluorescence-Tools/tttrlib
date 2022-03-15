@@ -88,10 +88,11 @@ bursts_selected = data[sel].get_intensity_trace(window_length)
 
 #%%
 # Save the traces to files
-folder = "S:/Papers/00_in_preparation/tttrlib/Figures/Fig1_Introduction/"
-np.savetxt(folder + "red_trace.txt", intensity_trace_red)
-np.savetxt(folder + "green_trace.txt", intensity_trace_green)
-np.savetxt(folder + "bursts_selected.txt", bursts_selected)
+
+# folder = "S:/Papers/00_in_preparation/tttrlib/Figures/Fig1_Introduction/"
+# np.savetxt(folder + "red_trace.txt", intensity_trace_red)
+# np.savetxt(folder + "green_trace.txt", intensity_trace_green)
+# np.savetxt(folder + "bursts_selected.txt", bursts_selected)
 
 fig, ax = plt.subplots(3, sharex=True, sharey=False)
 plt.setp(ax[0].get_xticklabels(), visible=False)

@@ -12,9 +12,11 @@ defined / fixed headers. Some of the information that can be found in a TTTR fil
 is listed in `Header tags sheet <https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL>`_.
 
 .. note::
-The list of Header tags is by any means not comprehensive. If you have information
-on the used header tags. Please contact the authors of tttrlib to contribute
-to the list.
+
+    The list of Header tags is by any means not comprehensive. If you have information
+    on the used header tags. Please contact the authors of tttrlib to contribute
+    to the list.
+
 
 Accessing header data
 =====================

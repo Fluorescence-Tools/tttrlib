@@ -263,10 +263,10 @@ class Tests(unittest.TestCase):
         np.testing.assert_array_almost_equal(ref, model_sconv)
 
     def test_convolve_lifetime_spectrum_periodic(self):
-        period = 10
-        time_axis = np.linspace(0, 25, period)
-        irf_position = 6.0
-        irf_width = 1.0
+        period = 25
+        time_axis = np.linspace(0, period, 10)
+        irf_position = 15.0
+        irf_width = 2.0
         irf = scipy.stats.norm.pdf(time_axis, loc=irf_position, scale=irf_width)
         lifetime_spectrum = np.array([0.2, 1.1, 0.8, 4.0])
         model_decay = np.zeros_like(time_axis)
@@ -278,9 +278,8 @@ class Tests(unittest.TestCase):
             period=period
         )
         reference = np.array(
-            [1.68774524e-08, 3.08318738e-03, 5.04539601e-01, 4.54789614e-01,
-             2.32436705e-01, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-             0.00000000e+00, 0.00000000e+00])
+            [0.07467251, 0.03723859, 0.0185952, 0.01035758, 0.04736252, 0.27493508,
+             0.41123514, 0.29049578, 0.15035893, 0.07467251])
         np.testing.assert_almost_equal(reference, model_decay, decimal=3)
 
     def test_lamp_shift(self):

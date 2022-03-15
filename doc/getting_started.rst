@@ -13,7 +13,6 @@ data, data preprocessing.
 
 Opening TTTR files and accesing data
 ------------------------------------
-
 ``tttrlib`` provides a simple interface to TTTR data contained in TTTR files.
 The data in TTTR files is presented via so called :term:`TTTR` objects. These
 objects can be created on their on or by reading files.
@@ -24,16 +23,21 @@ Here is a simple example where we fit a
   >>> import tttrlib
   >>> tttr1 = TTTR()
   >>> tttr2 = TTTR('filename.ptu')
-  >>> microtimes = tttr2.microtimes
+  >>> micro_time = tttr2.micro_time
 
 TTTR objects can be used to compute correlation curves, fluorescence decays,
 for photon distribution analysis, or to compute fluorescence images in 
 confocal laser scanning microscopy.
 
+  >>> import tttrlib
+  >>> data = TTTR('clsm_filename.ptu')
+  >>> clsm = tttrlib.CLSMImage(data)
+  >>> intensity_img = clsm.intensity
+
+
 Next steps
 ----------
-
-We have briefly covered how TTTR files are read and data contained in 
+We have briefly covered how TTTR files are read and data contained in
 these files are accessed. Please refer to our :ref:`user_guide` for details 
 on all the tools that we provide. You can also find an exhaustive list of 
 the public API in the

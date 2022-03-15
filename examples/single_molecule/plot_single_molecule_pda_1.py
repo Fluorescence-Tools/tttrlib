@@ -5,6 +5,7 @@ Photon distribution analysis - 1
 
 Photon distribution analysis
 ============================
+
 Theory
 ------
 The library tttrlib provides the option to compute models for single molecule
