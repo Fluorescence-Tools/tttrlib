@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.abspath('sphinxext'))
 import sphinx_gallery
 
 # -- General configuration ---------------------------------------------------
+root_doc = 'contents'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -140,7 +141,7 @@ html_favicon = 'logos/favicon.ico'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['images']
+html_static_path = []
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -170,7 +171,7 @@ latest_highlights = sorted(release_highlights_dir.glob(
     "plot_release_highlights_*.py"))[-1]
 latest_highlights = latest_highlights.with_suffix('').name
 html_context["release_highlights"] = \
-    f"auto_examples/release_highlights/{latest_highlights}"
+    f"examples/release_highlights/{latest_highlights}"
 
 # get version from higlight name assuming highlights have the form
 # plot_release_highlights_0_22_0
@@ -264,7 +265,7 @@ sphinx_gallery_conf = {
     'doc_module': 'tttrlib',
     'show_memory': False,
     'examples_dirs': ['../examples'],
-    'gallery_dirs': ['auto_examples'],
+    'gallery_dirs': ['examples'],
     'subsection_order': SubSectionTitleOrder('../examples'),
     # avoid generating too many cross links
     'inspect_global_variables': False,
@@ -322,7 +323,7 @@ def filter_search_index(app, exception):
 
 
 breathe_projects = {}
-# latex and breathe do not play very well together. Therefore
+# latex and breathe do not play very well together. Therefore,
 # breathe is only used for the webpage.
 # compatible with readthedocs online builder and local builder
 if sys.argv[0].endswith('sphinx-build') and \
