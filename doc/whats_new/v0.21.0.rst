@@ -9,7 +9,6 @@ Version 0.21
 
 Changelog
 ---------
-
 * Added support for a PQ FLIM equipped Zeiss LSM 980
 * Fixed memory issues
 * Computation of mean lifetime & mean arrival times for TTTRRanges
@@ -17,7 +16,9 @@ Changelog
 * Compute mean micro time in TTTRRange and TTTR
 * Added arm64 (Raspberry Pi) and PPC64LE builds
 * reintroduced phasor
-
-
-API changes summary
--------------------
+* added option to select micro time range when filling CLSMImage
+* added method to strip tttr indices from TTTRRanges
+* added TTTRSelection class for more advanced selections (count rates, etc.)
+* added option to crop the content of CLSMImage instances
+* added transformation (ie moving of TTTR indices in a CLSMImage instance)
+* added TTTRMask class to consolidate selections and masks
