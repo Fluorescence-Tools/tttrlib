@@ -95,6 +95,7 @@ deploy:doc:
      - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
    script:
      - echo "I am a deploy stage... Building documentation."
+     - apt-get update && DEBIAN_FRONTEND=noninteractive && TZ=Europe/Berlin
      - source activate base
      - conda config --add channels "file://`pwd`/bld-dir"
      - cd doc
