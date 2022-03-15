@@ -96,7 +96,7 @@ deploy:doc:
    script:
      - source activate base
      - git clone https://gitlab.peulen.xyz/skf/tttrlib
-     - git clone https://gitlab.peulen.xyz/skf/tttr-data
+     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
      - mv tttr-data tttrlib && cd tttrlib && cd doc
      - mamba env update --file environment.yml
      - conda activate doc
