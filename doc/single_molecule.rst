@@ -12,9 +12,9 @@ Single-molecule fluorescence
 .. toctree::
     :maxdepth: 2
 
-    modules/burst_selection.rst
+    modules/burst_analysis.rst
     modules/intensity.rst
     modules/decay.rst
-    modules/fcs_basics.rst
-    modules/fcs_advanced.rst
+    modules/fcs.rst
+    modules/pda.rst
 
