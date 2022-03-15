@@ -36,7 +36,7 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
-	-rm -rf auto_examples/
+	-rm -rf examples/
 
 html:
 	# These two lines make the build a bit more lengthy, and the
@@ -124,7 +124,7 @@ doctest:
 # Optimize PNG files. Needs OptiPNG. Change the -P argument to the number of
 # cores you have available, so -P 64 if you have a real computer ;)
 optipng:
-	find _build auto_examples */generated -name '*.png' -print0 \
+	find _build examples */generated -name '*.png' -print0 \
 	  | xargs -0 -n 1 -P 4 optipng -o10
 
 dist: html ziphtml
