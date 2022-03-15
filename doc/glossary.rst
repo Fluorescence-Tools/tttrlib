@@ -39,10 +39,21 @@ Glossary
         transfers energy to an acceptor defines the yield of this energy transfer.
 
         .. math::
-            E = \frac{transfered}{excited}
+            E = \frac{transferred}{excited}
 
         Practically, mostly the donor and acceptor fluorescence intensities are used to obtain an experimental estimate
         for this yield.
+
+    FRET
+        FRET stands for (Förster) Resonance Energy Transfer and describes the mechanism of energy transfer between two
+        light-sensitive molecules. A donor chromophore, initially in its electronic excited state, may transfer energy
+        to an acceptor chromophore, through nonradiative dipole–dipole coupling. The fluorescence absorption and
+        emission spectrum of the acceptor are red shifted compared to the respective spectra of the donor fluorophore
+        For FRET to occur, three criteria have to be fulfilled: (1) The donor fluorescence emission spectrum has
+        to overlap with the absorption spectrum of the acceptor, (2) the fluorophores' dipoles are sufficiently 
+        parallel and (3) the fluorophores are in close vicinity (usually < 10 nm).
+        The efficiency of this energy transfer is inversely proportional to the sixth power of the distance 
+        between donor and acceptor, making FRET extremely sensitive to small changes in distance.
 
     FRET induced donor decay
         The FRET-induced donor decay is a time-resolved intensity independent measure of FRET similar to the
@@ -137,3 +148,8 @@ Glossary
         Jordi format both decays must have the same length, i.e., the same number
         of micro time counting channels.
 
+    PIE
+        Pulsed-Interleaved Excitation (PIE) experiments excite the studied samples
+        by multiple pulsed light sources for different dyes. The light sources excite
+        the sample interleaved and the photons of the samples are registered by
+        time-resolved detectors and electronics.
