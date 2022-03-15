@@ -93,8 +93,6 @@ deploy:doc:
      - apt-get update -qy
      # Latex documentation
      - apt-get install -qy texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
-     # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
-     - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
    script:
      - echo "I am a deploy stage... Building documentation."
      - source activate base
