@@ -92,10 +92,11 @@ deploy:doc:
      - export TZ=Europe/Berlin
      - apt-get update -qy
      # Latex documentation
-     - apt-get install -qy texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
+     - apt-get install -qy git git-lfs texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
    script:
      - echo "I am a deploy stage... Building documentation."
      - source activate base
+     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
      - conda config --add channels "file://`pwd`/bld-dir"
      - cd doc
      - mamba env update --file environment.yml
