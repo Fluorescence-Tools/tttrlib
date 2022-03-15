@@ -96,7 +96,7 @@ deploy:doc:
    script:
      - echo "I am a deploy stage... Building documentation."
      - source activate base
-     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
+     - git clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
      - cd doc
      - mamba env update --file environment.yml
      - conda activate doc
