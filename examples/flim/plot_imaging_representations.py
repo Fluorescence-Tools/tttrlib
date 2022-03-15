@@ -15,11 +15,11 @@ multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer
 (FRET) experiment is processed. The FRET sample contained a donor, D, and
 an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
 
-1. create intensity images
-2. selection of channels
-3. stripping of photons from CLSMImage
-2. image of the mean micro times
-3. a fluorescence intensity decay of the micro times
+    1. create intensity images
+    2. selection of channels
+    3. stripping of photons from CLSMImage
+    2. image of the mean micro times
+    3. a fluorescence intensity decay of the micro times
 
 
 """

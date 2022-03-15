@@ -11,11 +11,9 @@ PTU format provide the option for arbitrary meta data. In other TTTR formats hav
 defined / fixed headers. Some of the information that can be found in a TTTR file
 is listed in `Header tags sheet <https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL>`_.
 
-.. note::
-
-    The list of Header tags is by any means not comprehensive. If you have information
-    on the used header tags. Please contact the authors of tttrlib to contribute
-    to the list.
+Note, the list of Header tags is by any means not comprehensive. If you have information
+on the used header tags. Please contact the authors of tttrlib to contribute
+to the list.
 
 
 Accessing header data
@@ -82,8 +80,7 @@ data.get_number_of_micro_time_channels()
 
 
 #%%
-# .. note::
-# The effective number of micro time channels, i.e., the number of micro time
+# Note, the effective number of micro time channels, i.e., the number of micro time
 # channels can be smaller than the actual number of micro time channels. For
 # instance at a micro time channel resolution of 4 ps and macro time resolution
 # of 12.5 ns effectively only 3125 micro time channels will be filled with
