@@ -1,7 +1,11 @@
 """
+====================
+Bi-exponential model
+====================
 
 fit24
-^^^^
+-----
+
 Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes
 :math:`\tau_1`, :math:`\tau_2`, and amplitude of the second lifetime :math:`a_2`,
 the fraction scattered light :math:`\gamma`, and a constant offset to experimental

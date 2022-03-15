@@ -1,8 +1,11 @@
 """
-
+==================================
+Polarization resolved lifetime MLE
+==================================
 
 fit23
-^^^^^
+-----
+
 This example illustrates how to recover a fluorescence lifetime (tau) and a
 rotational correlation time (rho)  using ``fit23`` from polarization resolved
 fluorescence decay histograms. ``fit23`` makes use of a maximum likelihood estimator
