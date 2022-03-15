@@ -16,4 +16,4 @@ tools/
 doc/_*
 doc/_build/
 doc/paper*
-doc/auto_examples
+/doc/examples/
