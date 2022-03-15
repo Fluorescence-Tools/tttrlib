@@ -19,4 +19,4 @@ Table Of Contents
     getting_started
     user_guide
     glossary
-    auto_examples/index
+    examples/index
