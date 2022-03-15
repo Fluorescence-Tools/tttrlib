@@ -44,7 +44,7 @@ import numpy as np
 import tttrlib
 
 data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
-mt = data.get_macro_time()
+mt = data.get_macro_times()
 
 green_indeces = data.get_selection_by_channel([0, 8])
 red_indeces = data.get_selection_by_channel([1, 9])

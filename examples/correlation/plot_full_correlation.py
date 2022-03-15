@@ -78,8 +78,8 @@ y_corr = correlator.correlation
 # the weights and the micro times manually before obtaining a correlation
 # curve from the correlator.
 correlator_ref = tttrlib.Correlator(**full_corr_settings)  # read the settings from above
-t1, t2 = data.macro_times[ch1_indeces], tttr_ch2.macro_times  # Get the macrotime information
-mt1, mt2 = data.micro_times[ch1_indeces], tttr_ch2.micro_times  # Get the microtime information
+t1, t2 = data.macro_times[ch1_indices], tttr_ch2.macro_times  # Get the macrotime information
+mt1, mt2 = data.micro_times[ch1_indices], tttr_ch2.micro_times  # Get the microtime information
 w1, w2 = np.ones_like(t1, dtype=np.float), np.ones_like(t2, dtype=np.float)  # Generate weights
 # Note: the weights are all set to 1 here, i.e. no weighting
 correlator_ref.set_macrotimes(t1, t2)

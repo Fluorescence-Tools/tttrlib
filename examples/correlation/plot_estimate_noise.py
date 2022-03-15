@@ -48,7 +48,7 @@ n_ph = int(len(data) / n_chunks)
 # Before correlating the data, we define the number of bins and the number
 # of coarsening steps for the multi-tau correlation algorithm and create
 # a new correlator instance.
-print("Used routing channels:", data.get_used_routing_channels())
+print("Used routing channels:", data.used_routing_channels)
 ch1 = [0]
 ch2 = [2]
 corr_settings = {

@@ -30,8 +30,8 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 # TTTR files is demonstrated by the Python code examples shown below. A TTTR object
 # provides getter methods to access the data contained in the associated file.
 
-macro_time = data.get_macro_time()
-micro_time = data.get_micro_time()
+macro_time = data.get_macro_times()
+micro_time = data.get_micro_times()
 channel = data.get_routing_channel()
 event_type = data.get_event_type()
 header = data.get_header()
