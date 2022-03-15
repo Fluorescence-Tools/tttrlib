@@ -1,8 +1,6 @@
 name: doc
 channels:
     - tpeulen
-    - defaults
-    - salilab
     - conda-forge
 dependencies:
     - tttrlib
@@ -20,7 +18,6 @@ dependencies:
     - numpy
     - numpydoc
     - pyyaml
-    - sphinxcontrib-bibtex
-    - sphinx-rtd-theme
+    - sphinxcontrib-bibtex<2.0.0
     - sphinxcontrib-websupport
-    - sphinx-bootstrap-theme
+    - scikit-image
