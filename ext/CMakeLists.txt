@@ -18,11 +18,8 @@ IF(BUILD_PYTHON_INTERFACE)
 
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
-            ${HDF5_LIBRARIES}
             ${PYTHON_LIBRARY}
             ${CMAKE_THREAD_LIBS_INIT}
-            ${Boost_LIBRARIES}
-            OpenMP::OpenMP_CXX
     )
     IF (NOT PYTHON_LINK_LIBRARIES)
         IF (APPLE)

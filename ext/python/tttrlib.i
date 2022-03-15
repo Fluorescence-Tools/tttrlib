@@ -1,3 +1,10 @@
+// Linking issues against Python in Windows
+%begin %{
+#ifdef _MSC_VER
+#define SWIG_PYTHON_INTERPRETER_NO_DEBUG
+#endif
+%}
+
 %module(directors="1", package="tttrlib") tttrlib
 %feature("kwargs", 1);
 %feature("autodoc", "2");
