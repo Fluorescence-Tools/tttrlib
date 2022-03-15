@@ -95,10 +95,9 @@ deploy:doc:
      - apt-get install -qy git git-lfs texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
    script:
      - source activate base
-     - git clone https://gitlab.peulen.xyz/skf/tttrlib --depth 1
-     - cd tttrlib
-     - git clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
-     - cd doc
+     - git clone https://gitlab.peulen.xyz/skf/tttrlib
+     - git clone https://gitlab.peulen.xyz/skf/tttr-data
+     - mv tttr-data tttrlib && cd tttrlib && cd doc
      - mamba env update --file environment.yml
      - conda activate doc
      - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
