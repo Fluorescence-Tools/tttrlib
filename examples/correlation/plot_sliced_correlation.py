@@ -50,8 +50,10 @@ time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 # macro time calibration we computed previously. Note, the last chunk can
 # be shorter than the specified time.
 minimum_window_length = 5.0  # in seconds
-time_windows = data.get_ranges_by_time_window(minimum_window_length, macro_time_calibration=time_calibration)
+time_windows = data.get_ranges_by_time_window(
+    minimum_window_length, macro_time_calibration=time_calibration)
 start_stop = time_windows.reshape((len(time_windows)//2, 2))
+print(start_stop)
 
 #%%
 # Before correlating the data, we define the number of bins and the number
@@ -67,7 +69,7 @@ correlator = tttrlib.Correlator(**corr_settings)
 # We print the used routing channels and define the routing channels
 # that should be used in the correlation as a first and second correlation
 # channel.
-print(data.get_used_routing_channels())
+print(data.used_routing_channels)
 ch1 = [0]
 ch2 = [2]
 
@@ -85,6 +87,7 @@ for start, stop in start_stop:
     correlations.append(
         (correlator.x_axis, correlator.correlation)
     )
+print(correlations)
 
 #%%
 # Finally, we compute the correlation for all data and plot all correlations
@@ -104,7 +107,7 @@ ax[0].set_title('Correlation all data')
 ax[1].set_title('Correlation of slices')
 for x, y in correlations[:-1]:
     ax[1].semilogx(x, y)
-ax[0].set_ylim([min(correlator.correlation) * 0.9, max(correlator.correlation) * 1.1])
+ax[0].set_ylim([0.9, 3])
 ax[0].set_xlabel(r'corr. time (s) ')
 ax[1].set_xlabel(r'corr. time (s) ')
 ax[0].set_ylabel(r'corr. amplitude')

@@ -91,7 +91,7 @@ ax[0].set_title('Correlation all data')
 ax[1].set_title('Correlation of slices')
 for y in correlations:
     ax[1].semilogx(x_axis, y)
-ax[0].set_ylim([min(correlator.correlation) * 0.9, 3.5])
+ax[0].set_ylim([0.9, 3.5])
 ax[0].set_xlabel(r'corr. time (s) ')
 ax[1].set_xlabel(r'corr. time (s) ')
 ax[0].set_ylabel(r'corr. amplitude')
