@@ -196,7 +196,7 @@ class Tests(unittest.TestCase):
     #     data = self.data
     #     ch1_indeces = data.get_selection_by_channel([0])
     #     ch2_indeces = data.get_selection_by_channel([8])
-    #     mt = data.get_macro_time()
+    #     mt = data.get_macro_times()
     #
     #     t1 = mt[ch1_indeces]
     #     w1 = np.ones_like(t1, dtype=np.float)
