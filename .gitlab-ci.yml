@@ -88,7 +88,9 @@ deploy:doc:
      - linux
    needs: ["test:linux"]
    before_script:
-     - apt-get update -qy && DEBIAN_FRONTEND=noninteractive && TZ=Europe/Berlin
+     - export DEBIAN_FRONTEND=noninteractive
+     - export TZ=Europe/Berlin
+     - apt-get update -qy
      # Latex documentation
      - apt-get install -qy texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
      # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
