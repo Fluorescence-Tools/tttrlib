@@ -152,33 +152,47 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
 void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                int n_points, double period, double dt)
 {
-#if VERBOSE_FIT2X
-    std::clog << "fconv_per" << std::endl;
-#endif
-    int ne, i, lamp_start = 0,
-            stop1, period_n = (int)ceil(period/dt-0.5);
-    double fitcurr, expcurr, tail_a, deltathalf = dt*0.5;
+    stop = (stop < 0) ? n_points: stop;
+    int period_n = (int)ceil(period/dt-0.5);
 
-    while (lamp[lamp_start++]==0);
-    stop1 = std::min(period_n+lamp_start, n_points);
+    int lamp_start = 0;
+    while(lamp[lamp_start++]==0);
+
     int start1 = std::max(1, start);
+    int stop1 = std::min(period_n+lamp_start, n_points);
+
+    #if VERBOSE_FIT2X
+    std::clog << "FCONV_PER" << std::endl;
+    std::clog << "-- numexp:" << numexp << std::endl;
+    std::clog << "-- start:" << start << std::endl;
+    std::clog << "-- stop:" << stop << std::endl;
+    std::clog << "-- n_points:" << n_points << std::endl;
+    std::clog << "-- period:" << period << std::endl;
+    std::clog << "-- dt:" << dt << std::endl;
+    #endif
+
+    // Precompute everything needed for the convolution
+    // lamp * dt * 0.5
+    auto l2 = (double *) malloc(stop * sizeof(double));
+    for (int i = 0; i < stop; i++) l2[i] = dt * 0.5 * lamp[i];
 
     /* convolution */
-    for (ne=0; ne<numexp; ne++) {
-        expcurr = exp(-dt/x[2*ne+1]);
-        tail_a = 1./(1.-exp(-period/x[2*ne+1]));
-        fitcurr = 0;
-        fit[0] += (fitcurr + deltathalf * lamp[0]);
-        for (i=start1; i<stop1; i++){
-            fitcurr=(fitcurr + deltathalf*lamp[i - 1])*expcurr + deltathalf*lamp[i];
+    for (int ne=0; ne<numexp; ne++) {
+        double expcurr = exp(-dt/x[2*ne+1]);
+        double tail_a = 1./(1.-exp(-period/x[2*ne+1]));
+        double fitcurr = 0;
+        fit[0] += (fitcurr + l2[0]);
+        for (int i=start1; i<stop1; i++){
+            fitcurr=(fitcurr + l2[i - 1])*expcurr + l2[i];
             fit[i] += fitcurr*x[2*ne];
         }
         fitcurr *= exp(-(period_n - stop1 + start)*dt/x[2*ne+1]);
-        for (i=start; i<stop; i++){
+        for (int i=start; i<stop; i++){
             fitcurr *= expcurr;
             fit[i] += fitcurr*x[2*ne]*tail_a;
         }
     }
+    free(l2);
 }
 
 
@@ -186,7 +200,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
 void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                    int n_points, double period, double dt) {
 #if VERBOSE_FIT2X
-    std::clog << "fconv_per_avx" << std::endl;
+    std::clog << "FCONV_PER_AVX" << std::endl;
     std::clog << "-- numexp: " << numexp << std::endl;
     std::clog << "-- start: " << start << std::endl;
     std::clog << "-- stop: " << stop << std::endl;
@@ -204,16 +218,16 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
     // Number of time channels in period
     int period_n = (int)ceil(period/dt-0.5);
 
-    // Check if the window is is larger than the decay histogram.
-    // If it is larger only convolve till the end of the decay. Otherwise
-    // convolve till the end of the period. The period starts at the
+    // Check if the window is larger than the decay histogram.
+    // If it is larger only convolve till the end of the decay. Otherwise,
+    // convolve till end of period. The period starts at the
     // excitation pulse.
     // Find the position where the IRF starts
     int lamp_start = 0;
     while (lamp[lamp_start++] == 0);
     int stop1 = std::min(period_n+lamp_start, n_points);
 
-    // Precompute the everything that is needed for the convolution
+    // Precompute everything needed for the convolution
     // lamp * dt * 0.5
     auto l2 = (double *) malloc(stop * sizeof(double));
     for (int i = 0; i < stop; i++) l2[i] = dt * 0.5 * lamp[i];
@@ -491,18 +505,13 @@ void fconv_per_cs_time_axis(
         double period
 ){
     double dt = time_axis[1] - time_axis[0];
-#ifdef __AVX2__
+#ifdef __AVX__
     fconv_per_avx(
-            model,
-            lifetime_spectrum,
-            irf,
-            (int) n_lifetime_spectrum / 2,
-            convolution_start, convolution_stop,
-            n_model,
-            period, dt
+            model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
+            convolution_start, convolution_stop, n_model, period, dt
     );
 #endif
-#ifndef __AVX2__
+#ifndef __AVX__
     fconv_per(
             model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, n_model, period, dt
@@ -521,7 +530,7 @@ void fconv_cs_time_axis(
         int convolution_stop
 ){
     double dt = time_axis[1] - time_axis[0];
-#ifdef __AVX2__
+#ifdef __AVX__
     fconv_avx(
             output,
             lifetime_spectrum,
@@ -530,7 +539,7 @@ void fconv_cs_time_axis(
             convolution_start, convolution_stop, dt
     );
 #endif
-#ifndef __AVX2__
+#ifndef __AVX__
     fconv(
             output,
             lifetime_spectrum,

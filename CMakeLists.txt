@@ -32,7 +32,7 @@ if (MSVC)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
     # /Oi is for intrinsics
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi /O2")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
 else()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=haswell")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=haswell")
