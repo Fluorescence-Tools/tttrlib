@@ -92,7 +92,7 @@ deploy:doc:
      # Latex documentation
      - apt-get install -qy texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
      # see: https://bugs.launchpad.net/ubuntu/+source/lftp/+bug/1904601
-     # - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
+     - apt-get install -y lftp=4.8.1-1ubuntu0.1 --allow-downgrades
    script:
      - echo "I am a deploy stage... Building documentation."
      - source activate base
@@ -101,8 +101,8 @@ deploy:doc:
      - mamba env update --file environment.yml
      - conda activate doc
      - echo "I am a deploy stage... Uploading documentation."
-     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build . _build; else exit; fi
-     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/tttrlib/; bye"
+     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
+     - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/docs.peulen.xyz/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:
