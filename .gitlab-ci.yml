@@ -100,7 +100,9 @@ deploy:doc:
      - mv tttr-data tttrlib && cd tttrlib && cd doc
      - mamba env update --file environment.yml
      - conda activate doc
-     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
+     - echo $FTP_USERNAME
+     - echo $FTP_PASSWORD
+     #- if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
      - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/docs.peulen.xyz/tttrlib/; bye"
 
 # Downstream projects
