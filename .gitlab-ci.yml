@@ -95,14 +95,13 @@ deploy:doc:
      - apt-get install -qy git git-lfs texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
    script:
      - source activate base
-     - git clone https://gitlab.peulen.xyz/skf/tttrlib
-     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
-     - mv tttr-data tttrlib && cd tttrlib && cd doc
-     - mamba env update --file environment.yml
-     - conda activate doc
-     - echo $FTP_USERNAME
-     - echo $FTP_PASSWORD
+     #- git clone https://gitlab.peulen.xyz/skf/tttrlib
+     #- git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
+     #- mv tttr-data tttrlib && cd tttrlib && cd doc
+     #- mamba env update --file environment.yml
+     #- conda activate doc
      #- if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
+     - cd doc && mkdir _build
      - lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/docs.peulen.xyz/tttrlib/; bye"
 
 # Downstream projects
