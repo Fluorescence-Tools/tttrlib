@@ -103,7 +103,7 @@ deploy:doc:
      #- if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then sphinx-build -b html . _build; else exit; fi
      - cd doc && mkdir _build
      #- lftp -c "set sftp:auto-confirm yes; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\"; open -u $FTP_USERNAME,$FTP_PASSWORD sftp://peulen.xyz:2222; mirror -Rnev --delete ./_build/ ./www/docs.peulen.xyz/tttrlib/; bye"
-     - lftp -d -e "set sftp:auto-confirm yes; open sftp://peulen.xyz:2222; user $FTP_USERNAME $FTP_PASSWORD; mirror -X .* -X .*/ --reverse --verbose --delete _build/ /www/docs.peulen.xyz/tttrlib/; bye"`
+     - lftp -d -e "set sftp:auto-confirm yes; open sftp://peulen.xyz:2222; user $FTP_USERNAME $FTP_PASSWORD; mirror -Rnev --verbose --delete _build/ /www/docs.peulen.xyz/tttrlib/; bye"
 
 # Downstream projects
 tttrconvert:
