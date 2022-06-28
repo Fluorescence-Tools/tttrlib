@@ -59,10 +59,11 @@ def save_burst_id(
 # This selects ranges in the event stream with a length of at least 250 microseconds
 # with that with at least 20 events. This selection will select "bright" regions in
 # the event stream.
-window_length = 2e-3 # one millisecond
-time_in_seconds = 0.25e-3  # 0.25 millisecond
+minimum_window_length = 2e-3 # 2 millisecond
+maximum_window_length = 30e-3 # 30 millisecond / optional parameter
 tw_ranges = data.get_time_window_ranges(
     minimum_window_length=window_length,
+    maximum_window_length = maximum_window_length,
     minimum_number_of_photons_in_time_window=40
 )
 
