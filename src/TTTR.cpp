@@ -448,12 +448,13 @@ size_t TTTR::get_n_events(){
 
 void TTTR::get_selection_by_channel(
         int **output, int *n_output,
-        int *input, int n_input){
-    selection_by_channels(
-            output, n_output,
-            input, n_input,
-            routing_channels, get_n_events()
-    );
+        signed char *input, int n_input
+){
+    TTTRMask* m = new TTTRMask();
+    m->select_channels(this, input, n_input);
+    auto v = m->get_indices();
+    get_array<int>(v.size(), v.data(), output, n_output);
+    delete m;
 }
 
 void TTTR::get_selection_by_count_rate(
@@ -497,23 +498,6 @@ std::shared_ptr<TTTR> TTTR::select(int *selection, int n_selection) {
     return std::make_shared<TTTR>(*this, selection, n_selection);
 }
 
-void selection_by_channels(
-        int **output, int *n_output,
-        int *input, int n_input,
-        signed char *routing_channels, int n_routing_channels) {
-    size_t n_sel;
-    *output = (int *) malloc(n_routing_channels * sizeof(int));
-    n_sel = 0;
-    for (int i = 0; i < n_routing_channels; i++) {
-        int ch = routing_channels[i];
-        for (int j = 0; j < n_input; j++) {
-            if (input[j] == ch) {
-                (*output)[n_sel++] = i;
-            }
-        }
-    }
-    *n_output = (int) n_sel;
-}
 
 size_t TTTR::get_number_of_records_by_file_size(
         std::FILE *fp,
@@ -598,7 +582,6 @@ void selection_by_count_rate(
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
     *output = (int*) calloc(sizeof(int), n_time);
-
     int i = 0; *n_output = 0;
     while (i < (n_time - 1)){
         int n_ph;

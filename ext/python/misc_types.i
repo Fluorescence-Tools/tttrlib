@@ -21,6 +21,7 @@ import_array();
 // Templates
 // Vector templates
 
+%template(VectorBool) std::vector<bool>;
 %template(VectorDouble) std::vector<double>;
 %template(VectorInt16) std::vector<short>;
 %template(VectorInt32) std::vector<int>;
@@ -62,6 +63,7 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 // Integers
 %apply(char* IN_ARRAY1, int DIM1) {(char *input, int n_input)}
 %apply(short* IN_ARRAY1, int DIM1) {(short* input, int n_input)}
+%apply(signed char* IN_ARRAY1, int DIM1) {(signed char* input, int n_input)}
 %apply(unsigned short* IN_ARRAY1, int DIM1) {(unsigned short* input, int n_input)}
 %apply(int* IN_ARRAY1, int DIM1) {(int* input, int n_input)}
 %apply(unsigned int* IN_ARRAY1, int DIM1) {(unsigned int* input, int n_input)}
@@ -98,3 +100,5 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 
+// Bool
+%apply(bool** ARGOUTVIEWM_ARRAY1, int* DIM1) {(bool **output, int *n_output)}

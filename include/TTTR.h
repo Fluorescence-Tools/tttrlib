@@ -27,6 +27,7 @@
 #include "TTTRHeader.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
+#include "TTTRMask.h"
 #include "info.h"
 
 
@@ -131,26 +132,6 @@ void compute_intensity_trace(
 //        int selection_channel
 //);
 //
-
-/*!
- * Selects a subset of indices by a  list of routing channel numbers.
- *
- * The retuned set of indices will have routing channel numbers that are in
- * the list of the provided routing channel numbers.
- *
- * @param output[out] output array that will contain the selected indices
- * @param n_output[out] the length of the output array
- * @param input[int] routing channel numbers defining the returned subset of indices
- * @param n_input[int] the length of the input array
- * @param routing_channels[int] array of routing channel numbers. A subset of this
- * array will be selected by the input.
- * @param n_routing_channels[int] the length of the routing channel number array.
- */
-void selection_by_channels(
-        int **output, int *n_output,
-        int *input, int n_input,
-        signed char *routing_channels, int n_routing_channels
-);
 
 
 template <typename T>
@@ -618,10 +599,10 @@ public:
       */
     void get_selection_by_channel(
             int **output, int *n_output,
-            int *input, int n_input
+            signed char *input, int n_input
     );
 
-    std::shared_ptr<TTTR> get_tttr_by_channel(int *input, int n_input){
+    std::shared_ptr<TTTR> get_tttr_by_channel(signed char *input, int n_input){
         int* sel; int nsel;
         get_selection_by_channel(&sel, &nsel, input, n_input);
         return get_tttr_by_selection(sel, nsel);

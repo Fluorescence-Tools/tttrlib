@@ -40,12 +40,60 @@ void TTTRMask::select_microtime_ranges(
     }
 }
 
-std::vector<int> TTTRMask::get_indices() {
+std::vector<int> TTTRMask::get_indices(bool selected) {
     std::vector<int> idxs;
-    for(int idx=0; idx < size(); idx++){
-        if(!masked[idx]){
-            idxs.emplace_back(idx);
+    if(selected){
+        for(int idx=0; idx < size(); idx++){
+            if(!masked[idx]) idxs.emplace_back(idx);
+        }
+    } else{
+        for(int idx=0; idx < size(); idx++){
+            if(masked[idx]) idxs.emplace_back(idx);
         }
     }
     return idxs;
+}
+
+
+std::vector<int> TTTRMask::get_selected_ranges() {
+    std::vector<int> rng;
+    int start = 0;
+    int stop = 0;
+
+    while(start < size()){
+        // linear search for first element
+        for(; start < size(); start++){
+            if(masked[start] == 0){
+                break;
+            }
+        }
+        // linear search for last element
+        for(stop=start + 1; stop < size(); stop++){
+            if(masked[stop] == 0){
+                break;
+            }
+        }
+        rng.emplace_back(start);
+        rng.emplace_back(stop);
+    }
+
+    return rng;
+}
+
+void TTTRMask::select_count_rate(TTTR* tttr, double time_window, int n_ph_max, bool invert){
+    if(tttr == nullptr) return;
+    set_tttr(tttr);
+
+    double macro_time_calibration = tttr->get_header()->get_macro_time_resolution();
+    auto tw = (unsigned long) (time_window / macro_time_calibration);
+
+    int i = 0;
+    while (i < tttr->size() - 1){
+        int n_ph = 0; int r = i;
+        while((tttr->macro_times[r] - tttr->macro_times[i] < tw) && (r < tttr->size() - 1)){
+            r++; n_ph++;
+        }
+        masked[i] = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
+        i = r;
+    }
 }

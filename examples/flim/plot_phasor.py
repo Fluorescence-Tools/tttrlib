@@ -22,7 +22,9 @@ in spectroscopy and data analysis :cite:`DIGMAN2008L14`.
 """
 from __future__ import print_function
 import tttrlib
+
 import pylab as plt
+import numpy as np
 
 #%%
 # Read data of the CLSM image
@@ -43,7 +45,7 @@ ht3_reading_parameter = {
 image = tttrlib.CLSMImage(**ht3_reading_parameter)
 
 stack_frames = True
-minimum_number_of_photons = 30
+minimum_number_of_photons = 60
 
 # No IRF correction
 phasor = image.get_phasor(
@@ -109,3 +111,15 @@ ax[0, 2].set_title('No IRF correction')
 ax[1, 2].set_title('IRF correction')
 
 plt.show()
+
+#%%
+# The both phasor values can be inspected by mapping them to
+# colors.
+phasor_clr = np.zeros((phasor.shape[1], phasor.shape[2], 3))
+phasor_xc = np.clip(phasor_x * 0.59, 0, 1)
+phasor_yc = np.clip(phasor_y * 1.45, 0, 1)
+phasor_clr[:, :, 0] = phasor_xc
+phasor_clr[:, :, 1] = phasor_yc
+plt.imshow(phasor_clr, vmin=0.6, vmax=0.8)
+plt.show()
+
