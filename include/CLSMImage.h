@@ -316,7 +316,7 @@ public:
     );
 
     /// Convert frame, line, and pixel to 1D index
-    int to1D(int frame, int line, int pixel) {
+    inline int to1D(int frame, int line, int pixel) {
         return (frame * n_lines * n_pixel) + (line * n_lines) + pixel;
     }
 
@@ -386,6 +386,17 @@ public:
      * @param n_index
      */
     void transform(unsigned int* input, int n_input);
+
+    /*!
+     * Rebin a CLSMImage
+     *
+     * Note, rebinning redistributes photons and thus
+     * the macro times in pixels.
+     *
+     * @param bin_line binning factor for lines
+     * @param bin_pixel binning factor for pixel in lines
+     */
+    void rebin(int bin_line, int bin_pixel);
 
     /*!
      * Distribute the photons of a pixel_id to a set of

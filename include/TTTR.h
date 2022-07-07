@@ -25,9 +25,9 @@
 
 #include "Histogram.h"
 #include "TTTRHeader.h"
+#include "TTTRMask.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
-#include "TTTRMask.h"
 #include "info.h"
 
 
@@ -141,6 +141,7 @@ inline void get_array(size_t n_valid_events, T *array, T **out, int *n_out){
     for(size_t i=0; i<n_valid_events; i++) (*out)[i] = array[i];
 }
 
+class TTTRMask;
 
 class TTTR : public std::enable_shared_from_this<TTTR>{
 

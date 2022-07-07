@@ -4,8 +4,11 @@
 #include "TTTR.h"
 #include <vector>
 
+class TTTR;
 
 class TTTRMask{
+
+    friend class TTTR;
 
 private:
 

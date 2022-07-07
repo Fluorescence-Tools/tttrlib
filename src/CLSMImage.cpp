@@ -149,6 +149,23 @@ void CLSMImage::append(CLSMFrame* frame) {
     n_frames++;
 }
 
+void CLSMImage::rebin(int bin_line, int bin_pixel){
+    std::vector<unsigned int> mapping;
+    int n_px = n_frames * n_lines * n_pixel;
+    mapping.reserve(2 * n_px);
+    for(int f = 0; f < n_frames; f++){
+        for(int l = 0; l < n_lines; l++) {
+            for(int p = 0; p < n_pixel; p++) {
+                auto source_idx = to1D(f, l, p);
+                auto target_idx = to1D(f, l / bin_line, p / bin_pixel);
+                mapping.emplace_back(source_idx);
+                mapping.emplace_back(target_idx);
+            }
+        }
+    }
+    transform(&mapping[0], 2 * n_px);
+}
+
 void CLSMImage::get_frame_edges(
         int** output, int* n_output,
         TTTR* tttr,
