@@ -78,6 +78,14 @@ public:
         pixels.erase(pixels.begin(), pixels.begin() + pixel_start);
     }
 
+    CLSMLine& operator+=(const CLSMLine& rhs){
+        int i = 0;
+        for(auto &p: pixels){
+            p += rhs.pixels[i];
+        }
+        return *this;
+    }
+
 };
 
 #endif //TTTRLIB_CLSMLINE_H

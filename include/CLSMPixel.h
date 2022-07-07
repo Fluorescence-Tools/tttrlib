@@ -24,6 +24,16 @@ public:
         }
     }
 
+    CLSMPixel& operator+=(const CLSMPixel& rhs){
+        _tttr_indices.insert(
+                std::end(_tttr_indices),
+                std::begin(rhs._tttr_indices),
+                std::end(rhs._tttr_indices)
+        );
+
+        return *this;
+    }
+
 };
 
 #endif //TTTRLIB_CLSMPIXEL_H

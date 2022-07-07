@@ -76,7 +76,8 @@ CLSMImage::CLSMImage (
         std::vector<int> channels,
         bool skip_before_first_frame_marker,
         bool skip_after_last_frame_marker,
-        std::vector<std::pair<int,int>> micro_time_ranges
+        std::vector<std::pair<int,int>> micro_time_ranges,
+        bool stack_frames
 ) {
 #if VERBOSE_TTTRLIB
     std::clog << "Initializing CLSM image" << std::endl;
@@ -129,6 +130,9 @@ CLSMImage::CLSMImage (
         this->fill(this->tttr.get(), channels, false, micro_time_ranges);
     if(macro_time_shift!=0)
         shift_line_start(macro_time_shift);
+
+    // stack frames
+    if(stack_frames) this->stack_frames();
 }
 
 void CLSMImage::create_pixels_in_lines() {
@@ -1229,6 +1233,8 @@ void CLSMImage::transform(unsigned int* input, int n_input){
                 std::end(source_pixel->_tttr_indices)
         );
     }
+
+    delete source;
 }
 
 

@@ -23,3 +23,5 @@ Changelog
 * added transformation (ie moving of TTTR indices in a CLSMImage instance)
 * added TTTRMask class to consolidate selections and masks
 * added option to rebin CLSMImages (0.21.7)
+* added method to stack frames in images and option to stack
+  all frames when initializing CLSMImages

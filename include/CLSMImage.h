@@ -425,6 +425,15 @@ public:
             int pixel_start, int pixel_stop
     );
 
+    void stack_frames(){
+        CLSMFrame* f0 = frames[0];
+        for(int i = 1; i < n_frames; i++){
+            *f0 += *frames[i];
+        }
+        frames.resize(1);
+        n_frames = 1;
+    }
+
     /// Copy constructor
     CLSMImage(const CLSMImage &p2, bool fill = false);
 
@@ -461,6 +470,8 @@ public:
      * from the source CLSMImage instance.
      * @param channels The channel number of the events that will be used to fill
      * the pixels.
+     * @param stack_frames If set to true (default is false) the frames in the CLSM
+     * image are stacked and the resulting CLSMImage will hava a single frame.
      */
     explicit CLSMImage(
             std::shared_ptr<TTTR> tttr_data = nullptr,
@@ -476,7 +487,8 @@ public:
             std::vector<int> channels = std::vector<int>(),
             bool skip_before_first_frame_marker = false,
             bool skip_after_last_frame_marker = false,
-            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>(),
+            bool stack_frames = false
     );
 
     /// Destructor

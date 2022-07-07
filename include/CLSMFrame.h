@@ -63,6 +63,14 @@ public:
         return lines[i_line];
     }
 
+    CLSMFrame& operator+=(const CLSMFrame& rhs){
+        int i = 0;
+        for(auto l: lines){
+            *l += *rhs.lines[i];
+        }
+        return *this;
+    }
+
     /*!
      * Crops a frame
      */
@@ -70,6 +78,7 @@ public:
             int line_start, int line_stop,
             int pixel_start, int pixel_stop
     );
+
 };
 
 
