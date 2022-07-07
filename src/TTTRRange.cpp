@@ -33,9 +33,9 @@ TTTRRange::TTTRRange(
     }
     _tttr_indices.reserve(pre_reserve);
     if(tttr != nullptr){
-        this->tttr = tttr->Get();
+        this->_tttr = tttr;
     } else{
-        this->tttr = nullptr;
+        this->_tttr = nullptr;
     }
 }
 

@@ -861,47 +861,63 @@ void TTTR::compute_microtime_histogram(
         TTTR *tttr_data,
         double** histogram, int* n_histogram,
         double** time, int* n_time,
-        unsigned short micro_time_coarsening
+        unsigned short micro_time_coarsening,
+        std::vector<int> *tttr_indices
 ) {
-    // construct histogram
-    if (tttr_data != nullptr) {
-        auto header = *(tttr_data->get_header());
-        int n_channels = header.get_number_of_micro_time_channels() / micro_time_coarsening;
-        double micro_time_resolution = header.get_micro_time_resolution();
-        unsigned short *micro_times; int n_micro_times;
-        tttr_data->get_micro_times(&micro_times, &n_micro_times);
-#if VERBOSE_TTTRLIB
-        std::cout << "compute_histogram" << std::endl;
-        std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
-        std::cout << "-- n_channels: " << n_channels << std::endl;
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-        for(int i=0; i<n_micro_times;i++)
-            micro_times[i] /= micro_time_coarsening;
-#if VERBOSE_TTTRLIB
-        std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-        auto bin_edges = std::vector<unsigned short>(n_channels);
-        for (size_t i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
-        auto hist = (double *) malloc(n_channels * sizeof(double));
-        for(int i=0; i<n_channels;i++) hist[i] = 0.0;
-        histogram1D<unsigned short>(
-                micro_times, n_micro_times,
-                nullptr, 0,
-                bin_edges.data(), bin_edges.size(),
-                hist, n_channels,
-                "lin", false
-        );
-        *histogram = hist;
-        *n_histogram = n_channels;
+    if (tttr_data == nullptr) return;
 
-        auto t = (double *) malloc(n_channels * sizeof(double));
-        for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
-        *time = t;
-        *n_time = n_channels;
-        free(micro_times);
+    // Get resolution information
+    /////////////////////////////////
+    auto header = *(tttr_data->get_header());
+    int n_channels = header.get_number_of_micro_time_channels() / micro_time_coarsening;
+    double micro_time_resolution = header.get_micro_time_resolution();
+
+    // get micro times
+    ////////////////////////////////
+    unsigned short *micro_times; int n_micro_times;
+    // tttr_indices -> all micro times
+    if(tttr_indices == nullptr){
+        tttr_data->get_micro_times(&micro_times, &n_micro_times);
+    } else{
+        n_micro_times = tttr_indices->size();
+        micro_times = (unsigned short*) malloc(sizeof(unsigned short) * n_micro_times);
+        for(int i = 0; i < n_micro_times; i++){
+            auto mt = tttr_data->micro_times[tttr_indices->data()[i]];
+            micro_times[i] = mt;
+        }
     }
+#if VERBOSE_TTTRLIB
+    std::cout << "compute_histogram" << std::endl;
+    std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
+    std::cout << "-- n_channels: " << n_channels << std::endl;
+    std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+    for(int i=0; i<n_micro_times;i++)
+        micro_times[i] /= micro_time_coarsening;
+#if VERBOSE_TTTRLIB
+    std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
+    std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+
+    auto bin_edges = std::vector<unsigned short>(n_channels);
+    for (size_t i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
+    auto hist = (double *) malloc(n_channels * sizeof(double));
+    for(int i=0; i<n_channels;i++) hist[i] = 0.0;
+    histogram1D<unsigned short>(
+            micro_times, n_micro_times,
+            nullptr, 0,
+            bin_edges.data(), bin_edges.size(),
+            hist, n_channels,
+            "lin", false
+    );
+    *histogram = hist;
+    *n_histogram = n_channels;
+
+    auto t = (double *) malloc(n_channels * sizeof(double));
+    for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
+    *time = t;
+    *n_time = n_channels;
+    free(micro_times);
 }
 
 double TTTR::compute_mean_lifetime(

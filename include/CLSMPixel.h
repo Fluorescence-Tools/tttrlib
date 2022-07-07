@@ -10,6 +10,7 @@ class CLSMPixel : public TTTRRange{
     friend class CLSMImage;
 
 public:
+
     virtual ~CLSMPixel() = default;
 
     CLSMPixel(const CLSMPixel& p2) : TTTRRange(p2){};

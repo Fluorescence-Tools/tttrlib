@@ -13,4 +13,10 @@
 %attribute(TTTRRange, unsigned int, start_time, get_start_time, set_start_time);
 %attribute(TTTRRange, unsigned int, stop_time, get_stop_time, set_stop_time);
 
+// for microtime_histogram
+%apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1){
+    (double** histogram, int* n_histogram),
+    (double** time, int* n_time)
+};
+
 %include "../include/TTTRRange.h"

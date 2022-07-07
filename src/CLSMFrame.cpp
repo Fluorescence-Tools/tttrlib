@@ -9,8 +9,10 @@
 
 CLSMFrame::CLSMFrame(): TTTRRange() {}
 
-CLSMFrame::CLSMFrame(size_t frame_start) : CLSMFrame()
+CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr) :
+CLSMFrame()
 {
+    _stop = frame_stop;
     _start = frame_start;
 }
 

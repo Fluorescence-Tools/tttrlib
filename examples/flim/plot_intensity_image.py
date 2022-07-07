@@ -20,7 +20,9 @@ plt.imshow(clsm_image.intensity.sum(axis=0))
 plt.show()
 
 # %%
-# The frames can be stacked when creating a new CLSM image
-clsm_stacked = tttrlib.CLSMImage(tttr_data=data, fill=True, channels=[0], frame_stack=True)
-clsm_stacked_int = clsm_stacked.intensity
-
+# Filled CLSMImages can be stacked. Stacking assigns the photons of pixels
+# in frames to the first frame. Note, stacking simply combines the tttr indices
+# in a pixels. After stacking the CLSMImage should not be "refilled" as this
+# can result in undefined behavior.
+clsm_image.stack_frames()
+clsm_stacked_int = clsm_image.intensity

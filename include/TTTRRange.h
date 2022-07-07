@@ -10,7 +10,7 @@ class TTTRRange {
 
 protected:
 
-    std::shared_ptr<TTTR> tttr = nullptr;
+    TTTR* _tttr = nullptr;
 
 public:
 
@@ -149,6 +149,20 @@ public:
         return tttr_data->get_mean_microtime(&_tttr_indices, microtime_resolution, minimum_number_of_photons);
     }
 
+    void get_microtime_histogram(
+            double** histogram, int* n_histogram,
+            double** time, int* n_time,
+            unsigned short micro_time_coarsening
+    ){
+        TTTR::compute_microtime_histogram(
+            _tttr,
+            histogram, n_histogram,
+            time, n_time,
+            micro_time_coarsening,
+            &_tttr_indices
+        );
+    }
+
     /*!
      *  Return the average lifetime
      *
@@ -220,6 +234,7 @@ public:
             TTTR* tttr_data,
             bool from_tttr_indices=true
     ){
+        _tttr = tttr_data;
         if(from_tttr_indices){
             if(!_tttr_indices.empty()){
                 _start = _tttr_indices[0];

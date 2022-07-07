@@ -2,70 +2,98 @@
 =================
 Lifetime analysis
 =================
-Use an MLE to determine mean lifetime in a pixel
+Fit a decay to photons in pixel to determine a mean fluorescence lifetime.
 """
 import tttrlib
-
-import json
 import numpy as np
 import pylab as plt
 
-filename = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
-filename_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
-channels_green = [0, 2]
+# %%
+# The fit operates on a parallel and a perpendicular detection
+# channel. Here we define the channel numbers of the two channels
+# and read the tttr data of the clsm experiment. Moreover, we define
+# a binning factor that is used to coarsen the micro time.
+ch_p = [0]
+ch_s = [1]
+binning_factor = 64
+minimum_n_photons = 10
 
-data = tttrlib.TTTR(filename)
-irf_tttr = tttrlib.TTTR(filename_irf)
-irf_green: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(channels_green)]
+fn_clsm = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
+data = tttrlib.TTTR(fn_clsm)
 
-binning_factor = 16
-irf, t = irf_green.get_microtime_histogram(binning_factor)
+# %%
+# Next we create two CLSM container for the parallel and perpendicular
+# channel and stack frames to have more photons in each pixels.
+clsm_p = tttrlib.CLSMImage(data, channels=ch_p, fill=True)
+clsm_s = tttrlib.CLSMImage(data, channels=ch_s, fill=True)
+clsm_p.stack_frames()
+clsm_s.stack_frames()
+
+# %%
+# We determine instrument response function in parallel and perpendicular
+# detection channels.
+fn_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
+irf_tttr = tttrlib.TTTR(fn_irf)
+irf_data_p: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_p)]
+irf_data_s: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_s)]
+
+# %%
+# We get micro time histograms for the IRF and stack the histograms
+irf_p, t = irf_data_p.get_microtime_histogram(binning_factor)
+irf_s, _ = irf_data_s.get_microtime_histogram(binning_factor)
+irf = np.hstack([irf_p, irf_s])
 
 # %%
 # Settings for MLE
 settings = {
-    'dt': data.header.micro_time_resolution * 1e9,
-    'g_factor': 1.0, 'l1': 0.1, 'l2': 0.2,
-    'convolution_stop': 31,
+    'dt': data.header.micro_time_resolution * 1e9 * binning_factor,
+    'g_factor': 1.0, 'l1': 0.05, 'l2': 0.05,
+    'convolution_stop': -1,
     'irf': irf,
-    'period': 16.0,
+    'period': 32.0,
     'background': np.zeros_like(irf)
 }
 
 # %%
-# The settings are used to initialize a instance of the class ``Fit23``. A dataset
+# The settings are used to initialize an instance of the class ``Fit23``. A dataset
 # is fitted by calling an instance of ``Fit23`` using the data, an array of the initial
 # values of the fitting parameters, and an array that specifies which parameters are
 # fixed.
 fit23 = tttrlib.Fit23(**settings)
+tau, gamma, r0, rho = 5.2, 0.05, 0.38, 10.0
+x0 = np.array([tau, gamma, r0, rho])
+fixed = np.array([0, 0, 1, 0])
 
 # %%
-# Create a new CLSM Image. This image will be used as a template for the green and red image.
-# This avoids passing through the TTTR screen multiple times. The frame line, and pixel locations
-# will be copied for the green and red image from this template.
-clsm_template = tttrlib.CLSMImage(data)
-clsm_green = tttrlib.CLSMImage(
-    source=clsm_template,
-    channels=channels_green
-)
+# We iterate over all pixels in the image and apply the fit to
+# pixels where we have at certain minimum number of photons
+intensity = clsm_p.intensity
+micro_times = data.micro_times // binning_factor
+n_channels = data.header.number_of_micro_time_channels // binning_factor
+tau = np.zeros_like(intensity, dtype=np.float32)
+rho = np.zeros_like(intensity, dtype=np.float32)
+n_frames, n_lines, n_pixel = clsm_p.shape
+for i in range(n_frames):
+    for j in range(0, n_lines, 1):
+        for k in range(n_pixel):
+            idx_p = clsm_p[i][j][k].tttr_indices
+            idx_s = clsm_s[i][j][k].tttr_indices
+            n_p = len(idx_p)
+            n_s = len(idx_s)
+            if n_p + n_s < minimum_n_photons:
+                continue
+            hist = np.hstack(
+                [
+                    np.bincount(micro_times[idx_p], minlength=n_channels),
+                    np.bincount(micro_times[idx_s], minlength=n_channels)
+                ]
+            )
+            r = fit23(hist, x0, fixed)
+            tau[i, j, k] = r['x'][0]
 
-fit23 = tttrlib.Fit23(**settings)
-tau, gamma, r0, rho = 2.2, 0.01, 0.38, 1.22
-x0 = np.array([tau, gamma, r0, rho])
-fixed = np.array([0, 1, 1, 0])
-r = fit23(
-    data=data,
-    initial_values=x0,
-    fixed=fixed
-)
-data = fit23.data
-model = fit23.model
 
-fig, ax = plt.subplots(nrows=2, ncols=2)
-ax[0, 0].set_title('Green intensity')
-ax[0, 1].set_title('Red intensity')
-ax[1, 0].set_title('Mean green fl. lifetime')
-ax[1, 1].set_title('Pixel histogram')
-ax[1, 1].set_xlabel('tauG / ns')
-ax[1, 1].set_ylabel('log(Sg/Sr')
+plt.imshow(tau[0])
+plt.show()
+
+plt.hist(tau[0].flatten(), 131, range=(0.01, 5))
 plt.show()

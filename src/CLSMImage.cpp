@@ -76,8 +76,7 @@ CLSMImage::CLSMImage (
         std::vector<int> channels,
         bool skip_before_first_frame_marker,
         bool skip_after_last_frame_marker,
-        std::vector<std::pair<int,int>> micro_time_ranges,
-        bool stack_frames
+        std::vector<std::pair<int,int>> micro_time_ranges
 ) {
 #if VERBOSE_TTTRLIB
     std::clog << "Initializing CLSM image" << std::endl;
@@ -131,8 +130,6 @@ CLSMImage::CLSMImage (
     if(macro_time_shift!=0)
         shift_line_start(macro_time_shift);
 
-    // stack frames
-    if(stack_frames) this->stack_frames();
 }
 
 void CLSMImage::create_pixels_in_lines() {
@@ -141,6 +138,9 @@ void CLSMImage::create_pixels_in_lines() {
     for(auto &f: frames){
         for(auto &l: f->lines){
             l->pixels.resize(n_pixel);
+            for(auto &p: l->pixels){
+                p._tttr = tttr.get();
+            }
         }
     }
 #if VERBOSE_TTTRLIB
@@ -304,8 +304,9 @@ void CLSMImage::create_frames(bool clear_first){
     std::cout << "-- Creating " << n_frame_edges - 1 << " frames: " << std::flush;
 #endif
     for(int i=0; i < n_frame_edges - 1; i++){
-        auto frame = new CLSMFrame(frame_edges[i]);
-        frame->set_stop(frame_edges[i + 1]);
+        auto frame = new CLSMFrame(
+                frame_edges[i], frame_edges[i + 1], tttr.get()
+        );
         append(frame);
 #if VERBOSE_TTTRLIB
         std::cout << " " << i  << std::flush;
@@ -378,10 +379,11 @@ void CLSMImage::clear() {
 #if VERBOSE_TTTRLIB
     std::clog << "Clear pixels of photons" << std::endl;
 #endif
+    _is_filled_ = false;
     for(auto *frame : frames){
         for(auto &line : frame->lines){
             for(auto &pixel: line->pixels){
-                pixel._tttr_indices.clear();
+                pixel.clear();
             }
         }
     }
@@ -390,9 +392,9 @@ void CLSMImage::clear() {
 void CLSMImage::fill(
         TTTR* tttr_data,
         std::vector<int> channels,
-        bool clear_pixel,
-        std::vector<std::pair<int,int>> micro_time_ranges
-        ) {
+        bool clear,
+        const std::vector<std::pair<int,int>> &micro_time_ranges
+) {
 #if VERBOSE_TTTRLIB
     std::clog << "-- Filling pixels..." << std::endl;
     std::clog << "-- Channels: "; for(auto ch: channels) std::clog << ch << " "; std::clog << std::endl;
@@ -407,6 +409,7 @@ void CLSMImage::fill(
     if(tttr_data == nullptr){
         tttr_data = tttr.get();
     }
+    if(clear) this->clear();
     if(channels.empty()){
         std::clog << "WARNING: Image filled without channel numbers. Using all channels." << std::endl;
         signed char *chs; int nchs;
@@ -422,7 +425,6 @@ void CLSMImage::fill(
                 std::clog << "WARNING: Line without pixel." << std::endl;
                 continue;
             }
-            if(clear_pixel) for(auto &v:line->pixels) v.clear();
             auto pixel_duration = line->get_pixel_duration();
             size_t n_pixels_in_line = line->pixels.size();
 
@@ -436,28 +438,34 @@ void CLSMImage::fill(
                     if(c == ci){
                         auto line_time = (tttr_data->macro_times[event_i] - line->get_start_time());
                         auto pixel_nbr = line_time / pixel_duration;
-                        if(pixel_nbr < n_pixels_in_line) {
-                            bool add_ph = true;
-                            auto micro_time = tttr_data->micro_times[event_i];
-                            for(auto r: micro_time_ranges){
-                                add_ph &= micro_time >= r.first;
-                                add_ph &= micro_time <= r.second;
-                            }
-                            if(add_ph){
-                                line->pixels[pixel_nbr].append(event_i);
-                            }
-                        } else {
-                            break;
+
+                        // skip if photon is outside of line
+                        if(pixel_nbr >=  n_pixels_in_line) break;
+
+                        // Check if micro time is in micro time range
+                        bool add_ph = true;
+                        auto micro_time = tttr_data->micro_times[event_i];
+                        for(auto r: micro_time_ranges){
+                            add_ph &= micro_time >= r.first;
+                            add_ph &= micro_time <= r.second;
+                        }
+
+                        // If photon was in micro time range add it
+                        if(add_ph){
+                            line->pixels[pixel_nbr].append(event_i);
                         }
                     }
                 }
             }
+
             // update start, stop indices and times
             for(auto pixel : line->get_pixels()){
                 pixel.update(tttr_data);
             }
+
         }
     }
+    _is_filled_ = true;
 }
 
 void CLSMImage::strip(const std::vector<int> &tttr_indices){

@@ -24,4 +24,6 @@ Changelog
 * added TTTRMask class to consolidate selections and masks
 * added option to rebin CLSMImages (0.21.7)
 * added method to stack frames in images and option to stack
-  all frames when initializing CLSMImages
+  all frames when initializing CLSMImages (0.21.8)
+* added example how to use fit23 for MLE analysis of FLIM data & option
+  to compute histograms on TTTRRange (0.21.9)

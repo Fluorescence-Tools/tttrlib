@@ -46,7 +46,7 @@ public:
         }
     }
 
-    explicit CLSMFrame(size_t frame_start);
+    explicit CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr);
 
     /*!
      * Append a line to the current frame

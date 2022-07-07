@@ -23,6 +23,9 @@ class CLSMImage {
 
 private:
 
+    /// Used to tack if the CLSMImage is in a filled state
+    bool _is_filled_ = false;
+
     std::vector<CLSMFrame *> frames;
 
     void remove_incomplete_frames();
@@ -88,7 +91,7 @@ public:
             TTTR *tttr_data = nullptr,
             std::vector<int> channels = std::vector<int>(),
             bool clear = true,
-            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
+            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
     );
 
     void fill_pixels(
@@ -125,7 +128,6 @@ public:
     std::vector<int>  get_tttr_indices(){
         auto idx = std::vector<int>();
         for(auto &f: get_frames()){
-
         }
         return idx;
     }
@@ -487,8 +489,7 @@ public:
             std::vector<int> channels = std::vector<int>(),
             bool skip_before_first_frame_marker = false,
             bool skip_after_last_frame_marker = false,
-            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>(),
-            bool stack_frames = false
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
     );
 
     /// Destructor

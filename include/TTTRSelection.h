@@ -9,13 +9,13 @@ class TTTRSelection : public TTTRRange{
 
 public:
 
-    std::shared_ptr<TTTR> get_tttr(){
+    TTTR* get_tttr(){
         //auto p = std::make_shared<TTTR>(*this, selection, n_selection, true);
-        return tttr;
+        return _tttr;
     }
 
     TTTRSelection(std::shared_ptr<TTTR> tttr = nullptr){
-        this->tttr = tttr;
+        this->_tttr = tttr.get();
     }
 
 

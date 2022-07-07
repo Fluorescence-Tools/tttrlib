@@ -723,7 +723,8 @@ public:
             TTTR *tttr_data,
             double** output, int* n_output,
             double **time, int *n_time,
-            unsigned short micro_time_coarsening = 1
+            unsigned short micro_time_coarsening = 1,
+            std::vector<int> *tttr_indices = nullptr
     );
 
     void get_microtime_histogram(
