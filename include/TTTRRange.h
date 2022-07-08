@@ -262,6 +262,16 @@ public:
         return !operator==(other);
     }
 
+    TTTRRange& operator+=(const TTTRRange& rhs){
+        _start = std::min(_start, rhs._start);
+        _stop = std::max(_stop, rhs._stop);
+        _start_time = std::min(_start_time, rhs._start_time);
+        _stop_time = std::max(_stop_time, rhs._stop_time);
+        _tttr_indices.insert(_tttr_indices.end(), rhs._tttr_indices.begin(), rhs._tttr_indices.end());
+        return *this;
+    }
+
+
 };
 
 #include "TTTR.h"
