@@ -2,55 +2,58 @@ stages:
 - build
 - test
 - deploy
-- Trigger-cross-projects
 
-.build_lnx: &build_linux
+.build: &build
   stage: build
-  image: condaforge/mambaforge
-  before_script:
-    - apt update -yq && apt -yq install build-essential
-    - git submodule update --init --recursive --remote
-  script:
-    - ./tools/build.sh
   artifacts:
     paths:
       - bld-dir/
-build:lnx_x86_64:
-  <<: *build_linux
+.build_posix: &build_posix
+  <<: *build
+  script:
+    - ./tools/build.sh
+.build:lnx: &build_lnx
+  <<: *build_posix
+  before_script:
+    - source "/opt/conda/etc/profile.d/conda.sh"
+    - conda activate /opt/conda/
+    - git submodule update --init --recursive --remote
+build:lnx_x86:
+  <<: *build_lnx
+  image:
+    name: condaforge/linux-anvil-cos7-x86_64
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
     - x86_64
-#build:lnx_ppc64le:
-#  <<: *build_linux
-#  tags:
-#    - ppc64le
-#build:lnx_aarch64:
-#  <<: *build_linux
-#  tags:
-#    - aarch64
-
+build:lnx_ppc64le:
+  <<: *build_lnx
+  image:
+    name: condaforge/linux-anvil-ppc64le
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
+  tags:
+    - ppc64le
+build:lnx_aarch64:
+  <<: *build_lnx
+  image:
+    name: condaforge/linux-anvil-aarch64
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
+  tags:
+    - aarch64
+build:osx:
+  <<: *build
+  <<: *build_posix
+  tags:
+    - osx
+  before_script:
+    - git submodule update --init --recursive --remote
 build:windows:
-  stage: build
+  <<: *build
   tags:
     - win
   before_script:
     - git submodule update --init --recursive --remote
   script:
     - .\tools\build.bat
-  artifacts:
-    paths:
-      - bld-dir/
-
-build:osx:
-  stage: build
-  tags:
-    - osx
-  before_script:
-    - git submodule update --init --recursive --remote
-  script:
-    - ./tools/build.sh
-  artifacts:
-    paths:
-      - bld-dir/
 
 test:linux:
   stage: test
@@ -106,16 +109,16 @@ deploy:doc:
      - lftp -d -e "set sftp:auto-confirm yes; set ssl:verify-certificate no; set sftp:connect-program \"ssh -a -x -o UserKnownHostsFile=/dev/null\ StrictHostKeyChecking=no; open sftp://peulen.xyz:2222; user $FTP_USERNAME $FTP_PASSWORD; mirror -Rnev --verbose --delete _build/ /www/docs.peulen.xyz/tttrlib/; bye"
 
 
-# Downstream projects
-tttrconvert:
-  stage: Trigger-cross-projects
-  trigger: chisurf/tttrconvert
-
-fit2x:
-  stage: Trigger-cross-projects
-  trigger: skf/fit2x
-
-# Depends via fit2x on tttrlib
-#scikit-fluorescence:
+## Downstream projects
+#tttrconvert:
 #  stage: Trigger-cross-projects
-#  trigger: skf/scikit-fluorescence
+#  trigger: chisurf/tttrconvert
+#
+#fit2x:
+#  stage: Trigger-cross-projects
+#  trigger: skf/fit2x
+#
+## Depends via fit2x on tttrlib
+##scikit-fluorescence:
+##  stage: Trigger-cross-projects
+##  trigger: skf/scikit-fluorescence
