@@ -73,8 +73,9 @@ public:
 
     std::string reading_routine = "default";
 
+    /// CLSM TTTR data starts can have incomplete frame. Thus skipping
+    /// data can make sense
     bool skip_before_first_frame_marker = false;
-
     bool skip_after_last_frame_marker = false;
 
     /*!
@@ -93,7 +94,6 @@ public:
             bool clear = true,
             const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
     );
-
     void fill_pixels(
             TTTR *tttr_data,
             std::vector<int> channels,
@@ -108,11 +108,6 @@ public:
      * Clear tttr_indices stored in the pixels
      */
     void clear();
-
-    /*!
-    * Clear tttr_indices stored in the pixels
-    * Deprecated use clear() instead.
-    */
     void clear_pixels(){
         std::clog << "WARNING: 'clear_pixels' deprecated.  Use 'clear'." << std::endl;
         clear();
@@ -133,7 +128,7 @@ public:
     }
 
     /*!
-     * Computes the
+     * Computes the an image where pixels are correlation curves
      *
      * @param output[out]
      * @param dim1[out]
@@ -161,27 +156,7 @@ public:
         return frames;
     }
 
-//    /// Get stacked lines in CLSMImage
-//    std::vector<CLSMLine *> get_lines() {
-//        auto l = std::vector<CLSMLine *>();
-//        for(auto &f: get_frames()){
-//            auto b = f->get_lines();
-//            l.insert( l.end(), b.begin(), b.end() );
-//        }
-//        return l;
-//    }
-//
-//    /// Get stacked lines in CLSMImage
-//    std::vector<CLSMPixel *> get_pixel() {
-//        auto p = std::vector<CLSMPixel *>();
-//        for(auto &l: get_lines()){
-//            for(int i = 0; i < l->pixels.size(); i++){
-//                p.emplace_back(l[i]);
-//            }
-//        }
-//        return p;
-//    }
-
+    /// Intensity image
     void get_intensity(unsigned int **output, int *dim1, int *dim2, int *dim3);
 
     /*!
@@ -323,12 +298,12 @@ public:
     }
 
     /// Convert 1D index to frame, line, and pixel
-    std::vector<int> to3D(int idx) {
+    inline std::vector<int> to3D(int idx) {
         int frame = idx / (n_lines * n_pixel);
         idx -= (frame * n_lines * n_pixel);
         int line = idx / n_lines;
         int pixel = idx % n_pixel;
-        return std::vector<int>{ frame, line, pixel};
+        return std::vector<int>{frame, line, pixel};
     }
 
     CLSMPixel* getPixel(unsigned int idx){
