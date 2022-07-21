@@ -1,5 +1,4 @@
 # tttrlib
-
 [![pipeline status](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)
 [![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://anaconda.org/tpeulen/tttrlib)
 
