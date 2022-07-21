@@ -123,4 +123,4 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 tttrlib is released under the open source MPL 2.0 license.
 
-[3]: https://docs.peulen.xyz/tttrlib/_images/sphx_glr_plot_imaging_representations_001.png "tttrlib FLIM"
+[3]: https://docs.peulen.xyz/tttrlib/_images/sphx_glr_plot_read_clsm_data_002.png "tttrlib FLIM"
