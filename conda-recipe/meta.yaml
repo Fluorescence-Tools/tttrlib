@@ -16,27 +16,33 @@ source:
 build:
     number: 0
     string: py{{ PY_VER_MAJOR }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
+    detect_binary_files_with_prefix: True  # [not win]
 
 requirements:
   build:
+    - python                                 # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    - numpy                                  # [build_platform != target_platform]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - doxygen
-    - cmake >=3.14
+    - llvm-openmp  # [osx]
+    - libgomp      # [linux]
+    - pkg-config   # [not win]
     - swig
-    - pkg-config
+    - cmake
+    - ninja
   host:
     - python {{ python }}
     - setuptools
     - numpy
-    - boost
+    - boost-cpp
     - hdf5
     - fftw
   run:
     - python
     - typing [py27]
-    - numpy
-    - boost
+    - {{ pin_compatible('numpy') }}
+    - boost-cpp
     - hdf5
     - fftw
     - llvm-openmp # [osx]
