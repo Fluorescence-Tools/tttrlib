@@ -20,6 +20,13 @@ OPTION(INSTALL "Install the library and the include files" ON)
 
 ## Compiler flags
 ########################
+if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    set(TARGET_ARCHITECTURE haswell)
+    cmake_compiler_machine_option(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
+    message(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
+    ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
+endif()
+
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(MSVC)
         ADD_COMPILE_OPTIONS(/Wall)
@@ -32,13 +39,7 @@ if (MSVC)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
     # /Oi is for intrinsics
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
-else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=haswell")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=haswell")
-    # Requires AVX and FMA
-    STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
-    STRING(APPEND CMAKE_C_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp:experimental /Oi")
 endif (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
