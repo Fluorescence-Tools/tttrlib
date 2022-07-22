@@ -29,7 +29,7 @@ requirements:
     - pkg-config   # [not win]
     - swig
     - cmake
-    - ninja
+    - make         # [linux]
   host:
     - python {{ python }}
     - setuptools
