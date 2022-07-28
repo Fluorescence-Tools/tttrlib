@@ -9,9 +9,11 @@ PROJECT(${PROJECT_NAME})
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 
+INCLUDE(simd)
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
+OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ${AVX_FOUND})
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
@@ -20,24 +22,32 @@ OPTION(INSTALL "Install the library and the include files" ON)
 
 ## Compiler flags
 ########################
-#if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
-#    include()
-#endif()
+IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
+ENDIF()
+IF(WITH_AVX)
+  IF (MSVC)
+      # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
+      # /Oi is for intrinsics
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
+  ELSE(MSVC)
+      STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
+  ENDIF (MSVC)
+ENDIF(WITH_AVX)
+
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(MSVC)
-        ADD_COMPILE_OPTIONS(/Wall)
-    else()
-        ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
-    endif()
+  if(MSVC)
+    ADD_COMPILE_OPTIONS(/Wall)
+  ELSE(MSVC)
+      ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
+  ENDIF(MSVC)
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-if (MSVC)
+
+IF (MSVC)
     ADD_DEFINITIONS(-DMS_WIN64)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-    # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
-    # /Oi is for intrinsics
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp:experimental /Oi")
-endif (MSVC)
+ENDIF (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
