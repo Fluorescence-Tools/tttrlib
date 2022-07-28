@@ -22,6 +22,7 @@ requirements:
     - libgomp      # [linux]
     - pkg-config   # [not win]
     - boost-cpp
+    - git
     - hdf5
     - fftw
     - swig
