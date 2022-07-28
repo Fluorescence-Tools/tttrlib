@@ -1,7 +1,10 @@
+cd %SRC_DIR%
 git submodule update --recursive --init --remote
 rmdir build /s /q
-%PYTHON% %SRC_DIR%\setup.py install --single-version-externally-managed --record=record.txt
-cd build
+%PYTHON% setup.py install --single-version-externally-managed --record=record.txt
+
+mkdir b2
+cd b2
 cmake .. -G "NMake Makefiles" ^
   -DCMAKE_INSTALL_PREFIX=%PREFIX%/Library ^
   -DCMAKE_BUILD_TYPE=Release ^
@@ -9,4 +12,3 @@ cmake .. -G "NMake Makefiles" ^
   -DCMAKE_PREFIX_PATH=%PREFIX%
 nmake
 nmake install
-
