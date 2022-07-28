@@ -20,12 +20,9 @@ OPTION(INSTALL "Install the library and the include files" ON)
 
 ## Compiler flags
 ########################
-if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    set(TARGET_ARCHITECTURE haswell)
-    cmake_compiler_machine_option(ARCHITECTURE_FLAG ${TARGET_ARCHITECTURE})
-    message(STATUS "Use compiler option: ${ARCHITECTURE_FLAG}")
-    ADD_COMPILE_OPTIONS(${ARCHITECTURE_FLAG})
-endif()
+#if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+#    include()
+#endif()
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(MSVC)
