@@ -2,6 +2,7 @@
 import os
 import sys
 import platform
+import subprocess
 import multiprocessing
 
 from setuptools import setup, Extension
@@ -56,7 +57,7 @@ class CMakeBuild(build_ext):
         if platform.system() == "Windows":
             cmake_args += [
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
-                '-G "Visual Studio 15 2017"'
+                '-GVisual Studio 14 2015 Win64'
             ]
         else:
             build_args += [
@@ -67,10 +68,16 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         print("BUILDING::CMAKE: " + " ".join(cmake_args))
-        os.chdir(self.build_temp)
-        os.system(" ".join(['cmake', ext.sourcedir] + cmake_args))
+        subprocess.check_call(
+            ['cmake', ext.sourcedir] + cmake_args,
+            cwd=self.build_temp,
+            env=env
+        )
         print("BUILDING::CMAKE --build.")
-        os.system(" ".join(['cmake', '--build', '.'] + build_args))
+        subprocess.check_call(
+            ['cmake', '--build', '.'] + build_args,
+            cwd=self.build_temp
+        )
 
 setup(
     name=NAME,
@@ -101,3 +108,4 @@ setup(
         'Topic :: Scientific/Engineering',
     ]
 )
+

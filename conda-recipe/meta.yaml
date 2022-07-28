@@ -5,11 +5,12 @@ package:
   version: {{ data.get('version')|lower }}
 
 source:
-  path: ..
-#  git_url: ..
+#  path: ..
+  git_url: ..
 
 build:
   number: 1
+  detect_binary_files_with_prefix: True  # [not win]
 
 requirements:
   build:
@@ -49,7 +50,7 @@ about:
   license: {{ data.get('license') }}
   summary: |
     {{ data.get('description') }}
-  description: |
+description: |
     {{ data.get('long_description') }}
 
 extra:
