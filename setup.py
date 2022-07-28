@@ -2,7 +2,6 @@
 import os
 import sys
 import platform
-import subprocess
 import multiprocessing
 
 from setuptools import setup, Extension
@@ -68,16 +67,10 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         print("BUILDING::CMAKE: " + " ".join(cmake_args))
-        subprocess.check_call(
-            ['cmake', ext.sourcedir] + cmake_args,
-            cwd=self.build_temp,
-            env=env
-        )
+        os.chdir(self.build_temp)
+        os.system(" ".join(['cmake', ext.sourcedir] + cmake_args))
         print("BUILDING::CMAKE --build.")
-        subprocess.check_call(
-            ['cmake', '--build', '.'] + build_args,
-            cwd=self.build_temp
-        )
+        os.system(" ".join(['cmake', '--build', '.'] + build_args))
 
 setup(
     name=NAME,

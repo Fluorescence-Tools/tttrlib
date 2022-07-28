@@ -5,8 +5,8 @@ package:
   version: {{ data.get('version')|lower }}
 
 source:
-#  path: ..
-  git_url: ..
+  path: ..
+#  git_url: ..
 
 build:
   number: 1
