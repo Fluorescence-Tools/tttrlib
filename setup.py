@@ -56,7 +56,7 @@ class CMakeBuild(build_ext):
         if platform.system() == "Windows":
             cmake_args += [
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
-                '-GVisual Studio 14 2015 Win64'
+                '-G "Visual Studio 14 2015 Win64"'
             ]
         else:
             build_args += [
