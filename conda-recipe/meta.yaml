@@ -1,9 +1,4 @@
 {% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
-{% set PY_VER_MAJOR = PY_VER[0] %}
-{% set PY_VER_MINOR = PY_VER[2] %}
-
-# This conda recipe makes sure that hdf5 and boost is linked as in version(IMP) <= 2.14
-# Later IMP versions use more generic linking and should work with meta.yaml
 
 package:
   name: {{ data.get('name')|lower }}
@@ -14,8 +9,8 @@ source:
   git_url: ..
 
 build:
-    number: 0
-    string: py{{ PY_VER_MAJOR }}{{ PY_VER_MINOR }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}
+  number: 1
+  detect_binary_files_with_prefix: True  # [not win]
 
 requirements:
   build:
