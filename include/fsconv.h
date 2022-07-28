@@ -8,20 +8,20 @@
 #include <algorithm> /* std::max */
 #include <string.h> /* strcmp */
 
-#if defined(_MSC_VER)
-/* Microsoft C/C++-compatible compiler */
-#include <intrin.h>
-#include <immintrin.h>
-#endif
-#if defined(__GNUC__) || defined(__clang__)
-#include <immintrin.h>
-#include <avxintrin.h>
-#endif
-#if !defined(__FMA__) && defined(__AVX__)
-#define __FMA__ 1
-#endif
-
-
+#if defined(__AVX__)
+  #if defined(_MSC_VER)
+    /* Microsoft C/C++-compatible compiler */
+    #include <intrin.h>
+    #include <immintrin.h>
+   #endif
+  #if (defined(__GNUC__) || defined(__clang__)) && defined(__AVX__)
+    #include <immintrin.h>
+    #include <avxintrin.h>
+  #endif
+  #if !defined(__FMA__) && defined(__AVX__)
+    #define __FMA__ 1
+  #endif
+#endif //__AVX__
 
 
 /*!
