@@ -10,24 +10,28 @@ source:
 
 build:
   number: 1
+  detect_binary_files_with_prefix: True  # [not win]
 
 requirements:
   build:
+    - python                                 # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    - numpy                                  # [build_platform != target_platform]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - python {{ python }}
-    - setuptools
-    - numpy
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
     - pkg-config   # [not win]
-    - boost-cpp
-    - git
-    - hdf5
-    - fftw
     - swig
     - cmake
     - make         # [linux]
+  host:
+    - python {{ python }}
+    - setuptools
+    - numpy
+    - boost-cpp
+    - hdf5
+    - fftw
   run:
     - python
     - typing [py27]
@@ -36,6 +40,10 @@ requirements:
     - hdf5
     - fftw
     - llvm-openmp # [osx]
+
+test:
+ imports:
+   - tttrlib
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
@@ -48,3 +56,4 @@ description: |
 extra:
   recipe-maintainers:
     - tpeulen
+
