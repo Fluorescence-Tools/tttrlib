@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <iostream>
 #include <map>
-#include <cmath> /* floor */
+#include <cmath> /* floor, ceil */
 #include <string>
 #include <string.h> /* strcmp */
 #include <algorithm>
@@ -173,6 +173,26 @@ public:
     /// Resolution for the micro time in nanoseconds
     double get_micro_time_resolution(){
         return get_tag(json_data, TTTRTagRes)["value"];
+    }
+
+    /// Duration of a pixel in LSM in units of macro time clock
+    int get_pixel_duration(){
+        double pixel_duration_d = TTTRHeader::get_tag(
+                json_data, "$TimePerPixel")["value"];
+        double global_res = TTTRHeader::get_tag(
+                json_data, "MeasDesc_GlobalResolution")["value"];
+        long pixel_duration = std::ceil(pixel_duration_d / global_res);
+        return pixel_duration;
+    }
+
+    /// Duration of a line in LSM in units of macro time clock
+    int get_line_duration(){
+        double pixel_duration_d = TTTRHeader::get_tag(
+                json_data, "$TimePerPixel")["value"];
+        double global_res_d = TTTRHeader::get_tag(
+                json_data, "MeasDesc_GlobalResolution")["value"];
+        double n_pixel = TTTRHeader::get_tag(json_data, "ImgHdr_PixX")["value"];
+        return std::ceil((pixel_duration_d * n_pixel) / global_res_d);
     }
 
     /*!

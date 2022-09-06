@@ -27,10 +27,7 @@ void CLSMImage::copy(const CLSMImage& p2, bool fill){
 #endif
     this->tttr = p2.tttr;
     // public attributes
-    marker_frame = p2.marker_frame;
-    marker_line_start = p2.marker_line_start;
-    marker_line_stop = p2.marker_line_stop;
-    marker_event = p2.marker_event;
+    settings = p2.settings;
     n_frames = p2.n_frames;
     n_lines = p2.n_lines;
     n_pixel = p2.n_pixel;
@@ -62,20 +59,13 @@ void CLSMImage::determine_number_of_lines(){
     }
 }
 
-CLSMImage::CLSMImage (
+CLSMImage::CLSMImage(
         std::shared_ptr<TTTR> tttr_data,
-        std::vector<int> marker_frame_start,
-        int marker_line_start,
-        int marker_line_stop,
-        int marker_event_type,
-        int pixel_per_line,
-        std::string reading_routine,
+        CLSMSettings settings,
         long long macro_time_shift,
         CLSMImage* source,
         bool fill,
         std::vector<int> channels,
-        bool skip_before_first_frame_marker,
-        bool skip_after_last_frame_marker,
         std::vector<std::pair<int,int>> micro_time_ranges
 ) {
 #if VERBOSE_TTTRLIB
@@ -90,22 +80,16 @@ CLSMImage::CLSMImage (
 #if VERBOSE_TTTRLIB
         std::clog << "-- Initializing new CLSM image..." << std::endl;
 #endif
-        this->marker_frame = marker_frame_start;
-        this->marker_line_start = marker_line_start;
-        this->marker_line_stop = marker_line_stop;
-        this->marker_event = marker_event_type;
-        this->n_pixel = pixel_per_line;
-        this->reading_routine = reading_routine;
-        this->skip_before_first_frame_marker = skip_before_first_frame_marker;
-        this->skip_after_last_frame_marker = skip_after_last_frame_marker;
+        this->settings = settings;
+        this->n_pixel = settings.n_pixel_per_line;
         tttr = tttr_data;
 
         // early exist if sth is wrong
-        if(tttr_data == nullptr){
+        if(tttr_data.get() == nullptr){
             std::clog << "WARNING: No TTTR object provided" << std::endl;
             return;
         }
-        if(marker_frame_start.empty()){
+        if(this->settings.marker_frame_start.empty()){
             std::clog << "WARNING: No frame marker provided" << std::endl;
             return;
         }
@@ -157,9 +141,9 @@ void CLSMImage::rebin(int bin_line, int bin_pixel){
     std::vector<unsigned int> mapping;
     int n_px = n_frames * n_lines * n_pixel;
     mapping.reserve(2 * n_px);
-    for(int f = 0; f < n_frames; f++){
-        for(int l = 0; l < n_lines; l++) {
-            for(int p = 0; p < n_pixel; p++) {
+    for(unsigned int f = 0; f < n_frames; f++){
+        for(unsigned int l = 0; l < n_lines; l++) {
+            for(unsigned int p = 0; p < n_pixel; p++) {
                 auto source_idx = to1D(f, l, p);
                 auto target_idx = to1D(f, l / bin_line, p / bin_pixel);
                 mapping.emplace_back(source_idx);
@@ -177,10 +161,9 @@ void CLSMImage::get_frame_edges(
         int stop_event,
         std::vector<int> marker_frame,
         int marker_event,
-        std::string reading_routine,
+        int reading_routine,
         bool skip_before_first_frame_marker,
-        bool skip_after_last_frame_marker
-        )
+        bool skip_after_last_frame_marker)
 {
 #if VERBOSE_TTTRLIB
     std::clog << "-- GET_FRAME_EDGES" << std::endl;
@@ -195,14 +178,14 @@ void CLSMImage::get_frame_edges(
     if (stop_event < 0) stop_event = n_events;
     for (int i_event = start_event; i_event < stop_event; i_event++) {
         for (auto f: marker_frame) {
-            if (reading_routine == "SP8") {
+            if (reading_routine == CLSM_SP8) {
                 if (tttr->routing_channels[i_event] == marker_event){
                     if (f == tttr->micro_times[i_event]) {
                         frame_edges.emplace_back(i_event);
                         break;
                     }
                 }
-            } else if (reading_routine == "SP5") {
+            } else if (reading_routine == CLSM_SP5) {
                 if(f == tttr->routing_channels[i_event]){
                     frame_edges.emplace_back(i_event);
                     break;
@@ -234,54 +217,45 @@ void CLSMImage::get_line_edges(
         unsigned int** output, int* n_output,
         TTTR* tttr,
         int start_event, int stop_event,
-        int marker_line_start, int marker_line_stop,
-        int marker_event,
-        std::string reading_routine
+        int marker_line_start, int marker_line_stop, int marker_event,
+        int reading_routine
 ) {
-    std::vector<int> line_edges;
     if (stop_event < 0) stop_event = tttr->n_valid_events;
+    long line_duration = (marker_line_stop < 0) ?
+            tttr->header->get_line_duration(): -1;
 
-    if (reading_routine == "SP5"){
-        line_edges.emplace_back(start_event);
-    }
-    for (int i_event = start_event; i_event < stop_event; i_event++) {
-        if (reading_routine == "SP8") {
-            if(tttr->routing_channels[i_event] == marker_event){
-                if(tttr->micro_times[i_event] == marker_line_start){
-                    line_edges.emplace_back(i_event);
-                    continue;
-                }
-                if(tttr->micro_times[i_event] == marker_line_stop){
-                    line_edges.emplace_back(i_event);
-                    continue;
-                }
-            }
-        } else if (reading_routine == "SP5") {
-            if(tttr->event_types[i_event] == marker_event){
-                if(tttr->routing_channels[i_event] == marker_line_start){
-                    line_edges.emplace_back(i_event);
-                    continue;
-                }
-                if(tttr->routing_channels[i_event] == marker_line_stop){
-                    line_edges.emplace_back(i_event);
-                    continue;
-                }
-            }
+    std::vector<int> line_edges;
+    for(int i_event = start_event; i_event < stop_event; i_event++) {
+        std::pair<size_t, size_t> start_stop;
+        if (reading_routine == CLSM_SP8) {
+            start_stop = find_start_stop(
+                    i_event,
+                    marker_line_start, marker_line_stop, marker_event,
+                    tttr->macro_times,
+                    tttr->routing_channels,
+                    tttr->micro_times,
+                    stop_event,
+                    line_duration
+            );
         } else {
-            if(tttr->event_types[i_event] == marker_event){
-                if(tttr->routing_channels[i_event] == marker_line_start) {
-                    line_edges.emplace_back(i_event);
-                    continue;
-                } else if(tttr->routing_channels[i_event] == marker_line_stop){
-                    line_edges.emplace_back(i_event);
-                    continue;
-                }
-            }
+            start_stop = find_start_stop(
+                    i_event,
+                    marker_line_start, marker_line_stop, marker_event,
+                    tttr->macro_times,
+                    tttr->routing_channels,
+                    tttr->event_types,
+                    stop_event,
+                    line_duration
+            );
         }
+        line_edges.emplace_back(start_stop.first);
+        line_edges.emplace_back(start_stop.second);
     }
+
     int n_out = (int) line_edges.size();
     auto out = (unsigned int*) malloc(n_out * sizeof(unsigned int));
     for(int i=0;i < n_out; i++) out[i] = line_edges[i];
+
     *output = out;
     *n_output = n_out;
 }
@@ -294,19 +268,18 @@ void CLSMImage::create_frames(bool clear_first){
             &frame_edges, &n_frame_edges,
             tttr.get(),
             0, -1,
-            this->marker_frame, marker_event,
-            reading_routine,
-            skip_before_first_frame_marker,
-            skip_after_last_frame_marker
+            settings.marker_frame_start,
+            settings.marker_event,
+            settings.reading_routine,
+            settings.skip_before_first_frame_marker,
+            settings.skip_after_last_frame_marker
     );
 #if VERBOSE_TTTRLIB
     std::clog << "-- CREATE_FRAMES" << std::endl;
     std::cout << "-- Creating " << n_frame_edges - 1 << " frames: " << std::flush;
 #endif
     for(int i=0; i < n_frame_edges - 1; i++){
-        auto frame = new CLSMFrame(
-                frame_edges[i], frame_edges[i + 1], tttr.get()
-        );
+        auto frame = new CLSMFrame(frame_edges[i], frame_edges[i + 1], tttr.get());
         append(frame);
 #if VERBOSE_TTTRLIB
         std::cout << " " << i  << std::flush;
@@ -324,22 +297,25 @@ void CLSMImage::create_frames(bool clear_first){
 void CLSMImage::create_lines(){
     // create new lines in every frame
     for(auto &frame:frames){
-        int start = frame->get_start();
-        int stop = frame->get_stop();
         unsigned int* line_edges; int n_line_edges;
         get_line_edges(
                 &line_edges, &n_line_edges,
                 tttr.get(),
-                start, stop,
-                marker_line_start, marker_line_stop,
-                marker_event,
-                reading_routine
+                frame->get_start(),
+                frame->get_stop(),
+                settings.marker_line_start,
+                settings.marker_line_stop,
+                settings.marker_event,
+                settings.reading_routine
         );
+        int pixel_duration = (settings.marker_line_stop < 0) ?
+                tttr->header->get_pixel_duration() : -1;
         for(int i_line = 0; i_line < n_line_edges / 2; i_line++){
             unsigned int line_start = line_edges[(i_line * 2) + 0];
             unsigned int line_stop = line_edges[(i_line * 2) + 1];
             auto line = new CLSMLine(line_start);
             line->_stop = (int) line_stop;
+            line->set_pixel_duration(pixel_duration);
             line->update(tttr.get(), false);
             frame->append(line);
         }
@@ -543,7 +519,7 @@ void CLSMImage::get_fluorescence_decay(
         size_t i_line = 0;
         for(auto line : frame->lines){
             size_t i_pixel = 0;
-            for(int pixel_i=0; pixel_i<n_pixel;pixel_i++){
+            for(int pixel_i=0; pixel_i < n_pixel; pixel_i++){
                 auto pixel = line->pixels[pixel_i];
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
                                    i_line  * (n_pixel * n_tac) +
@@ -1280,7 +1256,7 @@ void CLSMImage::crop(
         f->crop(line_start, line_stop, pixel_start, pixel_stop);
         frs.emplace_back(f);
     }
-    for(int i = frame_stop; i < n_frames; i++){
+    for(unsigned long i = frame_stop; i < n_frames; i++){
         delete frames[i];
     }
     frames = frs;

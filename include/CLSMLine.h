@@ -14,7 +14,7 @@ class CLSMLine : public TTTRRange{
 private:
 
     std::vector<CLSMPixel> pixels;
-    int pixel_duration = 1;
+    int pixel_duration = -1;
 
 public:
 
@@ -27,8 +27,16 @@ public:
         return pixels;
     }
 
+    void set_pixel_duration(int v){
+        this->pixel_duration = v;
+    }
+
     unsigned long long get_pixel_duration(){
-        return (size_t) (get_duration() / size());
+        if(pixel_duration < 0){
+            return (size_t) (get_duration() / size());
+        } else{
+            return pixel_duration;
+        }
     }
 
     CLSMLine() = default;
@@ -46,7 +54,7 @@ public:
         _start = line_start;
     }
 
-    CLSMLine(int line_start,unsigned int n_pixel){
+    CLSMLine(int line_start, unsigned int n_pixel){
         this->_start = line_start;
         pixels.resize(n_pixel);
     }
@@ -79,7 +87,7 @@ public:
     }
 
     CLSMLine& operator+=(const CLSMLine& rhs){
-        for(int i = 0; i < pixels.size(); i++){
+        for(unsigned int i = 0; i < pixels.size(); i++){
             pixels[i] += rhs.pixels[i];
         }
         return *this;
