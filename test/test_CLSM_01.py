@@ -1,6 +1,5 @@
 from __future__ import division
 
-
 import unittest
 
 import json
@@ -98,7 +97,14 @@ class TestCLSM(unittest.TestCase):
         # SP8
         filename = "./tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
         tttr = tttrlib.TTTR(filename)
-        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP8")
+        kw = {
+            "start_event": 0,
+            "stop_event": -1,
+            "marker_event_type": 15,
+            "marker_frame_start": [4, 6],
+            "reading_routine": tttrlib.CLSM_SP8
+        }
+        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, **kw)
         ref = np.array([0, 33529, 66704, 100007, 133448, 166819, 200246,
                   233764, 266964, 300495, 334002, 367244, 400663, 433842,
                   467465, 500897, 534214, 567481, 600787, 633652, 666928,
@@ -113,17 +119,37 @@ class TestCLSM(unittest.TestCase):
                   2571614, 2604919, 2638158, 2671470, 2704766, 2737823, 2770808,
                   2804447, 2837775, 2871352, 2904614, 2937702, 2971088, 3004543,
                   3037889, 3071241, 3104687, 3104829], dtype=np.uint32)
-        self.assertEqual(np.allclose(frame_marker, ref), True)
+        np.testing.assert_allclose(frame_marker, ref)
+        clsm = tttrlib.CLSMImage(
+            tttr_data=tttr,
+            channels=[0],
+            fill=True,
+            reading_routine='SP8'
+        )
+        clsm.fill(
+            tttr_data=tttr,
+            channels=[0],
+        )
 
-        sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
-        sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
-        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, reading_routine="SP5")
-        clsm_image = tttrlib.CLSMImage(
-            tttr_data=sp5_data,
+        fn = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
+        tttr = tttrlib.TTTR(fn, 'PTU')
+        kw = {
+            "start_event": 0,
+            "stop_event": -1,
+            "marker_event_type": 1,
+            "marker_frame_start": [4, 6],
+            "reading_routine": tttrlib.CLSM_SP5
+        }
+        frame_marker = tttrlib.CLSMImage.get_frame_edges(tttr, **kw)
+        clsm = tttrlib.CLSMImage(
+            tttr_data=tttr,
             channels=[0],
             fill=True,
             reading_routine='SP5'
         )
+
+        np.testing.assert_allclose(clsm.intensity.shape, (230, 256, 256))
+
 
     def test_copy_constructor(self):
         reading_parameter = ht3_reading_parameter
@@ -131,7 +157,9 @@ class TestCLSM(unittest.TestCase):
             tttr_data=ht3_data,
             **reading_parameter
         )
-        clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
+        clsm_image_2 = tttrlib.CLSMImage(
+            source=clsm_image_1, fill=True
+        )
         self.assertAlmostEqual(
             float(np.sum(clsm_image_1.intensity - clsm_image_2.intensity)),
             0.0
@@ -139,6 +167,7 @@ class TestCLSM(unittest.TestCase):
 
     def test_open_clsm_ptu_read_header(self):
         for ptu_file in pq_test_files:
+            print(ptu_file)
             data = tttrlib.TTTR(ptu_file)
             clsm = tttrlib.CLSMImage(data)
 

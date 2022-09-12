@@ -24,6 +24,57 @@ typedef enum{
 } ReadingRoutine;
 
 
+template<typename TS, typename TE>
+static std::pair<int, int> find_clsm_start_stop(
+        int &i_event,
+        int marker_start, int marker_stop, int marker_event,
+        unsigned long long* macro_time_arr,
+        TS start_stop_arr,
+        TE event_type_arr,
+        size_t n,
+        long duration = -1
+){
+    int start = -1;
+    int stop = -1;
+    for(; i_event < n; i_event++)
+    {
+        if(event_type_arr[i_event] != marker_event) continue;
+        if(start_stop_arr[i_event] == marker_start)
+            // start found -> search stop and break
+        {
+            start = i_event;
+            if(marker_stop > 0) // search for stop idx using stop event
+            {
+                for(;i_event < n; i_event++){
+                    if(event_type_arr[i_event] != marker_event) continue;
+                    if(start_stop_arr[i_event] == marker_stop){
+                        stop = i_event;
+                        break;
+                    }
+                }
+            }
+            else if(duration > 0) // search for stop idx using duration
+            {
+                unsigned long stop_time = macro_time_arr[i_event] + duration;
+                for(;i_event < n; i_event++){
+                    if(macro_time_arr[i_event] >= stop_time){
+                        stop = i_event;
+                        break;
+                    }
+                }
+            }
+            else // do not search for stop idx
+            {
+                stop = 0;
+            }
+            break;
+        }
+    }
+    return {start, stop};
+}
+
+
+
 class CLSMSettings{
 
     friend class CLSMImage;
@@ -33,6 +84,7 @@ public:
     /// To skip incomplete frames
     bool skip_before_first_frame_marker = false;
     bool skip_after_last_frame_marker = false;
+    long long macro_time_shift = 0;
 
     int reading_routine = CLSM_DEFAULT;
 
@@ -46,9 +98,10 @@ public:
     std::vector<int> marker_frame_start = std::vector<int>();
 
     /// The event type used for the marker
-    int marker_event = 0;
+    int marker_event_type = 0;
 
     int n_pixel_per_line = 0;
+    int n_lines = 0;
 
     /*!
     * @param marker_frame_start routing channel numbers (default reading routine)
@@ -60,11 +113,13 @@ public:
     * @param marker_line_stop routing channel number (default reading routine)
     * or micro time channel number (SP8 reading routine) that serves as a marker
     * informing on the stop of a new line in a frame within the TTTR data stream
-    * @param marker_event_type event types that are interpreted as markers for
+    * @param marker_event event types that are interpreted as markers for
     * frames and lines.
     * @param n_pixel_per_line number of pixels into which each line is separated.
     * If the number of pixels per line is set to zero. The number of pixels per
     * line will correspond to the number of lines in the first frame.
+    * @param macro_time_shift Number of macro time counts a line start is shifted
+    * relative to the line start marker in the TTTR object (default 0)
     * @param reading_routine an integer that specifies the reading routine used to
     * read a CLSM image out of a TTTR data stream. A CLSM image can be encoded
     * by several ways in a TTTR stream. Leica encodes frame and line markers in
@@ -79,17 +134,21 @@ public:
             int marker_line_start = 3,
             int marker_line_stop = 2,
             std::vector<int> marker_frame_start = {1},
-            int marker_event = 1,
-            int n_pixel_per_line = 1
+            int marker_event_type = 1,
+            int n_pixel_per_line = 1,
+            int n_lines = -1,
+            long long macro_time_shift = 0
     ){
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker = skip_after_last_frame_marker;
         this->reading_routine = reading_routine;
         this->n_pixel_per_line = n_pixel_per_line;
-        this->marker_event = marker_event;
+        this->n_lines = n_lines;
+        this->marker_event_type = marker_event_type;
         this->marker_line_stop = marker_line_stop;
         this->marker_line_start = marker_line_start;
         this->marker_frame_start = marker_frame_start;
+        this->macro_time_shift = macro_time_shift;
     }
 
 };
@@ -104,13 +163,6 @@ class CLSMImage {
 
 private:
 
-    /// The number of lines per frames
-    size_t n_lines = 0;
-
-
-    /// The number if pixels per line
-    size_t n_pixel = 0;
-
     CLSMSettings settings;
 
     /// Used to tack if the CLSMImage is in a filled state
@@ -122,62 +174,16 @@ private:
 
     void create_pixels_in_lines();
 
-    template<typename TS, typename TE>
-    static std::pair<size_t, size_t> find_start_stop(
-            int &i_event,
-            int marker_start, int marker_stop, int marker_event,
-            unsigned long long* macro_time_arr,
-            TS start_stop_arr, TE event_type_arr, size_t n_arr,
-            long duration = -1
-    ){
-
-        size_t start, stop;
-        for(; i_event < n_arr; i_event++)
-        {
-            if(event_type_arr[i_event] != marker_event) continue;
-
-            if (start_stop_arr[i_event] == marker_start)
-            // start found
-            {
-                start = i_event;
-                if(duration > 0)
-                // search for stop idx using duration
-                {
-                    unsigned long stop_time = macro_time_arr[i_event] + duration;
-                    for(;i_event < n_arr; i_event++){
-                        if(macro_time_arr[i_event] >= stop_time){
-                            stop = i_event;
-                            break;
-                        }
-                    }
-                }
-                else if(marker_stop > 0)
-                // search for stop idx using stop event
-                {
-                    for(;i_event < n_arr; i_event++){
-                        if(event_type_arr[i_event] != marker_event) continue;
-                        if(start_stop_arr[i_event] == marker_stop){
-                            stop = i_event;
-                            break;
-                        }
-                    }
-
-                }
-                else
-                // do not search for stop idx
-                {
-                    stop = -1;
-                }
-                break;
-            }
-        }
-        return {start, stop};
-    }
-
 protected:
 
     /// The number of frames in an CLSMImage
     size_t n_frames = 0;
+
+    /// The number of lines per frames
+    size_t n_lines = 0;
+
+    /// The number if pixels per line
+    size_t n_pixel = 0;
 
     /// Pointer to tttr data that was used to construct the Image
     std::shared_ptr<TTTR> tttr = nullptr;
@@ -190,10 +196,33 @@ protected:
 
 public:
 
+    const CLSMSettings* get_settings(){
+        return &settings;
+    }
+
     /// Get the number of frames in the CLSMImage
     size_t size(){
         return frames.size();
     }
+
+    /// Vector containing the tttr indices of the frame markers
+    std::vector<int> marker_frame;
+
+    /// Defines the marker for a line start
+    int marker_line_start;
+
+    /// Defines the marker for a line stop
+    int marker_line_stop;
+
+    /// The event type used for the marker
+    int marker_event;
+
+    std::string reading_routine = "default";
+
+    /// CLSM TTTR data starts can have incomplete frame. Thus skipping
+    /// data can make sense
+    bool skip_before_first_frame_marker = false;
+    bool skip_after_last_frame_marker = false;
 
     /*!
      * Fill the tttr_indices of the pixels with the indices of the channels
@@ -209,15 +238,13 @@ public:
             TTTR *tttr_data = nullptr,
             std::vector<int> channels = std::vector<int>(),
             bool clear = true,
-            const std::vector<std::pair<int,int>> &micro_time_ranges =
-                    std::vector<std::pair<int,int>>()
+            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
     );
     void fill_pixels(
             TTTR *tttr_data,
             std::vector<int> channels,
             bool clear_pixel = true,
-            std::vector<std::pair<int,int>> micro_time_ranges =
-                    std::vector<std::pair<int,int>>()
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
     ){
         std::clog << "WARNING: 'fill_pixels' deprecated.  Use 'fill'." << std::endl;
         fill(tttr_data, channels, clear_pixel, micro_time_ranges);
@@ -237,6 +264,14 @@ public:
      * assumes that each tttr index is only once in an image
      */
     void strip(const std::vector<int> &tttr_indices);
+
+    /// Get tttr indices of photons in
+    std::vector<int>  get_tttr_indices(){
+        auto idx = std::vector<int>();
+        for(auto &f: get_frames()){
+        }
+        return idx;
+    }
 
     /*!
      * Computes the an image where pixels are correlation curves
@@ -528,8 +563,26 @@ public:
     /*!
      *
      * @param tttr_data pointer to TTTR object
-     * @param macro_time_shift Number of macro time counts a line start is shifted
-     * relative to the line start marker in the TTTR object (default 0)
+     * @param marker_frame_start routing channel numbers (default reading routine)
+     * or micro time channel number (SP8 reading routine) that serves as a marker
+     * informing on a new frame in the TTTR data stream.
+     * @param marker_line_start routing channel number (default reading routine)
+     * or micro time channel number (SP8 reading routine) that serves as a marker
+     * informing on the start of a new line in a frame within the TTTR data stream
+     * @param marker_line_stop routing channel number (default reading routine)
+     * or micro time channel number (SP8 reading routine) that serves as a marker
+     * informing on the stop of a new line in a frame within the TTTR data stream
+     * @param marker_event_type event types that are interpreted as markers for
+     * frames and lines.
+     * @param n_pixel_per_line number of pixels into which each line is separated.
+     * If the number of pixels per line is set to zero. The number of pixels per
+     * line will correspond to the number of lines in the first frame.
+     * @param reading_routine an integer that specifies the reading routine used to
+     * read a CLSM image out of a TTTR data stream. A CLSM image can be encoded
+     * by several ways in a TTTR stream. Leica encodes frame and line markers in
+     * micro time channel numbers. PicoQuant and others use a more 'traditional'
+     * encoding for frame and line markers marking TTTR events as marker events and
+     * using the channel number to differentiate the different marker types.
      * @param source A CLSMImage object that is used as a template for the created
      * object. All frames and lines are copied and empty pixels are created. If
      * the parameter fill is set to true moreover the content of the pixels is copied.
@@ -544,11 +597,11 @@ public:
     explicit CLSMImage(
             std::shared_ptr<TTTR> tttr_data = nullptr,
             CLSMSettings settings = CLSMSettings(),
-            long long macro_time_shift = 0,
             CLSMImage *source = nullptr,
             bool fill = true,
             std::vector<int> channels = std::vector<int>(),
-            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
+            std::vector<std::pair<int,int>> micro_time_ranges =
+                    std::vector<std::pair<int,int>>()
     );
 
     /// Destructor
@@ -567,9 +620,7 @@ public:
      * @param macro_time_shift  [in] the number of macro time counts that which
      * which the lines are at least shifted.
      */
-    void shift_line_start(
-            int macro_time_shift
-    );
+    void shift_line_start(int macro_time_shift);
 
     CLSMFrame *operator[](unsigned int i_frame) {
         return frames[i_frame];
@@ -687,32 +738,42 @@ public:
     * Get the tttr indices of frame markers for a SP8
     *
     * @param tttr pointer to the TTTR object that is inspected
-    * @param marker_frame_start vector of
+    * @param marker_frame vector of
     * @param marker_event
     * @param start_event
     * @param stop_event
     * @return
     */
-    static void get_frame_edges(
-            int** output, int* n_output,
+    static std::vector<int> get_frame_edges(
             TTTR* tttr = nullptr,
             int start_event = 0,
             int stop_event = -1,
-            std::vector<int> marker_frame_start = std::vector<int>({4, 6}),
-            int marker_event = 15,
+            std::vector<int> marker_frame_start = {4, 6},
+            int marker_event_type = 15,
             int reading_routine = CLSM_SP8,
             bool skip_before_first_frame_marker = false,
             bool skip_after_last_frame_marker = false
     );
 
-    static void get_line_edges(
-            unsigned int** output, int* n_output,
+    /// Read start stop marker to identify line edges
+    static std::vector<int> get_line_edges(
             TTTR* tttr,
-            int start_event,
-            int stop_event,
-            int marker_line_start = 1, int marker_line_stop = 2, int marker_event = 15,
+            int start_event, int stop_event,
+            int marker_line_start = 1, int marker_line_stop = 2,
+            int marker_event_type = 15,
             int reading_routine = CLSM_SP8
     );
+
+    /// Read start marker and use line duration as stop
+    static std::vector<int> get_line_edges_dur(
+            TTTR* tttr,
+            int start_event, int stop_event,
+            int marker_line_start = 1,
+            int line_duration = 2,
+            int marker_event_type = 15,
+            int reading_routine = CLSM_SP8
+    );
+
 
 };
 

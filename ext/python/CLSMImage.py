@@ -55,36 +55,58 @@ def __init__(
         marker_frame_start=None,
         marker_line_start=None,
         marker_line_stop=None,
-        marker_event=1,
+        marker_event_type=1,
         n_pixel_per_line=None,
-        reading_routine=tttrlib.CLSM_DEFAULT,
+        reading_routine='default',
         skip_before_first_frame_marker=False,
         skip_after_last_frame_marker=False,
         **kwargs
 ):
     source = kwargs.get('source', None)
+    rt = {
+        'SP8': tttrlib.CLSM_SP8,
+        'SP5': tttrlib.CLSM_SP5,
+        'default': tttrlib.CLSM_DEFAULT
+    }
+
     settings_kwargs = {
         "skip_before_first_frame_marker": skip_before_first_frame_marker,
         "skip_after_last_frame_marker": skip_after_last_frame_marker,
-        "reading_routine": reading_routine,
+        "reading_routine": rt[reading_routine],
         "marker_line_start": marker_line_start,
         "marker_line_stop": marker_line_stop,
         "marker_frame_start": marker_frame_start,
-        "marker_event": marker_event,
+        "marker_event_type": marker_event_type,
         "n_pixel_per_line": n_pixel_per_line
     }
 
     if not isinstance(source, tttrlib.CLSMImage):
+        settings_kwargs.update(
+            {
+                "marker_frame_start": marker_frame_start,
+                "marker_line_start": marker_line_start,
+                "marker_line_stop": marker_line_stop,
+                "marker_event_type": marker_event_type,
+                "n_pixel_per_line": n_pixel_per_line,
+                "reading_routine": rt[reading_routine],
+                "skip_before_first_frame_marker": skip_before_first_frame_marker
+            }
+        )
         if tttr_data is not None:
             header = tttr_data.header
             self.header = header
             if tttr_data.get_tttr_container_type() == 'PTU':
-                settings_kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+                try:
+                    settings_kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+                except:
+                    settings_kwargs["marker_frame_start"] = [8]
                 settings_kwargs.update(
                     {
                         "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
                         "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"])
+                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
+                        "marker_event_type": 1
                     }
                 )
             elif tttr_data.get_tttr_container_type() == 'HT3':
@@ -92,22 +114,35 @@ def __init__(
                     {
                         "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
                         "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
+                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
                         "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"])
+                        "marker_event_type": 1
                     }
                 )
-            kwargs['tttr_data'] = tttr_data
 
-        # Defined setups overrule setting
-        settings_kwargs["reading_routine"] = tttrlib.CLSM_DEFAULT
+        # Overwrite if user defined inputs make sense
+        if isinstance(marker_frame_start, int):
+            settings_kwargs['marker_frame_start'] = [marker_frame_start]
+        if isinstance(marker_frame_start, list):
+            settings_kwargs['marker_frame_start'] = marker_frame_start
+        if isinstance(marker_line_start, int):
+            settings_kwargs['marker_line_start'] = marker_line_start
+        if isinstance(marker_line_stop, int):
+            settings_kwargs['marker_line_stop'] = marker_line_stop
+        if isinstance(marker_event_type, int):
+            settings_kwargs['marker_event_type'] = marker_event_type
+        if isinstance(n_pixel_per_line, int):
+            settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
+        kwargs['tttr_data'] = tttr_data
+
+        # Defined setups overrule all setting
         if reading_routine == 'SP5':
-            settings_kwargs["reading_routine"] = tttrlib.CLSM_SP5
             settings_kwargs["marker_event_type"] = 1
             settings_kwargs["marker_frame_start"] = [4, 6]
             settings_kwargs["marker_line_start"] = 1
             settings_kwargs["marker_line_stop"] = 2
         elif reading_routine == 'SP8':
-            settings_kwargs["reading_routine"] = tttrlib.CLSM_SP8
             settings_kwargs["marker_event_type"] = 15
             settings_kwargs["marker_frame_start"] = [4, 6]
             settings_kwargs["marker_line_start"] = 1
@@ -116,20 +151,9 @@ def __init__(
                 header = tttr_data.header
                 settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
                 settings_kwargs["marker_line_stop"] = int(header.tag('ImgHdr_LineStop')["value"])
-
-    # Overwrite with user arguments
-    if isinstance(marker_frame_start, list):
-        settings_kwargs['marker_frame_start'] = marker_frame_start
-    if isinstance(marker_frame_start, int):
-        settings_kwargs['marker_frame_start'] = [marker_frame_start]
-    if isinstance(marker_line_start, int):
-        settings_kwargs['marker_line_start'] = marker_line_start
-    if isinstance(marker_line_stop, int):
-        settings_kwargs['marker_line_stop'] = marker_line_stop
-    if isinstance(n_pixel_per_line, int):
-        settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
-
-    clsm_settings = tttrlib.CLSMSettings(**settings_kwargs)
+        clsm_settings = tttrlib.CLSMSettings(**settings_kwargs)
+    else:
+        clsm_settings = source.get_settings()
     this = _tttrlib.new_CLSMImage(**kwargs, settings=clsm_settings)
     try:
         self.this.append(this)
