@@ -54,7 +54,7 @@ public:
         _start = line_start;
     }
 
-    CLSMLine(int line_start, unsigned int n_pixel){
+    CLSMLine(int line_start,unsigned int n_pixel){
         this->_start = line_start;
         pixels.resize(n_pixel);
     }
@@ -87,7 +87,7 @@ public:
     }
 
     CLSMLine& operator+=(const CLSMLine& rhs){
-        for(unsigned int i = 0; i < pixels.size(); i++){
+        for(size_t i = 0; i < pixels.size(); i++){
             pixels[i] += rhs.pixels[i];
         }
         return *this;

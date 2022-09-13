@@ -1,3 +1,10 @@
+%{
+#include "../include/TTTRHeader.h"
+%}
+
+//%ignore TTTRHeader();
+//%ignore TTTRHeader(int tttr_container_type);
+//%ignore TTTRHeader(const TTTRHeader &p2);
 %ignore TTTRHeader(std::FILE *fpin, int tttr_container_type=0, bool close_file=false);
 
 // TTTRHeader

@@ -1,7 +1,3 @@
-//
-// Created by tpeulen on 10/24/20.
-//
-
 #include "include/CLSMPixel.h"
 #include "include/CLSMLine.h"
 #include "include/CLSMFrame.h"
@@ -34,15 +30,15 @@ void CLSMFrame::crop(
     #endif
 
     std::vector<CLSMLine*> lns;
-    for(int i = 0; i < line_start; i++){
+    for(size_t i = 0; i < line_start; i++){
         delete lines[i];
     }
-    for(int i = line_start; i < line_stop; i++){
+    for(size_t i = line_start; i < line_stop; i++){
         auto l = lines[i];
         l->crop(pixel_start, pixel_stop);
         lns.emplace_back(l);
     }
-    for(int i = line_stop; i < size(); i++){
+    for(size_t i = line_stop; i < size(); i++){
         delete lines[i];
     }
     lines = lns;

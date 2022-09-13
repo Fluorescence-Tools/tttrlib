@@ -19,7 +19,7 @@
 #include <assert.h>
 %}
 
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
 // Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
 // Warning 389: operator[] ignored (consider using %extend)
 // Warning 401: Nothing known about base class

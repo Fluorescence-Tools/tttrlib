@@ -181,7 +181,7 @@ public:
                 json_data, "$TimePerPixel")["value"];
         double global_res = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
-        long pixel_duration = std::ceil(pixel_duration_d / global_res);
+        long pixel_duration = std::round(pixel_duration_d / global_res);
         return pixel_duration;
     }
 

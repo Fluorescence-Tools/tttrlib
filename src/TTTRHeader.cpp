@@ -144,7 +144,7 @@ size_t TTTRHeader::read_ht3_header(
         nlohmann::json &data,
         bool rewind
 ) {
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
     std::clog << "-- READ_HT3_HEADER" << std::endl;
 #endif
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
@@ -222,23 +222,23 @@ size_t TTTRHeader::read_ht3_header(
     add_tag(data, TTTRTagRes, resolution, tyFloat8);
 
     // TODO: add identification of HydraHarp HHT3v1 files
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
     std::clog << "FormatVersion:-" << get_tag(data, "FormatVersion")["value"] << "-" << std::endl;
 #endif
     if (get_tag(data, "Ident")["value"] == "HydraHarp") {
         if(get_tag(data, "FormatVersion")["value"] == "1.0"){
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v1" << std::endl;
 #endif
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v1, tyInt8);
         } else{
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v2" << std::endl;
 #endif
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v2, tyInt8);
         }
     } else {
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
         std::clog << "Record reader:" << "PQ_RECORD_TYPE_PHT3" << std::endl;
 #endif
         add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_PHT3, tyInt8);
@@ -567,7 +567,7 @@ int TTTRHeader::find_tag(
         }
         curr_idx++;
     }
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
     std::clog << "FIND_TAG: " << name << ":" << idx << ":" << tag_idx  << std::endl;
 #endif
     return tag_idx;
@@ -575,7 +575,7 @@ int TTTRHeader::find_tag(
 
 
 void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes){
-//#ifdef VERBOSE_TTTRLIB
+//#if VERBOSE_TTTRLIB
 //    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
 //#endif
 //    if(boost::filesystem::exists(fn)){
@@ -716,7 +716,7 @@ void TTTRHeader::add_tag(
     } else {
         json_data["tags"][tag_idx] = tag;
     }
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
     std::clog << "ADD_TAG: " << tag << std::endl;
 #endif
 }
@@ -730,7 +730,7 @@ nlohmann::json TTTRHeader::get_tag(
     for (auto& it : json_data["tags"].items()) {
         if(it.value()["name"] == name){
             if((idx < 0) || (idx == it.value()["idx"])){
-#ifdef VERBOSE_TTTRLIB
+#if VERBOSE_TTTRLIB
                 std::clog << "-- GET_TAG:" << name << ":" << it << std::endl;
 #endif
                 return it.value();
