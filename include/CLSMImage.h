@@ -765,7 +765,7 @@ public:
     );
 
     /// Read start marker and use line duration as stop
-    static std::vector<int> get_line_edges_dur(
+    static std::vector<int> get_line_edges_by_duration(
             TTTR* tttr,
             int start_event, int stop_event,
             int marker_line_start = 1,

@@ -261,7 +261,7 @@ std::vector<int> CLSMImage::get_line_edges(
 }
 
 
-std::vector<int> CLSMImage::get_line_edges_dur(
+std::vector<int> CLSMImage::get_line_edges_by_duration(
         TTTR* tttr,
         int frame_start,
         int frame_stop,
@@ -372,7 +372,7 @@ void CLSMImage::create_lines(){
             );
         } else{
             long line_duration = tttr->header->get_line_duration();
-            line_edges = get_line_edges_dur(
+            line_edges = get_line_edges_by_duration(
                     tttr.get(),
                     frame->get_start(),
                     frame->get_stop(),

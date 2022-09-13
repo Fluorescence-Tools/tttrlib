@@ -42,7 +42,7 @@ html:
 	# These two lines make the build a bit more lengthy, and the
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
-	#rm -rf _build/doctrees/
+	rm -rf _build/doctrees/
 
 	# Create conda env that contains all dependencies
 	# Clone the TTTR-example data rep
