@@ -79,7 +79,7 @@ class CLSMSettings{
 
     friend class CLSMImage;
 
-public:
+protected:
 
     /// To skip incomplete frames
     bool skip_before_first_frame_marker = false;
@@ -95,13 +95,15 @@ public:
     int marker_line_stop = 0;
 
     /// Vector containing the tttr indices of the frame markers
-    std::vector<int> marker_frame_start = std::vector<int>();
+    std::vector<int> marker_frame_start = {};
 
     /// The event type used for the marker
     int marker_event_type = 0;
 
     int n_pixel_per_line = 0;
     int n_lines = 0;
+
+public:
 
     /*!
     * @param marker_frame_start routing channel numbers (default reading routine)
