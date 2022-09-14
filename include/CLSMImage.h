@@ -750,7 +750,7 @@ public:
             TTTR* tttr = nullptr,
             int start_event = 0,
             int stop_event = -1,
-            std::vector<int> marker_frame_start = {4, 6},
+            std::vector<int> marker_frame_start = std::vector<int>({4, 6}),
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8,
             bool skip_before_first_frame_marker = false,
