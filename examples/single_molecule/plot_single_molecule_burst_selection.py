@@ -62,8 +62,8 @@ def save_burst_id(
 minimum_window_length = 2e-3 # 2 millisecond
 maximum_window_length = 30e-3 # 30 millisecond / optional parameter
 tw_ranges = data.get_time_window_ranges(
-    minimum_window_length=window_length,
-    maximum_window_length = maximum_window_length,
+    minimum_window_length=minimum_window_length,
+    maximum_window_length=maximum_window_length,
     minimum_number_of_photons_in_time_window=40
 )
 
