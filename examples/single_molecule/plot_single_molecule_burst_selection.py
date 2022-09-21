@@ -83,9 +83,9 @@ sel = np.array(sel)
 green_indeces = data.get_selection_by_channel([0, 8])
 red_indeces = data.get_selection_by_channel([1, 9])
 
-intensity_trace_green = data[green_indeces].get_intensity_trace(window_length)
-intensity_trace_red = data[red_indeces].get_intensity_trace(window_length)
-bursts_selected = data[sel].get_intensity_trace(window_length)
+intensity_trace_green = data[green_indeces].get_intensity_trace(maximum_window_length)
+intensity_trace_red = data[red_indeces].get_intensity_trace(maximum_window_length)
+bursts_selected = data[sel].get_intensity_trace(maximum_window_length)
 
 #%%
 # Save the traces to files
