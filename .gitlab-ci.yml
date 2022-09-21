@@ -89,7 +89,7 @@ deploy:doc:
    image: condaforge/mambaforge
    tags:
      - linux
-   needs: ["test:linux"]
+   needs: ["build:lnx_x86"]
    before_script:
      - export DEBIAN_FRONTEND=noninteractive
      - export TZ=Europe/Berlin
