@@ -48,11 +48,13 @@ build:osx:
     - git submodule update --init --recursive --remote
 build:windows:
   <<: *build
+  image: mambaforge:vs16
   tags:
     - win
-  before_script:
-    - git submodule update --init --recursive --remote
   script:
+    - cmd.exe
+    - conda activate base
+    - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
 test:linux:
