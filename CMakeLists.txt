@@ -95,22 +95,6 @@ ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
 
 ## OpenMP
 ###########################
-IF (APPLE)
-    # macOS install OMP via: brew install libomp
-    SET(OMP_INCLUDE_DIR "/usr/local/opt/libomp/include")
-    SET(OMP_LIB_DIR "/usr/local/opt/libomp/lib")
-    # see: https://gitlab.kitware.com/cmake/cmake/issues/18098
-    MESSAGE(STATUS "OMP_INCLUDE_DIR: ${OMP_INCLUDE_DIR}")
-    MESSAGE(STATUS "OMP_LIB_DIR: ${OMP_LIB_DIR}")
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OMP_INCLUDE_DIR}" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
-    set(OpenMP_omp_LIBRARY "${OMP_LIB_DIR}/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-    set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-    set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
-ENDIF (APPLE)
 FIND_PACKAGE(OpenMP REQUIRED)
 LINK_LIBRARIES(OpenMP::OpenMP_CXX)
 
