@@ -54,7 +54,6 @@ build:windows:
   script:
     - cmd.exe
     - conda activate base
-    - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
 test:linux:
