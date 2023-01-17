@@ -40,10 +40,10 @@ build:lnx_aarch64:
   tags:
     - aarch64
 build:osx:
-  <<: *build
-  <<: *build_posix
+  <<: *build_lnx
+  image: sickcodes/docker-osx:latest
   tags:
-    - osx
+    - x86_64
   before_script:
     - git submodule update --init --recursive --remote
 build:windows:
