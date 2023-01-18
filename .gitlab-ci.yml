@@ -45,10 +45,10 @@ build:osx:
   tags:
     - x86_64
   before_script:
-    - chmod -R 777 ~
+    - chmod -R 777 /home/arch
     - curl -LO "http://repo.continuum.io/miniconda/Miniconda3-4.4.10-MacOSX-x86_64.sh"
-    - bash Miniconda3-4.4.10-MacOSX-x86_64.sh -p ~/miniconda -b
-    - PATH=~/miniconda/bin:${PATH}
+    - bash Miniconda3-4.4.10-MacOSX-x86_64.sh -p /home/arch/miniconda -b
+    - PATH=/home/arch/miniconda/bin:${PATH}
     - conda install git
     - git submodule update --init --recursive --remote
 build:windows:
