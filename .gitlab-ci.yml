@@ -45,14 +45,9 @@ build:osx:
   tags:
     - x86_64
   script:
-    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - chmod -R 777 /home/arch
-    - curl -LO "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-x86_64.sh"
-    - sh Mambaforge-MacOSX-x86_64.sh -p /home/arch/miniconda -b
-    - PATH=/home/arch/miniconda/bin:${PATH}
-    - conda install git
-    - git submodule update --init --recursive --remote
-    - ./tools/build.sh
+    - id=$(docker run -d -it --device /dev/kvm -p 50922:10022 -e "USERNAME=user" -e "PASSWORD=alpine" sickcodes/docker-osx:naked)
+    - sleep 240
+    - docker stop $id && docker rm -v $id
 build:windows:
   <<: *build
   image: mambaforge:vs16
