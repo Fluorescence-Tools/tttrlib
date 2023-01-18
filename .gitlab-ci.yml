@@ -46,8 +46,8 @@ build:osx:
     - x86_64
   before_script:
     - chmod -R 777 /home/arch
-    - curl -LO "http://repo.continuum.io/miniconda/Miniconda3-4.4.10-MacOSX-x86_64.sh"
-    - bash Miniconda3-4.4.10-MacOSX-x86_64.sh -p /home/arch/miniconda -b
+    - curl -LO "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-x86_64.sh"
+    - sh Mambaforge-MacOSX-x86_64.sh -p /home/arch/miniconda -b
     - PATH=/home/arch/miniconda/bin:${PATH}
     - conda install git
     - git submodule update --init --recursive --remote
