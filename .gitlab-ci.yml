@@ -40,6 +40,7 @@ build:lnx_aarch64:
   tags:
     - aarch64
 build:osx:
+  <<: *build
   image: sickcodes/docker-osx:latest
   tags:
     - x86_64
