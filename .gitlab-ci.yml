@@ -45,6 +45,7 @@ build:osx:
   tags:
     - x86_64
   script:
+    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - chmod -R 777 /home/arch
     - curl -LO "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-x86_64.sh"
     - sh Mambaforge-MacOSX-x86_64.sh -p /home/arch/miniconda -b
