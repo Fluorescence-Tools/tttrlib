@@ -105,9 +105,9 @@ class Tests(unittest.TestCase):
         ch2_indeces = data.get_selection_by_channel([0])
         mt = data.macro_times
         t1 = mt[ch1_indeces]
-        w1 = np.ones_like(t1, dtype=np.float)
+        w1 = np.ones_like(t1, dtype=np.float64)
         t2 = mt[ch2_indeces]
-        w2 = np.ones_like(t2, dtype=np.float)
+        w2 = np.ones_like(t2, dtype=np.float64)
 
         correlator = tttrlib.Correlator()
         correlator.n_bins = 17

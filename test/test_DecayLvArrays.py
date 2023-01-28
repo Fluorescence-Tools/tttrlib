@@ -14,7 +14,7 @@ class Tests(unittest.TestCase):
             len(lv_array), 10
         )
         lv_array[0] = 10
-        vec = np.linspace(1, 10., 10, dtype=np.float)
+        vec = np.linspace(1, 10., 10, dtype=np.float64)
         for i, v in enumerate(vec):
             lv_array[i] = v
         l = [v for v in lv_array]
@@ -25,7 +25,7 @@ class Tests(unittest.TestCase):
     # @unittest.expectedFailure
     # def test_LVDoubleArray_slice(self):
     #     lv_array = tttrlib.CreateLVDoubleArray(10)
-    #     vec = np.linspace(1, 10., 10, dtype=np.float)
+    #     vec = np.linspace(1, 10., 10, dtype=np.float64)
     #     # will fail slicing not supported
     #     lv_array[:] = vec
 
@@ -54,7 +54,7 @@ class Tests(unittest.TestCase):
     def test_MParam_2(self):
         # create filled MParam structure
         n_corrections = 5
-        corrections_np = np.zeros(n_corrections, dtype=np.float)
+        corrections_np = np.zeros(n_corrections, dtype=np.float64)
         irf_np = np.ones(32)
         dt = 0.1
         bg_np = np.zeros_like(irf_np)
@@ -79,7 +79,7 @@ class Tests(unittest.TestCase):
     def test_lv_param(self):
         for i in range(200):
             lv_array = tttrlib.CreateLVDoubleArray(10)
-            a = np.ones(111, dtype=np.float)
+            a = np.ones(111, dtype=np.float64)
             lv_array.set_data(a)
             x = [x for x in lv_array]
             self.assertListEqual(list(a), x)
@@ -92,7 +92,7 @@ class Tests(unittest.TestCase):
             self.assertListEqual(list(a), x)
 
         for i in range(15000):
-            a = np.ones(111, dtype=np.float)
+            a = np.ones(111, dtype=np.float64)
             dt = 0.032
             parameter_group = tttrlib.CreateMParam(
                 irf=a,
