@@ -5,8 +5,8 @@ package:
   version: {{ data.get('version')|lower }}
 
 source:
-#  path: ..
-  git_url: ..
+  path: ../
+#  git_url: ..
 
 build:
   number: 1
@@ -14,19 +14,19 @@ build:
 
 requirements:
   build:
-    - python                                 # [build_platform != target_platform]
-    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
-    - numpy                                  # [build_platform != target_platform]
+    - python
+    - numpy
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - llvm-openmp  # [osx]
     - libgomp      # [linux]
     - pkg-config   # [not win]
     - swig
+    - ninja
     - cmake
     - make         # [linux]
   host:
-    - python {{ python }}
+    - python
     - setuptools
     - numpy
     - boost-cpp
@@ -34,7 +34,7 @@ requirements:
     - fftw
   run:
     - python
-    - typing [py27]
+    - typing # [py27]
     - {{ pin_compatible('numpy') }}
     - boost-cpp
     - hdf5
