@@ -80,6 +80,7 @@ deploy:conda:
   stage: deploy
   image: condaforge/mambaforge
   tags:
+    - x86_64
     - linux
   before_script:
     - git submodule update --init --recursive --remote
@@ -90,6 +91,7 @@ deploy:doc:
    stage: deploy
    image: condaforge/mambaforge
    tags:
+     - x86_64
      - linux
    needs: ["build:lnx_x86"]
    before_script:
