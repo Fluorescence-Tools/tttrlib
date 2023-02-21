@@ -1,16 +1,28 @@
 cd %SRC_DIR%
 git submodule update --recursive --init --remote
-rmdir build /s /q
-%PYTHON% %SRC_DIR%\setup.py install --single-version-externally-managed --record=record.txt
+
+echo "Build app wrapper"
+:: build app wrapper
+copy "%RECIPE_DIR%\app_wrapper.c" .
+cl app_wrapper.c shell32.lib
+if errorlevel 1 exit 1
 
 rmdir b2 /s /q
 mkdir b2
 cd b2
 cmake .. -G "NMake Makefiles" ^
-  -DCMAKE_INSTALL_PREFIX=%PREFIX%/Library ^
-  -DCMAKE_BUILD_TYPE=Release ^
-  -DBUILD_PYTHON_INTERFACE=OFF ^
-  -DCMAKE_PREFIX_PATH=%PREFIX%
-nmake
+ -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%" ^
+ -DCMAKE_PREFIX_PATH="%PREFIX%" ^
+ -DBUILD_PYTHON_INTERFACE=ON ^
+ -DCMAKE_BUILD_TYPE=Release ^
+ -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
+ -DCMAKE_SWIG_OUTDIR="%SP_DIR%"
 nmake install
 
+
+:: Add wrappers to path for each Python command line tool
+:: (all files without an extension)
+cd %SRC_DIR%\bin
+for /f %%f in ('dir /b *.py') do copy "%SRC_DIR%\bin\%%f" "%PREFIX%\Library\bin\%%f"
+for /f %%f in ('dir /b *.') do copy "%SRC_DIR%\app_wrapper.exe" "%PREFIX%\Library\bin\%%f.exe"
+if errorlevel 1 exit 1

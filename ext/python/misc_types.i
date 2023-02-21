@@ -4,6 +4,7 @@
 %include "std_wstring.i";
 %include "std_map.i";
 %include "std_vector.i";
+%include "std_set.i";
 %include "std_list.i";
 %include "std_pair.i"; // tttrlib.Correlator.get_tttr
 %include <std_shared_ptr.i>
@@ -19,15 +20,17 @@ import_array();
 %}
 
 // Templates
-// Vector templates
+%template(SetInt32) std::set<int>;
 
+// Vector templates
 %template(VectorBool) std::vector<bool>;
 %template(VectorDouble) std::vector<double>;
 %template(VectorInt16) std::vector<short>;
 %template(VectorInt32) std::vector<int>;
 %template(VectorInt64) std::vector<long long>;
 %template(VectorUint32) std::vector<unsigned int>;
-%template(VectorUint64) std::vector<unsigned long long>;
+%template(VectorUint64) std::vector<unsigned long>;
+%template(VectorUint128) std::vector<unsigned long long>;
 %template(VectorUint32_3D) std::vector<std::vector<std::vector<unsigned int>>>;
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
 %template(MapStringString) std::map<std::string, std::string>;
@@ -45,7 +48,6 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 /*---------------------*/
 // Generic numpy arrays
 /*---------------------*/
-
 
 // Inplace arrays
 /*---------------------*/
@@ -76,7 +78,6 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 // floating points
 %apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** output_view, int* n_output)}
 %apply(float** ARGOUTVIEW_ARRAY1, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(float **output, int *dim1, int *dim2, int *dim3, int *dim4)}
-
 // Generic output memory managed arrays
 /*---------------------*/
 
@@ -97,8 +98,9 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply(char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(char** output, int* n_output)}
 %apply(signed char** ARGOUTVIEW_ARRAY1, int* DIM1) {(signed char** output, int* n_output)}
 %apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(unsigned int** output, int* dim1, int* dim2)}
-%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
+%apply (unsigned short** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned short** output, int* dim1, int* dim2, int* dim3)}
+%apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 
 // Bool
 %apply(bool** ARGOUTVIEWM_ARRAY1, int* DIM1) {(bool **output, int *n_output)}

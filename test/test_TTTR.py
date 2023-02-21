@@ -370,62 +370,67 @@ class Tests(unittest.TestCase):
     def test_TTTRRange(self):
         # empty range object
         tttr_range_1 = tttrlib.TTTRRange()
-        self.assertEqual(tttr_range_1.start, 0)
-        self.assertEqual(tttr_range_1.stop, 0)
-        self.assertEqual(tttr_range_1.start_time, 0)
-        self.assertEqual(tttr_range_1.stop_time, 0)
-        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (0, 0))
+        self.assertEqual(tttr_range_1.start, -1)
+        self.assertEqual(tttr_range_1.stop, -1)
+        self.assertTupleEqual(tuple(tttr_range_1.start_stop), (-1, -1))
         self.assertEqual(len(tttr_range_1.tttr_indices), 0)
         d = {
             "start": 11,
-            "stop": 898,
-            "start_time": 222,
-            "stop_time": 2222
+            "stop": 898
         }
         tttr_range_1 = tttrlib.TTTRRange(*d.values())
         self.assertEqual(tttr_range_1.start, d["start"])
         self.assertEqual(tttr_range_1.stop, d["stop"])
-        self.assertEqual(tttr_range_1.start_time, d["start_time"])
-        self.assertEqual(tttr_range_1.stop_time, d["stop_time"])
         self.assertTupleEqual(tuple(tttr_range_1.start_stop), (d["start"], d["stop"]))
 
         tttr_range_2 = tttrlib.TTTRRange(other=tttr_range_1)
         self.assertEqual(tttr_range_2.start, d["start"])
         self.assertEqual(tttr_range_2.stop, d["stop"])
-        self.assertEqual(tttr_range_2.start_time, d["start_time"])
-        self.assertEqual(tttr_range_2.stop_time, d["stop_time"])
         self.assertTupleEqual(tuple(tttr_range_2.start_stop), (d["start"], d["stop"]))
 
-        # append a index
-        tttr_range_1.append(89)
-        self.assertEqual(len(tttr_range_1.tttr_indices), 1)
-        self.assertTupleEqual(tuple(tttr_range_1.tttr_indices), (89,))
+        # append an index
+        tttr_range_1.insert(89)
+        self.assertEqual(len(tttr_range_1.tttr_indices), 3)
+        self.assertTupleEqual(tuple(tttr_range_1.tttr_indices), (11, 89, 898))
         tttr_range_1.clear()
         self.assertEqual(len(tttr_range_1.tttr_indices), 0)
 
-        tttr_range_2 = tttrlib.TTTRRange(**d)
-        tttr_range_3 = tttrlib.TTTRRange(other=tttr_range_1)
-        self.assertEqual(
-            tttr_range_1, tttr_range_2
-        )
+        tttr_range_3 = tttrlib.TTTRRange(other=tttr_range_2)
         self.assertEqual(tttr_range_2, tttr_range_3)
 
         # strip/remove indices
         tr = tttrlib.TTTRRange()
-        tr.append(81)
-        tr.append(233)
-        tr.append(232223)
-        tr.append(44444443)
-        idx = tr.strip([233, 232223])
+        tr.insert(81)
+        tr.insert(233)
+        tr.insert(232223)
+        tr.insert(44444443)
+        tr.strip([233, 232223])
         print(list(tr.tttr_indices))
         self.assertTupleEqual(tuple(tr.tttr_indices), (81, 44444443,))
-        self.assertEqual(1, idx)
+        
+    def test_TTTRRange_strip(self):
+        tr = tttrlib.TTTRRange()
+        tr.insert(22)
+        tr.insert(44)
+        tr.insert(7)
+        tr.insert(11)
+        tr.insert(33)
+        idx = list(tr.tttr_indices)
+        self.assertListEqual(idx, [7, 11, 22, 33, 44])
+        
+        # offset is last element
+        off = tr.strip([11, 22])
+        self.assertEqual(off, 2)
+        
+        idx2 = list(tr.tttr_indices)
+        self.assertListEqual(idx2, [7, 33, 44])
+        
 
     def test_mean_microtime(self):
         self.assertAlmostEqual(data.get_mean_microtime(), 4.351471044638555e-09)
 
     def test_open_non_existing_file(self):
-        # make sure that opening an non-exisitng file does not crash
+        # make sure that opening a non-exisitng file does not crash
         d = tttrlib.TTTR('NOFILE', 'PTU')
         self.assertEqual(
             len(d.macro_times), 0

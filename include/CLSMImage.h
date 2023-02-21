@@ -84,7 +84,6 @@ protected:
     /// To skip incomplete frames
     bool skip_before_first_frame_marker = false;
     bool skip_after_last_frame_marker = false;
-    long long macro_time_shift = 0;
 
     int reading_routine = CLSM_DEFAULT;
 
@@ -138,8 +137,8 @@ public:
             std::vector<int> marker_frame_start = std::vector<int>({1}),
             int marker_event_type = 1,
             int n_pixel_per_line = 1,
-            int n_lines = -1,
-            long long macro_time_shift = 0
+            int n_lines = -1
+//            long long macro_time_shift = 0
     ){
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker = skip_after_last_frame_marker;
@@ -150,7 +149,7 @@ public:
         this->marker_line_stop = marker_line_stop;
         this->marker_line_start = marker_line_start;
         this->marker_frame_start = marker_frame_start;
-        this->macro_time_shift = macro_time_shift;
+//        this->macro_time_shift = macro_time_shift;
     }
 
 };
@@ -187,7 +186,7 @@ protected:
     /// The number if pixels per line
     size_t n_pixel = 0;
 
-    /// Pointer to tttr data that was used to construct the Image
+    /// Pointer to tttr data that used to construct the Image
     std::shared_ptr<TTTR> tttr = nullptr;
 
     void create_frames(bool clear_first = true);
@@ -265,15 +264,7 @@ public:
      * Strips tttr_indices from all pixels in Image
      * assumes that each tttr index is only once in an image
      */
-    void strip(const std::vector<int> &tttr_indices);
-
-    /// Get tttr indices of photons in
-    std::vector<int>  get_tttr_indices(){
-        auto idx = std::vector<int>();
-        for(auto &f: get_frames()){
-        }
-        return idx;
-    }
+    void strip(const std::vector<int> &tttr_indices, int offset = 0);
 
     /*!
      * Computes the an image where pixels are correlation curves
@@ -305,7 +296,7 @@ public:
     }
 
     /// Intensity image
-    void get_intensity(unsigned int **output, int *dim1, int *dim2, int *dim3);
+    void get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3);
 
     /*!
      * Computes an image stack where the value of each pixel corresponds to
@@ -437,7 +428,9 @@ public:
             double **output, int *dim1, int *dim2, int *dim3,
             int minimum_number_of_photons = 3,
             TTTR *tttr_irf = nullptr, double m0_irf = 1.0, double m1_irf = 1.0,
-            bool stack_frames = false
+            bool stack_frames = false,
+            std::vector<double> background = std::vector<double>(),
+            double m0_bg = 0.0, double m1_bg = 0.0
     );
 
     /// Convert frame, line, and pixel to 1D index
@@ -613,17 +606,6 @@ public:
         }
     }
 
-    /*!
-     * Shift the line starts at least by a specified number of macro time clock
-     * counts
-     *
-     * @param tttr_data pointer [in] to the TTTR object used to construct the CLSM
-     * object that is shifted
-     * @param macro_time_shift  [in] the number of macro time counts that which
-     * which the lines are at least shifted.
-     */
-    void shift_line_start(int macro_time_shift);
-
     CLSMFrame *operator[](unsigned int i_frame) {
         return frames[i_frame];
     };
@@ -775,7 +757,6 @@ public:
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8
     );
-
 
 };
 

@@ -237,7 +237,7 @@ class Tests(unittest.TestCase):
             'background': np.zeros_like(irf)
         }
         fit23 = tttrlib.Fit23(**settings)
-        tau, gamma, r0, rho = 2.2, 0.01, 0.38, 1.22
+        tau, gamma, r0, rho = 1.2, 0.01, 0.38, 1.22
         x0 = np.array([tau, gamma, r0, rho])
         fixed = np.array([0, 1, 1, 0])
         r = fit23(

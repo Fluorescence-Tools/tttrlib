@@ -1,6 +1,7 @@
 %{
 #include "../include/TTTRSelection.h"
 %}
+%attributeval(TTTRSelection, std::vector<int>, tttr_indices, get_tttr_indices);
 
 // used in selection and ranges
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}

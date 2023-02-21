@@ -926,8 +926,15 @@ double TTTR::compute_mean_lifetime(
         double m0_irf, double m1_irf,
         std::vector<int> *tttr_indices,
         double dt,
-        int minimum_number_of_photons
+        int minimum_number_of_photons,
+        std::vector<double> *background,
+        double m0_bg, double m1_bg
 ){
+    if(dt < 0.0){
+        dt = tttr_data->header->get_micro_time_resolution();
+    }
+
+    // Compute moments for IRF
     if(tttr_irf != nullptr){
         // number of photons
         m0_irf = (double) tttr_irf->n_valid_events;
@@ -936,27 +943,35 @@ double TTTR::compute_mean_lifetime(
                 tttr_irf->micro_times,
                 tttr_irf->micro_times + tttr_irf->n_valid_events, 0.0);
     }
-    if(dt < 0.0){
-        dt = tttr_data->header->get_micro_time_resolution();
+
+    // Compute moments for background pattern
+    if(background != nullptr){
+        m0_bg = 0.0;
+        m1_bg = 0.0;
+        for(size_t i = 0; i < background->size(); i++){
+            m0_bg += (*background)[i];
+            m1_bg += i * (*background)[i];
+        }
     }
 
-    double lt = 0.0;
-    double mu0 = 0.0; // total number of photons
-    double mu1 = 0.0; // sum of photon arrival times
+    // Compute moments for data
+    double m0_h = 0.0; // total number of photons
+    double m1_h = 0.0; // sum of photon arrival times
     if(tttr_indices == nullptr){
-        mu0 += (double) tttr_data->n_valid_events;
-        for(int i=0; i< tttr_data->n_valid_events; i++)
-            mu1 += tttr_data->micro_times[i];
+        m0_h += (double) tttr_data->n_valid_events;
+        for(size_t i = 0; i < tttr_data->n_valid_events; i++)
+            m1_h += tttr_data->micro_times[i];
     } else{
-        mu0 += (double) tttr_indices->size();
+        m0_h += (double) tttr_indices->size();
         for (auto &vi: *tttr_indices)
-            mu1 += tttr_data->micro_times[vi];
+            m1_h += tttr_data->micro_times[vi];
     }
 
-    double g1 = mu0 / m0_irf;
-    double g2 = (mu1 - g1 * m1_irf) / m0_irf;
-    if (mu0 > minimum_number_of_photons) {
-        lt = g2 / g1 * dt;
+    // Compute average lifetime
+    double lt = 0.0;
+    if (m0_h > minimum_number_of_photons) {
+        lt =  (m1_h - m1_bg) / (m0_h - m0_bg) - m1_irf / m0_irf;
+        lt *= dt;
     }
 
     return lt;

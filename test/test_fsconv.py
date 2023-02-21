@@ -17,7 +17,7 @@ class Tests(unittest.TestCase):
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 3, 0, 1, 0,
             1, 1, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         ],
-        dtype=np.float
+        dtype=np.float64
     )
     w_sq = np.sqrt(data)**2.
     model = np.array(

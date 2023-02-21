@@ -754,15 +754,20 @@ public:
      * @param dt[in] Time resolution of the micro time. If not provided extracted from the header (slow)
      * @param minimum_number_of_photons[in] Minimum number of photons. If less photons are in the dataset
      * returns -1 as computed lifetime
+     * @param background background pattern
+     * @param m0_bg sum of background photons (overwritten if background pattern not empty)
+     * @param m1_bg first moment of background pattern (overwritten if background pattern not empty)
      * @return The computed lifetime
      */
     static double compute_mean_lifetime(
             TTTR *tttr_data,
             TTTR *tttr_irf = nullptr,
-            double m0_irf = 1, double m1_irf = 1,
+            double m0_irf = 1, double m1_irf = 0,
             std::vector<int> *tttr_indices = nullptr,
             double dt = -1.0,
-            int minimum_number_of_photons = 1
+            int minimum_number_of_photons = 1,
+            std::vector<double> *background = nullptr,
+            double m0_bg = 0.0, double m1_bg = 0.0
     );
 
     /*!
@@ -815,7 +820,9 @@ public:
             double microtime_resolution = -1.0,
             int minimum_number_of_photons = 1
     ){
-        return compute_mean_microtime(this, tttr_indices, microtime_resolution, minimum_number_of_photons);
+        return compute_mean_microtime(
+                this, tttr_indices,
+                microtime_resolution, minimum_number_of_photons);
     }
 
 };

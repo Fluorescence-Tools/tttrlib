@@ -1,19 +1,57 @@
 
 // File: index.xml
 
+// File: classap_1_1ap__error.xml
+
+
+%feature("docstring") ap::ap_error "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::ap_error::make_assertion "
+ap::ap_error::make_assertion";
+
+// File: classbfgs.xml
+
+
+%feature("docstring") bfgs "
+
+C++ includes: i_lbfgs.h
+";
+
+%feature("docstring") bfgs::bfgs "
+bfgs::bfgs";
+
+%feature("docstring") bfgs::bfgs "
+bfgs::bfgs";
+
+%feature("docstring") bfgs::~bfgs "
+bfgs::~bfgs";
+
+%feature("docstring") bfgs::setN "
+bfgs::setN";
+
+%feature("docstring") bfgs::seteps "
+bfgs::seteps";
+
+%feature("docstring") bfgs::seteps "
+bfgs::seteps";
+
+%feature("docstring") bfgs::fix "
+bfgs::fix";
+
+%feature("docstring") bfgs::free "
+bfgs::free";
+
+%feature("docstring") bfgs::minimize "
+bfgs::minimize";
+
 // File: unionbh__overflow.xml
 
 // File: unionbh__spc130__record.xml
 
-// File: structbh__spc132__header__t.xml
-
-
-%feature("docstring") bh_spc132_header_t "
-
-Becker&Hickl SPC132 Header.  
-
-C++ includes: TTTRHeaderTypes.h
-";
+// File: unionbh__spc132__header.xml
 
 // File: unionbh__spc600__256__record.xml
 
@@ -28,32 +66,44 @@ C++ includes: CLSMFrame.h
 ";
 
 %feature("docstring") CLSMFrame::get_lines "
-";
+CLSMFrame::get_lines";
 
 %feature("docstring") CLSMFrame::size "
-
+CLSMFrame::size
 Get the number of lines in the CLSMFrame.  
 ";
 
 %feature("docstring") CLSMFrame::CLSMFrame "
+CLSMFrame::CLSMFrame";
+
+%feature("docstring") CLSMFrame::CLSMFrame "
+CLSMFrame::CLSMFrame
+Copy constructor  
+
+Parameters
+----------
+* `fill` :  
+    if set to false the content of the pixels is not copied  
 ";
 
 %feature("docstring") CLSMFrame::CLSMFrame "
-";
-
-%feature("docstring") CLSMFrame::CLSMFrame "
-";
+CLSMFrame::CLSMFrame";
 
 %feature("docstring") CLSMFrame::~CLSMFrame "
-";
+CLSMFrame::~CLSMFrame";
 
 %feature("docstring") CLSMFrame::append "
-
+CLSMFrame::append
 Append a line to the current frame  
 
 Parameters
 ----------
 * `line` :  
+";
+
+%feature("docstring") CLSMFrame::crop "
+CLSMFrame::crop
+Crops a frame  
 ";
 
 // File: class_c_l_s_m_image.xml
@@ -64,13 +114,16 @@ Parameters
 C++ includes: CLSMImage.h
 ";
 
-%feature("docstring") CLSMImage::size "
+%feature("docstring") CLSMImage::get_settings "
+CLSMImage::get_settings";
 
+%feature("docstring") CLSMImage::size "
+CLSMImage::size
 Get the number of frames in the CLSMImage.  
 ";
 
-%feature("docstring") CLSMImage::fill_pixels "
-
+%feature("docstring") CLSMImage::fill "
+CLSMImage::fill
 Fill the tttr_indices of the pixels with the indices of the channels that are
 within a pixel  
 
@@ -84,18 +137,26 @@ Parameters
     set to false new tttr indices are added to the pixels  
 ";
 
-%feature("docstring") CLSMImage::clear_pixels "
+%feature("docstring") CLSMImage::fill_pixels "
+CLSMImage::fill_pixels";
 
+%feature("docstring") CLSMImage::clear "
+CLSMImage::clear
 Clear tttr_indices stored in the pixels  
+";
 
-Parameters
-----------
-* `channels` :  
+%feature("docstring") CLSMImage::clear_pixels "
+CLSMImage::clear_pixels";
+
+%feature("docstring") CLSMImage::strip "
+CLSMImage::strip
+Strips tttr_indices from all pixels in Image assumes that each tttr index is
+only once in an image  
 ";
 
 %feature("docstring") CLSMImage::get_fcs_image "
-
-Computes the  
+CLSMImage::get_fcs_image
+Computes the an image where pixels are correlation curves  
 
 Parameters
 ----------
@@ -110,13 +171,17 @@ Parameters
 ";
 
 %feature("docstring") CLSMImage::get_frames "
+CLSMImage::get_frames
+Get the frames in the CLSMImage.  
 ";
 
-%feature("docstring") CLSMImage::get_intensity_image "
+%feature("docstring") CLSMImage::get_intensity "
+CLSMImage::get_intensity
+Intensity image.  
 ";
 
-%feature("docstring") CLSMImage::get_fluorescence_decay_image "
-
+%feature("docstring") CLSMImage::get_fluorescence_decay "
+CLSMImage::get_fluorescence_decay
 Computes an image stack where the value of each pixel corresponds to a histogram
 of micro times in each pixel. The micro times can be coarsened by integer
 numbers.  
@@ -143,7 +208,7 @@ Parameters
 ";
 
 %feature("docstring") CLSMImage::get_decay_of_pixels "
-
+CLSMImage::get_decay_of_pixels
 Computes micro time histograms for the stacks of images and a selection of
 pixels. Photons in pixels that are selected by the selection array contribute to
 the returned array of micro time histograms.  
@@ -172,8 +237,8 @@ Parameters
     if True the frames are stacked.  
 ";
 
-%feature("docstring") CLSMImage::get_mean_micro_time_image "
-
+%feature("docstring") CLSMImage::get_mean_micro_time "
+CLSMImage::get_mean_micro_time
 Calculates an image stack where the value of each pixel corresponds to the mean
 micro time (in units of the micro channel resolution).  
 
@@ -200,8 +265,8 @@ Parameters
     pixels (this corresponds to the photon weighted mean arrival time).  
 ";
 
-%feature("docstring") CLSMImage::get_phasor_image "
-
+%feature("docstring") CLSMImage::get_phasor "
+CLSMImage::get_phasor
 Computes the phasor values for every pixel  
 
 Pixels with few photons can be discriminated. Discriminated pixels will be
@@ -230,8 +295,8 @@ Parameters
     pixels (this corresponds to the photon weighted mean arrival time).  
 ";
 
-%feature("docstring") CLSMImage::get_mean_lifetime_image "
-
+%feature("docstring") CLSMImage::get_mean_lifetime "
+CLSMImage::get_mean_lifetime
 Computes an image of average lifetimes  
 
 The average lifetimes are computed (not fitted) by the methods of moments (Irvin
@@ -266,23 +331,36 @@ Parameters
     is the first moment of the IRF (optional, default=1)  
 ";
 
-%feature("docstring") CLSMImage::get_n_frames "
+%feature("docstring") CLSMImage::to1D "
+CLSMImage::to1D
+Convert frame, line, and pixel to 1D index.  
+";
 
+%feature("docstring") CLSMImage::to3D "
+CLSMImage::to3D
+Convert 1D index to frame, line, and pixel.  
+";
+
+%feature("docstring") CLSMImage::getPixel "
+CLSMImage::getPixel";
+
+%feature("docstring") CLSMImage::get_n_frames "
+CLSMImage::get_n_frames
 Get the number of frames in the CLSM image.  
 ";
 
 %feature("docstring") CLSMImage::get_n_lines "
-
+CLSMImage::get_n_lines
 Get the number of lines per frame in the CLSMImage.  
 ";
 
 %feature("docstring") CLSMImage::get_n_pixel "
-
+CLSMImage::get_n_pixel
 Get the number of pixels per line a frame of the CLSMImage.  
 ";
 
 %feature("docstring") CLSMImage::copy "
-
+CLSMImage::copy
 Copy the information from another CLSMImage object  
 
 Parameters
@@ -298,7 +376,7 @@ Returns
 ";
 
 %feature("docstring") CLSMImage::append "
-
+CLSMImage::append
 Append a frame to the CLSM image.  
 
 Parameters
@@ -306,13 +384,63 @@ Parameters
 * `frame` :  
 ";
 
-%feature("docstring") CLSMImage::CLSMImage "
+%feature("docstring") CLSMImage::transform "
+CLSMImage::transform
+Moves the content of the Pixels  
 
+The input is an interleaved array or source and target pixel indices. A pixel
+index is a mapping from a frames, lines, and pixel combination to an index.  
+
+Parameters
+----------
+* `index` :  
+* `n_index` :  
+";
+
+%feature("docstring") CLSMImage::rebin "
+CLSMImage::rebin
+Rebin a CLSMImage  
+
+Note, rebinning redistributes photons and thus the macro times in pixels.  
+
+Parameters
+----------
+* `bin_line` :  
+    binning factor for lines  
+* `bin_pixel` :  
+    binning factor for pixel in lines  
+";
+
+%feature("docstring") CLSMImage::distribute "
+CLSMImage::distribute
+Distribute the photons of a pixel_id to a set of pixel ids in a target image
+according to provided probabilities  
+";
+
+%feature("docstring") CLSMImage::crop "
+CLSMImage::crop
+Crop the image  
+
+Parameters
+----------
+* `frame_start` :  
+* `frame_stop` :  
+* `line_start` :  
+* `line_stop` :  
+* `pixel_start` :  
+* `pixel_stop` :  
+";
+
+%feature("docstring") CLSMImage::stack_frames "
+CLSMImage::stack_frames";
+
+%feature("docstring") CLSMImage::CLSMImage "
+CLSMImage::CLSMImage
 Copy constructor.  
 ";
 
 %feature("docstring") CLSMImage::CLSMImage "
-
+CLSMImage::CLSMImage
 Parameters
 ----------
 * `tttr_data` :  
@@ -342,9 +470,6 @@ Parameters
     PicoQuant and others use a more 'traditional' encoding for frame and line
     markers marking TTTR events as marker events and using the channel number to
     differentiate the different marker types.  
-* `macro_time_shift` :  
-    Number of macro time counts a line start is shifted relative to the line
-    start marker in the TTTR object (default 0)  
 * `source` :  
     A CLSMImage object that is used as a template for the created object. All
     frames and lines are copied and empty pixels are created. If the parameter
@@ -355,29 +480,18 @@ Parameters
     source CLSMImage instance.  
 * `channels` :  
     The channel number of the events that will be used to fill the pixels.  
+* `stack_frames` :  
+    If set to true (default is false) the frames in the CLSM image are stacked
+    and the resulting CLSMImage will hava a single frame.  
 ";
 
 %feature("docstring") CLSMImage::~CLSMImage "
-
+CLSMImage::~CLSMImage
 Destructor.  
 ";
 
-%feature("docstring") CLSMImage::shift_line_start "
-
-Shift the line starts at least by a specified number of macro time clock counts  
-
-Parameters
-----------
-* `tttr_data` :  
-    pointer [in] to the TTTR object used to construct the CLSM object that is
-    shifted  
-* `macro_time_shift` :  
-    [in] the number of macro time counts that which which the lines are at least
-    shifted.  
-";
-
 %feature("docstring") CLSMImage::compute_ics "
-
+CLSMImage::compute_ics
 Computes an image correlation via FFTs for a set of frames  
 
 This function computes the image correlation for a set of frames. The frames can
@@ -435,7 +549,7 @@ Parameters
 ";
 
 %feature("docstring") CLSMImage::get_roi "
-
+CLSMImage::get_roi
 Copies a region of interest (ROI) into a new image and does some background
 correction.  
 
@@ -500,7 +614,7 @@ Parameters
 ";
 
 %feature("docstring") CLSMImage::get_frame_edges "
-
+CLSMImage::get_frame_edges
 Get the tttr indices of frame markers for a SP8  
 
 Parameters
@@ -518,6 +632,13 @@ Returns
 ";
 
 %feature("docstring") CLSMImage::get_line_edges "
+CLSMImage::get_line_edges
+Read start stop marker to identify line edges.  
+";
+
+%feature("docstring") CLSMImage::get_line_edges_by_duration "
+CLSMImage::get_line_edges_by_duration
+Read start marker and use line duration as stop.  
 ";
 
 // File: class_c_l_s_m_line.xml
@@ -529,33 +650,39 @@ C++ includes: CLSMLine.h
 ";
 
 %feature("docstring") CLSMLine::size "
-
+CLSMLine::size
 Get the number of pixels per line a frame of the CLSMImage.  
 ";
 
 %feature("docstring") CLSMLine::get_pixels "
-";
+CLSMLine::get_pixels";
+
+%feature("docstring") CLSMLine::set_pixel_duration "
+CLSMLine::set_pixel_duration";
 
 %feature("docstring") CLSMLine::get_pixel_duration "
-";
+CLSMLine::get_pixel_duration";
 
 %feature("docstring") CLSMLine::CLSMLine "
-";
+CLSMLine::CLSMLine";
 
 %feature("docstring") CLSMLine::CLSMLine "
-";
+CLSMLine::CLSMLine";
 
 %feature("docstring") CLSMLine::CLSMLine "
-";
+CLSMLine::CLSMLine";
 
 %feature("docstring") CLSMLine::CLSMLine "
-";
+CLSMLine::CLSMLine";
 
 %feature("docstring") CLSMLine::~CLSMLine "
-";
+CLSMLine::~CLSMLine";
 
 %feature("docstring") CLSMLine::append "
-";
+CLSMLine::append";
+
+%feature("docstring") CLSMLine::crop "
+CLSMLine::crop";
 
 // File: class_c_l_s_m_pixel.xml
 
@@ -566,13 +693,95 @@ C++ includes: CLSMPixel.h
 ";
 
 %feature("docstring") CLSMPixel::~CLSMPixel "
-";
+CLSMPixel::~CLSMPixel";
 
 %feature("docstring") CLSMPixel::CLSMPixel "
-";
+CLSMPixel::CLSMPixel";
 
 %feature("docstring") CLSMPixel::CLSMPixel "
+CLSMPixel::CLSMPixel";
+
+// File: class_c_l_s_m_settings.xml
+
+
+%feature("docstring") CLSMSettings "
+
+C++ includes: CLSMImage.h
 ";
+
+%feature("docstring") CLSMSettings::CLSMSettings "
+CLSMSettings::CLSMSettings
+Parameters
+----------
+* `marker_frame_start` :  
+    routing channel numbers (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on a new
+    frame in the TTTR data stream.  
+* `marker_line_start` :  
+    routing channel number (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on the start
+    of a new line in a frame within the TTTR data stream  
+* `marker_line_stop` :  
+    routing channel number (default reading routine) or micro time channel
+    number (SP8 reading routine) that serves as a marker informing on the stop
+    of a new line in a frame within the TTTR data stream  
+* `marker_event` :  
+    event types that are interpreted as markers for frames and lines.  
+* `n_pixel_per_line` :  
+    number of pixels into which each line is separated. If the number of pixels
+    per line is set to zero. The number of pixels per line will correspond to
+    the number of lines in the first frame.  
+* `macro_time_shift` :  
+    Number of macro time counts a line start is shifted relative to the line
+    start marker in the TTTR object (default 0)  
+* `reading_routine` :  
+    an integer that specifies the reading routine used to read a CLSM image out
+    of a TTTR data stream. A CLSM image can be encoded by several ways in a TTTR
+    stream. Leica encodes frame and line markers in micro time channel numbers.
+    PicoQuant and others use a more 'traditional' encoding for frame and line
+    markers marking TTTR events as marker events and using the channel number to
+    differentiate the different marker types.  
+";
+
+// File: classap_1_1complex.xml
+
+
+%feature("docstring") ap::complex "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::complex::complex "
+ap::complex::complex";
+
+%feature("docstring") ap::complex::complex "
+ap::complex::complex";
+
+%feature("docstring") ap::complex::complex "
+ap::complex::complex";
+
+%feature("docstring") ap::complex::complex "
+ap::complex::complex";
+
+// File: classap_1_1const__raw__vector.xml
+
+
+%feature("docstring") ap::const_raw_vector "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::const_raw_vector::const_raw_vector "
+ap::const_raw_vector::const_raw_vector";
+
+%feature("docstring") ap::const_raw_vector::GetData "
+ap::const_raw_vector::GetData";
+
+%feature("docstring") ap::const_raw_vector::GetLength "
+ap::const_raw_vector::GetLength";
+
+%feature("docstring") ap::const_raw_vector::GetStep "
+ap::const_raw_vector::GetStep";
 
 // File: struct_correlation_curve_settings.xml
 
@@ -583,7 +792,7 @@ C++ includes: CorrelatorCurve.h
 ";
 
 %feature("docstring") CorrelationCurveSettings::get_ncorr "
-
+CorrelationCurveSettings::get_ncorr
 The number of points in a correlation curve.  
 ";
 
@@ -596,13 +805,13 @@ C++ includes: Correlator.h
 ";
 
 %feature("docstring") Correlator::dt "
-
+Correlator::dt
 Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t is the
 difference between the first and the last photon.  
 ";
 
 %feature("docstring") Correlator::Correlator "
-
+Correlator::Correlator
 Parameters
 ----------
 * `tttr` :  
@@ -617,12 +826,12 @@ Parameters
 ";
 
 %feature("docstring") Correlator::~Correlator "
-
+Correlator::~Correlator
 Destructor.  
 ";
 
 %feature("docstring") Correlator::set_n_casc "
-
+Correlator::set_n_casc
 Sets the number of cascades (also called blocks) of the correlation curve and
 updates the correlation axis.  
 
@@ -632,17 +841,17 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_curve "
-";
+Correlator::get_curve";
 
 %feature("docstring") Correlator::get_n_casc "
-
+Correlator::get_n_casc
 Returns
 -------
 number of correlation blocks  
 ";
 
 %feature("docstring") Correlator::set_n_bins "
-
+Correlator::set_n_bins
 Parameters
 ----------
 * `v` :  
@@ -650,14 +859,14 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_n_bins "
-
+Correlator::get_n_bins
 Returns
 -------
 the number of equally spaced correlation channels per block  
 ";
 
 %feature("docstring") Correlator::set_correlation_method "
-
+Correlator::set_correlation_method
 Set method that to correlate the data  
 
 Parameters
@@ -667,14 +876,14 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_correlation_method "
-
+Correlator::get_correlation_method
 Returns
 -------
 name of the used correlation method  
 ";
 
 %feature("docstring") Correlator::set_microtimes "
-
+Correlator::set_microtimes
 Changes the time axis to consider the micro times.  
 
 Parameters
@@ -692,7 +901,7 @@ Parameters
 ";
 
 %feature("docstring") Correlator::set_macrotimes "
-
+Correlator::set_macrotimes
 Parameters
 ----------
 * `t1` :  
@@ -706,10 +915,10 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_macrotimes "
-";
+Correlator::get_macrotimes";
 
 %feature("docstring") Correlator::set_events "
-
+Correlator::set_events
 Parameters
 ----------
 * `time` :  
@@ -731,7 +940,7 @@ Parameters
 ";
 
 %feature("docstring") Correlator::set_weights "
-
+Correlator::set_weights
 Set the weights that are used in the correlation channels  
 
 Parameters
@@ -747,10 +956,10 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_weights "
-";
+Correlator::get_weights";
 
 %feature("docstring") Correlator::get_x_axis "
-
+Correlator::get_x_axis
 Get the normalized x-axis of the correlation  
 
 Parameters
@@ -762,7 +971,7 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_corr_normalized "
-
+Correlator::get_corr_normalized
 Get the normalized correlation.  
 
 Parameters
@@ -774,7 +983,7 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_corr "
-
+Correlator::get_corr
 Get the correlation.  
 
 Parameters
@@ -787,14 +996,14 @@ Parameters
 ";
 
 %feature("docstring") Correlator::run "
-
+Correlator::run
 Compute the correlation function. Usually calling this method is not necessary
 the the validity of the correlation function is tracked by the attribute
 is_valid.  
 ";
 
 %feature("docstring") Correlator::set_tttr "
-
+Correlator::set_tttr
 This method sets the time and the weights using TTTR objects.  
 
 The header of the first TTTR object is used for calibration. Both TTTR objects
@@ -811,10 +1020,10 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_tttr "
-";
+Correlator::get_tttr";
 
 %feature("docstring") Correlator::set_filter "
-
+Correlator::set_filter
 Updates the weights. Non-zero weights are assigned a filter value that is
 defined by a filter map and the micro time of the event.  
 
@@ -837,10 +1046,10 @@ C++ includes: CorrelatorCurve.h
 ";
 
 %feature("docstring") CorrelatorCurve::size "
-";
+CorrelatorCurve::size";
 
 %feature("docstring") CorrelatorCurve::get_x_axis "
-
+CorrelatorCurve::get_x_axis
 Get the x-axis of the correlation  
 
 Parameters
@@ -853,7 +1062,7 @@ Parameters
 ";
 
 %feature("docstring") CorrelatorCurve::set_n_bins "
-
+CorrelatorCurve::set_n_bins
 Parameters
 ----------
 * `v` :  
@@ -861,10 +1070,10 @@ Parameters
 ";
 
 %feature("docstring") CorrelatorCurve::get_n_bins "
-";
+CorrelatorCurve::get_n_bins";
 
 %feature("docstring") CorrelatorCurve::set_n_casc "
-
+CorrelatorCurve::set_n_casc
 Sets the number of cascades (also called blocks) of the correlation curve and
 updates the correlation axis.  
 
@@ -874,17 +1083,17 @@ Parameters
 ";
 
 %feature("docstring") CorrelatorCurve::get_n_casc "
-
+CorrelatorCurve::get_n_casc
 Returns
 -------
 number of correlation blocks  
 ";
 
 %feature("docstring") CorrelatorCurve::get_corr "
-";
+CorrelatorCurve::get_corr";
 
 %feature("docstring") CorrelatorCurve::get_corr_normalized "
-";
+CorrelatorCurve::get_corr_normalized";
 
 // File: class_correlator_photon_stream.xml
 
@@ -895,25 +1104,25 @@ C++ includes: CorrelatorPhotonStream.h
 ";
 
 %feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
-";
+CorrelatorPhotonStream::CorrelatorPhotonStream";
 
 %feature("docstring") CorrelatorPhotonStream::CorrelatorPhotonStream "
-";
+CorrelatorPhotonStream::CorrelatorPhotonStream";
 
 %feature("docstring") CorrelatorPhotonStream::~CorrelatorPhotonStream "
-";
+CorrelatorPhotonStream::~CorrelatorPhotonStream";
 
 %feature("docstring") CorrelatorPhotonStream::empty "
-";
+CorrelatorPhotonStream::empty";
 
 %feature("docstring") CorrelatorPhotonStream::size "
-";
+CorrelatorPhotonStream::size";
 
 %feature("docstring") CorrelatorPhotonStream::clear "
-";
+CorrelatorPhotonStream::clear";
 
 %feature("docstring") CorrelatorPhotonStream::resize "
-
+CorrelatorPhotonStream::resize
 Parameters
 ----------
 * `n` :  
@@ -922,16 +1131,16 @@ Parameters
 ";
 
 %feature("docstring") CorrelatorPhotonStream::make_fine "
-";
+CorrelatorPhotonStream::make_fine";
 
 %feature("docstring") CorrelatorPhotonStream::set_weights "
-";
+CorrelatorPhotonStream::set_weights";
 
 %feature("docstring") CorrelatorPhotonStream::set_events "
-";
+CorrelatorPhotonStream::set_events";
 
 %feature("docstring") CorrelatorPhotonStream::coarsen "
-
+CorrelatorPhotonStream::coarsen
 Coarsens the time events  
 
 This method coarsens the time events by dividing the times by two. In case two
@@ -941,16 +1150,16 @@ weight is set to zero.
 ";
 
 %feature("docstring") CorrelatorPhotonStream::dt "
-";
+CorrelatorPhotonStream::dt";
 
 %feature("docstring") CorrelatorPhotonStream::sum_of_weights "
-";
+CorrelatorPhotonStream::sum_of_weights";
 
 %feature("docstring") CorrelatorPhotonStream::mean_count_rate "
-";
+CorrelatorPhotonStream::mean_count_rate";
 
 %feature("docstring") CorrelatorPhotonStream::set_time_axis_calibration "
-
+CorrelatorPhotonStream::set_time_axis_calibration
 Set time axis calibration. The time axis calibration if the duration of between
 two sync signals (macro time clock)  
 
@@ -961,7 +1170,7 @@ Parameters
 ";
 
 %feature("docstring") CorrelatorPhotonStream::get_time_axis_calibration "
-
+CorrelatorPhotonStream::get_time_axis_calibration
 Returns
 -------
 The calibration of the time axis in seconds. The time axis calibration is the
@@ -969,13 +1178,13 @@ duration of a sync signal (macro time clock).
 ";
 
 %feature("docstring") CorrelatorPhotonStream::set_tttr "
-";
+CorrelatorPhotonStream::set_tttr";
 
 %feature("docstring") CorrelatorPhotonStream::get_tttr "
-";
+CorrelatorPhotonStream::get_tttr";
 
 %feature("docstring") CorrelatorPhotonStream::make_fine_times "
-
+CorrelatorPhotonStream::make_fine_times
 Changes the time events by adding the micro time to the macro time  
 
 Changes the time events by adding the micro time to the macro time. The micro
@@ -1000,6 +1209,601 @@ Parameters
 C++ includes: TTTRHeaderTypes.h
 ";
 
+// File: class_decay_fit.xml
+
+
+%feature("docstring") DecayFit "
+
+C++ includes: DecayFit.h
+";
+
+%feature("docstring") DecayFit::modelf "
+DecayFit::modelf
+Function to compute a model fluorescence decay.  
+
+Parameters
+----------
+* `param` :  
+    array containing the model parameters  
+* `irf` :  
+    instrument response function in Jordi format (parallel, perpendicular)  
+* `bg[in]` :  
+    background pattern in Jordi format (parallel, perpendicular)  
+* `Nchannels[in]` :  
+    number of channels (half the length of the Jordi arrays)  
+* `dt[in]` :  
+    time difference between two consecutive counting channels  
+* `corrections[in]` :  
+    array with corrections (details see implementations)  
+* `mfunction[out]` :  
+    output array of the computed decay in Jordi format. The output array has to
+    have twice the number of channels. It needs to be allocated by beforehand.  
+
+Returns
+-------
+integer For reporting failures (default 0)  
+";
+
+%feature("docstring") DecayFit::targetf "
+DecayFit::targetf
+Target function (to minimize)  
+
+Computes the model function and returns a score that quantifies the discrepancy
+between the data and the model.  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    a vector of length that that contains the model parameters  
+* `pv[in]` :  
+    a pointer to a MParam structure that contains the data and a set of
+    corrections.  
+
+Returns
+-------
+a normalized chi2  
+";
+
+%feature("docstring") DecayFit::fit "
+DecayFit::fit
+Function that optimizes parameters of model23 to data.  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    a vector of length that that contains the starting parameters  
+* `fixed` :  
+    an array that specifies if a parameter is optimized. If a value is set to 1,
+    the parameter is optimized.  
+* `p` :  
+    an instance of MParam that contains all relevant information  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayFit::correct_input "
+DecayFit::correct_input
+Correct input parameters and compute values  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    input output array (see implementations of derived classes)  
+* `xm[in`, `out]` :  
+    array that will contain the corrected parameters  
+* `corrections[in]` :  
+    array with correction parameters  
+* `return_r[in]` :  
+    if set to true (positive) computes the anisotropy and returns the scatter
+    corrected and the signal (no scatter correction) anisotropy and writes the
+    values to the input/output vector x.  
+";
+
+// File: class_decay_fit23.xml
+
+
+%feature("docstring") DecayFit23 "
+
+C++ includes: DecayFit23.h
+";
+
+%feature("docstring") DecayFit23::modelf "
+DecayFit23::modelf
+Single exponential model function with single rotational correlation time, with
+scatter contribution (BIFL scatter model)  
+
+This function computes the fluorescence decay in the parallel and perpendicular
+detection channel for a single exponential decay with a fluorescence lifetime
+tau, a single rotational correlation time rho, and separate instrument response
+functions for the parallel and perpendicular detection channels. The model
+considers the faction of scattered light in the two detection channels by the
+parameter gamma. The scattered light contribution is handled by patterns for the
+light in the parallel and perpendicular detection channel.  
+
+The instrument response function, the background, and the computed model
+function are in the Jordi format, i.e., stacked one-dimensional arrays of the
+parallel and perpendicular detection channel.  
+
+Parameters
+----------
+* `param` :  
+    array containing the model parameters [0] tau, [1] gamma, [2] r0, [3] rho  
+* `irf` :  
+    instrument response function in Jordi format (parallel, perpendicular)  
+* `bg[in]` :  
+    background pattern in Jordi format (parallel, perpendicular)  
+* `Nchannels[in]` :  
+    number of channels (half the length of the Jordi arrays)  
+* `dt[in]` :  
+    time difference between two consecutive counting channels  
+* `corrections[in]` :  
+    [0] excitation period, [1] g factor, [2] l1, [3] l2, [4] convolution stop
+    channel number  
+* `mfunction[out]` :  
+    output array of the computed decay in Jordi format. The output array has to
+    have twice the number of channels. It needs to be allocated by beforehand.  
+
+Returns
+-------
+integer (not used, 0 by default)  
+";
+
+%feature("docstring") DecayFit23::targetf "
+DecayFit23::targetf
+Target function (to minimize) for fit23.  
+
+Computes the model function 23 and returns a score that quantifies the
+discrepancy between the data and the model.  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    a vector of length that that contains the starting parameters for the
+    optimization and is used to return the optimized parameters. [0]
+    fluorescence lifetime - tau (in) [1] fraction of scattered light - gamma
+    (in) [2] fundamental anisotropy - r0 (in) [3] rotational correlation time -
+    rho (in) [4] if negative reduce contribution of background photons from
+    scoring function - Soft BIFL scatter fit? (flag) (in) [5] specifies type of
+    score that is returned - 2I*: P+2S? (flag), this parameter only affects the
+    returned score and does not influence the fitting (in) [6] background
+    corrected anisotropy - r Scatter (out) [7] anisotropy without background
+    correction - r Experimental (out)  
+* `pv[in]` :  
+    a pointer to a MParam structure that contains the data and a set of
+    corrections.  
+
+Returns
+-------
+a normalized chi2  
+";
+
+%feature("docstring") DecayFit23::fit "
+DecayFit23::fit
+Function that optimizes parameters of model23 to data.  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    a vector of length that that contains the starting parameters for the
+    optimization and is used to return the optimized parameters. [0]
+    fluorescence lifetime - tau (in,out) [1] fraction of scattered light - gamma
+    (in,out) [2] fundamental anisotropy - r0 () [3] rotational correlation time
+    - rho (in,out) [4] if negative reduce contribution of background photons
+    from scoring function - Soft BIFL scatter fit? (flag) (in) [5] specifies
+    type of score that is returned - 2I*: P+2S? (flag), this parameter only
+    affects the returned score and does not influence the fitting (in) [6]
+    background corrected anisotropy - r Scatter (out) [7] anisotropy without
+    background correction - r Experimental (out)  
+* `fixed` :  
+    an array at least of length 4 for the parameters tau, gamma, r0, and rho
+    that specifies if a parameter is optimized. If a value is set to 1, the
+    parameter is optimized.  
+* `p` :  
+    an instance of MParam that contains all relevant information, i.e.,
+    experimental data, the instrument response function, the needed corrections
+    ( g-factor, l1, l2)  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayFit23::correct_input "
+DecayFit23::correct_input
+Correct input parameters and compute anisotropy  
+
+This function corrects the input parameters for fit23 and takes care of
+unreasonable values. The fluorescence lifetime is constraint to positive values,
+gamma (the fraction of scattered light) is constraint to values between 0.0 and
+0.999, the rotational correlation time rho is (if the global variable fixedrho
+is set to true) to the value that corresponds to the Perrin equation (for the
+computed, experimental anisotropy). Moreover, this function computes the
+anisotropy based on the corrected (g-factor, l1, l2, background) intensities, if
+the variable return_r is set to true.  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    array of length 8 that contains parameters x[0] fluorescence lifetime - tau;
+    x[1] fraction of scattered light - gamma; x[2] fundamental anisotropy - r0
+    x[3] rotational time - rho; x[4] softbifl - flag specifying the type of bifl
+    fit (not used here) x[5] p2s_twoIstar - flag specifying the type of chi2
+    calculation (not used here) x[6] background corrected anisotropy x[7]
+    anisotropy without background correction  
+* `xm[in`, `out]` :  
+    array that will contain the corrected parameters  
+* `corrections[in]` :  
+* `return_r[in]` :  
+    if set to true (positive) computes the anisotropy and returns the scatter
+    corrected and the signal (no scatter correction) anisotropy and writes the
+    values to the input/output vector x.  
+";
+
+// File: class_decay_fit24.xml
+
+
+%feature("docstring") DecayFit24 "
+
+C++ includes: DecayFit24.h
+";
+
+%feature("docstring") DecayFit24::modelf "
+DecayFit24::modelf
+Bi-exponential model function.  
+
+Bi-exponential model function with two fluorescence lifetimes tau1, tau2 and
+amplitude of the second lifetime A2, fraction scattered light gamma, and a
+constant offset. A2 (A1 + A2 = 1)  
+
+The model function does not describe anisotropy. The decays passed as a Jordi
+format are treated identical in first and the second channel of the stacked
+arrays.  
+
+mfunction[i] * (1. - gamma) / sum_m + bg[i] * gamma / sum_s + offset  
+
+Parameters
+----------
+* `param` :  
+    array containing the parameters of the model [0] tau1, [1] gamma, [2] tau2,
+    [3] A2, [4] offset  
+* `irf` :  
+    instrument response function in Jordi format  
+* `bg[in]` :  
+    background pattern in Jordi format  
+* `Nchannels[in]` :  
+    number of channels (half the length of the Jordi arrays)  
+* `dt[in]` :  
+    time difference between two consecutive counting channels  
+* `corrections[in]` :  
+    [0] excitation period, [1] unused, [2] unused, [3] unused, [4] convolution
+    stop channel.  
+* `mfunction[out]` :  
+    output array of the computed decay in Jordi format. The output array has to
+    have twice the number of channels. It needs to be allocated by beforehand.  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayFit24::targetf "
+DecayFit24::targetf
+Target function (to minimize) for fit23.  
+
+Parameters
+----------
+* `x` :  
+    array containing the parameters of the model [0] tau1, [1] gamma, [2] tau2,
+    [3] A2, [4] offset  
+* `pv[in]` :  
+    a pointer to a MParam structure that contains the data and a set of
+    corrections.  
+
+Returns
+-------
+a normalized chi2  
+";
+
+%feature("docstring") DecayFit24::fit "
+DecayFit24::fit
+Fit a bi-exponential decay model  
+
+This function fits a bi-exponential decay model to two decays that are stacked
+using global parameters for the lifetimes and amplitudes.  
+
+Bi-exponential model function with two fluorescence lifetimes tau1, tau2 and
+amplitude of the second lifetime A2, fraction scattered light gamma, and a
+constant offset. A2 (A1 + A2 = 1)  
+
+The model function does not describe anisotropy. The decays passed as a Jordi
+format are treated identical in first and the second channel of the stacked
+arrays.  
+
+The anisotropy is computed assuming that the first and the second part of the
+Jordi input arrays are for parallel and perpendicular using the correction array
+of the attribute p of the type MParam.  
+
+Parameters
+----------
+* `x` :  
+    array containing the parameters of the model [0] tau1, [1] gamma, [2] tau2,
+    [3] A2, [4] offset, [5] BIFL scatter fit? (flag) - if smaller than 0 uses
+    soft bifl scatter fit (seems to be unused) [6] r Scatter (output only), [7]
+    r Experimental (output only)  
+* `fixed` :  
+    an array at least of length 5 for the parameters [0] tau1, [1] gamma, [2]
+    tau2, [3] A2, [4] offset. If a value is not set to fixed the parameter is
+    optimized.  
+* `p` :  
+    an instance of MParam that contains relevant information. Here, experimental
+    data, the instrument response function, and the background decay are used.  
+
+Returns
+-------
+Quality parameter 2I*  
+";
+
+%feature("docstring") DecayFit24::correct_input "
+DecayFit24::correct_input
+Correct input parameters and compute anisotropy for fit24.  
+
+limits (0.001 < A2 < 0.999), (0.001 < gamma < 0.999), (tau1 > 0), (tau2 > 0),
+background > 0 (called offset in other places)  
+
+Parameters
+----------
+* `x[in`, `out]` :  
+    [0] tau1, [1] gamma [2] tau2, [3] A2, [4] background, [5] BIFL scatter fit?
+    (flag, not used), [6] anisotropy r (scatter corrected, output), [7]
+    anisotropy (no scatter correction, output)  
+* `xm[out]` :  
+    array for corrected parameters (amplied range)  
+* `corrections` :  
+    [1] g factor, [2] l1, [3] l3  
+* `return_r` :  
+    if true computes the anisotropy.  
+
+Returns
+-------  
+";
+
+// File: class_decay_fit25.xml
+
+
+%feature("docstring") DecayFit25 "
+
+C++ includes: DecayFit25.h
+";
+
+%feature("docstring") DecayFit25::correct_input "
+DecayFit25::correct_input
+adjust parameters for fit25 and compute anisotropy  
+
+Makes sure that (0 < gamma < 0.999) and (0<rho).  
+
+Parameters
+----------
+* `x` :  
+* `xm` :  
+* `corrections` :  
+* `return_r` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayFit25::targetf "
+DecayFit25::targetf
+Function used to compute the target value in fit 25  
+
+This is misleadingly named target25. Fit25 selects out of a set of 4 lifetimes
+the lifetime that describes best the data.  
+
+Parameters
+----------
+* `x` :  
+* `pv` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") DecayFit25::fit "
+DecayFit25::fit
+Selects the lifetime out of a set of 4 fixed lifetimes that best describes the
+data.  
+
+This function selects out of a set of 4 lifetimes tau the lifetime that fits
+best the data and returns the lifetime through the parameter x[0].  
+
+If softBIFL flag is set to (x[6] < 0) and fixed[4] is zero gamma is optimized
+for each lifetime tau and the best gamma is returned by x[4]. The gamma is
+fitted with fit23.  
+
+Parameters
+----------
+* `x` :  
+    array containing the parameters [0] tau1 output for best tau (always fixed),
+    [1] tau2 (always fixed), [2] tau3 (always fixed), [3] tau4 (always fixed),
+    [4] gamma (input, output), [5] fundamental anisotropy r0, [6] BIFL scatter
+    fit? (flag), [7] r Scatter (output only), [8] r Experimental (output only)  
+* `fixed` :  
+    array that is of least of length 5. Only the element fixed[4] is used. If
+    fixed[4] is zero gamma is optimized for each lifetime.  
+* `p` :  
+    an instance of MParam that contains all relevant information, i.e.,
+    experimental data, the instrument response function, the needed corrections
+    for the anisotropy (g-factor, l1, l2)  
+
+Returns
+-------  
+";
+
+// File: class_decay_fit26.xml
+
+
+%feature("docstring") DecayFit26 "
+
+C++ includes: DecayFit26.h
+";
+
+%feature("docstring") DecayFit26::correct_input "
+DecayFit26::correct_input
+Correct input for fit 26  
+
+Constrains the fraction x1 of the first pattern to (0 < x1 < 1).  
+
+Parameters
+----------
+* `x[in]` :  
+    x[0] fraction of first pattern  
+* `xm[out]` :  
+    xm[0] corrected fraction of first pattern  
+";
+
+%feature("docstring") DecayFit26::targetf "
+DecayFit26::targetf";
+
+%feature("docstring") DecayFit26::fit "
+DecayFit26::fit
+Pattern-fit  
+
+Fits the fraction of a mixture of two patterns  
+
+The two patterns are set by the attributes irf and bg of the MParam structure.  
+
+Parameters
+----------
+* `x` :  
+    [0] fraction of pattern 1  
+* `fixed` :  
+    not used  
+* `p` :  
+    an instance of MParam that contains the patterns. The fist pattern is
+    contained in the instrument response function array, the second in the
+    background, array, the experimental data is in the array expdata.  
+
+Returns
+-------  
+";
+
+// File: struct_decay_fit_corrections.xml
+
+
+%feature("docstring") DecayFitCorrections "
+
+C++ includes: DecayFit.h
+";
+
+%feature("docstring") DecayFitCorrections::set_gamma "
+DecayFitCorrections::set_gamma";
+
+%feature("docstring") DecayFitCorrections::str "
+DecayFitCorrections::str";
+
+%feature("docstring") DecayFitCorrections::DecayFitCorrections "
+DecayFitCorrections::DecayFitCorrections";
+
+// File: struct_decay_fit_integrate_signals.xml
+
+
+%feature("docstring") DecayFitIntegrateSignals "
+
+C++ includes: DecayFit.h
+";
+
+%feature("docstring") DecayFitIntegrateSignals::Fp "
+DecayFitIntegrateSignals::Fp";
+
+%feature("docstring") DecayFitIntegrateSignals::Fs "
+DecayFitIntegrateSignals::Fs";
+
+%feature("docstring") DecayFitIntegrateSignals::r "
+DecayFitIntegrateSignals::r";
+
+%feature("docstring") DecayFitIntegrateSignals::rho "
+DecayFitIntegrateSignals::rho";
+
+%feature("docstring") DecayFitIntegrateSignals::rs "
+DecayFitIntegrateSignals::rs";
+
+%feature("docstring") DecayFitIntegrateSignals::compute_signal_and_background "
+DecayFitIntegrateSignals::compute_signal_and_background
+Computes the total number of photons in the parallel and perpendicular detection
+channel for the background and the measured signal. The computed number of
+photons are stored in the static variables Sp, Ss, Bp, Bs.  
+
+Parameters
+----------
+* `p[in]` :  
+    a pointer to a MParam object  
+";
+
+%feature("docstring") DecayFitIntegrateSignals::normM "
+DecayFitIntegrateSignals::normM
+Normalizes the number of photons in the entire model function to the number of
+experimental photons.  
+
+Here, the Number of experimental photons is Sp + Ss (signal in parallel and
+perpendicular). Sp and Ss are global variables that can be computed by
+`compute_signal_and_background`.  
+
+Parameters
+----------
+* `M[in`, `out]` :  
+    array containing the model function in Jordi format  
+* `Nchannels[in]` :  
+    number of channels in the experiment(half length of
+    M array)  
+";
+
+%feature("docstring") DecayFitIntegrateSignals::normM "
+DecayFitIntegrateSignals::normM
+Normalizes a model function (that is already normalized to a unit area) to the
+total number of photons in parallel and perpendicular,  
+
+Parameters
+----------
+* `M[in`, `out]` :  
+    array containing the model function in Jordi format  
+* `s[in]` :  
+    a scaling factor by which the model function is divided.  
+* `Nchannels[in]` :  
+    the number of channels in the model function (half length of M array)  
+";
+
+%feature("docstring") DecayFitIntegrateSignals::normM_p2s "
+DecayFitIntegrateSignals::normM_p2s
+Normalizes the number of photons in the model function for Ss and Sp
+individually to the number of experimental photons in Ss and Sp.  
+
+Here, the number of experimental photons are global variables that can be
+computed by `compute_signal_and_background`.  
+
+Parameters
+----------
+* `M` :  
+    array[in,out] containing the model function in Jordi format  
+* `Nchannels[in]` :  
+    number of channels in the experiment (half length of M array)  
+";
+
+%feature("docstring") DecayFitIntegrateSignals::str "
+DecayFitIntegrateSignals::str";
+
+%feature("docstring") DecayFitIntegrateSignals::DecayFitIntegrateSignals "
+DecayFitIntegrateSignals::DecayFitIntegrateSignals";
+
+// File: struct_decay_fit_settings.xml
+
+
+%feature("docstring") DecayFitSettings "
+
+C++ includes: DecayFit.h
+";
+
+%feature("docstring") DecayFitSettings::str "
+DecayFitSettings::str";
+
 // File: class_decay_phasor.xml
 
 
@@ -1009,7 +1813,7 @@ C++ includes: DecayPhasor.h
 ";
 
 %feature("docstring") DecayPhasor::compute_phasor "
-
+DecayPhasor::compute_phasor
 Compute the phasor (g,s) for a selection of micro times  
 
 This function computes the phasor (g,s) for a set of micro times that are
@@ -1036,18 +1840,23 @@ Returns
 vector of length 2: first element g-value, second element s-value  
 ";
 
-%feature("docstring") DecayPhasor::compute_phasor_all "
+%feature("docstring") DecayPhasor::compute_phasor_bincounts "
+DecayPhasor::compute_phasor_bincounts
+Compute the phasor (g,s) for a histogram / bincounts  
 
-Compute the phasor (g,s) for a all passed micro times  
+This function computes the phasor (g,s) for bincounted micro times  
 
 Parameters
 ----------
-* `micro_times` :  
-    vector of micro times  
-* `n_microtimes` :  
-    number of elements in the micro time array  
+* `bincounts` :  
+    vector bincounts  
+* `minimum_number_of_photons` :  
 * `frequency` :  
     the frequency of the phasor  
+* `g_irf` :  
+    g-value of instrument response phasor  
+* `s_irf` :  
+    s-value of instrument response phasor  
 
 Returns
 -------
@@ -1055,7 +1864,7 @@ vector of length 2: first element g-value, second element s-value
 ";
 
 %feature("docstring") DecayPhasor::g "
-
+DecayPhasor::g
 https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001  
 
 Parameters
@@ -1072,7 +1881,7 @@ Returns
 ";
 
 %feature("docstring") DecayPhasor::s "
-
+DecayPhasor::s
 https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001  
 
 Parameters
@@ -1116,25 +1925,25 @@ C++ includes: Histogram.h
 ";
 
 %feature("docstring") Histogram::update "
-";
+Histogram::update";
 
 %feature("docstring") Histogram::get_histogram "
-";
+Histogram::get_histogram";
 
 %feature("docstring") Histogram::set_axis "
-";
+Histogram::set_axis";
 
 %feature("docstring") Histogram::set_axis "
-";
+Histogram::set_axis";
 
 %feature("docstring") Histogram::get_axis "
-";
+Histogram::get_axis";
 
 %feature("docstring") Histogram::Histogram "
-";
+Histogram::Histogram";
 
 %feature("docstring") Histogram::~Histogram "
-";
+Histogram::~Histogram";
 
 // File: class_histogram_axis.xml
 
@@ -1145,36 +1954,83 @@ C++ includes: HistogramAxis.h
 ";
 
 %feature("docstring") HistogramAxis::update "
-
+HistogramAxis::update
 Recalculates the bin edges of the axis  
 ";
 
 %feature("docstring") HistogramAxis::setAxisType "
-";
+HistogramAxis::setAxisType";
 
 %feature("docstring") HistogramAxis::getNumberOfBins "
-";
+HistogramAxis::getNumberOfBins";
 
 %feature("docstring") HistogramAxis::getBinIdx "
-";
+HistogramAxis::getBinIdx";
 
 %feature("docstring") HistogramAxis::getBins "
-";
+HistogramAxis::getBins";
 
 %feature("docstring") HistogramAxis::getBins "
-";
+HistogramAxis::getBins";
 
 %feature("docstring") HistogramAxis::getName "
-";
+HistogramAxis::getName";
 
 %feature("docstring") HistogramAxis::setName "
-";
+HistogramAxis::setName";
 
 %feature("docstring") HistogramAxis::HistogramAxis "
-";
+HistogramAxis::HistogramAxis";
 
 %feature("docstring") HistogramAxis::HistogramAxis "
+HistogramAxis::HistogramAxis";
+
+// File: struct_l_v_double_array.xml
+
+
+%feature("docstring") LVDoubleArray "
+
+C++ includes: LvArrays.h
 ";
+
+%feature("docstring") LVDoubleArray::~LVDoubleArray "
+LVDoubleArray::~LVDoubleArray";
+
+%feature("docstring") LVDoubleArray::str "
+LVDoubleArray::str";
+
+// File: struct_l_v_i32_array.xml
+
+
+%feature("docstring") LVI32Array "
+
+Structures and functions used for LabView interface.  
+
+fit2x was originally developed as a C backend for LabView software. Therefore,
+the interface with fit2x uses structures that can be accessed by Labview. In
+order to make an interfacing with Python and other languages possible there is a
+this files defines a set of functions that facilitate the creation of the
+LabView structures.  
+
+C++ includes: LvArrays.h
+";
+
+%feature("docstring") LVI32Array::~LVI32Array "
+LVI32Array::~LVI32Array";
+
+%feature("docstring") LVI32Array::str "
+LVI32Array::str";
+
+// File: struct_m_param.xml
+
+
+%feature("docstring") MParam "
+
+C++ includes: LvArrays.h
+";
+
+%feature("docstring") MParam::~MParam "
+MParam::~MParam";
 
 // File: struct_param_struct__t.xml
 
@@ -1193,12 +2049,12 @@ C++ includes: Pda.h
 ";
 
 %feature("docstring") Pda::evaluate "
-
+Pda::evaluate
 Computes the S1S2 histogram.  
 ";
 
 %feature("docstring") Pda::Pda "
-
+Pda::Pda
 Constructor creating a new Pda object  
 
 A Pda object can be used to compute Photon Distribution Analysis histograms.  
@@ -1212,10 +2068,10 @@ Parameters
 ";
 
 %feature("docstring") Pda::~Pda "
-";
+Pda::~Pda";
 
 %feature("docstring") Pda::append "
-
+Pda::append
 Appends a species.  
 
 A species is defined by the probability of detecting a photon in the first
@@ -1230,12 +2086,12 @@ Parameters
 ";
 
 %feature("docstring") Pda::clear_probability_ch1 "
-
+Pda::clear_probability_ch1
 Clears the model and removes all species.  
 ";
 
 %feature("docstring") Pda::get_amplitudes "
-
+Pda::get_amplitudes
 Returns the amplitudes of the species  
 
 Parameters
@@ -1247,7 +2103,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::set_amplitudes "
-
+Pda::set_amplitudes
 Sets the amplitudes of the species.  
 
 Parameters
@@ -1259,7 +2115,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::set_callback "
-
+Pda::set_callback
 Set the callback (cb) for the computation of a 1D histogram.  
 
 The cb function recudes two dimensional values, i.e., the intensity in channel
@@ -1273,7 +2129,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::get_S1S2_matrix "
-
+Pda::get_S1S2_matrix
 Returns the S1S2 matrix that contains the photon counts in the two channels  
 
 Parameters
@@ -1287,7 +2143,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::set_probability_spectrum_ch1 "
-
+Pda::set_probability_spectrum_ch1
 Set the theoretical probability spectrum of detecting a photon in the first
 channel  
 
@@ -1303,7 +2159,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::get_probabilities_ch1 "
-
+Pda::get_probabilities_ch1
 Returns the amplitudes of the species  
 
 Parameters
@@ -1315,7 +2171,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::set_probabilities_ch1 "
-
+Pda::set_probabilities_ch1
 Sets the theoretical probabilities for detecting a the species in the first
 channel.  
 
@@ -1328,7 +2184,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::get_probability_spectrum_ch1 "
-
+Pda::get_probability_spectrum_ch1
 Get the theoretical probability spectrum of detecting a photon in the first
 channel  
 
@@ -1344,7 +2200,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::setPF "
-
+Pda::setPF
 Set the probability P(F)  
 
 Parameters
@@ -1354,12 +2210,12 @@ Parameters
 ";
 
 %feature("docstring") Pda::getPF "
-
+Pda::getPF
 Set the probability P(F)  
 ";
 
 %feature("docstring") Pda::get_1dhistogram "
-
+Pda::get_1dhistogram
 Returns a one dimensional histogram of the 2D counting array of the two
 channels.  
 
@@ -1403,12 +2259,12 @@ Parameters
 ";
 
 %feature("docstring") Pda::get_max_number_of_photons "
-
+Pda::get_max_number_of_photons
 The maximum number of photons in the SgSr matrix.  
 ";
 
 %feature("docstring") Pda::set_max_number_of_photons "
-
+Pda::set_max_number_of_photons
 Set the maximum number of photons in the S1S2 matrix  
 
 Note: the size of the pF array must agree with the maximum number of photons!  
@@ -1420,48 +2276,48 @@ Parameters
 ";
 
 %feature("docstring") Pda::get_min_number_of_photons "
-
+Pda::get_min_number_of_photons
 The minimum number of photons in the SgSr matrix.  
 ";
 
 %feature("docstring") Pda::set_min_number_of_photons "
-
+Pda::set_min_number_of_photons
 Set the minimum number of photons in the SgSr matrix.  
 ";
 
 %feature("docstring") Pda::get_ch1_background "
-
+Pda::get_ch1_background
 Get the background in the green channel.  
 ";
 
 %feature("docstring") Pda::set_ch1_background "
-
+Pda::set_ch1_background
 Set the background in the green channel.  
 ";
 
 %feature("docstring") Pda::get_ch2_background "
-
+Pda::get_ch2_background
 Get the background in the red channel.  
 ";
 
 %feature("docstring") Pda::set_ch2_background "
-
+Pda::set_ch2_background
 Set the background in the red channel.  
 ";
 
 %feature("docstring") Pda::is_valid_sgsr "
-
+Pda::is_valid_sgsr
 Returns true if the SgSr histogram is valid, i.e., if output is correct for the
 input parameter. This value is set to true by evaluate.  
 ";
 
 %feature("docstring") Pda::set_valid_sgsr "
-
+Pda::set_valid_sgsr
 Set the SgSr histogram to valid (only used for testing)  
 ";
 
 %feature("docstring") Pda::compute_experimental_histograms "
-
+Pda::compute_experimental_histograms
 Parameters
 ----------
 * `tttr_data[in]` :  
@@ -1487,7 +2343,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::S1S2_pF "
-
+Pda::S1S2_pF
 calculating p(G,R), several ratios using the same same P(F)  
 
 Parameters
@@ -1505,7 +2361,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::conv_pF "
-
+Pda::conv_pF
 Convolves the Fluorescence matrix F1F2 with the background to yield the signal
 matrix S1S2  
 
@@ -1519,7 +2375,7 @@ Parameters
 ";
 
 %feature("docstring") Pda::poisson_0toN "
-
+Pda::poisson_0toN
 Writes a Poisson distribution with an average lam, for 0..N into a vector
 starting at a specified index.  
 
@@ -1539,13 +2395,13 @@ C++ includes: PdaCallback.h
 ";
 
 %feature("docstring") PdaCallback::run "
-";
+PdaCallback::run";
 
 %feature("docstring") PdaCallback::PdaCallback "
-";
+PdaCallback::PdaCallback";
 
 %feature("docstring") PdaCallback::~PdaCallback "
-";
+PdaCallback::~PdaCallback";
 
 // File: unionph__ph__t2__record.xml
 
@@ -1589,6 +2445,20 @@ C++ includes: TTTRHeaderTypes.h
 
 // File: unionpq__ph__t3__record.xml
 
+// File: classap_1_1raw__vector.xml
+
+
+%feature("docstring") ap::raw_vector "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::raw_vector::raw_vector "
+ap::raw_vector::raw_vector";
+
+%feature("docstring") ap::raw_vector::GetData "
+ap::raw_vector::GetData";
+
 // File: structtag__head.xml
 
 
@@ -1599,6 +2469,94 @@ A Header Tag entry of a PTU file.
 C++ includes: TTTRHeaderTypes.h
 ";
 
+// File: classap_1_1template__1d__array.xml
+
+
+%feature("docstring") ap::template_1d_array "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::template_1d_array::template_1d_array "
+ap::template_1d_array::template_1d_array";
+
+%feature("docstring") ap::template_1d_array::template_1d_array "
+ap::template_1d_array::template_1d_array";
+
+%feature("docstring") ap::template_1d_array::~template_1d_array "
+ap::template_1d_array::~template_1d_array";
+
+%feature("docstring") ap::template_1d_array::setbounds "
+ap::template_1d_array::setbounds";
+
+%feature("docstring") ap::template_1d_array::setcontent "
+ap::template_1d_array::setcontent";
+
+%feature("docstring") ap::template_1d_array::getcontent "
+ap::template_1d_array::getcontent";
+
+%feature("docstring") ap::template_1d_array::getcontent "
+ap::template_1d_array::getcontent";
+
+%feature("docstring") ap::template_1d_array::getlowbound "
+ap::template_1d_array::getlowbound";
+
+%feature("docstring") ap::template_1d_array::gethighbound "
+ap::template_1d_array::gethighbound";
+
+%feature("docstring") ap::template_1d_array::getvector "
+ap::template_1d_array::getvector";
+
+%feature("docstring") ap::template_1d_array::getvector "
+ap::template_1d_array::getvector";
+
+// File: classap_1_1template__2d__array.xml
+
+
+%feature("docstring") ap::template_2d_array "
+
+C++ includes: ap.h
+";
+
+%feature("docstring") ap::template_2d_array::template_2d_array "
+ap::template_2d_array::template_2d_array";
+
+%feature("docstring") ap::template_2d_array::template_2d_array "
+ap::template_2d_array::template_2d_array";
+
+%feature("docstring") ap::template_2d_array::~template_2d_array "
+ap::template_2d_array::~template_2d_array";
+
+%feature("docstring") ap::template_2d_array::setbounds "
+ap::template_2d_array::setbounds";
+
+%feature("docstring") ap::template_2d_array::setcontent "
+ap::template_2d_array::setcontent";
+
+%feature("docstring") ap::template_2d_array::getcontent "
+ap::template_2d_array::getcontent";
+
+%feature("docstring") ap::template_2d_array::getcontent "
+ap::template_2d_array::getcontent";
+
+%feature("docstring") ap::template_2d_array::getlowbound "
+ap::template_2d_array::getlowbound";
+
+%feature("docstring") ap::template_2d_array::gethighbound "
+ap::template_2d_array::gethighbound";
+
+%feature("docstring") ap::template_2d_array::getcolumn "
+ap::template_2d_array::getcolumn";
+
+%feature("docstring") ap::template_2d_array::getcolumn "
+ap::template_2d_array::getcolumn";
+
+%feature("docstring") ap::template_2d_array::getrow "
+ap::template_2d_array::getrow";
+
+%feature("docstring") ap::template_2d_array::getrow "
+ap::template_2d_array::getrow";
+
 // File: class_t_t_t_r.xml
 
 
@@ -1607,8 +2565,13 @@ C++ includes: TTTRHeaderTypes.h
 C++ includes: TTTR.h
 ";
 
-%feature("docstring") TTTR::copy_from "
+%feature("docstring") TTTR::Get "
+TTTR::Get
+Make shared pointer.  
+";
 
+%feature("docstring") TTTR::copy_from "
+TTTR::copy_from
 Copy the information from another TTTR object  
 
 Parameters
@@ -1621,7 +2584,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::read_file "
-
+TTTR::read_file
 Reads the TTTR data contained in a file into the TTTR object  
 
 Parameters
@@ -1638,19 +2601,19 @@ Returns 1 in case the file was read without errors. Otherwise 0 is returned.
 ";
 
 %feature("docstring") TTTR::append_events "
-";
+TTTR::append_events";
 
 %feature("docstring") TTTR::append_event "
-";
+TTTR::append_event";
 
 %feature("docstring") TTTR::append "
-";
+TTTR::append";
 
 %feature("docstring") TTTR::size "
-";
+TTTR::size";
 
 %feature("docstring") TTTR::get_used_routing_channels "
-
+TTTR::get_used_routing_channels
 Returns an array containing the routing channel numbers that are contained
 (used) in the TTTR file.  
 
@@ -1662,8 +2625,8 @@ Parameters
     Pointer to the number of elements in the output array  
 ";
 
-%feature("docstring") TTTR::get_macro_time "
-
+%feature("docstring") TTTR::get_macro_times "
+TTTR::get_macro_times
 Returns an array containing the macro times of the valid TTTR events.  
 
 Parameters
@@ -1674,8 +2637,8 @@ Parameters
     Pointer to the number of elements in the output array  
 ";
 
-%feature("docstring") TTTR::get_micro_time "
-
+%feature("docstring") TTTR::get_micro_times "
+TTTR::get_micro_times
 Returns an array containing the micro times of the valid TTTR events.  
 
 Parameters
@@ -1687,7 +2650,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_intensity_trace "
-
+TTTR::get_intensity_trace
 Returns a intensity trace that is computed for a specified integration window  
 
 Parameters
@@ -1701,7 +2664,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_routing_channel "
-
+TTTR::get_routing_channel
 Returns an array containing the routing channel numbers of the valid TTTR
 events.  
 
@@ -1714,7 +2677,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_event_type "
-
+TTTR::get_event_type
 Parameters
 ----------
 * `output` :  
@@ -1724,7 +2687,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_number_of_micro_time_channels "
-
+TTTR::get_number_of_micro_time_channels
 Returns the number of micro time channels that fit between two macro time
 clocks.  
 
@@ -1734,34 +2697,34 @@ maximum valid number of micro time channels
 ";
 
 %feature("docstring") TTTR::get_n_valid_events "
-
+TTTR::get_n_valid_events
 Returns
 -------
 number of valid events in the TTTR file  
 ";
 
 %feature("docstring") TTTR::get_tttr_container_type "
-
+TTTR::get_tttr_container_type
 Returns
 -------
 the container type that was used to open the file  
 ";
 
 %feature("docstring") TTTR::select "
-";
+TTTR::select";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Constructor  
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Copy constructor.  
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Constructor that can read a file  
 
 Parameters
@@ -1779,7 +2742,7 @@ BH_SPC600_256_CONTAINER 3 BH_SPC600_4096_CONTAINER 4
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Parameters
 ----------
 * `filename` :  
@@ -1790,7 +2753,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Parameters
 ----------
 * `filename` :  
@@ -1801,7 +2764,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 Constructor of TTTR object using arrays of the TTTR events  
 
 If arrays of different size are used to initialize a TTTR object the shortest
@@ -1831,7 +2794,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::TTTR "
-
+TTTR::TTTR
 This constructor can be used to create a new TTTR object that only contains
 records that are specified in the selection array.  
 
@@ -1850,12 +2813,12 @@ Parameters
 ";
 
 %feature("docstring") TTTR::~TTTR "
-
+TTTR::~TTTR
 Destructor.  
 ";
 
 %feature("docstring") TTTR::get_filename "
-
+TTTR::get_filename
 getFilename Getter for the filename of the TTTR file  
 
 Returns
@@ -1864,7 +2827,7 @@ The filename of the TTTR file
 ";
 
 %feature("docstring") TTTR::get_tttr_by_selection "
-
+TTTR::get_tttr_by_selection
 Get a ptr to a TTTR object that is based on a selection on the current TTTR
 object. A selection is an array of indices of the TTTR events.  
 
@@ -1877,8 +2840,32 @@ Returns
 -------  
 ";
 
-%feature("docstring") TTTR::get_selection_by_channel "
+%feature("docstring") TTTR::get_ranges_by_time_window "
+TTTR::get_ranges_by_time_window
+Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
+size, a minimum number of photons in a tw.  
 
+Parameters
+----------
+* `output` :  
+    [out] Array containing the interleaved start and stop indices of the tws in
+    the TTTR object.  
+* `n_output` :  
+    [out] Length of the output array  
+* `minimum_window_length` :  
+    [in] Minimum length of a tw (mandatory).  
+* `maximum_window_length` :  
+    [in] Maximum length of a tw (optional).  
+* `minimum_number_of_photons_in_time_window` :  
+    [in] Minimum number of photons a selected tw contains (optional)  
+* `maximum_number_of_photons_in_time_window` :  
+    [in] Maximum number of photons a selected tw contains (optional)  
+* `invert` :  
+    [in] If set to true, the selection criteria are inverted.  
+";
+
+%feature("docstring") TTTR::get_selection_by_channel "
+TTTR::get_selection_by_channel
 Get events indices by the routing channel number  
 
 This method returns an array that contains the event / photon indices of events
@@ -1897,10 +2884,10 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_tttr_by_channel "
-";
+TTTR::get_tttr_by_channel";
 
 %feature("docstring") TTTR::get_selection_by_count_rate "
-
+TTTR::get_selection_by_count_rate
 List of indices where the count rate is smaller than a maximum count rate  
 
 The count rate is specified by providing a time window that slides over the time
@@ -1919,10 +2906,10 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_tttr_by_count_rate "
-";
+TTTR::get_tttr_by_count_rate";
 
 %feature("docstring") TTTR::get_time_window_ranges "
-
+TTTR::get_time_window_ranges
 Returns time windows (tw), i.e., the start and the stop indices for a minimum tw
 size, a minimum number of photons in a tw.  
 
@@ -1947,12 +2934,12 @@ Parameters
 ";
 
 %feature("docstring") TTTR::get_header "
-
+TTTR::get_header
 Get header returns the header (if present) as a map of strings.  
 ";
 
 %feature("docstring") TTTR::get_n_events "
-
+TTTR::get_n_events
 Returns the number of events in the TTTR file for cases no selection is
 specified otherwise the number of selected events is returned.  
 
@@ -1961,7 +2948,7 @@ Returns
 ";
 
 %feature("docstring") TTTR::write "
-
+TTTR::write
 Write the contents of a opened TTTR file to a new TTTR file.  
 
 Parameters
@@ -1970,7 +2957,7 @@ Parameters
     filename  
 * `container_type` :  
     container type (PTU; HT3; SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
-    write_a_header if set to false no header is written - Writing correct
+    @oaram write_a_header if set to false no header is written - Writing correct
     headers is not implemented. Therefore, the default value is false.  
 
 Returns
@@ -1978,16 +2965,16 @@ Returns
 ";
 
 %feature("docstring") TTTR::write_spc132_events "
-";
+TTTR::write_spc132_events";
 
 %feature("docstring") TTTR::write_hht3v2_events "
-";
+TTTR::write_hht3v2_events";
 
 %feature("docstring") TTTR::write_header "
-";
+TTTR::write_header";
 
 %feature("docstring") TTTR::shift_macro_time "
-
+TTTR::shift_macro_time
 Shift the macro time by a constant  
 
 Parameters
@@ -1995,23 +2982,23 @@ Parameters
 * `shift` :  
 ";
 
-%feature("docstring") TTTR::microtime_histogram "
-";
+%feature("docstring") TTTR::get_microtime_histogram "
+TTTR::get_microtime_histogram";
 
 %feature("docstring") TTTR::mean_lifetime "
-
+TTTR::mean_lifetime
 Compute the mean lifetime by the moments of the decay and the instrument
 response function.  
 ";
 
 %feature("docstring") TTTR::get_count_rate "
-";
+TTTR::get_count_rate";
 
 %feature("docstring") TTTR::get_mean_microtime "
-";
+TTTR::get_mean_microtime";
 
-%feature("docstring") TTTR::determine_number_of_records_by_file_size "
-
+%feature("docstring") TTTR::get_number_of_records_by_file_size "
+TTTR::get_number_of_records_by_file_size
 Determines the number of records in a TTTR files (not for use with HDF5)  
 
 Calculates the number of records in the file based on the file size. if  
@@ -2034,7 +3021,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::compute_microtime_histogram "
-
+TTTR::compute_microtime_histogram
 Computes a histogram of the TTTR data's micro times  
 
 Parameters
@@ -2057,7 +3044,7 @@ Parameters
 ";
 
 %feature("docstring") TTTR::compute_mean_lifetime "
-
+TTTR::compute_mean_lifetime
 Compute a mean lifetime by the moments of the decay and the instrument response
 function.  
 
@@ -2082,6 +3069,13 @@ Parameters
 * `minimum_number_of_photons[in]` :  
     Minimum number of photons. If less photons are in the dataset returns -1 as
     computed lifetime  
+* `background` :  
+    background pattern  
+* `m0_bg` :  
+    sum of background photons (overwritten if background pattern not empty)  
+* `m1_bg` :  
+    first moment of background pattern (overwritten if background pattern not
+    empty)  
 
 Returns
 -------
@@ -2089,7 +3083,7 @@ The computed lifetime
 ";
 
 %feature("docstring") TTTR::compute_count_rate "
-
+TTTR::compute_count_rate
 Compute the count rate  
 
 Parameters
@@ -2105,7 +3099,7 @@ Count rate
 ";
 
 %feature("docstring") TTTR::compute_mean_microtime "
-";
+TTTR::compute_mean_microtime";
 
 // File: class_t_t_t_r_header.xml
 
@@ -2116,15 +3110,14 @@ C++ includes: TTTRHeader.h
 ";
 
 %feature("docstring") TTTRHeader::get_tttr_record_type "
-
-TTTR record type  
-
+TTTRHeader::get_tttr_record_type
 Returns
--------  
+-------
+The TTTR container type of the associated TTTR file as a char  
 ";
 
 %feature("docstring") TTTRHeader::set_tttr_record_type "
-
+TTTRHeader::set_tttr_record_type
 Parameters
 ----------
 * `v` :  
@@ -2132,7 +3125,7 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::get_tttr_container_type "
-
+TTTRHeader::get_tttr_container_type
 The container type  
 
 Returns
@@ -2140,7 +3133,7 @@ Returns
 ";
 
 %feature("docstring") TTTRHeader::set_tttr_container_type "
-
+TTTRHeader::set_tttr_container_type
 Parameters
 ----------
 * `v` :  
@@ -2148,21 +3141,21 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::get_bytes_per_record "
-
+TTTRHeader::get_bytes_per_record
 Stores the bytes per TTTR record of the associated TTTR file This attribute is
 changed when a header is read  
 ";
 
 %feature("docstring") TTTRHeader::end "
-";
+TTTRHeader::end";
 
 %feature("docstring") TTTRHeader::size "
-
+TTTRHeader::size
 Number of meta data entries  
 ";
 
 %feature("docstring") TTTRHeader::get_number_of_micro_time_channels "
-
+TTTRHeader::get_number_of_micro_time_channels
 The total (possible) number of micro time channels.  
 
 The number of TAC channels (TAC - Time to analog converter) refers to the number
@@ -2170,17 +3163,27 @@ of micro time channels.
 ";
 
 %feature("docstring") TTTRHeader::get_macro_time_resolution "
-
+TTTRHeader::get_macro_time_resolution
 Resolution for the macro time in nanoseconds.  
 ";
 
 %feature("docstring") TTTRHeader::get_micro_time_resolution "
-
+TTTRHeader::get_micro_time_resolution
 Resolution for the micro time in nanoseconds.  
 ";
 
-%feature("docstring") TTTRHeader::get_effective_number_of_micro_time_channels "
+%feature("docstring") TTTRHeader::get_pixel_duration "
+TTTRHeader::get_pixel_duration
+Duration of a pixel in LSM in units of macro time clock.  
+";
 
+%feature("docstring") TTTRHeader::get_line_duration "
+TTTRHeader::get_line_duration
+Duration of a line in LSM in units of macro time clock.  
+";
+
+%feature("docstring") TTTRHeader::get_effective_number_of_micro_time_channels "
+TTTRHeader::get_effective_number_of_micro_time_channels
 The number of micro time channels that fit between two macro times.  
 
 The total (possible) number of TAC channels can exceed the number that fit
@@ -2193,37 +3196,30 @@ Returns
 effective_tac_channels (that fit between to macro times)  
 ";
 
-%feature("docstring") TTTRHeader::getTTTRRecordType "
-
-Returns
--------
-The TTTR container type of the associated TTTR file as a char  
-";
-
 %feature("docstring") TTTRHeader::TTTRHeader "
-
+TTTRHeader::TTTRHeader
 Default constructor  
 ";
 
 %feature("docstring") TTTRHeader::TTTRHeader "
-";
+TTTRHeader::TTTRHeader";
 
 %feature("docstring") TTTRHeader::TTTRHeader "
-
+TTTRHeader::TTTRHeader
 Copy constructor.  
 ";
 
 %feature("docstring") TTTRHeader::TTTRHeader "
-";
+TTTRHeader::TTTRHeader";
 
 %feature("docstring") TTTRHeader::TTTRHeader "
-";
+TTTRHeader::TTTRHeader";
 
 %feature("docstring") TTTRHeader::~TTTRHeader "
-";
+TTTRHeader::~TTTRHeader";
 
 %feature("docstring") TTTRHeader::get_json "
-
+TTTRHeader::get_json
 Get a representation of the TTTRHeader meta data as a JSON string  
 
 Parameters
@@ -2241,7 +3237,7 @@ Returns
 ";
 
 %feature("docstring") TTTRHeader::set_json "
-
+TTTRHeader::set_json
 Set / update the TTTRHeader meta data using a JSON string  
 
 Parameters
@@ -2250,7 +3246,7 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::get_tag "
-
+TTTRHeader::get_tag
 Get a tag / entry from the meta data list in a JSON dict  
 
 Parameters
@@ -2264,7 +3260,7 @@ Returns
 ";
 
 %feature("docstring") TTTRHeader::find_tag "
-
+TTTRHeader::find_tag
 Find the index of a tag in the JSON data by name type and index  
 
 Parameters
@@ -2279,7 +3275,7 @@ Returns
 ";
 
 %feature("docstring") TTTRHeader::add_tag "
-
+TTTRHeader::add_tag
 Add a meta data tag. If the tag already exists the value of the meta data tag is
 replaced.  
 
@@ -2293,7 +3289,7 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::read_ptu_header "
-
+TTTRHeader::read_ptu_header
 Reads the header of a ptu file and sets the reading routing for  
 
 Parameters
@@ -2311,7 +3307,7 @@ The position of the file pointer at the end of the header
 ";
 
 %feature("docstring") TTTRHeader::read_ht3_header "
-
+TTTRHeader::read_ht3_header
 Reads the header of a ht3 file and sets the reading routing for  
 
 Parameters
@@ -2327,7 +3323,7 @@ The position of the file pointer at the end of the header
 ";
 
 %feature("docstring") TTTRHeader::read_bh132_header "
-
+TTTRHeader::read_bh132_header
 Reads the header of a Becker&Hickel SPC132 file and sets the reading routing  
 
 Parameters
@@ -2340,7 +3336,7 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::write_spc132_header "
-
+TTTRHeader::write_spc132_header
 Write a spc132 header to a file  
 
 WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
@@ -2352,11 +3348,11 @@ Parameters
 * `header` :  
     pointer to the TTTRHeader object that is written to the file  
 * `modes` :  
-    the writing modes (default 'wb')  
+    the writing modes (default 'w+b')  
 ";
 
 %feature("docstring") TTTRHeader::write_ptu_header "
-
+TTTRHeader::write_ptu_header
 Write a PTU header to a file  
 
 WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
@@ -2372,7 +3368,7 @@ Parameters
 ";
 
 %feature("docstring") TTTRHeader::write_ht3_header "
-
+TTTRHeader::write_ht3_header
 Write a HT3 header to a file  
 
 WARNING: If the default write mode is \"wb\". Existing files are overwritten.  
@@ -2387,6 +3383,95 @@ Parameters
     the writing modes (default 'wb')  
 ";
 
+// File: class_t_t_t_r_mask.xml
+
+
+%feature("docstring") TTTRMask "
+
+C++ includes: TTTRMask.h
+";
+
+%feature("docstring") TTTRMask::~TTTRMask "
+TTTRMask::~TTTRMask";
+
+%feature("docstring") TTTRMask::TTTRMask "
+TTTRMask::TTTRMask";
+
+%feature("docstring") TTTRMask::TTTRMask "
+TTTRMask::TTTRMask";
+
+%feature("docstring") TTTRMask::size "
+TTTRMask::size";
+
+%feature("docstring") TTTRMask::set_mask "
+TTTRMask::set_mask";
+
+%feature("docstring") TTTRMask::get_mask "
+TTTRMask::get_mask";
+
+%feature("docstring") TTTRMask::set_tttr "
+TTTRMask::set_tttr";
+
+%feature("docstring") TTTRMask::select_channels "
+TTTRMask::select_channels
+Selects a subset of indices by a list of routing channel numbers.  
+
+The returned set of indices will have routing channel numbers that are in the
+list of the provided routing channel numbers.  
+
+Parameters
+----------
+* `tttr` :  
+    pointer to TTTR object  
+* `routing_channels[int]` :  
+    routing channel numbers. A subset of this array will be selected by the
+    input.  
+* `n_routing_channels[int]` :  
+    length of the routing channel number array.  
+";
+
+%feature("docstring") TTTRMask::select_count_rate "
+TTTRMask::select_count_rate
+Selects a subset of indices a count rate of a sliding time-window  
+
+Parameters
+----------
+* `tttr` :  
+    pointer to TTTR object  
+* `time_window` :  
+    time window size in units of seconds  
+* `n_ph_max` :  
+    maximum number of photons in time window  
+* `invert` :  
+    boolean used to invert selection  
+";
+
+%feature("docstring") TTTRMask::select_microtime_ranges "
+TTTRMask::select_microtime_ranges
+Masks outside the provides micro time ranges  
+
+Parameters
+----------
+* `tttr` :  
+* `micro_time_ranges` :  
+* `mask` :  
+";
+
+%feature("docstring") TTTRMask::get_indices "
+TTTRMask::get_indices
+Parameters
+----------
+* `selected` :  
+    if selected is true returns selected (unmasked) indices otherwise masked
+    indices are returned  
+
+Returns
+-------  
+";
+
+%feature("docstring") TTTRMask::get_selected_ranges "
+TTTRMask::get_selected_ranges";
+
 // File: class_t_t_t_r_range.xml
 
 
@@ -2396,102 +3481,77 @@ C++ includes: TTTRRange.h
 ";
 
 %feature("docstring") TTTRRange::TTTRRange "
-
-Parameters
-----------
-* `start` :  
-    start index of the TTTRRange  
-* `stop` :  
-    stop index of the TTTRRange  
-* `start_time` :  
-    start time of the TTTRRange  
-* `stop_time` :  
-    stop time of the TTTRRange  
-* `pre_reserve` :  
-    is the number of tttr indices that is pre-allocated in in memory upon
-    creation of a TTTRRange object.  
-";
+TTTRRange::TTTRRange";
 
 %feature("docstring") TTTRRange::TTTRRange "
+TTTRRange::TTTRRange";
 
+%feature("docstring") TTTRRange::TTTRRange "
+TTTRRange::TTTRRange
 Copy constructor.  
 ";
 
 %feature("docstring") TTTRRange::size "
-";
+TTTRRange::size";
 
 %feature("docstring") TTTRRange::get_tttr_indices "
-
+TTTRRange::get_tttr_indices
 A vector containing a set of TTTR indices that was assigned to the range.  
 ";
 
-%feature("docstring") TTTRRange::get_start_stop "
+%feature("docstring") TTTRRange::get_start "
+TTTRRange::get_start
+The start index of the TTTR range object.  
+";
 
+%feature("docstring") TTTRRange::get_stop "
+TTTRRange::get_stop
+The stop index of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::get_start_stop "
+TTTRRange::get_start_stop
 A vector of the start and the stop TTTR index of the range.  
 ";
 
-%feature("docstring") TTTRRange::get_start_stop_time "
+%feature("docstring") TTTRRange::get_stop_time "
+TTTRRange::get_stop_time
+The stop time of the TTTR range object.  
+";
 
+%feature("docstring") TTTRRange::get_start_time "
+TTTRRange::get_start_time
+The start time of the TTTR range object.  
+";
+
+%feature("docstring") TTTRRange::get_start_stop_time "
+TTTRRange::get_start_stop_time
 A vector of the start and stop time.  
 ";
 
 %feature("docstring") TTTRRange::get_duration "
-
+TTTRRange::get_duration
 The difference between the start and the stop time of a range.  
 ";
 
-%feature("docstring") TTTRRange::set_start "
-
-The start index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_start "
-
-The start index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::set_stop "
-
-The stop index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_stop "
-
-The stop index of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::set_stop_time "
-
-The stop time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_stop_time "
-
-The stop time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::set_start_time "
-
-The start time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::get_start_time "
-
-The start time of the TTTR range object.  
-";
-
-%feature("docstring") TTTRRange::append "
-
+%feature("docstring") TTTRRange::insert "
+TTTRRange::insert
 Append a index to the TTTR index vector.  
 ";
 
 %feature("docstring") TTTRRange::clear "
-
+TTTRRange::clear
 Clears the TTTR index vector.  
 ";
 
-%feature("docstring") TTTRRange::get_mean_microtime "
+%feature("docstring") TTTRRange::strip "
+TTTRRange::strip
+Strip tttr_indices from a range starting at tttr_indices[offset] the
+tttr_indices need to be sorted in ascending size  
+";
 
+%feature("docstring") TTTRRange::get_mean_microtime "
+TTTRRange::get_mean_microtime
 Computes to the mean micro time (in units of the micro channel resolution).  
 
 If there are less then the minimum number of photons in a TTTRRange the function
@@ -2505,8 +3565,11 @@ Parameters
     the minimum number of photons in a micro time  
 ";
 
-%feature("docstring") TTTRRange::get_mean_lifetime "
+%feature("docstring") TTTRRange::get_microtime_histogram "
+TTTRRange::get_microtime_histogram";
 
+%feature("docstring") TTTRRange::get_mean_lifetime "
+TTTRRange::get_mean_lifetime
 Return the average lifetime  
 
 If a TTTRRange has not enough photons return -1  
@@ -2530,26 +3593,8 @@ Parameters
     time resolution of the micro time  
 ";
 
-%feature("docstring") TTTRRange::shift_start_time "
-";
-
-%feature("docstring") TTTRRange::update "
-
-Update start, stop and the start and stop using the tttr_indices attribute  
-
-Parameters
-----------
-* `tttr_data` :  
-    [in] the TTTR dataset that is used to determine the start and stop time by
-    the TTTR macro time.  
-* `from_tttr_indices` :  
-    [in] if set to true (default is true) the start stop indices and the start
-    stop time are updated from the tttr_indices attribute. Otherwise, the start
-    stop times are updated from the tttr object using the current start stop  
-";
-
 %feature("docstring") TTTRRange::compute_mean_lifetime "
-
+TTTRRange::compute_mean_lifetime
 Compute the average lifetime for a set of TTTR indices  
 
 The average lifetimes are computed (not fitted) by the methods of moments (Irvin
@@ -2577,9 +3622,158 @@ Parameters
     time resolution of the micro time  
 ";
 
+// File: class_t_t_t_r_selection.xml
+
+
+%feature("docstring") TTTRSelection "
+
+C++ includes: TTTRSelection.h
+";
+
+%feature("docstring") TTTRSelection::get_tttr "
+TTTRSelection::get_tttr";
+
+%feature("docstring") TTTRSelection::set_tttr "
+TTTRSelection::set_tttr";
+
+%feature("docstring") TTTRSelection::TTTRSelection "
+TTTRSelection::TTTRSelection";
+
+%feature("docstring") TTTRSelection::TTTRSelection "
+TTTRSelection::TTTRSelection
+Copy constructor.  
+";
+
+%feature("docstring") TTTRSelection::TTTRSelection "
+TTTRSelection::TTTRSelection";
+
+// File: namespaceap.xml
+
+%feature("docstring") ap::abscomplex "
+ap::abscomplex";
+
+%feature("docstring") ap::conj "
+ap::conj";
+
+%feature("docstring") ap::csqr "
+ap::csqr";
+
+%feature("docstring") ap::vdotproduct "
+ap::vdotproduct";
+
+%feature("docstring") ap::vmove "
+ap::vmove";
+
+%feature("docstring") ap::vmove "
+ap::vmove";
+
+%feature("docstring") ap::vmoveneg "
+ap::vmoveneg";
+
+%feature("docstring") ap::vadd "
+ap::vadd";
+
+%feature("docstring") ap::vadd "
+ap::vadd";
+
+%feature("docstring") ap::vsub "
+ap::vsub";
+
+%feature("docstring") ap::vsub "
+ap::vsub";
+
+%feature("docstring") ap::vmul "
+ap::vmul";
+
+%feature("docstring") ap::sign "
+ap::sign";
+
+%feature("docstring") ap::randomreal "
+ap::randomreal";
+
+%feature("docstring") ap::randominteger "
+ap::randominteger";
+
+%feature("docstring") ap::round "
+ap::round";
+
+%feature("docstring") ap::trunc "
+ap::trunc";
+
+%feature("docstring") ap::ifloor "
+ap::ifloor";
+
+%feature("docstring") ap::iceil "
+ap::iceil";
+
+%feature("docstring") ap::pi "
+ap::pi";
+
+%feature("docstring") ap::sqr "
+ap::sqr";
+
+%feature("docstring") ap::maxint "
+ap::maxint";
+
+%feature("docstring") ap::minint "
+ap::minint";
+
+%feature("docstring") ap::maxreal "
+ap::maxreal";
+
+%feature("docstring") ap::minreal "
+ap::minreal";
+
+// File: namespacestatistics.xml
+
+%feature("docstring") statistics::neyman "
+statistics::neyman";
+
+%feature("docstring") statistics::poisson "
+statistics::poisson";
+
+%feature("docstring") statistics::pearson "
+statistics::pearson";
+
+%feature("docstring") statistics::gauss "
+statistics::gauss";
+
+%feature("docstring") statistics::cnp "
+statistics::cnp";
+
+%feature("docstring") statistics::sswr "
+statistics::sswr
+Sum of squared weighted residuals.  
+";
+
+%feature("docstring") statistics::chi2_counting "
+statistics::chi2_counting
+Different chi2 measures for counting data:  
+
+https://arxiv.org/pdf/1903.07185.pdf  
+
+Parameters
+----------
+* `data` :  
+* `model` :  
+* `x_min` :  
+* `x_max` :  
+* `type` :  
+
+Returns
+-------  
+";
+
+// File: namespacestd.xml
+
+// File: ap_8h.xml
+
 // File: _c_l_s_m_frame_8h.xml
 
 // File: _c_l_s_m_image_8h.xml
+
+%feature("docstring") find_clsm_start_stop "
+";
 
 // File: _c_l_s_m_line_8h.xml
 
@@ -2591,7 +3785,624 @@ Parameters
 
 // File: _correlator_photon_stream_8h.xml
 
+// File: _decay_fit_8h.xml
+
+// File: _decay_fit23_8h.xml
+
+// File: _decay_fit24_8h.xml
+
+// File: _decay_fit25_8h.xml
+
+// File: _decay_fit26_8h.xml
+
 // File: _decay_phasor_8h.xml
+
+// File: _decay_statistics_8h.xml
+
+%feature("docstring") statistics::init_fact "
+
+Initialize an array containing pre-computed logratithms  
+";
+
+%feature("docstring") statistics::loggammaf "
+
+Approximation of log(gamma function). See wikipedia  
+
+https://en.wikipedia.org/wiki/Gamma_function#The_log-gamma_function  
+
+Parameters
+----------
+* `t` :  
+    input of the gamma function  
+
+Returns
+-------
+approximation of the logarithm of the gamma function  
+";
+
+%feature("docstring") statistics::wcm "
+
+log-likelihood w(C|m) for Cp + 2Cs  
+
+Parameters
+----------
+* `C` :  
+    number of counts in channel  
+* `m` :  
+    model function  
+
+Returns
+-------
+log-likelihood w(C|m) for Cp + 2Cs  
+";
+
+%feature("docstring") statistics::wcm_p2s "
+
+Compute the -log-likelihood for Cp + 2Cs of a single micro time channel.  
+
+Compute score of model counts in a parallel and perpendicular detection channel
+and the experimental counts for a micro time channel.  
+
+This function computes a score for the experimental counts (C) in a channel
+where the experimental counts were computed by the sum of the counts in the
+parallel (P) and the perpendicular (S) channel by the equation C = P + 2 S.  
+
+This function considers that the number of counts C = P + 2S is not Poissonian.
+The score relates to a maximum likelihood function.  
+
+Parameters
+----------
+* `C` :  
+    number of experimental counts (P + 2 S) in a micro time channel  
+* `mp` :  
+    number of counts of the model in parallel detection channel  
+* `ms` :  
+    number of counts of the model in the perpendicular detection channel  
+
+Returns
+-------  
+";
+
+%feature("docstring") statistics::Wcm_p2s "
+
+Compute the overall -log-likelihood for Cp + 2Cs for all micro time channels  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+-log-likelihood for Cp + 2Cs for all micro time channels  
+";
+
+%feature("docstring") statistics::twoIstar_p2s "
+
+Compute overall 2I* for Cp + 2Cs  
+
+This function computes the overall 2I* for the model function Cp + 2Cs that is
+computed by parallel signal (Cp) and the perpendicular signal (Cs). For the
+definition of function 2I* see \"An Experimental Comparison of the
+Maximum Likelihood Estimation and Nonlinear Least-Squares Fluorescence Lifetime
+Analysis of Single Molecules, Michael Maus, Mircea Cotlet, Johan Hofkens,
+Thomas Gensch, Frans C. De Schryver, J. Schaffer, and C. A. M. Seidel, Anal.
+Chem. 2001, 73, 9, 2078–2086\".  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+2I* for Cp + 2Cs  
+";
+
+%feature("docstring") statistics::twoIstar "
+
+Compute overall 2I* for Cp & Cs  
+
+This function computes 2I* for Cp and Cs. Cp and Cs are the model signals in the
+parallel and perpendicular channel. Contrary to twoIstar_p2s the overall 2I* is
+the sum of 2I* for Cp and Cs.  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+2I* for Cp & Cs  
+";
+
+%feature("docstring") statistics::Wcm "
+
+Compute overall -log-likelihood for Cp & Cs  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+-log-likelihood for Cp & Cs  
+";
+
+// File: fsconv_8h.xml
+
+%feature("docstring") rescale "
+
+Scale model function to the data (old version)  
+
+This function rescales the model function (fit) to the data by the number of
+photons between a start and a stop micro time counting channel. The number of
+photons between start and stop are counted and the model function is scaled to
+match the data by area.  
+
+This rescaling function does not consider the noise in the data when rescaling
+the model.  
+
+Parameters
+----------
+* `fit[in`, `out]` :  
+    model function that is scaled (modified in-place)  
+* `decay[in]` :  
+    the experimental data to which the model function is scaled  
+* `scale[out]` :  
+    the scaling parameter (the factor) by which the model function is
+    multiplied.  
+* `start[in]` :  
+    The start micro time channel  
+* `stop[in]` :  
+    The stop micro time channel  
+";
+
+%feature("docstring") rescale_w "
+
+Scale model function to the data (with weights)  
+
+This function rescales the model function (fit) to the data by the number of
+photons between a start and a stop micro time counting channel. The number of
+photons between start and stop are counted and the model function is scaled to
+match the data by area considering the noise of the data.  
+
+The scaling factor is computed by:  
+
+scale = sum(fit*decay/w^2)/sum(fit^2/w^2)  
+
+Parameters
+----------
+* `fit[in`, `out]` :  
+    model function that is scaled (modified in-place)  
+* `decay[in]` :  
+    the experimental data to which the model function is scaled  
+* `w_sq[in]` :  
+    squared weights of the data.  
+* `scale[out]` :  
+    the scaling parameter (the factor) by which the model function is
+    multiplied.  
+* `start[in]` :  
+    The start micro time channel  
+* `stop[in]` :  
+    The stop micro time channel  
+";
+
+%feature("docstring") rescale_w_bg "
+
+Scale model function to the data (with weights and background)  
+
+This function scales the model function (fit) to the data by the number of
+photons between a start and a stop micro time counting channel. The number of
+photons between start and stop are counted and the model function is scaled to
+match the data by area considering the noise of the data and a constant offset
+of the data.  
+
+scale = sum(fit*(decay-bg)/w^2)/sum(fit^2/w^2)  
+
+Parameters
+----------
+* `fit[in`, `out]` :  
+    model function that is scaled (modified in-place)  
+* `decay[in]` :  
+    the experimental data to which the model function is scaled  
+* `w_sq[in]` :  
+    squared weights of the data.  
+* `bg[in]` :  
+    constant background of the data  
+* `scale[out]` :  
+    the scaling parameter (the factor) by which the model function is
+    multiplied.  
+* `start[in]` :  
+    The start micro time channel  
+* `stop[in]` :  
+    The stop micro time channel  
+";
+
+%feature("docstring") fconv "
+
+Convolve lifetime spectrum with instrument response (fast convolution, low
+repetition rate)  
+
+This function computes the convolution of a lifetime spectrum (a set of
+lifetimes with corresponding amplitudes) with a instrument response function
+(irf). This function does not consider periodic excitation and is suited for
+experiments at low repetition rate.  
+
+Parameters
+----------
+* `fit[out]` :  
+    model function. The convoluted decay is written to this array  
+* `x[in]` :  
+    lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)  
+* `lamp[in]` :  
+    instrument response function  
+* `numexp[in]` :  
+    number of fluorescence lifetimes  
+* `start[in]` :  
+    start micro time index for convolution (not used)  
+* `stop[in]` :  
+    stop micro time index for convolution.  
+* `dt[in]` :  
+    time difference between two micro time channels  
+";
+
+%feature("docstring") fconv_avx "
+
+Convolve lifetime spectrum with instrument response (fast convolution, AVX
+optimized for large lifetime spectra)  
+
+This function is a modification of fconv for large lifetime spectra. The
+lifetime spectrum is processed by AVX intrinsics. Four lifetimes are convolved
+at once. Spectra with lifetimes that are not multiple of four are zero padded.  
+
+Parameters
+----------
+* `fit` :  
+* `x` :  
+* `lamp` :  
+* `numexp` :  
+* `start` :  
+* `stop` :  
+* `n_points` :  
+* `dt` :  
+";
+
+%feature("docstring") fconv_per "
+
+Convolve lifetime spectrum with instrument response (fast convolution, high
+repetition rate)  
+
+This function computes the convolution of a lifetime spectrum (a set of
+lifetimes with corresponding amplitudes) with a instrument response function
+(irf). This function does consider periodic excitation and is suited for
+experiments at high repetition rate.  
+
+Parameters
+----------
+* `fit[out]` :  
+    model function. The convoluted decay is written to this array  
+* `x[in]` :  
+    lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)  
+* `lamp[in]` :  
+    instrument response function  
+* `numexp[in]` :  
+    number of fluorescence lifetimes  
+* `start[in]` :  
+    start micro time index for convolution (not used)  
+* `stop[in]` :  
+    stop micro time index for convolution.  
+* `n_points` :  
+    number of points in the model function.  
+* `period` :  
+    excitation period in units of the fluorescence lifetimes (typically
+    nanoseconds)  
+* `dt[in]` :  
+    time difference between two micro time channels  
+";
+
+%feature("docstring") fconv_per_avx "
+
+Convolve lifetime spectrum with instrument response (fast convolution, high
+repetition rate), AVX optimized version.  
+
+This function computes the convolution of a lifetime spectrum (a set of
+lifetimes with corresponding amplitudes) with a instrument response function
+(irf). This function does consider periodic excitation and is suited for
+experiments at high repetition rate.  
+
+Parameters
+----------
+* `fit[out]` :  
+    model function. The convoluted decay is written to this array  
+* `x[in]` :  
+    lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)  
+* `lamp[in]` :  
+    instrument response function  
+* `numexp[in]` :  
+    number of fluorescence lifetimes  
+* `start[in]` :  
+    start micro time index for convolution (not used)  
+* `stop[in]` :  
+    stop micro time index for convolution.  
+* `n_points` :  
+    number of points in the model function.  
+* `period` :  
+    excitation period in units of the fluorescence lifetimes (typically
+    nanoseconds)  
+* `dt[in]` :  
+    time difference between two micro time channels  
+";
+
+%feature("docstring") fconv_per_cs "
+
+Convolve lifetime spectrum - fast convolution, high repetition rate, with
+convolution stop.  
+
+fast convolution, high repetition rate, with convolution stop for Paris  
+
+Parameters
+----------
+* `fit[out]` :  
+    model function. The convoluted decay is written to this array  
+* `x[in]` :  
+    lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)  
+* `lamp[in]` :  
+    instrument response function  
+* `numexp[in]` :  
+    number of fluorescence lifetimes  
+* `stop[in]` :  
+    stop micro time index for convolution.  
+* `n_points` :  
+    number of points in the model function.  
+* `period` :  
+    excitation period in units of the fluorescence lifetimes (typically
+    nanoseconds)  
+* `conv_stop` :  
+    convolution stop micro channel number  
+* `dt[in]` :  
+    time difference between two micro time channels  
+";
+
+%feature("docstring") fconv_ref "
+
+Convolve lifetime spectrum - fast convolution with reference compound decay.  
+
+This function convolves a set of fluorescence lifetimes and with associated
+amplitudes with an instrument response function. The provided amplitudes are
+scaled prior to the convolution by area using a reference fluorescence lifetime.
+The amplitudes are computed by  
+
+amplitude_corrected = a * ( 1 /tauref - 1 / tau)  
+
+where a and tau are provided amplitudes.  
+
+Parameters
+----------
+* `fit[out]` :  
+    model function. The convoluted decay is written to this array  
+* `x[in]` :  
+    lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)  
+* `lamp[in]` :  
+    instrument response function  
+* `numexp[in]` :  
+    number of fluorescence lifetimes  
+* `start[in]` :  
+    start micro time index for convolution (not used)  
+* `stop[in]` :  
+    stop micro time index for convolution.  
+* `tauref` :  
+    a reference lifetime used to rescale the amplitudes of the fluorescence
+    lifetime spectrum  
+* `dt[in]` :  
+    time difference between two micro time channels  
+";
+
+%feature("docstring") sconv "
+
+Convolve fluorescence decay curve with irf.  
+
+This function computes a convolved model function for a fluorescence decay
+curve.  
+
+Parameters
+----------
+* `fit` :  
+    convolved model function  
+* `p` :  
+    model function before convolution - fluorescence decay curve  
+* `lamp` :  
+    instrument response function  
+* `start` :  
+    start index of the convolution  
+* `stop` :  
+    stop index of the convolution  
+";
+
+%feature("docstring") shift_lamp "
+
+shift instrumnet response function  
+
+Parameters
+----------
+* `lampsh` :  
+* `lamp` :  
+* `ts` :  
+* `n_points` :  
+* `out_value` :  
+    the value of the shifted response function outside of the valid indices  
+";
+
+%feature("docstring") add_pile_up_to_model "
+
+Add a pile-up distortion to the model function.  
+
+This function adds a pile up distortion to a model fluorescence decay. The model
+used to compute the pile-up distortion follows the description of Coates (1968,
+eq. 2 and eq. 4)  
+
+Reference: Coates, P.: The correction for photonpile-up in the measurement of
+radiative lifetimes. J. Phys. E: Sci. Instrum. 1(8), 878–879 (1968)  
+
+Parameters
+----------
+* `model[in`, `out]` :  
+    The array containing the model function  
+* `n_model[in]` :  
+    Number of elements in the model array  
+* `data[in]` :  
+    The array containing the experimental decay  
+* `n_data[in]` :  
+    number of elements in experimental decay  
+* `repetition_rate[in]` :  
+    The repetition-rate (excitation rate) in MHz  
+* `instrument_dead_time[in]` :  
+    The overall dead-time of the detection system in nanoseconds  
+* `measurement_time[in]` :  
+    The measurement time in seconds  
+* `pile_up_model[in]` :  
+    The model used to compute the pile up distortion.  
+* `start` :  
+    Start index for pile up  
+* `stop` :  
+    Stop index for pile up (default \"coates\")  
+";
+
+%feature("docstring") discriminate_small_amplitudes "
+
+Threshold the amplitudes  
+
+Amplitudes with absolute values smaller than the specified threshold are set to
+zero.  
+
+Parameters
+----------
+* `lifetime_spectrum` :  
+    interleaved lifetime spectrum (amplitude, lifetime)  
+* `n_lifetime_spectrum` :  
+    number of elements in lifetime spectrum  
+* `amplitude_threshold` :  
+";
+
+%feature("docstring") fconv_per_cs_time_axis "
+
+Compute the fluorescence decay for a lifetime spectrum and a instrument response
+function considering periodic excitation.  
+
+Fills the pre-allocated output array `output_decay` with a fluorescence
+intensity decay defined by a set of fluorescence lifetimes defined by the
+parameter `lifetime_handler`. The fluorescence decay will be convolved (non-
+periodically) with an instrumental response function that is defined by
+`instrument_response_function`.  
+
+This function calculates a fluorescence intensity model_decay that is convolved
+with an instrument response function (IRF). The fluorescence intensity
+model_decay is specified by its fluorescence lifetime spectrum, i.e., an
+interleaved array containing fluorescence lifetimes with corresponding
+amplitudes.  
+
+This convolution only works with evenly linear spaced time axes.  
+
+Parameters
+----------
+* `inplace_output[in`, `out]` :  
+    Inplace output array that is filled with the values of the computed
+    fluorescence intensity decay model  
+* `n_output[in]` :  
+    Number of elements in the output array  
+* `time_axis[in]` :  
+    the time-axis of the model_decay  
+* `n_time_axis[in]` :  
+    length of the time axis  
+* `irf[in]` :  
+    the instrument response function array  
+* `n_irf[in]` :  
+    length of the instrument response function array  
+* `lifetime_spectrum[in]` :  
+    Interleaved array of amplitudes and fluorescence lifetimes of the form
+    (amplitude, lifetime, amplitude, lifetime, ...)  
+* `n_lifetime_spectrum[in]` :  
+    number of elements in the lifetime spectrum  
+* `convolution_start[in]` :  
+    Start channel of convolution (position in array of IRF)  
+* `convolution_stop[in]` :  
+    convolution stop channel (the index on the time-axis)  
+* `period` :  
+    Period of repetition in units of the lifetime (usually, nano-seconds)  
+";
+
+%feature("docstring") fconv_cs_time_axis "
+
+Compute the fluorescence decay for a lifetime spectrum and a instrument response
+function.  
+
+Fills the pre-allocated output array `output_decay` with a fluorescence
+intensity decay defined by a set of fluorescence lifetimes defined by the
+parameter `lifetime_handler`. The fluorescence decay will be convolved (non-
+periodically) with an instrumental response function that is defined by
+`instrument_response_function`.  
+
+This function calculates a fluorescence intensity model_decay that is convolved
+with an instrument response function (IRF). The fluorescence intensity
+model_decay is specified by its fluorescence lifetime spectrum, i.e., an
+interleaved array containing fluorescence lifetimes with corresponding
+amplitudes.  
+
+This convolution works also with uneven spaced time axes.  
+
+Parameters
+----------
+* `inplace_output[in`, `out]` :  
+    Inplace output array that is filled with the values of the computed
+    fluorescence intensity decay model  
+* `n_output[in]` :  
+    Number of elements in the output array  
+* `time_axis[in]` :  
+    the time-axis of the model_decay  
+* `n_time_axis[in]` :  
+    length of the time axis  
+* `irf[in]` :  
+    the instrument response function array  
+* `n_irf[in]` :  
+    length of the instrument response function array  
+* `lifetime_spectrum[in]` :  
+    Interleaved array of amplitudes and fluorescence lifetimes of the form
+    (amplitude, lifetime, amplitude, lifetime, ...)  
+* `n_lifetime_spectrum[in]` :  
+    number of elements in the lifetime spectrum  
+* `convolution_start[in]` :  
+    Start channel of convolution (position in array of IRF)  
+* `convolution_stop[in]` :  
+    convolution stop channel (the index on the time-axis)  
+* `use_amplitude_threshold[in]` :  
+    If this value is True (default False) fluorescence lifetimes in the lifetime
+    spectrum which have an amplitude with an absolute value of that is smaller
+    than `amplitude_threshold` are not omitted in the convolution.  
+* `amplitude_threshold[in]` :  
+    Threshold value for the amplitudes  
+";
 
 // File: _histogram_8h.xml
 
@@ -2675,7 +4486,62 @@ Returns
 -------  
 ";
 
+// File: i__lbfgs_8h.xml
+
+%feature("docstring") fjac1 "
+";
+
+%feature("docstring") fgrad1 "
+";
+
+%feature("docstring") fjac2 "
+";
+
+%feature("docstring") fgrad2 "
+";
+
+%feature("docstring") fjac4 "
+";
+
+%feature("docstring") fgrad4 "
+";
+
 // File: info_8h.xml
+
+// File: lbfgs_8h.xml
+
+%feature("docstring") funcgrad "
+";
+
+%feature("docstring") lbfgsminimize "
+";
+
+// File: _localization_8h.xml
+
+// File: _lv_arrays_8h.xml
+
+%feature("docstring") CreateLVI32Array "
+
+Parameters
+----------
+* `len` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") CreateLVDoubleArray "
+
+Parameters
+----------
+* `len` :  
+
+Returns
+-------  
+";
+
+%feature("docstring") CreateMParam "
+";
 
 // File: _pda_8h.xml
 
@@ -2768,49 +4634,14 @@ Parameters
     the resolution of the macro time clock  
 ";
 
-%feature("docstring") get_ranges_channel "
-
-Get the ranges in for a specific channel number  
-
-Parameters
-----------
-* `ranges` :  
-* `n_range` :  
-* `channel` :  
-* `n_channel` :  
-* `channel` :  
-";
-
-%feature("docstring") selection_by_channels "
-
-Selects a subset of indices by a list of routing channel numbers.  
-
-The retuned set of indices will have routing channel numbers that are in the
-list of the provided routing channel numbers.  
-
-Parameters
-----------
-* `output[out]` :  
-    output array that will contain the selected indices  
-* `n_output[out]` :  
-    the length of the output array  
-* `input[int]` :  
-    routing channel numbers defining the returned subset of indices  
-* `n_input[int]` :  
-    the length of the input array  
-* `routing_channels[int]` :  
-    array of routing channel numbers. A subset of this array will be selected by
-    the input.  
-* `n_routing_channels[int]` :  
-    the length of the routing channel number array.  
-";
-
 %feature("docstring") get_array "
 ";
 
 // File: _t_t_t_r_header_8h.xml
 
 // File: _t_t_t_r_header_types_8h.xml
+
+// File: _t_t_t_r_mask_8h.xml
 
 // File: _t_t_t_r_range_8h.xml
 
@@ -2844,6 +4675,8 @@ Parameters
 ";
 
 // File: _t_t_t_r_record_types_8h.xml
+
+// File: _t_t_t_r_selection_8h.xml
 
 // File: dir_d44c64559bbebec7f509842c48db8b23.xml
 
