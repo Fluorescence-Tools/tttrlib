@@ -95,20 +95,22 @@ deploy:doc:
      - linux
    needs: ["build:lnx_x86"]
    before_script:
-    - export DEBIAN_FRONTEND=interactive
-    - export TZ=Europe/Berlin
-    - apt-get update -qy
-    - apt-get install -qy git sshfs rsync # texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk 
+    - |
+        export DEBIAN_FRONTEND=interactive
+        export TZ=Europe/Berlin
+        apt-get update -qy
+        apt-get install -qy git sshfs rsync 
    script:
-    - git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib
-    - git fetch && git switch $CI_COMMIT_REF_NAME
-    - mkdir www
-    - sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
-    - ln -s www/tttr-data tttr-data 
-    - cd doc && mamba env update --file environment.yml
-    - conda activate doc
-    - sphinx-build -b html . _build
-    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf ../www/docs.peulen.xyz/tttrlib && mv _build/ ../www/docs.peulen.xyz/tttrlib; fi
+    - |
+        git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib
+        git fetch && git switch $CI_COMMIT_REF_NAME
+        mkdir www
+        sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
+        ln -s www/tttr-data tttr-data 
+        cd doc && mamba env update --file environment.yml
+        conda activate doc
+        sphinx-build -b html . _build
+        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf ../www/docs.peulen.xyz/tttrlib && mv -v _build/ ../www/docs.peulen.xyz/tttrlib; fi
 
 ## Downstream projects
 #tttrconvert:

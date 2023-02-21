@@ -38,7 +38,7 @@ created is already considered. The time window length are in units of milli seco
 
 
 """
-import pylab as p
+import matplotlib.pylab as p
 import numpy as np
 
 import tttrlib
