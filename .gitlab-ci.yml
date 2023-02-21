@@ -95,20 +95,20 @@ deploy:doc:
      - linux
    needs: ["build:lnx_x86"]
    before_script:
-     - export DEBIAN_FRONTEND=noninteractive
-     - export TZ=Europe/Berlin
-     - apt-get update -qy
-     - apt-get install -qy git git-lfs texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk build-essential lftp
+    - export DEBIAN_FRONTEND=interactive
+    - export TZ=Europe/Berlin
+    - apt-get update -qy
+    - apt-get install -qy git sshfs rsync # texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk 
    script:
-     - source activate base
-     - git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib
-     - git fetch
-     - git switch $CI_COMMIT_REF_NAME
-     - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
-     - cd doc && mamba env update --file environment.yml
-     - conda activate doc
-     - sphinx-build -b html . _build
-     - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then lftp -p 2222 -u "$FTP_USERNAME,$FTP_PASSWORD" sftp://peulen.xyz -e 'set sftp:auto-confirm yes; set ssl:verify-certificate no; set sftp:connect-program "ssh -a -x -o UserKnownHostsFile=/dev/null\ StrictHostKeyChecking=no"; mirror -Rnev --verbose --delete _build/ /www/docs.peulen.xyz/tttrlib/; quit;'; else echo "Not uploading (not on main) "; fi
+    - git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib
+    - git fetch && git switch $CI_COMMIT_REF_NAME
+    - mkdir www
+    - sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
+    - ln -s www/tttr-data tttr-data 
+    - cd doc && mamba env update --file environment.yml
+    - conda activate doc
+    - sphinx-build -b html . _build
+    - if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf ../www/docs.peulen.xyz/tttrlib && mv _build/ ../www/docs.peulen.xyz/tttrlib; fi
 
 ## Downstream projects
 #tttrconvert:
