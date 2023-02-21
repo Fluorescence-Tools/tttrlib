@@ -149,7 +149,8 @@ public:
     void get_S1S2_matrix(double **output, int *n_output1, int *n_output2){
         if(!_is_valid_sgsr) evaluate();
         auto* t = (double *) malloc(_S1S2.size() * sizeof(double));
-        for(int i = 0; i < _S1S2.size(); i++) t[i] = _S1S2[i];
+        for(unsigned int i = 0; i < _S1S2.size(); i++) 
+            t[i] = _S1S2[i];
         *output = t;
         *n_output1 = int (_n_2d_max + 1);
         *n_output2 = int (_n_2d_max + 1);
@@ -216,7 +217,7 @@ public:
     void get_probability_spectrum_ch1(double** output, int* n_output) {
         int n = (int)_amplitudes.size() * 2;
         auto temp = (double*) malloc(sizeof(double) * n);
-        for(int i=0; i < _amplitudes.size(); i++){
+        for(unsigned int i=0; i < _amplitudes.size(); i++){
             temp[2 * i] = _amplitudes[i];
             temp[2 * i + 1] = _probability_ch1[i];
         }

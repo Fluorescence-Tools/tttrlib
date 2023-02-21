@@ -152,13 +152,13 @@ class TTTR : public std::enable_shared_from_this<TTTR>{
 
 private:
 
+    /// Global overflow counter that counts the total number of overflows in a TTTR file
+    uint64_t overflow_counter;
+
     /// the input file
     std::string filename;
 
     TTTRHeader *header = nullptr;
-
-    /// Global overflow counter that counts the total number of overflows in a TTTR file
-    uint64_t overflow_counter;
 
     /// map to translates string container types to int container types
     boost::bimap<std::string, int> container_names;
@@ -203,7 +203,7 @@ private:
 
     /// A string that defines the TTTR container type
     std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
-    int tttr_record_type; // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
+    int tttr_record_type;                // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;                          /* File handle for all other file types */

@@ -1,5 +1,5 @@
 git submodule update --recursive --init --remote
-mkdir build && cd build
+mkdir b2 && cd b2
 
 cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" \
  -DCMAKE_PREFIX_PATH="$PREFIX" \
