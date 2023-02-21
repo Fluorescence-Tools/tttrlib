@@ -185,7 +185,7 @@ print("Fill settings:%s" % fill_settings["G"]["Gps"])
 # ----------------
 # Frames, lines, pixel
 image_intensity_green = image.intensity
-# equivalent to
+# this is equivalent to 
 image_intensity_green = image.get_intensity()
 image_intensity_green_sum = image_intensity_green.sum(axis=0)
 
@@ -257,6 +257,7 @@ int_t_s = image.intensity.sum(axis=0)
 # illustrate how to strip photons
 # Filled image with Gps remove Gs to get Gp
 tttr_indices_s = data.get_selection_by_channel(detection_channels['Gs']["channels"])
+
 image.strip(tttr_indices=tttr_indices_s)
 int_p = image.intensity
 

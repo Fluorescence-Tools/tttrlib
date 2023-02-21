@@ -35,7 +35,7 @@ class Tests(unittest.TestCase):
             len(lv_array), 10
         )
         lv_array[0] = 10
-        vec = np.linspace(1, 10, 10, dtype=np.int)
+        vec = np.linspace(1, 10, 10, dtype=np.int32)
         # will fail slicing not supported
         # lv_array[:] = vec
         for i, v in enumerate(vec):
@@ -48,7 +48,7 @@ class Tests(unittest.TestCase):
     # @unittest.expectedFailure
     # def test_LVI32Array_slice(self):
     #     lv_array = tttrlib.CreateLVI32Array(10)
-    #     vec = np.linspace(1, 10, 10, dtype=np.int)
+    #     vec = np.linspace(1, 10, 10, dtype=np.int32)
     #     lv_array[:] = vec
 
     def test_MParam_2(self):

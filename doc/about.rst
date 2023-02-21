@@ -33,7 +33,7 @@ If you use tttrlib in a scientific publication, we would appreciate
 citations to the following paper.
 
 
-    Peulen *et al.*, (2021). `tttrlib: A library for time-tagged time-resolved fluorescence and image spectroscopy
+    Peulen *et al.*, (2023). `tttrlib: A library for time-tagged time-resolved fluorescence and image spectroscopy
     <https://joss.theoj.org/papers/xxx>`_. Journal of Open Source Software, X(XX), XXX
 
   Bibtex entry::
