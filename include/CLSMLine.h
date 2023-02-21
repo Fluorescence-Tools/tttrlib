@@ -4,9 +4,9 @@
 #include <vector>
 #include "TTTR.h" /* TTTRRange */
 #include "CLSMPixel.h"
-#include "TTTRRange.h"
+#include "TTTRSelection.h"
 
-class CLSMLine : public TTTRRange{
+class CLSMLine : public TTTRSelection{
 
     friend class CLSMImage;
     friend class CLSMFrame;
@@ -33,7 +33,7 @@ public:
 
     unsigned long long get_pixel_duration(){
         if(pixel_duration < 0){
-            return (size_t) (get_duration() / size());
+            return (size_t) (get_duration(_tttr) / size());
         } else{
             return pixel_duration;
         }
@@ -41,7 +41,7 @@ public:
 
     CLSMLine() = default;
 
-    CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRRange(old_line){
+    CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRSelection(old_line){
         // private attributes
         pixels.resize(old_line.pixels.size());
         pixels = old_line.pixels;
@@ -51,29 +51,25 @@ public:
     }
 
     explicit CLSMLine(unsigned int line_start){
-        _start = line_start;
+        _tttr_indices.insert(line_start);
     }
 
-    CLSMLine(int line_start,unsigned int n_pixel){
-        this->_start = line_start;
+    CLSMLine(int line_start, unsigned int n_pixel){
+        _tttr_indices.insert(line_start);
         pixels.resize(n_pixel);
     }
 
-    virtual ~CLSMLine(){
-    }
+    virtual ~CLSMLine() = default;
 
-    void append(CLSMPixel pixel){
+    void append(CLSMPixel& pixel){
         pixels.emplace_back(pixel);
-        pixel_duration = (int) (get_duration() / size());
     }
 
     CLSMPixel* operator[](unsigned int i_pixel){
         return &pixels[i_pixel];
     }
 
-    void crop(
-            int pixel_start, int pixel_stop
-    ){
+    void crop(int pixel_start, int pixel_stop){
         pixel_stop = std::min(pixel_stop, (int) size());
         pixel_start = std::max(0, pixel_start);
 

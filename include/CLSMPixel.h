@@ -15,12 +15,8 @@ public:
 
     CLSMPixel(const CLSMPixel& p2) : TTTRRange(p2){};
 
-    CLSMPixel(CLSMPixel* p2 = nullptr){
+    CLSMPixel(CLSMPixel* p2 = nullptr) : TTTRRange(){
         if(p2 != nullptr){
-            _start = p2->_start;
-            _stop = p2->_stop;
-            _start_time = p2->_start_time;
-            _stop_time = p2->_stop_time;
             _tttr_indices = p2->_tttr_indices;
         }
     }

@@ -3,14 +3,11 @@
 #include "include/CLSMFrame.h"
 #include "TTTRRange.h"
 
-CLSMFrame::CLSMFrame(): TTTRRange() {}
+CLSMFrame::CLSMFrame(): TTTRSelection() {}
 
 CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr) :
-CLSMFrame()
-{
-    _stop = frame_stop;
-    _start = frame_start;
-}
+    TTTRSelection(frame_start, frame_stop, tttr)
+{}
 
 void CLSMFrame::append(CLSMLine * line){
     lines.emplace_back(line);

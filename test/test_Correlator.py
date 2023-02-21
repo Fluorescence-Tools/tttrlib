@@ -199,9 +199,9 @@ class Tests(unittest.TestCase):
     #     mt = data.get_macro_times()
     #
     #     t1 = mt[ch1_indeces]
-    #     w1 = np.ones_like(t1, dtype=np.float)
+    #     w1 = np.ones_like(t1, dtype=np.float64)
     #     t2 = mt[ch2_indeces]
-    #     w2 = np.ones_like(t2, dtype=np.float)
+    #     w2 = np.ones_like(t2, dtype=np.float64)
     #     # zero low count rate regions
     #     cr_selection = tttrlib.selection_by_count_rate(
     #         t1, 1200000, 30
@@ -264,8 +264,8 @@ class Tests(unittest.TestCase):
     #     correlator_2 = tttrlib.Correlator(data)
     #     t1 = data.macro_times
     #     t2 = t1
-    #     w1 = np.ones_like(t1, dtype=np.float)
-    #     w2 = np.ones_like(t2, dtype=np.float)
+    #     w1 = np.ones_like(t1, dtype=np.float64)
+    #     w2 = np.ones_like(t2, dtype=np.float64)
     #     correlator_2.set_macrotimes(t1, t2)
     #     correlator_2.set_weights(w1, w2)
     #
@@ -321,8 +321,8 @@ class Tests(unittest.TestCase):
     #     t2 = data.macro_times[ch2_indeces]
     #     mt1 = data.micro_times[ch1_indeces]
     #     mt2 = data.micro_times[ch2_indeces]
-    #     w1 = np.ones_like(t1, dtype=np.float)
-    #     w2 = np.ones_like(t2, dtype=np.float)
+    #     w1 = np.ones_like(t1, dtype=np.float32)
+    #     w2 = np.ones_like(t2, dtype=np.float32)
     #     correlator_ref.set_macrotimes(t1, t2)
     #     correlator_ref.set_weights(w1, w2)
     #     n_microtime_channels = data.get_number_of_micro_time_channels()
@@ -427,9 +427,9 @@ class Tests(unittest.TestCase):
     # #     n_casc = 25
     # #
     # #     t1 = mt[phs]
-    # #     w1 = np.ones_like(t1, dtype=np.float)
+    # #     w1 = np.ones_like(t1, dtype=np.float32)
     # #     t2 = mt[phs]
-    # #     w2 = np.ones_like(t2, dtype=np.float)
+    # #     w2 = np.ones_like(t2, dtype=np.float32)
     # #
     # #     correlator = tttrlib.Correlator()
     # #     correlator.n_bins = B

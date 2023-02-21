@@ -6,15 +6,17 @@
 #include "TTTR.h" /* TTTRRange */
 #include "CLSMPixel.h"
 #include "CLSMLine.h"
-#include "TTTRRange.h"
+#include "TTTRSelection.h"
 
-class CLSMFrame: public TTTRRange{
+
+class CLSMFrame: public TTTRSelection{
 
     friend class CLSMImage;
 
 private:
 
     std::vector<CLSMLine*> lines;
+    TTTR* _tttr = nullptr;
 
 public:
 
@@ -34,7 +36,7 @@ public:
      *
      * @param fill if set to false the content of the pixels is not copied
      */
-    CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRRange(old_frame){
+    CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRSelection(old_frame){
         for(auto l: old_frame.lines){
             lines.emplace_back(new CLSMLine(*l, fill));
         }

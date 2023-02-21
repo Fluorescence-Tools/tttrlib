@@ -1,0 +1,286 @@
+#!/usr/bin/env python
+
+import glob
+import typing
+import numpy as np
+import skimage as ski
+import matplotlib.pylab as plt
+
+import os
+import tqdm
+import tttrlib
+
+import click
+from click_didyoumean import DYMGroup
+
+
+@click.command(name="correlate", help="Compute correlation")
+@click.argument('input', nargs=-1)
+@click.option('-f', '--fine', help='Make fine correlation (with microtime)',
+              required=False, default=False, show_default=True)
+@click.option('-ch1', '--correlation_channel_1',
+              help='List of routing channel numbers considered in correlation channel 1, e.g. "0,1".',
+              required=True)
+@click.option('-ch2', '--correlation_channel_2',
+              help='List of routing channel numbers considered in correlation channel 2, e.g. "0,1". If no '
+                   'correlation channels are given routing channels of ch1 are used.',
+              required=False, default=None)
+@click.option('-n_casc', '--n_casc',
+              help='Multi tau correlation parameter, number of cascades).',
+              required=False,show_default=True,
+              default=25)
+@click.option('-n_bins', '--n_bins',
+              help='Multi tau correlation parameter, number of bins per cascade).',
+              required=False,show_default=True,
+              default=9)
+@click.option('-c', '--n_chunks',
+              help='Number of pieces the data is to be split into.',
+              required=False,show_default=True,
+              default=5)
+@click.option('-j', '--join',
+              help='If True files select by wildcard are lexically sorted and joined.',
+              required=False, show_default=True,
+              default=False)
+@click.option('-p', '--do_plot',
+              help='If True plots to a svg file',
+              required=False,
+              default=True)
+def trace_correlate(
+        input: str,
+        correlation_channel_1: typing.List[int],
+        correlation_channel_2: typing.List[int] = None,
+        fine: bool = False,
+        n_casc: int = 25,
+        n_bins: int = 9,
+        n_chunks: int = 5,
+        join: bool = True,
+        do_plot: bool = True
+):
+    def get_correlation(data, start_stop, settings, correlation_channel1, correlation_channel2):
+        correlation = tttrlib.Correlator(**settings)
+        correlations = list()
+        for start, stop in tqdm.tqdm(start_stop):
+            indices = np.arange(start, stop, dtype=np.int64)
+            tttr_slice = data[indices]
+            tttr_ch1 = tttr_slice[tttr_slice.get_selection_by_channel(correlation_channel1)]
+            tttr_ch2 = tttr_slice[tttr_slice.get_selection_by_channel(correlation_channel2)]
+            correlation.set_tttr(
+                tttr_1=tttr_ch1,
+                tttr_2=tttr_ch2
+            )
+            correlations.append((correlation.x_axis, correlation.correlation))
+        return np.array(correlations)
+
+    def save_correlation(corr_ab, duration_sec, filename, label, n_ph_ch1, n_ph_ch2, do_plot=True):
+        ########################################################
+        #  Save correlation curves
+        ########################################################
+        corr_ab_a = corr_ab[:, 1, :]
+        avg_curve_ab = corr_ab_a.mean(axis=0)
+        std_curve_ab = corr_ab_a.std(axis=0)
+
+        # calculate the correct time axis by multiplication of x-axis with macro_time
+        time_axis = corr_ab[0, 0] * 1000
+        # fill 3rd column with 0's for compatibility with ChiSurf & Kristine
+        # 1st and 2nd entry of 3rd column are measurement duration & average count rate
+        suren_column_ccf = np.zeros_like(time_axis)
+        suren_column_acf1 = np.zeros_like(time_axis)
+        suren_column_acf2 = np.zeros_like(time_axis)
+
+        cr_ch1 = n_ph_ch1 / duration_sec / 1000  # kHz
+        cr_ch2 = n_ph_ch2 / duration_sec / 1000  # kHz
+        avg_cr = (cr_ch1 + cr_ch2) / 2
+
+        suren_column_ccf[0] = duration_sec
+        suren_column_ccf[1] = avg_cr
+
+        suren_column_acf1[0] = duration_sec
+        suren_column_acf1[1] = cr_ch1
+
+        suren_column_acf2[0] = duration_sec
+        suren_column_acf2[1] = cr_ch2
+
+        f, _ = os.path.splitext(filename)
+        np.savetxt(
+            f + label + ".cor",
+            np.vstack(
+                [
+                    time_axis,
+                    avg_curve_ab,
+                    suren_column_ccf,
+                    std_curve_ab / np.sqrt(n_chunks)
+                ]
+            ).T,
+            delimiter='\t'
+        )
+        plt.semilogx(time_axis, avg_curve_ab, label=label)
+
+    if correlation_channel_2 is None:
+        correlation_channel_2 = correlation_channel_1
+
+    print("Loading:")
+    datas = list()
+    fns = list()
+    for g in input:
+        fns += glob.glob(g)
+    for fn in sorted(fns):
+        print(fn)
+        datas.append((fn, tttrlib.TTTR(fn)))
+
+    if join:
+        print("Joining data...")
+        data = datas[0][1]
+        for _, d2 in datas[1:]:
+            data += d2
+        datas = [(fn, data)]
+
+    correlation_channel_a = [int(k) for k in correlation_channel_1.split(",")]
+    correlation_channel_b = [int(k) for k in correlation_channel_2.split(",")]
+    print("-- Correlation channel 1:", correlation_channel_a)
+    print("-- Correlation channel 2:", correlation_channel_b)
+    for fn, data in datas:
+        header = data.header
+        macro_time_calibration = data.header.macro_time_resolution  # unit seconds
+
+        duration = float(header.tag("TTResult_StopAfter")["value"])  # unit millisecond
+        duration_sec = duration / 1000
+        window_length = duration_sec / n_chunks  # in seconds
+        print("-- Macro_time_calibration [sec]:", macro_time_calibration)
+        print("-- Duration [sec]:", duration_sec)
+        print("-- Time window length [sec]:", window_length)
+
+        ch1_indices = data.get_selection_by_channel(correlation_channel_a)
+        ch2_indices = data.get_selection_by_channel(correlation_channel_b)
+        # Get the start-stop indices of the data slices
+        time_windows = data.get_ranges_by_time_window(
+            window_length,
+            macro_time_calibration=macro_time_calibration
+        )
+        start_stop = time_windows.reshape((len(time_windows)//2, 2))
+
+        #  Correlate the pieces
+        settings = {
+            "method": "default",
+            "n_bins": n_bins,
+            "n_casc": n_casc,
+            "make_fine": fine
+        }
+        print("-- Correlation(Ch1,Ch2)")
+        corr_12 = get_correlation(
+            data,
+            start_stop,
+            settings,
+            correlation_channel_a,
+            correlation_channel_b
+        )
+        print("-- Correlation(Ch1,Ch2)")
+        corr_21 = get_correlation(
+            data,
+            start_stop,
+            settings,
+            correlation_channel_b,
+            correlation_channel_a
+        )
+        print("-- Correlation(Ch1,Ch1)")
+        corr_11 = get_correlation(
+            data,
+            start_stop,
+            settings,
+            correlation_channel_a,
+            correlation_channel_a
+        )
+        print("-- Correlation(Ch2,Ch2)")
+        corr_22 = get_correlation(
+            data,
+            start_stop,
+            settings,
+            correlation_channel_b,
+            correlation_channel_b
+        )
+
+        #  Get mean and standard deviation
+        nr_of_ch1_photons = len(ch1_indices)
+        nr_of_ch2_photons = len(ch2_indices)
+
+        l12 = "(" + correlation_channel_1 + "-" + correlation_channel_2 + ")"
+        l21 = "(" + correlation_channel_2 + "-" + correlation_channel_1 + ")"
+        l11 = "(" + correlation_channel_1 + "-" + correlation_channel_1 + ")"
+        l22 = "(" + correlation_channel_2 + "-" + correlation_channel_2 + ")"
+        save_correlation(corr_12, duration_sec, fn, l12, nr_of_ch1_photons, nr_of_ch2_photons, do_plot)
+        save_correlation(corr_21, duration_sec, fn, l21, nr_of_ch1_photons, nr_of_ch2_photons, do_plot)
+        save_correlation(corr_11, duration_sec, fn, l11, nr_of_ch1_photons, nr_of_ch2_photons, do_plot)
+        save_correlation(corr_22, duration_sec, fn, l22, nr_of_ch1_photons, nr_of_ch2_photons, do_plot)
+
+        if do_plot:
+            plt.ylim(ymin=1)
+            plt.xlabel('correlation time [ms]')
+            plt.ylabel('correlation amplitude')
+            plt.legend()
+            f, _ = os.path.splitext(fn)
+            plt.savefig(f + '.svg', dpi=150)
+
+
+@click.command(name="export", help="Export image from LSM file")
+@click.argument('input')
+@click.option('-ch', '--channels',
+              help='List of routing channel numbers considered. Photons in detection channels separated by commas are'
+                   'integrated/combined in groups. Groups are separated by colons. The input "0,3:1,2" outputs two '
+                   'images where photons of channel 0,3 and 1,2 are combined. By default all photons of all channels'
+                   'are combined.',
+              required=False)
+def image_export(
+        input: str,
+        channels: str = None,
+):
+    data = tttrlib.TTTR(input)
+    clsm = tttrlib.CLSMImage(data)
+    if channels is None:
+        c = data.get_used_routing_channels()
+        channels = ",".join(map(str, sorted(c)))
+    groups = [[int(v) for v in g.split(',')] for g in channels.split(":")]
+    print("Input: ", input)
+    print("Export:", channels)
+    for chs in groups:
+        fn_chs = ','.join(map(str, chs))
+        fn_tail = "_ch(" + fn_chs + ").tif"
+        fn_lead, _ = os.path.splitext(input)
+        fn_out = fn_lead + fn_tail
+        print("Output: ", fn_out)
+        clsm.fill(data, chs)
+        img = clsm.intensity
+        ski.io.imsave(fn_out, img, check_contrast=False)
+
+
+@click.group(
+    help='Trace processing (correlation, burst selection, burst analysis, ...)',
+    cls=DYMGroup
+)
+def trace():
+    pass
+
+@click.group(
+    help='Image processing (exporting, FLIM, ...)',
+    cls=DYMGroup
+)
+def image():
+    pass
+
+@click.group(cls=DYMGroup)
+def cli():
+    pass
+
+
+def main():
+    # Trace commands
+    trace.add_command(trace_correlate)
+
+    # Image commands
+    image.add_command(image_export)
+
+    cli.add_command(trace)
+    cli.add_command(image)
+    cli()
+
+
+if __name__ == "__main__":
+    main()

@@ -34,6 +34,11 @@ requirements:
     - fftw
   run:
     - python
+    - click
+    - scikit-image
+    - matplotlib
+    - tqdm
+    - click-didyoumean
     - typing # [py27]
     - {{ pin_compatible('numpy') }}
     - boost-cpp
@@ -44,6 +49,8 @@ requirements:
 test:
  imports:
    - tttrlib
+ commands:            # [not win]
+   - tttrlib --help   # [not win]
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
@@ -56,4 +63,3 @@ description: |
 extra:
   recipe-maintainers:
     - tpeulen
-

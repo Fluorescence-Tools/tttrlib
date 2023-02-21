@@ -3,6 +3,7 @@ channels:
     - tpeulen
     - conda-forge
 dependencies:
+    - python=3.9
     - tttrlib
     - phconvert
     - doxygen

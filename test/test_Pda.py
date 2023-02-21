@@ -88,7 +88,7 @@ class Tests(unittest.TestCase):
     #         amplitude=amplitude,
     #         probability_ch1=probability_green
     #     )
-    #     pF = np.ones(max_number_of_photons, dtype=np.float)
+    #     pF = np.ones(max_number_of_photons, dtype=np.float64)
     #     pda.setPF(pF)
     #     ref = np.array(
     #         [[0.06122821, 0.05510539, 0.0275527, 0.01047002, 0.00347164,

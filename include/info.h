@@ -3,7 +3,7 @@
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
-#define TTTRLIB_VERSION             "0.22.0"
+#define TTTRLIB_VERSION             "0.23.3"
 #define VERBOSE_TTTRLIB             0
 
 #endif //TTTRLIB_INFO_H
