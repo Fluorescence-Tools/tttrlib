@@ -102,6 +102,8 @@ deploy:doc:
         apt-get install -qy git sshfs rsync 
    script:
     - |
+        # requires runner in privileged mode see (https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4122)
+        source activate base
         git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib
         git fetch && git switch $CI_COMMIT_REF_NAME
         mkdir www
