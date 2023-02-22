@@ -1189,11 +1189,13 @@ void CLSMImage::compute_ics(
         uint8_t *mask, int dmask1, int dmask2, int dmask3
 ){
 #if VERBOSE_TTTRLIB
-    std::clog << "COMPUTE_ICS" << std::endl;
+    std::clog << "CLSMImage::compute_ics" << std::endl;
 #endif
-    // create roi
+
+    // create ROI
     double *roi1; int nf1, nl1, np1;
     double *roi2; int nf2, nl2, np2;
+
     // If pair of ICS frames empty make ACF without frame shift
     get_roi(&roi1, &nf1, &nl1, &np1,
             clsm, x_range, y_range,
@@ -1202,6 +1204,7 @@ void CLSMImage::compute_ics(
             images, input_frames, input_lines, input_pixel,
             mask, dmask1, dmask2, dmask3
     );
+
     if((clsm2!= nullptr)&&(images_2!= nullptr)){
         get_roi(&roi2, &nf2, &nl2, &np2,
                 clsm, x_range, y_range,
@@ -1214,6 +1217,8 @@ void CLSMImage::compute_ics(
         roi2 = roi1;
         nf2 = nf1; nl2 = nl1; np2 = np1;
     }
+
+    // number of frames, lines, pixel
     int nf, nl, np;
     nf = std::min(nf1, nf2);
     nl = std::min(nl1, nl2);
@@ -1221,6 +1226,7 @@ void CLSMImage::compute_ics(
     int pixel_in_roi = nl * np;
 
     // Define set of frame pairs (if no pairs were defined)
+    // Computes ICS for pair of frames default (1,1), (2,2), ...
     if(frames_index_pairs.empty()){
 #if VERBOSE_TTTRLIB
         std::clog << "-- No frame pair selection: Computing ACF " << std::endl;
@@ -1228,23 +1234,37 @@ void CLSMImage::compute_ics(
         frames_index_pairs.reserve(nf);
         for(int i=0; i < nf; i++) frames_index_pairs.emplace_back(std::make_pair(i, i));
     }
+
     // Allocate memory for the ICS output array
     auto out_tmp = (double*) calloc(frames_index_pairs.size() * pixel_in_roi, sizeof(double));
+
     // Prepare FFTW plans for first and second frame, and the inverse
-    fftw_complex *in, *first_out, *second_out;
+    fftw_complex *in, *out, *first_out, *second_out;
     fftw_plan p_forward_first, p_forward_second, p_backward;
     in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
     first_out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
     second_out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pixel_in_roi);
-    p_forward_first = fftw_plan_dft_2d(nl, np, in, first_out, FFTW_FORWARD, FFTW_MEASURE);
+
+    // Make FFTW Plans
+    p_forward_first  = fftw_plan_dft_2d(nl, np, in, first_out, FFTW_FORWARD, FFTW_MEASURE);
     p_forward_second = fftw_plan_dft_2d(nl, np, in, second_out, FFTW_FORWARD, FFTW_MEASURE);
-    p_backward = fftw_plan_dft_2d(nl, np, in, first_out, FFTW_BACKWARD, FFTW_MEASURE);
+    p_backward       = fftw_plan_dft_2d(nl, np, in, out, FFTW_BACKWARD, FFTW_MEASURE);
+
+    // Make sure that outputs are filled with zeros
+    for(int pix = 0; pix < pixel_in_roi; pix++){
+        in[pix][0] = 0; in[pix][1] = 0;
+        out[pix][0] = 0; out[pix][1] = 0;
+        first_out[pix][0] = 0; first_out[pix][1] = 0;
+        second_out[pix][0] = 0; second_out[pix][1] = 0;
+    }
+
     // Iterate through the pair of frames
 #if VERBOSE_TTTRLIB
     std::clog << "-- CCF of pair: ";
 #endif
     int current_frame = 0;
-    for (auto frame_pair: frames_index_pairs) {
+    for (auto &frame_pair: frames_index_pairs) {
 #if VERBOSE_TTTRLIB
         std::clog << "(" << frame_pair.first << ", " << frame_pair.second << ") ";
 #endif
@@ -1256,6 +1276,7 @@ void CLSMImage::compute_ics(
             in[pix][0] = count;
         }
         fftw_execute(p_forward_first);
+
         // FFT of second frame
         double second_frame_total_intensity;
         if(frame_pair.second != frame_pair.first){
@@ -1267,42 +1288,51 @@ void CLSMImage::compute_ics(
             }
             fftw_execute(p_forward_second);
             // make product of FFT(img1) * conj(FFT(img2))
-            for(int n=0; n < pixel_in_roi; n++){
+            for(int n = 0; n < pixel_in_roi; n++) {
                 in[n][0] = first_out[n][0] * second_out[n][0] + first_out[n][1] * second_out[n][1];
                 in[n][1] = 0;
             }
-        } else{
+        }
+        else{
             // if the second frame equals to the first use first FFT
             second_frame_total_intensity = first_frame_total_intensity;
             // make product of FFT(img1) * conj(FFT(img1))
-            for(int n=0; n < pixel_in_roi; n++){
-                in[n][0] = first_out[n][0] * first_out[n][0] + first_out[n][1] * first_out[n][1];
+            for(int n = 0; n < pixel_in_roi; n++){
+                in[n][0] =  first_out[n][0] * first_out[n][0] + first_out[n][1] * first_out[n][1];
                 in[n][1] = 0;
             }
         }
+
         // make backward transform FFT-1(FFT(img1) * conj(FFT(img2)))
         fftw_execute(p_backward);
+        
         // copy to results to ics output and normalize
         int frame_pos = current_frame * pixel_in_roi;
-        for(int pix=0; pix < pixel_in_roi; pix++){
+        for(int pix = 0; pix < pixel_in_roi; pix++){
             // We need to normalize by the mean intensity and the number of
             // pixels. A forward and backward FFT by fftw3 introduce a factor
             // N=nx*ny. Thus, it is enough to divide by total_intensity_2.
             double denom = (first_frame_total_intensity * second_frame_total_intensity);
-            out_tmp[frame_pos + pix] = first_out[pix][0] / denom - 1.0;
+            out_tmp[frame_pos + pix] = out[pix][0] / denom - 1.0;
         }
+
         current_frame++;
     }
+
 #if VERBOSE_TTTRLIB
     std::clog << std::endl;
 #endif
+    // Cleanup FFTW
     fftw_destroy_plan(p_forward_first);
     fftw_destroy_plan(p_forward_second);
     fftw_destroy_plan(p_backward);
     fftw_free(in);
-    fftw_free(first_out); fftw_free(second_out);
+    fftw_free(out);
+    fftw_free(first_out); 
+    fftw_free(second_out);
     free(roi1);
 
+    // Assign output
     *dim1 = (int) nf;
     *dim2 = (int) nl;
     *dim3 = (int) np;

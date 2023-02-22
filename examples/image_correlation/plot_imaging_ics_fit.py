@@ -10,7 +10,7 @@ import scipy.optimize
 import pylab as p
 import mpl_toolkits.mplot3d
 import matplotlib.patches
-import tifffile
+import skimage as ski
 
 
 def rics_simple(
@@ -138,7 +138,7 @@ def chi2(
     return chi2_s
 
 
-img = tifffile.imread('../../tttr-data/imaging/ics/RICS_EGFPGFP.tif')
+img = ski.io.imread('../../tttr-data/imaging/ics/RICS_EGFPGFP.tif')
 x_range = [100, 200]
 y_range = [100, 200]
 
@@ -191,6 +191,7 @@ fit = scipy.optimize.minimize(
     bounds=bounds
 )
 
+
 model = rics_simple(
     line_shift, pixel_shift, *fit.x, **kw
 )
@@ -200,6 +201,7 @@ ommit_center = True
 fig = p.figure()
 ax1 = fig.add_subplot(1, 4, 1)
 ax1.imshow(img.mean(axis=0))
+ax1.title.set_text('Mean intensity / ROI')
 rect = matplotlib.patches.Rectangle(
     xy=(x_range[0], y_range[0]),
     width=x_range[1]-x_range[0],
@@ -215,9 +217,15 @@ if ommit_center:
     data[nx//2, ny//2] = 0.0
     model[nx//2, ny//2] = 0.0
 ax2.imshow(ics_mean_select, cmap='gray')
+ax2.title.set_text('ICS Data D')
+
 ax3 = fig.add_subplot(1, 4, 3)
+ax3.imshow(model, cmap='gray')
+ax3.title.set_text('ICS Model, M')
+
 ax4 = fig.add_subplot(1, 4, 4)
 ax4.imshow(np.log(abs(model - ics_mean_select) / ics_std_select), cmap='gray')
-ax3.imshow(model, cmap='gray')
+ax4.title.set_text('(M - D) / SD')
+
 ax2.get_shared_x_axes().join(ax2, ax3)
 p.show()
