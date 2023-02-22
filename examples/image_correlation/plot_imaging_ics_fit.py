@@ -191,7 +191,6 @@ fit = scipy.optimize.minimize(
     bounds=bounds
 )
 
-
 model = rics_simple(
     line_shift, pixel_shift, *fit.x, **kw
 )
