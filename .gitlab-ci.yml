@@ -60,6 +60,7 @@ build:windows:
 test:linux:
   stage: test
   tags:
+    - local
     - linux
   image: condaforge/mambaforge
   needs: ["build:lnx_x86"]
@@ -96,7 +97,7 @@ deploy:doc:
    stage: deploy
    image: condaforge/mambaforge
    tags:
-     - x86_64
+     - local
      - linux
    needs: ["build:lnx_x86"]
    before_script:
