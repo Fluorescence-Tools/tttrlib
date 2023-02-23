@@ -48,7 +48,6 @@ html:
 	doxygen
 
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
-	rm -r _build/html/stable/api
 	mv _build/api _build/html/stable
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable"
