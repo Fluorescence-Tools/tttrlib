@@ -103,7 +103,7 @@ deploy:doc:
     - |
         export DEBIAN_FRONTEND=interactive
         export TZ=Europe/Berlin
-        apt-get update -qy && apt-get install -qy git nfs-common
+        apt-get update -qy && apt-get install -qy git nfs-common make
    script:
     - |
         source activate base
