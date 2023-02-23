@@ -1,8 +1,0 @@
-===
-API
-===
-
-C++ API
-=======
-
-.. doxygenindex::

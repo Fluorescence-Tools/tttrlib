@@ -43,17 +43,13 @@ html:
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
 	rm -rf _build/doctrees/
-
-	# Create conda env that contains all dependencies
-	# Clone the TTTR-example data rep
-	@if [ ! -d "../tttr-data/" ]; then \
-		git clone https://gitlab.peulen.xyz/tpeulen/tttr-data --depth 1 ../tttr-data; \
-	fi
-
-	# Use Doxygen to build xml files (used to breathe for sphinx docs)
+	
+	# Use Doxygen to build API html documentation files
 	doxygen
 
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
+	rm -r _build/html/stable/api
+	mv _build/api _build/html/stable
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable"
 

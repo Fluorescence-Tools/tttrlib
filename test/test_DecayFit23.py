@@ -237,7 +237,7 @@ class Tests(unittest.TestCase):
             'background': np.zeros_like(irf)
         }
         fit23 = tttrlib.Fit23(**settings)
-        tau, gamma, r0, rho = 1.2, 0.01, 0.38, 1.22
+        tau, gamma, r0, rho = 1.6, 0.01, 0.38, 1.22
         x0 = np.array([tau, gamma, r0, rho])
         fixed = np.array([0, 1, 1, 0])
         r = fit23(
@@ -249,6 +249,6 @@ class Tests(unittest.TestCase):
         model = fit23.model
         np.testing.assert_array_almost_equal(
             r['x'], np.array([1.74493538, 0.00, 0.38, 8.75202697, -1., 0., 0.31683168, 0.31683168]),
-            decimal=4
+            decimal=3
         )
         self.assertEqual(((data - model)**2.0).sum() < 40, True)

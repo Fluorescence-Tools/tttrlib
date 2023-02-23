@@ -110,19 +110,5 @@ deploy:doc:
         git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mount.nfs 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
         cd doc && mamba env update --file environment.yml && conda activate doc
-        sphinx-build -b html . _build
-        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/ /srv/docs.peulen.xyz/tttrlib; fi
-
-## Downstream projects
-#tttrconvert:
-#  stage: Trigger-cross-projects
-#  trigger: chisurf/tttrconvert
-#
-#fit2x:
-#  stage: Trigger-cross-projects
-#  trigger: skf/fit2x
-#
-## Depends via fit2x on tttrlib
-##scikit-fluorescence:
-##  stage: Trigger-cross-projects
-##  trigger: skf/scikit-fluorescence
+        make html
+        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi

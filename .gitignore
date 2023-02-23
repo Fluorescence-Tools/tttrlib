@@ -1,7 +1,9 @@
 build/
 bld-dir/
 dist/
+doc/examples
 tmp/
+.ipynb_checkpoints
 cmake-build-*/
 temp/
 *.egg-info/

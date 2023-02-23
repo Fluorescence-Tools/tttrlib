@@ -35,16 +35,17 @@ root_doc = 'contents'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.autosummary',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'numpydoc',
+    'nbsphinx',
+    'sphinx_gallery.gen_gallery',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.imgconverter',
-    'sphinx_gallery.gen_gallery',
     'add_toctree_functions',
     'matplotlib.sphinxext.plot_directive',
-    'sphinxcontrib.bibtex'
-    # 'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel'
 ]
 
 # this is needed for some reason...
