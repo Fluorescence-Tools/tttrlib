@@ -323,19 +323,6 @@ def filter_search_index(app, exception):
         f.write(searchindex_text)
 
 
-breathe_projects = {}
-# latex and breathe do not play very well together. Therefore,
-# breathe is only used for the webpage.
-# compatible with readthedocs online builder and local builder
-if sys.argv[0].endswith('sphinx-build') and \
-        ('html' in sys.argv or sys.argv[-1] == '_build/html'):
-    subprocess.call('doxygen', shell=True)
-    breathe_projects['tttrlib'] = './_build/xml'
-    breathe_default_project = "tttrlib"
-    extensions += ['breathe']
-
-
-
 
 # Hack to get kwargs to appear in docstring #18434
 # TODO: Remove when https://github.com/sphinx-doc/sphinx/pull/8234 gets
