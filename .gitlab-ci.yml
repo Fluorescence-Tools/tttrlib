@@ -75,7 +75,7 @@ test:linux:
         conda config --add channels "file://`pwd`/bld-dir"
         git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mamba install python tttrlib nose scipy
-        mkdir /srv && mount.nfs 192.168.124.254:tank/www /srv
+        mount.nfs 192.168.124.254:tank/www /srv
         # sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
         ln /srv/tttr-data tttr-data
         nosetests test
@@ -108,7 +108,7 @@ deploy:doc:
     - |
         source activate base
         git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
-        mkdir /srv && mount.nfs 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
+        mount.nfs 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
         cd doc && mamba env update --file environment.yml && conda activate doc
         sphinx-build -b html . _build
         if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/ /srv/docs.peulen.xyz/tttrlib; fi
