@@ -77,7 +77,7 @@ test:linux:
         mamba install python tttrlib nose scipy
         mount.nfs 192.168.124.254:tank/www /srv
         # sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
-        ln /srv/tttr-data tttr-data
+        ln -s /srv/tttr-data tttr-data
         nosetests test
 
 deploy:conda:
