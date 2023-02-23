@@ -64,18 +64,23 @@ test:linux:
   image: condaforge/mambaforge
   needs: ["build:lnx_x86"]
   before_script:
-    - apt update -yq
-    - apt-get install -qy git sshfs
+    - |
+        export DEBIAN_FRONTEND=interactive
+        export TZ=Europe/Berlin
+        apt-get update -qy
+        apt-get install -qy git sshfs
   script:
-    - source activate base
-    - conda config --add channels "file://`pwd`/bld-dir"
-    - git clone https://gitlab.peulen.xyz/skf/tttrlib
-    - git fetch && git switch $CI_COMMIT_REF_NAME
-    - mamba install python tttrlib nose scipy
-    - mkdir tttr-data
-    - sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www/tttr-data tttr-data <<< $FTP_PASSWORD
-    # - git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
-    - nosetests test
+    - |
+        # requires runner in privileged mode see (https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4122)
+        source activate base
+        conda config --add channels "file://`pwd`/bld-dir"
+        git clone https://gitlab.peulen.xyz/skf/tttrlib
+        git fetch && git switch $CI_COMMIT_REF_NAME
+        mamba install python tttrlib nose scipy
+        mkdir tttr-data
+        sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www/tttr-data tttr-data <<< $FTP_PASSWORD
+        # git lfs clone https://gitlab.peulen.xyz/skf/tttr-data --depth 1
+        nosetests test
 
 deploy:conda:
   stage: deploy
