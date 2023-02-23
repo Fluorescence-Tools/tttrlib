@@ -8,7 +8,7 @@ numpy ICS implementation use CLSMImage as an input
 """
 import tttrlib
 import numpy as np
-import pylab as p
+import matplotlib.pylab as p
 import matplotlib.patches
 
 

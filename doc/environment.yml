@@ -13,7 +13,7 @@ dependencies:
     - sphinx-gallery
     - nbsphinx
     - jupyter_client # needed for nbsphinx
-    - tifffile
+    - tifffile <2023 # issue with reading example RICS TIFF
     - breathe
     - matplotlib
     - numpy
