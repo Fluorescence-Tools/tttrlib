@@ -71,11 +71,11 @@ test:linux:
         apt-get update -qy && apt-get install -qy git nfs-common # sshfs
   script:
     - |
-        # requires runner in privileged mode see (https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4122)
         source activate base
         conda config --add channels "file://`pwd`/bld-dir"
-        git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
+        git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mamba install python tttrlib nose scipy
+        # requires runner in privileged mode see
         mount.nfs -o nolock 192.168.124.254:tank/www /srv
         # sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
         ln -s /srv/tttr-data tttr-data
@@ -108,7 +108,7 @@ deploy:doc:
    script:
     - |
         source activate base
-        git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
+        git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mount.nfs -o nolock 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
         cd doc && mamba env update --file environment.yml && conda activate doc
         make html
