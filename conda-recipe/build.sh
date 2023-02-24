@@ -1,16 +1,16 @@
 git submodule update --recursive --init --remote
 mkdir b2 && cd b2
 
+
+# There is an additional check if the build machine supports.
+# On macOS the software is build on a machine that supports AVX.
+# To support x86 on M1 machines the AVX flag must be turned off.
 if [ "$(uname)" == "Darwin" ]; then
     # Do something under Mac OS X platform   
     export WITH_AVX=0 # no AVX under macOS -> issues with M1
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Do something under GNU/Linux platform
     export WITH_AVX=1
-elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
-    # Do something under 32 bits Windows NT platform
-elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
-    # Do something under 64 bits Windows NT platform
 fi
 
 cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" \
@@ -19,7 +19,7 @@ cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" \
  -DCMAKE_BUILD_TYPE=Release \
  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$SP_DIR" \
  -DCMAKE_SWIG_OUTDIR="$SP_DIR" \
- -DWITH_AVX="$WITH_AVX"
+ -DWITH_AVX="$WITH_AVX" \
  -G Ninja ..
 
 # On some platforms (notably aarch64 with Drone) builds can fail due to

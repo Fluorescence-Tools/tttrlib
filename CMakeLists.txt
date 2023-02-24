@@ -33,7 +33,7 @@ IF(WITH_AVX AND ${AVX_FOUND})
   ELSE(MSVC)
       STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
   ENDIF (MSVC)
-ENDIF(WITH_AVX)
+ENDIF(WITH_AVX AND ${AVX_FOUND})
 
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
