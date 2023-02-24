@@ -13,7 +13,7 @@ INCLUDE(simd)
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" OFF)
+OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
@@ -32,8 +32,8 @@ IF(WITH_AVX)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
   ELSE(MSVC)
       STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
-  ENDIF (MSVC)
-ENDIF(WITH_AVX)
+  ENDIF ()
+ENDIF()
 
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
