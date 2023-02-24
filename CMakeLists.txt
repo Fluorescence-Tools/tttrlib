@@ -22,10 +22,10 @@ OPTION(INSTALL "Install the library and the include files" ON)
 
 ## Compiler flags
 ########################
-IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
   set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
 ENDIF()
-IF(WITH_AVX AND ${AVX_FOUND})
+IF(WITH_AVX)
   IF (MSVC)
       # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
       # /Oi is for intrinsics
@@ -33,7 +33,7 @@ IF(WITH_AVX AND ${AVX_FOUND})
   ELSE(MSVC)
       STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
   ENDIF (MSVC)
-ENDIF(WITH_AVX AND ${AVX_FOUND})
+ENDIF(WITH_AVX)
 
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
