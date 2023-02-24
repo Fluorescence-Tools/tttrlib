@@ -13,7 +13,7 @@ INCLUDE(simd)
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ${AVX_FOUND})
+OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
@@ -25,7 +25,7 @@ OPTION(INSTALL "Install the library and the include files" ON)
 IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
   set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
 ENDIF()
-IF(WITH_AVX)
+IF(WITH_AVX AND ${AVX_FOUND})
   IF (MSVC)
       # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
       # /Oi is for intrinsics
@@ -132,13 +132,13 @@ IF(INSTALL)
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-            )
+    )
     INSTALL(TARGETS ${PROJECT_NAME}Static
             RUNTIME DESTINATION bin
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-            )
+    )
 ENDIF(INSTALL)
 
 # Print additional (Debug) info

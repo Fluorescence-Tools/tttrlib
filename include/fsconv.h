@@ -22,7 +22,8 @@
   #if !defined(__FMA__)
     #define __FMA__ 1
   #endif
-#endif //__AVX__
+#endif 
+//__AVX__
 
 
 /*!

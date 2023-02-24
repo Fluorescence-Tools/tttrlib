@@ -23,56 +23,6 @@ file. For that the header information from a PTU file need to be provided when
 writing to a file.
 
 
-.. code-block:: python
-
-    import tttrlib
-    import json
-    data = tttrlib.TTTR('./data/bh/bh_spc132.spc', 'SPC-130')
-    header = data.header
-    header.tttr_container_type = 0 # PTU
-    header.tttr_record_type = 4 # PQ_RECORD_TYPE_HHT3v2
-    header_dict = {
-        "tags": [
-            {"name": "MeasDesc_BinningFactor",
-             "idx": -1,
-             "type": 268435464,
-             "value": 1
-             },
-            {"name": "TTResultFormat_BitsPerRecord",
-             "idx": -1,
-             "type": 268435464,
-             "value": 1
-             },
-            {
-                "idx": -1,
-                "name": "MeasDesc_Resolution",
-                "type": 536870920,
-                "value": 3.2958984375e-12
-            },
-            {
-                "idx": -1,
-                "name": "MeasDesc_GlobalResolution",
-                "type": 536870920,
-                "value": 1.35e-08
-            },
-            {
-                "idx": -1,
-                "name": "TTResultFormat_BitsPerRecord",
-                "type": 268435464,
-                "value": 32
-            },
-            {
-                "idx": -1,
-                "name": "TTResultFormat_TTTRRecType",
-                "type": 268435464,
-                "value": 0x00010304 # rtHydraHarpT3
-            }
-        ]
-    }
-    header.json = json.dumps(header_dict)
-    data.write('spc_data_converted.ptu')
-    data_ptu = tttrlib.TTTR(ptu_file)
-
 
 When a TTTR file is writen to another format certain meta data need to be provided.
 The combination of tttr_container_type and tttr_record_type determines of the header
