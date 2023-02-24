@@ -102,13 +102,10 @@ conda install -c tpeulen tttrlib
 ```
 
 For most users the later approach is recommended. Currently, pre-compiled
-packages for the anaconda distribution system are available for:
+packages for the anaconda distribution system are available for Windows (x86),
+Linux (x86, ARM64, PPCle), and macOS (x86). 
 
-* Windows: Python 3.7 (x64)
-* Linux: Python 3.7 (x64)
-* MacOs: Python 3.7 (x64)
-
-Legacy 32-bit platforms and versions of programming languages, e.g, Python 2.7
+Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
 are not supported.
 
 ## Documentation
