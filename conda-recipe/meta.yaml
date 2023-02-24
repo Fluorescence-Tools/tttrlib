@@ -16,6 +16,7 @@ requirements:
   build:
     - python
     - numpy
+    - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - llvm-openmp  # [osx]
