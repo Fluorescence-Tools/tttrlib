@@ -889,7 +889,8 @@ void CLSMImage::get_mean_lifetime(
         TTTR* tttr_irf, double m0_irf, double m1_irf,
         bool stack_frames,
         std::vector<double> background,
-        double m0_bg, double m1_bg
+        double m0_bg, double m1_bg,
+        double background_fraction
 ){
     const double dt = tttr_data->header->get_micro_time_resolution() * 1E9;
 #if VERBOSE_TTTRLIB
@@ -944,7 +945,8 @@ void CLSMImage::get_mean_lifetime(
                     t[pixel_nbr] = TTTRRange::compute_mean_lifetime(
                             tttr_indices, tttr_data, minimum_number_of_photons,
                             nullptr, m0_irf, m1_irf, dt,
-                            nullptr, m0_bg, m1_bg
+                            nullptr, m0_bg, m1_bg,
+                            background_fraction
                             );
                 } else {
                     auto px = this->frames[i_frame]->lines[i_line]->pixels[i_pixel];
@@ -953,7 +955,9 @@ void CLSMImage::get_mean_lifetime(
                                     tttr_data,
                                     minimum_number_of_photons,
                                     nullptr, m0_irf, m1_irf, dt,
-                                    nullptr, m0_bg, m1_bg);
+                                    nullptr, m0_bg, m1_bg,
+                                    background_fraction
+                                    );
                 }
             }
         }

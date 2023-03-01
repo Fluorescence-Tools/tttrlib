@@ -757,6 +757,7 @@ public:
      * @param background background pattern
      * @param m0_bg sum of background photons (overwritten if background pattern not empty)
      * @param m1_bg first moment of background pattern (overwritten if background pattern not empty)
+     * @param background_fraction background fraction (if negative background is not scaled)
      * @return The computed lifetime
      */
     static double compute_mean_lifetime(
@@ -767,7 +768,8 @@ public:
             double dt = -1.0,
             int minimum_number_of_photons = 1,
             std::vector<double> *background = nullptr,
-            double m0_bg = 0.0, double m1_bg = 0.0
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     /*!

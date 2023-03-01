@@ -928,7 +928,8 @@ double TTTR::compute_mean_lifetime(
         double dt,
         int minimum_number_of_photons,
         std::vector<double> *background,
-        double m0_bg, double m1_bg
+        double m0_bg, double m1_bg, 
+        double background_fraction
 ){
     if(dt < 0.0){
         dt = tttr_data->header->get_micro_time_resolution();
@@ -946,8 +947,7 @@ double TTTR::compute_mean_lifetime(
 
     // Compute moments for background pattern
     if(background != nullptr){
-        m0_bg = 0.0;
-        m1_bg = 0.0;
+        m0_bg = 0.0; m1_bg = 0.0;
         for(size_t i = 0; i < background->size(); i++){
             m0_bg += (*background)[i];
             m1_bg += i * (*background)[i];
@@ -965,6 +965,12 @@ double TTTR::compute_mean_lifetime(
         m0_h += (double) tttr_indices->size();
         for (auto &vi: *tttr_indices)
             m1_h += tttr_data->micro_times[vi];
+    }
+
+    // Scale by background by background fraction
+    if(background_fraction > 0.0){
+        m1_bg = m1_bg * (m0_h / m0_bg) * background_fraction;
+        m0_bg = m0_h * background_fraction;
     }
 
     // Compute average lifetime
