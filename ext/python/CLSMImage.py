@@ -1,26 +1,5 @@
 import tttrlib
 
-
-@property
-def line_duration(self):
-    """ line duration in milliseconds
-    """
-    # this is in milliseconds
-    header = self.header
-    line_duration = (self[0][1][0].get_start_stop_time()[0] -
-                     self[0][0][0].get_start_stop_time()[0]) * \
-                    header.macro_time_resolution / 1e6
-    return line_duration
-
-@property
-def pixel_duration(self):
-    """ pixel duration in milliseconds
-    """
-    line = self[0][0]
-    return line.get_duration() * \
-           self.header.macro_time_resolution / \
-           (1e3 * self.n_pixel)
-
 @property
 def shape(self):
     return self.n_frames, self.n_lines, self.n_pixel
@@ -48,6 +27,7 @@ def __getattr__(self, item):
         return call()
     else:
         raise AttributeError
+
 
 def __init__(
         self,

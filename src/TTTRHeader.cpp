@@ -737,7 +737,9 @@ nlohmann::json TTTRHeader::get_tag(
             }
         }
     }
+#if VERBOSE_TTTRLIB
     std::cerr << "ERROR: TTTR-TAG " << name << ":" << idx << " not found." << std::endl;
+#endif
     nlohmann::json re = {
             {"value", -1.0},
             {"idx", -1},
