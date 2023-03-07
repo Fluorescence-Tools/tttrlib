@@ -419,8 +419,8 @@ void Correlator::normalize_ccf(
     auto cr2 = (double) np2 / std::max(1.0, (double) dt2);
     auto maximum_macro_time = (double) std::max(dt1, dt2);
     for (unsigned int j = 0; j < x_axis.size(); j++) {
-        auto pw = (uint64_t) pow(2.0, (int) (float(j - 1) / n_bins));
-        auto delta_t = (double) (maximum_macro_time - x_axis[j]);
+        double pw = (uint64_t) pow(2.0, (int) (double(j - 1) / n_bins));
+        double delta_t = (double) (maximum_macro_time - x_axis[j]);
         corr[j] /= pw; corr[j] /= (cr1 * cr2 * delta_t);
         if(correct_x_axis){
             x_axis[j] = x_axis[j] / pw * pw;
