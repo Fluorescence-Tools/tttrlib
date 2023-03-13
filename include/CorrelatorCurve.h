@@ -36,11 +36,13 @@ private:
 
     /*!
      *
+     * @brief Updates x-axis (correlation bins) to the current parameters
+     *  
      * tau_j = tau_(i_casc -1 ) + 2 ** (floor(i_casc-1 / n_bins))
      *
      * for n_casc = 3, n_bins = 10 tau_j = [0, 1, 2, ..., 9, 10, 12, ..., 28, 30, 34, ..., 70] (j=0...n_casc*n_bins)
      *
-     * Updates x-axis to the current parameters
+     * 
      */
     void update_axis();
 
@@ -75,14 +77,20 @@ public:
     }
 
     /*!
-     * Get the x-axis of the correlation
-     *
+     * @brief Get the x-axis of the correlation
      *
      * @param[out] x_axis a pointer to an array that will contain the x-axis
      * @param[out] n_out a pointer to the an integer that will contain the
      * number of elements of the x-axis
      */
     void get_x_axis(double **output, int *n_output);
+
+    /*!
+    * @brief Set the x-axis to arbitray bin values.
+    * 
+    * Attention: Make sure that the correlation method supports arbitray bin spacing
+    */
+    void set_x_axis(std::vector<long long unsigned int> input);
 
     /*!
      * @param[in] v  the number of equally spaced correaltion channels per block
