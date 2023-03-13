@@ -1,3 +1,18 @@
+def __getattr__(self, item):
+    """
+    If an attribute `attribute` is accesses that does not exist
+    the corresponding getter by calling 'get_attribute' is called
+
+    :param self:
+    :param item:
+    :return:
+    """
+    item = "get_" + str(item)
+    if hasattr(self.__class__, item):
+        call = getattr(self, item)
+        return call()
+    else:
+        raise AttributeError
 
 @property
 def correlation(self):
@@ -12,7 +27,6 @@ def x_axis(self):
 @property
 def tttr(self):
     return self.get_tttr()
-
 
 @tttr.setter
 def tttr(self, v):
@@ -45,12 +59,10 @@ def weights(self, v):
 def __repr__(self):
     return 'tttrlib.Correlator()'
 
-
 def __str__(self):
     s = "Number of evenly spaced correlation channels: %d \n" % self.get_n_bins()
     s += "Number of correlation blocks: %d \n" % self.get_n_casc()
     return s
-
 
 def __init__(
         self,
