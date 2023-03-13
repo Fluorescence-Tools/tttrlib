@@ -33,7 +33,7 @@ void DecayFit23::correct_input(double *x, double *xm, LVDoubleArray *corrections
         x[7] = fit_signals.rs();
         x[6] = r;
     }
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "CORRECT_INPUT23" << std::endl;
     std::cout << fit_corrections.str();
     std::cout << fit_signals.str();
@@ -97,7 +97,7 @@ int DecayFit23::modelf(
     tmpf = (1. - gamma) / sum_m;
     for (i = 0; i < 2 * Nchannels; i++) mfunction[i] = mfunction[i] * tmpf + bg[i] * gamma;
 
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "COMPUTE MODEL23" << std::endl;
     std::cout << "-- tau: " << tau << std::endl;
     std::cout << "-- gamma: " << gamma << std::endl;
@@ -132,7 +132,7 @@ double DecayFit23::targetf(double *x, void *pv) {
         w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(fit_signals.Bexpected + 1.);
     }
     double v = w / Nchannels + fit_settings.penalty;
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "COMPUTING TARGET23" << std::endl;
     std::cout << "xm:" ; for(int i=0; i<8;i++) std::cout << xm[i] << " "; std::cout << std::endl;
     std::cout << "corrections:" ;
@@ -179,7 +179,8 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     // pre-fit with fixed gamma
     //  bfgs_o.maxiter = 20;
     if(!fixed[0]){
-        bfgs_o.minimize(x, p);
+        std::cout << "pre-fit with fixed gamma" << std::endl;
+        info = bfgs_o.minimize(x, p);
     }else {
         bfgs_o.fix(0);
     }
@@ -187,6 +188,9 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     // fit with free gamma
     // bfgs_o.maxiter = 100;
     if (!fixed[1] && (x[4] <= 0.)) {
+        std::cout << "fit with free gamma" << std::endl;
+        std::cout << fixed[1] << std::endl;
+        std::cout << x[4] << std::endl;
         bfgs_o.free(1);
         info = bfgs_o.minimize(x, p);
     }
@@ -200,8 +204,9 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
 
     if (info == 5 || x[0] < 0.) x[0] = -1.;        // for report
     x[1] = xm[1];
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "FIT23" << std::endl;
+    std::cout << "-- BFGS info: " << info << std::endl;
     std::cout << "-- Initial parameters / fixed: " << std::endl;
     std::cout << "-- tau: " << x[0] << " / " << fixed[0] << std::endl;
     std::cout << "-- gamma: " << x[1] << " / " << fixed[1] << std::endl;

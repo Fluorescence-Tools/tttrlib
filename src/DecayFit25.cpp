@@ -39,7 +39,7 @@ void DecayFit25::correct_input(double* x, double* xm, LVDoubleArray* corrections
         x[8] = fit_signals.rs();
     }
 
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "correct_input25" << std::endl;
     std::cout<< "xm[1]:" << xm[1] << std::endl;
     std::cout << fit25_corrections.str();
@@ -135,7 +135,7 @@ double DecayFit25::fit (double* x, short* fixed, MParam* p)
         fit_signals.normM(M->data, Nchannels);
         if (p2s_twoIstar) tIstar = twoIstar_p2s(expdata->data, M->data, Nchannels);
         else tIstar = twoIstar(expdata->data, M->data, Nchannels);
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
         std::cout<< x[i] << "\t" << tIstar << "\t"  << std::endl;
 #endif
         if (tIstar < tIstarbest) {

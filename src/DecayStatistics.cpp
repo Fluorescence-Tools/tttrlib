@@ -32,7 +32,7 @@ double statistics::chi2_counting(
         int x_max,
         const char* type
 ){
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "CHI2_COUNTING" << std::endl;
     std::cout << "-- type: " << type << std::endl;
     std::cout << "-- x_min: " << x_min << std::endl;
@@ -52,7 +52,7 @@ double statistics::chi2_counting(
     } else{
         chi2 = sswr(data.data(), model.data(), data_noise.data(), x_min, x_max);
     }
-#if VERBOSE_FIT2X
+#if VERBOSE_TTTRLIB
     std::cout << "-- chi2: " << chi2 << std::endl;
 #endif
     return chi2;
