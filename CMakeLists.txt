@@ -31,7 +31,7 @@ IF(WITH_AVX)
       # /Oi is for intrinsics
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
   ELSE(MSVC)
-      STRING(APPEND CMAKE_CXX_FLAGS " -Ofast -mavx -mfma -ffast-math -funroll-loops")
+      STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mavx -mfma")
   ENDIF ()
 ENDIF()
 
