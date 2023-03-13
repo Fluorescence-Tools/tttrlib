@@ -1,5 +1,4 @@
 #include <include/Correlator.h>
-#include <algorithm>
 
 
 Correlator::Correlator(
@@ -24,8 +23,8 @@ Correlator::Correlator(
 }
 
 void Correlator::set_macrotimes(
-        unsigned long long  *t1v, int n_t1v,
-        unsigned long long  *t2v, int n_t2v
+        unsigned long long *t1v, int n_t1v,
+        unsigned long long *t2v, int n_t2v
 ){
 #if VERBOSE_TTTRLIB
     std::clog << "-- Setting macro times..." << std::endl;
@@ -80,14 +79,15 @@ void Correlator::run(){
     } else {
         if(!p1.empty() && !p2.empty()){
             curve.clear();
-            if (correlation_method == "default"){
-                ccf(
+            if (correlation_method == "wahl"){
+                ccf_wahl(
                         get_n_casc(), get_n_bins(),
-                        curve.x_axis, curve.correlation,
+                        curve.x_axis, 
+                        curve.correlation,
                         p1, p2
                 );
-            } else if (correlation_method == "lamb") {
-                ccf_lamb(
+            } else if (correlation_method == "felekyan") {
+                ccf_felekyan(
                         (const unsigned long long *) p1.times.data(),
                         (const unsigned long long *) p2.times.data(),
                         p1.weights.data(), p2.weights.data(),
@@ -98,6 +98,8 @@ void Correlator::run(){
                         curve.x_axis.data(),
                         curve.correlation.data()
                 );
+            } else if (correlation_method == "laurence") {
+                ccf_laurence(curve.x_axis, curve.correlation, p1, p2);
             } else{
                 std::cerr << "WARNING: Correlation mode not recognized!" << std::endl;
             }
@@ -168,7 +170,7 @@ void Correlator::set_filter(
     p2.set_weights(filter, micro_times_2, routing_channels_2);
 }
 
-void Correlator::ccf_lamb(
+void Correlator::ccf_felekyan(
         const unsigned long long *t1,
         const unsigned long long *t2,
         const double *weights1,
@@ -178,8 +180,7 @@ void Correlator::ccf_lamb(
         unsigned int np1,
         unsigned int np2,
         const unsigned long long *xdat, double *corrl
-)
-{
+) {
     // t1, t2:              macrotime vectors
     // xdat:                correlation time bins (timeaxis)
     // np1, np2:            number of photons in each channel
@@ -311,7 +312,7 @@ void Correlator::ccf_lamb(
     }
 }
 
-inline void ccf_correlate(
+inline void ccf_wahl_correlate(
         size_t start_1, size_t end_1,
         size_t start_2, size_t end_2,
         size_t i_casc, size_t n_bins,
@@ -345,7 +346,7 @@ inline void ccf_correlate(
     }
 }
 
-void Correlator::ccf(
+void Correlator::ccf_wahl(
         size_t n_casc, size_t n_bins,
         std::vector<unsigned long long> &taus, std::vector<double> &corr,
         CorrelatorPhotonStream &p1,
@@ -365,7 +366,7 @@ void Correlator::ccf(
     }
 #endif
     for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
-        ccf_correlate(
+        ccf_wahl_correlate(
                 0, s1.size(),
                 0, s2.size(),
                 i_casc, n_bins,
@@ -378,25 +379,62 @@ void Correlator::ccf(
     }
 }
 
-void Correlator::normalize(
-        Correlator* correlator,
-        CorrelatorCurve &curve
-        ){
+void Correlator::ccf_laurence(
+            std::vector<unsigned long long> &taus, 
+            std::vector<double> &corr,
+            CorrelatorPhotonStream &p1,
+            CorrelatorPhotonStream &p2
+){
+    int nbins = taus.size();
+    long i, j, k, l;
+    
+    std::vector<long> jmin(taus.size(), 0);
+    std::vector<long> jmax(taus.size(), 0);
+
+    for(i = 0; i < p1.size(); i++){
+        auto ti = p1.times[i];
+        double w1 = p1.weights[i];
+        
+        for(int k = 0; k < nbins - 1; k++){
+            double tau_min = taus[k + 0]; // lower edge of tau bin
+            double tau_max = taus[k + 1]; // upper edge of tau bin
+
+            if(k == 0){
+                j = jmin[k];
+                for(; (j < p2.size()) && ((p2.times[j] - ti) < tau_min); j++);
+            }
+            jmin[k] = j;
+            
+            j = std::max(jmax[k], j);
+            for(; (j < p2.size()) && ((p2.times[j] - ti) < tau_max); j++);
+            jmax[k] = j;
+
+            // add weight
+            double w2 = 0.0; 
+            for(l = jmin[k]; l < jmax[k]; l++) w2 += p2.weights[l];
+            corr[k] += w1 * w2; 
+
+        }
+
+    }
+}
+
+void Correlator::normalize(Correlator* correlator, CorrelatorCurve &curve){
 #if VERBOSE_TTTRLIB
     std::clog << "-- Normalizing correlation curve..." << std::endl;
 #endif
     for(size_t i=0; i < curve.corr_normalized.size(); i++) curve.corr_normalized[i] = curve.correlation[i];
     uint64_t maximum_macro_time = correlator->dt();
-    if(correlator->correlation_method == "default"){
-        normalize_ccf(
+    if(correlator->correlation_method == "wahl"){
+        normalize_ccf_wahl(
                 correlator->p1.sum_of_weights(), correlator->p1.dt(),
                 correlator->p2.sum_of_weights(), correlator->p2.dt(),
                 curve.x_axis,
                 curve.corr_normalized,
                 curve.settings.n_bins
         );
-    } else if (correlator->correlation_method == "lamb") {
-        normalize_ccf_lamb(
+    } else if (correlator->correlation_method == "felekyan") {
+        normalize_ccf_felekyan(
                 curve.x_axis, curve.correlation,
                 curve.x_axis,
                 curve.corr_normalized,
@@ -405,32 +443,71 @@ void Correlator::normalize(
                 curve.settings.n_casc,
                 maximum_macro_time
         );
+    } else if (correlator->correlation_method == "laurence") {
+        normalize_ccf_laurence(
+            correlator->p1,
+            correlator->p2,
+            curve.x_axis, 
+            curve.correlation,
+            curve.corr_normalized         
+        );
     }
 }
 
-void Correlator::normalize_ccf(
+void Correlator::normalize_ccf_wahl(
         double np1, uint64_t dt1,
         double np2, uint64_t dt2,
-        std::vector<unsigned long long> &x_axis, std::vector<double> &corr,
-        size_t n_bins,
-        bool correct_x_axis
+        std::vector<unsigned long long> &x_axis, 
+        std::vector<double> &corr,
+        size_t n_bins
 ) {
-    auto cr1 = (double) np1 / std::max(1.0, (double) dt1);
-    auto cr2 = (double) np2 / std::max(1.0, (double) dt2);
-    auto maximum_macro_time = (double) std::max(dt1, dt2);
+    double cr1 = (double) np1 / std::max(1.0, (double) dt1);
+    double cr2 = (double) np2 / std::max(1.0, (double) dt2);
+    double maximum_macro_time = (double) std::max(dt1, dt2);
     for (unsigned int j = 0; j < x_axis.size(); j++) {
         double pw = (uint64_t) pow(2.0, (int) (double(j - 1) / n_bins));
         double delta_t = (double) (maximum_macro_time - x_axis[j]);
-        corr[j] /= pw; corr[j] /= (cr1 * cr2 * delta_t);
-        if(correct_x_axis){
-            x_axis[j] = x_axis[j] / pw * pw;
-        } else{
-            x_axis[j] = x_axis[j];
-        }
+        corr[j] /= pw; 
+        corr[j] /= (cr1 * cr2 * delta_t);
     }
 }
 
-void Correlator::normalize_ccf_lamb(
+void Correlator::normalize_ccf_laurence(
+        CorrelatorPhotonStream &p1,
+        CorrelatorPhotonStream &p2,
+        std::vector<unsigned long long> &axis, 
+        std::vector<double> &corr,
+        std::vector<double> &corr_normalized
+) {
+    double dt1 = p1.dt();
+    double dt2 = p2.dt();
+    double duration = std::max(dt1, dt2);
+    double n1 = p1.sum_of_weights();
+    double n2 = p2.sum_of_weights();
+
+    for (int i = 0; i < axis.size() - 1; i++) {
+        double dtau = axis[i + 1] - axis[i];
+        double scale = (duration / dtau - 1.0);
+
+        // double w1 = 0.0;
+        // for(int i = 0; i < p1.size(); i++)
+        //     w1 += p1.weights[i] * (p1.times[i] >= dtau);
+
+        // double w2 = 0.0;
+        // double dt_dtau = dt2 - dtau;
+        // for(int i = 0; i < p2.size(); i++)
+        //     w2 += p2.weights[i] * (p2.times[i] <= dt_dtau);
+
+        // corr_normalized[i + 1] = corr[i] * scale / (w1 * w2);
+
+        corr_normalized[i + 1] = corr[i] * scale / (n1 * n2);
+
+    }
+
+}
+
+
+void Correlator::normalize_ccf_felekyan(
         std::vector<unsigned long long> &x_axis,
         std::vector<double> &corr,
         std::vector<unsigned long long> &x_axis_normalized,

@@ -27,9 +27,7 @@ void CorrelatorPhotonStream::make_fine(
             times.data(), times.size(),
             tac, number_of_microtime_channels
     );
-    set_time_axis_calibration(
-            time_axis_calibration / number_of_microtime_channels
-            );
+    set_time_axis_calibration(time_axis_calibration / number_of_microtime_channels);
 }
 
 unsigned long long CorrelatorPhotonStream::dt(){
@@ -79,11 +77,12 @@ void CorrelatorPhotonStream::set_tttr(
 }
 
 void CorrelatorPhotonStream::coarsen() {
-    for(size_t i=0; i< size(); i++) times[i] /= 2;
+    for(size_t i=0; i< size(); i++) 
+        times[i] /= 2;
     for (size_t i = 1; i < times.size(); i++) {
         if (times[i] == times[i - 1]) {
             weights[i] += weights[i - 1];
-            weights[i - 1] = 0;
+            weights[i - 1] = 0.0;
         }
     }
     size_t j=0;

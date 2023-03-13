@@ -9,6 +9,10 @@ void CorrelatorCurve::get_x_axis(double **output, int *n_output){
     *output = t;
 }
 
+void CorrelatorCurve::set_x_axis(std::vector<long long unsigned int> input){
+    this->x_axis = input;
+}
+
 void CorrelatorCurve::get_corr(double** output, int* n_output){
     (*n_output) = settings.get_ncorr();
     auto* t = (double *) malloc((*n_output) * sizeof(double));
