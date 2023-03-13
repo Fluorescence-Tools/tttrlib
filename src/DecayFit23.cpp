@@ -179,7 +179,6 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     // pre-fit with fixed gamma
     //  bfgs_o.maxiter = 20;
     if(!fixed[0]){
-        std::cout << "pre-fit with fixed gamma" << std::endl;
         info = bfgs_o.minimize(x, p);
     }else {
         bfgs_o.fix(0);
@@ -188,9 +187,6 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     // fit with free gamma
     // bfgs_o.maxiter = 100;
     if (!fixed[1] && (x[4] <= 0.)) {
-        std::cout << "fit with free gamma" << std::endl;
-        std::cout << fixed[1] << std::endl;
-        std::cout << x[4] << std::endl;
         bfgs_o.free(1);
         info = bfgs_o.minimize(x, p);
     }
