@@ -4,6 +4,9 @@ Lifetime analysis
 =================
 Fit a decay to photons in pixel to determine a mean fluorescence lifetime.
 """
+
+# %%
+# Import necessary libraries
 import tttrlib
 import numpy as np
 import pylab as plt
@@ -60,7 +63,7 @@ settings = {
 # values of the fitting parameters, and an array that specifies which parameters are
 # fixed.
 fit23 = tttrlib.Fit23(**settings)
-tau, gamma, r0, rho = 5.2, 0.05, 0.38, 10.0
+tau, gamma, r0, rho = 3.2, 0.05, 0.38, 10.0
 x0 = np.array([tau, gamma, r0, rho])
 fixed = np.array([0, 0, 1, 0])
 

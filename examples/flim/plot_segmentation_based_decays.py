@@ -21,6 +21,8 @@ structures.
     7. Apply pixel classes for analysis
 
 """
+
+#%%
 import tttrlib
 import numpy as np
 import matplotlib.pyplot as plt

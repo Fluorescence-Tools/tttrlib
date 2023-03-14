@@ -9,6 +9,8 @@ image. Instead of operating on gray level intensity of and image at any point. P
 information) are mapped to a new image. Such a mapping can eg for non-affine and affine transforamtions (rotations,
 streching, etc.). Below a very simple image transformation (scaling/streching) is illustrated.
 """
+
+#%%
 from __future__ import print_function
 import tttrlib
 import numpy as np

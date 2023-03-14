@@ -23,6 +23,8 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
 
 
 """
+
+#%%
 from __future__ import print_function
 
 import matplotlib.pyplot as plt

@@ -20,6 +20,8 @@ are analyzed in FLIM, paving the way for the analysis of large data sets
 and, in general, making the FLIM technique accessible to the nonexpert
 in spectroscopy and data analysis :cite:`DIGMAN2008L14`.
 """
+
+#%%
 from __future__ import print_function
 import tttrlib
 

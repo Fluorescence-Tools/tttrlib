@@ -3,6 +3,8 @@
 Image rebinning
 ===============
 """
+
+#%%
 from __future__ import print_function
 import tttrlib
 import numpy as np
