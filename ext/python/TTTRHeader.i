@@ -1,5 +1,5 @@
 %{
-#include "../include/TTTRHeader.h"
+#include "TTTRHeader.h"
 %}
 
 //%ignore TTTRHeader();
@@ -14,6 +14,6 @@
 %attribute(TTTRHeader, int, tttr_record_type, get_tttr_record_type, set_tttr_record_type);
 %attribute(TTTRHeader, int, tttr_container_type, get_tttr_container_type, set_tttr_container_type);
 
-%include "../include/TTTRHeader.h"
+%include "TTTRHeader.h"
 
 %extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader.py"}

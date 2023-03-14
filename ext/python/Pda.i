@@ -1,7 +1,7 @@
 %module tttrlib
 %{
-#include "../include/Pda.h"
-#include "../include/PdaCallback.h"
+#include "Pda.h"
+#include "PdaCallback.h"
 %}
 
 //// internal
@@ -33,5 +33,5 @@
 // Used for PdaCallback
 // see https://github.com/swig/swig/tree/master/Examples/python/callback
 %feature("director") PdaCallback;
-%include "../include/Pda.h"
-%include "../include/PdaCallback.h"
+%include "Pda.h"
+%include "PdaCallback.h"

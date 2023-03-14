@@ -1,5 +1,5 @@
 %{
-#include "../include/TTTRRange.h"
+#include "TTTRRange.h"
 %}
 
 // Python does not support overloading. Thus, ignore the copy constructor
@@ -18,4 +18,4 @@
     (double** time, int* n_time)
 };
 
-%include "../include/TTTRRange.h"
+%include "TTTRRange.h"

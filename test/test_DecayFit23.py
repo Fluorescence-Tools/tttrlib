@@ -202,7 +202,7 @@ class Tests(unittest.TestCase):
         tau = 2.1
         x = np.zeros(8, dtype=np.float64)
         x[:6] = [tau, gamma, r0, rho, bifl_scatter, p_2s]
-        fixed = np.array([0, 1, 1, 1], dtype=np.int16)  # lifetime fitted
+        fixed = np.array([0, 0, 1, 1], dtype=np.int16)  # lifetime fitted
         twoIstar = tttrlib.DecayFit23.fit(x, fixed, m_param)
         fit_res = np.array([1.79, 0.0, 0.38, 1.2, -1., 0., 0.26, 0.26])
         np.testing.assert_array_almost_equal(fit_res, x, decimal=2)

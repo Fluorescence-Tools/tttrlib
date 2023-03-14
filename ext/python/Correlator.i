@@ -1,8 +1,8 @@
 %{
-#include "../include/TTTR.h"
-#include "../include/CorrelatorPhotonStream.h"
-#include "../include/CorrelatorCurve.h"
-#include "../include/Correlator.h"
+#include "TTTR.h"
+#include "CorrelatorPhotonStream.h"
+#include "CorrelatorCurve.h"
+#include "Correlator.h"
 %}
 
 // CorrelatorCurve
@@ -23,9 +23,9 @@
 %apply (unsigned short* IN_ARRAY1, int DIM1) {(unsigned short* tac_2, int n_tac_2)}
 %apply (unsigned short* IN_ARRAY1, int DIM1) {(unsigned short *tac, int n_tac)}
 
-%include "../include/CorrelatorPhotonStream.h"
-%include "../include/CorrelatorCurve.h"
-%include "../include/Correlator.h"
+%include "CorrelatorPhotonStream.h"
+%include "CorrelatorCurve.h"
+%include "Correlator.h"
 
 %extend Correlator{
     %pythoncode "../ext/python/Correlator.py"
