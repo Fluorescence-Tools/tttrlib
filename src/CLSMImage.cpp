@@ -1354,8 +1354,9 @@ void CLSMImage::transform(unsigned int* input, int n_input){
         CLSMPixel* source_pixel = source->getPixel(input[i + 0]);
         CLSMPixel* target_pixel = target->getPixel(input[i + 1]);
         // Append tttr indices to pixel
-        target_pixel->_tttr_indices.insert(
-                target_pixel->_tttr_indices.begin(), target_pixel->_tttr_indices.end());
+        for(auto tr_idx: source_pixel->_tttr_indices){
+            target_pixel->_tttr_indices.insert(tr_idx);
+        }
     }
 
     delete source;
