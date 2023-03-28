@@ -1,7 +1,8 @@
 git submodule update --recursive --init --remote
 mkdir b2 && cd b2
 
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+cmake  \
+ -DCMAKE_INSTALL_PREFIX="$PREFIX" \
  -DCMAKE_PREFIX_PATH="$PREFIX" \
  -DBUILD_PYTHON_INTERFACE=ON \
  -DCMAKE_BUILD_TYPE=Release \

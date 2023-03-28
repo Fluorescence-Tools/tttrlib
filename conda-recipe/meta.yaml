@@ -26,6 +26,7 @@ requirements:
     - ninja
     - cmake
     - make         # [linux]
+    - cmake-build-extension
   host:
     - python
     - setuptools
@@ -35,13 +36,13 @@ requirements:
     - fftw
   run:
     - python
+    - typing # [py27]
+    - tqdm
     - click
+    - click-didyoumean
+    - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
-    - tqdm
-    - click-didyoumean
-    - typing # [py27]
-    - {{ pin_compatible('numpy') }}
     - boost-cpp
     - hdf5
     - fftw
@@ -58,8 +59,6 @@ about:
   license: {{ data.get('license') }}
   summary: |
     {{ data.get('description') }}
-description: |
-    {{ data.get('long_description') }}
 
 extra:
   recipe-maintainers:

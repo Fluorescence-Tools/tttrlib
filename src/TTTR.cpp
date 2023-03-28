@@ -283,7 +283,7 @@ int TTTR::read_file(const char *fn, int container_type) {
 #endif
             return 1;
     } else{
-        std::cerr << "-- WARNING: File " << filename << " does not exist" << std::endl;
+        std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
         return 0;
     }
 }

@@ -1,8 +1,13 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
-ENABLE_LANGUAGE(CXX)
-SET(CMAKE_CXX_STANDARD 11)
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
+
+# C++ standard
+ENABLE_LANGUAGE(CXX)
+SET(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # CMAKE
 ###########
@@ -18,7 +23,6 @@ OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
-OPTION(INSTALL "Install the library and the include files" ON)
 
 ## Compiler flags
 ########################
