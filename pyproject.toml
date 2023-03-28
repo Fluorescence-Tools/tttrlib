@@ -1,3 +1,44 @@
+[project]
+version = "0.23.7"
+name = "tttrlib"
+requires-python = ">=3.7"
+description = "tttrlib read/process/write TTTR data."
+long_description = "file: README.md"
+long_description_content_type = "text/markdown"
+authors = [
+  {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
+]
+license = {file = "LICENSE.txt"}
+
+keywords = [
+    "fluorescence",
+    "time-resolved",
+    "spectroscopy",
+    "imaging",
+    "microscopy"
+]
+
+classifiers = [
+    "Topic :: Software Development",
+    "Development Status :: 2 - Pre-Alpha",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Framework :: Fluorescence Framework",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"
+]
+
+[project.urls]
+homepage = "https://github.com/fluorescence-tools/tttrlib"
+documentation = "https://docs.peulen.xyz/tttrlib"
+repository = "https://github.com/fluorescence-tools/tttrlib.git"
+
 [build-system]
 requires = [
     "wheel",

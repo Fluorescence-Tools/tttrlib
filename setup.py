@@ -3,11 +3,7 @@ import os
 import sys
 import inspect
 from pathlib import Path
-try:
-    import cmake_build_extension
-except ImportError:
-    print("Missing: cmake_build_extension")
-import setuptools
+import cmake_build_extension
 
 # Importing the bindings inside the build_extension_env context manager is necessary only
 # in Windows with Python>=3.8.
