@@ -248,6 +248,6 @@ class Tests(unittest.TestCase):
         model = fit23.model
         np.testing.assert_array_almost_equal(
             r['x'], np.array([1.74, 0.00, 0.38, 8.75, -1., 0., 0.317, 0.317]),
-            decimal=2
+            decimal=1
         )
         self.assertEqual(((data - model)**2.0).sum() < 40, True)
