@@ -127,7 +127,6 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_ref, model_fconv)
 
-    @nose.tools.raises(AssertionError) # AVX can be tricky
     def test_fconv_avx(self):
         period = 12.0
         lifetime_spectrum = np.array([1.0, 4.1])
@@ -196,7 +195,6 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_fconv_per, ref)
 
-    @nose.tools.raises(AssertionError) # AVX can be tricky
     def test_fconv_per_avx(self):
         period = 13.0
         lifetime_spectrum = np.array([1.0, 4.1])
