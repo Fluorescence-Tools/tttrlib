@@ -30,7 +30,6 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Programming Language :: C++",
     "Programming Language :: Python :: 3 :: Only",
-    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"
 ]
 
 [project.urls]
