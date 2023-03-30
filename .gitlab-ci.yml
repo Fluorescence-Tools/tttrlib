@@ -115,6 +115,7 @@ deploy:doc:
         if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
 
 linux:cibuildwheel:
+  stage: build
   image: python:3.8
   tags:
     - x86_64
@@ -138,6 +139,7 @@ linux:cibuildwheel:
     - python ./bin/run_tests.py
 
 windows:cibuildwheel:
+  stage: build
   tags:
     - win
   image: mcr.microsoft.com/windows/servercore:1809
