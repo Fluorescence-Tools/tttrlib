@@ -1,56 +1,56 @@
 [project]
-version = "0.23.7"
-name = "tttrlib"
-requires-python = ">=3.7"
-description = "tttrlib read/process/write TTTR data."
-readme = "README.md"
-authors = [
-  {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
-]
-license = {file = "LICENSE.txt"}
+    version = "0.23.7"
+    name = "tttrlib"
+    requires-python = ">=3.7"
+    description = "tttrlib read/process/write TTTR data."
+    readme = "README.md"
+    authors = [
+    {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
+    ]
+    license = {file = "LICENSE.txt"}
 
-keywords = [
-    "fluorescence",
-    "time-resolved",
-    "spectroscopy",
-    "imaging",
-    "microscopy"
-]
+    keywords = [
+        "fluorescence",
+        "time-resolved",
+        "spectroscopy",
+        "imaging",
+        "microscopy"
+    ]
 
-classifiers = [
-    "Topic :: Software Development",
-    "Development Status :: 2 - Pre-Alpha",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: MacOS",
-    "Operating System :: Microsoft :: Windows",
-    "Framework :: Fluorescence Framework",
-    "Intended Audience :: Education",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering",
-    "Programming Language :: C++",
-    "Programming Language :: Python :: 3 :: Only",
-]
+    classifiers = [
+        "Topic :: Software Development",
+        "Development Status :: 2 - Pre-Alpha",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows",
+        "Framework :: Fluorescence Framework",
+        "Intended Audience :: Education",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
+        "Programming Language :: C++",
+        "Programming Language :: Python :: 3 :: Only",
+    ]
 
 [project.urls]
-homepage = "https://github.com/fluorescence-tools/tttrlib"
-documentation = "https://docs.peulen.xyz/tttrlib"
-repository = "https://github.com/fluorescence-tools/tttrlib.git"
+    homepage = "https://github.com/fluorescence-tools/tttrlib"
+    documentation = "https://docs.peulen.xyz/tttrlib"
+    repository = "https://github.com/fluorescence-tools/tttrlib.git"
 
 [build-system]
-requires = [
-    "wheel",
-    "setuptools",
-    "cmake_build_extension",
-    "numpy",
-    "swig",
-    "boost"
-]
-build-backend = "setuptools.build_meta"
+    requires = [
+        "wheel",
+        "setuptools",
+        "cmake_build_extension",
+        "numpy",
+        "swig",
+        "boost"
+    ]
+    build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 88
+[tool.setuptools]
+    platforms = ["any"]
 
 [tool.isort]
-profile = "black"
-multi_line_output = 3
+    profile = "black"
+    multi_line_output = 3
