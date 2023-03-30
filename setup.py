@@ -1,7 +1,7 @@
-#! /usr/bin/env python
 import os
 import sys
 import inspect
+import setuptools
 from pathlib import Path
 import cmake_build_extension
 
@@ -20,24 +20,7 @@ init_py = inspect.cleandoc(
     """
 )
 
-def read_version(header_file):
-    version = "0.0.0"
-    with open(header_file, "r") as fp:
-        for line in fp.readlines():
-            if "#define" in line and "TTTRLIB_VERSION" in line:
-                version = line.split()[-1]
-    return version.replace('"', '')
-
-
-NAME = "tttrlib"
-VERSION = read_version(os.path.dirname(os.path.abspath(__file__)) + '/include/info.h')
-LICENSE = 'BSD 3-Clause License'
-
 setuptools.setup(
-    name=NAME,
-    version=VERSION,
-    author='Thomas-Otavio Peulen',
-    author_email='thomas@peulen.xyz',
     ext_modules=[
         cmake_build_extension.CMakeExtension(
             name="tttrlib",
@@ -57,8 +40,5 @@ setuptools.setup(
        cmdclass=dict(
         # Enable the CMakeExtension entries defined above
         build_ext=cmake_build_extension.BuildExtension,
-        # Pack the whole git folder:
-        sdist=cmake_build_extension.GitSdistTree,
     ),
 )
-
