@@ -3,6 +3,7 @@ bld-dir/
 dist/
 doc/examples
 tmp/
+.vscode
 .ipynb_checkpoints
 cmake-build-*/
 temp/
