@@ -114,7 +114,7 @@ deploy:doc:
         make html
         if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
 
-linux:cibuildwheel:
+build:cibuildwheel:linux:
   stage: build
   image: python:3.8
   tags:
@@ -138,7 +138,7 @@ linux:cibuildwheel:
     - python -m pip install -e ".[dev]" pytest-custom-exit-code
     - python ./bin/run_tests.py
 
-windows:cibuildwheel:
+build:cibuildwheel:windows:
   stage: build
   tags:
     - win
