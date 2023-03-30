@@ -113,3 +113,40 @@ deploy:doc:
         cd doc && mamba env update --file environment.yml && conda activate doc
         make html
         if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
+
+linux:cibuildwheel:
+  image: python:3.8
+  tags:
+    - x86_64
+    - linux  
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
+
+    # skip all but the basic tests
+    # (comment the below line in a PR to debug a Gitlab-specific issue)
+    PYTEST_ADDOPTS: -k "unit_test or test_0_basic" --suppress-no-test-exit-code
+  script:
+    - curl -sSL https://get.docker.com/ | sh
+    - python -m pip install -e ".[dev]" pytest-custom-exit-code
+    - python ./bin/run_tests.py
+
+windows:cibuildwheel:
+  tags:
+    - win
+  image: mcr.microsoft.com/windows/servercore:1809
+  variables:
+    PYTEST_ADDOPTS: -k "unit_test or test_0_basic" --suppress-no-test-exit-code
+  before_script:
+    - choco install python -y --version 3.8.6
+  script:
+    - py -m pip install -e ".[dev]" pytest-custom-exit-code
+    - py bin\run_tests.py
+  tags:
+    - windows
