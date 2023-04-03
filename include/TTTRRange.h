@@ -14,7 +14,7 @@ class TTTRRange {
 
 protected:
 
-    boost::container::flat_set<int> _tttr_indices = {};
+    boost::container::flat_set<int> _tttr_indices{};
 
 public:
 
