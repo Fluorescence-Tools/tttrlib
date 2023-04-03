@@ -8,45 +8,42 @@ stages:
   artifacts:
     paths:
       - bld-dir/
-.build_posix: &build_posix
+.conda:build:posix: &conda:build:posix
   <<: *build
   script:
     - ./tools/build.sh
-.build:lnx: &build_lnx
-  <<: *build_posix
+.conda:build:lnx: &conda:build:lnx
+  <<: *conda:build:posix
+  image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
   before_script:
     - source "/opt/conda/etc/profile.d/conda.sh"
     - conda activate /opt/conda/
-    - git submodule update --init --recursive --remote
-build:lnx_x86:
-  <<: *build_lnx
+conda:build:lnx:x86:
+  <<: *conda:build:lnx
   image:
     name: condaforge/linux-anvil-cos7-x86_64
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
     - x86_64
-build:lnx_ppc64le:
-  <<: *build_lnx
+conda:build:lnx:ppc64le:
+  <<: *conda:build:lnx
   image:
     name: condaforge/linux-anvil-ppc64le
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
     - ppc64le
-build:lnx_aarch64:
-  <<: *build_lnx
+conda:build:lnx:aarch64:
+  <<: *conda:build:lnx
   image:
     name: condaforge/linux-anvil-aarch64
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
     - aarch64
-build:osx:
-  <<: *build
-  <<: *build_posix
+conda:build:osx:
+  <<: *conda:build:posix
   tags:
     - osx
   before_script:
     - git submodule update --init --recursive --remote
-build:windows:
+conda:build:windows:
   <<: *build
   image: mambaforge:vs16
   tags:
@@ -57,13 +54,13 @@ build:windows:
     - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
-test:linux:
+conda:test:linux:
   stage: test
   tags:
-    - local
+    - local # go for a server marked as local
     - linux
   image: condaforge/mambaforge
-  needs: ["build:lnx_x86"]
+  needs: ["conda:build:lnx_x86"]
   before_script:
     - |
         export DEBIAN_FRONTEND=interactive
@@ -81,7 +78,7 @@ test:linux:
         ln -s /srv/tttr-data tttr-data
         nosetests test
 
-deploy:conda:
+conda:deploy:
   stage: deploy
   image: condaforge/mambaforge
   tags:
@@ -114,12 +111,13 @@ deploy:doc:
         make html
         if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
 
-build:cibuildwheel:linux:
-  stage: build
-  image: python:3.8
+wheel:build:linux:
+  <<: *build
   tags:
     - x86_64
     - linux  
+  image: python:3.8
+  # make a docker daemon available for cibuildwheel to use
   services:
     - name: docker:dind
       entrypoint: ["env", "-u", "DOCKER_HOST"]
@@ -129,24 +127,34 @@ build:cibuildwheel:linux:
     DOCKER_DRIVER: overlay2
     # See https://github.com/docker-library/docker/pull/166
     DOCKER_TLS_CERTDIR: ""
-
-    # skip all but the basic tests
-    # (comment the below line in a PR to debug a Gitlab-specific issue)
-    PYTEST_ADDOPTS: -k "unit_test or test_0_basic" --suppress-no-test-exit-code
   script:
     - curl -sSL https://get.docker.com/ | sh
-    - python -m pip install -e ".[dev]" pytest-custom-exit-code
-    - python ./bin/run_tests.py
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - python -m pip install cibuildwheel
+    - git submodule update --init
+    - cibuildwheel --output-dir bld-dir --platform linux
 
-build:cibuildwheel:windows:
-  stage: build
+
+# wheel:build:windows:
+#   stage: build
+#   tags:
+#     - win
+#   image: mcr.microsoft.com/windows/servercore:1809
+#   variables:
+#     PYTEST_ADDOPTS: -k "unit_test or test_0_basic" --suppress-no-test-exit-code
+#   before_script:
+#     - choco install python -y --version 3.8.6
+#   script:
+#     - py -m pip install -e ".[dev]" pytest-custom-exit-code
+#     - py bin\run_tests.py
+
+wheel:upload:
+  <<: *build
+  stage: deploy
   tags:
-    - win
-  image: mcr.microsoft.com/windows/servercore:1809
-  variables:
-    PYTEST_ADDOPTS: -k "unit_test or test_0_basic" --suppress-no-test-exit-code
-  before_script:
-    - choco install python -y --version 3.8.6
-  script:
-    - py -m pip install -e ".[dev]" pytest-custom-exit-code
-    - py bin\run_tests.py
+    - x86_64
+    - linux  
+  image: python:3.8
+  script:  
+  - pip install twine
+  - twine upload --repository-url ${PYPI_SERVER} --username $PYPI_USER --password $PYPI_PASSWORDD $artifact
