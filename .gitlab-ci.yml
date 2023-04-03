@@ -169,9 +169,9 @@ wheel:upload:
   image: python:3.8
   needs: ["wheel:build:linux"]
   script:  
+    - python -m pip install --upgrade pip
     - pip install twine
     - twine upload bld-dir/*.whl
-    #- twine upload --repository tttrlib --username "$PYPI_USER" --password "$PYPI_PASSWORDD" bld-dir/*.whl
   artifacts:
     paths:
       - bld-dir/
