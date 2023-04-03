@@ -57,6 +57,7 @@ test:
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
+  license: BSD-3
   summary: |
     {{ data.get('description') }}
 
