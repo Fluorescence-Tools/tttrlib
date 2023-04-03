@@ -23,11 +23,15 @@
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows",
-        "Framework :: Fluorescence Framework",
         "Intended Audience :: Education",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "License :: OSI Approved :: BSD License",
         "Programming Language :: C++",
         "Programming Language :: Python :: 3 :: Only",
     ]
@@ -69,7 +73,7 @@ select = "cp3{8,9,10}-*"
 
     # On Linux we need to use different package managers depending on image used
     [tool.cibuildwheel.linux]
-    
+
     before-all = [
         "yum update -y",
         "yum install -y epel-release",
