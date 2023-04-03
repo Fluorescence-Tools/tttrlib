@@ -69,16 +69,11 @@ select = "cp3{8,9,10}-*"
 
     # On Linux we need to use different package managers depending on image used
     [tool.cibuildwheel.linux]
-
-    test-skip = [
-        # See: https://github.com/pyFFTW/pyFFTW/issues/326
-        "*aarch64",
-    ]
-
+    
     before-all = [
         "yum update -y",
         "yum install -y epel-release",
-        "yum -y install boost-devel fftw-devel hdf5-devel"
+        "yum -y install boost-devel fftw-devel hdf5-devel swig cmake"
     ]
 
     manylinux-x86_64-image = "manylinux_2_28"
