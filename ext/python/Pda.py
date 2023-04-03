@@ -73,7 +73,7 @@ def s1s2(self):
 
 
 def __repr__(self):
-    return 'tttrlib.Pda("n_species: %s")' % (
+    return 'Pda("n_species: %s")' % (
         len(self.get_amplitudes())
     )
 

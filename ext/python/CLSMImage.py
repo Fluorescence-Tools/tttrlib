@@ -1,4 +1,3 @@
-import tttrlib
 
 @property
 def shape(self):
@@ -44,9 +43,9 @@ def __init__(
 ):
     source = kwargs.get('source', None)
     rt = {
-        'SP8': tttrlib.CLSM_SP8,
-        'SP5': tttrlib.CLSM_SP5,
-        'default': tttrlib.CLSM_DEFAULT
+        'SP8': CLSM_SP8,
+        'SP5': CLSM_SP5,
+        'default': CLSM_DEFAULT
     }
 
     settings_kwargs = {
@@ -60,7 +59,7 @@ def __init__(
         "n_pixel_per_line": n_pixel_per_line
     }
 
-    if not isinstance(source, tttrlib.CLSMImage):
+    if not isinstance(source, CLSMImage):
         settings_kwargs.update(
             {
                 "marker_frame_start": marker_frame_start,
@@ -131,7 +130,7 @@ def __init__(
                 header = tttr_data.header
                 settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
                 settings_kwargs["marker_line_stop"] = int(header.tag('ImgHdr_LineStop')["value"])
-        clsm_settings = tttrlib.CLSMSettings(**settings_kwargs)
+        clsm_settings = CLSMSettings(**settings_kwargs)
     else:
         clsm_settings = source.get_settings()
     this = _tttrlib.new_CLSMImage(**kwargs, settings=clsm_settings)
@@ -208,4 +207,4 @@ def get_frc(
         img2 = getattr(other, attribute)
         im1 = img1.sum(axis=0)
         im2 = img2.sum(axis=0)
-    return tttrlib.CLSMImage.compute_frc(im1, im2, bin_width)
+    return CLSMImage.compute_frc(im1, im2, bin_width)

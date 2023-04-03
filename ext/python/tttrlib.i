@@ -1,7 +1,7 @@
 // Linking issues against Python in Windows
 %begin %{
 #ifdef _MSC_VER
-#define SWIG_PYTHON_INTERPRETER_NO_DEBUG
+#define SWIG_PYTHON_INTERPRETER_NO_DEBUG 
 #endif
 %}
 

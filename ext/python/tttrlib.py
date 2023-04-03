@@ -1,8 +1,6 @@
 import numpy as np
 import sys
 import typing
-import _tttrlib
-import tttrlib
 from importlib.metadata import version
 
 try:
