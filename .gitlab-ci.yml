@@ -27,16 +27,25 @@ conda:build:lnx:x86:
   image:
     entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-cos7-x86_64
+  tags:
+    - linux
+    - x86_64
 conda:build:lnx:ppc64le:
   <<: *conda_build_lnx
   image:
     entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-ppc64le
+  tags:
+    - linux
+    - ppc64le
 conda:build:lnx:aarch64:
   <<: *conda_build_lnx
   image:
     entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-aarch64
+  tags:
+    - linux
+    - aarch64
 
 # macOS conda build
 conda:build:osx:
