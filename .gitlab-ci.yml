@@ -133,7 +133,7 @@ wheel:build:linux:
   script:
     - curl -sSL https://get.docker.com/ | sh
     - python -m pip install cibuildwheel==2.12.1
-    - git submodule update --init
+    - git submodule update --init --recursive --remote
     - cibuildwheel --output-dir bld-dir --platform linux
   artifacts:
     paths:
