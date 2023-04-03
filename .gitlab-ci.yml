@@ -17,8 +17,6 @@ conda:build:posix: &conda_build_posix
 # linux conda build
 conda:build:lnx: &conda_build_lnx
   <<: *conda_build_posix
-  image:
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   before_script:
     - source "/opt/conda/etc/profile.d/conda.sh"
     - conda activate /opt/conda/
@@ -27,14 +25,17 @@ conda:build:lnx: &conda_build_lnx
 conda:build:lnx:x86:
   <<: *conda_build_lnx
   image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-cos7-x86_64
 conda:build:lnx:ppc64le:
   <<: *conda_build_lnx
   image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-ppc64le
 conda:build:lnx:aarch64:
   <<: *conda_build_lnx
   image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-aarch64
 
 # macOS conda build
