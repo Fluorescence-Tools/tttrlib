@@ -144,6 +144,9 @@ wheel:build:linux:
     - python -m pip install cibuildwheel==2.12.1
     - git submodule update --init --recursive --remote
     - cibuildwheel --output-dir bld-dir --platform linux
+    - python -m pip install --upgrade pip
+    - pip install twine
+    - twine upload bld-dir/*.whl
   artifacts:
     paths:
       - bld-dir/
@@ -161,17 +164,3 @@ wheel:build:linux:
 #       - wheelhouse/
 #   tags:
 #     - win
-
-wheel:upload:
-  stage: deploy
-  tags:
-    - linux  
-  image: python:3.8
-  needs: ["wheel:build:linux"]
-  script:  
-    - python -m pip install --upgrade pip
-    - pip install twine
-    - twine upload bld-dir/*.whl
-  artifacts:
-    paths:
-      - bld-dir/
