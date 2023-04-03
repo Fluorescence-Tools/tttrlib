@@ -25,15 +25,17 @@ setuptools.setup(
         cmake_build_extension.CMakeExtension(
             name="tttrlib",
             install_prefix="tttrlib",
+            write_top_level_init="from . tttrlib import *",
             cmake_configure_options=[
                 # Select the bindings implementation
                 "-DCALL_FROM_SETUP_PY:BOOL=ON",
-                "-DEXAMPLE_WITH_SWIG:BOOL=ON",
                 "-DBUILD_PYTHON_DOCS:BOOL=OFF",
                 "-DBUILD_PYTHON_INTERFACE:BOOL=ON",
                 "-DWITH_AVX:BOOL=ON",
                 "-DBUILD_R_INTERFACE:BOOL=OFF",
-                "-DCMAKE_BUILD_TYPE=Release"
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DBUILD_LIBRARY:BOOL=OFF",
+                "-DCMAKE_CXX_FLAGS='-w'"
             ]
         )
     ],

@@ -1,7 +1,7 @@
 [project]
     version = "0.23.7"
     name = "tttrlib"
-    requires-python = ">=3.7"
+    requires-python = ">=3.8"
     description = "tttrlib read/process/write TTTR data."
     readme = "README.md"
     authors = [
@@ -32,10 +32,16 @@
         "Programming Language :: Python :: 3 :: Only",
     ]
 
-[project.urls]
-    homepage = "https://github.com/fluorescence-tools/tttrlib"
-    documentation = "https://docs.peulen.xyz/tttrlib"
-    repository = "https://github.com/fluorescence-tools/tttrlib.git"
+    dependencies = [
+        "numpy",
+        # "boost"
+    ]
+
+    [project.urls]
+        homepage = "https://github.com/fluorescence-tools/tttrlib"
+        documentation = "https://docs.peulen.xyz/tttrlib"
+        repository = "https://github.com/fluorescence-tools/tttrlib.git"
+
 
 [build-system]
     requires = [
@@ -43,14 +49,52 @@
         "setuptools",
         "cmake_build_extension",
         "numpy",
-        "swig",
-        "boost"
+        # "swig",
+        # "cmake",
+        # "boost",
     ]
     build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-    platforms = ["any"]
+# tttrlib requires fftw and boost
+# see also: https://github.com/pyFFTW/pyFFTW/blob/master/pyproject.toml
+[tool.cibuildwheel]
+# Normal options, etc.
+build-verbosity = 2
 
-[tool.isort]
-    profile = "black"
-    multi_line_output = 3
+# Skip CPython 3.6, 3.7, 3.11, and pypy
+skip = ["cp36-*", "cp37-*", "cp311-*"]
+
+[[tool.cibuildwheel.overrides]]
+select = "cp3{8,9,10}-*"
+
+    # On Linux we need to use different package managers depending on image used
+    [tool.cibuildwheel.linux]
+
+    test-skip = [
+        # See: https://github.com/pyFFTW/pyFFTW/issues/326
+        "*aarch64",
+    ]
+
+    before-all = [
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum -y install boost-devel fftw-devel hdf5-devel"
+    ]
+
+    manylinux-x86_64-image = "manylinux_2_28"
+    manylinux-i686-image = "manylinux_2_28"
+    manylinux-aarch64-image = "manylinux_2_28"
+    manylinux-ppc64le-image = "manylinux_2_28"
+    manylinux-s390x-image = "manylinux_2_28"
+    manylinux-pypy_x86_64-image = "manylinux_2_28"
+    manylinux-pypy_i686-image = "manylinux_2_28"
+    manylinux-pypy_aarch64-image = "manylinux_2_28"
+
+    archs = [
+        "x86_64",
+        # "aarch64",
+        # "ppc64le"
+    ]
+
+    # Skip musllinux builds for the moment
+    skip = "*-musllinux_*"
