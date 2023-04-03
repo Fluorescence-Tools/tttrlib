@@ -20,6 +20,7 @@ INCLUDE(simd)
 ################################################################################
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
+OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
@@ -121,29 +122,31 @@ FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/inclu
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 
-# By default the output name is the target. To not have different names, i.e.,
-# ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+IF(BUILD_LIBRARY)
+  # By default the output name is the target. To not have different names, i.e.,
+  # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 
-# Add install target
-#######################
-IF(INSTALL)
-    INSTALL(TARGETS ${PROJECT_NAME}Shared
-            RUNTIME DESTINATION bin
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-    )
-    INSTALL(TARGETS ${PROJECT_NAME}Static
-            RUNTIME DESTINATION bin
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
-    )
-ENDIF(INSTALL)
+  # Add install target
+  #######################
+  IF(INSTALL)
+      INSTALL(TARGETS ${PROJECT_NAME}Shared
+              RUNTIME DESTINATION bin
+              LIBRARY DESTINATION lib
+              ARCHIVE DESTINATION lib
+              PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+      )
+      INSTALL(TARGETS ${PROJECT_NAME}Static
+              RUNTIME DESTINATION bin
+              LIBRARY DESTINATION lib
+              ARCHIVE DESTINATION lib
+              PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+      )
+  ENDIF(INSTALL)
+ENDIF(BUILD_LIBRARY)
 
 # Print additional (Debug) info
 #####################################
@@ -161,6 +164,5 @@ IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "LINK_DIRECTORIES='${dir}'")
   endforeach()
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
 
 

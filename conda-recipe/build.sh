@@ -8,6 +8,7 @@ cmake  \
  -DCMAKE_BUILD_TYPE=Release \
  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$SP_DIR" \
  -DCMAKE_SWIG_OUTDIR="$SP_DIR" \
+ -DBUILD_LIBRARY=ON \
  -G Ninja ..
 
 # On some platforms (notably aarch64 with Drone) builds can fail due to
