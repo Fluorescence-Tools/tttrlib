@@ -148,7 +148,7 @@ wheel:linux:
     - python -m pip install --upgrade pip
     - pip install twine
     - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
-    - twine upload bld-dir/*.whl
+    - twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
       - bld-dir/
@@ -168,7 +168,7 @@ wheel:windows:
     # - py -m pip install cibuildwheel==2.12.1 twine
     - py -m cibuildwheel --output-dir wheelhouse --platform windows
     - if($CI_COMMIT_REF_NAME -ne "master"){$TWINE_REPOSITORY=testpypi}
-    - twine upload bld-dir/*.whl
+    - twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
       - bld-dir/
