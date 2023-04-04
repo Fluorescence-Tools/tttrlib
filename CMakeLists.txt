@@ -37,6 +37,8 @@ IF(WITH_AVX)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
   ELSE(MSVC)
       STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mavx -mfma")
+      # # Issue with MSVC exceptions (https://stackoverflow.com/questions/6832666/lnk2019-when-including-asio-headers-solution-generated-with-cmake)
+      # ADD_DEFINITIONS("/EHsc")
   ENDIF ()
 ENDIF()
 
@@ -80,7 +82,7 @@ FIND_PACKAGE(Conda)
 ## Boost
 ###########################
 FIND_PACKAGE(CondaBoost)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale system)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 

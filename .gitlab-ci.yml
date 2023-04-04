@@ -167,12 +167,14 @@ wheel:linux:
 # - py -m pip install cibuildwheel==2.12.1 twine
 wheel:windows:
   stage: build
-  image: mambaforge:vs16
+   image: mambaforge:vs16
   script:
     - cmd.exe
     - conda activate base
-    - py -m pip install cibuildwheel==2.12.1 twine
-    - py -m cibuildwheel --output-dir bld-dir --platform windows
+    - git submodule update --init --recursive --remote
+    - python -m pip install cibuildwheel==2.12.1 twine
+    - C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat x64
+    - python -m cibuildwheel --output-dir bld-dir --platform windows
     - if($CI_COMMIT_REF_NAME -ne "master"){$TWINE_REPOSITORY=testpypi}
     - twine upload --skip-existing bld-dir/*.whl
   artifacts:
