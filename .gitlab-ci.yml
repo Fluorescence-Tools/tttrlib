@@ -153,6 +153,7 @@ wheel:linux:
     paths:
       - bld-dir/
 
+# Currently build on docker-windows requires powershell executer due to choco install
 wheel:windows:
   stage: build
   image: mcr.microsoft.com/windows/servercore:1809
