@@ -154,19 +154,25 @@ wheel:linux:
       - bld-dir/
 
 # Currently build on docker-windows requires powershell executer due to choco install
+# Needs working compiler toolchain installed: https://cibuildwheel.readthedocs.io/en/stable/options/
+# Thus, use custom docker image
+# image: mcr.microsoft.com/windows/servercore:1809
+# before_script:
+#   - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+#   - choco install python -y --version 3.8.6
+#   - choco install git.install -y
+#   - py -m pip install cibuildwheel==2.12.1 twine
+# - choco install python -y --version 3.8.6
+# - choco install git.install -yfd
+# - py -m pip install cibuildwheel==2.12.1 twine
 wheel:windows:
   stage: build
-  image: mcr.microsoft.com/windows/servercore:1809
-  before_script:
-    - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    - choco install python -y --version 3.8.6
-    - choco install git.install -y
-    - py -m pip install cibuildwheel==2.12.1 twine
+  image: mambaforge:vs16
   script:
-    # - choco install python -y --version 3.8.6
-    # - choco install git.install -yfd
-    # - py -m pip install cibuildwheel==2.12.1 twine
-    - py -m cibuildwheel --output-dir wheelhouse --platform windows
+    - cmd.exe
+    - conda activate base
+    - py -m pip install cibuildwheel==2.12.1 twine
+    - py -m cibuildwheel --output-dir bld-dir --platform windows
     - if($CI_COMMIT_REF_NAME -ne "master"){$TWINE_REPOSITORY=testpypi}
     - twine upload --skip-existing bld-dir/*.whl
   artifacts:
