@@ -146,6 +146,7 @@ wheel:build:linux:
     - cibuildwheel --output-dir bld-dir --platform linux
     - python -m pip install --upgrade pip
     - pip install twine
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
     - twine upload bld-dir/*.whl
   artifacts:
     paths:
