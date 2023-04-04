@@ -154,15 +154,16 @@ wheel:build:linux:
       - bld-dir/
 
 windows:
+  stage: build
   image: mcr.microsoft.com/windows/servercore:1809
   before_script:
     - choco install python -y --version 3.8.6
     - choco install git.install -y
     - py -m pip install cibuildwheel==2.12.1
   script:
-    - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    - choco install python -y --version 3.8.6
-    - choco install git.install -yfd
+    # - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    # - choco install python -y --version 3.8.6
+    # - choco install git.install -yfd
     - py -m pip install cibuildwheel==2.12.1 twine
     - py -m cibuildwheel --output-dir wheelhouse --platform windows
     - if($CI_COMMIT_REF_NAME -ne "master"){$TWINE_REPOSITORY=testpypi}
