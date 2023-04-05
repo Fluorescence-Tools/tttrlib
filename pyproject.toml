@@ -2,7 +2,7 @@
     version = "0.23.7"
     name = "tttrlib"
     requires-python = ">=3.8"
-    description = "tttrlib read/process/write TTTR data."
+    description = "Read, write & process time-tagged time-resolved (TTTR) data."
     readme = "README.md"
     authors = [
     {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
@@ -27,9 +27,10 @@
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Image Processing",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: BSD License",
         "Programming Language :: C++",
@@ -65,8 +66,8 @@
 # Normal options, etc.
 build-verbosity = 2
 
-# Skip CPython 3.6, 3.7, 3.11, and pypy
-skip = ["cp36-*", "cp37-*", "cp311-*"]
+# Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
+skip = ["cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
