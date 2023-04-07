@@ -90,6 +90,8 @@ FIND_PACKAGE(Conda)
 ###########################
 FIND_PACKAGE(CondaBoost)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale system)
+SET(Boost_USE_STATIC_LIBS ON)
+SET(Boost_USE_STATIC ON)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 
