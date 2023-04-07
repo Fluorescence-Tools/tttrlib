@@ -304,20 +304,7 @@ void TTTR::allocate_memory_for_records(size_t n_rec){
 #ifdef VERBOSE_TTTRLIB
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 #endif
-    if(tttr_container_type == PHOTON_HDF_CONTAINER) {
-        macro_times = (unsigned long long*) H5allocate_memory(
-                n_rec * sizeof(unsigned long long), false
-        );
-        micro_times = (unsigned short*) H5allocate_memory(
-                n_rec * sizeof(unsigned short), false
-        );
-        routing_channels = (signed char*) H5allocate_memory(
-                n_rec * sizeof(signed char), false
-        );
-        event_types = (signed char*) H5allocate_memory(
-                n_rec * sizeof(signed char), false
-        );
-    } else {
+    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
         macro_times = (unsigned long long*) malloc(
                 n_rec * sizeof(unsigned long long)
                 );
@@ -330,21 +317,40 @@ void TTTR::allocate_memory_for_records(size_t n_rec){
         event_types = (signed char*) malloc(
                 n_rec * sizeof(signed char)
         );
+    } 
+    else {
+        #ifdef BUILD_PHOTON_HDF
+        macro_times = (unsigned long long*) H5allocate_memory(
+                n_rec * sizeof(unsigned long long), false
+        );
+        micro_times = (unsigned short*) H5allocate_memory(
+                n_rec * sizeof(unsigned short), false
+        );
+        routing_channels = (signed char*) H5allocate_memory(
+                n_rec * sizeof(signed char), false
+        );
+        event_types = (signed char*) H5allocate_memory(
+                n_rec * sizeof(signed char), false
+        );
+        #endif
     }
 }
 
 void TTTR::deallocate_memory_of_records(){
-    if(tttr_container_type == PHOTON_HDF_CONTAINER) {
+
+    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
+        free(macro_times);
+        free(routing_channels);
+        free(micro_times);
+        free(event_types);
+    } else {
+        #ifdef BUILD_PHOTON_HDF
         H5free_memory(macro_times);
         H5free_memory(routing_channels);
         H5free_memory(micro_times);
         H5free_memory(event_types);
         H5garbage_collect();
-    } else {
-        free(macro_times);
-        free(routing_channels);
-        free(micro_times);
-        free(event_types);
+        #endif
     }
 }
 
