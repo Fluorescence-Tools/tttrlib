@@ -23,7 +23,6 @@
     #define __FMA__ 1
   #endif
 #endif 
-//__AVX__
 
 
 /*!

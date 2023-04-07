@@ -5,7 +5,9 @@
 #include <vector>
 #include <cstring>
 
+#ifdef BUILD_ICS
 #include "fftw3.h" /* FFT for ICS*/
+#endif
 
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"

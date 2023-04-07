@@ -6,7 +6,6 @@
 #include "DecayStatistics.h"
 
 
-
 class DecayFit24 : DecayFit {
 
 

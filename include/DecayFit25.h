@@ -2,8 +2,8 @@
 #define FIT2X_DECAYFIT25_H
 
 #include "fsconv.h"
-#include "DecayStatistics.h"
 
+#include "DecayStatistics.h"
 #include "DecayFit.h"
 #include "DecayFit23.h"
 
