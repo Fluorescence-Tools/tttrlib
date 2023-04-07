@@ -33,7 +33,7 @@ void DecayFit23::correct_input(double *x, double *xm, LVDoubleArray *corrections
         x[7] = fit_signals.rs();
         x[6] = r;
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "CORRECT_INPUT23" << std::endl;
     std::cout << fit_corrections.str();
     std::cout << fit_signals.str();
@@ -97,7 +97,7 @@ int DecayFit23::modelf(
     tmpf = (1. - gamma) / sum_m;
     for (i = 0; i < 2 * Nchannels; i++) mfunction[i] = mfunction[i] * tmpf + bg[i] * gamma;
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "COMPUTE MODEL23" << std::endl;
     std::cout << "-- tau: " << tau << std::endl;
     std::cout << "-- gamma: " << gamma << std::endl;
@@ -132,7 +132,7 @@ double DecayFit23::targetf(double *x, void *pv) {
         w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(fit_signals.Bexpected + 1.);
     }
     double v = w / Nchannels + fit_settings.penalty;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "COMPUTING TARGET23" << std::endl;
     std::cout << "xm:" ; for(int i=0; i<8;i++) std::cout << xm[i] << " "; std::cout << std::endl;
     std::cout << "corrections:" ;
@@ -200,7 +200,7 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
 
     if (info == 5 || x[0] < 0.) x[0] = -1.;        // for report
     x[1] = xm[1];
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "FIT23" << std::endl;
     std::cout << "-- BFGS info: " << info << std::endl;
     std::cout << "-- Initial parameters / fixed: " << std::endl;

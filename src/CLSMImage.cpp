@@ -1,28 +1,27 @@
 #include "include/CLSMImage.h"
-#include "info.h"
 
 void CLSMImage::copy(const CLSMImage& p2, bool fill){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Copying image structure." << std::endl;
     if(fill){
         std::clog << "-- Copying pixel information." << std::endl;
     }
 #endif
     // private attributes
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Copying frame: " << std::flush;
     int i_frame = 0;
 #endif
     for(auto f: p2.frames){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
         std::clog << i_frame++ << " " << std::flush;
 #endif
         frames.emplace_back(new CLSMFrame(*f, fill));
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << std::endl;
 #endif
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Linking TTTR: " << std::endl << std::flush;
 #endif
     this->tttr = p2.tttr;
@@ -31,7 +30,7 @@ void CLSMImage::copy(const CLSMImage& p2, bool fill){
     n_frames = p2.n_frames;
     n_lines = p2.n_lines;
     n_pixel = p2.n_pixel;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
 #endif
 }
@@ -41,7 +40,7 @@ CLSMImage::CLSMImage(const CLSMImage& p2, bool fill){
 }
 
 //void CLSMImage::shift_line_start(int macro_time_shift){
-//#if VERBOSE_TTTRLIB
+//#ifdef VERBOSE_TTTRLIB
 //    std::clog << "-- Shifting line start by [macro time clocks]: " << macro_time_shift << std::endl;
 //#endif
 //    for(auto &frame : get_frames()){
@@ -52,7 +51,7 @@ CLSMImage::CLSMImage(const CLSMImage& p2, bool fill){
 //}
 
 void CLSMImage::determine_number_of_lines(){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- CLSMImage::determine_number_of_lines" << std::endl;
 #endif
     n_lines = 0;
@@ -70,16 +69,16 @@ CLSMImage::CLSMImage (
         std::vector<int> channels,
         std::vector<std::pair<int,int>> micro_time_ranges
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "Initializing CLSM image" << std::endl;
 #endif
     if(source != nullptr){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Copying data from other object" << std::endl;
 #endif
         copy(*source, fill);
     } else{
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIBLIB
         std::clog << "-- Initializing new CLSM image..." << std::endl;
 #endif
         this->settings = settings;
@@ -104,7 +103,7 @@ CLSMImage::CLSMImage (
 
         create_frames(true);
         create_lines();
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Initial number of frames: " << n_frames << std::endl;
         std::clog << "-- Lines per frame: " << n_lines << std::endl;
 #endif
@@ -120,7 +119,7 @@ CLSMImage::CLSMImage (
 }
 
 void CLSMImage::create_pixels_in_lines() {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- CLSMImage::create_pixels_in_lines" << std::endl;
 #endif
     // by improving here, a factor of two in speed could be possible.
@@ -129,7 +128,7 @@ void CLSMImage::create_pixels_in_lines() {
             l->pixels.resize(n_pixel);
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
     std::clog << "-- Number of pixels per line: " << n_pixel << std::endl;
 #endif
 }
@@ -172,7 +171,7 @@ std::vector<int> CLSMImage::get_frame_edges(
         frame_edges.emplace_back(start_event);
     if (stop_event < 0) stop_event = n_events;
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- GET_FRAME_EDGES" << std::endl;
     std::clog << "-- Reading routing:" << reading_routine << std::endl;
     std::clog << "-- skip_after_last_frame_marker:" << skip_after_last_frame_marker << std::endl;
@@ -208,7 +207,7 @@ std::vector<int> CLSMImage::get_frame_edges(
     if(!skip_after_last_frame_marker){
         frame_edges.emplace_back(n_events);
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- number of frame edges:" << frame_edges.size() << std::endl;
 #endif
     return frame_edges;
@@ -221,7 +220,7 @@ std::vector<int> CLSMImage::get_line_edges(
         int marker_event_type,
         int reading_routine
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "CLSMImage::get_line_edges" << std::endl;
 #endif
     std::vector<int> line_edges;
@@ -282,7 +281,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
         int reading_routine
 ){
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
     std::clog << "CLSMImage::get_line_edges_by_duration" << std::endl;
     std::clog << "-- frame_start: " << frame_start << std::endl;
     std::clog << "-- frame_stop: " << frame_stop << std::endl;
@@ -338,7 +337,7 @@ void CLSMImage::create_frames(bool clear_first){
             settings.skip_before_first_frame_marker,
             settings.skip_after_last_frame_marker
     );
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- CREATE_FRAMES" << std::endl;
     std::cout << "-- Creating " << frame_edges.size() << " frames: " << std::flush;
 #endif
@@ -347,11 +346,11 @@ void CLSMImage::create_frames(bool clear_first){
                 frame_edges[i], frame_edges[i + 1], tttr.get());
         frame->set_tttr(tttr.get());
         append(frame);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::cout << " " << i  << std::flush;
 #endif
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << std::endl;
     std::clog << "-- Initial number of frames: " << n_frames << std::endl;
 #endif
@@ -359,17 +358,17 @@ void CLSMImage::create_frames(bool clear_first){
 
 void CLSMImage::create_lines(){
     // create new lines in every frame
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "CLSMIMAGE::CREATE_LINES" << std::endl;
     std::clog << "-- Frame start, frame stop idx:" << std::endl;
 #endif
     for(auto &frame:frames){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "\t" << frame->get_start() << ", " << frame->get_stop() << std::endl;
 #endif
         int pixel_duration = (settings.marker_line_stop < 0) ?
                              tttr->header->get_pixel_duration() : -1;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- find line edges" << std::endl;
 #endif
         // find line edges
@@ -397,7 +396,7 @@ void CLSMImage::create_lines(){
             );
         }
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- append lines to frames" << std::endl;
 #endif
         for(size_t i_line = 0; i_line < line_edges.size() / 2; i_line++){
@@ -416,7 +415,7 @@ void CLSMImage::create_lines(){
 
 void CLSMImage::remove_incomplete_frames(){
     // remove incomplete frames
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
     std::clog << "-- Removing incomplete frames" << std::endl;
 #endif
     std::vector<CLSMFrame*> complete_frames;
@@ -426,7 +425,7 @@ void CLSMImage::remove_incomplete_frames(){
         if(frame->lines.size() == n_lines){
             complete_frames.push_back(frame);
         } else{
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
             std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() <<
             " incomplete only "<< frame->lines.size() << " / " << n_lines << " lines." << std::endl;
 #endif
@@ -436,14 +435,14 @@ void CLSMImage::remove_incomplete_frames(){
     }
     frames = complete_frames;
     n_frames = complete_frames.size();
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Final number of frames: " << n_frames << std::endl;
 #endif
 }
 
 
 void CLSMImage::clear() {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "Clear pixels of photons" << std::endl;
 #endif
     _is_filled_ = false;
@@ -462,7 +461,7 @@ void CLSMImage:: fill(
         bool clear,
         const std::vector<std::pair<int,int>> &micro_time_ranges
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Filling pixels..." << std::endl;
     std::clog << "-- Channels: "; for(auto ch: channels) std::clog << ch << " "; std::clog << std::endl;
     std::clog << "-- Clear pixel before fill: " << clear << std::endl;
@@ -545,7 +544,7 @@ void CLSMImage::get_intensity(unsigned short**output, int* dim1, int* dim2, int*
     *dim2 = (int) n_lines;
     *dim3 = (int) n_pixel;
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "Get intensity image" << std::endl;
     std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Total number of pixels: " << n_pixel_total << std::endl;
@@ -578,7 +577,7 @@ void CLSMImage::get_fluorescence_decay(
         int micro_time_coarsening,
         bool stack_frames
         ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "Get decay image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
@@ -590,7 +589,7 @@ void CLSMImage::get_fluorescence_decay(
 
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
     auto* t = (unsigned char*) calloc(n_tac_total, sizeof(unsigned char));
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Number of micro time channels: " << n_tac << std::endl;
     std::clog << "-- Micro time coarsening factor: " << micro_time_coarsening << std::endl;
@@ -629,7 +628,7 @@ void CLSMImage::get_fcs_image(
         const bool normalized_correlation,
         const int min_photons
 ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "Get fluorescence correlation image" << std::endl;
 #endif
     size_t nf = (stack_frames) ? 1 : n_frames;
@@ -637,7 +636,7 @@ void CLSMImage::get_fcs_image(
     size_t n_corr = corr.curve.size();
     size_t n_cor_total = nf * n_lines * n_pixel * n_corr;
     auto t = (float*) calloc(n_cor_total, sizeof(float));
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Number of correlation blocks: " << n_casc << std::endl;
     std::clog << "-- Number of correlation bins per block: " << n_bins << std::endl;
@@ -712,7 +711,7 @@ void CLSMImage::get_decay_of_pixels(
 ){
     size_t n_decays = stack_frames ? 1 : n_frames;
     size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / tac_coarsening;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
     std::clog << "Get decays:" << std::endl;
     std::clog << "-- Number of frames: " << n_frames << std::endl;
     std::clog << "-- Stack frames (true/false): " << stack_frames << std::endl;
@@ -758,7 +757,7 @@ void CLSMImage::get_mean_micro_time(
         int minimum_number_of_photons,
         bool stack_frames
 ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIBLIBLIBLIBLIBLIB
     std::clog << "Get mean micro time image" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
@@ -783,7 +782,7 @@ void CLSMImage::get_mean_micro_time(
         *output = t;
     } else{
         int w_frame = 1;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
         std::clog << "-- Compute photon weighted average over frames" << std::endl;
 #endif
         auto* r = (double *) malloc(sizeof(double) * w_frame * n_lines * n_pixel);
@@ -869,7 +868,7 @@ void CLSMImage::get_phasor(
             }
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "GET_PHASOR_IMAGE..." << std::endl;
     std::clog << "-- frequency [GHz]: " << frequency << std::endl;
     std::clog << "-- stack_frames: " << stack_frames << std::endl;
@@ -893,7 +892,7 @@ void CLSMImage::get_mean_lifetime(
         double background_fraction
 ){
     const double dt = tttr_data->header->get_micro_time_resolution() * 1E9;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIBLIB
     std::clog << "Compute a mean lifetime image (Isenberg 1973)" << std::endl;
     std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
     std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
@@ -902,7 +901,7 @@ void CLSMImage::get_mean_lifetime(
     if(tttr_irf != nullptr){
         unsigned short *micro_times_irf; int n_micro_times_irf;
         tttr_irf->get_micro_times(&micro_times_irf, &n_micro_times_irf);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Computing first moments (m0, m1) of IRF using TTTR data " << std::endl;
         std::clog << "-- n_micro_times_irf:" << n_micro_times_irf << std::endl;
 #endif
@@ -910,7 +909,7 @@ void CLSMImage::get_mean_lifetime(
         m1_irf = 0.0;
         for(int i=0; i<n_micro_times_irf;i++) m1_irf += (double) micro_times_irf[i];
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- IRF m0: " << m0_irf << std::endl;
     std::clog << "-- IRF m1: " << m1_irf << std::endl;
 #endif
@@ -925,7 +924,7 @@ void CLSMImage::get_mean_lifetime(
             m1_bg += i * background[i];
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- BG m0: " << m0_bg << std::endl;
     std::clog << "-- BG m1: " << m1_bg << std::endl;
 #endif
@@ -980,14 +979,14 @@ void CLSMImage::get_roi(
         uint8_t *mask, int dmask1, int dmask2, int dmask3,
         std::vector<int> selected_frames
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "CREATE ROI" << std::endl;
 #endif
     // determine the total number of frames, lines, and pixel in the input
     size_t nf, nl, np; // the number frames, lines, and pixel in the input
     TTTR* tttr_data = nullptr;
     if(clsm != nullptr){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Using CLSM/TTTR data" << std::endl;
 #endif
         if(clsm->tttr == nullptr)
@@ -1002,7 +1001,7 @@ void CLSMImage::get_roi(
             (n_lines > 0) &&
             (n_pixel > 0)
     ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Using image array input" << std::endl;
 #endif
         nf = n_frames;
@@ -1011,7 +1010,7 @@ void CLSMImage::get_roi(
     } else{
         std::cerr << "ERROR: No input data specified!" << std::endl;
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Input number of frames: " << nf << std::endl;
     std::clog << "-- Input number of lines: " << nl << std::endl;
     std::clog << "-- Input number of pixel: " << np << std::endl;
@@ -1036,7 +1035,7 @@ void CLSMImage::get_roi(
     int nframes_roi = selected_frames.size();
     int pixel_in_roi = nrows_roi * ncol_roi;
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- ROI (x0, x1, y0, y1): " <<
               start_x << ", " << stop_x << ", " <<
               start_y << ", " << stop_y << std::endl;
@@ -1044,14 +1043,14 @@ void CLSMImage::get_roi(
     std::clog << "-- Number of pixel in ROI: " << pixel_in_roi << std::endl;
 #endif
     if(selected_frames.empty()){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- No frames specified, using all frames in input" << std::endl;
 #endif
         selected_frames.reserve(nf);
         for(int i=0; i < nf; i++) selected_frames.emplace_back(i);
         nframes_roi = selected_frames.size();
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     if(use_mask)
         std::clog << "-- Using selection mask." << std::endl;
     else
@@ -1072,17 +1071,17 @@ void CLSMImage::get_roi(
                 int fi = (f < dmask1)? f : 1;
                 mask_v[f*nl*np + l*np + p] = mask[fi * dmask1 * dmask2 + l * dmask2 + p];
             }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Copying image to ROI array... " << std::endl;
     std::clog << "-- Frames in ROI: " << nframes_roi << std::endl;
 #endif
     auto *img_roi = (double*) calloc(nframes_roi * pixel_in_roi, sizeof(double));
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Copying frame: ";
 #endif
     int current_pixel = 0;
     for(auto f:selected_frames){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << f << " ";
 #endif
         for(int l=start_y;l<stop_y;l++){
@@ -1104,12 +1103,12 @@ void CLSMImage::get_roi(
             }
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << std::endl;
     std::clog << "-- Correcting ROI" << std::endl;
 #endif
     if(background != 0){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Subtracted background per pixel: " << background << std::endl;
 #endif
         for(int f=0;f<nframes_roi;f++){
@@ -1119,7 +1118,7 @@ void CLSMImage::get_roi(
         }
     }
     if(clip){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Clipping values: " << clip_max << ", " << clip_min << std::endl;
 #endif
         for(int f=0;f<nframes_roi;f++){
@@ -1131,11 +1130,11 @@ void CLSMImage::get_roi(
             }
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Subtract average mode: " << subtract_average << std::endl;
 #endif
     if(subtract_average=="stack"){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Subtract pixel average of all frames." << std::endl;
 #endif
         auto img_mean = (double*) calloc(pixel_in_roi, sizeof(double));
@@ -1159,7 +1158,7 @@ void CLSMImage::get_roi(
         }
         free(img_mean);
     } else if(subtract_average=="frame"){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Subtracting average intensity in frame." << std::endl;
 #endif
         // compute the mean intensity in image and subtract the mean fro
@@ -1192,9 +1191,11 @@ void CLSMImage::compute_ics(
         double *images_2, int input_frames_2, int input_lines_2, int input_pixel_2,
         uint8_t *mask, int dmask1, int dmask2, int dmask3
 ){
-#if VERBOSE_TTTRLIB
+    #ifdef BUILD_ICS
+
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "CLSMImage::compute_ics" << std::endl;
-#endif
+    #endif
 
     // create ROI
     double *roi1; int nf1, nl1, np1;
@@ -1232,9 +1233,9 @@ void CLSMImage::compute_ics(
     // Define set of frame pairs (if no pairs were defined)
     // Computes ICS for pair of frames default (1,1), (2,2), ...
     if(frames_index_pairs.empty()){
-#if VERBOSE_TTTRLIB
+        #ifdef VERBOSE_TTTRLIB
         std::clog << "-- No frame pair selection: Computing ACF " << std::endl;
-#endif
+        #endif
         frames_index_pairs.reserve(nf);
         for(int i=0; i < nf; i++) frames_index_pairs.emplace_back(std::make_pair(i, i));
     }
@@ -1262,16 +1263,17 @@ void CLSMImage::compute_ics(
         first_out[pix][0] = 0; first_out[pix][1] = 0;
         second_out[pix][0] = 0; second_out[pix][1] = 0;
     }
-
     // Iterate through the pair of frames
-#if VERBOSE_TTTRLIB
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "-- CCF of pair: ";
-#endif
+    #endif
+    
     int current_frame = 0;
     for (auto &frame_pair: frames_index_pairs) {
-#if VERBOSE_TTTRLIB
+        #ifdef VERBOSE_TTTRLIB
         std::clog << "(" << frame_pair.first << ", " << frame_pair.second << ") ";
-#endif
+        #endif
+        
         // FFT of first frame
         double first_frame_total_intensity = 0.0;
         for (int pix = 0; pix < pixel_in_roi; pix++) {
@@ -1323,7 +1325,7 @@ void CLSMImage::compute_ics(
         current_frame++;
     }
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << std::endl;
 #endif
     // Cleanup FFTW
@@ -1341,6 +1343,10 @@ void CLSMImage::compute_ics(
     *dim2 = (int) nl;
     *dim3 = (int) np;
     *output = out_tmp;
+    return;
+
+    #endif
+    std::cerr << "WARNING: Libary compilied without ICS support";
 }
 
 
@@ -1381,7 +1387,7 @@ void CLSMImage::crop(
     frame_stop = std::min(std::max(0, frame_stop), (int) size());
     frame_start = std::max(0, frame_start);
 
-    #if VERBOSE_TTTRLIB
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "Crop image" << std::endl;
     std::clog << "-- Frame range: " << frame_start << ", " << frame_stop << std::endl;
     std::clog << "-- Line range: " << line_start << ", " << line_stop << std::endl;

@@ -46,7 +46,7 @@ void rescale_w_bg(double *fit, double *decay, double *e_sq, double bg, double *s
     if (sumdenom != 0.) *scale = sumnom / sumdenom;
     for (int i = start; i < stop; i++)
         fit[i] *= *scale;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "RESCALE_W_BG" << std::endl;
     std::clog << "w_sq [start:stop]: "; for(int i=start; i<stop; i++) std::clog << e_sq[i] << " "; std::clog << std::endl;
     std::clog << "decay [start:stop]: "; for(int i=start; i<stop; i++) std::clog << decay[i] << " "; std::clog << std::endl;
@@ -166,7 +166,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
     int start1 = std::max(1, start);
     int stop1 = std::min(period_n+lamp_start, n_points);
 
-    #if VERBOSE_TTTRLIB
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "FCONV_PER" << std::endl;
     std::clog << "-- numexp:" << numexp << std::endl;
     std::clog << "-- start:" << start << std::endl;
@@ -206,7 +206,7 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
                    int n_points, double period, double dt) {
 #ifdef __AVX__
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "FCONV_PER_AVX" << std::endl;
     std::clog << "-- numexp: " << numexp << std::endl;
     std::clog << "-- start: " << start << std::endl;
@@ -427,7 +427,7 @@ void add_pile_up_to_model(
     stop = stop < 0 ? n_data : std::min(n_data, stop);
     start = start < 0 ? 0 : std::min(n_data, start);
     stop = std::min(n_data, n_model);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "ADD PILE-UP" << std::endl;
     std::clog << "-- Repetition_rate [MHz]: " << repetition_rate << std::endl;
     std::clog << "-- Dead_time [ns]: " << instrument_dead_time << std::endl;
@@ -438,7 +438,7 @@ void add_pile_up_to_model(
     std::clog << "-- stop: " << stop << std::endl;
 #endif
     if(strcmp(pile_up_model.c_str(), "coates") == 0){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- pile_up_model: " << pile_up_model << std::endl;
 #endif
         repetition_rate *= 1e6;
@@ -449,7 +449,7 @@ void add_pile_up_to_model(
         double total_dead_time = n_pulse_detected * instrument_dead_time;
         double live_time = measurement_time - total_dead_time;
         double n_excitation_pulses = std::max(live_time * repetition_rate, (double) n_pulse_detected);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- live_time [s]: " << live_time << std::endl;
         std::clog << "-- total_dead_time [s]: " << total_dead_time << std::endl;
         std::clog << "-- n_pulse_detected [#]: " << n_pulse_detected << std::endl;
@@ -478,7 +478,7 @@ void discriminate_small_amplitudes(
         double amplitude_threshold
 ){
     int number_of_exponentials = n_lifetime_spectrum / 2;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "APPLY_AMPLITUDE_THRESHOLD" << std::endl;
     std::clog << "-- amplitude_threshold spectrum: " << amplitude_threshold << std::endl;
     std::clog << "-- lifetime spectrum before: ";
@@ -493,7 +493,7 @@ void discriminate_small_amplitudes(
             lifetime_spectrum[2 * ne] = 0.0;
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- lifetime spectrum after: ";
     for (int i=0; i < number_of_exponentials * 2; i++){
         std::clog << lifetime_spectrum[i] << ' ';
@@ -569,7 +569,7 @@ void fconv_cs_time_axis_old(
         int convolution_stop
 ){
     int number_of_exponentials = n_lifetime_spectrum / 2;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "convolve_lifetime_spectrum... " << std::endl;
     std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
     std::clog << "-- convolution_start: " << convolution_start << std::endl;

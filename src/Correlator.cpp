@@ -8,13 +8,13 @@ Correlator::Correlator(
         int n_casc,
         bool make_fine
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "CORRELATOR" << std::endl;
 #endif
     curve.set_n_bins(n_bins);
     curve.set_n_casc(n_casc);
     if (tttr != nullptr) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Passed a TTTR object" << std::endl;
 #endif
         set_tttr(tttr, tttr, make_fine);
@@ -26,7 +26,7 @@ void Correlator::set_macrotimes(
         unsigned long long *t1v, int n_t1v,
         unsigned long long *t2v, int n_t2v
 ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Setting macro times..." << std::endl;
     std::clog << "-- n_t1v, n_t2v: " << n_t1v << "," << n_t2v << std::endl;
 #endif
@@ -41,7 +41,7 @@ void Correlator::set_weights(
         double* weight_ch1, int n_weights_ch1,
         double* weight_ch2, int n_weights_ch2
 ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Setting weights..." << std::endl;
     std::clog << "-- n_weights_ch1, n_weights_ch2: " <<
     n_weights_ch1 << "," << n_weights_ch2 << std::endl;
@@ -65,13 +65,13 @@ void Correlator::set_events(
 }
 
 void Correlator::run(){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Running correlator..." << std::endl;
     std::clog << "-- Correlation mode: " << correlation_method << std::endl;
     std::clog << "-- Filling correlation vectors with zero." << std::endl;
 #endif
     if(is_valid){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "CORRELATOR::RUN" << std::endl;
         std::clog << "-- Results are already valid." << std::endl;
 #endif
@@ -116,7 +116,7 @@ void Correlator::set_microtimes(
         unsigned short* tac_2, int n_tac_2,
         unsigned int number_of_microtime_channels
         ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Setting micro times..." << std::endl;
 #endif
     is_valid = false;
@@ -130,7 +130,7 @@ uint64_t Correlator::dt(){
     uint64_t dt2 = p2.dt();
     /// The maximum time of an event in the first and second correlation channel, max(t1, t2)
     uint64_t maximum_macro_time = std::max(dt1, dt2);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Maximum time (Ch1): " << dt1 << std::endl;
     std::clog << "-- Maximum time (Ch2): " << dt2 << std::endl;
     std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;
@@ -188,7 +188,7 @@ void Correlator::ccf_felekyan(
     // nc:                  number of evenly spaced elements per block
     // nb:                  number of blocks of increasing spacing
     // corrl:               pointer to correlation output
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Copying data to new arrays..." << std::endl;
 #endif
     // the arrays can be modified inplace during the correlation. Thus, copied to a new array.
@@ -352,14 +352,14 @@ void Correlator::ccf_wahl(
         CorrelatorPhotonStream &p1,
         CorrelatorPhotonStream &p2
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "CORRELATOR::CCF" << std::endl;
     std::clog << "-- Copying data to new arrays..." << std::endl;
 #endif
     // the photon streams are modified inplace. Thus, copies are creates
     CorrelatorPhotonStream s1(p1);
     CorrelatorPhotonStream s2(p2);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "taus:" << std::endl;
     for(auto v: taus){
         std::clog << v << ",";
@@ -420,7 +420,7 @@ void Correlator::ccf_laurence(
 }
 
 void Correlator::normalize(Correlator* correlator, CorrelatorCurve &curve){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Normalizing correlation curve..." << std::endl;
 #endif
     for(size_t i=0; i < curve.corr_normalized.size(); i++) curve.corr_normalized[i] = curve.correlation[i];

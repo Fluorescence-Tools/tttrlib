@@ -20,13 +20,17 @@ INCLUDE(simd)
 ################################################################################
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
+OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" OFF)
+OPTION(BUILD_ICS "Build with image correlation spectroscopy (requires fftw)" OFF)
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
+OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
-## Compiler flags
-########################
+## Sytem specific compiler flags
+################################
+# AVX
 IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
   set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
 ENDIF()
@@ -42,8 +46,9 @@ IF(WITH_AVX)
   ENDIF ()
 ENDIF()
 
-
+# Debug build
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  SET(VERBOSE_TTTRLIB ON)
   if(MSVC)
     ADD_COMPILE_OPTIONS(/Wall)
   ELSE(MSVC)
@@ -51,6 +56,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   ENDIF(MSVC)
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
+# Operation sytem specific flags
 IF (MSVC)
     ADD_DEFINITIONS(-DMS_WIN64)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
@@ -71,6 +77,7 @@ if(APPLE)
     endif()
 endif()
 
+
 #######################################
 # INCLUDES AND LIBRARIES
 #######################################
@@ -88,22 +95,39 @@ LINK_LIBRARIES(${Boost_LIBRARIES})
 
 ## FFTW
 ##############
-FIND_PACKAGE(FFTW REQUIRED)
+FIND_PACKAGE(FFTW)
 LINK_LIBRARIES(${FFTW_LIBRARIES})
 INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 
 ## HDF5
-###########################
-FIND_PACKAGE(HDF5 1.10 REQUIRED COMPONENTS C)
-INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-LINK_LIBRARIES(${HDF5_LIBRARIES})
-# needed for build on Windows
-ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
+###########################cd
+FIND_PACKAGE(HDF5 1.10 COMPONENTS C)
+IF(HDF5_FOUND)
+  INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
+  LINK_LIBRARIES(${HDF5_LIBRARIES})
+  ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
+ENDIF()
 
 ## OpenMP
 ###########################
 FIND_PACKAGE(OpenMP REQUIRED)
 LINK_LIBRARIES(OpenMP::OpenMP_CXX)
+
+#######################################
+# Library and other compile flags
+#######################################
+IF(VERBOSE_TTTRLIB)
+  add_compile_definitions(VERBOSE_TTTRLIB)
+ENDIF(VERBOSE_TTTRLIB)
+
+IF(BUILD_ICS AND FFTW_FOUND)
+  add_compile_definitions(BUILD_ICS)
+ENDIF(BUILD_ICS)
+
+IF(BUILD_PHOTON_HDF AND HDF5_FOUND)
+  add_compile_definitions(BUILD_PHOTON_HDF)
+ENDIF()
+
 
 # Targets
 #############################
@@ -113,18 +137,18 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ADD_SUBDIRECTORY(ext)
 
-## Shared / static library
-###########################
-# cmake needs unique target name, thus place shared in front of project
-ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
-ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
-
-# Define which headers are going to be included in the install target
-FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
-SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
-
 IF(BUILD_LIBRARY)
+  ## Shared / static library
+  ###########################
+  # cmake needs unique target name, thus place shared in front of project
+  ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
+  ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
+
+  # Define which headers are going to be included in the install target
+  FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
+
   # By default the output name is the target. To not have different names, i.e.,
   # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")

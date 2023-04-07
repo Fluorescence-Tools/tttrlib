@@ -18,10 +18,13 @@
 #include <cinttypes>    /* uint64, int64, etc */
 
 #include "omp.h"
+
 #include <boost/bimap.hpp>
 #include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
+#ifdef BUILD_PHOTON_HDF
 #include "hdf5.h"
+#endif
 
 #include "Histogram.h"
 #include "TTTRHeader.h"
@@ -161,7 +164,7 @@ private:
     TTTRHeader *header = nullptr;
 
     /// map to translates string container types to int container types
-    boost::bimap<std::string, int> container_names;
+    boost::bimap<std::string, int> container_names = {};
 
     typedef bool (*processRecord_t)(
             uint32_t&,  // input

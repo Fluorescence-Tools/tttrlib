@@ -31,7 +31,7 @@ void CorrelatorCurve::get_corr_normalized(double** output, int* n_output){
 
 void CorrelatorCurve::update_axis(){
     resize(settings.get_ncorr());
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Updating x-axis..." << std::endl;
     std::clog << "-- n_casc: " << settings.n_casc << std::endl;
     std::clog << "-- n_bins: " << settings.n_bins << std::endl;

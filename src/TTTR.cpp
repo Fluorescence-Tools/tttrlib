@@ -1,6 +1,4 @@
 #include "TTTR.h"
-#include "TTTRRange.h"
-#include "TTTRHeader.h"
 
 
 TTTR::TTTR() :
@@ -38,7 +36,7 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            signed char *event_types, int n_event_types,
            bool find_used_channels
 ): TTTR() {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
 #endif
     this->filename = "NA";
@@ -73,7 +71,7 @@ TTTR::TTTR(
         int n_selection,
         bool find_used_channels) :  TTTR()
         {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
 #endif
     copy_from(parent, false);
@@ -176,7 +174,7 @@ void TTTR::find_used_routing_channels(){
             used_routing_channels.push_back(c);
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Used routing channels: ";
     for(auto c: used_routing_channels){
         std::clog << static_cast<unsigned>(c) << ", ";
@@ -186,6 +184,7 @@ void TTTR::find_used_routing_channels(){
 }
 
 int TTTR::read_hdf_file(const char *fn){
+#ifdef BUILD_PHOTON_HDF
     header = new TTTRHeader();
 
     /* handles */
@@ -212,7 +211,7 @@ int TTTR::read_hdf_file(const char *fn){
      * before storing the hdf5 file. */
     n_valid_events = dims[0];
     n_records_in_file = dims[0];
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
 #endif
     /*
@@ -237,10 +236,13 @@ int TTTR::read_hdf_file(const char *fn){
     H5Fclose(hdf5_file);
     H5Sclose(space);
     return 1;
+#endif
+    std::cerr << "Not build with Photon HDF interface." << std::endl;
+    return 0;
 }
 
 int TTTR::read_file(const char *fn, int container_type) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
 #endif
     if(fn == nullptr){
@@ -250,7 +252,7 @@ int TTTR::read_file(const char *fn, int container_type) {
         container_type = tttr_container_type;
     }
     if(boost::filesystem::exists(fn)){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Filename: " << fn << std::endl;
         std::clog << "-- Container type: " << container_type << std::endl;
 #endif
@@ -265,7 +267,7 @@ int TTTR::read_file(const char *fn, int container_type) {
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
             processRecord = processRecord_map[tttr_record_type];
@@ -278,7 +280,7 @@ int TTTR::read_file(const char *fn, int container_type) {
             read_records();
             fclose(fp);
         }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
 #endif
             return 1;
@@ -299,7 +301,7 @@ std::string TTTR::get_filename() {
 }
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 #endif
     if(tttr_container_type == PHOTON_HDF_CONTAINER) {
@@ -352,7 +354,7 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "-- Records that will be read : " << n_rec << std::endl;
 #endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
@@ -396,7 +398,7 @@ void TTTR::read_records() {
 }
 
 TTTRHeader* TTTR::get_header() {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- TTTR::get_header" << std::endl;
 #endif
     if(header != nullptr){
@@ -515,7 +517,7 @@ size_t TTTR::get_number_of_records_by_file_size(
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
     fseek(fp, (long) current_position, SEEK_SET);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
 #endif
     return n_records_in_file;
@@ -533,7 +535,7 @@ void ranges_by_time_window(
 ) {
     auto tw_min = (uint64_t) (minimum_window_length / macro_time_calibration);
     auto tw_max = (uint64_t) (maximum_window_length / macro_time_calibration);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
     std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
     std::clog << "-- maximum_window_length [ms]: " << maximum_window_length << std::endl;
@@ -886,7 +888,7 @@ void TTTR::compute_microtime_histogram(
             micro_times[i] = mt;
         }
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "compute_histogram" << std::endl;
     std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
     std::cout << "-- n_channels: " << n_channels << std::endl;
@@ -894,7 +896,7 @@ void TTTR::compute_microtime_histogram(
 #endif
     for(int i=0; i<n_micro_times;i++)
         micro_times[i] /= micro_time_coarsening;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
     std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
 #endif
@@ -997,7 +999,7 @@ void TTTR::append_events(
         (n_microtimes == n_routing_channels) &&
         (n_routing_channels == n_event_types)
     ){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::cout << "-- Appending number of records: " << n_macrotimes << std::endl;
 #endif
         size_t n_rec = this->n_valid_events + n_macrotimes;
@@ -1079,7 +1081,7 @@ double TTTR::compute_count_rate(
     }
     auto n = (double) v.size();
     double dT = (t_max - t_min);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "COMPUTE_COUNT_RATE" << std::endl;
     std::clog << "-- dT [mT units]:" << dT << std::endl;
     std::clog << "-- number of photons:" << n << std::endl;

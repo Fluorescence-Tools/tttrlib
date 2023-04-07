@@ -10,7 +10,7 @@ static double penalty = 0.;
 
 void DecayFit26::correct_input(double* x, double* xm)
 {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout<<"correct_input26"<<std::endl;
 #endif
     // correct input parameters (take care of unreasonable values)
@@ -24,7 +24,7 @@ void DecayFit26::correct_input(double* x, double* xm)
         penalty = x[0]-1.0;
     }
     else penalty = 0.;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::cout<<"x[0]: " << x[0] <<std::endl;
     std::cout<<"xm[0]: " << xm[0] <<std::endl;
 #endif
