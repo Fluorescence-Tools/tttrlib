@@ -210,7 +210,11 @@ private:
 
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;                          /* File handle for all other file types */
+
+#ifdef BUILD_PHOTON_HDF
     hid_t hdf5_file;                        /*HDF5 file handle */
+#endif
+
 
     /// End the end of the header the begining of the tttr records in the input file
     size_t fp_records_begin;
