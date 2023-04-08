@@ -98,15 +98,6 @@ FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 
-if (WIN32)
-  # disable autolinking in boost
-  add_definitions( -DBOOST_ALL_NO_LIB )
-
-  # force all boost libraries to dynamic link (we already disabled
-  # autolinking, so I don't know why we need this, but we do!)
-  add_definitions( -DBOOST_ALL_DYN_LINK )
-endif()
-
 ## FFTW
 ##############
 FIND_PACKAGE(FFTW)
