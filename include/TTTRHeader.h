@@ -14,12 +14,14 @@
 #include <array>
 #include <memory>
 #include <numeric>
+#include <fstream> /* ifstream */
 
 #include <boost/any.hpp>
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
 
 #include "json.hpp"
+
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"

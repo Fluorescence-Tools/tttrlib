@@ -434,9 +434,14 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     std::clog << "TTTRHeader::write_ptu_header" << std::endl;
     #endif
     // Check for existing file
-    if(boost::filesystem::exists(fn)){
+    // if(boost::filesystem::exists(fn)){
+    //     std::clog << "WARNING: File exists" << fn << "." << std::endl;
+    // }
+    std::ifstream f(fn);
+    if(f.good()){
         std::clog << "WARNING: File exists" << fn << "." << std::endl;
     }
+
     // write header information that is not in header tags
     FILE* fp = fopen(fn.c_str(), modes.c_str());
     // Write identifier for PTU files
@@ -680,7 +685,7 @@ void TTTRHeader::add_tag(
         int idx
 ) {
     nlohmann::json tag;
-    tag["name"] = boost::locale::conv::to_utf<char>(name,"ISO-8859-1");
+    tag["name"] = name; // boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
     tag["type"] = type;
     tag["idx"] = idx;
     if (type == tyEmpty8) {
