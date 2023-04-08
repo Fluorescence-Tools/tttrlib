@@ -27,6 +27,7 @@ OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
+OPTION(Boost_USE_STATIC "Static boost build" ON)
 
 ## Sytem specific compiler flags
 ################################
@@ -59,7 +60,8 @@ IF (MSVC)
     ADD_DEFINITIONS(-DMS_WIN64)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     # Issue with MSVC exceptions (https://stackoverflow.com/questions/6832666/lnk2019-when-including-asio-headers-solution-generated-with-cmake)
-    ADD_DEFINITIONS(/DWIN32 /D_WINDOWS /W3 /GR /EHsc)
+    # https://github.com/microsoft/vcpkg/discussions/25414
+    ADD_DEFINITIONS(/DWIN32 /D_WINDOWS /GR /EHsc)
 ENDIF (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
@@ -88,13 +90,13 @@ FIND_PACKAGE(Conda)
 
 ## Boost
 ###########################
-# see: https://stackoverflow.com/questions/28887680/linking-boost-library-with-boost-use-static-lib-off-on-windows
 FIND_PACKAGE(CondaBoost)
-set (Boost_USE_STATIC_LIBS ON CACHE BOOL "use static libraries from Boost")
-set (Boost_USE_MULTITHREADED ON)
+IF(Boost_USE_STATIC)
+  SET(Boost_USE_STATIC_LIBS ON))
+ENDIF()
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
-include_directories(${Boost_INCLUDE_DIRS})
-link_libraries(${Boost_LIBRARIES})
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_LIBRARIES(${Boost_LIBRARIES})
 
 if (WIN32)
   # disable autolinking in boost
