@@ -92,7 +92,7 @@ FIND_PACKAGE(Conda)
 ###########################
 FIND_PACKAGE(CondaBoost)
 IF(Boost_USE_STATIC)
-  SET(Boost_USE_STATIC_LIBS ON))
+  SET(Boost_USE_STATIC_LIBS ON)
 ENDIF()
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
