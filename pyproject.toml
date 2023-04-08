@@ -70,7 +70,7 @@ build-verbosity = 2
 skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
 
 [tool.cibuildwheel.windows]
-environment = {CMAKE_TOOLCHAIN_FILE='C:/vcpkg/scripts/buildsystems/vcpkg.cmake', FFTWDIR='C:/fftw/'}
+environment = {FFTWDIR='C:/fftw/'}
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
