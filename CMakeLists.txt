@@ -92,7 +92,7 @@ FIND_PACKAGE(Conda)
 FIND_PACKAGE(CondaBoost)
 set (Boost_USE_STATIC_LIBS OFF CACHE BOOL "use static libraries from Boost")
 set (Boost_USE_MULTITHREADED ON)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale system)
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 
