@@ -54,8 +54,6 @@
         "setuptools",
         "cmake_build_extension",
         "numpy",
-        "swig",
-        "cmake",
         "boost",
     ]
     build-backend = "setuptools.build_meta"
