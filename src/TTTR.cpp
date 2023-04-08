@@ -251,7 +251,10 @@ int TTTR::read_file(const char *fn, int container_type) {
     if(container_type < 0){
         container_type = tttr_container_type;
     }
-    if(boost::filesystem::exists(fn)){
+
+    // check if file exists
+    std::ifstream f(fn);
+    if(f.good()){
 #ifdef VERBOSE_TTTRLIB
         std::clog << "-- Filename: " << fn << std::endl;
         std::clog << "-- Container type: " << container_type << std::endl;

@@ -16,11 +16,12 @@
 #include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
 #include <cinttypes>    /* uint64, int64, etc */
+#include <fstream> /* ifstream */
 
 #include "omp.h"
 
 #include <boost/bimap.hpp>
-#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
+//#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #ifdef BUILD_PHOTON_HDF
 #include "hdf5.h"
