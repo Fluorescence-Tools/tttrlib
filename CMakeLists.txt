@@ -90,7 +90,6 @@ FIND_PACKAGE(Conda)
 ###########################
 # see: https://stackoverflow.com/questions/28887680/linking-boost-library-with-boost-use-static-lib-off-on-windows
 FIND_PACKAGE(CondaBoost)
-set(Boost_NO_SYSTEM_PATHS true)
 set (Boost_USE_STATIC_LIBS OFF CACHE BOOL "use static libraries from Boost")
 set (Boost_USE_MULTITHREADED ON)
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale system)
