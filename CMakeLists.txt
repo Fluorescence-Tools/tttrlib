@@ -20,7 +20,7 @@ INCLUDE(simd)
 ################################################################################
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
-OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" OFF)
+OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
 OPTION(BUILD_ICS "Build with image correlation spectroscopy (requires fftw)" OFF)
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
@@ -94,7 +94,7 @@ FIND_PACKAGE(CondaBoost)
 IF(Boost_USE_STATIC)
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF(Boost_USE_STATIC)
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS filesystem iostreams locale)
+FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_LIBRARIES(${Boost_LIBRARIES})
 
@@ -107,7 +107,6 @@ IF(FFTW_FOUND AND BUILD_ICS)
   add_compile_definitions(BUILD_ICS)
 ENDIF(FFTW_FOUND AND BUILD_ICS)
 
-
 ## HDF5
 ###########################cd
 FIND_PACKAGE(HDF5 1.10 COMPONENTS C)
@@ -117,10 +116,6 @@ IF(HDF5_FOUND AND BUILD_PHOTON_HDF)
   add_compile_definitions(BUILD_PHOTON_HDF)
 ENDIF()
 
-## OpenMP
-###########################
-FIND_PACKAGE(OpenMP REQUIRED)
-LINK_LIBRARIES(OpenMP::OpenMP_CXX)
 
 IF(VERBOSE_TTTRLIB)
   add_compile_definitions(VERBOSE_TTTRLIB)
