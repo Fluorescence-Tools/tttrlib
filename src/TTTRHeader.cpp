@@ -701,9 +701,11 @@ void TTTRHeader::add_tag(
     }
     else if (type == tyAnsiString) {
         auto str = boost::any_cast<char*>(value);
-        auto str2 = std::string(str);
-        auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
-        tag["value"] = str3;
+        tag["value"] = str;
+        // the stuff below work better but depnds on boost
+        // auto str2 = std::string(str);
+        // auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
+        // tag["value"] = str3;
     }
     else if (type == tyWideString) {
         auto str = boost::any_cast<wchar_t *>(value);
