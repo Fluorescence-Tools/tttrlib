@@ -67,10 +67,10 @@
 build-verbosity = 2
 
 # Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
-skip = ["cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
+skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
 
 [tool.cibuildwheel.windows]
-environment = { FFTWDIR='C:\\fftw\\' }
+environment = {CMAKE_TOOLCHAIN_FILE='C:/vcpkg/scripts/buildsystems/vcpkg.cmake', FFTWDIR='C:/fftw/'}
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
