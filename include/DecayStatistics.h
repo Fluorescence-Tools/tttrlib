@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <iostream>
 #include <cstring> /* strcmp */
-#include "omp.h"
 
 
 /*!

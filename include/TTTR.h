@@ -18,8 +18,6 @@
 #include <cinttypes>    /* uint64, int64, etc */
 #include <fstream> /* ifstream */
 
-#include "omp.h"
-
 #include <boost/bimap.hpp>
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
