@@ -9,8 +9,12 @@ INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(.)
 
 IF(BUILD_PYTHON_INTERFACE)
-    MESSAGE(STATUS "Building Python interface")
-    FIND_PACKAGE(MyPython)
+    MESSAGE(STATUS "Building Python interface") 
+    cmake_policy(SET CMP0094 NEW)
+
+    FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module NumPy)
+    INCLUDE_DIRECTORIES(BEFORE ${Python3_NumPy_PATH} ${Python3_INCLUDE_DIRS})
+    LINK_LIBRARIES(${Python3_LIBRARY} Python3::NumPy)
 
     # Handle where to install the resulting Python package
     if(CALL_FROM_SETUP_PY)
@@ -68,8 +72,6 @@ IF(BUILD_PYTHON_INTERFACE)
         ARCHIVE DESTINATION ${MY_INSTALL_PREFIX}
         RUNTIME DESTINATION ${MY_INSTALL_PREFIX}
     )
-
-
 
 ENDIF(BUILD_PYTHON_INTERFACE)
 
