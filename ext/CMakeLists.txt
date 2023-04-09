@@ -12,9 +12,9 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE(STATUS "Building Python interface") 
     cmake_policy(SET CMP0094 NEW)
 
-    FIND_PACKAGE(Python3 COMPONENTS Interpreter Development.Module NumPy)
-    INCLUDE_DIRECTORIES(BEFORE ${Python3_NumPy_PATH} ${Python3_INCLUDE_DIRS})
-    LINK_LIBRARIES(${Python3_LIBRARY} Python3::NumPy)
+    FIND_PACKAGE(Python COMPONENTS Interpreter Development.Module NumPy)
+    INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
+    LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
 
     # Handle where to install the resulting Python package
     if(CALL_FROM_SETUP_PY)
@@ -26,7 +26,7 @@ IF(BUILD_PYTHON_INTERFACE)
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
-        set(MY_INSTALL_PREFIX ${Python3_SITELIB})
+        set(MY_INSTALL_PREFIX ${Python_SITELIB})
         SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     endif()
 
