@@ -54,7 +54,8 @@
         "setuptools",
         "cmake_build_extension",
         "numpy",
-        "cmake"
+        "cmake",
+        "swig"
     ]
     build-backend = "setuptools.build_meta"
 
@@ -66,6 +67,9 @@ build-verbosity = 2
 
 # Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
 skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
+
+# Install test dependencies
+test-requires = ["nose", "scipy"]
 
 [tool.cibuildwheel.windows]
 environment = {FFTWDIR='C:/fftw/'}
