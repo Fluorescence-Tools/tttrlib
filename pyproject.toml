@@ -53,9 +53,7 @@
         "wheel",
         "setuptools",
         "cmake_build_extension",
-        "numpy",
-        "cmake",
-        "swig"
+        "numpy"
     ]
     build-backend = "setuptools.build_meta"
 
