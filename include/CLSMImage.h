@@ -7,6 +7,7 @@
 
 #ifdef BUILD_ICS
 #include "fftw3.h" /* FFT for ICS*/
+#include "pocketfft.h"
 #endif
 
 #include "TTTR.h" /* TTTR */
