@@ -37,7 +37,9 @@ setuptools.setup(
                 "-DBUILD_PHOTON_HDF:BOOL=OFF",
                 "-DBUILD_ICS:BOOL=OFF",
                 "-DBUILD_LIBRARY:BOOL=OFF",
-                "-DCMAKE_CXX_FLAGS='-w'"
+                "-DCMAKE_CXX_FLAGS='-w'",
+                # Help cmake FindPython to pick the right path
+                "-DPython_ROOT_DIR='%s'" % Path(sys.executable).parent
             ]
         )
     ],
