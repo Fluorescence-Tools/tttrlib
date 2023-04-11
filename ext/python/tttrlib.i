@@ -55,7 +55,7 @@
 %include "Pda.i"
 
 /* convolution */
-%include "fsconv.i"
+%include "DecayConvolution.i"
 
 /* DecayFit(s) */
 %include "DecayFit.i"
