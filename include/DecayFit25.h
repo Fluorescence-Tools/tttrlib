@@ -1,7 +1,7 @@
 #ifndef FIT2X_DECAYFIT25_H
 #define FIT2X_DECAYFIT25_H
 
-#include "fsconv.h"
+#include "DecayConvolution.h"
 
 #include "DecayStatistics.h"
 #include "DecayFit.h"

@@ -1,6 +1,11 @@
 #ifndef FIT2X_DECAYFIT26_H
 #define FIT2X_DECAYFIT26_H
 
+#include "DecayFit.h"
+#include "DecayConvolution.h"
+#include "DecayStatistics.h"
+
+
 class DecayFit26 : DecayFit {
 
 

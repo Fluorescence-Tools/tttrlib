@@ -2,7 +2,7 @@
 #define FIT2X_DECAYFIT24_H
 
 #include "DecayFit.h"
-#include "fsconv.h"
+#include "DecayConvolution.h"
 #include "DecayStatistics.h"
 
 
