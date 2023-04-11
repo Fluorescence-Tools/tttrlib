@@ -5,7 +5,8 @@
 #include <set>
 #include <vector>
 #include <algorithm> // set union
-#include<boost/container/flat_set.hpp>
+//#include<boost/container/flat_set.hpp>
+#include "flat_set.hpp"
 
 #include "TTTR.h"
 
@@ -14,7 +15,9 @@ class TTTRRange {
 
 protected:
 
-    boost::container::flat_set<int> _tttr_indices{};
+    //boost::container::flat_set<int> _tttr_indices{};
+    //std::flat_set<int> _tttr_indices{};
+    itlib::flat_set<int> _tttr_indices{};
 
 public:
 
