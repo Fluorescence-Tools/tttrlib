@@ -4,7 +4,6 @@
 #include <memory> /* std::shared_ptr */
 #include <set>
 #include <vector>
-#include <algorithm> // set union
 //#include<boost/container/flat_set.hpp>
 #include "flat_set.hpp"
 
