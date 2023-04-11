@@ -1,6 +1,4 @@
 #include "DecayFit.h"
-#include "fsconv.h"
-
 
 void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
     LVI32Array *expdata = *(p->expdata);

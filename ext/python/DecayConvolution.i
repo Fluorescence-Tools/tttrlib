@@ -1,5 +1,5 @@
 %{
-#include "fsconv.h"
+#include "DecayConvolution.h"
 %}
 
 
@@ -484,4 +484,4 @@ void my_shift_lamp(
 
 
 
-%include "fsconv.h"
+%include "DecayConvolution.h"

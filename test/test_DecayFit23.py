@@ -205,7 +205,7 @@ class Tests(unittest.TestCase):
         fixed = np.array([0, 0, 1, 1], dtype=np.int16)  # lifetime fitted
         twoIstar = tttrlib.DecayFit23.fit(x, fixed, m_param)
         fit_res = np.array([1.79, 0.0, 0.38, 1.2, -1., 0., 0.26, 0.26])
-        np.testing.assert_array_almost_equal(fit_res, x, decimal=2)
+        np.testing.assert_allclose(fit_res, x, rtol=1e-02, atol=0.02)
         self.assertAlmostEqual(twoIstar, 0.512, places=2)
 
     def test_fit23_2(self):

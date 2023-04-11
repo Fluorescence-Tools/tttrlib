@@ -1,4 +1,4 @@
-#include "fsconv.h"
+#include "DecayConvolution.h"
 
 /* rescaling -- old version. sum(fit)->sum(decay) */
 void rescale(double *fit, double *decay, double *scale, int start, int stop) {
