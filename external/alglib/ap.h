@@ -105,13 +105,13 @@ Windows DLL symbol exports
 ********************************************************************/
 // #define ALGLIB_SHARED_LIB
 #if ! defined(WIN32) && ! defined(_WIN32) && ! defined(__CYGWIN__)
-// #  define ALGLIB_EXPORT
-// #else
+#  define ALGLIB_EXPORT
+#else
 // #  ifdef ALGLIB_SHARED_LIB
 // #    if defined(vtkalglib_EXPORTS)
-// #      define ALGLIB_EXPORT __declspec(dllexport)
+#      define ALGLIB_EXPORT __declspec(dllexport)
 // #    else
-#      define ALGLIB_EXPORT __declspec(dllimport)
+// #      define ALGLIB_EXPORT __declspec(dllimport)
 // #    endif
 // #  else
 // #    define ALGLIB_EXPORT
@@ -130,7 +130,7 @@ Namespace of a standard library AlgoPascal.
 ********************************************************************/
 namespace ap
 {
-
+    
 /********************************************************************
 Service routines:
     amalloc - allocates an aligned block of size bytes
