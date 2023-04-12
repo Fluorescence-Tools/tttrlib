@@ -104,19 +104,19 @@ Current environment.
 Windows DLL symbol exports
 ********************************************************************/
 // #define ALGLIB_SHARED_LIB
-// #if ! defined(WIN32) && ! defined(_WIN32) && ! defined(__CYGWIN__)
+#if ! defined(WIN32) && ! defined(_WIN32) && ! defined(__CYGWIN__)
 // #  define ALGLIB_EXPORT
 // #else
 // #  ifdef ALGLIB_SHARED_LIB
 // #    if defined(vtkalglib_EXPORTS)
 // #      define ALGLIB_EXPORT __declspec(dllexport)
 // #    else
-// #      define ALGLIB_EXPORT __declspec(dllimport)
+#      define ALGLIB_EXPORT __declspec(dllimport)
 // #    endif
 // #  else
 // #    define ALGLIB_EXPORT
 // #  endif
-// #endif
+#endif
 
 /********************************************************************
 This symbol is used for debugging. Do not define it and do not remove
