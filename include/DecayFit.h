@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include "external/i_lbfgs.h"
+#include "i_lbfgs.h"
 #include "LvArrays.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
