@@ -34,10 +34,14 @@ setuptools.setup(
                 "-DWITH_AVX:BOOL=ON",
                 "-DBUILD_R_INTERFACE:BOOL=OFF",
                 "-DCMAKE_BUILD_TYPE=Release",
+                # PHOTON HDF depends on HDF5 -> difficult to distribute
                 "-DBUILD_PHOTON_HDF:BOOL=OFF",
+                # Currently depends on fftw3 -> difficult to distribute
                 "-DBUILD_ICS:BOOL=OFF",
                 "-DBUILD_LIBRARY:BOOL=OFF",
                 "-DCMAKE_CXX_FLAGS='-w'",
+                # Static linking to facilitate pypi distribution
+                "-DBoost_USE_STATIC:BOOL=ON",
                 # Help cmake FindPython to pick the right path
                 "-DPython_ROOT_DIR='%s'" % Path(sys.executable).parent
             ]
