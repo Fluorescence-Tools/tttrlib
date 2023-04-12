@@ -18,7 +18,7 @@ at least one of the references given below:
 #ifndef _lbfgs_h
 #define _lbfgs_h
 
-#include "ap.h"
+#include "alglib/ap.h"
 
 void funcgrad(ap::real_1d_array, double&, ap::real_1d_array&);
 
