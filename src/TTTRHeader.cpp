@@ -680,10 +680,12 @@ void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::strin
 void TTTRHeader::add_tag(
         nlohmann::json &json_data,
         const std::string &name,
-        boost::any value,
+        std::any value,
+        // boost::any value,
         unsigned int type,
         int idx
 ) {
+    using namespace std;
     nlohmann::json tag;
     tag["name"] = name; // boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
     tag["type"] = type;
@@ -691,16 +693,16 @@ void TTTRHeader::add_tag(
     if (type == tyEmpty8) {
         tag["value"] = nullptr;
     } else if (type == tyBool8) {
-        tag["value"] = boost::any_cast<bool>(value);
+        tag["value"] = any_cast<bool>(value);
     } else if ((type == tyInt8) || (type == tyBitSet64) || (type == tyColor8)) {
-        tag["value"] = boost::any_cast<int>(value);
+        tag["value"] = any_cast<int>(value);
     } else if ((type == tyFloat8) || (type == tyTDateTime)) {
-        tag["value"] = boost::any_cast<double>(value);
+        tag["value"] = any_cast<double>(value);
     } else if (type == tyFloat8Array) {
-        tag["value"] = boost::any_cast<std::vector<double>>(value);
+        tag["value"] = any_cast<std::vector<double>>(value);
     }
     else if (type == tyAnsiString) {
-        auto str = boost::any_cast<char*>(value);
+        auto str = any_cast<char*>(value);
         tag["value"] = str;
         // the stuff below work better but depnds on boost
         // auto str2 = std::string(str);
@@ -708,14 +710,14 @@ void TTTRHeader::add_tag(
         // tag["value"] = str3;
     }
     else if (type == tyWideString) {
-        auto str = boost::any_cast<wchar_t *>(value);
+        auto str = any_cast<wchar_t *>(value);
         auto str2 = std::wstring(str);
         tag["value"] = str2;
     }
     else if (type == tyBinaryBlob) {
-        tag["value"] = boost::any_cast<std::vector<int32_t>>(value);
+        tag["value"] = any_cast<std::vector<int32_t>>(value);
     } else {
-        tag["value"] = std::to_string(boost::any_cast<int>(value));
+        tag["value"] = std::to_string(any_cast<int>(value));
     }
     int tag_idx = find_tag(json_data, name, idx);
     if (tag_idx < 0) {
