@@ -20,7 +20,7 @@
 //#include <boost/filesystem.hpp>
 //#include <boost/locale.hpp>
 
-#include "external/json.hpp"
+#include "json.hpp"
 
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
