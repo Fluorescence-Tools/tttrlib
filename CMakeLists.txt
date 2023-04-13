@@ -24,7 +24,7 @@ OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
-OPTION(Boost_USE_STATIC "Static boost build" ON)
+OPTION(Boost_USE_STATIC_LIBS "Static boost build" ON)
 
 ## Sytem specific compiler flags
 ################################
@@ -88,9 +88,9 @@ FIND_PACKAGE(Conda)
 ## Boost
 ###########################
 FIND_PACKAGE(CondaBoost)
-IF(Boost_USE_STATIC)
+IF(Boost_USE_STATIC_LIBS)
   SET(Boost_USE_STATIC_LIBS ON)
-ENDIF(Boost_USE_STATIC)
+ENDIF(Boost_USE_STATIC_LIBS)
 FIND_PACKAGE(Boost 1.36)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 

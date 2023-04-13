@@ -41,7 +41,7 @@ setuptools.setup(
                 "-DBUILD_LIBRARY:BOOL=OFF",
                 "-DCMAKE_CXX_FLAGS='-w'",
                 # Static linking to facilitate pypi distribution
-                "-DBoost_USE_STATIC:BOOL=ON",
+                "-DBoost_USE_STATIC_LIBS:BOOL=ON",
                 # Help cmake FindPython to pick the right path
                 "-DPython_ROOT_DIR='%s'" % Path(sys.executable).parent
             ]

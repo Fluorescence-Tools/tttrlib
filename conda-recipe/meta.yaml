@@ -44,7 +44,6 @@ requirements:
     - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
-    - boost-cpp
     - hdf5
     - fftw
     - llvm-openmp # [osx]
