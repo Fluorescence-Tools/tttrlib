@@ -1,5 +1,5 @@
 [project]
-    version = "0.23.8"
+    version = "0.23.9"
     name = "tttrlib"
     requires-python = ">=3.8"
     description = "Read, write & process time-tagged time-resolved (TTTR) data."
@@ -63,14 +63,13 @@
 # Normal options, etc.
 build-verbosity = 2
 
+test-command = 'python -c "import tttrlib; d = tttrlib.TTTR(); print(d)"'
+
 # Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
 skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
 
 # Install test dependencies
 test-requires = ["nose", "scipy"]
-
-[tool.cibuildwheel.windows]
-environment = {FFTWDIR='C:/fftw/'}
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
@@ -81,7 +80,7 @@ select = "cp3{8,9,10}-*"
     before-all = [
         "yum update -y",
         "yum install -y epel-release",
-        "yum -y install boost-devel fftw-devel hdf5-devel swig cmake"
+        "yum -y install boost-devel hdf5-devel swig cmake"
     ]
 
     manylinux-x86_64-image = "manylinux_2_28"
