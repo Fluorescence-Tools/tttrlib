@@ -4,11 +4,10 @@
 #include <iostream> /* cout, clog */
 #include <vector>
 #include <cstring>
+#include <complex>
+#include <cmath>
 
-#ifdef BUILD_ICS
-#include "fftw3.h" /* FFT for ICS*/
-#include "pocketfft.h"
-#endif
+#include "pocketfft/pocketfft_hdronly.h"
 
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"
@@ -21,7 +20,7 @@
 
 /// Different types of distances between two accessible volumes
 typedef enum{
-    CLSM_DEFAULT,         /// Default reading routine
+    CLSM_DEFAULT,         /// Default reading compute_icsroutine
     CLSM_SP5,             /// Leica SP5
     CLSM_SP8              /// Leica SP5
 } ReadingRoutine;
@@ -670,8 +669,6 @@ public:
             std::vector<int> y_range=std::vector<int>({0,-1}),
             std::vector<std::pair<int,int>> frames_index_pairs=std::vector<std::pair<int,int>>(),
             std::string subtract_average="",
-            CLSMImage* clsm2=nullptr,
-            double *images_2=nullptr, int input_frames_2=-1, int input_lines_2=-1, int input_pixel_2=-1,
             uint8_t *mask=nullptr, int dmask1=-1, int dmask2=-1, int dmask3=-1
     );
 

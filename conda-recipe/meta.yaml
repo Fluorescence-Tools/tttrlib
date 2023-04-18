@@ -34,10 +34,8 @@ requirements:
     - numpy
     - boost-cpp
     - hdf5
-    - fftw
   run:
     - python
-    - typing # [py27]
     - tqdm
     - click
     - click-didyoumean
@@ -45,8 +43,6 @@ requirements:
     - scikit-image
     - matplotlib
     - hdf5
-    - fftw
-    - llvm-openmp # [osx]
 
 test:
  imports:

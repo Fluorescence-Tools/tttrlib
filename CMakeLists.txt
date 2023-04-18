@@ -18,7 +18,6 @@ INCLUDE(simd)
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
-OPTION(BUILD_ICS "Build with image correlation spectroscopy (requires fftw)" OFF)
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
@@ -93,19 +92,6 @@ IF(Boost_USE_STATIC_LIBS)
 ENDIF(Boost_USE_STATIC_LIBS)
 FIND_PACKAGE(Boost 1.36)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-
-## FFTW
-##############
-IF(BUILD_ICS)
-  FIND_PACKAGE(FFTW)
-  IF(FFTW_FOUND)
-    LINK_LIBRARIES(${FFTW_LIBRARIES})
-    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
-    add_compile_definitions(BUILD_ICS)
-  ELSE(FFTW_FOUND)
-    SET(BUILD_ICS FALSE)
-  ENDIF(FFTW_FOUND)
-ENDIF(BUILD_ICS)
 
 ## HDF5
 ###########################cd
