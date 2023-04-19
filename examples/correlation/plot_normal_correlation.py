@@ -81,7 +81,7 @@ correlator = tttrlib.Correlator(
 )
 
 # no need to scale axis - correlator aware of macro time units
-ax.semilogx(
+plt.semilogx(
     correlator.curve.x,
     correlator.curve.y,
     label="Gp,Gs/Rp,Rs"
@@ -94,7 +94,7 @@ correlator = tttrlib.Correlator(
     **settings
 )
 
-ax.semilogx(
+plt.semilogx(
     correlator.x_axis,
     correlator.correlation,
     label="pR,sR"
@@ -107,15 +107,15 @@ correlator = tttrlib.Correlator(
     **settings
 )
 
-ax.semilogx(
+plt.semilogx(
     correlator.x_axis,
     correlator.correlation,
     label="pRsR,pGsG"
 )
 
 # Show results
-ax.set_xlabel('corr. time / sec')
-ax.set_ylabel('Correlation Amplitude')
-ax.legend()
+plt.set_xlabel('corr. time / sec')
+plt.set_ylabel('Correlation Amplitude')
+plt.legend()
 
 plt.show()

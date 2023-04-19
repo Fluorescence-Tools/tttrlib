@@ -8,6 +8,10 @@ set to another set after performing some operations. An image transform is a fun
 image. Instead of operating on gray level intensity of and image at any point. Photons (including their additional
 information) are mapped to a new image. Such a mapping can eg for non-affine and affine transforamtions (rotations,
 streching, etc.). Below a very simple image transformation (scaling/streching) is illustrated.
+
+Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a transformed images 
+cannot be used for advanced data analyis such as image correlation. Try to plan your experiment optimally 
+and aquire the data as needed (pixel dwell times, laser power, etc.). 
 """
 
 #%%
