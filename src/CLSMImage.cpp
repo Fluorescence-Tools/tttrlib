@@ -1232,23 +1232,20 @@ void CLSMImage::compute_ics(
     // Iterate through the pair of frames
     int current_pair = 0;
     for (auto &frame_pair: frames_index_pairs) {
-        // FFT of first frame
-        pocketfft::r2c<double>(
-            shape, stride_d, stride_c, axes, pocketfft::FORWARD, 
-            &roi[frame_pair.first * pixel_in_roi], fft_roi1.data(), 
-            norm
-        );
-        cout << "." << flush;
+        //double roi1_int = 0.0;
+        //double roi2_int = 0.0; // sum of values in roi1 & roi2
+        
+        // ROI1
+        //for(int i = frame_pair.first * pixel_in_roi; i < frame_pair.first * pixel_in_roi + pixel_in_roi; i++) roi1_int += roi[i];
+        pocketfft::r2c<double>(shape, stride_d, stride_c, axes, pocketfft::FORWARD, &roi[frame_pair.first * pixel_in_roi], fft_roi1.data(), 1.0);
 
-        // FFT of second frame
+        // ROI2
         if(frame_pair.second != frame_pair.first){
-            pocketfft::r2c<T>(
-                shape, stride_d, stride_c, axes, pocketfft::FORWARD, 
-                &roi[frame_pair.second * pixel_in_roi], fft_roi2.data(), 
-                norm
-            );
+            //for(int i = frame_pair.first * pixel_in_roi; i < frame_pair.first * pixel_in_roi + pixel_in_roi; i++) roi2_int += roi[i];
+            pocketfft::r2c<T>(shape, stride_d, stride_c, axes, pocketfft::FORWARD, &roi[frame_pair.second * pixel_in_roi], fft_roi2.data(), 1.0);
         } else{
             fft_roi2 = fft_roi1;
+            //roi2_int = roi1_int;
         }
 
         // FFT(roi1) * conj(FFT(roi2))
@@ -1261,6 +1258,7 @@ void CLSMImage::compute_ics(
         
         // write results to ics output and normalize
         int frame_offset = current_pair * pixel_in_roi;
+        //double denom = roi1_int * roi2_int;
         for(int i = 0; i < pixel_in_roi; i++){
             out_tmp[frame_offset + i] = real(ics[i]);
         }
