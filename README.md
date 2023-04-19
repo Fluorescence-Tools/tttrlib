@@ -108,6 +108,20 @@ Linux (x86, ARM64, PPCle), and macOS (x86).
 Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
 are not supported.
 
+### Pip install
+
+Ubuntu: 
+
+Self compiled
+
+```console
+sudo apt-get install libhdf5-dev boost-dev swig
+```
+
+```console
+pip install https://github.com/fluorescence-tools/tttrlib
+```
+
 ## Documentation
 
 The API of tttrlib as well as some use cases are documented
@@ -116,8 +130,11 @@ on its [web page](https://docs.peulen.xyz/tttrlib)
 Note, tttrlib is highly experimental library in current development. In
 case you notice unusual behaviour do not hesitate to contact the authors.
 
+cibuildwheel --output-dir wheelhouse --platform linux
+
 ## License
 
-tttrlib is released under the open source MPL 2.0 license.
+Copyright 2007-2023 tttrlib developers.
+Licensed under the BSD-3-Clause
 
 [3]: https://docs.peulen.xyz/tttrlib/_images/sphx_glr_plot_read_clsm_data_002.png "tttrlib FLIM"
