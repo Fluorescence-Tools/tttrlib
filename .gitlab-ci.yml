@@ -169,4 +169,4 @@ wheel:windows:
     paths:
       - bld-dir/
   tags:
-    - win--
+    - win
