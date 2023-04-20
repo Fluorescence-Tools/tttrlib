@@ -157,7 +157,7 @@ wheel:windows:
   stage: build
   image: wheel:win
   script:
-    - REM cmd.exe
+    - cmd.exe
     - REM git checkout development
     - REM git submodule update --init --recursive --remote
     - C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat
