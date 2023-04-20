@@ -66,7 +66,7 @@ test-command = 'python -c "import tttrlib; d = tttrlib.TTTR(); print(d)"'
 skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686"]
 
 # Install test dependencies
-test-requires = ["nose", "scipy"]
+test-requires = []
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
@@ -77,7 +77,7 @@ select = "cp3{8,9,10}-*"
     before-all = [
         "yum update -y",
         "yum install -y epel-release",
-        "yum -y install boost-devel hdf5-devel swig cmake"
+        "yum -y install boost-devel swig cmake"
     ]
 
     manylinux-x86_64-image = "manylinux_2_28"
