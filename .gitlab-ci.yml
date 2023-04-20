@@ -162,7 +162,7 @@ wheel:windows:
         CMD.EXE /C $env:public\inline.cmd
         REM git checkout development
         REM git submodule update --init --recursive --remote
-        C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat
+        call C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat
         py -m cibuildwheel --output-dir bld-dir --platform windows
         if(%CI_COMMIT_REF_NAME% -ne "master"){%TWINE_REPOSITORY%=testpypi}
         twine upload --skip-existing bld-dir/*.whl
