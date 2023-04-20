@@ -155,7 +155,7 @@ wheel:linux:
 
 wheel:windows:
   stage: build
-   image: wheel:win
+  image: wheel:win
   script:
     - REM cmd.exe
     - REM git checkout development
