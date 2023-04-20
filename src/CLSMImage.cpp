@@ -1188,9 +1188,8 @@ void CLSMImage::compute_ics(
         std::string subtract_average,
         uint8_t *mask, int dmask1, int dmask2, int dmask3
 ){
-    using namespace std;
     typedef double T;
-    typedef complex<T> CT;
+    typedef std::complex<T> CT;
 
     // create ROI
     T* roi; int nf, nl, np;
@@ -1209,17 +1208,17 @@ void CLSMImage::compute_ics(
     if(frames_index_pairs.empty()){
         frames_index_pairs.reserve(nf);
         for(int i=0; i < nf; i++) 
-            frames_index_pairs.emplace_back(make_pair(i, i));
+            frames_index_pairs.emplace_back(std::make_pair(i, i));
     }
 
     // Allocate memory for the ICS output array
     auto out_tmp = (T*) calloc(frames_index_pairs.size() * pixel_in_roi, sizeof(T));
 
     // Allocate arrays for FFTWs
-    vector<CT> in(pixel_in_roi, 0);
-    vector<CT> fft_roi1(pixel_in_roi, 0);
-    vector<CT> fft_roi2(pixel_in_roi, 0);
-    vector<CT> ics(pixel_in_roi, 0);
+    std::vector<CT> in(pixel_in_roi, 0);
+    std::vector<CT> fft_roi1(pixel_in_roi, 0);
+    std::vector<CT> fft_roi2(pixel_in_roi, 0);
+    std::vector<CT> ics(pixel_in_roi, 0);
 
     std::ptrdiff_t sd = sizeof(T);
     std::ptrdiff_t sc = sizeof(CT);
