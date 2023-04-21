@@ -33,6 +33,7 @@ RUN powershell -NoProfile -ExecutionPolicy Bypass -Command `
     "[Net.ServicePointManager]::SecurityProtocol = \"tls12, tls11, tls\"; iex ((New-Object System.Net.WebClient).DownloadString('http://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 
 # Install various packages.
+RUN choco install -y pwsh
 RUN choco install -y 7zip
 RUN choco install -y git
 RUN choco install -y python --version=3.8.6
@@ -55,4 +56,4 @@ RUN choco install -y swig
 
 RUN mkdir c:\wheelhouse
 CMD ["cmd.exe"]
-#ENTRYPOINT ["C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe"]
+ENTRYPOINT ["C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe"]
