@@ -58,7 +58,6 @@ conda:build:osx:
 # windows conda build
 conda:build:windows:
   <<: *build
-  image: mambaforge:vs16
   tags:
     - win
   script:
