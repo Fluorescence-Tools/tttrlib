@@ -61,13 +61,10 @@ conda:build:windows:
   tags:
     - win
   script:
-    - |
-      set-content $env:public\inline.cmd -Value @'
+    - 
       conda activate base
       cd tools && git pull --force && cd..
       .\tools\build.bat
-      '@
-      CMD.EXE /C $env:public\inline.cmd
 
 # tests - only run tests on linux
 conda:test:linux:
