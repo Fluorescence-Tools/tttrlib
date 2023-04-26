@@ -61,10 +61,9 @@ conda:build:windows:
   tags:
     - win
   script:
-    - 
-      conda activate base
-      cd tools && git pull --force && cd..
-      .\tools\build.bat
+    - conda activate base
+    - cd tools && git pull --force && cd..
+    - .\tools\build.bat
 
 # tests - only run tests on linux
 conda:test:linux:
