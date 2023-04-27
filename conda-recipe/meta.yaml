@@ -27,13 +27,12 @@ requirements:
     - ninja
     - cmake
     - make         # [linux]
-    - cmake-build-extension
   host:
+    - boost-cpp
+    - hdf5
     - python
     - setuptools
     - numpy
-    - boost-cpp
-    - hdf5
   run:
     - python
     - tqdm
