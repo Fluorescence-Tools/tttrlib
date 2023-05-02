@@ -1,6 +1,6 @@
 """
 ========================================
-Release Highlights for tttrlib 0.21
+Release Highlights for tttrlib 0.23
 ========================================
 
 .. currentmodule:: tttrlib
@@ -12,7 +12,7 @@ refer to the :ref:`release notes <changes_0_20>`.
 
 To install the latest version with conda::
 
-    conda install -c tpeulen scikit-learn
+    conda install -c tpeulen tttrlib
 """
 
 
