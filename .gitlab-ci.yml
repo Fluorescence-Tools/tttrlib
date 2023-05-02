@@ -151,6 +151,22 @@ wheel:linux:
     paths:
       - bld-dir/
 
+wheel:osx:
+  stage: build
+  tags:
+    - osx  
+  script:
+    - python -m pip install cibuildwheel==2.12.1
+    - git submodule update --init --recursive --remote
+    - cibuildwheel --output-dir bld-dir --platform linux
+    - python -m pip install --upgrade pip
+    - pip install twine
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
+    - twine upload --skip-existing bld-dir/*.whl
+  artifacts:
+    paths:
+      - bld-dir/
+
 wheel:windows:
   <<: *build  
   image: wheel:win
