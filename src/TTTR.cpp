@@ -419,6 +419,17 @@ TTTRHeader* TTTR::get_header() {
     }
 }
 
+void TTTR::set_header(TTTRHeader* v) {
+#ifdef VERBOSE_TTTRLIB
+    std::clog << "-- TTTR::set_header" << std::endl;
+#endif
+    if(v != nullptr){
+        header = v;
+    }
+}
+
+
+
 void TTTR::get_macro_times(unsigned long long** output, int* n_output){
     get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
 }

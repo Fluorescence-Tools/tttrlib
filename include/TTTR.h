@@ -672,6 +672,9 @@ public:
     /// Get header returns the header (if present) as a map of strings.
     TTTRHeader* get_header();
 
+    /// Set header
+    void set_header(TTTRHeader* v);
+
     /*!
      * Returns the number of events in the TTTR file for cases no selection
      * is specified otherwise the number of selected events is returned.
