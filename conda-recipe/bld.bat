@@ -17,7 +17,7 @@ cmake .. -G "NMake Makefiles" ^
  -DCMAKE_BUILD_TYPE=Release ^
  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
  -DCMAKE_SWIG_OUTDIR="%SP_DIR%" ^
- -DBUILD_LIBRARY=ON ^
+ -DBUILD_LIBRARY=ON
 nmake install
 
 

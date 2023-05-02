@@ -1,6 +1,11 @@
 git submodule update --recursive --init --remote
 mkdir b2 && cd b2
 
+if [[ "${target_platform}" == osx-* ]]; then
+  # See https://conda-forge.org/docs/maintainer/knowledge_base.html#newer-c-features-with-old-sdk
+  CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY"
+fi
+
 cmake  \
  -DCMAKE_INSTALL_PREFIX="$PREFIX" \
  -DCMAKE_PREFIX_PATH="$PREFIX" \
