@@ -114,8 +114,8 @@ plt.semilogx(
 )
 
 # Show results
-plt.set_xlabel('corr. time / sec')
-plt.set_ylabel('Correlation Amplitude')
+plt.xlabel('corr. time / sec')
+plt.ylabel('Correlation Amplitude')
 plt.legend()
 
 plt.show()
