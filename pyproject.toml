@@ -56,6 +56,7 @@
     ]
     build-backend = "setuptools.build_meta"
 
+
 [tool.cibuildwheel]
 # Normal options, etc.
 build-verbosity = 2
@@ -67,6 +68,11 @@ skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686", "*-
 
 # Install test dependencies
 test-requires = []
+
+[tool.cibuildwheel.macos]
+# Newer C++ features with old SDK¶:
+# https://conda-forge.org/docs/maintainer/knowledge_base.html
+environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1" }
 
 [[tool.cibuildwheel.overrides]]
 select = "cp3{8,9,10}-*"
