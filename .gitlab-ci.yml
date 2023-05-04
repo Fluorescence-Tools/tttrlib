@@ -120,7 +120,9 @@ deploy:doc:
         mount.nfs -o nolock 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
         cd doc && mamba env update --file environment.yml && conda activate doc
         make html
-        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
+        export HTML_TARGET="dev/tttrlib"
+        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then export HTML_TARGET="tttrlib" fi
+        rm -rf /srv/docs.peulen.xyz/$HTML_TARGET && mv -v _build/html/stable /srv/docs.peulen.xyz/$HTML_TARGET; fi
 
 wheel:linux:
   stage: build

@@ -13,6 +13,7 @@ __pycache__
 tttr-data
 .idea/
 tools/
+leftovers/
 
 # Documentation and tools
 doc/_*
