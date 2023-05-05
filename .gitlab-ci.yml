@@ -114,10 +114,10 @@ deploy:doc:
         export TZ=Europe/Berlin
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
+    - source activate base
+    - mamba env update --file doc/environment.yml && conda activate doc
     - mount.nfs -o nolock 192.168.124.254:tank/www /srv
     - ln -s /srv/tttr-data tttr-data
-    - conda init bash
-    - mamba env update --file doc/environment.yml && conda activate doc
     - cd doc && make html
     - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
     - mv -v _build/html/stable /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
