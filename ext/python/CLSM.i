@@ -1,9 +1,9 @@
 %{
-#include "../include/CLSMPixel.h"
-#include "../include/CLSMLine.h"
-#include "../include/CLSMFrame.h"
-#include "../include/CLSMImage.h"
-#include "../include/TTTR.h"
+#include "CLSMPixel.h"
+#include "CLSMLine.h"
+#include "CLSMFrame.h"
+#include "CLSMImage.h"
+#include "TTTR.h"
 static int myErr = 0; // flag to save error state
 %}
 
@@ -34,10 +34,10 @@ static int myErr = 0; // flag to save error state
 // Use shared_prt for CLSMImage to pass CLSMImage around
 %shared_ptr(CLSMImage)
 
-%include "../include/CLSMPixel.h"
-%include "../include/CLSMLine.h"
-%include "../include/CLSMFrame.h"
-%include "../include/CLSMImage.h"
+%include "CLSMPixel.h"
+%include "CLSMLine.h"
+%include "CLSMFrame.h"
+%include "CLSMImage.h"
 
 // https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
 %exception CLSMImage::__getitem__ {

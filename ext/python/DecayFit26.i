@@ -35,4 +35,3 @@
 };
 
 %include "DecayFit26.h"
-%pythoncode "../ext/python/DecayFit26.py"

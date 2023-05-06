@@ -14,12 +14,15 @@
 #include <array>
 #include <memory>
 #include <numeric>
+#include <fstream> /* ifstream */
 
-#include <boost/any.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/locale.hpp>
+#include <any>
+// #include <boost/any.hpp>
+//#include <boost/filesystem.hpp>
+//#include <boost/locale.hpp>
 
 #include "json.hpp"
+
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
@@ -125,7 +128,8 @@ public:
     static void add_tag(
             nlohmann::json &json_data,
             const std::string &name,
-            boost::any value,
+            std::any value,
+            // boost::any value,
             unsigned int type = tyAnsiString,
             int idx = -1
     );

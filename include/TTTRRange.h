@@ -4,8 +4,8 @@
 #include <memory> /* std::shared_ptr */
 #include <set>
 #include <vector>
-#include <algorithm> // set union
-#include<boost/container/flat_set.hpp>
+//#include<boost/container/flat_set.hpp>
+#include "itlib/flat_set.hpp"
 
 #include "TTTR.h"
 
@@ -14,7 +14,9 @@ class TTTRRange {
 
 protected:
 
-    boost::container::flat_set<int> _tttr_indices = {};
+    //boost::container::flat_set<int> _tttr_indices{};
+    //std::flat_set<int> _tttr_indices{};
+    itlib::flat_set<int> _tttr_indices{};
 
 public:
 
@@ -153,14 +155,14 @@ public:
     }
 
     void get_microtime_histogram(
-            TTTR* tttr,
+            std::shared_ptr<TTTR> tttr,
             double** histogram, int* n_histogram,
             double** time, int* n_time,
             unsigned short micro_time_coarsening
     ){
         auto v = get_tttr_indices();
         TTTR::compute_microtime_histogram(
-            tttr,
+            tttr.get(),
             histogram, n_histogram,
             time, n_time,
             micro_time_coarsening,
@@ -190,7 +192,8 @@ public:
             double m0_irf = 1.0, double m1_irf = 1.0,
             double dt = 1.0,
             std::vector<double> *background = nullptr,
-            double m0_bg = 0.0, double m1_bg = 0.0
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     /*!
@@ -211,6 +214,7 @@ public:
      * @param m0_irf is the zero moment of the IRF (optional, default=1)
      * @param m1_irf is the first moment of the IRF (optional, default=1)
      * @param dt time resolution of the micro time
+     * @param background_fraction fraction of background pattern in data (if negative no background)
      */
     static double compute_mean_lifetime(
             std::vector<int> &tttr_indices,
@@ -220,7 +224,8 @@ public:
             double m0_irf = 1.0, double m1_irf = 1.0,
             double dt = 1.0,
             std::vector<double> *background = nullptr,
-            double m0_bg = 0.0, double m1_bg = 0.0
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     bool operator==(const TTTRRange& other) const {

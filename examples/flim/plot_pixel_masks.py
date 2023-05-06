@@ -4,6 +4,8 @@ Using Pixel masks
 =================
 
 """
+
+#%%
 import pylab as plt
 from matplotlib.pyplot import imread
 import tttrlib
@@ -25,6 +27,7 @@ reading_parameter = {
 }
 clsm_image = tttrlib.CLSMImage(**reading_parameter)
 
+#%%
 n_frames, n_lines, n_pixel = clsm_image.shape
 mask_template = imread("../../tttr-data/imaging/misc/clsm_mask.png").astype(np.uint8).T
 mask = np.empty((n_frames, n_lines, n_pixel), dtype=np.uint8)

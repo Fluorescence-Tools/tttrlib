@@ -7,6 +7,8 @@ peripheral areas of an image to remove extraneous trash from the picture, to imp
 aspect ratio. Cropping of CLSM images in tttrlib preserves the information contained in the associated photons, i.e.,
 the micro time, the macro time, and the routing channel numbers.
 """
+
+#%%
 from __future__ import print_function
 import tttrlib
 import numpy as np

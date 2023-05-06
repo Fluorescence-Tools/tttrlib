@@ -1,8 +1,9 @@
-{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+{% set pyproject = load_file_data('../pyproject.toml', from_recipe_dir=True) %}
+{% set data = pyproject.get('project', {}) %}
 
 package:
-  name: {{ data.get('name')|lower }}
-  version: {{ data.get('version')|lower }}
+  name: {{ data.get('name') }}
+  version: {{ data.get('version') }}
 
 source:
   path: ../
@@ -16,6 +17,7 @@ requirements:
   build:
     - python
     - numpy
+    - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - llvm-openmp  # [osx]
@@ -26,25 +28,20 @@ requirements:
     - cmake
     - make         # [linux]
   host:
+    - boost-cpp
+    - hdf5
     - python
     - setuptools
     - numpy
-    - boost-cpp
-    - hdf5
-    - fftw
   run:
     - python
+    - tqdm
     - click
+    - click-didyoumean
+    - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
-    - tqdm
-    - click-didyoumean
-    - typing # [py27]
-    - {{ pin_compatible('numpy') }}
-    - boost-cpp
     - hdf5
-    - fftw
-    - llvm-openmp # [osx]
 
 test:
  imports:
@@ -54,11 +51,9 @@ test:
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
-  license: {{ data.get('license') }}
+  license: BSD-3-Clause
   summary: |
     {{ data.get('description') }}
-description: |
-    {{ data.get('long_description') }}
 
 extra:
   recipe-maintainers:

@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+
 #include "TTTR.h"
 #include "PdaCallback.h"
 
@@ -232,7 +233,7 @@ public:
      * @param n_input[in]
      */
     void setPF(double *input, int n_input){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Setting pF " << std::endl;
 #endif
         _is_valid_sgsr = false;

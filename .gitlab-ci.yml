@@ -3,67 +3,76 @@ stages:
 - test
 - deploy
 
+# general definitions
 .build: &build
   stage: build
   artifacts:
     paths:
       - bld-dir/
-.build_posix: &build_posix
-  <<: *build
+.conda:build:posix: &conda_build_posix
+  <<: *build  
   script:
     - ./tools/build.sh
-.build:lnx: &build_lnx
-  <<: *build_posix
+.conda:build:lnx: &conda_build_lnx
+  <<: *conda_build_posix
   before_script:
     - source "/opt/conda/etc/profile.d/conda.sh"
     - conda activate /opt/conda/
+    - git config --global safe.directory '*'
     - git submodule update --init --recursive --remote
-build:lnx_x86:
-  <<: *build_lnx
+
+# linux conda builds
+conda:build:lnx:x86:
+  <<: *conda_build_lnx
   image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-cos7-x86_64
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
+    - linux
     - x86_64
-build:lnx_ppc64le:
-  <<: *build_lnx
+conda:build:lnx:ppc64le:
+  <<: *conda_build_lnx
   image:
+    entrypoint: [ "/bin/bash", "-i", "-c" ]
     name: condaforge/linux-anvil-ppc64le
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
   tags:
+    - linux
     - ppc64le
-build:lnx_aarch64:
-  <<: *build_lnx
+conda:build:lnx:aarch64:
+  <<: *conda_build_lnx
   image:
-    name: condaforge/linux-anvil-aarch64
     entrypoint: [ "/bin/bash", "-i", "-c" ]
+    name: condaforge/linux-anvil-aarch64
   tags:
+    - linux
     - aarch64
-build:osx:
-  <<: *build
-  <<: *build_posix
+
+# macOS conda build
+conda:build:osx:
+  <<: *conda_build_posix
   tags:
     - osx
   before_script:
     - git submodule update --init --recursive --remote
-build:windows:
+
+# windows conda build
+conda:build:windows:
   <<: *build
-  image: mambaforge:vs16
   tags:
     - win
   script:
-    - cmd.exe
     - conda activate base
     - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
-test:linux:
+# tests - only run tests on linux
+conda:test:linux:
   stage: test
   tags:
-    - local
+    - local # go for a server marked as local
     - linux
   image: condaforge/mambaforge
-  needs: ["build:lnx_x86"]
+  needs: ["conda:build:lnx:x86"]
   before_script:
     - |
         export DEBIAN_FRONTEND=interactive
@@ -71,21 +80,20 @@ test:linux:
         apt-get update -qy && apt-get install -qy git nfs-common # sshfs
   script:
     - |
-        # requires runner in privileged mode see (https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4122)
         source activate base
         conda config --add channels "file://`pwd`/bld-dir"
-        git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
+        git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mamba install python tttrlib nose scipy
+        # requires runner in privileged mode see
         mount.nfs -o nolock 192.168.124.254:tank/www /srv
         # sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
         ln -s /srv/tttr-data tttr-data
         nosetests test
 
-deploy:conda:
+conda:deploy:
   stage: deploy
   image: condaforge/mambaforge
   tags:
-    - x86_64
     - linux
   before_script:
     - git submodule update --init --recursive --remote
@@ -99,17 +107,79 @@ deploy:doc:
    tags:
      - local
      - linux
-   needs: ["build:lnx_x86"]
+   needs: ["conda:build:lnx:x86"]
    before_script:
     - |
         export DEBIAN_FRONTEND=interactive
         export TZ=Europe/Berlin
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
-    - |
-        source activate base
-        git clone --depth 1 https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
-        mount.nfs -o nolock 192.168.124.254:tank/www /srv && ln -s /srv/tttr-data tttr-data
-        cd doc && mamba env update --file environment.yml && conda activate doc
-        make html
-        if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then rm -rf /srv/docs.peulen.xyz/tttrlib && mv -v _build/html/stable /srv/docs.peulen.xyz/tttrlib; fi
+    - source activate base
+    - mamba env update --file doc/environment.yml && conda activate doc
+    - mount.nfs -o nolock 192.168.124.254:tank/www /srv
+    - ln -s /srv/tttr-data tttr-data
+    - cd doc && make html
+    - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+    - mv -v _build/html/stable /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+
+wheel:linux:
+  stage: build
+  tags:
+    - linux  
+  image: python:3.8
+  # make a docker daemon available for cibuildwheel to use
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - curl -sSL https://get.docker.com/ | sh
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - python -m pip install cibuildwheel==2.12.1
+    - git submodule update --init --recursive --remote
+    - cibuildwheel --output-dir bld-dir --platform linux
+    - python -m pip install --upgrade pip
+    - pip install twine
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
+    - twine upload --skip-existing bld-dir/*.whl
+  artifacts:
+    paths:
+      - bld-dir/
+
+wheel:osx:
+  stage: build
+  tags:
+    - osx  
+  script:
+    - conda deactivate
+    - python3 -m pip install cibuildwheel==2.12.1
+    - git submodule update --init --recursive --remote
+    - cibuildwheel --output-dir bld-dir --platform macos
+    - python3 -m pip install --upgrade pip
+    - python3 -m pip install twine
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
+    - python3 -m twine upload --skip-existing bld-dir/*.whl
+  artifacts:
+    paths:
+      - bld-dir/
+
+wheel:windows:
+  <<: *build  
+  image: wheel:win
+  script:
+      - |
+        conda deactivate
+        set-content $env:public\inline.cmd -Value @'
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+        py -m cibuildwheel --output-dir bld-dir --platform windows
+        if %CI_COMMIT_REF_NAME% NEQ master set TWINE_REPOSITORY=testpypi
+        twine upload --skip-existing bld-dir/*.whl
+        '@
+        CMD.EXE /C $env:public\inline.cmd
+  tags:
+    - win

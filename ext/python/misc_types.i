@@ -7,7 +7,7 @@
 %include "std_set.i";
 %include "std_list.i";
 %include "std_pair.i"; // tttrlib.Correlator.get_tttr
-%include <std_shared_ptr.i>
+%include "std_shared_ptr.i";
 
 %include "cpointer.i"
 %include "attribute.i"

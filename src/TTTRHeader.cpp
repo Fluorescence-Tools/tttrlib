@@ -14,14 +14,14 @@ TTTRHeader::TTTRHeader() :
     json_data["tags"] = nlohmann::json::array();
     json_data[TTTRContainerType] = 0;
     json_data[TTTRRecordType] = -1;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- TTTRHeader::TTTRHeader" << std::endl;
 #endif
 }
 
 TTTRHeader::TTTRHeader(const TTTRHeader &p2)
 {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- TTTRHeader::TTTRHeader - Copy constructor" << std::endl;
 #endif
     json_data = p2.json_data;
@@ -34,7 +34,7 @@ TTTRHeader::TTTRHeader(
         bool close_file
         ) : TTTRHeader(tttr_container_type)
 {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- TTTRHeader::TTTRHeader - Opening file" << std::endl;
     std::clog << "reading header" << std::endl;
 #endif
@@ -96,7 +96,7 @@ TTTRHeader::TTTRHeader(
     }
     set_tttr_record_type(tttr_record_type);
     if(close_file) fclose(fpin);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "End of header: " << header_end << std::endl;
     std::clog << json_data << std::endl;
 #endif
@@ -131,7 +131,7 @@ size_t TTTRHeader::read_bh132_header(
     add_tag(data, TTTRNMicroTimes, 4096, tyInt8);
     add_tag(data, TTTRTagBits, 32, tyInt8);
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- BH132 header reader " << std::endl;
     std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
     std::clog << "-- micro_time_resolution: " << mi_clk << std::endl;
@@ -144,7 +144,7 @@ size_t TTTRHeader::read_ht3_header(
         nlohmann::json &data,
         bool rewind
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- READ_HT3_HEADER" << std::endl;
 #endif
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
@@ -222,23 +222,23 @@ size_t TTTRHeader::read_ht3_header(
     add_tag(data, TTTRTagRes, resolution, tyFloat8);
 
     // TODO: add identification of HydraHarp HHT3v1 files
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "FormatVersion:-" << get_tag(data, "FormatVersion")["value"] << "-" << std::endl;
 #endif
     if (get_tag(data, "Ident")["value"] == "HydraHarp") {
         if(get_tag(data, "FormatVersion")["value"] == "1.0"){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v1" << std::endl;
 #endif
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v1, tyInt8);
         } else{
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v2" << std::endl;
 #endif
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v2, tyInt8);
         }
     } else {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "Record reader:" << "PQ_RECORD_TYPE_PHT3" << std::endl;
 #endif
         add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_PHT3, tyInt8);
@@ -257,7 +257,7 @@ size_t TTTRHeader::read_ptu_header(
         nlohmann::json &json_data,
         bool rewind
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- TTTRHeader::read_ptu_header" << std::endl;
 #endif
     /// The version of the PTU file
@@ -290,7 +290,7 @@ size_t TTTRHeader::read_ptu_header(
     sprintf(buffer_out, "%s", version);
     json_data["Tag Version"] = buffer_out;
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "PTU ID:" << Magic << std::endl;
     std::clog << "Tag version:" << json_data["Tag Version"] << std::endl;
     std::clog << "Reading keys..." << std::endl;
@@ -308,7 +308,7 @@ size_t TTTRHeader::read_ptu_header(
         if (TTTRTagTTTRRecType == TagHead.Ident)
             file_type = TagHead.TagValue;
         std::string key = TagHead.Ident;
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << key << ":" << TagHead.Typ << ":" << TagHead.TagValue << ";" << std::endl;
 #endif
         // The header end tag is skipped.
@@ -430,13 +430,18 @@ void TTTRHeader::write_spc132_header(
 }
 
 void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::string modes){
-    #if VERBOSE_TTTRLIB
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "TTTRHeader::write_ptu_header" << std::endl;
     #endif
     // Check for existing file
-    if(boost::filesystem::exists(fn)){
+    // if(boost::filesystem::exists(fn)){
+    //     std::clog << "WARNING: File exists" << fn << "." << std::endl;
+    // }
+    std::ifstream f(fn);
+    if(f.good()){
         std::clog << "WARNING: File exists" << fn << "." << std::endl;
     }
+
     // write header information that is not in header tags
     FILE* fp = fopen(fn.c_str(), modes.c_str());
     // Write identifier for PTU files
@@ -462,7 +467,7 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     bool header_end_written = false;
     for(auto &it: header->json_data["tags"].items()){
         auto tag = it.value();
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << tag << std::endl;
 #endif
         tag_head_t TagHead;
@@ -541,7 +546,7 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
         }
     }
     if(!header_end_written){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
         std::clog << "Header_End is missing. Adding Header_End to tag list." << std::endl;
 #endif
         tag_head_t TagHead;
@@ -567,7 +572,7 @@ int TTTRHeader::find_tag(
         }
         curr_idx++;
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "FIND_TAG: " << name << ":" << idx << ":" << tag_idx  << std::endl;
 #endif
     return tag_idx;
@@ -575,7 +580,7 @@ int TTTRHeader::find_tag(
 
 
 void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes){
-//#if VERBOSE_TTTRLIB
+//#ifdef VERBOSE_TTTRLIB
 //    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
 //#endif
 //    if(boost::filesystem::exists(fn)){
@@ -675,40 +680,44 @@ void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::strin
 void TTTRHeader::add_tag(
         nlohmann::json &json_data,
         const std::string &name,
-        boost::any value,
+        std::any value,
+        // boost::any value,
         unsigned int type,
         int idx
 ) {
+    using namespace std;
     nlohmann::json tag;
-    tag["name"] = boost::locale::conv::to_utf<char>(name,"ISO-8859-1");
+    tag["name"] = name; // boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
     tag["type"] = type;
     tag["idx"] = idx;
     if (type == tyEmpty8) {
         tag["value"] = nullptr;
     } else if (type == tyBool8) {
-        tag["value"] = boost::any_cast<bool>(value);
+        tag["value"] = any_cast<bool>(value);
     } else if ((type == tyInt8) || (type == tyBitSet64) || (type == tyColor8)) {
-        tag["value"] = boost::any_cast<int>(value);
+        tag["value"] = any_cast<int>(value);
     } else if ((type == tyFloat8) || (type == tyTDateTime)) {
-        tag["value"] = boost::any_cast<double>(value);
+        tag["value"] = any_cast<double>(value);
     } else if (type == tyFloat8Array) {
-        tag["value"] = boost::any_cast<std::vector<double>>(value);
+        tag["value"] = any_cast<std::vector<double>>(value);
     }
     else if (type == tyAnsiString) {
-        auto str = boost::any_cast<char*>(value);
-        auto str2 = std::string(str);
-        auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
-        tag["value"] = str3;
+        auto str = any_cast<char*>(value);
+        tag["value"] = str;
+        // the stuff below work better but depnds on boost
+        // auto str2 = std::string(str);
+        // auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
+        // tag["value"] = str3;
     }
     else if (type == tyWideString) {
-        auto str = boost::any_cast<wchar_t *>(value);
+        auto str = any_cast<wchar_t *>(value);
         auto str2 = std::wstring(str);
         tag["value"] = str2;
     }
     else if (type == tyBinaryBlob) {
-        tag["value"] = boost::any_cast<std::vector<int32_t>>(value);
+        tag["value"] = any_cast<std::vector<int32_t>>(value);
     } else {
-        tag["value"] = std::to_string(boost::any_cast<int>(value));
+        tag["value"] = std::to_string(any_cast<int>(value));
     }
     int tag_idx = find_tag(json_data, name, idx);
     if (tag_idx < 0) {
@@ -716,7 +725,7 @@ void TTTRHeader::add_tag(
     } else {
         json_data["tags"][tag_idx] = tag;
     }
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "ADD_TAG: " << tag << std::endl;
 #endif
 }
@@ -730,14 +739,16 @@ nlohmann::json TTTRHeader::get_tag(
     for (auto& it : json_data["tags"].items()) {
         if(it.value()["name"] == name){
             if((idx < 0) || (idx == it.value()["idx"])){
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
                 std::clog << "-- GET_TAG:" << name << ":" << it << std::endl;
 #endif
                 return it.value();
             }
         }
     }
+#ifdef VERBOSE_TTTRLIB
     std::cerr << "ERROR: TTTR-TAG " << name << ":" << idx << " not found." << std::endl;
+#endif
     nlohmann::json re = {
             {"value", -1.0},
             {"idx", -1},

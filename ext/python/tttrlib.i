@@ -1,7 +1,7 @@
 // Linking issues against Python in Windows
 %begin %{
 #ifdef _MSC_VER
-#define SWIG_PYTHON_INTERPRETER_NO_DEBUG
+#define SWIG_PYTHON_INTERPRETER_NO_DEBUG 
 #endif
 %}
 
@@ -19,7 +19,7 @@
 #include <assert.h>
 %}
 
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
 // Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
 // Warning 389: operator[] ignored (consider using %extend)
 // Warning 401: Nothing known about base class
@@ -55,7 +55,7 @@
 %include "Pda.i"
 
 /* convolution */
-%include "fsconv.i"
+%include "DecayConvolution.i"
 
 /* DecayFit(s) */
 %include "DecayFit.i"

@@ -4,8 +4,10 @@
 #include <iostream> /* cout, clog */
 #include <vector>
 #include <cstring>
+#include <complex>
+#include <cmath>
 
-#include "fftw3.h" /* FFT for ICS*/
+#include "pocketfft/pocketfft_hdronly.h"
 
 #include "TTTR.h" /* TTTR */
 #include "Correlator.h"
@@ -18,7 +20,7 @@
 
 /// Different types of distances between two accessible volumes
 typedef enum{
-    CLSM_DEFAULT,         /// Default reading routine
+    CLSM_DEFAULT,         /// Default reading compute_icsroutine
     CLSM_SP5,             /// Leica SP5
     CLSM_SP8              /// Leica SP5
 } ReadingRoutine;
@@ -196,6 +198,14 @@ protected:
     void determine_number_of_lines();
 
 public:
+
+    std::shared_ptr<TTTR> get_tttr(){
+        return tttr;
+    }
+
+    void set_tttr(std::shared_ptr<TTTR> v){
+        tttr = v;
+    }    
 
     const CLSMSettings* get_settings(){
         return &settings;
@@ -430,7 +440,8 @@ public:
             TTTR *tttr_irf = nullptr, double m0_irf = 1.0, double m1_irf = 1.0,
             bool stack_frames = false,
             std::vector<double> background = std::vector<double>(),
-            double m0_bg = 0.0, double m1_bg = 0.0
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     /// Convert frame, line, and pixel to 1D index
@@ -658,8 +669,6 @@ public:
             std::vector<int> y_range=std::vector<int>({0,-1}),
             std::vector<std::pair<int,int>> frames_index_pairs=std::vector<std::pair<int,int>>(),
             std::string subtract_average="",
-            CLSMImage* clsm2=nullptr,
-            double *images_2=nullptr, int input_frames_2=-1, int input_lines_2=-1, int input_pixel_2=-1,
             uint8_t *mask=nullptr, int dmask1=-1, int dmask2=-1, int dmask3=-1
     );
 
@@ -757,6 +766,38 @@ public:
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8
     );
+
+    /// @brief Obtain line duration (in milliseconds)
+    /// @param frame number of frame in image
+    /// @param line number of line in image
+    /// @return duration of line in selected frame
+    double get_line_duration(int frame = 0, int line = 0){
+        double re = -1.0;
+        if(tttr != nullptr){
+            auto header = tttr->get_header();
+            
+            auto f = frames[frame];
+            auto l = f->lines[line];
+
+            int start = l->get_start();
+            int stop = l->get_stop();
+
+            unsigned long long t_stop = tttr->macro_times[stop];
+            unsigned long long t_start = tttr->macro_times[start];
+            unsigned long long dt = t_stop - t_start;
+            double res = header->get_macro_time_resolution() * 1000.0;
+            re = dt * res;
+        }
+        return re;
+    }
+
+    /// @brief  Obtain pixel duration in milliseconds
+    /// @param frame Selected frame number
+    /// @param line selected line number
+    /// @return duration of pixel in selected frame
+    double get_pixel_duration(int frame = 0, int line = 0){
+        return get_line_duration(frame, line) / settings.n_pixel_per_line;
+    }
 
 };
 

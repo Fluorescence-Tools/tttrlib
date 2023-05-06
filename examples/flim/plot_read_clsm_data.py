@@ -22,6 +22,8 @@ for markers are provided, either the default values for a particular setup are u
 or meta-data contained in the TTTR file is read.
 
 """
+
+#%%
 import pylab as plt
 from matplotlib.pyplot import imread
 import tttrlib

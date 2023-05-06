@@ -1,15 +1,15 @@
 # tttrlib
+[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
+[![PyPI version](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
 [![pipeline status](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)](https://gitlab.peulen.xyz/tpeulen/tttrlib/badges/master/pipeline.svg)
-[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/installer/conda.svg)](https://anaconda.org/tpeulen/tttrlib)
 
 ## General description
-
-tttrlib is a file format agnostic low level, high performance library to
+tttrlib is a file format agnostic high performance library to
 read and process time-tagged-time resolved (TTTR) data acquired by
 PicoQuant (PQ) and Becker & Hickl measurement devices/cards or TTTR
 files in the open Photon-HDF format.
 
-The library tttrlib facilitates the work with files containing
+The library facilitates the work with files containing
 time-tagged time resolved photon streams by providing
 a vendor independent C++ application programming interface (API)
 for TTTR files that is wrapped by SWIG (Simplified Wrapper and Interface
@@ -33,18 +33,17 @@ purposes.
 ## Supported file formats
 
 ### PicoQuant (PQ)
-
 * PicoHarp ptu, T2/T3
 * HydraHarp ptu, T2/T3
 * HydraHarp ht3, PTU
 
 ### Becker & Hickl (BH)
-
 * spc132
 * spc630 (256 & 4096 mode)
 
-## Design goals
+### Photon HDF5
 
+## Design goals
 * Low memory footprint (keep objective large datasets, e.g.  FLIM in memory).
 * Platform independent C/C++ library with interfaces for scripting libraries
 
@@ -102,14 +101,27 @@ conda install -c tpeulen tttrlib
 ```
 
 For most users the later approach is recommended. Currently, pre-compiled
-packages for the anaconda distribution system are available for:
+packages for the anaconda distribution system are available for Windows (x86),
+Linux (x86, ARM64, PPCle), and macOS (x86). Precompiled libary are linked against 
+conda-forge HDF5 & Boost. Thus, the use of [miniforge](https://github.com/conda-forge/miniforge) 
+is highly recommended.
 
-* Windows: Python 3.7 (x64)
-* Linux: Python 3.7 (x64)
-* MacOs: Python 3.7 (x64)
-
-Legacy 32-bit platforms and versions of programming languages, e.g, Python 2.7
+Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
 are not supported.
+
+### Pip install
+
+Ubuntu: 
+
+Self compiled
+
+```console
+sudo apt-get install libhdf5-dev boost-dev swig
+```
+
+```console
+pip install https://github.com/fluorescence-tools/tttrlib
+```
 
 ## Documentation
 
@@ -121,6 +133,7 @@ case you notice unusual behaviour do not hesitate to contact the authors.
 
 ## License
 
-tttrlib is released under the open source MPL 2.0 license.
+Copyright 2007-2023 tttrlib developers.
+Licensed under the BSD-3-Clause
 
 [3]: https://docs.peulen.xyz/tttrlib/_images/sphx_glr_plot_read_clsm_data_002.png "tttrlib FLIM"

@@ -1,0 +1,102 @@
+[project]
+    version = "0.23.9"
+    name = "tttrlib"
+    requires-python = ">=3.8"
+    description = "Read, write & process time-tagged time-resolved (TTTR) data."
+    readme = "README.md"
+    authors = [
+    {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
+    ]
+    license = {file = "LICENSE.txt"}
+
+    keywords = [
+        "fluorescence",
+        "time-resolved",
+        "spectroscopy",
+        "imaging",
+        "microscopy"
+    ]
+
+    classifiers = [
+        "Topic :: Software Development",
+        "Development Status :: 2 - Pre-Alpha",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows",
+        "Intended Audience :: Education",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Physics",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "License :: OSI Approved :: BSD License",
+        "Programming Language :: C++",
+        "Programming Language :: Python :: 3 :: Only",
+    ]
+
+    dependencies = [
+        "numpy"
+    ]
+
+    [project.urls]
+        homepage = "https://github.com/fluorescence-tools/tttrlib"
+        documentation = "https://docs.peulen.xyz/tttrlib"
+        repository = "https://github.com/fluorescence-tools/tttrlib.git"
+
+
+[build-system]
+    requires = [
+        "wheel",
+        "setuptools",
+        "cmake_build_extension",
+        "numpy"
+    ]
+    build-backend = "setuptools.build_meta"
+
+
+[tool.cibuildwheel]
+# Normal options, etc.
+build-verbosity = 2
+
+test-command = 'python -c "import tttrlib; d = tttrlib.TTTR(); print(d)"'
+
+# Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
+skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
+
+# Install test dependencies
+test-requires = []
+
+[tool.cibuildwheel.macos]
+# Newer C++ features with old SDK¶:
+# https://conda-forge.org/docs/maintainer/knowledge_base.html
+environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="10.14"}
+
+[[tool.cibuildwheel.overrides]]
+select = "cp3{8,9,10}-*"
+
+    # On Linux we need to use different package managers depending on image used
+    [tool.cibuildwheel.linux]
+
+    before-all = [
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum -y install boost-devel swig cmake"
+    ]
+
+    manylinux-x86_64-image = "manylinux_2_28"
+    manylinux-i686-image = "manylinux_2_28"
+    manylinux-aarch64-image = "manylinux_2_28"
+    manylinux-ppc64le-image = "manylinux_2_28"
+    manylinux-s390x-image = "manylinux_2_28"
+    manylinux-pypy_x86_64-image = "manylinux_2_28"
+    manylinux-pypy_i686-image = "manylinux_2_28"
+    manylinux-pypy_aarch64-image = "manylinux_2_28"
+
+    archs = [
+        "x86_64",
+        # "aarch64",
+        # "ppc64le"
+    ]

@@ -13,6 +13,8 @@ productive use.
 For any productive applications it is recommended to use the built-in ``tttrlib``
 CLSM functions.
 """
+
+#%%
 import tttrlib
 import numpy as np
 import pylab as p

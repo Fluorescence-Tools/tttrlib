@@ -10,7 +10,7 @@
 
 #include "i_lbfgs.h"
 #include "LvArrays.h"
-#include "fsconv.h"
+#include "DecayConvolution.h"
 #include "DecayStatistics.h"
 #include "DecayFit.h"
 

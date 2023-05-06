@@ -25,7 +25,7 @@ def add_tags(self, header2):
     import json
     if isinstance(header2, str):
         header2_dict = json.loads(header2)
-    elif isinstance(header2, tttrlib.TTTRHeader):
+    elif isinstance(header2, TTTRHeader):
         header2_dict = json.loads(header2.json)
     elif isinstance(header2, dict):
         header2_dict = header2

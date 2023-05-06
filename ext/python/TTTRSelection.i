@@ -1,5 +1,5 @@
 %{
-#include "../include/TTTRSelection.h"
+#include "TTTRSelection.h"
 %}
 %attributeval(TTTRSelection, std::vector<int>, tttr_indices, get_tttr_indices);
 
@@ -15,5 +15,5 @@
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *routing_channels, int n_routing_channels)}
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *event_types, int n_event_types)}
 
-%include "../include/TTTRSelection.h"
+%include "TTTRSelection.h"
 

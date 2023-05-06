@@ -16,12 +16,14 @@
 #include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
 #include <cinttypes>    /* uint64, int64, etc */
+#include <fstream> /* ifstream */
 
-#include "omp.h"
 #include <boost/bimap.hpp>
-#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
+//#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
+#ifdef BUILD_PHOTON_HDF
 #include "hdf5.h"
+#endif
 
 #include "Histogram.h"
 #include "TTTRHeader.h"
@@ -161,7 +163,7 @@ private:
     TTTRHeader *header = nullptr;
 
     /// map to translates string container types to int container types
-    boost::bimap<std::string, int> container_names;
+    boost::bimap<std::string, int> container_names = {};
 
     typedef bool (*processRecord_t)(
             uint32_t&,  // input
@@ -207,7 +209,11 @@ private:
 
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;                          /* File handle for all other file types */
+
+#ifdef BUILD_PHOTON_HDF
     hid_t hdf5_file;                        /*HDF5 file handle */
+#endif
+
 
     /// End the end of the header the begining of the tttr records in the input file
     size_t fp_records_begin;
@@ -666,6 +672,9 @@ public:
     /// Get header returns the header (if present) as a map of strings.
     TTTRHeader* get_header();
 
+    /// Set header
+    void set_header(TTTRHeader* v);
+
     /*!
      * Returns the number of events in the TTTR file for cases no selection
      * is specified otherwise the number of selected events is returned.
@@ -757,6 +766,7 @@ public:
      * @param background background pattern
      * @param m0_bg sum of background photons (overwritten if background pattern not empty)
      * @param m1_bg first moment of background pattern (overwritten if background pattern not empty)
+     * @param background_fraction background fraction (if negative background is not scaled)
      * @return The computed lifetime
      */
     static double compute_mean_lifetime(
@@ -767,7 +777,8 @@ public:
             double dt = -1.0,
             int minimum_number_of_photons = 1,
             std::vector<double> *background = nullptr,
-            double m0_bg = 0.0, double m1_bg = 0.0
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     /*!

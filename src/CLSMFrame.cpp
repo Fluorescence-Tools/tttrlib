@@ -20,7 +20,7 @@ void CLSMFrame::crop(
     line_stop = std::min(line_stop, (int) size());
     line_start = std::max(0, line_start);
 
-    #if VERBOSE_TTTRLIB
+    #ifdef VERBOSE_TTTRLIB
     std::clog << "Crop frame" << std::endl;
     std::clog << "-- Line range: " << line_start << ", " << line_stop << std::endl;
     std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;

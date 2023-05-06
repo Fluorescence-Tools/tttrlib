@@ -10,6 +10,7 @@ dependencies:
     - numba
     - scipy
     - pillow
+    - sphinx <7.0.0 # see: https://github.com/readthedocs/readthedocs.org/issues/10279
     - sphinx-gallery
     - nbsphinx
     - jupyter_client # needed for nbsphinx
@@ -21,3 +22,4 @@ dependencies:
     - sphinxcontrib-bibtex<2.0.0
     - sphinxcontrib-websupport
     - scikit-image
+    - jinja2=3.1.2

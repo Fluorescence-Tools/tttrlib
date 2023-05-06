@@ -1,3 +1,18 @@
+def __getattr__(self, item):
+    """
+    If an attribute `attribute` is accesses that does not exist
+    the corresponding getter by calling 'get_attribute' is called
+
+    :param self:
+    :param item:
+    :return:
+    """
+    item = "get_" + str(item)
+    if hasattr(self.__class__, item):
+        call = getattr(self, item)
+        return call()
+    else:
+        raise AttributeError
 
 @property
 def correlation(self):
@@ -13,10 +28,9 @@ def x_axis(self):
 def tttr(self):
     return self.get_tttr()
 
-
 @tttr.setter
 def tttr(self, v):
-    if isinstance(v, tttrlib.TTTR):
+    if isinstance(v, TTTR):
         self.set_tttr(v, v)
     else:
         self.set_tttr(*v)
@@ -43,14 +57,12 @@ def weights(self, v):
 
 
 def __repr__(self):
-    return 'tttrlib.Correlator()'
-
+    return 'Correlator()'
 
 def __str__(self):
     s = "Number of evenly spaced correlation channels: %d \n" % self.get_n_bins()
     s += "Number of correlation blocks: %d \n" % self.get_n_casc()
     return s
-
 
 def __init__(
         self,
@@ -62,7 +74,7 @@ def __init__(
 ):
     # prepare kwargs
     make_fine = kwargs.get('make_fine', False)
-    if isinstance(tttr, tttrlib.TTTR):
+    if isinstance(tttr, TTTR):
         kwargs['tttr'] = tttr
     this = _tttrlib.new_Correlator(**kwargs)
     try:
@@ -84,7 +96,7 @@ def __init__(
         ch1, ch2 = channels
         # use the indices to create new TTTR objects these
         self.set_tttr(
-            tttrlib.TTTR(tttr, tttr.get_selection_by_channel(ch1)),
-            tttrlib.TTTR(tttr, tttr.get_selection_by_channel(ch2)),
+            TTTR(tttr, tttr.get_selection_by_channel(ch1)),
+            TTTR(tttr, tttr.get_selection_by_channel(ch2)),
             make_fine
         )

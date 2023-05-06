@@ -7,6 +7,8 @@
 #include "TTTR.h"
 
 
+
+//! CorrelatorPhotonStream gathers event times and weights
 class CorrelatorPhotonStream{
 
     friend class Correlator;
@@ -36,7 +38,7 @@ public:
     std::vector<double> weights;
 
     bool empty() const{
-        return times.empty();
+        return times.empty() && weights.empty();
     }
 
     size_t size() const{

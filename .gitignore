@@ -3,6 +3,7 @@ bld-dir/
 dist/
 doc/examples
 tmp/
+.vscode
 .ipynb_checkpoints
 cmake-build-*/
 temp/
@@ -11,8 +12,8 @@ __pycache__
 .vscode/
 tttr-data
 .idea/
-cmake/
 tools/
+leftovers/
 
 # Documentation and tools
 doc/_*

@@ -3,10 +3,12 @@
 
 // minimize f(x,p) using BFGS algorithm
 
-#include "ap.h"
-#include "lbfgs.h"
 #include <cmath> /* isfinite */
 #include <iostream>
+
+#include "alglib/ap.h"
+#include "lbfgs/lbfgs.h"
+
 
 // pointer to the target function
 typedef double(*TargetFP)(double*, void*);

@@ -1,17 +1,6 @@
 
 // File: index.xml
 
-// File: classap_1_1ap__error.xml
-
-
-%feature("docstring") ap::ap_error "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::ap_error::make_assertion "
-ap::ap_error::make_assertion";
-
 // File: classbfgs.xml
 
 
@@ -113,6 +102,12 @@ Crops a frame
 
 C++ includes: CLSMImage.h
 ";
+
+%feature("docstring") CLSMImage::get_tttr "
+CLSMImage::get_tttr";
+
+%feature("docstring") CLSMImage::set_tttr "
+CLSMImage::set_tttr";
 
 %feature("docstring") CLSMImage::get_settings "
 CLSMImage::get_settings";
@@ -490,6 +485,38 @@ CLSMImage::~CLSMImage
 Destructor.  
 ";
 
+%feature("docstring") CLSMImage::get_line_duration "
+CLSMImage::get_line_duration
+Obtain line duration (in milliseconds)  
+
+Parameters
+----------
+* `frame` :  
+    number of frame in image  
+* `line` :  
+    number of line in image  
+
+Returns
+-------
+duration of line in selected frame  
+";
+
+%feature("docstring") CLSMImage::get_pixel_duration "
+CLSMImage::get_pixel_duration
+Obtain pixel duration in milliseconds.  
+
+Parameters
+----------
+* `frame` :  
+    Selected frame number  
+* `line` :  
+    selected line number  
+
+Returns
+-------
+duration of pixel in selected frame  
+";
+
 %feature("docstring") CLSMImage::compute_ics "
 CLSMImage::compute_ics
 Computes an image correlation via FFTs for a set of frames  
@@ -743,46 +770,6 @@ Parameters
     differentiate the different marker types.  
 ";
 
-// File: classap_1_1complex.xml
-
-
-%feature("docstring") ap::complex "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::complex::complex "
-ap::complex::complex";
-
-%feature("docstring") ap::complex::complex "
-ap::complex::complex";
-
-%feature("docstring") ap::complex::complex "
-ap::complex::complex";
-
-%feature("docstring") ap::complex::complex "
-ap::complex::complex";
-
-// File: classap_1_1const__raw__vector.xml
-
-
-%feature("docstring") ap::const_raw_vector "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::const_raw_vector::const_raw_vector "
-ap::const_raw_vector::const_raw_vector";
-
-%feature("docstring") ap::const_raw_vector::GetData "
-ap::const_raw_vector::GetData";
-
-%feature("docstring") ap::const_raw_vector::GetLength "
-ap::const_raw_vector::GetLength";
-
-%feature("docstring") ap::const_raw_vector::GetStep "
-ap::const_raw_vector::GetStep";
-
 // File: struct_correlation_curve_settings.xml
 
 
@@ -806,8 +793,8 @@ C++ includes: Correlator.h
 
 %feature("docstring") Correlator::dt "
 Correlator::dt
-Computes the the delta t for Ch1, Ch2 and the maximum delta t. Delta t is the
-difference between the first and the last photon.  
+Computes the the time difference in macro time units the first and the last
+event.  
 ";
 
 %feature("docstring") Correlator::Correlator "
@@ -815,33 +802,42 @@ Correlator::Correlator
 Parameters
 ----------
 * `tttr` :  
-    an optional TTTR object. The macro and micro time calibration of the header
-    in the TTTR object calibrate the correlator.  
+    optional TTTR object. If provided, the macro and micro time calibration of
+    the TTTR object header calibrate the correlator.  
 * `method` :  
     name of correlation method that is used by the correlator  
 * `n_bins` :  
-    the number of equally spaced correlation bins per block  
+    number of equally spaced correlation bins per block (determines correlation
+    bins)  
 * `n_casc` :  
-    the number of blocks  
+    number of blocks (determines correlation bins)  
+* `make_fine` :  
+    if true macro and micro time are combined.  
 ";
 
 %feature("docstring") Correlator::~Correlator "
-Correlator::~Correlator
-Destructor.  
-";
+Correlator::~Correlator";
 
 %feature("docstring") Correlator::set_n_casc "
 Correlator::set_n_casc
-Sets the number of cascades (also called blocks) of the correlation curve and
-updates the correlation axis.  
+Set correlation axis parameter and update axis.  
 
 Parameters
 ----------
 * `n_casc` :  
+    number of cascades (also called blocks) of the correlation curve  
 ";
 
 %feature("docstring") Correlator::get_curve "
-Correlator::get_curve";
+Correlator::get_curve
+get correlation  
+
+computes correlation (if necessary) and returns correlation curve  
+
+Returns
+-------
+correlation curve STOP STOP  
+";
 
 %feature("docstring") Correlator::get_n_casc "
 Correlator::get_n_casc
@@ -855,7 +851,7 @@ Correlator::set_n_bins
 Parameters
 ----------
 * `v` :  
-    the number of equally spaced correaltion channels per block  
+    number of equally spaced correlation channels per block  
 ";
 
 %feature("docstring") Correlator::get_n_bins "
@@ -867,12 +863,26 @@ the number of equally spaced correlation channels per block
 
 %feature("docstring") Correlator::set_correlation_method "
 Correlator::set_correlation_method
-Set method that to correlate the data  
+Correlation method  
 
 Parameters
 ----------
 * `cm` :  
-    the name of the method  
+    the name of the method options: \"felekyan\", \"wahl\", or \"laurence\"  
+
+Felekyan, S., Kühnemuth, R., Kudryavtsev, V., Sandhagen, C., Becker, W. and
+Seidel, C.A.,  
+
+1.  Full correlation from picoseconds to seconds by time-resolved and time-
+    correlated single photon detection. Review of scientific instruments, 76(8),
+    p.083104.  
+
+Michael Wahl, Ingo Gregor, Matthias Patting, Joerg Enderlein, 2003, Fast
+calculation of fluorescence correlation data with asynchronous time-correlated
+single-photon counting, Opt Express Vol. 11, No. 26, p. 3383  
+
+Ted A. Laurence, Samantha Fore, Thomas Huser, 2006. Fast, flexible algorithm for
+calculating photon correlations, , Opt Lett. 15;31(6):829-31  
 ";
 
 %feature("docstring") Correlator::get_correlation_method "
@@ -884,7 +894,7 @@ name of the used correlation method
 
 %feature("docstring") Correlator::set_microtimes "
 Correlator::set_microtimes
-Changes the time axis to consider the micro times.  
+Add microtime information to event stream.  
 
 Parameters
 ----------
@@ -915,7 +925,13 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_macrotimes "
-Correlator::get_macrotimes";
+Correlator::get_macrotimes
+get event times of first and second correlation channel  
+
+Returns
+-------
+event times of first and second correlation channel  
+";
 
 %feature("docstring") Correlator::set_events "
 Correlator::set_events
@@ -941,7 +957,9 @@ Parameters
 
 %feature("docstring") Correlator::set_weights "
 Correlator::set_weights
-Set the weights that are used in the correlation channels  
+Set weights used for correlation.  
+
+Set and update weights of the events in first and second correlation channel  
 
 Parameters
 ----------
@@ -956,11 +974,15 @@ Parameters
 ";
 
 %feature("docstring") Correlator::get_weights "
-Correlator::get_weights";
+Correlator::get_weights
+Returns
+-------
+weights in first and second correlation channel  
+";
 
 %feature("docstring") Correlator::get_x_axis "
 Correlator::get_x_axis
-Get the normalized x-axis of the correlation  
+Get correlation bins (axis)  
 
 Parameters
 ----------
@@ -984,7 +1006,7 @@ Parameters
 
 %feature("docstring") Correlator::get_corr "
 Correlator::get_corr
-Get the correlation.  
+Get the (unnormalized) correlation.  
 
 Parameters
 ----------
@@ -997,6 +1019,8 @@ Parameters
 
 %feature("docstring") Correlator::run "
 Correlator::run
+compute the correlation  
+
 Compute the correlation function. Usually calling this method is not necessary
 the the validity of the correlation function is tracked by the attribute
 is_valid.  
@@ -1004,11 +1028,13 @@ is_valid.
 
 %feature("docstring") Correlator::set_tttr "
 Correlator::set_tttr
-This method sets the time and the weights using TTTR objects.  
+Sets the time and the weights using TTTR objects.  
+
+Set the event times (and weights) using TTTR objects. By default the weights are
+all set to one.  
 
 The header of the first TTTR object is used for calibration. Both TTTR objects
-should have the same calibration (this is not checked). Weights are set to one
-by default.  
+should have the same calibration (this is not checked).  
 
 Parameters
 ----------
@@ -1050,7 +1076,7 @@ CorrelatorCurve::size";
 
 %feature("docstring") CorrelatorCurve::get_x_axis "
 CorrelatorCurve::get_x_axis
-Get the x-axis of the correlation  
+Get the x-axis of the correlation.  
 
 Parameters
 ----------
@@ -1059,6 +1085,13 @@ Parameters
 * `n_out` :  
     a pointer to the an integer that will contain the number of elements of the
     x-axis  
+";
+
+%feature("docstring") CorrelatorCurve::set_x_axis "
+CorrelatorCurve::set_x_axis
+Set the x-axis to arbitray bin values.  
+
+Attention: Make sure that the correlation method supports arbitray bin spacing  
 ";
 
 %feature("docstring") CorrelatorCurve::set_n_bins "
@@ -1099,6 +1132,8 @@ CorrelatorCurve::get_corr_normalized";
 
 
 %feature("docstring") CorrelatorPhotonStream "
+
+CorrelatorPhotonStream gathers event times and weights.  
 
 C++ includes: CorrelatorPhotonStream.h
 ";
@@ -2445,20 +2480,6 @@ C++ includes: TTTRHeaderTypes.h
 
 // File: unionpq__ph__t3__record.xml
 
-// File: classap_1_1raw__vector.xml
-
-
-%feature("docstring") ap::raw_vector "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::raw_vector::raw_vector "
-ap::raw_vector::raw_vector";
-
-%feature("docstring") ap::raw_vector::GetData "
-ap::raw_vector::GetData";
-
 // File: structtag__head.xml
 
 
@@ -2468,94 +2489,6 @@ A Header Tag entry of a PTU file.
 
 C++ includes: TTTRHeaderTypes.h
 ";
-
-// File: classap_1_1template__1d__array.xml
-
-
-%feature("docstring") ap::template_1d_array "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::template_1d_array::template_1d_array "
-ap::template_1d_array::template_1d_array";
-
-%feature("docstring") ap::template_1d_array::template_1d_array "
-ap::template_1d_array::template_1d_array";
-
-%feature("docstring") ap::template_1d_array::~template_1d_array "
-ap::template_1d_array::~template_1d_array";
-
-%feature("docstring") ap::template_1d_array::setbounds "
-ap::template_1d_array::setbounds";
-
-%feature("docstring") ap::template_1d_array::setcontent "
-ap::template_1d_array::setcontent";
-
-%feature("docstring") ap::template_1d_array::getcontent "
-ap::template_1d_array::getcontent";
-
-%feature("docstring") ap::template_1d_array::getcontent "
-ap::template_1d_array::getcontent";
-
-%feature("docstring") ap::template_1d_array::getlowbound "
-ap::template_1d_array::getlowbound";
-
-%feature("docstring") ap::template_1d_array::gethighbound "
-ap::template_1d_array::gethighbound";
-
-%feature("docstring") ap::template_1d_array::getvector "
-ap::template_1d_array::getvector";
-
-%feature("docstring") ap::template_1d_array::getvector "
-ap::template_1d_array::getvector";
-
-// File: classap_1_1template__2d__array.xml
-
-
-%feature("docstring") ap::template_2d_array "
-
-C++ includes: ap.h
-";
-
-%feature("docstring") ap::template_2d_array::template_2d_array "
-ap::template_2d_array::template_2d_array";
-
-%feature("docstring") ap::template_2d_array::template_2d_array "
-ap::template_2d_array::template_2d_array";
-
-%feature("docstring") ap::template_2d_array::~template_2d_array "
-ap::template_2d_array::~template_2d_array";
-
-%feature("docstring") ap::template_2d_array::setbounds "
-ap::template_2d_array::setbounds";
-
-%feature("docstring") ap::template_2d_array::setcontent "
-ap::template_2d_array::setcontent";
-
-%feature("docstring") ap::template_2d_array::getcontent "
-ap::template_2d_array::getcontent";
-
-%feature("docstring") ap::template_2d_array::getcontent "
-ap::template_2d_array::getcontent";
-
-%feature("docstring") ap::template_2d_array::getlowbound "
-ap::template_2d_array::getlowbound";
-
-%feature("docstring") ap::template_2d_array::gethighbound "
-ap::template_2d_array::gethighbound";
-
-%feature("docstring") ap::template_2d_array::getcolumn "
-ap::template_2d_array::getcolumn";
-
-%feature("docstring") ap::template_2d_array::getcolumn "
-ap::template_2d_array::getcolumn";
-
-%feature("docstring") ap::template_2d_array::getrow "
-ap::template_2d_array::getrow";
-
-%feature("docstring") ap::template_2d_array::getrow "
-ap::template_2d_array::getrow";
 
 // File: class_t_t_t_r.xml
 
@@ -2938,6 +2871,11 @@ TTTR::get_header
 Get header returns the header (if present) as a map of strings.  
 ";
 
+%feature("docstring") TTTR::set_header "
+TTTR::set_header
+Set header.  
+";
+
 %feature("docstring") TTTR::get_n_events "
 TTTR::get_n_events
 Returns the number of events in the TTTR file for cases no selection is
@@ -3076,6 +3014,8 @@ Parameters
 * `m1_bg` :  
     first moment of background pattern (overwritten if background pattern not
     empty)  
+* `background_fraction` :  
+    background fraction (if negative background is not scaled)  
 
 Returns
 -------
@@ -3620,6 +3560,8 @@ Parameters
     is the first moment of the IRF (optional, default=1)  
 * `dt` :  
     time resolution of the micro time  
+* `background_fraction` :  
+    fraction of background pattern in data (if negative no background)  
 ";
 
 // File: class_t_t_t_r_selection.xml
@@ -3646,83 +3588,6 @@ Copy constructor.
 
 %feature("docstring") TTTRSelection::TTTRSelection "
 TTTRSelection::TTTRSelection";
-
-// File: namespaceap.xml
-
-%feature("docstring") ap::abscomplex "
-ap::abscomplex";
-
-%feature("docstring") ap::conj "
-ap::conj";
-
-%feature("docstring") ap::csqr "
-ap::csqr";
-
-%feature("docstring") ap::vdotproduct "
-ap::vdotproduct";
-
-%feature("docstring") ap::vmove "
-ap::vmove";
-
-%feature("docstring") ap::vmove "
-ap::vmove";
-
-%feature("docstring") ap::vmoveneg "
-ap::vmoveneg";
-
-%feature("docstring") ap::vadd "
-ap::vadd";
-
-%feature("docstring") ap::vadd "
-ap::vadd";
-
-%feature("docstring") ap::vsub "
-ap::vsub";
-
-%feature("docstring") ap::vsub "
-ap::vsub";
-
-%feature("docstring") ap::vmul "
-ap::vmul";
-
-%feature("docstring") ap::sign "
-ap::sign";
-
-%feature("docstring") ap::randomreal "
-ap::randomreal";
-
-%feature("docstring") ap::randominteger "
-ap::randominteger";
-
-%feature("docstring") ap::round "
-ap::round";
-
-%feature("docstring") ap::trunc "
-ap::trunc";
-
-%feature("docstring") ap::ifloor "
-ap::ifloor";
-
-%feature("docstring") ap::iceil "
-ap::iceil";
-
-%feature("docstring") ap::pi "
-ap::pi";
-
-%feature("docstring") ap::sqr "
-ap::sqr";
-
-%feature("docstring") ap::maxint "
-ap::maxint";
-
-%feature("docstring") ap::minint "
-ap::minint";
-
-%feature("docstring") ap::maxreal "
-ap::maxreal";
-
-%feature("docstring") ap::minreal "
-ap::minreal";
 
 // File: namespacestatistics.xml
 
@@ -3766,8 +3631,6 @@ Returns
 
 // File: namespacestd.xml
 
-// File: ap_8h.xml
-
 // File: _c_l_s_m_frame_8h.xml
 
 // File: _c_l_s_m_image_8h.xml
@@ -3785,173 +3648,7 @@ Returns
 
 // File: _correlator_photon_stream_8h.xml
 
-// File: _decay_fit_8h.xml
-
-// File: _decay_fit23_8h.xml
-
-// File: _decay_fit24_8h.xml
-
-// File: _decay_fit25_8h.xml
-
-// File: _decay_fit26_8h.xml
-
-// File: _decay_phasor_8h.xml
-
-// File: _decay_statistics_8h.xml
-
-%feature("docstring") statistics::init_fact "
-
-Initialize an array containing pre-computed logratithms  
-";
-
-%feature("docstring") statistics::loggammaf "
-
-Approximation of log(gamma function). See wikipedia  
-
-https://en.wikipedia.org/wiki/Gamma_function#The_log-gamma_function  
-
-Parameters
-----------
-* `t` :  
-    input of the gamma function  
-
-Returns
--------
-approximation of the logarithm of the gamma function  
-";
-
-%feature("docstring") statistics::wcm "
-
-log-likelihood w(C|m) for Cp + 2Cs  
-
-Parameters
-----------
-* `C` :  
-    number of counts in channel  
-* `m` :  
-    model function  
-
-Returns
--------
-log-likelihood w(C|m) for Cp + 2Cs  
-";
-
-%feature("docstring") statistics::wcm_p2s "
-
-Compute the -log-likelihood for Cp + 2Cs of a single micro time channel.  
-
-Compute score of model counts in a parallel and perpendicular detection channel
-and the experimental counts for a micro time channel.  
-
-This function computes a score for the experimental counts (C) in a channel
-where the experimental counts were computed by the sum of the counts in the
-parallel (P) and the perpendicular (S) channel by the equation C = P + 2 S.  
-
-This function considers that the number of counts C = P + 2S is not Poissonian.
-The score relates to a maximum likelihood function.  
-
-Parameters
-----------
-* `C` :  
-    number of experimental counts (P + 2 S) in a micro time channel  
-* `mp` :  
-    number of counts of the model in parallel detection channel  
-* `ms` :  
-    number of counts of the model in the perpendicular detection channel  
-
-Returns
--------  
-";
-
-%feature("docstring") statistics::Wcm_p2s "
-
-Compute the overall -log-likelihood for Cp + 2Cs for all micro time channels  
-
-Parameters
-----------
-* `C` :  
-    array of experimental counts in Jordi format  
-* `M` :  
-    array model function in Jordi format  
-* `Nchannels` :  
-    number of micro time channels in parallel and perpendicular (half the number
-    of elements in C and M).  
-
-Returns
--------
--log-likelihood for Cp + 2Cs for all micro time channels  
-";
-
-%feature("docstring") statistics::twoIstar_p2s "
-
-Compute overall 2I* for Cp + 2Cs  
-
-This function computes the overall 2I* for the model function Cp + 2Cs that is
-computed by parallel signal (Cp) and the perpendicular signal (Cs). For the
-definition of function 2I* see \"An Experimental Comparison of the
-Maximum Likelihood Estimation and Nonlinear Least-Squares Fluorescence Lifetime
-Analysis of Single Molecules, Michael Maus, Mircea Cotlet, Johan Hofkens,
-Thomas Gensch, Frans C. De Schryver, J. Schaffer, and C. A. M. Seidel, Anal.
-Chem. 2001, 73, 9, 2078–2086\".  
-
-Parameters
-----------
-* `C` :  
-    array of experimental counts in Jordi format  
-* `M` :  
-    array model function in Jordi format  
-* `Nchannels` :  
-    number of micro time channels in parallel and perpendicular (half the number
-    of elements in C and M).  
-
-Returns
--------
-2I* for Cp + 2Cs  
-";
-
-%feature("docstring") statistics::twoIstar "
-
-Compute overall 2I* for Cp & Cs  
-
-This function computes 2I* for Cp and Cs. Cp and Cs are the model signals in the
-parallel and perpendicular channel. Contrary to twoIstar_p2s the overall 2I* is
-the sum of 2I* for Cp and Cs.  
-
-Parameters
-----------
-* `C` :  
-    array of experimental counts in Jordi format  
-* `M` :  
-    array model function in Jordi format  
-* `Nchannels` :  
-    number of micro time channels in parallel and perpendicular (half the number
-    of elements in C and M).  
-
-Returns
--------
-2I* for Cp & Cs  
-";
-
-%feature("docstring") statistics::Wcm "
-
-Compute overall -log-likelihood for Cp & Cs  
-
-Parameters
-----------
-* `C` :  
-    array of experimental counts in Jordi format  
-* `M` :  
-    array model function in Jordi format  
-* `Nchannels` :  
-    number of micro time channels in parallel and perpendicular (half the number
-    of elements in C and M).  
-
-Returns
--------
--log-likelihood for Cp & Cs  
-";
-
-// File: fsconv_8h.xml
+// File: _decay_convolution_8h.xml
 
 %feature("docstring") rescale "
 
@@ -4404,6 +4101,172 @@ Parameters
     Threshold value for the amplitudes  
 ";
 
+// File: _decay_fit_8h.xml
+
+// File: _decay_fit23_8h.xml
+
+// File: _decay_fit24_8h.xml
+
+// File: _decay_fit25_8h.xml
+
+// File: _decay_fit26_8h.xml
+
+// File: _decay_phasor_8h.xml
+
+// File: _decay_statistics_8h.xml
+
+%feature("docstring") statistics::init_fact "
+
+Initialize an array containing pre-computed logratithms  
+";
+
+%feature("docstring") statistics::loggammaf "
+
+Approximation of log(gamma function). See wikipedia  
+
+https://en.wikipedia.org/wiki/Gamma_function#The_log-gamma_function  
+
+Parameters
+----------
+* `t` :  
+    input of the gamma function  
+
+Returns
+-------
+approximation of the logarithm of the gamma function  
+";
+
+%feature("docstring") statistics::wcm "
+
+log-likelihood w(C|m) for Cp + 2Cs  
+
+Parameters
+----------
+* `C` :  
+    number of counts in channel  
+* `m` :  
+    model function  
+
+Returns
+-------
+log-likelihood w(C|m) for Cp + 2Cs  
+";
+
+%feature("docstring") statistics::wcm_p2s "
+
+Compute the -log-likelihood for Cp + 2Cs of a single micro time channel.  
+
+Compute score of model counts in a parallel and perpendicular detection channel
+and the experimental counts for a micro time channel.  
+
+This function computes a score for the experimental counts (C) in a channel
+where the experimental counts were computed by the sum of the counts in the
+parallel (P) and the perpendicular (S) channel by the equation C = P + 2 S.  
+
+This function considers that the number of counts C = P + 2S is not Poissonian.
+The score relates to a maximum likelihood function.  
+
+Parameters
+----------
+* `C` :  
+    number of experimental counts (P + 2 S) in a micro time channel  
+* `mp` :  
+    number of counts of the model in parallel detection channel  
+* `ms` :  
+    number of counts of the model in the perpendicular detection channel  
+
+Returns
+-------  
+";
+
+%feature("docstring") statistics::Wcm_p2s "
+
+Compute the overall -log-likelihood for Cp + 2Cs for all micro time channels  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+-log-likelihood for Cp + 2Cs for all micro time channels  
+";
+
+%feature("docstring") statistics::twoIstar_p2s "
+
+Compute overall 2I* for Cp + 2Cs  
+
+This function computes the overall 2I* for the model function Cp + 2Cs that is
+computed by parallel signal (Cp) and the perpendicular signal (Cs). For the
+definition of function 2I* see \"An Experimental Comparison of the
+Maximum Likelihood Estimation and Nonlinear Least-Squares Fluorescence Lifetime
+Analysis of Single Molecules, Michael Maus, Mircea Cotlet, Johan Hofkens,
+Thomas Gensch, Frans C. De Schryver, J. Schaffer, and C. A. M. Seidel, Anal.
+Chem. 2001, 73, 9, 2078–2086\".  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+2I* for Cp + 2Cs  
+";
+
+%feature("docstring") statistics::twoIstar "
+
+Compute overall 2I* for Cp & Cs  
+
+This function computes 2I* for Cp and Cs. Cp and Cs are the model signals in the
+parallel and perpendicular channel. Contrary to twoIstar_p2s the overall 2I* is
+the sum of 2I* for Cp and Cs.  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+2I* for Cp & Cs  
+";
+
+%feature("docstring") statistics::Wcm "
+
+Compute overall -log-likelihood for Cp & Cs  
+
+Parameters
+----------
+* `C` :  
+    array of experimental counts in Jordi format  
+* `M` :  
+    array model function in Jordi format  
+* `Nchannels` :  
+    number of micro time channels in parallel and perpendicular (half the number
+    of elements in C and M).  
+
+Returns
+-------
+-log-likelihood for Cp & Cs  
+";
+
 // File: _histogram_8h.xml
 
 %feature("docstring") bincount1D "
@@ -4506,17 +4369,9 @@ Returns
 %feature("docstring") fgrad4 "
 ";
 
+// File: _image_localization_8h.xml
+
 // File: info_8h.xml
-
-// File: lbfgs_8h.xml
-
-%feature("docstring") funcgrad "
-";
-
-%feature("docstring") lbfgsminimize "
-";
-
-// File: _localization_8h.xml
 
 // File: _lv_arrays_8h.xml
 

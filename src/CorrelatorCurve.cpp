@@ -9,6 +9,10 @@ void CorrelatorCurve::get_x_axis(double **output, int *n_output){
     *output = t;
 }
 
+void CorrelatorCurve::set_x_axis(std::vector<long long unsigned int> input){
+    this->x_axis = input;
+}
+
 void CorrelatorCurve::get_corr(double** output, int* n_output){
     (*n_output) = settings.get_ncorr();
     auto* t = (double *) malloc((*n_output) * sizeof(double));
@@ -27,7 +31,7 @@ void CorrelatorCurve::get_corr_normalized(double** output, int* n_output){
 
 void CorrelatorCurve::update_axis(){
     resize(settings.get_ncorr());
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Updating x-axis..." << std::endl;
     std::clog << "-- n_casc: " << settings.n_casc << std::endl;
     std::clog << "-- n_bins: " << settings.n_bins << std::endl;

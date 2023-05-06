@@ -6,7 +6,7 @@ void CorrelatorPhotonStream::make_fine_times(
         unsigned short *tac,
         unsigned int n_tac
 ) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;
 #endif
     for (size_t i = 0; i < n_times; i++) {
@@ -27,9 +27,7 @@ void CorrelatorPhotonStream::make_fine(
             times.data(), times.size(),
             tac, number_of_microtime_channels
     );
-    set_time_axis_calibration(
-            time_axis_calibration / number_of_microtime_channels
-            );
+    set_time_axis_calibration(time_axis_calibration / number_of_microtime_channels);
 }
 
 unsigned long long CorrelatorPhotonStream::dt(){
@@ -39,7 +37,7 @@ unsigned long long CorrelatorPhotonStream::dt(){
 
 double CorrelatorPhotonStream::sum_of_weights(){
     double np = std::accumulate(weights.begin(), weights.end(), 0.0);
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Sum of weights: " << np << std::endl;
 #endif
     return np;
@@ -47,14 +45,14 @@ double CorrelatorPhotonStream::sum_of_weights(){
 
 double CorrelatorPhotonStream::mean_count_rate(){
     double cr = sum_of_weights() / (double) dt();
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Mean count rate: " << cr << std::endl;
 #endif
     return cr;
 }
 
 void CorrelatorPhotonStream::set_time_axis_calibration(double v) {
-#if VERBOSE_TTTRLIB
+#ifdef VERBOSE_TTTRLIB
     std::clog << "-- Time axis calibration [sec/bin]: " << v << std::endl;
 #endif
     time_axis_calibration = v;
@@ -79,11 +77,12 @@ void CorrelatorPhotonStream::set_tttr(
 }
 
 void CorrelatorPhotonStream::coarsen() {
-    for(size_t i=0; i< size(); i++) times[i] /= 2;
+    for(size_t i=0; i< size(); i++) 
+        times[i] /= 2;
     for (size_t i = 1; i < times.size(); i++) {
         if (times[i] == times[i - 1]) {
             weights[i] += weights[i - 1];
-            weights[i - 1] = 0;
+            weights[i - 1] = 0.0;
         }
     }
     size_t j=0;
