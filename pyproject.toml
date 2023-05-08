@@ -37,9 +37,7 @@
         "Programming Language :: Python :: 3 :: Only",
     ]
 
-    dependencies = [
-        "numpy"
-    ]
+    dependencies = {file = ["requirements.txt"]}
 
     [project.urls]
         homepage = "https://github.com/fluorescence-tools/tttrlib"
