@@ -3,23 +3,19 @@
 def json(self):
     return self.get_json()
 
-
 @json.setter
 def json(self, v):
     return self.set_json(v)
-
 
 @property
 def tags(self):
     import json
     return json.loads(self.json)["tags"]
 
-
 def tag(self, name, idx=-1):
     import json
     js = self.get_json(name, idx, 0)
     return json.loads(js)
-
 
 def add_tags(self, header2):
     import json
@@ -44,7 +40,6 @@ def add_tags(self, header2):
             tags_1.append(tag2)
     header1_dict["tags"] = tags_1
     self.set_json(json.dumps(header1_dict))
-
 
 def __init__(self, *args, **kwargs):
     this = _tttrlib.new_TTTRHeader(*args, **kwargs)

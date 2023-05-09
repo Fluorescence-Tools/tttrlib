@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 import inspect
 import setuptools
 from pathlib import Path
@@ -37,6 +38,7 @@ setuptools.setup(
                 # PHOTON HDF depends on HDF5 -> difficult to distribute
                 "-DBUILD_PHOTON_HDF:BOOL=OFF",
                 "-DBUILD_LIBRARY:BOOL=OFF",
+                "-DPYTHON_VERSION:str=%s" % platform.python_version(),
                 "-DCMAKE_CXX_FLAGS='-w'",
                 # Static linking to facilitate pypi distribution
                 "-DBoost_USE_STATIC_LIBS:BOOL=ON",

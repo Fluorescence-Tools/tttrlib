@@ -63,8 +63,8 @@ build-verbosity = 2
 
 test-command = 'python -c "import tttrlib; d = tttrlib.TTTR(); print(d)"'
 
-# Skip CPython 3.6, 3.7, 3.11, and 32-bit builds
-skip = ["pp*", "cp36-*", "cp37-*", "cp311-*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
+# Skip CPython 32-bit builds
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
 
 # Install test dependencies
 test-requires = []

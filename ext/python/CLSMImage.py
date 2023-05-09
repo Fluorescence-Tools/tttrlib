@@ -1,8 +1,6 @@
-
 @property
 def shape(self):
     return self.n_frames, self.n_lines, self.n_pixel
-
 
 def __repr__(self):
     return 'tttrlib.CLSMImage(%s, %s, %s)' % (
@@ -26,7 +24,6 @@ def __getattr__(self, item):
         return call()
     else:
         raise AttributeError
-
 
 def __init__(
         self,
@@ -133,19 +130,16 @@ def __init__(
         clsm_settings = CLSMSettings(**settings_kwargs)
     else:
         clsm_settings = source.get_settings()
-    this = _tttrlib.new_CLSMImage(**kwargs, settings=clsm_settings)
+    kwargs['settings'] = clsm_settings
+    this = _tttrlib.new_CLSMImage(**kwargs)
     try:
         self.this.append(this)
     except:
         self.this = this
 
-
 @staticmethod
-def compute_frc(
-        image_1: np.ndarray,
-        image_2: np.ndarray,
-        bin_width: int = 2.0
-):
+def compute_frc(image_1, image_2, bin_width = 2.0):
+    # type: (np.ndarray, np.ndarray, int) -> (np.ndarray, np.ndarray)
     """ Computes the Fourier Ring/Shell Correlation of two 2-D images
 
     :param image_1:
@@ -194,10 +188,10 @@ def compute_frc(
 
 
 def get_frc(
-        self,  # tttrlib.CLSMImage,
-        other=None,  # tttrlib.CLSMImage
-        bin_width: int = 2.0,
-        attribute="intensity"
+        self,                 # type: tttrlib.CLSMImage,
+        other = None,         # type: tttrlib.CLSMImage
+        bin_width = 2.0,      # type: int
+        attribute="intensity" # type: str
 ):
     img1 = getattr(self, attribute)
     if other is None:

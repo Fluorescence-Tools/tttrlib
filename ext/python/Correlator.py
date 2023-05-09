@@ -18,11 +18,9 @@ def __getattr__(self, item):
 def correlation(self):
     return self.get_corr_normalized()
 
-
 @property
 def x_axis(self):
     return self.get_x_axis()
-
 
 @property
 def tttr(self):
@@ -35,26 +33,21 @@ def tttr(self, v):
     else:
         self.set_tttr(*v)
 
-
 @property
 def times(self):
     return self.get_macrotimes()
-
 
 @times.setter
 def times(self, v):
     return self.set_macrotimes(*v)
 
-
 @property
 def weights(self):
     return self.get_weights()
 
-
 @weights.setter
 def weights(self, v):
     return self.set_weights(*v)
-
 
 def __repr__(self):
     return 'Correlator()'

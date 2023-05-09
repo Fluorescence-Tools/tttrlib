@@ -1,7 +1,11 @@
 import numpy as np
 import sys
 import typing
-from importlib.metadata import version
+
+if sys.version_info[0] < 3:
+    from importlib_metadata import version
+else:   
+    from importlib.metadata import version
 
 try:
     __version__ = version(__package__ or __name__)

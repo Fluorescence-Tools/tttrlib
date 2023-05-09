@@ -3,7 +3,6 @@
 %}
 
 
-
 // manually added instead of including header file as all other functions
 %apply (double* INPLACE_ARRAY1, int DIM1) {
     (double* fit, int n_fit),

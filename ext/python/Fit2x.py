@@ -2,17 +2,17 @@ class Fit2x(object):
 
     def __init__(
             self,
-            dt: float,
-            irf: np.ndarray,
-            background: np.ndarray,
-            period: float,
-            g_factor: float = 1.0,
-            l1: float = 0.0,
-            l2: float = 0.0,
-            convolution_stop: int = -1,
-            soft_bifl_scatter_flag: bool = True,
-            verbose: bool = False,
-            p2s_twoIstar_flag: bool = False
+            dt,                           # type: float
+            irf,                          # type: np.ndarray
+            background,                   # type: np.ndarray
+            period,                       # type: float
+            g_factor = 1.0,               # type: float
+            l1 = 0.0,                     # type: float
+            l2 = 0.0,                     # type: float
+            convolution_stop = -1,        # type: int
+            soft_bifl_scatter_flag = True,# type: bool
+            verbose = False,              # type: bool
+            p2s_twoIstar_flag = False     # type: bool
     ):
         """
         :param dt: time difference between microtime bins
@@ -75,10 +75,8 @@ class Fit2x(object):
     def background(self):
         return np.array([x for x in self._m_param.get_background()])
 
-    def __call__(
-            self,
-            data: np.ndarray
-    ) -> None:
+    def __call__(self, data):
+        # type: (np.ndarray) -> None
         """Take care of data ana make sure that it is a numpy object
         with appropriate dtype
 
@@ -98,11 +96,12 @@ class Fit23(Fit2x):
 
     def __call__(
             self,
-            data: np.ndarray,
-            initial_values: np.ndarray,
-            fixed: np.ndarray = None,
-            include_model: bool = False
-    ) -> dict:
+            data, # type: np.ndarray
+            initial_values, # type: np.ndarray
+            fixed = None, # type: np.ndarray
+            include_model = False # type: bool
+    ):
+        # type: (...) ->  dict
         """
 
         :param data: counting histogram containing experimental data
@@ -165,11 +164,12 @@ class Fit24(Fit2x):
 
     def __call__(
             self,
-            data: np.ndarray,
-            initial_values: np.ndarray,
-            fixed: np.ndarray = None,
-            include_model: bool = False
-    ) -> dict:
+            data, # type: np.ndarray
+            initial_values, # type: np.ndarray
+            fixed = None, # type: np.ndarray
+            include_model = False # type: bool
+    ):
+        # type: (...) -> dict
         """
         :param data: counting histogram containing experimental data
         :param initial_values: initial values of the model parameters that can
@@ -236,11 +236,12 @@ class Fit25(Fit2x):
 
     def __call__(
             self,
-            data: np.ndarray,
-            initial_values: np.ndarray,
-            fixed: np.ndarray = None,
-            include_model: bool = False
-    ) -> dict:
+            data, # type: np.ndarray
+            initial_values, # type: np.ndarray
+            fixed = None, # type: np.ndarray
+            include_model = False # type: bool
+    ):
+        # type: (...) -> dict
         """
         :param data: counting histogram containing experimental data
         :param initial_values: initial values of the model parameters that can
@@ -303,10 +304,10 @@ class Fit26(Fit2x):
 
     def __init__(
             self,
-            pattern_1: np.ndarray,
-            pattern_2: np.ndarray,
-            convolution_stop: int = -1,
-            verbose: bool = False
+            pattern_1, # type: np.ndarray
+            pattern_2, # type: np.ndarray
+            convolution_stop = -1, # type: int
+            verbose = False # type: bool
     ):
         if convolution_stop < 0:
             convolution_stop = min(len(pattern_1), len(pattern_2))
@@ -324,11 +325,12 @@ class Fit26(Fit2x):
 
     def __call__(
             self,
-            data: np.ndarray,
-            initial_values: np.ndarray,
-            fixed: np.ndarray = None,
-            include_model: bool = False
-    ) -> dict:
+            data, # type: np.ndarray
+            initial_values, # type: np.ndarray
+            fixed = None, # type: np.ndarray
+            include_model = False # type: bool
+    ): 
+        # type: (...) ->  dict
         """
         :param data: counting histogram containing experimental data
         :param initial_values: initial values of the model parameters that can
