@@ -20,39 +20,39 @@ requirements:
     - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - llvm-openmp  # [osx]
-    - libgomp      # [linux]
-    - pkg-config   # [not win]
+    - llvm-openmp        # [osx]
+    - libgomp            # [linux]
+    - pkg-config         # [not win]
     - swig
     - ninja
     - cmake
-    - make         # [linux]
-    - typing       #[py27]
+    - make               # [linux]
+    - typing             # [py27]
   host:
     - boost-cpp
     - hdf5
     - python
     - setuptools
-    - typing       #[py27]
+    - typing             #[py27]
     - numpy
   run:
     - python
-    - tqdm=4.14    #[py27]
-    - tqdm         #[py3]
+    - tqdm               # [py > 27]
+    - tqdm <=4.14        # [py27]    
     - click
     - click-didyoumean
     - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
     - hdf5
-    - typing       #[py27]
-    - importlib_metadata #[py27]
+    - typing             # [py27]
+    - importlib_metadata # [py27]
 
 test:
  imports:
    - tttrlib
- commands:            # [not win]
-   - tttrlib --help   # [not win]
+ commands:               # [not win]
+   - tttrlib --help      # [not win]
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib

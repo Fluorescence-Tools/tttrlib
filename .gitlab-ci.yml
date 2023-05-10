@@ -120,7 +120,7 @@ deploy:doc:
     - ln -s /srv/tttr-data tttr-data
     - cd doc && make html
     - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
-    - mv -v _build/html/stable /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+    - mv -v _build/html/stable /srv/docs.peulen.xyz/project/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
 
 wheel:linux:
   stage: build

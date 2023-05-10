@@ -1,48 +1,50 @@
 [project]
-    version = "0.23.9"
-    name = "tttrlib"
-    requires-python = ">=3.8"
-    description = "Read, write & process time-tagged time-resolved (TTTR) data."
-    readme = "README.md"
-    authors = [
-    {name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
-    ]
-    license = {file = "LICENSE.txt"}
+version = "0.23.9"
+name = "tttrlib"
+requires-python = ">=3.8"
+description = "Read, write & process time-tagged time-resolved (TTTR) data."
+readme = "README.md"
+authors = [
+{name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
+]
+license = {file = "LICENSE.txt"}
 
-    keywords = [
-        "fluorescence",
-        "time-resolved",
-        "spectroscopy",
-        "imaging",
-        "microscopy"
-    ]
+keywords = [
+    "fluorescence",
+    "time-resolved",
+    "spectroscopy",
+    "imaging",
+    "microscopy"
+]
 
-    classifiers = [
-        "Topic :: Software Development",
-        "Development Status :: 2 - Pre-Alpha",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows",
-        "Intended Audience :: Education",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Scientific/Engineering :: Physics",
-        "Topic :: Scientific/Engineering :: Chemistry",
-        "Topic :: Scientific/Engineering :: Bio-Informatics",
-        "Topic :: Scientific/Engineering :: Image Processing",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "License :: OSI Approved :: BSD License",
-        "Programming Language :: C++",
-        "Programming Language :: Python :: 3 :: Only",
-    ]
+classifiers = [
+    "Topic :: Software Development",
+    "Development Status :: 2 - Pre-Alpha",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3 :: Only",
+]
 
-    dependencies = {file = ["requirements.txt"]}
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
-    [project.urls]
-        homepage = "https://github.com/fluorescence-tools/tttrlib"
-        documentation = "https://docs.peulen.xyz/tttrlib"
-        repository = "https://github.com/fluorescence-tools/tttrlib.git"
+[project.urls]
+    homepage = "https://github.com/fluorescence-tools/tttrlib"
+    documentation = "https://docs.peulen.xyz/tttrlib"
+    repository = "https://github.com/fluorescence-tools/tttrlib.git"
 
 
 [build-system]
@@ -68,7 +70,7 @@ skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
 test-requires = []
 
 [tool.cibuildwheel.macos]
-# Newer C++ features with old SDK¶:
+# Newer C++ features with old SDK:
 # https://conda-forge.org/docs/maintainer/knowledge_base.html
 environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="10.14"}
 
@@ -95,6 +97,6 @@ select = "cp3{8,9,10}-*"
 
     archs = [
         "x86_64",
-        # "aarch64",
+        "aarch64",
         # "ppc64le"
     ]
