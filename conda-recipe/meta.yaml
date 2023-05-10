@@ -29,11 +29,12 @@ requirements:
     - make               # [linux]
     - typing             # [py27]
   host:
-    - boost-cpp
+    - boost-cpp 1.78     # [py > 27]
+    - boost-cpp 1.69     # [py27]
     - hdf5
     - python
     - setuptools
-    - typing             #[py27]
+    - typing             # [py27]
     - numpy
   run:
     - python
