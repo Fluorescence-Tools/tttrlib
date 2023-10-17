@@ -160,10 +160,10 @@ wheel:osx:
     - python3.9 -m pip install cibuildwheel==2.12.1
     - git submodule update --init --recursive --remote
     - cibuildwheel --output-dir bld-dir --platform macos
-    - python3 -m pip install --upgrade pip
-    - python3 -m pip install twine
+    - python3.9 -m pip install --upgrade pip
+    - python3.9 -m pip install twine
     - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
-    - python3 -m twine upload --skip-existing bld-dir/*.whl
+    - python3.9 -m twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
       - bld-dir/
