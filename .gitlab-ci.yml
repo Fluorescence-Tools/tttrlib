@@ -157,7 +157,7 @@ wheel:osx:
     - osx  
   script:
     - conda deactivate
-    - python3 -m pip install cibuildwheel==2.12.1
+    - python3.9 -m pip install cibuildwheel==2.12.1
     - git submodule update --init --recursive --remote
     - cibuildwheel --output-dir bld-dir --platform macos
     - python3 -m pip install --upgrade pip
