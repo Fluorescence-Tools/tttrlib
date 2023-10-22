@@ -61,6 +61,12 @@ IF (MSVC)
 ENDIF (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
+
+    # comatibility with older systems
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.13 -fvisibility=hidden")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.13 -fvisibility=hidden -fvisibility-inlines-hidden")
+    set(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.13")
+
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # explicit link to libc++ for recent osx versions
