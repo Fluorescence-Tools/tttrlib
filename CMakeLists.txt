@@ -121,11 +121,13 @@ ENDIF(VERBOSE_TTTRLIB)
 # Targets
 #############################
 FILE(GLOB_RECURSE SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-FILE(GLOB_RECURSE SRC_files_thirdparty "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/*.cpp")
-LIST(APPEND SRC_files ${SRC_files_thirdparty})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# third party includes/code
+FILE(GLOB_RECURSE SRC_files_thirdparty "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/*.cpp")
+LIST(APPEND SRC_files ${SRC_files_thirdparty})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
 ADD_SUBDIRECTORY(ext)
