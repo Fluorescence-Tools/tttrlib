@@ -24,6 +24,37 @@ def __getattr__(self, item):
         return call()
     else:
         raise AttributeError
+@staticmethod
+def read_clsm_settings(tttr_data):
+    settings = dict()
+    if tttr_data is not None:
+        header = tttr_data.header
+        if tttr_data.get_tttr_container_type() == 'PTU':
+            try:
+                settings["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+            except:
+                settings["marker_frame_start"] = [8]
+            settings.update(
+                {
+                    "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
+                    "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_event_type": 1
+                }
+            )
+        elif tttr_data.get_tttr_container_type() == 'HT3':
+            settings.update(
+                {
+                    "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
+                    "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
+                    "marker_event_type": 1
+                }
+            )
+    return settings
 
 def __init__(
         self,
@@ -71,32 +102,7 @@ def __init__(
         if tttr_data is not None:
             header = tttr_data.header
             self.header = header
-            if tttr_data.get_tttr_container_type() == 'PTU':
-                try:
-                    settings_kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
-                except:
-                    settings_kwargs["marker_frame_start"] = [8]
-                settings_kwargs.update(
-                    {
-                        "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
-                        "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                        "marker_event_type": 1
-                    }
-                )
-            elif tttr_data.get_tttr_container_type() == 'HT3':
-                settings_kwargs.update(
-                    {
-                        "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
-                        "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                        "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
-                        "marker_event_type": 1
-                    }
-                )
-
+            settings_kwargs.update(self.read_clsm_settings(tttr_data))
         # Overwrite if user defined inputs make sense
         if isinstance(marker_frame_start, int):
             settings_kwargs['marker_frame_start'] = [marker_frame_start]
