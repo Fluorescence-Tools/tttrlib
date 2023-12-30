@@ -18,7 +18,7 @@ void TTTRMask::select_channels(
         int ch = routing_channels[i];
         for (int j = 0; j < tttr->size(); j++) {
             if (tttr->routing_channels[j] == ch) {
-                masked[j] = false;
+                masked[j] = mask;
             }
         }
     }

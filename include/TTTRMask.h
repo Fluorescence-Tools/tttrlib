@@ -26,6 +26,10 @@ public:
         return masked.size();
     }
 
+    void flip() {
+        masked.flip();
+    }
+
     void set_mask(std::vector<bool> mask){
         masked = mask;
     }
@@ -47,7 +51,7 @@ public:
      * array will be selected by the input.
      * @param n_routing_channels[int] length of the routing channel number array.
      */
-    void select_channels(TTTR* tttr, signed char *routing_channels, int n_routing_channels, bool mask=true);
+    void select_channels(TTTR* tttr, signed char *routing_channels, int n_routing_channels, bool mask=false);
 
     /*!
      * Selects a subset of indices a count rate of a sliding time-window
