@@ -1,7 +1,7 @@
 #include "TTTRMask.h"
 
 void TTTRMask::set_tttr(TTTR* tttr){
-    masked.resize(tttr->size(), true);
+    masked.resize(tttr->size(), false);
 }
 
 TTTRMask::TTTRMask(TTTR* tttr){
@@ -31,12 +31,12 @@ void TTTRMask::select_microtime_ranges(
     set_tttr(tttr);
     for(int i=0; i < tttr->size(); i++){
         auto micro_time = tttr->micro_times[i];
-        bool mask = false;
+        bool out_of_bounds = false;
         for(auto r: micro_time_ranges){
-            mask |= micro_time <= r.first;
-            mask |= micro_time >= r.second;
+            out_of_bounds |= micro_time <= r.first;
+            out_of_bounds |= micro_time >= r.second;
         }
-        masked[i] = masked[i] || mask;
+        masked[i] = masked[i] || out_of_bounds;
     }
 }
 
