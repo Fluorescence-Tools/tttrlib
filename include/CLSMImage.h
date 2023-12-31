@@ -390,7 +390,7 @@ public:
      * be filled with zeros.
      *
      * @param tttr_data[in] pointer to a TTTR object
-     * @param out[out] pointer to output array that will contain the image stack
+     * @param output[out] pointer to output array that will contain the image stack
      * @param dim1[out] returns the number of frames
      * @param dim2[out] returns the number of lines
      * @param dim3[out] returns the number of pixels per line

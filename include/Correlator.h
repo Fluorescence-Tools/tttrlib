@@ -423,7 +423,8 @@ public:
     );
 
     std::pair<std::shared_ptr<TTTR>, std::shared_ptr<TTTR>> get_tttr();
-    /*!
+
+ /*!
      * Updates the weights. Non-zero weights are assigned a filter value that
      * is defined by a filter map and the micro time of the event.
      *
