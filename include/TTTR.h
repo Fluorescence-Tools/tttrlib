@@ -48,14 +48,16 @@
  * If If in a tw the number of photons is less then n_ph_max and invert
  * is true the tw is not written to output.
  *
- * @param selection output array
- * @param n_selected number of elements in output array
+ * @param output output array
+ * @param n_output number of elements in output array
  * @param time array of times
  * @param n_time number of times
  * @param time_window length of the time window
  * @param n_ph_max maximum number of photons in a time window
  * @param macro_time_calibration
  * @param invert if invert is true (default false) only indices where the number
+ * @param make_mask if true (default false) returns array filled with -1 or idx of
+ * length n_time
  * of photons exceeds n_ph_max are selected
  */
 void selection_by_count_rate(
@@ -63,7 +65,7 @@ void selection_by_count_rate(
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration=1.0,
-        bool invert=false
+        bool invert=false, bool make_mask=false
 );
 
 
@@ -107,7 +109,7 @@ void ranges_by_time_window(
  * @param n_output number of time windows
  * @param input array of time points
  * @param n_input number number of time points
- * @param time_window time window size in units of the macro time resolution
+ * @param time_window_length time window size in units of the macro time resolution
  * @param macro_time_resolution the resolution of the macro time clock
  */
 void compute_intensity_trace(
@@ -595,7 +597,7 @@ public:
     /*!
       * Get events indices by the routing channel number
       *
-      * This method returns an array that contains the event / photon indices
+      * This returns an array that contains the event / photon indices
       * of events with routing channel numbers that are found in the selection
       * input array.
       *
@@ -630,17 +632,18 @@ public:
     void get_selection_by_count_rate(
             int **output, int *n_output,
             double time_window, int n_ph_max,
-            bool invert=false
+            bool invert=false, bool make_mask=false
     );
 
     std::shared_ptr<TTTR> get_tttr_by_count_rate(
             double time_window, int n_ph_max,
-            bool invert=false
+            bool invert=false, bool make_mask=false
     ){
         int* sel; int nsel;
         get_selection_by_count_rate(
                 &sel, &nsel,
-                time_window, n_ph_max, invert);
+                time_window, n_ph_max,
+                invert, make_mask);
         return get_tttr_by_selection(sel, nsel);
     }
 
@@ -719,9 +722,9 @@ public:
      * Computes a histogram of the TTTR data's micro times
      *
      * @param tttr_data a pointer to the TTTR data
-     * @param histogram pointer to which the histogram will be written (the memory
+     * @param output pointer to which the histogram will be written (the memory
      * is allocated but the method)
-     * @param n_histogram the number of points in the histogram
+     * @param n_output the number of points in the histogram
      * @param time pointer to the time axis of the histogram (the memory is allocated
      * by the method)
      * @param n_time the number of points in the time axis

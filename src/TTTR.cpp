@@ -482,14 +482,14 @@ void TTTR::get_selection_by_channel(
 void TTTR::get_selection_by_count_rate(
         int **output, int *n_output,
         double time_window, int n_ph_max,
-        bool invert
+        bool invert, bool make_mask
 ){
     selection_by_count_rate(
             output, n_output,
             macro_times, (int) n_valid_events,
             time_window, n_ph_max,
             header->get_macro_time_resolution(),
-            invert
+            invert, make_mask
     );
 }
 
@@ -600,12 +600,12 @@ void selection_by_count_rate(
         unsigned long long *time, int n_time,
         double time_window, int n_ph_max,
         double macro_time_calibration,
-        bool invert
+        bool invert, bool make_mask
 ){
     auto tw = (unsigned long) (time_window / macro_time_calibration);
     *output = (int*) calloc(sizeof(int), n_time);
     int i = 0; *n_output = 0;
-    while (i < (n_time - 1)){
+    while(i < (n_time - 1)){
         int n_ph;
         // start at time[i] and increment r till time[r] - time[i] < tw
         int r = i;
@@ -620,6 +620,11 @@ void selection_by_count_rate(
             for(int k=i; k < r; k++){
                 (*n_output)++;
                 (*output)[(*n_output) - 1] = k;
+            }
+        } else if(make_mask){
+            for(int k=i; k < r; k++){
+                (*n_output)++;
+                (*output)[(*n_output) - 1] = -1;
             }
         }
         i = r;
