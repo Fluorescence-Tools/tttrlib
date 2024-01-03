@@ -146,7 +146,7 @@ wheel:linux:
     - python -m pip install --upgrade pip
     - pip install twine
     - export TWINE_PASSWORD=PYPI_TEST_TOKEN
-    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; export TWINE_PASSWORD=PYPI_TOKEN fi
+    - if [ "$CI_COMMIT_REF_NAME" != "master" ]; then export TWINE_REPOSITORY=testpypi; export TWINE_PASSWORD=PYPI_TOKEN; fi
     - twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
