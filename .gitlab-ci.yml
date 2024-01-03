@@ -145,7 +145,8 @@ wheel:linux:
     - cibuildwheel --output-dir bld-dir --platform linux
     - python -m pip install --upgrade pip
     - pip install twine
-    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
+    - export TWINE_PASSWORD = PYPI_TEST_TOKEN
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; export TWINE_PASSWORD = PYPI_TOKEN fi
     - twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
@@ -162,7 +163,8 @@ wheel:osx:
     - cibuildwheel --output-dir bld-dir --platform macos
     - python3 -m pip install --upgrade pip
     - python3 -m pip install twine
-    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; fi
+    - export TWINE_PASSWORD = PYPI_TEST_TOKEN
+    - if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then export TWINE_REPOSITORY=testpypi; export TWINE_PASSWORD = PYPI_TOKEN fi
     - python3 -m twine upload --skip-existing bld-dir/*.whl
   artifacts:
     paths:
