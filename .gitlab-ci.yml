@@ -182,7 +182,9 @@ wheel:windows:
         set-content $env:public\inline.cmd -Value @'
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         py -m cibuildwheel --output-dir bld-dir --platform windows
+        set TWINE_PASSWORD=%PYPI_TOKEN%
         if %CI_COMMIT_REF_NAME% NEQ master set TWINE_REPOSITORY=testpypi
+        if %CI_COMMIT_REF_NAME% NEQ master set TWINE_PASSWORD=%PYPI_TEST_TOKEN%
         twine upload --skip-existing bld-dir/*.whl
         '@
         CMD.EXE /C $env:public\inline.cmd
