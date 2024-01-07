@@ -100,7 +100,7 @@ x_min, x_max = 2, 110
 
 # initial values for the fit
 scatter, background, time_shift, irf_background = 0.05, 0, 0, 5
-amplitudes = np.ones(31, dtype=np.float)
+amplitudes = np.ones(31, dtype=np.float64)
 min_lifetime, max_lifetime = 0.01, 6.0
 lifetimes = np.linspace(min_lifetime, max_lifetime, len(amplitudes))
 lifetime_spectrum = np.empty(2 * len(lifetimes))
