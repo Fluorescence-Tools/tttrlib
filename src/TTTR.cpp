@@ -473,6 +473,8 @@ void TTTR::get_selection_by_channel(
         signed char *input, int n_input
 ){
     TTTRMask* m = new TTTRMask();
+    m->set_tttr(this);
+    m->flip();
     m->select_channels(this, input, n_input);
     auto v = m->get_indices();
     get_array<int>(v.size(), v.data(), output, n_output);
