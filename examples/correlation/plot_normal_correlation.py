@@ -58,9 +58,9 @@ ch2_indices = data.get_selection_by_channel([8])
 # Note: the weights are set to 1, i.e. no weighting is used
 t = data.macro_times
 t1 = t[ch1_indices]
-w1 = np.ones_like(t1, dtype=np.float)
+w1 = np.ones_like(t1, dtype=np.float64)
 t2 = t[ch2_indices]
-w2 = np.ones_like(t2, dtype=np.float)
+w2 = np.ones_like(t2, dtype=np.float64)
 correlator.set_events(t1, w1, t2, w2)
 
 # scale the x-axis to have units in milliseconds (common unit in FCS)
