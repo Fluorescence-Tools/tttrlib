@@ -20,7 +20,7 @@ operates on fluorescence decays in the :term:`Jordi-format`.
 
 ``fit23`` is intended to be used for data with very few photons, e.g. for pixel analysis
 in fluorescence lifetime image microscopy (FLIM) or for single-molecule spectroscopy.
-The fit implements a maximum likelihood estimimator as previously described :cite:`maus_experimental_2001`.
+The fit implements a maximum likelihood estimator as previously described :cite:`maus_experimental_2001`.
 Briefly, the MLE fit quality parameter 2I* = :math:`-2\ln L(n,g)` (where :math:`L`
 is the likelihood function, :math:`n` are the experimental counts, and :math:`g`
 is the model function) is minimized. The model function :math:`g` under magic-angle
