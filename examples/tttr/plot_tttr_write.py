@@ -1,7 +1,7 @@
 """
 ================================
 TTTR writing / Modify CLSM files
-===============================
+================================
 
 Here it is illustrated how TTTR data of CLSM experiments can be created and written. 
 Data of an existing CLSM experiment is read, masked, and the masked data is written to 
