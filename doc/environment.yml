@@ -19,10 +19,10 @@ dependencies:
     - numpy
     - numpydoc
     - pyyaml
+    - ipython
     - sphinxcontrib-bibtex<2.0.0
     - sphinxcontrib-websupport
     - sphinx-copybutton
     - sphinxext-opengraph
-    - sphinxext-linkcode
     - scikit-image
     - jinja2=3.1.2

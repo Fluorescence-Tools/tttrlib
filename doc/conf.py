@@ -48,6 +48,7 @@ extensions = [
     "sphinxext.opengraph",
     "matplotlib.sphinxext.plot_directive",
     'sphinxcontrib.bibtex',
+    'IPython.sphinxext.ipython_console_highlighting'
 ]
 
 
@@ -279,7 +280,7 @@ sphinx_gallery_conf = {
     'examples_dirs': ['../examples'],
     'gallery_dirs': ['auto_examples'],
     'subsection_order': SubSectionTitleOrder('../examples'),
-    # avoid generating too many cross links
+    # avoid generating too many cross-links
     'inspect_global_variables': False,
     'remove_config_comments': True,
     'ignore_pattern': r'^(?!_.*$)*.py' # match files ending with .py not starting with _
