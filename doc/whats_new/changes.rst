@@ -2,10 +2,10 @@
 
 .. _changes_0_23:
 
-Version 0.23
+Version 0.24
 ============
 
-**April, 2023**
+**January, 2024**
 
 
 Version 0.23
@@ -13,6 +13,8 @@ Version 0.23
 * Consider background with certain fraction in mean lifetime (0.23.6)
 * Added new correlator
 * use pocketfft instead of fftw3
+* add option to output full mask in ´selection_by_count_rate´ (0.23.10)
+* add flip method to TTTRMask (0.23.10)
 
 Version 0.22
 ------------
