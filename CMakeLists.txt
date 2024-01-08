@@ -5,6 +5,7 @@ PROJECT(${PROJECT_NAME})
 # C++ standard
 ENABLE_LANGUAGE(CXX)
 SET(CMAKE_CXX_STANDARD 17)
+ADD_DEFINITIONS(-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES)
 
 # CMAKE
 ###########
@@ -20,12 +21,12 @@ OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
-OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" ON)
+OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 OPTION(Boost_USE_STATIC_LIBS "Static boost build" ON)
 
-## Sytem specific compiler flags
+## System specific compiler flags
 ################################
 # AVX
 IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
@@ -63,8 +64,8 @@ if(APPLE)
     FIND_PACKAGE(Threads)
 
     # comatibility with older systems
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.13 -fvisibility=hidden")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.13 -fvisibility=hidden -fvisibility-inlines-hidden")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.13")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.13")
     set(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.13")
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
