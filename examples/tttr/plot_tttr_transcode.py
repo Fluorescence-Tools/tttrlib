@@ -1,7 +1,7 @@
 """
 ================================
 TTTR writing / Transcode
-===============================
+================================
 
 Save the content of a PTU file in an SPC file
 
