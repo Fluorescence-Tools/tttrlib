@@ -18,13 +18,13 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
     1. create intensity images
     2. selection of channels
     3. stripping of photons from CLSMImage
-    2. image of the mean micro times
-    3. a fluorescence intensity decay of the micro times
+    4. image of the mean micro times
+    5. a fluorescence intensity decay of the micro times
 
 
 """
 
-#%%
+#%
 from __future__ import print_function
 
 import matplotlib.pyplot as plt
@@ -213,6 +213,7 @@ plot_images(
 # 1. Mean micro time
 # 2. Mean lifetime
 # 3. Histogram over micro times
+#
 minimum_number_of_photons = 10
 
 image_mean_micro_time_green = image.get_mean_micro_time(
@@ -263,6 +264,7 @@ tttr_indices_s = data.get_selection_by_channel(detection_channels['Gs']["channel
 image.strip(tttr_indices=tttr_indices_s)
 int_p = image.intensity
 
+#%
 # By default the photons are cleared when an image is
 # filled
 image.fill(**fill_settings['G']['Gs'])
@@ -276,7 +278,7 @@ int_s_s = int_s.sum(axis=0)
 g = 1.0  # g factor
 image_r = (int_p_s - g * int_s_s) / (int_p_s + 2 * g * int_s_s)
 
-
+#%
 # Mask by number of photons
 r_min, r_max, nr_bins = -0.2, 0.6, 61
 mask = int_t_s < minimum_number_of_photons
