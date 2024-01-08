@@ -12,12 +12,12 @@
 #include "pocketfft/pocketfft_hdronly.h"
 
 #include "TTTR.h" /* TTTR */
-#include "Correlator.h"
-#include "DecayPhasor.h"
 
 #include "CLSMFrame.h"
 #include "CLSMLine.h"
 #include "CLSMPixel.h"
+#include "DecayPhasor.h"
+#include "Correlator.h"
 
 
 /// Different types of distances between two accessible volumes
@@ -366,7 +366,9 @@ public:
      *
      * @return Vector of CLSMFrame pointers representing the frames in the CLSMImage.
      */
-    std::vector<CLSMFrame *> get_frames();
+    std::vector<CLSMFrame *> get_frames() {
+        return frames;
+    }
 
     /*!
      * \brief Computes an intensity image.

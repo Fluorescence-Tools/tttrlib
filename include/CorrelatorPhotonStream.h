@@ -96,18 +96,19 @@ public:
         weights.resize(n, x);
     }
 
-    /**
-     * @brief Make time events fine by adding micro time to macro time.
-     *
-     * Changes the time events by adding the micro time to the macro time.
-     * The micro times should match the macro time, i.e., the length of
-     * the micro time array should be at least the same length as the
-     * macro time array.
-     *
-     * @param[in,out] t An array containing the time events (macro times).
-     * @param[in] n_times The number of macro times.
-     * @param[in] tac An array containing the micro times corresponding to macro times.
-     */
+   /**
+    * @brief Make time events fine by adding micro time to macro time.
+    *
+    * Changes the time events by adding the micro time to the macro time.
+    * The micro times should match the macro time, i.e., the length of
+    * the micro time array should be at least the same length as the
+    * macro time array.
+    *
+    * @param[in,out] t An array containing the time events (macro times).
+    * @param[in] n_times The number of macro times.
+    * @param[in] tac An array containing the micro times corresponding to macro times.
+    * @param[in] n_tac The number of micro times.
+    */
     static void make_fine_times(
             unsigned long long *t, unsigned int n_times,
             unsigned short *tac,

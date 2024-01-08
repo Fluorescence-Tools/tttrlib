@@ -100,18 +100,27 @@ void ranges_by_time_window(
 
 
 /*!
- * Computes a intensity trace for a sequence of time events
+ * \brief Computes the intensity trace for a sequence of time events.
  *
- * The intensity trace is computed by splitting the trace of time events into
- * time windows (tws) with a minimum specified length and counts the number
- * of photons in each tw.
+ * The intensity trace is calculated by partitioning the time events into
+ * time windows with a minimum specified length and counting the number
+ * of photons in each window.
  *
- * @param output number of photons in each time window
- * @param n_output number of time windows
- * @param input array of time points
- * @param n_input number number of time points
- * @param time_window_length time window size in units of the macro time resolution
- * @param macro_time_resolution the resolution of the macro time clock
+ * \param output Pointer to an array storing the number of photons in each time window.
+ * \param n_output Pointer to the variable storing the number of time windows.
+ * \param input Array of time points representing the time events.
+ * \param n_input Number of time points in the input array.
+ * \param time_window_length Size of the time window in units of the macro time resolution.
+ * \param macro_time_resolution The resolution of the macro time clock (default is 1.0).
+ *
+ * The function calculates the intensity trace by dividing the time events into
+ * non-overlapping time windows of the specified length. The output array holds
+ * the count of photons in each time window, and n_output is updated accordingly.
+ * The input array contains the time points of events, and n_input is the total
+ * number of events. The time_window_length parameter defines the size of the
+ * time windows, and macro_time_resolution specifies the resolution of the macro
+ * time clock (default is 1.0). The calculated intensity trace is stored in the
+ * output array, and the total number of time windows is updated in n_output.
  */
 void compute_intensity_trace(
         int **output, int *n_output,
@@ -138,16 +147,68 @@ void compute_intensity_trace(
 //);
 //
 
-
+/*!
+ * \brief Extracts a subarray of valid events from the input array.
+ *
+ * This function takes an array of type T, representing events, and extracts
+ * a subarray containing the first `n_valid_events` elements. The size of the
+ * output array is updated in `n_out`. Memory is allocated for the output array,
+ * and the caller is responsible for freeing this memory when it is no longer needed.
+ *
+ * \tparam T The data type of the array elements.
+ * \param n_valid_events Number of valid events to extract.
+ * \param array Pointer to the input array containing events of type T.
+ * \param[out] out Pointer to the output array holding the extracted subarray.
+ * \param[out] n_out Pointer to the variable storing the size of the output array.
+ *
+ * The function allocates memory for the output array and copies the first
+ * `n_valid_events` elements from the input array. The size of the output array
+ * is updated in `n_out`. It is the responsibility of the caller to free the
+ * allocated memory using `free(*out)` when the output array is no longer needed.
+ */
 template <typename T>
-inline void get_array(size_t n_valid_events, T *array, T **out, int *n_out){
-    *n_out = (int) n_valid_events;
-    (*out) = (T*) malloc(sizeof(T) * n_valid_events);
-    for(size_t i=0; i<n_valid_events; i++) (*out)[i] = array[i];
+inline void get_array(
+    size_t n_valid_events,  ///< [in] Number of valid events to extract.
+    T *array,               ///< [in] Pointer to the input array containing events of type T.
+    T **out,                ///< [out] Pointer to the output array holding the extracted subarray.
+    int *n_out              ///< [out] Pointer to the variable storing the size of the output array.
+) {
+    *n_out = static_cast<int>(n_valid_events);
+    *out = static_cast<T*>(malloc(sizeof(T) * n_valid_events));
+
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        (*out)[i] = array[i];
+    }
 }
+
 
 class TTTRMask;
 
+/*!
+ * \class TTTR
+ * \brief Time-Tagged Time-Resolved (TTTR) data class.
+ *
+ * The TTTR class represents Time-Tagged Time-Resolved data, which is commonly
+ * used in time-correlated single-photon counting (TCSPC) experiments. It inherits
+ * from std::enable_shared_from_this to facilitate shared ownership through
+ * std::shared_ptr.
+ *
+ * The class includes friend declarations for CLSMImage, TTTRRange, TTTRMask,
+ * and CorrelatorPhotonStream classes, allowing these classes to access the
+ * private and protected members of TTTR.
+ *
+ * TTTR data typically consists of time-tagged events, and this class provides
+ * functionality to work with and analyze such data.
+ *
+ * \note This class is designed to be used in conjunction with other classes
+ * such as CLSMImage, TTTRRange, TTTRMask, and CorrelatorPhotonStream.
+ *
+ *
+ * \see CLSMImage
+ * \see TTTRRange
+ * \see TTTRMask
+ * \see CorrelatorPhotonStream
+ */
 class TTTR : public std::enable_shared_from_this<TTTR>{
 
     friend class CLSMImage;
@@ -260,296 +321,460 @@ private:
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events = 0;
 
-    /// allocates memory for the records. @param n_rec are the number of records.
+    /*!
+     * \brief Allocates memory for storing time-tagged records.
+     *
+     * This method allocates memory to store a specified number of time-tagged records.
+     * The number of records to be allocated is specified by the parameter `n_rec`.
+     *
+     * \param n_rec Number of records to allocate memory for.
+     *
+     * \note Call this method to allocate memory before storing time-tagged records.
+     * \warning Ensure to free the allocated memory when it is no longer needed.
+     *
+     * \see deallocate_memory_for_records
+     */
     void allocate_memory_for_records(size_t n_rec);
 
-    /// deallocate memory of records
+    /*!
+     * \brief Deallocates memory used for storing time-tagged records.
+     *
+     * This method frees the memory that was previously allocated for storing time-tagged records.
+     * Call this method when the memory is no longer needed to prevent memory leaks.
+     *
+     * \note Ensure to call this method only when the records are no longer in use.
+     * \see allocate_memory_for_records
+     */
     void deallocate_memory_of_records();
 
     /*!
-     * Reads the content of a Photon HDF file.
+     * \brief Reads the essential content from a Photon HDF file.
      *
-     * WARNING: Only the micro time, the macro time, and the routing channel
-     * number are read. The meta data is not proccessed.
+     * Reads the micro time, macro time, and routing channel number from the specified Photon HDF file.
+     * This method only processes the fundamental data, excluding meta data.
      *
-     * @param fn filename pointing to the Photon HDF file
-     * @return
+     * \param fn Filename pointing to the Photon HDF file.
+     * \return Returns an integer indicating the success or failure of the file reading operation.
      */
     int read_hdf_file(const char *fn);
 
-    /// Reads n_records records of the file (n_records is the number of records)
-    /// @param n_rec is the number of records that are being read. If no number
-    /// of records to be read is specified all records in the file are being read.
-    /// If the parameter @param rewind is true (default behaviour) the file is read
-    /// from the beginning of the records till the end of the file or till n_red
-    /// records have been read. If @param rewind is false the records are being
-    /// read from the current location of the file pointer till the end of the file.
+    /*!
+     * \brief Reads a specified number of records from the file.
+     *
+     * Reads 'n_rec' records from the file. If 'n_rec' is not specified, all records in the file
+     * are read. If 'rewind' is true (default behavior), the file is read from the beginning
+     * of the records until the end of the file or until 'n_rec' records have been read. If 'rewind'
+     * is false, the records are read from the current location of the file pointer until the end of the file.
+     *
+     * \param n_rec Number of records to read. If not specified, all records in the file are read.
+     * \param rewind If true (default), the file is read from the beginning; if false, reads from the current position.
+     * \param chunk The size of the chunk to read at a time.
+     */
     void read_records(size_t n_rec, bool rewind, size_t chunk);
+
+    /*!
+     * \brief Reads a specified number of records from the file.
+     *
+     * Reads 'n_rec' records from the file. If 'n_rec' is not specified, all records in the file
+     * are read.
+     *
+     * \param n_rec Number of records to read. If not specified, all records in the file are read.
+     */
     void read_records(size_t n_rec);
+
+    /*!
+     * \brief Reads records from the current file position to the end.
+     *
+     * Reads records from the current file position to the end of the file.
+     * No specific number of records is specified.
+     */
     void read_records();
 
 protected:
 
     /*!
-    * Traverses the routing channel array and lists the used routing channel
-    * numbers in the protected attribute used_routing_channels.
-    */
+     * \brief Traverses the routing channel array and identifies used routing channel numbers.
+     *
+     * Traverses the routing channel array and populates the protected attribute
+     * used_routing_channels with the routing channel numbers that are in use.
+     */
     void find_used_routing_channels();
 
-    /// a vector containing the used routing channel numbers in the TTTR file
+    /// \brief A routing channel is a numeric identifier associated with each photon
+    ///        in the time-tagged time-resolved (TTTR) data. It signifies the path
+    ///        or channel through which the photon is detected or routed.
     std::vector<signed char> used_routing_channels;
 
 
 public:
 
-    /// Make shared pointer
-    std::shared_ptr<TTTR> Get() {return shared_from_this();}
+    /// \brief Returns a shared pointer to the current instance of TTTR.
+    ///
+    /// This function is used to create a shared pointer to the current instance of
+    /// the TTTR class. It allows managing the ownership of the object using
+    /// shared pointers.
+    ///
+    /// \return A shared pointer to the current instance of TTTR.
+    std::shared_ptr<TTTR> Get() { return shared_from_this(); }
 
     /*!
-    * Copy the information from another TTTR object
-    *
-    * @param p2 the TTTR object which which the information is copied from
-    * @param include_big_data if this is true also the macro time, micro time
-    * etc. are copied. Otherwise all other is copied
-    */
+     * \brief Copies information from another TTTR object.
+     *
+     * This function allows copying information from another TTTR object, including
+     * optional components based on the specified parameters.
+     *
+     * @param p2 The TTTR object from which the information is copied.
+     * @param include_big_data If true, macro time, micro time, etc., are also copied.
+     *                         Otherwise, only essential information is copied.
+     */
     void copy_from(const TTTR &p2, bool include_big_data = true);
 
     /*!
-    * Reads the TTTR data contained in a file into the TTTR object
-    *
-    * @param fn The filename that is read. If fn is a nullptr (default value
-    * is nullptr) the filename attribute of the TTTR object is used as
-    * filename.
-    *
-    * @param container_type The container type.
-    * @return Returns 1 in case the file was read without errors. Otherwise 0 is returned.
-    */
+     * \brief Reads TTTR data from a file into the TTTR object.
+     *
+     * This function reads TTTR data from the specified file into the TTTR object.
+     * If the filename is not provided (default is nullptr), the filename attribute
+     * of the TTTR object is used. The container_type parameter specifies the type
+     * of container used in the file.
+     *
+     * @param fn The filename to read. If nullptr (default), the TTTR object's filename is used.
+     * @param container_type The container type.
+     * @return Returns 1 if the file is read without errors; otherwise, returns 0.
+     */
     int read_file(const char *fn = nullptr, int container_type = -1);
 
     /*!
-    * Determines the number of records in a TTTR files (not for use with HDF5)
-    *
-    * Calculates the number of records in the file based on the file size.
-    * if @param offset is passed the number of records is calculated by the file size
-    * the number of bytes in the file - offset and @param bytes_per_record.
-    * If @param offset is not specified the current location of the file pointer
-    * is used as an offset. If @param bytes_per_record is not specified
-    * the attribute value bytes_per_record of the class instance is used.
-    *
-    * @param offset
-    * @param bytes_per_record
-    */
+     * \brief Determines the number of records in a TTTR file (not for use with HDF5).
+     *
+     * Calculates the number of records in the file based on the file size. If the offset
+     * is passed, the number of records is calculated using the file size, offset, and
+     * bytes_per_record. If the offset is not specified, the current location of the file
+     * pointer is used. If bytes_per_record is not specified, the attribute value
+     * bytes_per_record of the class instance is used.
+     *
+     * @param fp The file pointer to the TTTR file.
+     * @param offset The offset for calculating the number of records.
+     * @param bytes_per_record The number of bytes per record.
+     * @return Returns the calculated number of records.
+     */
     static size_t get_number_of_records_by_file_size(
-            std::FILE *fp,
-            size_t offset,
-            size_t bytes_per_record
+        std::FILE *fp,
+        size_t offset,
+        size_t bytes_per_record
     );
 
+
+    /*!
+     * \brief Appends events to the TTTR object.
+     *
+     * Appends events represented by macro_times, micro_times, routing_channels,
+     * and event_types to the TTTR object. The sizes of the input arrays
+     * (n_macrotimes, n_microtimes, n_routing_channels, n_event_types) must be equal.
+     *
+     * @param macro_times Array of macro time values.
+     * @param n_macrotimes Number of elements in the macro_times array.
+     * @param micro_times Array of micro time values.
+     * @param n_microtimes Number of elements in the micro_times array.
+     * @param routing_channels Array of routing channel values.
+     * @param n_routing_channels Number of elements in the routing_channels array.
+     * @param event_types Array of event type values.
+     * @param n_event_types Number of elements in the event_types array.
+     * @param shift_macro_time Flag indicating whether to shift macro times.
+     * @param macro_time_offset Offset applied to macro times if shift_macro_time is true.
+     */
     void append_events(
-            unsigned long long *macro_times, int n_macrotimes,
-            unsigned short *micro_times, int n_microtimes,
-            signed char *routing_channels, int n_routing_channels,
-            signed char *event_types, int n_event_types,
-            bool shift_macro_time = true,
-            long long macro_time_offset = 0
+        unsigned long long *macro_times, int n_macrotimes,
+        unsigned short *micro_times, int n_microtimes,
+        signed char *routing_channels, int n_routing_channels,
+        signed char *event_types, int n_event_types,
+        bool shift_macro_time = true,
+        long long macro_time_offset = 0
     );
 
+    /*!
+     * \brief Appends a single event to the TTTR object.
+     *
+     * Appends a single event represented by macro_time, micro_time, routing_channel,
+     * and event_type to the TTTR object.
+     *
+     * @param macro_time Macro time value for the event.
+     * @param micro_time Micro time value for the event.
+     * @param routing_channel Routing channel value for the event.
+     * @param event_type Event type value for the event.
+     * @param shift_macro_time Flag indicating whether to shift macro time.
+     * @param macro_time_offset Offset applied to macro time if shift_macro_time is true.
+     */
     void append_event(
-            unsigned long long macro_time,
-            unsigned short micro_time,
-            signed char routing_channel,
-            signed char event_type,
-            bool shift_macro_time = true,
-            long long macro_time_offset = 0
+        unsigned long long macro_time,
+        unsigned short micro_time,
+        signed char routing_channel,
+        signed char event_type,
+        bool shift_macro_time = true,
+        long long macro_time_offset = 0
     );
 
+    /*!
+     * \brief Appends events from another TTTR object to the current TTTR object.
+     *
+     * Appends events from another TTTR object (`other`) to the current TTTR object.
+     * Optionally shifts macro times and applies an offset to the macro times.
+     *
+     * @param other Pointer to the TTTR object containing events to append.
+     * @param shift_macro_time Flag indicating whether to shift macro times.
+     * @param macro_time_offset Offset applied to macro times if shift_macro_time is true.
+     */
     void append(
             const TTTR *other,
             bool shift_macro_time=true,
             long long macro_time_offset=0
     );
 
-    size_t size(){
-        return get_n_valid_events();
-    }
+     /*!
+      * \brief Returns the number of valid events in the TTTR data.
+      *
+      * This function is a wrapper for the get_n_valid_events() method and returns
+      * the total number of valid events in the TTTR data.
+      *
+      * @return The number of valid events.
+      */
+     size_t size() {
+      return get_n_valid_events();
+     }
 
-    /*!
-     * Returns an array containing the routing channel numbers
-     * that are contained (used) in the TTTR file.
-     *
-     * @param output Pointer to the output array
-     * @param n_output Pointer to the number of elements in the output array
-     */
-    void get_used_routing_channels(signed char **output, int *n_output);
+     /*!
+      * \brief Retrieves the used routing channel numbers from the TTTR data.
+      *
+      * This function populates the provided output array with the routing channel
+      * numbers that are used in the TTTR file. The number of elements in the output
+      * array is stored in the n_output parameter.
+      *
+      * @param output Pointer to the output array to be populated.
+      * @param n_output Pointer to the number of elements in the output array.
+      */
+     void get_used_routing_channels(signed char **output, int *n_output);
 
-    /*!
-     * Returns an array containing the macro times of the valid TTTR
-     * events.
-     *
-     * @param output Pointer to the output array
-     * @param n_output Pointer to the number of elements in the output array
-     */
-    void get_macro_times(unsigned long long **output, int *n_output);
+     /*!
+      * \brief Retrieves the macro times of valid TTTR events.
+      *
+      * This function populates the provided output array with the macro times
+      * of the valid TTTR events. The number of elements in the output array
+      * is stored in the n_output parameter.
+      *
+      * @param output Pointer to the output array to be populated.
+      * @param n_output Pointer to the number of elements in the output array.
+      */
+     void get_macro_times(unsigned long long **output, int *n_output);
 
-    /*!
-     * Returns an array containing the micro times of the valid TTTR
-     * events.
-     *
-     * @param output Pointer to the output array
-     * @param n_output Pointer to the number of elements in the output array
-     */
-    void get_micro_times(unsigned short **output, int *n_output);
+     /*!
+      * \brief Retrieves the micro times of valid TTTR events.
+      *
+      * This function populates the provided output array with the micro times
+      * of the valid TTTR events. The number of elements in the output array
+      * is stored in the n_output parameter.
+      *
+      * @param output Pointer to the output array to be populated.
+      * @param n_output Pointer to the number of elements in the output array.
+      */
+     void get_micro_times(unsigned short **output, int *n_output);
 
-    /*!
-     * Returns a intensity trace that is computed for a specified integration
-     * window
-     *
-     * @param output the returned intensity trace
-     * @param n_output the number of points in the intensity trace
-     * @param time_window_length the length of the integration time windows in
-     * units of milliseconds.
-     */
-    void get_intensity_trace(int **output, int *n_output, double time_window_length=1.0);
+     /*!
+      * \brief Computes and returns an intensity trace for a specified integration window.
+      *
+      * The intensity trace is calculated based on the integration time windows,
+      * and the result is stored in the output array. The number of points in the
+      * intensity trace is returned through the n_output parameter.
+      *
+      * @param output Pointer to the array to store the intensity trace.
+      * @param n_output Pointer to the number of points in the intensity trace.
+      * @param time_window_length The length of the integration time windows in
+      *        units of milliseconds.
+      */
+     void get_intensity_trace(int **output, int *n_output, double time_window_length = 1.0);
 
-    /*!
-     * Returns an array containing the routing channel numbers of the
-     * valid TTTR events.
-     *
-     * @param output Pointer to the output array
-     * @param n_output Pointer to the number of elements in the output array
-     */
-    void get_routing_channel(signed char** output, int* n_output);
+     /*!
+      * \brief Returns an array containing the routing channel numbers of the valid TTTR events.
+      *
+      * The routing channel numbers are stored in the output array, and the number of
+      * elements in the array is returned through the n_output parameter.
+      *
+      * @param output Pointer to the array to store the routing channel numbers.
+      * @param n_output Pointer to the number of elements in the output array.
+      */
+     void get_routing_channel(signed char** output, int* n_output);
 
-    /*!
-     *
-     * @param output Pointer to the output array
-     * @param n_output Pointer to the number of elements in the output array
-     */
-    void get_event_type(signed char** output, int* n_output);
+     /*!
+      * \brief Returns an array containing the event types of the valid TTTR events.
+      *
+      * The event types are stored in the output array, and the number of elements in
+      * the array is returned through the n_output parameter.
+      *
+      * @param output Pointer to the array to store the event types.
+      * @param n_output Pointer to the number of elements in the output array.
+      */
+     void get_event_type(signed char** output, int* n_output);
 
-    /*!
-     * Returns the number of micro time channels that fit between two
-     * macro time clocks.
-     *
-     * @return maximum valid number of micro time channels
-     */
-    unsigned int get_number_of_micro_time_channels();
+     /*!
+      * \brief Returns the number of micro time channels that fit between two macro time clocks.
+      *
+      * This function calculates and returns the maximum valid number of micro time channels
+      * that fit between two macro time clocks.
+      *
+      * @return Maximum valid number of micro time channels.
+      */
+     unsigned int get_number_of_micro_time_channels();
 
-    /*!
-     * @return number of valid events in the TTTR file
-     */
-    size_t get_n_valid_events();
+     /*!
+      * \brief Returns the number of valid events in the TTTR file.
+      *
+      * This function retrieves and returns the total number of valid events present in
+      * the TTTR (Time-Tagged Time-Resolved) file.
+      *
+      * @return Number of valid events in the TTTR file.
+      */
+     size_t get_n_valid_events();
 
-    /*!
-     * @return the container type that was used to open the file
-     */
-    std::string get_tttr_container_type(){
+     /*!
+      * \brief Returns the container type used to open the TTTR file.
+      *
+      * This function retrieves and returns the container type that was used to open
+      * the TTTR (Time-Tagged Time-Resolved) file.
+      *
+      * @return Container type used to open the TTTR file.
+      */
+     std::string get_tttr_container_type(){
         return tttr_container_type_str;
     }
 
-    std::shared_ptr<TTTR> select(int *selection, int n_selection);
+     /*!
+      * \brief Creates a new TTTR object by selecting specific events based on the provided indices.
+      *
+      * This function creates a new TTTR (Time-Tagged Time-Resolved) object by selecting specific events
+      * from the current TTTR object based on the provided indices.
+      *
+      * @param selection Pointer to an array containing the indices of selected events.
+      * @param n_selection Number of elements in the selection array.
+      * @return Shared pointer to the newly created TTTR object containing selected events.
+      */
+     std::shared_ptr<TTTR> select(int *selection, int n_selection);
 
-    /*! Constructor
+    /*!
+     * \brief Default constructor for the TTTR (Time-Tagged Time-Resolved) class.
+     *
+     * This constructor initializes a TTTR object with default values.
      */
     TTTR();
 
-    /// Copy constructor
+    /*!
+     * \brief Copy constructor for the TTTR (Time-Tagged Time-Resolved) class.
+     *
+     * This constructor creates a new TTTR object by copying the information from another TTTR object.
+     *
+     * @param p2 The TTTR object from which the information is copied.
+     */
     TTTR(const TTTR &p2);
 
-    /*!
-     * Constructor that can read a file
-     *
-     * @param filename TTTR filename
-     * @param container_type container type as int (0 = PTU; 1 = HT3;
-     * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
-     * @param read_input if true reads the content of the file
-     *
-     * PQ_PTU_CONTAINER          0
-     * PQ_HT3_CONTAINER          1
-     * BH_SPC130_CONTAINER       2
-     * BH_SPC600_256_CONTAINER   3
-     * BH_SPC600_4096_CONTAINER  4
-     */
+   /*!
+    * Constructor that can read a file.
+    *
+    * @param filename TTTR filename.
+    * @param container_type Container type as int:
+    *   - 0: PicoQuant PTU Container (PQ_PTU_CONTAINER)
+    *   - 1: PicoQuant HT3 Container (PQ_HT3_CONTAINER)
+    *   - 2: Becker & Hickl SPC-130 Container (BH_SPC130_CONTAINER)
+    *   - 3: Becker & Hickl SPC-600 with 256 channels Container (BH_SPC600_256_CONTAINER)
+    *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
+    *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
+    * @param read_input If true, reads the content of the file.
+    */
     TTTR(const char *filename, int container_type, bool read_input);
 
     /*!
+     * Constructor for TTTR object that reads the content of the file.
      *
-     * @param filename TTTR filename
-     * @param container_type container type as int (0 = PTU; 1 = HT3;
-     * 2 = SPC-130; 3 = SPC-600_256; 4 = SPC-600_4096; 5 = PHOTON-HDF5)
+     * @param filename TTTR filename.
+     * @param container_type Container type as int:
+     *   - 0: PicoQuant PTU Container (PQ_PTU_CONTAINER)
+     *   - 1: PicoQuant HT3 Container (PQ_HT3_CONTAINER)
+     *   - 2: Becker & Hickl SPC-130 Container (BH_SPC130_CONTAINER)
+     *   - 3: Becker & Hickl SPC-600 with 256 channels Container (BH_SPC600_256_CONTAINER)
+     *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
+     *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
      */
     TTTR(const char *filename, int container_type);
 
     /*!
+     * Constructor for TTTR object.
      *
-     * @param filename TTTR filename
-     * @param container_type container type as string (PTU; HT3;
-     * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
+     * @param filename TTTR filename.
+     * @param container_type Container type as string:
+     *   - "PTU": PicoQuant PTU Container
+     *   - "HT3": PicoQuant HT3 Container
+     *   - "SPC-130": Becker & Hickl SPC-130 Container
+     *   - "SPC-600_256": Becker & Hickl SPC-600 with 256 channels Container
+     *   - "SPC-600_4096": Becker & Hickl SPC-600 with 4096 channels Container
+     *   - "PHOTON-HDF5": Photon-HDF5 Container
      */
     TTTR(const char *filename, const char* container_type);
 
+     /*!
+      * Constructor for TTTR object using arrays of TTTR events.
+      *
+      * If arrays of different sizes are used to initialize a TTTR object,
+      * the shortest array among all provided arrays is used to construct the TTTR object.
+      *
+      * @param macro_times Array containing the macro times.
+      * @param n_macrotimes Number of macro times.
+      * @param micro_times Array containing the microtimes.
+      * @param n_microtimes Length of the micro time array.
+      * @param routing_channels Routing channel array.
+      * @param n_routing_channels Length of the routing channel array.
+      * @param event_types Array of event types.
+      * @param n_event_types Number of elements in the event type array.
+      * @param find_used_channels If set to true (default), searches all indices to find the used routing channels.
+      */
+     TTTR(unsigned long long *macro_times, int n_macrotimes,
+          unsigned short *micro_times, int n_microtimes,
+          signed char *routing_channels, int n_routing_channels,
+          signed char *event_types, int n_event_types,
+          bool find_used_channels = true
+     );
+
+     /*!
+      * Constructor for creating a new TTTR object containing records specified in the selection array.
+      *
+      * The selection array is an array of indices. The events with indices
+      * in the selection array are copied in the order of the selection array
+      * to a new TTTR object.
+      *
+      * @param parent Parent TTTR object from which to select records.
+      * @param selection Array of indices specifying the selected records.
+      * @param n_selection Number of elements in the selection array.
+      * @param find_used_channels If set to true (default), searches all indices to find the used routing channels.
+      */
+     TTTR(const TTTR &parent,
+             int *selection, int n_selection,
+             bool find_used_channels = true);
 
     /*!
-     * Constructor of TTTR object using arrays of the TTTR events
-     *
-     * If arrays of different size are used to initialize a TTTR object
-     * the shortest array of all provided arrays is used to construct the
-     * TTTR object.
-     *
-     * @param macro_times input array containing the macro times
-     * @param n_macrotimes  number of macro times
-     * @param micro_times input array containing the microtimes
-     * @param n_microtimes length of the of micro time array
-     * @param routing_channels routing channel array
-     * @param n_routing_channels length of the routing channel array
-     * @param event_types array of event types
-     * @param n_event_types number of elements in the event type array
-     * @param find_used_channels if set to true (default) searches all indices
-     * to find the used routing channels
+     * Destructor for TTTR class.
+     * Releases any allocated resources and cleans up the TTTR object.
      */
-    TTTR(unsigned long long *macro_times, int n_macrotimes,
-         unsigned short *micro_times, int n_microtimes,
-         signed char *routing_channels, int n_routing_channels,
-         signed char *event_types, int n_event_types,
-         bool find_used_channels = true
-    );
-
-    /*!
-     * This constructor can be used to create a new TTTR object that only
-     * contains records that are specified in the selection array.
-     *
-     * The selection array is an array of indices. The events with indices
-     * in the selection array are copied in the order of the selection array
-     * to a new TTTR object.
-     *
-     * @param parent
-     * @param selection
-     * @param n_selection
-     * @param find_used_channels if set to true (default) searches all indices
-     * to find the used routing channels
-     *
-     */
-    TTTR(const TTTR &parent,
-            int *selection, int n_selection,
-            bool find_used_channels = true);
-
-    /// Destructor
     ~TTTR();
 
-    /*!getFilename
-     * Getter for the filename of the TTTR file
+    /*!
+     * Getter for the filename of the TTTR file.
      *
-     * @return The filename of the TTTR file
+     * @return The filename of the TTTR file.
      */
     std::string get_filename();
 
     /*!
-     * Get a ptr to a TTTR object that is based on a selection on the current
+     * Get a pointer to a TTTR object that is based on a selection on the current
      * TTTR object. A selection is an array of indices of the TTTR events.
      *
-     * @param selection
-     * @param n_selection
-     * @return
+     * @param selection Array of indices of TTTR events.
+     * @param n_selection Number of elements in the selection array.
+     * @return A shared pointer to a new TTTR object based on the specified selection.
      */
     std::shared_ptr<TTTR> get_tttr_by_selection(int *selection, int n_selection){
         auto p = std::make_shared<TTTR>(*this, selection, n_selection, true);
@@ -557,20 +782,23 @@ public:
     }
 
     /*!
-    * @brief Returns time windows (tw), i.e., the start and the stop indices for a
-    * minimum tw size, a minimum number of photons in a tw.
-    *
-    * @param output [out] Array containing the interleaved start and stop indices
-    * of the tws in the TTTR object.
-    * @param n_output [out] Length of the output array
-    * @param minimum_window_length [in] Minimum length of a tw (mandatory).
-    * @param maximum_window_length [in] Maximum length of a tw (optional).
-    * @param minimum_number_of_photons_in_time_window [in] Minimum number of
-    * photons a selected tw contains (optional)
-    * @param maximum_number_of_photons_in_time_window [in] Maximum number of
-    * photons a selected tw contains (optional)
-    * @param invert [in] If set to true, the selection criteria are inverted.
-    */
+     * @brief Returns time windows (tw), i.e., the start and the stop indices for a
+     * minimum tw size, a minimum number of photons in a tw.
+     *
+     * @param output [out] Array containing the interleaved start and stop indices
+     * of the tws in the TTTR object.
+     * @param n_output [out] Length of the output array
+     * @param minimum_window_length [in] Minimum length of a tw (mandatory).
+     * @param maximum_window_length [in] Maximum length of a tw (optional).
+     * @param minimum_number_of_photons_in_time_window [in] Minimum number of
+     * photons a selected tw contains (optional)
+     * @param maximum_number_of_photons_in_time_window [in] Maximum number of
+     * photons a selected tw contains (optional)
+     * @param macro_time_calibration [in] Macro time calibration in units of the
+     * macro time resolution. If negative, the macro time resolution from the TTTR
+     * header is used.
+     * @param invert [in] If set to true, the selection criteria are inverted.
+     */
     void get_ranges_by_time_window(
             int **output, int *n_output,
             double minimum_window_length,
@@ -595,51 +823,73 @@ public:
         );
     }
 
-    /*!
-      * Get events indices by the routing channel number
+     /*!
+       * @brief Get events indices by the routing channel number
+       *
+       * This method retrieves an array containing the event/ photon indices
+       * of events with routing channel numbers found in the selection input array.
+       *
+       * @param output [out] Indices of the selected events
+       * @param n_output [out] Number of selected events
+       * @param input [in] Routing channel numbers for selecting events
+       * @param n_input [in] Number of routing channels for selection
+       */
+     void get_selection_by_channel(
+             int **output, int *n_output,
+             signed char *input, int n_input
+     );
+
+     /*!
+       * @brief Get a TTTR object based on a selection by routing channel numbers
+       *
+       * This method creates and returns a shared pointer to a TTTR object that
+       * contains only the events with routing channel numbers specified in the input array.
+       *
+       * @param input [in] Routing channel numbers for selecting events
+       * @param n_input [in] Number of routing channels for selection
+       * @return Shared pointer to the new TTTR object based on the specified selection
+       */
+     std::shared_ptr<TTTR> get_tttr_by_channel(signed char *input, int n_input){
+      int* sel; int nsel;
+      get_selection_by_channel(&sel, &nsel, input, n_input);
+      return get_tttr_by_selection(sel, nsel);
+     }
+
+     /*!
+      * @brief Get indices where the count rate is below a specified maximum
       *
-      * This returns an array that contains the event / photon indices
-      * of events with routing channel numbers that are found in the selection
-      * input array.
+      * This method returns an array of indices where the count rate, calculated
+      * within a sliding time window, is below a specified maximum.
       *
-      * @param output indices of the events
-      * @param n_output number of selected events
-      * @param input routing channel number for selection of events
-      * @param n_input number of routing channels for selection of events
+      * @param output [out] Array containing the selected indices
+      * @param n_output [out] Number of elements in the output array
+      * @param time_window [in] Length of the time window in milliseconds
+      * @param n_ph_max [in] Maximum number of photons within a time window
+      * @param invert [in] If set to true, the selection criteria are inverted
+      * @param make_mask [in] If set to true, the output array will be a boolean mask
       */
-    void get_selection_by_channel(
-            int **output, int *n_output,
-            signed char *input, int n_input
-    );
+     void get_selection_by_count_rate(
+             int **output, int *n_output,
+             double time_window, int n_ph_max,
+             bool invert=false, bool make_mask=false
+     );
 
-    std::shared_ptr<TTTR> get_tttr_by_channel(signed char *input, int n_input){
-        int* sel; int nsel;
-        get_selection_by_channel(&sel, &nsel, input, n_input);
-        return get_tttr_by_selection(sel, nsel);
-    }
 
-    /*!
-     * List of indices where the count rate is smaller than a maximum count
-     * rate
-     *
-     * The count rate is specified by providing a time window that slides over
-     * the time array and the maximum number of photons within the time window.
-     *
-     * @param output the output array that will contain the selected indices
-     * @param n_output the number of elements in the output array
-     * @param time_window the length of the time window in milliseconds
-     * @param n_ph_max the maximum number of photons within a time window
-     */
-    void get_selection_by_count_rate(
-            int **output, int *n_output,
-            double time_window, int n_ph_max,
-            bool invert=false, bool make_mask=false
-    );
-
-    std::shared_ptr<TTTR> get_tttr_by_count_rate(
-            double time_window, int n_ph_max,
-            bool invert=false, bool make_mask=false
-    ){
+     /*!
+      * @brief Get a TTTR object filtered by count rate criteria
+      *
+      * This method returns a TTTR object filtered based on count rate criteria.
+      *
+      * @param time_window [in] Length of the time window in milliseconds
+      * @param n_ph_max [in] Maximum number of photons within a time window
+      * @param invert [in] If set to true, the count rate criteria are inverted
+      * @param make_mask [in] If set to true, the output array will be a boolean mask
+      * @return A shared pointer to the filtered TTTR object
+      */
+     std::shared_ptr<TTTR> get_tttr_by_count_rate(
+             double time_window, int n_ph_max,
+             bool invert=false, bool make_mask=false
+     ){
         int* sel; int nsel;
         get_selection_by_count_rate(
                 &sel, &nsel,
@@ -648,192 +898,266 @@ public:
         return get_tttr_by_selection(sel, nsel);
     }
 
-    /*!
-    * Returns time windows (tw), i.e., the start and the stop indices for a
-    * minimum tw size, a minimum number of photons in a tw.
-    *
-    * @param output[out] Array containing the interleaved start and stop indices
-    * of the tws in the TTTR object.
-    * @param n_output[out] Length of the output array
-    * @param minimum_window_length[in] Minimum length of a tw in units of ms (mandatory).
-    * @param maximum_window_length[in] Maximum length of a tw (optional).
-    * @param minimum_number_of_photons_in_time_window[in] Minimum number of
-    * photons a selected tw contains (optional) in units of seconds
-    * @param maximum_number_of_photons_in_time_window[in] Maximum number of
-    * photons a selected tw contains (optional)
-    * @param invert[in] If set to true, the selection criteria are inverted.
-    */
-    void get_time_window_ranges(
-            int **output, int *n_output,
-            double minimum_window_length,
-            int minimum_number_of_photons_in_time_window,
-            int maximum_number_of_photons_in_time_window=-1,
-            double maximum_window_length=-1.0,
-            double macro_time_calibration=-1,
-            bool invert = false
-    );
+     /*!
+      * @brief Get time windows (tw) based on specified criteria
+      *
+      * Returns time windows (tw), i.e., the start and stop indices for a minimum tw size,
+      * a minimum number of photons in a tw.
+      *
+      * @param output[out] Array containing the interleaved start and stop indices
+      * of the tws in the TTTR object.
+      * @param n_output[out] Length of the output array
+      * @param minimum_window_length[in] Minimum length of a tw in units of ms (mandatory).
+      * @param minimum_number_of_photons_in_time_window[in] Minimum number of
+      * photons a selected tw contains (optional) in units of seconds
+      * @param maximum_number_of_photons_in_time_window[in] Maximum number of
+      * photons a selected tw contains (optional)
+      * @param maximum_window_length[in] Maximum length of a tw (optional).
+      * @param macro_time_calibration[in] Macro time calibration in units of seconds.
+      * If negative, the macro time resolution from the header is used.
+      * @param invert[in] If set to true, the selection criteria are inverted.
+      */
+     void get_time_window_ranges(
+             int **output, int *n_output,
+             double minimum_window_length,
+             int minimum_number_of_photons_in_time_window,
+             int maximum_number_of_photons_in_time_window=-1,
+             double maximum_window_length=-1.0,
+             double macro_time_calibration=-1,
+             bool invert = false
+     );
 
-    /// Get header returns the header (if present) as a map of strings.
+    /*!
+     * @brief Get the header as a map of strings.
+     *
+     * @return Pointer to the TTTRHeader object representing the header information.
+     * If no header is present, returns nullptr.
+     */
     TTTRHeader* get_header();
 
-    /// Set header
-    void set_header(TTTRHeader* v);
+     /*!
+      * @brief Set the header for the TTTR object.
+      *
+      * @param v Pointer to the TTTRHeader object containing the header information.
+      */
+     void set_header(TTTRHeader* v);
+
+     /*!
+      * @brief Returns the number of events in the TTTR file, or the number of selected events if a selection is applied.
+      *
+      * @return Number of events in the TTTR file or the number of selected events.
+      */
+     size_t get_n_events();
 
     /*!
-     * Returns the number of events in the TTTR file for cases no selection
-     * is specified otherwise the number of selected events is returned.
-     * @return
-     */
-    size_t get_n_events();
-
-    /*!
-     * Write the contents of a opened TTTR file to a new
-     * TTTR file.
+     * @brief Writes the contents of an opened TTTR file to a new TTTR file.
      *
-     * @param fn filename
-     * @param container_type container type (PTU; HT3;
-     * SPC-130; SPC-600_256; SPC-600_4096; PHOTON-HDF5)
-     * @oaram write_a_header if set to false no header is written - Writing correct
-     * headers is not implemented. Therefore, the default value is false.
-     * @return
+     * @param filename The filename for the new TTTR file.
+     * @param header Optional TTTRHeader to be written. If set to nullptr, no header is written (default is nullptr).
+     * @return True if the write operation is successful, false otherwise.
      */
     bool write(std::string filename, TTTRHeader* header = nullptr);
 
+    /*!
+     * @brief Write events from the TTTR object to a file as SPC-132.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
     void write_spc132_events(FILE* fp, TTTR* tttr);
 
+    /*!
+     * @brief Write events from the TTTR object to a file as HHT3v2.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
     void write_hht3v2_events(FILE* fp, TTTR* tttr);
 
-    void write_header(std::string &fn, TTTRHeader* header = nullptr);
+     /*!
+      * @brief Writes the header information to a TTTR file.
+      *
+      * @param fn The filename to write the header to.
+      * @param header Pointer to the TTTRHeader object containing header information.
+      */
+     void write_header(std::string &fn, TTTRHeader* header = nullptr);
+
+     /*!
+      * @brief Shifts the macro time by adding an integer value to each macro time entry.
+      *
+      * @param shift The integer value added to each macro time entry.
+      */
+     void shift_macro_time(int shift);
 
     /*!
-     * Shift the macro time by a constant
-     * @param shift
-     */
-    void shift_macro_time(int shift);
-
-    TTTR* operator+(const TTTR* other) const
-    {
+      * @brief Adds the events of another TTTR object to the current TTTR object.
+      *
+      * @param other Pointer to the TTTR object whose events will be added.
+      * @return Pointer to a new TTTR object containing the combined events.
+      */
+    TTTR* operator+(const TTTR* other) const {
         auto re = new TTTR();
         re->copy_from(*this, true);
         re->append(other);
         return re;
     }
 
+     /*!
+      * @brief Computes a histogram of the TTTR data's micro times.
+      *
+      * @param tttr_data Pointer to the TTTR object containing the data.
+      * @param output Pointer to which the histogram will be written (memory is allocated by the method).
+      * @param n_output Pointer to the number of points in the histogram.
+      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+      * @param n_time Pointer to the number of points in the time axis.
+      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+      * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
+      */
+     static void compute_microtime_histogram(
+             TTTR *tttr_data,
+             double** output, int* n_output,
+             double **time, int *n_time,
+             unsigned short micro_time_coarsening = 1,
+             std::vector<int> *tttr_indices = nullptr
+     );
+
+     /*!
+      * @brief Computes and returns a histogram of the TTTR data's micro times.
+      *
+      * @param histogram Pointer to which the histogram will be written (memory is allocated by the method).
+      * @param n_histogram Pointer to the number of points in the histogram.
+      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+      * @param n_time Pointer to the number of points in the time axis.
+      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+      */
+     void get_microtime_histogram(
+             double **histogram, int *n_histogram,
+             double **time, int *n_time,
+             unsigned short micro_time_coarsening = 1
+     ){
+      compute_microtime_histogram(
+              this, histogram, n_histogram,
+              time, n_time,
+              micro_time_coarsening
+      );
+     }
+
+     /*!
+      * @brief Computes the mean lifetime by the moments of the decay and the instrument response function.
+      *
+      * The computed lifetime is the first lifetime determined by the method of moments (Irvin Isenberg,
+      * 1973, Biophysical journal).
+      *
+      * @param tttr_data TTTR object for which the lifetime is computed.
+      * @param tttr_irf TTTR object that is used as IRF.
+      * @param m0_irf Number of counts in the IRF (used if no TTTR object for IRF provided).
+      * @param m1_irf First moment of the IRF (used if no TTTR object for IRF provided).
+      * @param tttr_indices Optional list of indices for selecting a subset of the TTTR.
+      * @param dt Time resolution of the micro time. If not provided, extracted from the header (slow).
+      * @param minimum_number_of_photons Minimum number of photons. If fewer photons are in the dataset,
+      * returns -1 as computed lifetime.
+      * @param background Background pattern.
+      * @param m0_bg Sum of background photons (overwritten if the background pattern is not empty).
+      * @param m1_bg First moment of the background pattern (overwritten if the background
+      * pattern is not empty).
+      * @param background_fraction Background fraction (if negative, the background is not scaled).
+      * @return The computed lifetime.
+      */
+     static double compute_mean_lifetime(
+             TTTR *tttr_data,
+             TTTR *tttr_irf = nullptr,
+             double m0_irf = 1, double m1_irf = 0,
+             std::vector<int> *tttr_indices = nullptr,
+             double dt = -1.0,
+             int minimum_number_of_photons = 1,
+             std::vector<double> *background = nullptr,
+             double m0_bg = 0.0, double m1_bg = 0.0,
+             double background_fraction = -1.0
+     );
+
+
+     /*!
+      * @brief Computes the mean lifetime by moments of decay and instrument response.
+      *
+      * @param tttr_irf TTTR object used as IRF.
+      * @param m0_irf Counts in the IRF (used if no TTTR object for IRF provided).
+      * @param m1_irf First moment of the IRF (used if no TTTR object for IRF provided).
+      * @param tttr_indices Optional indices for selecting a subset of the TTTR.
+      * @param dt Time resolution of the micro time. If not provided, extracted from the header (slow).
+      * @param min_ph Minimum number of photons. If fewer photons are in the dataset, returns -1 as computed lifetime.
+      * @return Computed mean lifetime.
+      */
+     double mean_lifetime(
+             TTTR *tttr_irf = nullptr,
+             int m0_irf = 1, int m1_irf = 1,
+             std::vector<int> *tttr_indices = nullptr,
+             double dt = -1.0,
+             int min_ph = 1
+     ){
+      return compute_mean_lifetime(
+              this,
+              tttr_irf, m0_irf, m1_irf,
+              tttr_indices, dt, min_ph
+      );
+     }
+
+     /*!
+      * @brief Computes the count rate.
+      *
+      * @param tttr_data TTTR object for which the count rate is computed.
+      * @param tttr_indices Optional indices for selecting a subset of the TTTR.
+      * @param macrotime_resolution If negative (default), reads macrotime resolution from header (slow).
+      * @return Count rate.
+      */
+     static double compute_count_rate(
+             TTTR *tttr_data,
+             std::vector<int> *tttr_indices = nullptr,
+             double macrotime_resolution = -1.0
+     );
+
+     /*!
+      * @brief Gets the count rate.
+      *
+      * @param tttr_indices Optional indices for selecting a subset of the TTTR.
+      * @param macrotime_resolution If negative (default), reads macrotime resolution from header (slow).
+      * @return Count rate.
+      */
+     double get_count_rate(
+             std::vector<int> *tttr_indices = nullptr,
+             double macrotime_resolution = -1.0
+     ){
+      return compute_count_rate(this, tttr_indices, macrotime_resolution);
+     }
+
+     /*!
+      * @brief Computes the mean microtime.
+      *
+      * @param tttr_data TTTR object for which the mean microtime is computed.
+      * @param tttr_indices Optional indices for selecting a subset of the TTTR.
+      * @param microtime_resolution If negative (default), reads microtime resolution from header (slow).
+      * @param minimum_number_of_photons Minimum number of photons. If less, returns -1 as computed mean microtime.
+      * @return The computed mean microtime.
+      */
+     static double compute_mean_microtime(
+             TTTR *tttr_data,
+             std::vector<int> *tttr_indices = nullptr,
+             double microtime_resolution = -1.0,
+             int minimum_number_of_photons = 1
+     );
+
+
     /*!
-     * Computes a histogram of the TTTR data's micro times
-     *
-     * @param tttr_data a pointer to the TTTR data
-     * @param output pointer to which the histogram will be written (the memory
-     * is allocated but the method)
-     * @param n_output the number of points in the histogram
-     * @param time pointer to the time axis of the histogram (the memory is allocated
-     * by the method)
-     * @param n_time the number of points in the time axis
-     * @param micro_time_coarsening a factor by which the micro times in the TTTR
-     * object are divided (default value is 1).
-     */
-    static void compute_microtime_histogram(
-            TTTR *tttr_data,
-            double** output, int* n_output,
-            double **time, int *n_time,
-            unsigned short micro_time_coarsening = 1,
-            std::vector<int> *tttr_indices = nullptr
-    );
-
-    void get_microtime_histogram(
-            double **histogram, int *n_histogram,
-            double **time, int *n_time,
-            unsigned short micro_time_coarsening = 1
-    ){
-        compute_microtime_histogram(
-                this, histogram, n_histogram,
-                time, n_time,
-                micro_time_coarsening
-        );
-    }
-
-    /*!
-     * Compute a mean lifetime by the moments of the decay and the instrument
-     * response function.
-     *
-     * The computed lifetime is the first lifetime determined by the method of
-     * moments (Irvin Isenberg, 1973, Biophysical journal).
-     *
-     * @param tttr_data TTTR object for which the lifetime is computed
-     * @param tttr_irf TTTR object that is used as IRF
-     * @param m0_irf[in] Number of counts in the IRF (used if no TTTR object for IRF provided.
-     * @param m1_irf[in] First moment of the IRF (used if no TTTR object for IRF provided.
-     * @param tttr_indices[in] Optional list of indices for selecting a subset of the TTTR
-     * @param dt[in] Time resolution of the micro time. If not provided extracted from the header (slow)
-     * @param minimum_number_of_photons[in] Minimum number of photons. If less photons are in the dataset
-     * returns -1 as computed lifetime
-     * @param background background pattern
-     * @param m0_bg sum of background photons (overwritten if background pattern not empty)
-     * @param m1_bg first moment of background pattern (overwritten if background pattern not empty)
-     * @param background_fraction background fraction (if negative background is not scaled)
-     * @return The computed lifetime
-     */
-    static double compute_mean_lifetime(
-            TTTR *tttr_data,
-            TTTR *tttr_irf = nullptr,
-            double m0_irf = 1, double m1_irf = 0,
-            std::vector<int> *tttr_indices = nullptr,
-            double dt = -1.0,
-            int minimum_number_of_photons = 1,
-            std::vector<double> *background = nullptr,
-            double m0_bg = 0.0, double m1_bg = 0.0,
-            double background_fraction = -1.0
-    );
-
-    /*!
-     * Compute the mean lifetime by the moments of the decay and the instrument
-     * response function.
-     */
-    double mean_lifetime(
-            TTTR *tttr_irf = nullptr,
-            int m0_irf = 1, int m1_irf = 1,
-            std::vector<int> *tttr_indices = nullptr,
-            double dt = -1.0,
-            int minimum_number_of_photons = 1
-    ){
-        return compute_mean_lifetime(
-                this,
-                tttr_irf, m0_irf, m1_irf,
-                tttr_indices, dt, minimum_number_of_photons
-        );
-    }
-
-    /*!
-     * Compute the count rate
-     *
-     * @param tttr_data[in] TTTR object for which the lifetime is computed
-     * @param macrotime_resolution[in] If negative (default) reads macrotime resolution from header (slow)
-     * @return Count rate
-     */
-    static double compute_count_rate(
-            TTTR *tttr_data,
-            std::vector<int> *tttr_indices = nullptr,
-            double macrotime_resolution = -1.0
-    );
-
-    double get_count_rate(
-            std::vector<int> *tttr_indices = nullptr,
-            double macrotime_resolution = -1.0
-    ){
-        return compute_count_rate(this, tttr_indices, macrotime_resolution);
-    }
-
-    static double compute_mean_microtime(
-            TTTR *tttr_data,
-            std::vector<int> *tttr_indices = nullptr,
-            double microtime_resolution = -1.0,
-            int minimum_number_of_photons = 1
-    );
-
+    * @brief Gets the mean microtime.
+    *
+    * @param tttr_indices Optional indices for selecting a subset of the TTTR.
+    * @param microtime_resolution If negative (default), reads microtime resolution from header (slow).
+    * @param minimum_number_of_photons Minimum number of photons. If less, returns -1 as computed mean microtime.
+    * @return The computed mean microtime.
+    */
     double get_mean_microtime(
-            std::vector<int> *tttr_indices = nullptr,
-            double microtime_resolution = -1.0,
-            int minimum_number_of_photons = 1
+         std::vector<int> *tttr_indices = nullptr,
+         double microtime_resolution = -1.0,
+         int minimum_number_of_photons = 1
     ){
         return compute_mean_microtime(
                 this, tttr_indices,

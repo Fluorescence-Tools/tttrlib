@@ -363,7 +363,9 @@ public:
      *
      * @return A pair of vectors containing event times of the first and second correlation channel.
      */
-    std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>> get_macrotimes();
+     std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>> get_macrotimes() {
+      return {this->p1.times, this->p2.times};
+     }
 
 
     /*!
@@ -410,7 +412,9 @@ public:
      *
      * @return A pair of vectors containing weights for the first and second correlation channels, respectively.
      */
-    std::pair<std::vector<double>, std::vector<double>> get_weights();
+    std::pair<std::vector<double>, std::vector<double>> get_weights(){
+        return {this->p1.weights, this->p2.weights};
+    }
 
     /*!
      * @brief Get correlation bins (axis)
