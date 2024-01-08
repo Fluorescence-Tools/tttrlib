@@ -118,7 +118,7 @@ deploy:doc:
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
     - source activate base
-    - mamba env update --file doc/environment.yml && conda activate doc-tttrlib
+    - mamba env update --file doc/environment.yml --prune
     - mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
     - ln -s /srv/tttr-data tttr-data
     - cd doc && make html

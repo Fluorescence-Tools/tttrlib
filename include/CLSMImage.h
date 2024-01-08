@@ -255,10 +255,10 @@ public:
      *                            only events within these ranges are considered.
      */
     void fill(
-        TTTR *tttr_data = nullptr,
-        std::vector<int> channels = {},
-        bool clear = true,
-        const std::vector<std::pair<int, int>> &micro_time_ranges = {}
+            TTTR *tttr_data = nullptr,
+            std::vector<int> channels = std::vector<int>(),
+            bool clear = true,
+            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
     );
 
     /*!
@@ -282,10 +282,10 @@ public:
      *                            only events within these ranges are considered.
      */
     void fill_pixels(
-        TTTR *tttr_data,
-        std::vector<int> channels,
-        bool clear_pixel = true,
-        std::vector<std::pair<int, int>> micro_time_ranges = {}
+            TTTR *tttr_data,
+            std::vector<int> channels,
+            bool clear_pixel = true,
+            std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
     ){
         std::clog << "WARNING: 'fill_pixels' deprecated.  Use 'fill'." << std::endl;
         fill(tttr_data, channels, clear_pixel, micro_time_ranges);
@@ -546,14 +546,14 @@ public:
      *                                (default is -1.0, which disables discrimination).
      */
     void get_mean_lifetime(
-        TTTR *tttr_data,
-        double **output, int *dim1, int *dim2, int *dim3,
-        int minimum_number_of_photons = 3,
-        TTTR *tttr_irf = nullptr, double m0_irf = 1.0, double m1_irf = 1.0,
-        bool stack_frames = false,
-        std::vector<double> background = {},
-        double m0_bg = 0.0, double m1_bg = 0.0,
-        double background_fraction = -1.0
+            TTTR *tttr_data,
+            double **output, int *dim1, int *dim2, int *dim3,
+            int minimum_number_of_photons = 3,
+            TTTR *tttr_irf = nullptr, double m0_irf = 1.0, double m1_irf = 1.0,
+            bool stack_frames = false,
+            std::vector<double> background = std::vector<double>(),
+            double m0_bg = 0.0, double m1_bg = 0.0,
+            double background_fraction = -1.0
     );
 
     /*!
@@ -891,16 +891,16 @@ public:
      *                        in the input are used.
      */
     static void get_roi(
-        double** output, int* dim1, int* dim2, int* dim3,
-        CLSMImage* clsm = nullptr,
-        std::vector<int> x_range = {0, -1},
-        std::vector<int> y_range = {0, -1},
-        std::string subtract_average = "",
-        double background = 0.0,
-        bool clip = false, double clip_max = 1e6, double clip_min = -1e6,
-        double* images = nullptr, int n_frames = -1, int n_lines = -1, int n_pixels = 1,
-        uint8_t* mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1,
-        std::vector<int> selected_frames = {}
+             double** output, int* dim1, int* dim2, int* dim3,
+             CLSMImage* clsm = nullptr,
+             std::vector<int> x_range=std::vector<int>({0,-1}),
+             std::vector<int> y_range=std::vector<int>({0,-1}),
+             std::string subtract_average = "",
+             double background = 0.0,
+             bool clip=false, double clip_max=1e6, double clip_min=-1e6,
+             double *images = nullptr, int input_frames=-1, int input_lines=-1, int input_pixel=1,
+             uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1,
+             std::vector<int> selected_frames = std::vector<int>()
     );
 
 
@@ -931,14 +931,14 @@ public:
      *                                   markers.
      */
     static std::vector<int> get_frame_edges(
-        TTTR* tttr = nullptr,
-        int start_event = 0,
-        int stop_event = -1,
-        std::vector<int> marker_frame_start = {4, 6},
-        int marker_event_type = 15,
-        int reading_routine = CLSM_SP8,
-        bool skip_before_first_frame_marker = false,
-        bool skip_after_last_frame_marker = false
+            TTTR* tttr = nullptr,
+            int start_event = 0,
+            int stop_event = -1,
+            std::vector<int> marker_frame_start = std::vector<int>({4, 6}),
+            int marker_event_type = 15,
+            int reading_routine = CLSM_SP8,
+            bool skip_before_first_frame_marker = false,
+            bool skip_after_last_frame_marker = false
     );
 
     /*!
