@@ -70,31 +70,32 @@ void selection_by_count_rate(
 
 
 /*!
-* @brief Returns time windows (tw), i.e., the start and the stop indices for a
-* minimum tw size, a minimum number of photons in a tw.
-*
-* @param output [out] Array containing the interleaved start and stop indices
-* of the tws in the TTTR object.
-* @param n_output [out] Length of the output array
-* @param input [in] Array containing the macro times
-* @param n_input [in] Number of macro times
-* @param minimum_window_length [in] Minimum length of a tw (mandatory).
-* @param maximum_window_length [in] Maximum length of a tw (optional).
-* @param minimum_number_of_photons_in_time_window [in] Minimum number of
-* photons a selected tw contains (optional)
-* @param maximum_number_of_photons_in_time_window [in] Maximum number of
-* photons a selected tw contains (optional)
-* @param invert [in] If set to true, the selection criteria are inverted.
-*/
+ * \brief Returns time windows (tw), i.e., the start and stop indices for a
+ * minimum tw size and a minimum number of photons in a tw.
+ *
+ * @param output [out] Array containing the interleaved start and stop indices
+ * of the time windows in the TTTR object.
+ * @param n_output [out] Length of the output array.
+ * @param input [in] Array containing the macro times.
+ * @param n_input [in] Number of macro times.
+ * @param minimum_window_length [in] Minimum length of a time window (mandatory).
+ * @param maximum_window_length [in] Maximum length of a time window (optional).
+ * @param minimum_number_of_photons_in_time_window [in] Minimum number of
+ * photons a selected time window must contain (optional).
+ * @param maximum_number_of_photons_in_time_window [in] Maximum number of
+ * photons a selected time window can contain (optional).
+ * @param macro_time_calibration [in] Calibration factor for macro times (default is 1.0).
+ * @param invert [in] If set to true, the selection criteria are inverted.
+ */
 void ranges_by_time_window(
-        int **output, int *n_output,
-        unsigned long long *input, int n_input,
-        double minimum_window_length,
-        double maximum_window_length=-1,
-        int minimum_number_of_photons_in_time_window=-1,
-        int maximum_number_of_photons_in_time_window=-1,
-        double macro_time_calibration=1.0,
-        bool invert=false
+    int **output, int *n_output,
+    unsigned long long *input, int n_input,
+    double minimum_window_length,
+    double maximum_window_length = -1,
+    int minimum_number_of_photons_in_time_window = -1,
+    int maximum_number_of_photons_in_time_window = -1,
+    double macro_time_calibration = 1.0,
+    bool invert = false
 );
 
 

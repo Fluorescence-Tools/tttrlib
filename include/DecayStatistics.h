@@ -1,5 +1,5 @@
-#ifndef FIT2X_DECAYSTATISTICS_H
-#define FIT2X_DECAYSTATISTICS_H
+#ifndef TTTRLIB_DECAYSTATISTICS_H
+#define TTTRLIB_DECAYSTATISTICS_H
 
 
 #include <cmath>
@@ -201,4 +201,4 @@ namespace statistics{
     );
 }
 
-#endif //FIT2X_DECAYSTATISTICS_H
+#endif //TTTRLIB_DECAYSTATISTICS_H

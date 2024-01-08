@@ -1,5 +1,5 @@
-#ifndef FIT2X_PHASOR_H
-#define FIT2X_PHASOR_H
+#ifndef TTTRLIB_PHASOR_H
+#define TTTRLIB_PHASOR_H
 
 #include <vector>
 #include <cmath>
@@ -89,4 +89,4 @@ public:
 };
 
 
-#endif //FIT2X_PHASOR_H
+#endif //TTTRLIB_PHASOR_H

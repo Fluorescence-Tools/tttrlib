@@ -1,5 +1,5 @@
-#ifndef FIT2X_DECAYFIT23_H
-#define FIT2X_DECAYFIT23_H
+#ifndef TTTRLIB_DECAYFIT23_H
+#define TTTRLIB_DECAYFIT23_H
 
 #include <iostream>
 #include <cmath>
@@ -141,4 +141,4 @@ public:
 };
 
 
-#endif //FIT2X_DECAYFIT23_H
+#endif //TTTRLIB_DECAYFIT23_H
