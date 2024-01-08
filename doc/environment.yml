@@ -1,4 +1,4 @@
-name: doc
+name: doc-tttrlib
 channels:
     - tpeulen
     - conda-forge
