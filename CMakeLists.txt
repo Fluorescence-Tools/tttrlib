@@ -73,6 +73,7 @@ if(APPLE)
     # explicit link to libc++ for recent osx versions
     MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
     ADD_DEFINITIONS(-stdlib=libc++)
+    SET(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.9")
     # Don't set MACOSX_RPATH by default
     # https://github.com/conda/conda/issues/3624
     if(DEFINED ENV{CONDA_PREFIX})
