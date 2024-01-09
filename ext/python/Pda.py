@@ -7,7 +7,7 @@ def histogram_function(self, cb):
     :param cb: the callback function
     :return: None
     """
-    class PdaCallbackPython(tttrlib.PdaCallback):
+    class PdaCallbackPython(PdaCallback):
         def __init__(
                 self,
                 cb_function,
