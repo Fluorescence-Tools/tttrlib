@@ -114,17 +114,17 @@ deploy:doc:
         export TZ=Europe/Berlin
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
-    - mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
-    - ln -s /srv/tttr-data tttr-data
-    - cd doc
-    - source activate base
-    - conda config --add channels "file://`pwd`/bld-dir"
-    - mamba env create -f environment.yml
-    - conda activate doc-tttrlib
-    - mamba install tttrlib --use-local
-    - make html
-    - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
-    - mv -v _build/html/stable /srv/docs.peulen.xyz/project/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+     - conda config --add channels "file://`pwd`/bld-dir"
+     - mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
+     - ln -s /srv/tttr-data tttr-data
+     - cd doc
+     - source activate base
+     - mamba env create -f environment.yml
+     - conda activate doc-tttrlib
+     - mamba install tttrlib --use-local
+     - make html
+     - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+     - mv -v _build/html/stable /srv/docs.peulen.xyz/project/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
 
 wheel:linux:
   stage: build
