@@ -3,7 +3,7 @@ channels:
     - tpeulen
     - conda-forge
 dependencies:
-    - python
+    - python=3.9
     - phconvert
     - doxygen
     - numba
