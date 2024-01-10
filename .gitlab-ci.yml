@@ -123,7 +123,7 @@ deploy:doc:
      - conda activate doc-tttrlib
      - mamba install tttrlib --use-local
      - make html
-     - rm -rf /srv/docs.peulen.xyz/cicd/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
+     - rm -rf /srv/docs.peulen.xyz/project/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
      - mv -v _build/html/stable /srv/docs.peulen.xyz/project/$CI_PROJECT_TITLE/$CI_COMMIT_REF_NAME
 
 wheel:linux:
