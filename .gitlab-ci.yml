@@ -2,9 +2,22 @@ variables:
   GIT_SSL_NO_VERIFY: "1"
 
 stages:
+  - sync
   - build
   - test
   - deploy
+
+github:push:
+  stage: sync
+  image: condaforge/mambaforge
+  tags:
+    - linux
+  before_script:
+    - git submodule update --init --recursive --remote
+  script:
+    - git switch -c ${CI_COMMIT_REF_NAME}
+    - git push --force https://${GITHUB_TOKEN}@github.com/fluorescence-tools/imp.bff
+
 
 # general definitions
 .build: &build
