@@ -2,7 +2,7 @@ variables:
   GIT_SSL_NO_VERIFY: "1"
 
 stages:
-  - sync
+#  - sync
   - build
   - test
   - deploy
@@ -74,9 +74,10 @@ conda:build:windows:
   <<: *build
   tags:
     - win
+  before_script:
+    - git submodule update --init --recursive --remote
   script:
     - conda activate base
-    - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
 conda:test:linux:
