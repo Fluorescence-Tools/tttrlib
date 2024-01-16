@@ -74,8 +74,6 @@ conda:build:windows:
   <<: *build
   tags:
     - win
-  before_script:
-    - git submodule update --init --recursive --remote
   script:
     - conda activate base
     - .\tools\build.bat
