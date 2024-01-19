@@ -81,7 +81,7 @@ select = "cp3{8,9,10}-*"
     [tool.cibuildwheel.linux]
 
     before-all = [
-        "yum update -y",
+        "yum update -y --nogpgcheck",
         "yum install -y epel-release",
         "yum -y install boost-devel swig cmake"
     ]
