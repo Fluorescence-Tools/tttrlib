@@ -36,10 +36,10 @@ def __getitem__(self, key):
         sel = key.astype(np.int32)
     else:
         sel = np.array([key], dtype=np.int32)
-    return tttrlib.TTTR(self, sel)
+    return TTTR(self, sel)
 
 def __add__(self, value):
-    t = tttrlib.TTTR(self)
+    t = TTTR(self)
     t.append(value)
     return t
 
@@ -70,7 +70,7 @@ def __init__(self, *args, **kwargs):
     self.this = this
 
 def __repr__(self):
-    return 'tttrlib.TTTR("%s", "%s")' % (
+    return 'TTTR("%s", "%s")' % (
         self.get_filename(),
         self.get_tttr_container_type()
     )

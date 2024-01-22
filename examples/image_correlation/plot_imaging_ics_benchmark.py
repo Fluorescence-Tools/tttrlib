@@ -48,7 +48,7 @@ def make_image_stack(
     :return: numpy array containing a stack of frames
     """
     if shift_vector is None:
-        shift_vector = np.array([0.2, 0.2], np.float)
+        shift_vector = np.array([0.2, 0.2], np.float64)
     if covariance is None:
         covariance = [[1, 0], [0, 1]]
     stack = list()
@@ -77,7 +77,7 @@ n_frames = 10
 n_gaussians = 20
 array_sizes = [32, 64, 128, 256, 512, 1024]
 time_numpy_ics = list()
-time_tttrlib_ics_fftw3 = list()
+time_tttrlib_ics = list()
 
 for array_size in array_sizes:
     img = make_image_stack(
@@ -95,7 +95,7 @@ for array_size in array_sizes:
             setup='from __main__ import numpy_fft_ics, img'
         )
     )
-    time_tttrlib_ics_fftw3.append(
+    time_tttrlib_ics.append(
         timeit.timeit(
             'tttrlib.CLSMImage.compute_ics(images=img, subtract_average="stack")',
             number=n_test_runs,
@@ -113,7 +113,7 @@ ax.set_title('Time to compute ICS')
 ax.set_xticks(ind + width / 2)
 ax.set_xticklabels(labels)
 rects1 = ax.bar(ind, time_numpy_ics, width, color='y')
-rects2 = ax.bar(ind + width, time_tttrlib_ics_fftw3, width, color='r')
+rects2 = ax.bar(ind + width, time_tttrlib_ics, width, color='r')
 ax.legend(
     (rects1[0], rects2[1]),
     ('numpy_ics', 'tttrlib_ics_fftw3')

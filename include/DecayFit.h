@@ -1,5 +1,5 @@
-#ifndef FIT2X_DECAYFIT_H
-#define FIT2X_DECAYFIT_H
+#ifndef TTTRLIB_DECAYFIT_H
+#define TTTRLIB_DECAYFIT_H
 
 #include <iostream>
 #include <cmath>
@@ -9,7 +9,7 @@
 
 #include "i_lbfgs.h"
 #include "LvArrays.h"
-#include "fsconv.h"
+#include "DecayConvolution.h"
 #include "DecayStatistics.h"
 
 
@@ -299,4 +299,4 @@ public:
 };
 
 
-#endif //FIT2X_DECAYFIT_H
+#endif //TTTRLIB_DECAYFIT_H

@@ -8,6 +8,8 @@ the data in a TTTR stream needs to be inspected manually to decipher the content
 of a custom build confocal microscope equipped with PicoQuant counting electronics and a TTTR stream of a Leica SP8
 instrument is inspected.
 """
+
+#%%
 from __future__ import print_function
 import tttrlib
 import numpy as np

@@ -2,4 +2,5 @@ References
 ==========
 
 .. bibliography:: references.bib
-    :all:
+   :list: enumerated
+   :notcited:

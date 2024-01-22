@@ -1,8 +1,9 @@
-{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+{% set pyproject = load_file_data('../pyproject.toml', from_recipe_dir=True) %}
+{% set data = pyproject.get('project', {}) %}
 
 package:
-  name: {{ data.get('name')|lower }}
-  version: {{ data.get('version')|lower }}
+  name: {{ data.get('name') }}
+  version: {{ data.get('version') }}
 
 source:
   path: ../
@@ -16,49 +17,49 @@ requirements:
   build:
     - python
     - numpy
+    - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - llvm-openmp  # [osx]
-    - libgomp      # [linux]
-    - pkg-config   # [not win]
+    - llvm-openmp        # [osx]
+    - libgomp            # [linux]
+    - pkg-config         # [not win]
     - swig
     - ninja
     - cmake
-    - make         # [linux]
+    - make               # [linux]
+    - typing             # [py27]
   host:
+    - boost-cpp 1.78     # [py > 27]
+    - boost-cpp 1.69     # [py27]
+    - hdf5
     - python
     - setuptools
+    - typing             # [py27]
     - numpy
-    - boost-cpp
-    - hdf5
-    - fftw
   run:
     - python
+    - tqdm               # [py > 27]
+    - tqdm <=4.14        # [py27]    
     - click
+    - click-didyoumean
+    - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
-    - tqdm
-    - click-didyoumean
-    - typing # [py27]
-    - {{ pin_compatible('numpy') }}
-    - boost-cpp
     - hdf5
-    - fftw
-    - llvm-openmp # [osx]
+    - typing             # [py27]
+    - importlib_metadata # [py27]
 
 test:
  imports:
    - tttrlib
- commands:            # [not win]
-   - tttrlib --help   # [not win]
+ commands:               # [not win]
+   - tttrlib --help      # [not win]
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib
-  license: {{ data.get('license') }}
+  license: BSD-3-Clause
   summary: |
     {{ data.get('description') }}
-description: |
-    {{ data.get('long_description') }}
 
 extra:
   recipe-maintainers:

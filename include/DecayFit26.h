@@ -1,5 +1,10 @@
-#ifndef FIT2X_DECAYFIT26_H
-#define FIT2X_DECAYFIT26_H
+#ifndef TTTRLIB_DECAYFIT26_H
+#define TTTRLIB_DECAYFIT26_H
+
+#include "DecayFit.h"
+#include "DecayConvolution.h"
+#include "DecayStatistics.h"
+
 
 class DecayFit26 : DecayFit {
 
@@ -38,4 +43,4 @@ public:
 };
 
 
-#endif //FIT2X_DECAYFIT26_H
+#endif //TTTRLIB_DECAYFIT26_H

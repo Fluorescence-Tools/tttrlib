@@ -1,15 +1,15 @@
-name: doc
+name: doc-tttrlib
 channels:
     - tpeulen
     - conda-forge
 dependencies:
     - python=3.9
-    - tttrlib
     - phconvert
     - doxygen
     - numba
     - scipy
     - pillow
+    - sphinx <7.0.0 # see: https://github.com/readthedocs/readthedocs.org/issues/10279
     - sphinx-gallery
     - nbsphinx
     - jupyter_client # needed for nbsphinx
@@ -18,6 +18,10 @@ dependencies:
     - numpy
     - numpydoc
     - pyyaml
+    - ipython
     - sphinxcontrib-bibtex<2.0.0
     - sphinxcontrib-websupport
+    - sphinx-copybutton
+    - sphinxext-opengraph
     - scikit-image
+    - jinja2=3.1.2

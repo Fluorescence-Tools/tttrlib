@@ -7,7 +7,7 @@ def histogram_function(self, cb):
     :param cb: the callback function
     :return: None
     """
-    class PdaCallbackPython(tttrlib.PdaCallback):
+    class PdaCallbackPython(PdaCallback):
         def __init__(
                 self,
                 cb_function,
@@ -26,57 +26,46 @@ def histogram_function(self, cb):
 
 histogram_function = property(None, histogram_function)
 
-
 @property
 def pf(self):
     return self.getPF()
-
 
 @pf.setter
 def pf(self, v):
     self.setPF(v)
 
-
 @property
 def spectrum_ch1(self):
     return self.get_probability_spectrum_ch1()
-
 
 @spectrum_ch1.setter
 def spectrum_ch1(self, v):
     self.set_probability_spectrum_ch1(v)
 
-
 @property
 def species_amplitudes(self):
     return self.get_amplitudes()
-
 
 @species_amplitudes.setter
 def species_amplitudes(self, v):
     self.set_amplitudes(v)
 
-
 @property
 def probabilities_ch1(self):
     return self.get_probabilities_ch1()
-
 
 @probabilities_ch1.setter
 def probabilities_ch1(self, v):
     self.set_probabilities_ch1(v)
 
-
 @property
 def s1s2(self):
     return self.get_S1S2_matrix()
 
-
 def __repr__(self):
-    return 'tttrlib.Pda("n_species: %s")' % (
+    return 'Pda("n_species: %s")' % (
         len(self.get_amplitudes())
     )
-
 
 def __str__(self):
     s = "Pda: \n"

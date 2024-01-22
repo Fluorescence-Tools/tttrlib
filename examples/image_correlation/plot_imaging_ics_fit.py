@@ -7,7 +7,7 @@ Fitting ICS data by a RICS model
 import tttrlib
 import numpy as np
 import scipy.optimize
-import pylab as p
+import pylab as plt
 import mpl_toolkits.mplot3d
 import matplotlib.patches
 import skimage as ski
@@ -150,6 +150,7 @@ ics_parameter = {
 }
 
 ics = tttrlib.CLSMImage.compute_ics(**ics_parameter)
+
 n_frames, n_lines, n_pixel = ics.shape
 
 # compute mean and std err of mean
@@ -197,7 +198,7 @@ model = rics_simple(
 
 
 ommit_center = True
-fig = p.figure()
+fig = plt.figure()
 ax1 = fig.add_subplot(1, 4, 1)
 ax1.imshow(img.mean(axis=0))
 ax1.title.set_text('Mean intensity / ROI')
@@ -215,16 +216,16 @@ if ommit_center:
     data = ics_mean_select
     data[nx//2, ny//2] = 0.0
     model[nx//2, ny//2] = 0.0
-ax2.imshow(ics_mean_select, cmap='gray')
-ax2.title.set_text('ICS Data D')
+ax2.imshow(np.log(ics_mean_select), cmap='gray')
+ax2.title.set_text('ICS Data, D')
 
 ax3 = fig.add_subplot(1, 4, 3)
-ax3.imshow(model, cmap='gray')
+ax3.imshow(np.log(model), cmap='gray')
 ax3.title.set_text('ICS Model, M')
 
 ax4 = fig.add_subplot(1, 4, 4)
 ax4.imshow(np.log(abs(model - ics_mean_select) / ics_std_select), cmap='gray')
 ax4.title.set_text('(M - D) / SD')
 
-ax2.get_shared_x_axes().join(ax2, ax3)
-p.show()
+# ax2.get_shared_x_axes().join(ax2, ax3)
+plt.show()

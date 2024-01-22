@@ -67,5 +67,4 @@
         }
 }
 
-%pythoncode "../ext/python/DecayFit23.py"
 %include "DecayFit23.h"

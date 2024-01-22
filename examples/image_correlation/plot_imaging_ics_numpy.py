@@ -50,7 +50,7 @@ def make_image_stack(
     :return: numpy array containing a stack of frames
     """
     if shift_vector is None:
-        shift_vector = np.array([0.2, 0.2], np.float)
+        shift_vector = np.array([0.2, 0.2], np.float64)
     if covariance is None:
         covariance = [[1, 0], [0, 1]]
     stack = list()

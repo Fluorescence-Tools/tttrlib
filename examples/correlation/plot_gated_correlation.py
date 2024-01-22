@@ -74,9 +74,9 @@ correlator.curve.settings.macro_time_duration = data.header.macro_time_resolutio
 # no weighting will be used
 t = data.macro_times
 t1 = t[ch1_indices]
-w1 = np.ones_like(t1, dtype=np.float)
+w1 = np.ones_like(t1, dtype=np.float64)
 t2 = t[ch2_indices]
-w2 = np.ones_like(t2, dtype=np.float)
+w2 = np.ones_like(t2, dtype=np.float64)
 correlator.set_events(t1, w1, t2, w2)
 
 x_raw = correlator.x_axis
@@ -90,7 +90,7 @@ t = data.get_macro_times()
 mt = data.get_micro_times()
 t1 = t[ch1_indices]
 mt1 = mt[ch1_indices]
-w1 = np.ones_like(t1, dtype=np.float)
+w1 = np.ones_like(t1, dtype=np.float64)
 w1[np.where(mt1 < n_lower)] *= 0.0
 
 #%%
@@ -101,7 +101,7 @@ w1[np.where(mt1 < n_lower)] *= 0.0
 # into account for the correlation
 t2 = t[ch2_indices]
 mt2 = mt[ch2_indices]
-w2 = np.ones_like(t2, dtype=np.float)
+w2 = np.ones_like(t2, dtype=np.float64)
 w2[np.where(mt2 < n_lower)] *= 0.0
 
 correlator.set_events(t1, w1, t2, w2)

@@ -1,30 +1,6 @@
-import tttrlib
-
-
-@property
-def line_duration(self):
-    """ line duration in milliseconds
-    """
-    # this is in milliseconds
-    header = self.header
-    line_duration = (self[0][1][0].get_start_stop_time()[0] -
-                     self[0][0][0].get_start_stop_time()[0]) * \
-                    header.macro_time_resolution / 1e6
-    return line_duration
-
-@property
-def pixel_duration(self):
-    """ pixel duration in milliseconds
-    """
-    line = self[0][0]
-    return line.get_duration() * \
-           self.header.macro_time_resolution / \
-           (1e3 * self.n_pixel)
-
 @property
 def shape(self):
     return self.n_frames, self.n_lines, self.n_pixel
-
 
 def __repr__(self):
     return 'tttrlib.CLSMImage(%s, %s, %s)' % (
@@ -48,6 +24,37 @@ def __getattr__(self, item):
         return call()
     else:
         raise AttributeError
+@staticmethod
+def read_clsm_settings(tttr_data):
+    settings = dict()
+    if tttr_data is not None:
+        header = tttr_data.header
+        if tttr_data.get_tttr_container_type() == 'PTU':
+            try:
+                settings["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+            except:
+                settings["marker_frame_start"] = [8]
+            settings.update(
+                {
+                    "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
+                    "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_event_type": 1
+                }
+            )
+        elif tttr_data.get_tttr_container_type() == 'HT3':
+            settings.update(
+                {
+                    "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
+                    "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
+                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
+                    "marker_event_type": 1
+                }
+            )
+    return settings
 
 def __init__(
         self,
@@ -64,9 +71,9 @@ def __init__(
 ):
     source = kwargs.get('source', None)
     rt = {
-        'SP8': tttrlib.CLSM_SP8,
-        'SP5': tttrlib.CLSM_SP5,
-        'default': tttrlib.CLSM_DEFAULT
+        'SP8': CLSM_SP8,
+        'SP5': CLSM_SP5,
+        'default': CLSM_DEFAULT
     }
 
     settings_kwargs = {
@@ -80,7 +87,7 @@ def __init__(
         "n_pixel_per_line": n_pixel_per_line
     }
 
-    if not isinstance(source, tttrlib.CLSMImage):
+    if not isinstance(source, CLSMImage):
         settings_kwargs.update(
             {
                 "marker_frame_start": marker_frame_start,
@@ -95,32 +102,7 @@ def __init__(
         if tttr_data is not None:
             header = tttr_data.header
             self.header = header
-            if tttr_data.get_tttr_container_type() == 'PTU':
-                try:
-                    settings_kwargs["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
-                except:
-                    settings_kwargs["marker_frame_start"] = [8]
-                settings_kwargs.update(
-                    {
-                        "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
-                        "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                        "marker_event_type": 1
-                    }
-                )
-            elif tttr_data.get_tttr_container_type() == 'HT3':
-                settings_kwargs.update(
-                    {
-                        "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
-                        "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
-                        "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                        "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                        "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
-                        "marker_event_type": 1
-                    }
-                )
-
+            settings_kwargs.update(self.read_clsm_settings(tttr_data))
         # Overwrite if user defined inputs make sense
         if isinstance(marker_frame_start, int):
             settings_kwargs['marker_frame_start'] = [marker_frame_start]
@@ -151,22 +133,19 @@ def __init__(
                 header = tttr_data.header
                 settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
                 settings_kwargs["marker_line_stop"] = int(header.tag('ImgHdr_LineStop')["value"])
-        clsm_settings = tttrlib.CLSMSettings(**settings_kwargs)
+        clsm_settings = CLSMSettings(**settings_kwargs)
     else:
         clsm_settings = source.get_settings()
-    this = _tttrlib.new_CLSMImage(**kwargs, settings=clsm_settings)
+    kwargs['settings'] = clsm_settings
+    this = _tttrlib.new_CLSMImage(**kwargs)
     try:
         self.this.append(this)
     except:
         self.this = this
 
-
 @staticmethod
-def compute_frc(
-        image_1: np.ndarray,
-        image_2: np.ndarray,
-        bin_width: int = 2.0
-):
+def compute_frc(image_1, image_2, bin_width = 2.0):
+    # type: (np.ndarray, np.ndarray, int) -> (np.ndarray, np.ndarray)
     """ Computes the Fourier Ring/Shell Correlation of two 2-D images
 
     :param image_1:
@@ -215,10 +194,10 @@ def compute_frc(
 
 
 def get_frc(
-        self,  # tttrlib.CLSMImage,
-        other=None,  # tttrlib.CLSMImage
-        bin_width: int = 2.0,
-        attribute="intensity"
+        self,                 # type: tttrlib.CLSMImage,
+        other = None,         # type: tttrlib.CLSMImage
+        bin_width = 2.0,      # type: int
+        attribute="intensity" # type: str
 ):
     img1 = getattr(self, attribute)
     if other is None:
@@ -228,4 +207,4 @@ def get_frc(
         img2 = getattr(other, attribute)
         im1 = img1.sum(axis=0)
         im2 = img2.sum(axis=0)
-    return tttrlib.CLSMImage.compute_frc(im1, im2, bin_width)
+    return CLSMImage.compute_frc(im1, im2, bin_width)

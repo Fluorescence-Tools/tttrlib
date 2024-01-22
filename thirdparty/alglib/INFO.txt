@@ -1,0 +1,13 @@
+The used source (2007) is under BSD license citation:
+"The most important in the version 2.1.0 is a change of license. The decision to change 
+the license was not easy. The project was distributed under BSD for about two years. 
+But over time it became clear that GPL is more suitable for further project development. 
+So starting from version 2.1.0, ALGLIB is distributed under GPL 2+ (GPL version 2 or later). 
+License change, of course, affects only 2.1.0 and following versions. Users of 
+previous versions may continue to use ALGLIB and distribute derivative code under 
+less strict, BSD-compatible terms.
+"
+https://www.alglib.net/arcnews.php
+September, 2009. ALGLIB 2.1.0.
+
+Used alglib version (https://gitlab.kitware.com/vtk/vtk/-/tree/v8.0.0/ThirdParty/)

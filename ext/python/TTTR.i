@@ -1,5 +1,5 @@
 %{
-#include "../include/TTTR.h"
+#include "TTTR.h"
 %}
 // Use shared_prt for TTTR to pass TTTR around
 %shared_ptr(TTTR)
@@ -24,5 +24,5 @@
 
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}
 
-%include "../include/TTTR.h"
+%include "TTTR.h"
 

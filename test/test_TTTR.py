@@ -123,7 +123,7 @@ class Tests(unittest.TestCase):
             # test __rep__
             file_path = file_type[0].replace('\\', '/')
             container_type = file_type[1]
-            ref = 'tttrlib.TTTR("%s", "%s")' % (
+            ref = 'TTTR("%s", "%s")' % (
                 file_path,
                 container_type.replace('\\', '/')
             )

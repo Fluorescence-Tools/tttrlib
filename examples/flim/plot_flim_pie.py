@@ -10,7 +10,8 @@ donor in a FRET experiment) and the delay range (a red laser excites the accepto
 
 """
 
-# Import all required libraries
+#%%
+#  Import all required libraries
 import tttrlib
 import numpy as np
 import matplotlib.pyplot as plt

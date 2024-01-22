@@ -1,12 +1,14 @@
-#ifndef FIT2X_I_BFGS_H
-#define FIT2X_I_BFGS_H
+#ifndef TTTRLIB_I_BFGS_H
+#define TTTRLIB_I_BFGS_H
 
 // minimize f(x,p) using BFGS algorithm
 
-#include "ap.h"
-#include "lbfgs.h"
 #include <cmath> /* isfinite */
 #include <iostream>
+
+#include "alglib/ap.h"
+#include "lbfgs/lbfgs.h"
+
 
 // pointer to the target function
 typedef double(*TargetFP)(double*, void*);
@@ -144,4 +146,4 @@ class bfgs
 
 };
 
-#endif //FIT2X_I_BFGS_H
+#endif //TTTRLIB_I_BFGS_H

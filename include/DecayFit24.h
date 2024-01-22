@@ -1,10 +1,9 @@
-#ifndef FIT2X_DECAYFIT24_H
-#define FIT2X_DECAYFIT24_H
+#ifndef TTTRLIB_DECAYFIT24_H
+#define TTTRLIB_DECAYFIT24_H
 
 #include "DecayFit.h"
-#include "fsconv.h"
+#include "DecayConvolution.h"
 #include "DecayStatistics.h"
-
 
 
 class DecayFit24 : DecayFit {
@@ -115,4 +114,4 @@ public:
 };
 
 
-#endif //FIT2X_DECAYFIT24_H
+#endif //TTTRLIB_DECAYFIT24_H

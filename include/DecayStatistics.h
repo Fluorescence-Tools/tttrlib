@@ -1,5 +1,5 @@
-#ifndef FIT2X_DECAYSTATISTICS_H
-#define FIT2X_DECAYSTATISTICS_H
+#ifndef TTTRLIB_DECAYSTATISTICS_H
+#define TTTRLIB_DECAYSTATISTICS_H
 
 
 #include <cmath>
@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <iostream>
 #include <cstring> /* strcmp */
-#include "omp.h"
 
 
 /*!
@@ -181,16 +180,17 @@ namespace statistics{
     }
 
     /*!
-     * Different chi2 measures for counting data:
+     * @brief Computes different chi2 measures for counting data.
      *
-     * https://arxiv.org/pdf/1903.07185.pdf
+     * Reference: https://arxiv.org/pdf/1903.07185.pdf
      *
-     * @param data
-     * @param model
-     * @param x_min
-     * @param x_max
-     * @param type
-     * @return
+     * @param data Vector containing the data.
+     * @param model Vector containing the model.
+     * @param weights Vector containing the weights.
+     * @param x_min Minimum index for computation.
+     * @param x_max Maximum index for computation.
+     * @param type Type of chi2 measure (default is "neyman").
+     * @return The computed chi2 value.
      */
     double chi2_counting(
             std::vector<double> &data,
@@ -198,8 +198,9 @@ namespace statistics{
             std::vector<double> &weights,
             int x_min = -1,
             int x_max = -1,
-            const char* type="neyman"
+            const char* type = "neyman"
     );
+
 }
 
-#endif //FIT2X_DECAYSTATISTICS_H
+#endif //TTTRLIB_DECAYSTATISTICS_H

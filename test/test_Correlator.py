@@ -114,26 +114,23 @@ class Tests(unittest.TestCase):
         correlator.n_casc = 25
         correlator.set_macrotimes(t1, t2)
         correlator.set_weights(w1, w2)
-        x_peulen = correlator.x_axis
-        y_peulen = correlator.correlation
+        x_wahl = correlator.x_axis
+        y_wahl = correlator.correlation
 
-        correlator.method = 'lamb'
-        x_lamb = correlator.x_axis
-        y_lamb = correlator.correlation
+        correlator.method = 'felekyan'
+        x_felekyan = correlator.x_axis
+        y_felekyan = correlator.correlation
 
-        n_min = min(len(x_peulen), len(x_lamb))
+        n_min = min(len(x_wahl), len(x_felekyan))
         d = scipy.spatial.distance.directed_hausdorff(
             u=(
-                np.vstack([y_peulen, x_peulen]).T[0:n_min]
+                np.vstack([y_wahl, x_wahl]).T[0:n_min]
             ),
             v=(
-                np.vstack([y_lamb, x_lamb]).T[0:n_min]
+                np.vstack([y_felekyan, x_felekyan]).T[0:n_min]
             )
         )
-        self.assertEqual(
-            d[0] < 5.3,
-            True
-        )
+        self.assertEqual(d[0] < 5.3, True)
 
         d = {
             'tttr': data,
@@ -144,7 +141,7 @@ class Tests(unittest.TestCase):
         correlator2 = tttrlib.Correlator(**d)
         y2 = correlator2.correlation
         self.assertEqual(
-            np.allclose(y2[1:], y_peulen[1:]), # first channel is zero time and can be undefined.
+            np.allclose(y2[1:], y_wahl[1:]), # first channel is zero time and can be undefined.
             True
         )
 
@@ -159,7 +156,7 @@ class Tests(unittest.TestCase):
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         correlator = tttrlib.Correlator(
-            method='default',
+            method='wahl',
             n_casc=20,
             n_bins=10,
             tttr=(

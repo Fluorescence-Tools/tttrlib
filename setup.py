@@ -1,111 +1,54 @@
-#! /usr/bin/env python
 import os
 import sys
 import platform
-import subprocess
-import multiprocessing
+import inspect
+import setuptools
+from pathlib import Path
+import cmake_build_extension
 
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
-
-
-def read_version(header_file):
-    version = "0.0.0"
-    with open(header_file, "r") as fp:
-        for line in fp.readlines():
-            if "#define" in line and "TTTRLIB_VERSION" in line:
-                version = line.split()[-1]
-    return version.replace('"', '')
-
-
-NAME = "tttrlib"
-DESCRIPTION = "tttrlib read/process/write TTTR data"
-LONG_DESCRIPTION = """tttrlib is a C++ library with Python wrappers to read, write and process time-tagged time resolved data."""
-VERSION = read_version(os.path.dirname(os.path.abspath(__file__)) + '/include/info.h')
-LICENSE = 'BSD 3-Clause License'
-
-
-class CMakeExtension(Extension):
-
-    def __init__(self, name, sourcedir=''):
-        Extension.__init__(self, name, sources=[])
-        self.sourcedir = os.path.abspath(sourcedir)
-
-
-class CMakeBuild(build_ext):
-
-    def run(self):
-        for ext in self.extensions:
-            self.build_extension(ext)
-
-    def build_extension(self, ext):
-        print(NAME, " VERSION:", VERSION)
-        extdir = os.path.abspath(
-            os.path.dirname(
-                self.get_ext_fullpath(ext.name)
-            )
-        ).replace('\\', '/')
-
-        cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-            '-DCMAKE_SWIG_OUTDIR=' + extdir
-        ]
-
-        cfg = 'Debug' if self.debug else 'Release'
-        build_args = ['--config', cfg]
-        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-        if platform.system() == "Windows":
-            cmake_args += [
-                '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
-                '-GVisual Studio 16 2019'
-            ]
-        else:
-            build_args += [
-                '--',
-                '-j%s' % int(multiprocessing.cpu_count() * 1.5)
-            ]
-        env = os.environ.copy()
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        print("BUILDING::CMAKE: " + " ".join(cmake_args))
-        subprocess.check_call(
-            ['cmake', ext.sourcedir] + cmake_args,
-            cwd=self.build_temp,
-            env=env
-        )
-        print("BUILDING::CMAKE --build.")
-        subprocess.check_call(
-            ['cmake', '--build', '.'] + build_args,
-            cwd=self.build_temp
-        )
-
-setup(
-    name=NAME,
-    version=VERSION,
-    license=LICENSE,
-    author='Thomas-Otavio Peulen',
-    author_email='thomas@peulen.xyz',
-    ext_modules=[
-        CMakeExtension('tttrlib')
-    ],
-    cmdclass={
-        'build_ext': CMakeBuild
-    },
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    install_requires=[
-        'numpy'
-    ],
-    zip_safe=False,
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python',
-        'Topic :: Scientific/Engineering',
-    ]
+# Importing the bindings inside the build_extension_env context manager is necessary only
+# in Windows with Python>=3.8.
+# See https://github.com/diegoferigo/cmake-build-extension/issues/8.
+# Note that if this manager is used in the init file, cmake-build-extension becomes an
+# install_requires that must be added to the setup.cfg. Otherwise, cmake-build-extension
+# could only be listed as build-system requires in pyproject.toml since it would only
+# be necessary for packaging and not during runtime.
+init_py = inspect.cleandoc(
+    """
+    import cmake_build_extension
+    with cmake_build_extension.build_extension_env():
+        from . import bindings
+    """
 )
 
+setuptools.setup(
+    ext_modules=[
+        cmake_build_extension.CMakeExtension(
+            name="tttrlib",
+            install_prefix="tttrlib",
+            write_top_level_init="from . tttrlib import *",
+            cmake_configure_options=[
+                # Select the bindings implementation
+                "-DCALL_FROM_SETUP_PY:BOOL=ON",
+                "-DBUILD_PYTHON_DOCS:BOOL=OFF",
+                "-DBUILD_PYTHON_INTERFACE:BOOL=ON",
+                "-DWITH_AVX:BOOL=ON",
+                "-DBUILD_R_INTERFACE:BOOL=OFF",
+                "-DCMAKE_BUILD_TYPE=Release",
+                # PHOTON HDF depends on HDF5 -> difficult to distribute
+                "-DBUILD_PHOTON_HDF:BOOL=OFF",
+                "-DBUILD_LIBRARY:BOOL=OFF",
+                "-DPYTHON_VERSION:str=%s" % platform.python_version(),
+                "-DCMAKE_CXX_FLAGS='-w'",
+                # Static linking to facilitate pypi distribution
+                "-DBoost_USE_STATIC_LIBS:BOOL=ON",
+                # Help cmake FindPython to pick the right path
+                "-DPython_ROOT_DIR='%s'" % Path(sys.executable).parent
+            ]
+        )
+    ],
+       cmdclass=dict(
+        # Enable the CMakeExtension entries defined above
+        build_ext=cmake_build_extension.BuildExtension,
+    ),
+)

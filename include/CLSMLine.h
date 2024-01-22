@@ -73,7 +73,7 @@ public:
         pixel_stop = std::min(pixel_stop, (int) size());
         pixel_start = std::max(0, pixel_start);
 
-        #if VERBOSE_TTTRLIB
+        #ifdef VERBOSE_TTTRLIB
         std::clog << "Crop line" << std::endl;
         std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
         #endif

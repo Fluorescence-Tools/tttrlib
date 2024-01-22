@@ -34,5 +34,4 @@
     }
 }
 %include "DecayFit25.h"
-%pythoncode "../ext/python/DecayFit25.py"
 

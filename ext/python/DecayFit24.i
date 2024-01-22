@@ -75,6 +75,5 @@
 }
 
 %include "DecayFit24.h"
-%pythoncode "../ext/python/DecayFit24.py"
 
 

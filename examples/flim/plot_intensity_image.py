@@ -4,6 +4,8 @@ Intensity image
 ===============
 
 """
+
+#%%
 import pylab as plt
 import tttrlib
 

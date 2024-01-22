@@ -46,15 +46,15 @@ from click_didyoumean import DYMGroup
               required=False,
               default=True)
 def trace_correlate(
-        input: str,
-        correlation_channel_1: typing.List[int],
-        correlation_channel_2: typing.List[int] = None,
-        fine: bool = False,
-        n_casc: int = 25,
-        n_bins: int = 9,
-        n_chunks: int = 5,
-        join: bool = True,
-        do_plot: bool = True
+        input, # type: str
+        correlation_channel_1, # type: typing.List[int]
+        correlation_channel_2 = None, # type: typing.List[int] 
+        fine = False, # type: bool 
+        n_casc = 25, # type: int 
+        n_bins = 9, # type: int 
+        n_chunks = 5, # type: int
+        join = True, # type: bool
+        do_plot = True # type: bool
 ):
     def get_correlation(data, start_stop, settings, correlation_channel1, correlation_channel2):
         correlation = tttrlib.Correlator(**settings)
@@ -229,8 +229,8 @@ def trace_correlate(
                    'are combined.',
               required=False)
 def image_export(
-        input: str,
-        channels: str = None,
+        input, # type: str
+        channels = None # type: str
 ):
     data = tttrlib.TTTR(input)
     clsm = tttrlib.CLSMImage(data)
@@ -250,7 +250,6 @@ def image_export(
         img = clsm.intensity
         ski.io.imsave(fn_out, img, check_contrast=False)
 
-
 @click.group(
     help='Trace processing (correlation, burst selection, burst analysis, ...)',
     cls=DYMGroup
@@ -269,7 +268,6 @@ def image():
 def cli():
     pass
 
-
 def main():
     # Trace commands
     trace.add_command(trace_correlate)
@@ -280,7 +278,6 @@ def main():
     cli.add_command(trace)
     cli.add_command(image)
     cli()
-
 
 if __name__ == "__main__":
     main()
