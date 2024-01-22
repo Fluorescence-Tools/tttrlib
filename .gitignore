@@ -4,6 +4,7 @@ dist/
 doc/auto_examples
 tmp/
 .vscode
+.vs
 .ipynb_checkpoints
 cmake-build-*/
 temp/
