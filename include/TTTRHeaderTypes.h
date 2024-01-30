@@ -37,6 +37,7 @@
 #define BH_SPC600_256_CONTAINER   3
 #define BH_SPC600_4096_CONTAINER  4
 #define PHOTON_HDF_CONTAINER      5
+#define CZ_CONFOCOR3_CONTAINER    6
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1
@@ -48,6 +49,7 @@
 #define BH_RECORD_TYPE_SPC130       7
 #define BH_RECORD_TYPE_SPC600_256   8
 #define BH_RECORD_TYPE_SPC600_4096  9
+#define CZ_RECORD_TYPE_CONFOCOR3    10
 
 
 /*

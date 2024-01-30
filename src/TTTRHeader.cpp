@@ -71,7 +71,11 @@ TTTRHeader::TTTRHeader(
             default:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
         }
-    } else if(tttr_container_type == PQ_HT3_CONTAINER){
+    } else if(tttr_container_type == CZ_CONFOCOR3_CONTAINER) {
+        header_end = read_cz_confocor3_header(fpin, json_data);
+        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+    }
+    else if(tttr_container_type == PQ_HT3_CONTAINER){
         header_end = read_ht3_header(fpin, json_data);
         tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
     } else if(tttr_container_type == BH_SPC600_256_CONTAINER){

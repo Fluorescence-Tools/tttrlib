@@ -62,6 +62,15 @@ typedef union bh_spc600_256_record{
 } bh_spc600_256_record_t;
 
 
+// Carl Zeiss Confocor3 raw dat
+typedef union cz_confocor3_raw_record{
+    uint32_t allbits;
+    struct {
+        unsigned mt      :32;
+    } bits;
+} cz_confocor3_raw_record_t;
+
+
 // Becker Hickl SPC-600/630 4096 Channel Mode.
 // The information about the subsequent photons is stored one after another in the measurement
 // data file. For each photon 6 bytes are used. The parameter @param adc corresponds to the value of

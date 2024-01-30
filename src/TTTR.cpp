@@ -21,11 +21,12 @@ TTTR::TTTR() :
         n_valid_events(0),
         processRecord(nullptr){
     container_names.insert({std::string("PTU"), PQ_PTU_CONTAINER});
-    container_names.insert({std::string("HT3"), 1});
-    container_names.insert({std::string("SPC-130"), 2});
-    container_names.insert({std::string("SPC-600_256"), 3});
-    container_names.insert({std::string("SPC-600_4096"), 4});
-    container_names.insert({std::string("PHOTON-HDF5"), 5});
+    container_names.insert({std::string("HT3"), PQ_HT3_CONTAINER});
+    container_names.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
+    container_names.insert({std::string("SPC-600_256"), BH_SPC600_256_CONTAINER});
+    container_names.insert({std::string("SPC-600_4096"), BH_SPC600_4096_CONTAINER});
+    container_names.insert({std::string("PHOTON-HDF5"), PHOTON_HDF_CONTAINER});
+    container_names.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
     header = new TTTRHeader(tttr_container_type);
     allocate_memory_for_records(0);
 }

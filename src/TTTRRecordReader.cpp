@@ -318,5 +318,22 @@ bool ProcessSPC600_256(
     return false;
 }
 
+bool ProcessCzRaw(
+        uint32_t &TTTRRecord,
+        uint64_t &overflow_counter,
+        uint64_t &true_nsync,
+        uint32_t &micro_time,
+        int16_t &channel,
+        int16_t &record_type
+) {
+    cz_confocor3_raw_record_t rec;
+    rec.allbits = TTTRRecord;
 
+    true_nsync = rec.bits.mt + overflow_counter;
+    micro_time = 1;
+    record_type = 0;
+    overflow_counter += rec.bits.mt;
+
+    return true;
+}
 
