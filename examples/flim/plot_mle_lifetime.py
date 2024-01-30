@@ -19,14 +19,14 @@ import pylab as plt
 ch_p = [0]
 ch_s = [1]
 binning_factor = 64
-minimum_n_photons = 10
+minimum_n_photons = 30
 
 fn_clsm = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
 data = tttrlib.TTTR(fn_clsm)
 
 # %%
 # Next we create two CLSM container for the parallel and perpendicular
-# channel and stack frames to have more photons in each pixels.
+# channel and stack frames to have more photons in each pixel.
 clsm_p = tttrlib.CLSMImage(data, channels=ch_p, fill=True)
 clsm_s = tttrlib.CLSMImage(data, channels=ch_s, fill=True)
 clsm_p.stack_frames()
@@ -69,13 +69,17 @@ fixed = np.array([0, 0, 1, 0])
 
 # %%
 # We iterate over all pixels in the image and apply the fit to
-# pixels where we have at certain minimum number of photons
+# pixels where we have at certain minimum number of photons.
 intensity = clsm_p.intensity
 micro_times = data.micro_times // binning_factor
 n_channels = data.header.number_of_micro_time_channels // binning_factor
 tau = np.zeros_like(intensity, dtype=np.float32)
 rho = np.zeros_like(intensity, dtype=np.float32)
 n_frames, n_lines, n_pixel = clsm_p.shape
+
+# These loops are not very fast but get the job done
+import time
+time_start = time.time()
 for i in range(n_frames):
     for j in range(0, n_lines, 1):
         for k in range(n_pixel):
@@ -93,10 +97,12 @@ for i in range(n_frames):
             )
             r = fit23(hist, x0, fixed)
             tau[i, j, k] = r['x'][0]
+time_stop = time.time()
+print("Elapsed time:", time_stop - time_start)
 
-
-plt.imshow(tau[0])
+plt.imshow(tau[0], vmin=0, vmax=5)
 plt.show()
 
 plt.hist(tau[0].flatten(), 131, range=(0.01, 5))
 plt.show()
+
