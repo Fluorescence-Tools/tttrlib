@@ -42,7 +42,6 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 # ``n_bins`` and ``n_casc`` define the settings of the multi-tau correlation steps.
 # If ``make_fine`` is set to false the micro time is not used for correlation.
 settings = {
-    "method": "default",
     "n_bins": 3,
     "n_casc": 27,
     "make_fine": False
