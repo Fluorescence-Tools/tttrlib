@@ -31,18 +31,16 @@ IF(BUILD_PYTHON_INTERFACE)
     LINK_LIBRARIES(${Python_LIBRARY} Python3::NumPy)
 
     # Handle where to install the resulting Python package
+    SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     if(CALL_FROM_SETUP_PY)
         # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
         # of the resulting wheel archive
         SET(MODULE_NAME ${PROJECT_NAME})
         SET(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-        SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
         set(MY_INSTALL_PREFIX ${Python3_SITELIB})
-        MESSAGE(STATUS "Use Python_SITELIB as install prefix: '${MY_INSTALL_PREFIX}'")
-        SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     endif()
     # Did not find installation prefix library location of python
     if(NOT MY_INSTALL_PREFIX)
@@ -54,9 +52,9 @@ IF(BUILD_PYTHON_INTERFACE)
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
+    MESSAGE(STATUS "MY_INSTALL_PREFIX: '${MY_INSTALL_PREFIX}'")
     MESSAGE(STATUS "CMAKE_SWIG_OUTDIR: '${CMAKE_SWIG_OUTDIR}'")
     MESSAGE(STATUS "SWIG_SUPPORT_FILES_DIRECTORY: '${SWIG_SUPPORT_FILES_DIRECTORY}'")
-    MESSAGE(STATUS "MY_INSTALL_PREFIX: '${MY_INSTALL_PREFIX}'")
     SWIG_ADD_LIBRARY(
         ${MODULE_NAME}
         TYPE MODULE
