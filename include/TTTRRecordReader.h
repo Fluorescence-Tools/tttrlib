@@ -6,11 +6,6 @@
 #include "TTTRRecordTypes.h"
 
 
-/*********************************************/
-/***                                       ***/
-/***                HT3 HHv1.0             ***/
-/***  https://github.com/tsbischof/libpicoquant/blob/master/src/hydraharp/hh_v20.h                       ***/
-/*********************************************/
 
 bool ProcessCzRaw(
         uint32_t &TTTRRecord,
@@ -47,6 +42,8 @@ bool ProcessSPC600_256(
         int16_t &channel,
         int16_t &record_type
 );
+
+/* See:  https://github.com/tsbischof/libpicoquant/blob/master/src/hydraharp/hh_v20.h                       ***/
 
 bool ProcessHHT2v2(
         uint32_t &TTTRRecord,

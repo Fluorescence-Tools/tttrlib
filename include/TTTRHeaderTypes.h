@@ -61,7 +61,6 @@ typedef struct {
     int32_t Show;
 } CurveMapping_t;
 
-
 typedef struct {
     float Start;
     float Step;
@@ -72,7 +71,6 @@ typedef struct{
     int32_t ModelCode;
     int32_t VersionCode;
 } pq_ht3_board_settings_t;
-
 
 /// The following represents the readable ASCII file header portion in a HT3 file
 typedef struct {
@@ -139,6 +137,19 @@ typedef struct {
     int32_t ImgHdrSize;
     uint64_t nRecords;
 } pq_ht3_TTModeHeader_t;
+
+
+/// Carl Zeiss Confocor3 raw data
+typedef union cz_confocor3_settings{
+    uint32_t allbits;
+    struct{
+        char Ident[52];
+        char dummy1[11];
+        unsigned channel        :8;
+        unsigned TagHead_Idx    :32;
+        unsigned sync_rate      :32;
+    } bits;
+} cz_confocor3_settings_t;
 
 
 /// Becker&Hickl SPC132 Header
