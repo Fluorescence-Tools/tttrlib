@@ -129,15 +129,15 @@ TTTR::TTTR(const char *fn, int container_type, bool read_input) : TTTR(){
 }
 
 TTTR::TTTR(const char *fn, int container_type) : TTTR(fn, container_type, true) {
-//    try {
+    try {
         tttr_container_type_str.assign(
                 container_names.right.at(container_type)
         );
-//    }
-//    catch(...) {
-//        std::cerr << "Container type " << container_type
-//        << " not supported." << std::endl;
-//    }
+    }
+    catch(...) {
+        std::cerr << "Container type " << container_type
+        << " not supported." << std::endl;
+    }
 }
 
 TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
@@ -260,9 +260,6 @@ int TTTR::read_file(const char *fn, int container_type) {
         std::clog << "-- Filename: " << fn << std::endl;
         std::clog << "-- Container type: " << container_type << std::endl;
 #endif
-        // clean up filename
-        // boost::filesystem::path p = fn;
-        //filename = boost::filesystem::canonical(boost::filesystem::absolute(p)).generic_string();
         fn = filename.c_str();
         if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
@@ -271,18 +268,30 @@ int TTTR::read_file(const char *fn, int container_type) {
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
-#ifdef VERBOSE_TTTRLIB
-            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
-#endif
             processRecord = processRecord_map[tttr_record_type];
-            n_records_in_file = get_number_of_records_by_file_size(
+            n_records_in_file =
+                get_number_of_records_by_file_size(
                     fp,
                     header->header_end,
                     header->get_bytes_per_record()
             );
+#ifdef VERBOSE_TTTRLIB
+            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+            std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
+#endif
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
+        } if( container_type == CZ_CONFOCOR3_CONTAINER) {
+            // Confocor raw data has no channel number in events
+            auto tag = header->get_tag(header->json_data, "channel");
+            int channel = tag["value"];
+#ifdef VERBOSE_TTTRLIB
+            std::clog << "-- Confocor3 channel: " << channel << std::endl;
+#endif
+            for(int i = 0; i < n_records_in_file; i++) {
+                routing_channels[i] = channel;
+            }
         }
 #ifdef VERBOSE_TTTRLIB
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
@@ -364,9 +373,6 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-#ifdef VERBOSE_TTTRLIB
-    std::cout << "-- Records that will be read : " << n_rec << std::endl;
-#endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
@@ -380,6 +386,10 @@ void TTTR::read_records(
     // read data in chunks to speed up the access
     size_t number_of_objects;
     size_t bytes_per_record = header->get_bytes_per_record();
+#ifdef VERBOSE_TTTRLIB
+    std::cout << "-- Records that will be read : " << n_rec << std::endl;
+    std::cout << "-- Bytes per record : " << bytes_per_record << std::endl;
+#endif
     do{
         auto tmp = (signed char*) malloc(bytes_per_record * (chunk + 1));
         number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
@@ -390,8 +400,8 @@ void TTTR::read_records(
                     overflow_counter,
                     *(uint64_t *) &macro_times[n_valid_events],
                     *(uint32_t *) &micro_times[n_valid_events],
-                    *(int16_t *) &routing_channels[n_valid_events],
-                    *(int16_t *) &event_types[n_valid_events]
+                    *(int16_t *)  &routing_channels[n_valid_events],
+                    *(int16_t *)  &event_types[n_valid_events]
             );
         }
         free(tmp);
@@ -425,11 +435,9 @@ void TTTR::set_header(TTTRHeader* v) {
     std::clog << "-- TTTR::set_header" << std::endl;
 #endif
     if(v != nullptr){
-        header = v;
+        header = new TTTRHeader(*v);
     }
 }
-
-
 
 void TTTR::get_macro_times(unsigned long long** output, int* n_output){
     get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
