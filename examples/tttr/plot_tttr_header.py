@@ -24,8 +24,7 @@ of the type :class:`.Header`.
 """
 
 import tttrlib
-
-data = tttrlib.TTTR('../../tttr-data/bh/pq/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR('./test/data/bh/bh_spc132.spc', 'SPC-130')
 # the header can be accesses by the method get_header or as an property
 header = data.header
 
@@ -41,10 +40,10 @@ header = data.header
 # attribute modifies the header / meta data of a TTTR object.
 
 import json
-data = tttrlib.TTTR('./test/data/PQ/PTU/pq_ptu_hh_t3.ptu', 'PTU')
+data = tttrlib.TTTR('./test/data/PQ/PTU/PQ_PTU_HH_T3.PTU', 'PTU')
 
 #%%
-# the header can be accesses by the method get_header or as a property
+# the header can be accesses by the method get_header or as an property
 
 header = data.header
 header_json = header.json
@@ -90,7 +89,7 @@ data.get_number_of_micro_time_channels()
 # Creating and writing TTTRHeader
 # ===============================
 # Each TTTR object has an attribute that is an instance of the TTTRHeader class.
-#     This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader
+#     This instances makes the meta data contained in the TTTR file accessible. TTTRHeader
 # objects can also be created independently of TTTR object.
 
 header = tttrlib.TTTRHeader()
@@ -106,7 +105,7 @@ header = tttrlib.TTTRHeader()
 
 #%%
 # The JSON string must contain a `tags` list. The `tags` list is a list of dictionarys
-# in which each dictionary corresponds to a meta-data field in the header. For instance,
+# in which each dictionary corresponds to a meta data field in the header. For instance,
 
 print(header.json) # '{\n "tags": []\n}'
 
