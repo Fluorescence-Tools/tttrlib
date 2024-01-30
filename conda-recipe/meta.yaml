@@ -15,21 +15,22 @@ build:
 
 requirements:
   build:
+    - python
+    - numpy
+    - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - llvm-openmp        # [osx]
     - libgomp            # [linux]
     - pkg-config         # [not win]
-    - cmake
-    - ninja
-    - make               # [linux]
-    - doxygen
     - swig
-    - python
-    - numpy
+    - ninja
+    - cmake
+    - make               # [linux]
     - typing             # [py27]
   host:
-    - libboost-devel
+    - boost-cpp 1.78     # [py > 27]
+    - boost-cpp 1.69     # [py27]
     - hdf5
     - python
     - setuptools
@@ -43,7 +44,7 @@ requirements:
     - click-didyoumean
     - {{ pin_compatible('numpy') }}
     - scikit-image
-    - matplotlib-base
+    - matplotlib
     - hdf5
     - typing             # [py27]
     - importlib_metadata # [py27]
@@ -63,3 +64,4 @@ about:
 extra:
   recipe-maintainers:
     - tpeulen
+    - khemmen
