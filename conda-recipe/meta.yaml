@@ -38,11 +38,11 @@ requirements:
     - numpy
   run:
     - python
+    - {{ pin_compatible('numpy') }}
     - tqdm               # [py > 27]
     - tqdm <=4.14        # [py27]    
     - click
     - click-didyoumean
-    - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib
     - hdf5

@@ -25,9 +25,9 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE(STATUS "Building Python interface") 
     cmake_policy(SET CMP0094 NEW)
 
-    FIND_PACKAGE(Python ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
+    FIND_PACKAGE(MyPython ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
-    LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
+    LINK_LIBRARIES(${Python_LIBRARY} Python3::NumPy)
 
     # Handle where to install the resulting Python package
     if(CALL_FROM_SETUP_PY)
@@ -39,9 +39,17 @@ IF(BUILD_PYTHON_INTERFACE)
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
-        set(MY_INSTALL_PREFIX ${Python_SITELIB})
+        set(MY_INSTALL_PREFIX ${Python3_SITELIB})
+        MESSAGE(STATUS "Use Python_SITELIB as install prefix: '${MY_INSTALL_PREFIX}'")
         SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     endif()
+    # Did not find installation prefix library location of python
+    if(NOT MY_INSTALL_PREFIX)
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+                OUTPUT_VARIABLE MY_INSTALL_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif ()
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
