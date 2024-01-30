@@ -35,15 +35,18 @@ IF(BUILD_PYTHON_INTERFACE)
     if(CALL_FROM_SETUP_PY)
         # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
         # of the resulting wheel archive
+        MESSAGE(STATUS "MY_INSTALL_PREFIX: CMAKE_INSTALL_PREFIX")
         SET(MODULE_NAME ${PROJECT_NAME})
         SET(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
+        MESSAGE(STATUS "MY_INSTALL_PREFIX: Python3_SITELIB")
         set(MY_INSTALL_PREFIX ${Python3_SITELIB})
     endif()
     # Did not find installation prefix library location of python
     if(NOT MY_INSTALL_PREFIX)
+        MESSAGE(STATUS "MY_INSTALL_PREFIX: sysconfig.get_path('platlib')")
         execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
                 WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
                 OUTPUT_VARIABLE MY_INSTALL_PREFIX
