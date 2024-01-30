@@ -539,6 +539,7 @@ std::pair<std::shared_ptr<TTTR>, std::shared_ptr<TTTR>> Correlator::get_tttr() {
 }
 
 void Correlator::get_x_axis(double** output, int* n_output){
+    if(!is_valid) run();
     curve.get_x_axis(output, n_output);
 }
 
