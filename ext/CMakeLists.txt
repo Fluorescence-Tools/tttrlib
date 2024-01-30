@@ -41,17 +41,12 @@ IF(BUILD_PYTHON_INTERFACE)
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
-        MESSAGE(STATUS "MY_INSTALL_PREFIX: Python3_SITELIB")
-        set(MY_INSTALL_PREFIX ${Python3_SITELIB})
-    endif()
-    # Did not find installation prefix library location of python
-    if(NOT MY_INSTALL_PREFIX)
         MESSAGE(STATUS "MY_INSTALL_PREFIX: sysconfig.get_path('platlib')")
         execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
                 WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
                 OUTPUT_VARIABLE MY_INSTALL_PREFIX
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-    endif ()
+    endif()
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
