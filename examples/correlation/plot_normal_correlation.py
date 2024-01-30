@@ -39,7 +39,6 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 
 # Correlator settings, if the same settings are used repeatedly it is useful to define them once
 settings = {
-    "method": "default",
     "n_bins": 7,  # n_bins and n_casc defines the settings of the multi-tau
     "n_casc": 27,  # correlation algorithm
     "make_fine": False  # Do not use the microtime information
@@ -64,8 +63,8 @@ w2 = np.ones_like(t2, dtype=np.float64)
 correlator.set_events(t1, w1, t2, w2)
 
 # scale the x-axis to have units in milliseconds (common unit in FCS)
-x = correlator.curve.x * (data.header.macro_time_resolution)
-y = correlator.curve.y
+x = correlator.x * data.header.macro_time_resolution
+y = correlator.y
 
 plt.semilogx(x, y, label="Gp/Gs")
 
@@ -82,8 +81,8 @@ correlator = tttrlib.Correlator(
 
 # no need to scale axis - correlator aware of macro time units
 plt.semilogx(
-    correlator.curve.x,
-    correlator.curve.y,
+    correlator.x,
+    correlator.y,
     label="Gp,Gs/Rp,Rs"
 )
 
@@ -95,8 +94,8 @@ correlator = tttrlib.Correlator(
 )
 
 plt.semilogx(
-    correlator.x_axis,
-    correlator.correlation,
+    correlator.x,
+    correlator.y,
     label="pR,sR"
 )
 
@@ -108,8 +107,8 @@ correlator = tttrlib.Correlator(
 )
 
 plt.semilogx(
-    correlator.x_axis,
-    correlator.correlation,
+    correlator.x,
+    correlator.y,
     label="pRsR,pGsG"
 )
 
