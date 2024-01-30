@@ -1,4 +1,3 @@
-git submodule update --recursive --init --remote
 mkdir b2 && cd b2
 
 if [[ "${target_platform}" == osx-* ]]; then

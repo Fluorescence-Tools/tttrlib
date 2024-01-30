@@ -1,5 +1,4 @@
 cd %SRC_DIR%
-git submodule update --recursive --init --remote
 
 echo "Build app wrapper"
 :: build app wrapper
