@@ -1,5 +1,5 @@
 [project]
-version = "0.24.1"
+version = "0.24.0"
 name = "tttrlib"
 requires-python = ">=3.8"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
@@ -81,7 +81,7 @@ select = "cp3{8,9,10}-*"
     [tool.cibuildwheel.linux]
 
     before-all = [
-        "yum update -y --nogpgcheck",
+        "yum update -y",
         "yum install -y epel-release",
         "yum -y install boost-devel swig cmake"
     ]
