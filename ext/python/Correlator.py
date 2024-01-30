@@ -14,13 +14,22 @@ def __getattr__(self, item):
     else:
         raise AttributeError
 
+
 @property
 def correlation(self):
     return self.get_corr_normalized()
 
 @property
+def y(self):
+    return self.correlation
+
+@property
 def x_axis(self):
     return self.get_x_axis()
+
+@property
+def x(self):
+    return self.x_axis
 
 @property
 def tttr(self):
