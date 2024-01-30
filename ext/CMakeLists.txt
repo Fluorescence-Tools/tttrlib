@@ -25,7 +25,8 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE(STATUS "Building Python interface") 
     cmake_policy(SET CMP0094 NEW)
 
-    FIND_PACKAGE(MyPython ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
+    FIND_PACKAGE(MyPython)
+    FIND_PACKAGE(Python ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
     LINK_LIBRARIES(${Python_LIBRARY} Python3::NumPy)
 
@@ -34,7 +35,7 @@ IF(BUILD_PYTHON_INTERFACE)
         # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
         # of the resulting wheel archive
         SET(MODULE_NAME ${PROJECT_NAME})
-        set(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+        SET(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
         SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     else()
         # The Python package is installed directly in the folder of the
@@ -45,7 +46,7 @@ IF(BUILD_PYTHON_INTERFACE)
     endif()
     # Did not find installation prefix library location of python
     if(NOT MY_INSTALL_PREFIX)
-        execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
+        execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_path('platlib'))"
                 WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
                 OUTPUT_VARIABLE MY_INSTALL_PREFIX
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
