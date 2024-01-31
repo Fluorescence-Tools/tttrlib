@@ -22,9 +22,15 @@ IF(BUILD_PYTHON_INTERFACE)
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     ENDIF()
 
-    MESSAGE(STATUS "Building Python interface") 
+    MESSAGE(STATUS "Building Python interface")
+    MESSAGE(STATUS "Python version: '${PYTHON_VERSION}'")
     cmake_policy(SET CMP0094 NEW)
 
+    EXECUTE_PROCESS(
+            COMMAND python -c "from __future__ import print_function; import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE Python_NumPy_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
     FIND_PACKAGE(Python ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
     LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
