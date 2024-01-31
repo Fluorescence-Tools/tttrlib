@@ -130,23 +130,6 @@ void compute_intensity_trace(
 );
 
 
-
-// Seems unused
-// * Get the ranges in for a specific channel number
-// *
-// * @param[out] ranges
-// * @param[out] n_range
-// * @param[in] channel
-// * @param[in] n_channel
-// * @param[in] channel
-// */
-//void get_ranges_channel(
-//        unsigned int **ranges, int *n_range,
-//        short *channel, int n_channel,
-//        int selection_channel
-//);
-//
-
 /*!
  * \brief Extracts a subarray of valid events from the input array.
  *
@@ -247,7 +230,8 @@ private:
             {PQ_RECORD_TYPE_PHT3,        ProcessPHT3},
             {BH_RECORD_TYPE_SPC600_256,  ProcessSPC600_256},
             {BH_RECORD_TYPE_SPC600_4096, ProcessSPC600_4096},
-            {BH_RECORD_TYPE_SPC130,      ProcessSPC130}
+            {BH_RECORD_TYPE_SPC130,      ProcessSPC130},
+            {CZ_RECORD_TYPE_CONFOCOR3,   ProcessCzRaw}
     };
 
     /*!
@@ -261,6 +245,7 @@ private:
      *  * BH_SPC600_256_CONTAINER   3
      *  * BH_SPC600_4096_CONTAINER  4
      *  * PHOTON_HDF5_CONTAINER     5
+     *  * CZ_CONFOCOR3_CONTAINER    6
      *
      * The numbers correspond to the numbers that should be used when
      * initializing the class.
@@ -462,7 +447,6 @@ public:
         size_t offset,
         size_t bytes_per_record
     );
-
 
     /*!
      * \brief Appends events to the TTTR object.
@@ -684,6 +668,7 @@ public:
     *   - 3: Becker & Hickl SPC-600 with 256 channels Container (BH_SPC600_256_CONTAINER)
     *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
     *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
+    *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
     * @param read_input If true, reads the content of the file.
     */
     TTTR(const char *filename, int container_type, bool read_input);
@@ -699,6 +684,7 @@ public:
      *   - 3: Becker & Hickl SPC-600 with 256 channels Container (BH_SPC600_256_CONTAINER)
      *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
      *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
+     *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
      */
     TTTR(const char *filename, int container_type);
 
@@ -713,6 +699,7 @@ public:
      *   - "SPC-600_256": Becker & Hickl SPC-600 with 256 channels Container
      *   - "SPC-600_4096": Becker & Hickl SPC-600 with 4096 channels Container
      *   - "PHOTON-HDF5": Photon-HDF5 Container
+     *   - "CZ_CONFOCOR3_CONTAINER": Carl Zeiss ConfoCor3 Container
      */
     TTTR(const char *filename, const char* container_type);
 
@@ -1074,7 +1061,6 @@ public:
              double m0_bg = 0.0, double m1_bg = 0.0,
              double background_fraction = -1.0
      );
-
 
      /*!
       * @brief Computes the mean lifetime by moments of decay and instrument response.

@@ -58,7 +58,6 @@ y_normal = correlator_ref.correlation
 # times as time information, the default value of parameters ``make_fine``
 # when creating a new Correlator needs to by modified:
 full_corr_settings = {
-    "method": 'default',
     "n_casc": 37,  # n_bins and n_casc defines the settings of the multi-tau
     "n_bins": 7,  # correlation algorithm
     "make_fine": True  # Use the microtime information (also called "fine" correlation)
@@ -103,5 +102,6 @@ ax.semilogx(x_normal * 1000, y_normal, label="GpRp/GsRs - normal")
 ax.set_xlabel('corr. time (ms)')
 ax.set_ylabel('Correlation Amplitude')
 ax.legend()
+ax.set_ylim(0, 12)  # Set y-axis range to 0-12
 
 plt.show()

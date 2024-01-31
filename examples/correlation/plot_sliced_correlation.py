@@ -44,7 +44,7 @@ time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 #%%
 # Next, we plan to split the TTTR data into separate data chunks. Here, chunk
 # the data into at least 5 seconds long pieces. The method ``get_ranges_by_time_window``
-# returns an one-dimensional array with the beginning and the end index of each
+# returns a one-dimensional array with the beginning and the end index of each
 # chunk. Later, we will use these start/stop indices to define TTTR slices
 # that will be correlated. To slice the data into time windows we use the
 # macro time calibration we computed previously. Note, the last chunk can

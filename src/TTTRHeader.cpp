@@ -71,7 +71,11 @@ TTTRHeader::TTTRHeader(
             default:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
         }
-    } else if(tttr_container_type == PQ_HT3_CONTAINER){
+    } else if(tttr_container_type == CZ_CONFOCOR3_CONTAINER) {
+        header_end = read_cz_confocor3_header(fpin, json_data);
+        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+    }
+    else if(tttr_container_type == PQ_HT3_CONTAINER){
         header_end = read_ht3_header(fpin, json_data);
         tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
     } else if(tttr_container_type == BH_SPC600_256_CONTAINER){
@@ -138,6 +142,34 @@ size_t TTTRHeader::read_bh132_header(
 #endif
     return 4;
 }
+
+
+size_t TTTRHeader::read_cz_confocor3_header(
+        std::FILE *fpin,
+        nlohmann::json &data,
+        bool rewind
+) {
+    if(rewind) std::fseek(fpin, 0, SEEK_SET);
+    cz_confocor3_settings_t rec;
+    fread(&rec, sizeof(rec),1, fpin);
+    fseek(fpin, 68, 0);
+    float sync_rate;
+    fread(&sync_rate, sizeof(float), 1, fpin);
+    double mt_clk = 1. / (1000. * sync_rate);
+
+    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
+    // Convert ASCII channel number to int
+    add_tag(data, "channel", rec.bits.channel - 48, tyInt8);
+    add_tag(data, TTTRTagBits, 32, tyInt8);
+    add_tag(data, TTTRRecordType, (int) CZ_RECORD_TYPE_CONFOCOR3, tyInt8);
+#ifdef VERBOSE_TTTRLIB
+    std::clog << "-- Confocor3 header reader " << std::endl;
+    std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
+    std::clog << "-- macro_time_resolution: " << sync_rate << std::endl;
+#endif
+    return 80;
+}
+
 
 size_t TTTRHeader::read_ht3_header(
         std::FILE *fpin,

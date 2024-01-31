@@ -898,7 +898,7 @@ public:
              std::string subtract_average = "",
              double background = 0.0,
              bool clip=false, double clip_max=1e6, double clip_min=-1e6,
-             double *images = nullptr, int input_frames=-1, int input_lines=-1, int input_pixel=1,
+             double *images = nullptr, int n_frames=-1, int n_lines=-1, int n_pixels=1,
              uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1,
              std::vector<int> selected_frames = std::vector<int>()
     );

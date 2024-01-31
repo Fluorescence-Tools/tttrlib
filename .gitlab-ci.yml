@@ -2,22 +2,9 @@ variables:
   GIT_SSL_NO_VERIFY: "1"
 
 stages:
-#  - sync
   - build
   - test
   - deploy
-
-# github:push:
-#   stage: sync
-#   image: condaforge/mambaforge
-#   tags:
-#     - linux
-#   before_script:
-#     - git submodule update --init --recursive --remote
-#   script:
-#     - git switch -c ${CI_COMMIT_REF_NAME}
-#     - git push --force https://${GITHUB_TOKEN}@github.com/fluorescence-tools/imp.bff
-
 
 # general definitions
 .build: &build
@@ -47,21 +34,21 @@ conda:build:lnx:x86:
     - linux
     - x86_64
 conda:build:lnx:ppc64le:
-  <<: *conda_build_lnx
-  image:
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
-    name: condaforge/linux-anvil-ppc64le
-  tags:
-    - linux
-    - ppc64le
+ <<: *conda_build_lnx
+ image:
+   entrypoint: [ "/bin/bash", "-i", "-c" ]
+   name: condaforge/linux-anvil-ppc64le
+ tags:
+   - linux
+   - ppc64le
 conda:build:lnx:aarch64:
-  <<: *conda_build_lnx
-  image:
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
-    name: condaforge/linux-anvil-aarch64
-  tags:
-    - linux
-    - aarch64
+ <<: *conda_build_lnx
+ image:
+   entrypoint: [ "/bin/bash", "-i", "-c" ]
+   name: condaforge/linux-anvil-aarch64
+ tags:
+   - linux
+   - aarch64
 
 conda:build:osx:
   <<: *conda_build_posix
