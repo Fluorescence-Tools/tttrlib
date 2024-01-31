@@ -63,7 +63,6 @@ conda:build:windows:
     - win
   script:
     - conda activate base
-    - cd tools && git pull --force && cd..
     - .\tools\build.bat
 
 conda:test:linux:

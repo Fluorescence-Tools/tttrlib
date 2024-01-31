@@ -33,6 +33,7 @@ requirements:
     - hdf5
     - python
     - setuptools
+    - typing             # [py27]
     - numpy
   run:
     - python

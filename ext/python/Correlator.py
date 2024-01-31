@@ -14,7 +14,6 @@ def __getattr__(self, item):
     else:
         raise AttributeError
 
-
 @property
 def correlation(self):
     return self.get_corr_normalized()

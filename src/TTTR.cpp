@@ -268,6 +268,9 @@ int TTTR::read_file(const char *fn, int container_type) {
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
+#ifdef VERBOSE_TTTRLIB
+            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+#endif
             processRecord = processRecord_map[tttr_record_type];
             n_records_in_file =
                 get_number_of_records_by_file_size(
@@ -373,6 +376,9 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
+#ifdef VERBOSE_TTTRLIB
+    std::cout << "-- Records that will be read : " << n_rec << std::endl;
+#endif
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
