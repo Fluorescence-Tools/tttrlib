@@ -14,40 +14,35 @@ build:
   detect_binary_files_with_prefix: True  # [not win]
 
 requirements:
+requirements:
   build:
-    - python
-    - numpy
-    - doxygen
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - llvm-openmp        # [osx]
     - libgomp            # [linux]
     - pkg-config         # [not win]
-    - swig
-    - ninja
     - cmake
+    - ninja
     - make               # [linux]
-    - typing             # [py27]
+    - doxygen
+    - swig
+    - python
+    - numpy
   host:
-    - boost-cpp 1.78     # [py > 27]
-    - boost-cpp 1.69     # [py27]
+    - libboost-devel
     - hdf5
     - python
     - setuptools
-    - typing             # [py27]
     - numpy
   run:
     - python
-    - {{ pin_compatible('numpy') }}
-    - tqdm               # [py > 27]
-    - tqdm <=4.14        # [py27]    
+    - tqdm
     - click
     - click-didyoumean
+    - {{ pin_compatible('numpy') }}
     - scikit-image
-    - matplotlib
+    - matplotlib-base
     - hdf5
-    - typing             # [py27]
-    - importlib_metadata # [py27]
 
 test:
  imports:
