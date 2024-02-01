@@ -1,0 +1,40 @@
+name: Build Conda Recipe
+
+on:
+  push:
+    branches:
+      - development  # You can change this to the branch you want to trigger on
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    name: GitHub-conda-lnx-build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: 3.9
+          mamba-version: "*"
+          channels: conda-forge,defaults
+          channel-priority: true
+
+      - name: Display Conda Settings
+        shell: bash -el {0}
+        run: |
+          conda info
+          conda list
+          conda config --show-sources
+          conda config --show
+          printenv | sort
+
+      - name: Install Conda Packages
+        shell: bash -el {0}
+        run: |
+            mamba install -y boa
+
+      - name: Build Conda Package
+        run: |
+          conda build conda-recipe
