@@ -6,9 +6,14 @@ on:
       - development  # You can change this to the branch you want to trigger on
 
 jobs:
-  build:
-    runs-on: "ubuntu-latest"
-    name: GitHub-conda-lnx-build
+  build-linux:
+    name: CondaBuild (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.7", "3.11"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -16,7 +21,8 @@ jobs:
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: 3.9
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
           mamba-version: "*"
           channels: conda-forge,defaults
           channel-priority: true
