@@ -30,11 +30,8 @@ jobs:
           conda config --show
           printenv | sort
 
-      - name: Install Conda Packages
+      - name: Build Conda Package
         shell: bash -el {0}
         run: |
-            mamba install -y boa
-
-      - name: Build Conda Package
-        run: |
-          conda build conda-recipe
+          mamba install conda-build boa
+          conda mambabuild conda-recipe
