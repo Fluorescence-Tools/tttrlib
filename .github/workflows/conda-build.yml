@@ -1,4 +1,4 @@
-name: Build Conda Recipe
+name: Conda Build
 
 on:
   push:
