@@ -177,4 +177,4 @@ are not supported.
 Copyright 2007-2024 tttrlib developers.
 Licensed under the BSD-3-Clause
 
-[3]: https://github.com/fluorescence-tools/tttrlib/doc/logos/mashup.png "tttrlib FLIM"
+[3]: https://github.com/Fluorescence-Tools/tttrlib/blob/master/doc/logos/mashup.png?raw=true "tttrlib FLIM"
