@@ -1,0 +1,43 @@
+name: Conda Build
+
+on:
+  push:
+    branches:
+      - development  # You can change this to the branch you want to trigger on
+
+jobs:
+  build-linux:
+    name: CondaBuild (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.8", "3.11"]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          mamba-version: "*"
+          channels: conda-forge,defaults
+          channel-priority: true
+
+      - name: Display Conda Settings
+        shell: bash -el {0}
+        run: |
+          conda info
+          conda list
+          conda config --show-sources
+          conda config --show
+          printenv | sort
+
+      - name: Build Conda Package
+        shell: bash -el {0}
+        run: |
+          mamba install conda-build boa
+          conda mambabuild conda-recipe

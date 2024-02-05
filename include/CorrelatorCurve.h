@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>  /* std::max */
 #include <cmath> /* pow */
+#include <cstdint> // include this header for uint64_t
+
 
 
 struct CorrelationCurveSettings{
