@@ -14,6 +14,8 @@
 #include <array>
 #include <memory>
 #include <numeric>
+#include <iostream>
+#include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
 
 #include <any>

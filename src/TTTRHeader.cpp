@@ -152,22 +152,45 @@ size_t TTTRHeader::read_cz_confocor3_header(
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
     cz_confocor3_settings_t rec;
     fread(&rec, sizeof(rec),1, fpin);
-    fseek(fpin, 68, 0);
-    float sync_rate;
-    fread(&sync_rate, sizeof(float), 1, fpin);
-    double mt_clk = 1. / (1000. * sync_rate);
+
+    float frequency_float = rec.bits.frequency;
+    double mt_clk = 1. / frequency_float;
+
+    // Convert each element to hexadecimal and concatenate them
+    std::stringstream ss;
+    for (int i = 0; i < 4; i++) {
+        ss << std::hex << std::setw(8) << std::setfill('0') << rec.bits.measure_id[i];
+    }
+    size_t total_length = ss.str().length() + 1;
+    char* hex_measure_id = new char[total_length];
+    std::strcpy(hex_measure_id, ss.str().c_str());
+
+    int measurement_position = rec.bits.measurement_position;
+    int kinetic_index = rec.bits.kinetic_index;
+    int repetition_number = rec.bits.repetition_number;
+    int channel_nbr = rec.bits.channel - 48;
 
     add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
     // Convert ASCII channel number to int
-    add_tag(data, "channel", rec.bits.channel - 48, tyInt8);
-    add_tag(data, TTTRTagBits, 32, tyInt8);
     add_tag(data, TTTRRecordType, (int) CZ_RECORD_TYPE_CONFOCOR3, tyInt8);
+    add_tag(data, "channel", channel_nbr, tyInt8);
+    add_tag(data, "measure_id", hex_measure_id, tyAnsiString);
+    add_tag(data, "measurement_position", measurement_position + 1, tyInt8);
+    add_tag(data, "kinetic_index", kinetic_index + 1, tyInt8);
+    add_tag(data, "repetition_number", repetition_number + 1, tyInt8);
+    add_tag(data, TTTRTagBits, 32, tyInt8);
 #ifdef VERBOSE_TTTRLIB
     std::clog << "-- Confocor3 header reader " << std::endl;
+    std::clog << "-- frequency_float: " << frequency_float << std::endl;
+    std::clog << "-- measure_id_string: " << hex_measure_id << std::endl;
     std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
-    std::clog << "-- macro_time_resolution: " << sync_rate << std::endl;
+    std::clog << "-- channel_nbr: " << channel_nbr << std::endl;
+    std::clog << "-- measurement_position: " << measurement_position << std::endl;
+    std::clog << "-- kinetic_index: " << kinetic_index << std::endl;
+    std::clog << "-- repetition_number: " << repetition_number << std::endl;
+    std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
 #endif
-    return 80;
+    return sizeof(rec);
 }
 
 

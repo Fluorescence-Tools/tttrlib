@@ -116,6 +116,6 @@ plt.semilogx(
     label="Corr(2,2)"
 )
 
-plt.ylim(1.032, 1.050)
+plt.ylim(0.98, 1.30)
 plt.show()
 
