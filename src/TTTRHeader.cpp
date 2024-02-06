@@ -161,7 +161,7 @@ size_t TTTRHeader::read_cz_confocor3_header(
     for (int i = 0; i < 4; i++) {
         ss << std::hex << std::setw(8) << std::setfill('0') << rec.bits.measure_id[i];
     }
-    size_t total_length = ss.str.length() + 1;
+    size_t total_length = ss.str().length() + 1;
     char* hex_measure_id = new char[total_length];
     std::strcpy(hex_measure_id, ss.str().c_str());
 
