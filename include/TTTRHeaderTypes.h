@@ -145,9 +145,15 @@ typedef union cz_confocor3_settings{
     struct{
         char Ident[52];
         char dummy1[11];
-        unsigned channel        :8;
-        unsigned TagHead_Idx    :32;
-        unsigned sync_rate      :32;
+        unsigned channel               :8;
+        // 64 byte
+        uint32_t measure_id[4];  // 16
+        uint32_t measurement_position; // 8
+        uint32_t kinetic_index; // 8
+        uint32_t repetition_number; // 8
+        uint32_t frequency; // 8
+        char dummy2[32]; //32
+        // 64 + 64 byte
     } bits;
 } cz_confocor3_settings_t;
 
