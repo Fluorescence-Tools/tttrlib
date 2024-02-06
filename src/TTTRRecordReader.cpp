@@ -291,30 +291,27 @@ bool ProcessSPC600_256(
         ){
     bh_spc600_256_record_t rec;
     rec.allbits = TTTRRecord;
-
     if(!rec.bits.mtov && !rec.bits.invalid){
         // normal record
         true_nsync = rec.bits.mt + overflow_counter * 4096;
         micro_time = (uint16_t) (255 - rec.bits.adc);
         channel = (uint16_t) (rec.bits.rout);
         return true;
-    } else{
-        if(!rec.bits.invalid && rec.bits.mtov){
-            // valid record with a single macro time overflow
-            overflow_counter += 1;
-            true_nsync = rec.bits.mt + overflow_counter * 65536; // 65536 = 2**16 (16 bits for macro time counter)
-            micro_time = (uint16_t) (255 - rec.bits.adc);
-            channel = (uint16_t) (rec.bits.rout);
-            return true;
-        } else{
-            if(rec.bits.invalid && rec.bits.mtov){
-                bh_overflow_t ovf;
-                ovf.allbits = TTTRRecord;
-                overflow_counter += ovf.bits.cnt;
-                return false;
-            }
-        }
     }
+    if(!rec.bits.invalid && rec.bits.mtov){
+        // valid record with a single macro time overflow
+        overflow_counter += 1;
+        true_nsync = rec.bits.mt + overflow_counter * 65536; // 65536 = 2**16 (16 bits for macro time counter)
+        micro_time = (uint16_t) (255 - rec.bits.adc);
+        channel = (uint16_t) (rec.bits.rout);
+        return true;
+    }
+    if(rec.bits.invalid && rec.bits.mtov){
+            bh_overflow_t ovf;
+            ovf.allbits = TTTRRecord;
+            overflow_counter += ovf.bits.cnt;
+            return false;
+        }
     return false;
 }
 
