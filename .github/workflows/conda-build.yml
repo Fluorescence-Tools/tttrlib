@@ -41,5 +41,6 @@ jobs:
         run: |
           mamba install conda-build boa
           cd conda-recipe
-          curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml
+          curl -sLO  https://raw.githubusercontent.com/conda-forge/conda-forge-pinning-feedstock/084b098a28a7a66e9a0967d156bc55b9ebfc6726/recipe/conda_build_config.yaml
+          # curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml
           conda mambabuild .
