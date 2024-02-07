@@ -29,21 +29,21 @@ requirements:
     - python
     - numpy
   host:
-    - libboost-devel
+    - boost-cpp
     - hdf5
     - python
     - setuptools
-    - typing             # [py27]
     - numpy
   run:
     - python
+    - {{ pin_compatible('numpy') }}
+    - boost-cpp
+    - hdf5
     - tqdm
     - click
     - click-didyoumean
-    - {{ pin_compatible('numpy') }}
     - scikit-image
     - matplotlib-base
-    - hdf5
 
 test:
  imports:
