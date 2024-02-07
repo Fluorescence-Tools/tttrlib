@@ -15,6 +15,7 @@
 #include <memory>
 #include <numeric>
 #include <iostream>
+#include <sstream>      // std::stringstream
 #include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
 
