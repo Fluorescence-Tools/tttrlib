@@ -392,8 +392,18 @@ void TTTR::read_records(
     std::cout << "-- Bytes per record : " << bytes_per_record << std::endl;
 #endif
     do{
-        auto tmp = (signed char*) malloc(bytes_per_record * (chunk + 1));
-        number_of_objects = fread(tmp, bytes_per_record, chunk, fp);
+        // Adjust chunk size if it's bigger than remaining records
+        size_t remaining_records = n_rec - n_records_read;
+        size_t adjusted_chunk = remaining_records < chunk ? remaining_records : chunk;
+
+        auto tmp = (signed char *)malloc(bytes_per_record * adjusted_chunk);
+        if (!tmp) {
+            // Handle memory allocation failure
+            std::cerr << "Memory allocation failed!" << std::endl;
+            return;
+        }
+        number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
+
         for (size_t j = 0; j < number_of_objects; j++) {
             offset = bytes_per_record * j;
             n_valid_events += processRecord(
@@ -407,7 +417,7 @@ void TTTR::read_records(
         }
         free(tmp);
         n_records_read += number_of_objects;
-    }while(number_of_objects > 0);
+    } while(number_of_objects > 0);
 }
 
 void TTTR::read_records(size_t n_rec){
