@@ -272,12 +272,7 @@ int TTTR::read_file(const char *fn, int container_type) {
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 #endif
             processRecord = processRecord_map[tttr_record_type];
-            n_records_in_file =
-                get_number_of_records_by_file_size(
-                    fp,
-                    header->header_end,
-                    header->get_bytes_per_record()
-            );
+            n_records_in_file = get_number_of_records_by_file_size(fp, header->header_end, header->get_bytes_per_record());
 #ifdef VERBOSE_TTTRLIB
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
             std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
@@ -538,11 +533,7 @@ std::shared_ptr<TTTR> TTTR::select(int *selection, int n_selection) {
 }
 
 
-size_t TTTR::get_number_of_records_by_file_size(
-        std::FILE *fp,
-        size_t offset,
-        size_t bytes_per_record
-        ){
+size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, size_t bytes_per_record){
     size_t n_records_in_file;
     // use the file size and the header to calculate the number of records
     // the position of the first record in the file
