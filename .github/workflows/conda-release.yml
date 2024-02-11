@@ -39,11 +39,16 @@ jobs:
           conda config --show
           printenv | sort
 
+      - name: "Set SDK on MacOS (if needed)"
+        if: startsWith(matrix.os, 'macos')
+        run: tools/install_macos_sdk.sh
+
       - name: Build Conda Package
         shell: bash -el {0}
         run: |
           mamba install conda-build boa anaconda-client
           cd conda-recipe
+          
           # Use older conda_build_config -> boost-cpp 1.78
           curl -sLO  https://raw.githubusercontent.com/conda-forge/conda-forge-pinning-feedstock/084b098a28a7a66e9a0967d156bc55b9ebfc6726/recipe/conda_build_config.yaml
           # curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml

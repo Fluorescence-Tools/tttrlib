@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+  - conda-forge/label/cf201901
+  - tpeulen
+channel_priority: strict

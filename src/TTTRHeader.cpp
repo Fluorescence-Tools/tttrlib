@@ -190,7 +190,7 @@ size_t TTTRHeader::read_cz_confocor3_header(
     std::clog << "-- repetition_number: " << repetition_number << std::endl;
     std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
 #endif
-    return sizeof(rec);
+    return (size_t) ftell(fpin);
 }
 
 
