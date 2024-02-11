@@ -39,6 +39,10 @@ jobs:
           conda config --show
           printenv | sort
 
+      - name: "Set SDK on MacOS (if needed)"
+        if: startsWith(matrix.os, 'macos')
+        run: tools/install_macos_sdk.sh
+
       - name: Build Conda Package
         shell: bash -el {0}
         run: |
