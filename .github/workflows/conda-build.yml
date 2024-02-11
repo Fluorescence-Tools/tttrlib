@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - development  # You can change this to the branch you want to trigger on
+  schedule:
+    # Every Monday at 17PM UTC (9AM EST)
+    - cron: "0 17 * * 1"
 
 jobs:
   build-linux:
