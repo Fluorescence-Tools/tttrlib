@@ -52,7 +52,7 @@ jobs:
           # Use older conda_build_config -> boost-cpp 1.78
           curl -sLO  https://raw.githubusercontent.com/conda-forge/conda-forge-pinning-feedstock/084b098a28a7a66e9a0967d156bc55b9ebfc6726/recipe/conda_build_config.yaml
           # curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml
-          conda mambabuild . --output-folder conda-bld
+          conda mambabuild . --output-folder ../conda-bld
 
       - name: Upload Conda Package
         shell: bash -el {0}
