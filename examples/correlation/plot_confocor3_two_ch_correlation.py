@@ -25,7 +25,7 @@ import tttrlib
 # ------------
 # The photon data registered by different detectors are saved in separate files.
 # Read the data of all channels that should be correlated into separate containers.
-fns = [str(p) for p in pathlib.Path('../../tttr-data/cz/fcs').glob('b02f1b794ef4110bcde513983548ee4b_R1_P12_K1_Ch*.raw')]
+fns = [str(p) for p in pathlib.Path('../../tttr-data/cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')]
 tttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]
 
 #%%
