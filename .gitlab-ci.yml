@@ -75,6 +75,7 @@ conda:test:linux:
     - linux
   image: condaforge/mambaforge
 #  needs: ["conda:build:lnx:x86"]
+  needs: []
   before_script:
     - |
         export DEBIAN_FRONTEND=interactive
@@ -107,6 +108,7 @@ deploy:doc:
      - local
      - linux
 #   needs: ["conda:build:lnx:x86"]
+   needs: []
    before_script:
     - |
         export DEBIAN_FRONTEND=interactive
