@@ -9,6 +9,8 @@
 #include "PdaCallback.h"
 
 
+/// \class Pda
+/// \brief Photon Distribution Analysis class for computing histograms.
 class Pda {
 
 private:
@@ -48,17 +50,25 @@ protected:
 
 public:
 
-    /// Computes the S1S2 histogram
+    /*!
+     * \brief Computes the S1S2 histogram.
+     *
+     * This function computes the S1S2 histogram based on the specified parameters,
+     * such as the maximum and minimum number of photons, background levels, and
+     * the probability distribution.
+     */
     void evaluate();
 
     /*!
-     * Constructor creating a new Pda object
+     * \brief Constructor for creating a new Pda object.
      *
-     * A Pda object can be used to compute Photon Distribution Analysis
-     * histograms.
+     * Initializes a Pda object for computing Photon Distribution Analysis histograms.
      *
-     * @param hist2d_nmax the maximum number of photons
-     * @param hist2d_nmin the minimum number of photons considered
+     * @param hist2d_nmax The maximum number of photons.
+     * @param hist2d_nmin The minimum number of photons considered.
+     * @param background_ch1 Background level in the first channel (green channel).
+     * @param background_ch2 Background level in the second channel (red channel).
+     * @param pF Probability distribution of having a certain number of photons.
      */
     Pda(
         int hist2d_nmax=300,
@@ -78,14 +88,14 @@ public:
     ~Pda() = default;
     
     /*!
-     * Appends a species.
+     * \brief Appends a species to the Pda object.
      *
-     * A species is defined by the probability of detecting a photon in the
-     * first detection channel.
+     * A species is defined by the amplitude (fraction) and the probability
+     * of detecting a photon in the first detection channel.
      *
-     * @param amplitude the amplitude (fraction) of the species
-     * @param probability_ch1 the probability of detecting the species in the
-     * first detection channel
+     * @param amplitude The amplitude (fraction) of the species.
+     * @param probability_ch1 The probability of detecting the species in the
+     *                        first detection channel.
      */
     void append(double amplitude, double probability_ch1) {
         _is_valid_sgsr = false;
@@ -93,7 +103,9 @@ public:
         _probability_ch1.push_back(probability_ch1);
     }
 
-    /// Clears the model and removes all species
+    /*!
+     * \brief Clears the model and removes all species from the Pda object.
+     */
     void clear_probability_ch1() {
         _is_valid_sgsr = false;
         _amplitudes.clear();
@@ -101,10 +113,10 @@ public:
     }
 
     /*!
-     * Returns the amplitudes of the species
+     * \brief Returns the amplitudes of the species.
      *
-     * @param output[out] A C type array containing the amplitude of the species
-     * @param n_output[out] The number of species
+     * @param output_view[out] A C type array containing the amplitude of the species.
+     * @param n_output[out] The number of species.
      */
     void get_amplitudes(double **output_view, int *n_output) {
         *n_output = _amplitudes.size();
@@ -112,10 +124,10 @@ public:
     }
 
     /*!
-     * Sets the amplitudes of the species.
+     * \brief Sets the amplitudes of the species.
      *
-     * @param input[in] A C type array that contains the amplitude of the species
-     * @param n_input[in] The number of species
+     * @param input[in] A C type array that contains the amplitude of the species.
+     * @param n_input[in] The number of species.
      */
     void set_amplitudes(double *input, int n_input) {
         _amplitudes.clear();
@@ -125,13 +137,13 @@ public:
     }
 
     /*!
-     * Set the callback (cb) for the computation of a 1D histogram.
+     * \brief Set the callback (cb) for the computation of a 1D histogram.
      *
-     * The cb function recudes two dimensional values, i.e., the intensity in
-     * channel (ch1) and ch2 to a one dimensional number. The cb is used to
+     * The cb function reduces two-dimensional values, i.e., the intensity in
+     * channel (ch1) and ch2, to a one-dimensional number. The cb is used to
      * compute either FRET efficiencies, etc.
      *
-     * @param callback[in] object that computes the value on a 1D histogram.
+     * @param cb[in] Object that computes the value on a 1D histogram.
      */
     void set_callback(PdaCallback* cb){
         _histogram_function = cb;
@@ -181,9 +193,10 @@ public:
     }
 
     /*!
-     * Returns the amplitudes of the species
-     * @param output[out] A C type array containing the amplitude of the species
-     * @param n_output[out] The number of species
+     * \brief Returns the amplitudes of the species.
+     *
+     * @param output_view[out] A C type array containing the amplitude of the species.
+     * @param n_output[out] The number of species.
      */
     void get_probabilities_ch1(double **output_view, int *n_output) {
         *n_output = _probability_ch1.size();
@@ -191,11 +204,11 @@ public:
     }
 
     /*!
-     * Sets the theoretical probabilities for detecting a the species in the
+     * \brief Sets the theoretical probabilities for detecting a species in the
      * first channel.
      *
-     * @param input[in] A C type array that contains the probabilities of the species
-     * @param n_input[in] The number of species
+     * @param input[in] A C type array that contains the probabilities of the species.
+     * @param n_input[in] The number of species.
      */
     void set_probabilities_ch1(double *input, int n_input) {
         _probability_ch1.clear();
@@ -206,14 +219,14 @@ public:
 
 
     /*!
-     * Get the theoretical probability spectrum of detecting a photon in the
-     * first channel
+     * \brief Get the theoretical probability spectrum of detecting a photon in the
+     * first channel.
      *
      * The probability spectrum is an interleaved array of the amplitudes and
-     * the probabilities of detecting a photon in the first channel
+     * the probabilities of detecting a photon in the first channel.
      *
-     * @param output[out] array containing the probability spectrum
-     * @param n_output[out] number of elements in the output array
+     * @param output[out] Array containing the probability spectrum.
+     * @param n_output[out] Number of elements in the output array.
      */
     void get_probability_spectrum_ch1(double** output, int* n_output) {
         int n = (int)_amplitudes.size() * 2;
@@ -227,10 +240,10 @@ public:
     }
 
     /*!
-     * Set the probability P(F)
+     * \brief Set the probability P(F).
      *
-     * @param input[in]
-     * @param n_input[in]
+     * @param input[in] A C type array containing the probability P(F).
+     * @param n_input[in] The number of elements in the input array.
      */
     void setPF(double *input, int n_input){
 #ifdef VERBOSE_TTTRLIB
@@ -240,39 +253,45 @@ public:
         pF.assign(input, input + n_input);
     }
 
-    /// Set the probability P(F)
+    /*!
+     * \brief Get the probability P(F).
+     *
+     * @param output_view[out] A C type array containing the probability P(F).
+     * @param n_output[out] The number of elements in the output array.
+     */
     void getPF(double** output_view, int* n_output){
         *n_output = pF.size();
         *output_view = pF.data();
     }
 
     /*!
-    * Returns a one dimensional histogram of the 2D counting array of the
-    * two channels.
-    *
-    * @param histogram_x[out] histogram X axis
-    * @param n_histogram_x[out] dimension of the x-axis
-    * @param histogram_y[out] array containing the computed histogram
-    * @param n_histogram_y[out] dimension of the histogram
-    * @param x_max[in] maximum x value of the histogram
-    * @param x_min[in] minimum x value of the histogram
-    * @param nbins[int] number of histogram bins
-    * @param log_x[in] If set to true (default is true) the values on the
-    * x-axis are logarithmically spaced otherwise they have a linear spacing.
-    * @param s1s2[in] Optional input for the S1S2 matrix. If this is set
-    * to a nullptr (default) the S1S2 matrix of the Pda object is used to
-    * compute the 1D histogram. If this is not set to nullptr and both dimensions
-    * set by n_input1 and n_input2 are larger than zero. The input is used as
-    * S1S2 matrix. The input matrix must be quadratic.
-    * @param n_min[in] Minimum number of photons in the histogram. If set to -1
-    * the number set when the Pda object was instancitated is used.
-    * @param skip_zero_photon[in] When this option is set to true only elements
-    * of the s1s2 matrix i,j (i>0 and j>0) are considered.
-    * @param amplitudes[in] The species amplitudes (optional). This updates the
-    * s1s2 matrix of the object.
-    * @param probabilities_ch1[in] The theoretical probabilities of detecting the
-    * species in channel 1(optional)This updates the s1s2 matrix of the object.
-    */
+     * \brief Computes a 1D histogram from the 2D counting array of the two channels.
+     *
+     * This method calculates a 1D histogram based on the 2D counting array of the
+     * two channels.
+     *
+     * @param histogram_x[out] Histogram X-axis.
+     * @param n_histogram_x[out] Dimension of the X-axis.
+     * @param histogram_y[out] Array containing the computed histogram.
+     * @param n_histogram_y[out] Dimension of the histogram.
+     * @param x_max[in] Maximum x-value of the histogram.
+     * @param x_min[in] Minimum x-value of the histogram.
+     * @param n_bins[in] Number of histogram bins.
+     * @param log_x[in] If set to true (default is true), x-axis values are
+     * logarithmically spaced; otherwise, linear spacing.
+     * @param s1s2[in] Optional input for the S1S2 matrix. If nullptr (default), the
+     * Pda object's S1S2 matrix is used for computation. If not nullptr and both
+     * n_histogram_x and n_histogram_y > 0, this input is used as the S1S2 matrix.
+     * Input matrix must be quadratic.
+     * @param n_min[in] Minimum number of photons in the histogram. If -1 (default),
+     * the number set when the Pda object was instantiated is used.
+     * @param skip_zero_photon[in] When true, only s1s2 matrix elements i,j (i>0 and
+     * j>0) are considered.
+     * @param amplitudes[in] Species amplitudes (optional). Updates the s1s2 matrix
+     * of the object.
+     * @param probabilities_ch1[in] Theoretical probabilities of detecting the
+     * species in channel 1 (optional). Updates the s1s2 matrix of the object.
+     */
     void get_1dhistogram(
             double **histogram_x, int *n_histogram_x,
             double **histogram_y, int *n_histogram_y,
@@ -286,25 +305,30 @@ public:
     );
 
     /*!
+     * \brief Computes experimental histograms.
      *
-     * @param tttr_data[in]
-     * @param s1s2[out]
-     * @param dim1[out]
-     * @param dim2[out]
-     * @param ps[out]
-     * @param dim_ps[out]
-     * @param channels_1 routing channel numbers that are used for the first channel
-     * in the S1S2 matrix. Photons with this channel number are counted and increment
+     * This static method computes experimental histograms based on the provided TTTR data.
+     *
+     * @param tttr_data[in] TTTR data input.
+     * @param s1s2[out] Output S1S2 matrix.
+     * @param dim1[out] Output dimension 1 of the S1S2 matrix.
+     * @param dim2[out] Output dimension 2 of the S1S2 matrix.
+     * @param ps[out] Output PS matrix.
+     * @param dim_ps[out] Output dimension of the PS matrix.
+     * @param tttr_indices[out] Output TTTR indices.
+     * @param n_tttr_indices[out] Output number of TTTR indices.
+     * @param channels_1[in] Routing channel numbers used for the first channel in
+     * the S1S2 matrix. Photons with this channel number are counted and increment
      * values in the S1S2 matrix.
-     * @param channels_2 routing channel numbers that are used for the second channel
-     * in the S1S2 matrix.Photons with this channel number are counted and increment
+     * @param channels_2[in] Routing channel numbers used for the second channel in
+     * the S1S2 matrix. Photons with this channel number are counted and increment
      * values in the S1S2 matrix.
-     * @param maximum_number_of_photons The maximum number of photons in the computed
-     * S1S2 matrix
-     * @param minimum_number_of_photons The minimum number of photons in a time window
-     * and in the S1S2 matrix
-     * @param minimum_time_window_length The minimum length of a time windows in
-     * units of milli seconds.
+     * @param maximum_number_of_photons[in] Maximum number of photons in the computed
+     * S1S2 matrix.
+     * @param minimum_number_of_photons[in] Minimum number of photons in a time window
+     * and in the S1S2 matrix.
+     * @param minimum_time_window_length[in] Minimum length of a time window in
+     * milliseconds.
      */
     static void compute_experimental_histograms(
         TTTR* tttr_data,
@@ -319,15 +343,17 @@ public:
     );
 
     /*!
-     * calculating p(G,R), several ratios using the same same P(F)
+     * \brief Calculates p(G,R) for several ratios using the same P(F).
      *
-     * @param S1S2[] see sgsr_pN
-     * @param pF[in] input: p(F)
-     * @param Nmax[in]
-     * @param background_ch1[in]
-     * @param background_ch2[in]
-     * @param p_ch1[in]
-     * @param amplitudes[in] corresponding amplitudes
+     * This static method calculates p(G,R) for several ratios using the same P(F).
+     *
+     * @param S1S2[in] See sgsr_pN.
+     * @param pF[in] Input P(F).
+     * @param Nmax[in] Maximum number of photons.
+     * @param background_ch1[in] Background in the green channel.
+     * @param background_ch2[in] Background in the red channel.
+     * @param p_ch1[in] Input probabilities for channel 1.
+     * @param amplitudes[in] Corresponding amplitudes.
      */
     static void S1S2_pF(
         std::vector<double> &S1S2,
@@ -340,14 +366,17 @@ public:
     );
 
     /*!
-     * Convolves the Fluorescence matrix F1F2 with the background
-     * to yield the signal matrix S1S2
+     * \brief Convolves the fluorescence matrix F1F2 with the background
+     * to yield the signal matrix S1S2.
      *
-     * @param S1S2[out]
-     * @param F1F2[in]
-     * @param Nmax
-     * @param background_ch1
-     * @param background_ch2
+     * This static method convolves the fluorescence matrix F1F2 with the background
+     * to produce the signal matrix S1S2.
+     *
+     * @param S1S2[out] Output signal matrix.
+     * @param F1F2[in] Input fluorescence matrix.
+     * @param Nmax Maximum number of photons.
+     * @param background_ch1 Background in the green channel.
+     * @param background_ch2 Background in the red channel.
      */
     static void conv_pF(
         std::vector<double> &S1S2,
@@ -358,13 +387,17 @@ public:
     );
 
     /*!
-    * Writes a Poisson distribution with an average lam, for 0..N
-    * into a vector starting at a specified index.
-    *
-    * @param return_p[in,out]
-    * @param lam[in]
-    * @param return_dim[in]
-    */
+     * \brief Writes a Poisson distribution with an average lam for 0..N
+     * into a vector starting at a specified index.
+     *
+     * This static method generates a Poisson distribution with an average lam
+     * for values 0 to N and writes it into the vector starting at the specified index.
+     *
+     * @param return_p[in,out] Vector to store the Poisson distribution.
+     * @param start_idx Starting index in the vector.
+     * @param lam Average lambda for the Poisson distribution.
+     * @param return_dim Dimension of the vector.
+     */
     static void poisson_0toN(
         std::vector<double> &return_p,
         int start_idx,
@@ -373,18 +406,27 @@ public:
     );
 
 
-    /// The maximum number of photons in the SgSr matrix
+    /*!
+     * \brief Get the maximum number of photons in the S1S2 matrix.
+     *
+     * This method returns the maximum number of photons that the S1S2 matrix can
+     * accommodate.
+     *
+     * @return The maximum number of photons in the S1S2 matrix.
+     */
     unsigned int get_max_number_of_photons() const{
         return _n_2d_max;
     }
 
     /*!
-     * Set the maximum number of photons in the S1S2 matrix
+     * \brief Set the maximum number of photons in the S1S2 matrix.
      *
-     * Note: the size of the pF array must agree with the maximum number
-     * of photons!
+     * This method sets the maximum number of photons that the S1S2 matrix can
+     * accommodate. It also resizes the internal S1S2 matrix accordingly.
      *
-     * @param nmax[in] the maximum number of photons
+     * Note: The size of the pF array must agree with the maximum number of photons.
+     *
+     * @param nmax[in] The maximum number of photons.
      */
     void set_max_number_of_photons(unsigned int nmax){
         _n_2d_max = nmax;
@@ -392,47 +434,99 @@ public:
         _is_valid_sgsr = false;
     }
 
-    /// The minimum number of photons in the SgSr matrix
+    /*!
+     * \brief Get the minimum number of photons in the S1S2 matrix.
+     *
+     * This method retrieves the minimum number of photons that the S1S2 matrix can
+     * have.
+     *
+     * @return The minimum number of photons.
+     */
     unsigned int get_min_number_of_photons() const{
         return this->_n_2d_min;
     }
 
-    /// Set the minimum number of photons in the SgSr matrix
+    /*!
+     * \brief Set the minimum number of photons in the S1S2 matrix.
+     *
+     * This method sets the minimum number of photons that the S1S2 matrix can have.
+     * It also invalidates the current S1S2 matrix to ensure it is recomputed with
+     * the new minimum number of photons.
+     *
+     * @param nmin The minimum number of photons to set.
+     */
     void set_min_number_of_photons(unsigned int nmin){
         this->_n_2d_min = nmin;
         _is_valid_sgsr = false;
     }
 
-    /// Get the background in the green channel
+    /*!
+     * \brief Get the background in the green channel.
+     *
+     * This method returns the background value in the green channel.
+     *
+     * @return The background value in the green channel.
+     */
     double get_ch1_background() const{
         return _bg_ch1;
     }
 
-    /// Set the background in the green channel
+    /*!
+     * \brief Set the background in the first channel.
+     *
+     * This method sets the background value in the green channel.
+     *
+     * @param bg The background value to be set in the green channel.
+     */
     void set_ch1_background(double bg){
         _is_valid_sgsr = false;
         _bg_ch1 = bg;
     }
 
-    /// Get the background in the red channel
+    /*!
+     * \brief Get the background in the second channel.
+     *
+     * This method returns the background value in the second channel.
+     *
+     * @return The background value in the second channel.
+     */
     double get_ch2_background() const{
         return _bg_ch2;
     }
 
-    /// Set the background in the red channel
+    /*!
+     * \brief Set the background in the second channel.
+     *
+     * This method sets the background value in the second channel.
+     *
+     * @param br The background value to be set.
+     */
     void set_ch2_background(double br) {
         _bg_ch2 = br;
         _is_valid_sgsr = false;
     }
 
-    /// Returns true if the
-    /// SgSr histogram is valid, i.e., if output is correct
-    /// for the input parameter. This value is set to true by evaluate.
+    /*!
+     * \brief Check if the S1S2 histogram is valid.
+     *
+     * This method returns true if the S1S2 histogram is considered valid,
+     * meaning that it provides correct output for the given input parameters.
+     * The validity is set to true after calling the evaluate method.
+     *
+     * @return True if the S1S2 histogram is valid, false otherwise.
+     */
     bool is_valid_sgsr() const{
         return _is_valid_sgsr;
     }
 
-    /// Set the SgSr histogram to valid (only used for testing)
+    /*!
+     * \brief Set the S1S2 histogram validity (for testing purposes).
+     *
+     * This method allows setting the validity of the S1S2 histogram explicitly,
+     * primarily intended for testing purposes.
+     *
+     * @param v[in] True to set the S1S2 histogram as valid, false otherwise.
+     */
     void set_valid_sgsr(bool v){
         _is_valid_sgsr = v;
     }

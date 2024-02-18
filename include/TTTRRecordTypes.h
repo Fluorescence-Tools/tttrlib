@@ -115,5 +115,12 @@ typedef union bh_overflow{
 } bh_overflow_t;
 
 
+// Carl Zeiss Confocor3 raw dat
+typedef union cz_confocor3_raw_record{
+    uint32_t allbits;
+    struct {
+        unsigned mt      :32;
+    } bits;
+} cz_confocor3_raw_record_t;
 
 #endif //TTTRLIB_TTTRRECORDTYPES_H

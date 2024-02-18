@@ -1,5 +1,5 @@
-#ifndef FIT2X_I_BFGS_H
-#define FIT2X_I_BFGS_H
+#ifndef TTTRLIB_I_BFGS_H
+#define TTTRLIB_I_BFGS_H
 
 // minimize f(x,p) using BFGS algorithm
 
@@ -146,4 +146,4 @@ class bfgs
 
 };
 
-#endif //FIT2X_I_BFGS_H
+#endif //TTTRLIB_I_BFGS_H

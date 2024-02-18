@@ -1,5 +1,5 @@
-#ifndef FIT2X_PHASOR_H
-#define FIT2X_PHASOR_H
+#ifndef TTTRLIB_PHASOR_H
+#define TTTRLIB_PHASOR_H
 
 #include <vector>
 #include <cmath>
@@ -9,47 +9,50 @@
 #include "CLSMImage.h" /* CLSMImage */
 
 
+/**
+ * @brief Utility class for computing phasor values in decay analysis.
+ */
 class DecayPhasor{
 
 public:
 
-    /*!
-     * Compute the phasor (g,s) for a selection of micro times
+    /**
+     * @brief Compute the phasor (g, s) for a selection of microtimes.
      *
-     * This function computes the phasor (g,s) for a set of micro times
-     * that are selected out of an vector. The microtimes are selected by a
-     * second vector. The second vector speciefies which indices of the microtime
+     * This function computes the phasor (g, s) for a set of microtimes that are selected
+     * using a second vector of indices. The indices specify which elements of the microtimes
      * vector are used to compute the phasor.
      *
-     * @param micro_times vector of micro times
-     * @param idxs vector of selected indices
-     * @param minimum_number_of_photons
-     * @param frequency the frequency of the phasor
-     * @param g_irf g-value of instrument response phasor
-     * @param s_irf s-value of instrument response phasor
-     * @return vector of length 2: first element g-value, second element s-value
+     * @param[in] microtimes Vector of microtimes.
+     * @param[in] n_microtimes Number of elements in the microtimes vector.
+     * @param[in] frequency The frequency of the phasor.
+     * @param[in] minimum_number_of_photons Minimum number of photons.
+     * @param[in] g_irf G-value of instrument response phasor.
+     * @param[in] s_irf S-value of instrument response phasor.
+     * @param[in] idxs Vector of selected indices.
+     * @return Vector of length 2: first element g-value, second element s-value.
      */
-
     static std::vector<double> compute_phasor(
             unsigned short* microtimes, int n_microtimes,
             double frequency = 1.0,
             int minimum_number_of_photons = 1,
-            double g_irf=1.0,
-            double s_irf=0.0,
+            double g_irf = 1.0,
+            double s_irf = 0.0,
             std::vector<int>* idxs = nullptr
     );
 
-    /*!
-     * Compute the phasor (g,s) for a histogram / bincounts
+
+    /**
+     * @brief Compute the phasor (g, s) for a histogram/bincounts of microtimes.
      *
-     * This function computes the phasor (g,s) for bincounted micro times
+     * This function computes the phasor (g, s) for bincounted microtimes.
      *
-     * @param bincounts vector bincounts
-     * @param minimum_number_of_photons
-     * @param frequency the frequency of the phasor
-     * @param g_irf g-value of instrument response phasor
-     * @param s_irf s-value of instrument response phasor
-     * @return vector of length 2: first element g-value, second element s-value
+     * @param[in] bincounts Vector of bincounts.
+     * @param[in] frequency The frequency of the phasor.
+     * @param[in] minimum_number_of_photons Minimum number of photons.
+     * @param[in] g_irf G-value of instrument response phasor.
+     * @param[in] s_irf S-value of instrument response phasor.
+     * @return Vector of length 2: first element g-value, second element s-value.
      */
     static std::vector<double> compute_phasor_bincounts(
             std::vector<int> &bincounts,
@@ -58,28 +61,34 @@ public:
             double g_irf, double s_irf
     );
 
-    /*!
-     * https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001
+
+    /**
+     * @brief Calculate g-value for a given set of phasor parameters.
      *
-     * @param g_irf g-value of instrument response phasor
-     * @param s_irf s-value of instrument response phasor
-     * @param g_exp
-     * @param s_exp
-     * @return
+     * Reference: https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001
+     *
+     * @param[in] g_irf G-value of instrument response phasor.
+     * @param[in] s_irf S-value of instrument response phasor.
+     * @param[in] g_exp Experimental g-value.
+     * @param[in] s_exp Experimental s-value.
+     * @return Computed g-value.
      */
     static double g(
             double g_irf, double s_irf,
             double g_exp, double s_exp
     );
 
-    /*!
-     * https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001
+
+    /**
+     * @brief Calculate s-value for a given set of phasor parameters.
      *
-     * @param g_irf
-     * @param s_irf
-     * @param g_exp
-     * @param s_exp
-     * @return
+     * Reference: https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0194578.s001
+     *
+     * @param[in] g_irf G-value of instrument response phasor.
+     * @param[in] s_irf S-value of instrument response phasor.
+     * @param[in] g_exp Experimental g-value.
+     * @param[in] s_exp Experimental s-value.
+     * @return Computed s-value.
      */
     static double s(
             double g_irf, double s_irf,
@@ -89,4 +98,4 @@ public:
 };
 
 
-#endif //FIT2X_PHASOR_H
+#endif //TTTRLIB_PHASOR_H
