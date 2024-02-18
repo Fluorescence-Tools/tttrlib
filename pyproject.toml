@@ -97,6 +97,6 @@ select = "cp3{8,9,10}-*"
 
     archs = [
         "x86_64",
-        "aarch64",
+        # "aarch64",
         # "ppc64le"
     ]
