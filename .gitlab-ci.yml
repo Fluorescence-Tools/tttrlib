@@ -6,67 +6,67 @@ stages:
   - test
   - deploy
 
-# general definitions
-.build: &build
-  stage: build
-  artifacts:
-    paths:
-      - bld-dir/
-.conda:build:posix: &conda_build_posix
-  <<: *build  
-  script:
-    - ./tools/build.sh
-.conda:build:lnx: &conda_build_lnx
-  <<: *conda_build_posix
-  before_script:
-    - source "/opt/conda/etc/profile.d/conda.sh"
-    - conda activate /opt/conda/
-    - git config --global safe.directory '*'
-    - git submodule update --init --recursive --remote
-
-# linux conda builds
-conda:build:lnx:x86:
-  <<: *conda_build_lnx
-  image:
-    entrypoint: [ "/bin/bash", "-i", "-c" ]
-    name: condaforge/linux-anvil-cos7-x86_64
-  tags:
-    - linux
-    - x86_64
-conda:build:lnx:ppc64le:
- <<: *conda_build_lnx
- image:
-   entrypoint: [ "/bin/bash", "-i", "-c" ]
-   name: condaforge/linux-anvil-ppc64le
- tags:
-   - linux
-   - ppc64le
-conda:build:lnx:aarch64:
- <<: *conda_build_lnx
- image:
-   entrypoint: [ "/bin/bash", "-i", "-c" ]
-   name: condaforge/linux-anvil-aarch64
- tags:
-   - linux
-   - aarch64
-
-conda:build:osx:
-  <<: *conda_build_posix
-  tags:
-    - osx
-  before_script:
-    - git submodule update --init --recursive --remote
-
-conda:build:windows:
-  <<: *build
-  tags:
-    - win
-  script: |
-    conda activate base
-    copy /Y tools\.condarc %userprofile%
-    copy /Y tools\conda_build_config.yaml conda_build_config.yaml
-    mamba install -y boa doxygen cmake
-    conda mambabuild conda-recipe --output-folder bld-dir
+## general definitions
+#.build: &build
+#  stage: build
+#  artifacts:
+#    paths:
+#      - bld-dir/
+#.conda:build:posix: &conda_build_posix
+#  <<: *build
+#  script:
+#    - ./tools/build.sh
+#.conda:build:lnx: &conda_build_lnx
+#  <<: *conda_build_posix
+#  before_script:
+#    - source "/opt/conda/etc/profile.d/conda.sh"
+#    - conda activate /opt/conda/
+#    - git config --global safe.directory '*'
+#    - git submodule update --init --recursive --remote
+#
+## linux conda builds
+#conda:build:lnx:x86:
+#  <<: *conda_build_lnx
+#  image:
+#    entrypoint: [ "/bin/bash", "-i", "-c" ]
+#    name: condaforge/linux-anvil-cos7-x86_64
+#  tags:
+#    - linux
+#    - x86_64
+#conda:build:lnx:ppc64le:
+# <<: *conda_build_lnx
+# image:
+#   entrypoint: [ "/bin/bash", "-i", "-c" ]
+#   name: condaforge/linux-anvil-ppc64le
+# tags:
+#   - linux
+#   - ppc64le
+#conda:build:lnx:aarch64:
+# <<: *conda_build_lnx
+# image:
+#   entrypoint: [ "/bin/bash", "-i", "-c" ]
+#   name: condaforge/linux-anvil-aarch64
+# tags:
+#   - linux
+#   - aarch64
+#
+#conda:build:osx:
+#  <<: *conda_build_posix
+#  tags:
+#    - osx
+#  before_script:
+#    - git submodule update --init --recursive --remote
+#
+#conda:build:windows:
+#  <<: *build
+#  tags:
+#    - win
+#  script: |
+#    conda activate base
+#    copy /Y tools\.condarc %userprofile%
+#    copy /Y tools\conda_build_config.yaml conda_build_config.yaml
+#    mamba install -y boa doxygen cmake
+#    conda mambabuild conda-recipe --output-folder bld-dir
 
 conda:test:linux:
   stage: test
@@ -83,7 +83,7 @@ conda:test:linux:
   script:
     - |
         source activate base
-        conda config --add channels "file://`pwd`/bld-dir"
+        conda config --add channels -c tpeulen  # "file://`pwd`/bld-dir"
         git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
         mamba install python tttrlib nose scipy
         # requires runner in privileged mode see
@@ -92,15 +92,15 @@ conda:test:linux:
         ln -s /srv/tttr-data tttr-data
         nosetests test
 
-conda:deploy:
-  stage: deploy
-  image: condaforge/mambaforge
-  tags:
-    - linux
-  before_script:
-    - git submodule update --init --recursive --remote
-  script:
-    - ./tools/deploy.sh
+#conda:deploy:
+#  stage: deploy
+#  image: condaforge/mambaforge
+#  tags:
+#    - linux
+#  before_script:
+#    - git submodule update --init --recursive --remote
+#  script:
+#    - ./tools/deploy.sh
 
 deploy:doc:
    # requires runner in privileged mode (setup in config.toml)
@@ -116,7 +116,7 @@ deploy:doc:
         export TZ=Europe/Berlin
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
-     - conda config --add channels "file://`pwd`/bld-dir"
+     - conda config --add channels -c tpeulen # "file://`pwd`/bld-dir"
      - mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
      - ln -s /srv/tttr-data tttr-data
      - cd doc
