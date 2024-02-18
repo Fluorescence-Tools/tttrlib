@@ -43,45 +43,41 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: tools/install_macos_sdk.sh
 
-      - name: Build Conda Package
+      - name: Build and Upload Conda Package
         shell: bash -el {0}
         run: |
           mamba install conda-build boa anaconda-client
           cd conda-recipe
-          
           # Use older conda_build_config -> boost-cpp 1.78
           curl -sLO  https://raw.githubusercontent.com/conda-forge/conda-forge-pinning-feedstock/084b098a28a7a66e9a0967d156bc55b9ebfc6726/recipe/conda_build_config.yaml
           # curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml
-          conda mambabuild . --output-folder ../conda-bld
-
-      - name: Upload Conda Package
-        shell: bash -el {0}
-        run: |
+          conda mambabuild . --output-folder conda-bld
           anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u tpeulen --force conda-bld/**/*.tar.bz2
+          
 
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # Used to host cibuildwheel
-      - uses: actions/setup-python@v3
-
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.16.5
-
-      - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-        # to supply options, put them in 'env', like:
-        # env:
-        #   CIBW_SOME_OPTION: value
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+#  build_wheels:
+#    name: Build wheels on ${{ matrix.os }}
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      # Used to host cibuildwheel
+#      - uses: actions/setup-python@v3
+#
+#      - name: Install cibuildwheel
+#        run: python -m pip install cibuildwheel==2.16.5
+#
+#      - name: Build wheels
+#        run: python -m cibuildwheel --output-dir wheelhouse
+#        # to supply options, put them in 'env', like:
+#        # env:
+#        #   CIBW_SOME_OPTION: value
+#
+#      - uses: actions/upload-artifact@v4
+#        with:
+#          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+#          path: ./wheelhouse/*.whl

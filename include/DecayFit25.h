@@ -1,5 +1,5 @@
-#ifndef TTTRLIB_DECAYFIT25_H
-#define TTTRLIB_DECAYFIT25_H
+#ifndef FIT2X_DECAYFIT25_H
+#define FIT2X_DECAYFIT25_H
 
 #include "DecayConvolution.h"
 
@@ -67,4 +67,4 @@ public:
 
 };
 
-#endif //TTTRLIB_DECAYFIT25_H
+#endif //FIT2X_DECAYFIT25_H

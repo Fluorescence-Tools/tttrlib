@@ -14,9 +14,6 @@
 #include <array>
 #include <memory>
 #include <numeric>
-#include <iostream>
-#include <sstream>      // std::stringstream
-#include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
 
 #include <any>
@@ -49,7 +46,6 @@ class TTTRHeader {
     friend class TTTR;
 
 protected:
-
     // JSON object used to store all the header information
     nlohmann::json json_data;
 
@@ -245,14 +241,15 @@ public:
     TTTRHeader(std::string fn, int tttr_container_type=0);
     ~TTTRHeader() = default;
 
-    /*!
-     * @brief Reads the header of a PTU file and sets the reading routing.
+    /*! Reads the header of a ptu file and sets the reading routing for
      *
-     * @param fpin File pointer to the PTU file.
-     * @param tttr_record_type Output parameter for the TTTR record type.
-     * @param json_data Output parameter for JSON data.
-     * @param rewind Flag to indicate whether to rewind the file (default is true).
-     * @return The position of the file pointer at the end of the header.
+     * @param fpin
+     * @param rewind
+     * @param tttr_record_type
+     * @param json_data
+     * @param macro_time_resolution
+     * @param micro_time_resolution
+     * @return The position of the file pointer at the end of the header
      */
     static size_t read_ptu_header(
             std::FILE *fpin,
@@ -261,43 +258,28 @@ public:
             bool rewind = true
     );
 
-    /*!
-     * @brief Reads the header of an HT3 file and sets the reading routing.
+    /*! Reads the header of a ht3 file and sets the reading routing for
      *
-     * @param fpin File pointer to the HT3 file.
-     * @param data Output parameter for JSON data.
-     * @param rewind Flag to indicate whether to rewind the file (default is true).
-     * @return The position of the file pointer at the end of the header.
+     * @param fpin
+     * @param rewind
+     * @param tttr_record_type
+     * @param data
+     * @return The position of the file pointer at the end of the header
      */
     static size_t read_ht3_header(
             std::FILE *fpin,
             nlohmann::json &data,
-            bool rewind = true
+            bool rewind=true
     );
 
-    /*!
-     * @brief Reads the header of a Becker & Hickel SPC132 file and sets the reading routing.
+    /*! Reads the header of a Becker&Hickel SPC132 file and sets the reading routing
      *
-     * @param fpin File pointer to the SPC132 file.
-     * @param data Output parameter for JSON data.
-     * @param rewind Flag to indicate whether to rewind the file (default is true).
-     * @return The position of the file pointer at the end of the header.
+     * @param fpin
+     * @param rewind
+     * @param tttr_record_type
+     * @param data JSON dictionary that will contain the header information
      */
     static size_t read_bh132_header(
-            std::FILE *fpin,
-            nlohmann::json &data,
-            bool rewind = true
-    );
-
-    /*!
-     * @brief Reads the header of a Carl Zeiss (CZ) Confocor3 file and sets the reading routing.
-     *
-     * @param fpin File pointer to the Confocor3 file.
-     * @param data Output parameter for JSON data.
-     * @param rewind Flag to indicate whether to rewind the file (default is true).
-     * @return The position of the file pointer at the end of the header.
-     */
-    static size_t read_cz_confocor3_header(
             std::FILE *fpin,
             nlohmann::json &data,
             bool rewind = true

@@ -61,9 +61,12 @@ conda:build:windows:
   <<: *build
   tags:
     - win
-  script:
-    - conda activate base
-    - .\tools\build.bat
+  script: |
+    conda activate base
+    copy /Y tools\.condarc %userprofile%
+    copy /Y tools\conda_build_config.yaml conda_build_config.yaml
+    mamba install -y boa doxygen cmake
+    conda mambabuild conda-recipe --output-folder bld-dir
 
 conda:test:linux:
   stage: test

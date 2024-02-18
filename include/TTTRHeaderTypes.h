@@ -37,7 +37,6 @@
 #define BH_SPC600_256_CONTAINER   3
 #define BH_SPC600_4096_CONTAINER  4
 #define PHOTON_HDF_CONTAINER      5
-#define CZ_CONFOCOR3_CONTAINER    6
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1
@@ -49,7 +48,6 @@
 #define BH_RECORD_TYPE_SPC130       7
 #define BH_RECORD_TYPE_SPC600_256   8
 #define BH_RECORD_TYPE_SPC600_4096  9
-#define CZ_RECORD_TYPE_CONFOCOR3    10
 
 
 /*
@@ -61,6 +59,7 @@ typedef struct {
     int32_t Show;
 } CurveMapping_t;
 
+
 typedef struct {
     float Start;
     float Step;
@@ -71,6 +70,7 @@ typedef struct{
     int32_t ModelCode;
     int32_t VersionCode;
 } pq_ht3_board_settings_t;
+
 
 /// The following represents the readable ASCII file header portion in a HT3 file
 typedef struct {
@@ -137,25 +137,6 @@ typedef struct {
     int32_t ImgHdrSize;
     uint64_t nRecords;
 } pq_ht3_TTModeHeader_t;
-
-
-/// Carl Zeiss Confocor3 raw data
-typedef union cz_confocor3_settings{
-    uint32_t allbits;
-    struct{
-        char Ident[52];
-        char dummy1[11];
-        unsigned channel               :8;
-        // 64 byte
-        uint32_t measure_id[4];  // 16
-        uint32_t measurement_position; // 8
-        uint32_t kinetic_index; // 8
-        uint32_t repetition_number; // 8
-        uint32_t frequency; // 8
-        char dummy2[32]; //32
-        // 64 + 64 byte
-    } bits;
-} cz_confocor3_settings_t;
 
 
 /// Becker&Hickl SPC132 Header

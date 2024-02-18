@@ -41,23 +41,17 @@ public:
     void set_tttr(TTTR* tttr);
 
     /*!
-     * @brief Selects a subset of indices by a list of routing channel numbers.
+     * Selects a subset of indices by a list of routing channel numbers.
      *
      * The returned set of indices will have routing channel numbers that are in
      * the list of the provided routing channel numbers.
      *
-     * @param tttr Pointer to TTTR object.
-     * @param routing_channels Array of routing channel numbers. A subset of this
+     * @param tttr pointer to TTTR object
+     * @param routing_channels[int] routing channel numbers. A subset of this
      * array will be selected by the input.
-     * @param n_routing_channels Length of the routing channel number array.
-     * @param mask Default value if a channel is selected.
+     * @param n_routing_channels[int] length of the routing channel number array.
      */
-    void select_channels(
-            TTTR* tttr,
-            signed char *routing_channels,
-            int n_routing_channels,
-            bool mask = false
-    );
+    void select_channels(TTTR* tttr, signed char *routing_channels, int n_routing_channels, bool mask=false);
 
     /*!
      * Selects a subset of indices a count rate of a sliding time-window

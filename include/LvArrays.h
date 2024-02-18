@@ -6,8 +6,8 @@
  * a this files defines a set of functions that facilitate the creation of the
  * LabView structures.
 */
-#ifndef TTTRLIB_DECAYLVARRAYS_H
-#define TTTRLIB_DECAYLVARRAYS_H
+#ifndef FIT2X_DECAYLVARRAYS_H
+#define FIT2X_DECAYLVARRAYS_H
 
 #include <iostream>
 #include <cmath>
@@ -105,4 +105,4 @@ MParam* CreateMParam(
     std::vector<int> data = std::vector<int>()
 );
 
-#endif //TTTRLIB_DECAYLVARRAYS_H
+#endif //FIT2X_DECAYLVARRAYS_H

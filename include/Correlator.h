@@ -178,17 +178,17 @@ protected:
             std::vector<double> &corr_normalized
     );
 
-   /*!
-    * @brief Normalize the correlation curve.
-    *
-    * This static function makes a copy of the current correlation curve,
-    * including the x-axis and corresponding correlation amplitudes,
-    * and calculates the values of the normalized correlation.
-    *
-    * @param[in]  correlator    Reads necessary normalization parameters from the correlator settings.
-    * @param[in,out] curve       Correlation curve to be normalized.
-    */
-   static void normalize(Correlator* correlator, CorrelatorCurve &curve);
+    /*!
+     * @brief Normalized the correlation of a correlation curve
+     *
+     * Makes a copy of the current correlation curve, i.e., the x-axis and
+     * and the corresponding correlation amplitudes and calculates the values
+     * of the normalized correlation.
+     * 
+     * @param[in] correlator reads necessary normalization parameters from correlator settings
+     * @param[in,out] curve correlation curve
+     */
+    static void normalize(Correlator* correlator, CorrelatorCurve &curve);
 
 public:
 
@@ -197,191 +197,146 @@ public:
     CorrelatorCurve curve;
 
     /*!
-     * @brief Compute the time difference in macro time units between the first and the last event.
-     *
-     * This function calculates the time difference in macro time units between the first
-     * and the last event in the event stream.
-     *
-     * @return Time difference in macro time units.
+     * @brief Computes the the time difference in macro time units the first and the last event
      */
     uint64_t dt();
 
     /*!
-     * @brief Correlator Constructor.
      *
-     * Constructs a Correlator object with the specified parameters.
-     *
-     * @param[in] tttr       Optional TTTR object. If provided, the macro and micro time calibration
-     *                       of the TTTR object header calibrate the correlator.
-     * @param[in] method     Name of the correlation method used by the correlator.
-     * @param[in] n_bins     Number of equally spaced correlation bins per block (determines correlation bins).
-     * @param[in] n_casc     Number of blocks (determines correlation bins).
-     * @param[in] make_fine  If true, macro and micro time are combined.
+     * @param[in] tttr optional TTTR object. If provided, the macro and micro time calibration
+     * of the TTTR object header calibrate the correlator.
+     * @param[in] method name of correlation method that is used by the correlator
+     * @param[in] n_bins number of equally spaced correlation bins per block (determines correlation bins)
+     * @param[in] n_casc number of blocks (determines correlation bins)
+     * @param[in] make_fine if true macro and micro time are combined.
      */
     Correlator(
-        std::shared_ptr<TTTR> tttr = nullptr,
-        std::string method = "wahl",
-        int n_bins = 17,
-        int n_casc = 25,
-        bool make_fine = false
+            std::shared_ptr<TTTR> tttr = nullptr,
+            std::string method = "wahl",
+            int n_bins = 17,
+            int n_casc = 25,
+            bool make_fine = false
     );
-
 
     ~Correlator() = default;
 
     /*!
-     * @brief Set the number of cascades (blocks) of the correlation curve.
-     *
-     * This function sets the number of cascades (blocks) of the correlation curve
-     * and updates the curve accordingly.
-     *
-     * @param[in] n_casc Number of cascades (blocks) of the correlation curve.
+     * @brief Set correlation axis parameter and update axis
+     * @param[in] n_casc number of cascades (also called blocks) of the correlation curve
      */
-    void set_n_casc(int n_casc) {
-     curve.set_n_casc(n_casc);
-     is_valid = false;
+    void set_n_casc(int v) {
+        curve.set_n_casc(v);
+        is_valid = false;
     }
 
-
+    /// @brief get correlation
     /*!
-     * @brief Get the correlation curve.
-     *
-     * Computes the correlation (if necessary) and returns the correlation curve.
-     *
-     * @return Correlation curve.
-     */
+    * computes correlation (if necessary) and returns correlation curve
+    * @return correlation curve
+    * STOP STOP
+    */
     CorrelatorCurve *get_curve() {
         if (!is_valid) run();
         return &curve;
-       }
-
+    }
 
     /*!
-     * @brief Get the number of correlation blocks.
-     *
-     * Returns the number of correlation blocks (cascades) in the correlation curve.
-     *
-     * @return Number of correlation blocks.
+     * @return number of correlation blocks
      */
     unsigned int get_n_casc() {
         return curve.get_n_casc();
-       }
+    }
 
     /*!
-     * @brief Set the number of equally spaced correlation channels per block.
-     *
-     * This function sets the number of equally spaced correlation channels per block
-     * and updates the correlation curve accordingly.
-     *
-     * @param[in] v Number of equally spaced correlation channels per block.
+     * @param[in] v  number of equally spaced correlation channels per block
      */
     void set_n_bins(int v) {
         curve.set_n_bins(v);
         is_valid = false;
-       }
+    }
 
     /*!
-     * @brief Get the number of equally spaced correlation channels per block.
-     *
-     * Returns the number of equally spaced correlation channels per block in the correlation curve.
-     *
-     * @return Number of equally spaced correlation channels per block.
+     * @return the number of equally spaced correlation channels per block
      */
     unsigned int get_n_bins() const {
         return curve.settings.n_bins;
     }
 
-
     /*!
-     * @brief Set the correlation method.
-     *
-     * This function sets the correlation method used by the correlator.
-     *
-     * @param[in] cm The name of the method. Options: "felekyan", "wahl", or "laurence".
-     *
-     * References:
-     * - Felekyan, S., et al., 2005. Full correlation from picoseconds to seconds by time-resolved and
-     *   time-correlated single photon detection. Review of Scientific Instruments, 76(8), p.083104.
-     * - Wahl, M., et al., 2003. Fast calculation of fluorescence correlation data with asynchronous
-     *   time-correlated single-photon counting, Opt Express Vol. 11, No. 26, p. 3383.
-     * - Laurence, T.A., et al., 2006. Fast, flexible algorithm for calculating photon correlations,
-     *   Opt Lett. 15;31(6):829-31.
+     * Correlation method
+     * @param[in] cm the name of the method options: "felekyan", "wahl", or "laurence" 
+     * 
+     *  Felekyan, S., Kühnemuth, R., Kudryavtsev, V., Sandhagen, C., Becker, W. and Seidel, C.A., 
+     *  2005. Full correlation from picoseconds to seconds by time-resolved and time-correlated 
+     *  single photon detection. Review of scientific instruments, 76(8), p.083104.
+     * 
+     *  Michael Wahl, Ingo Gregor, Matthias Patting, Joerg Enderlein, 
+     *  2003, Fast calculation of fluorescence correlation data with asynchronous
+     *  time-correlated single-photon counting, Opt Express Vol. 11, No. 26, p. 3383 
+     * 
+     *  Ted A. Laurence, Samantha Fore, Thomas Huser, 2006. Fast, flexible algorithm for 
+     *  calculating photon correlations, , Opt Lett. 15;31(6):829-31
+     * 
      */
     void set_correlation_method(std::string cm) {
         is_valid = false;
         correlation_method = cm;
-       }
-
+    }
 
     /*!
-     * @brief Get the name of the used correlation method.
-     *
-     * Returns the name of the correlation method currently set in the correlator.
-     *
-     * @return Name of the used correlation method.
+     * @return name of the used correlation method
      */
     std::string get_correlation_method() {
         return correlation_method;
-       }
+    }
 
     /*!
-     * @brief Add microtime information to the event stream.
+     * @brief Add microtime information to event stream 
      *
-     * This function adds microtime information to the event stream for correlation analysis.
-     *
-     * @param[in] tac_1 The micro times of the first correlation channel.
-     * @param[in] n_tac_1 The number of events in the first correlation channel.
-     * @param[in] tac_2 The micro times of the second correlation channel.
-     * @param[in] n_tac_2 The number of events in the second correlation channel.
+     * @param[in] tac_1 The micro times of the first correlation channel
+     * @param[in] n_tac_1 The number of events in the first correlation channel
+     * @param[in] tac_2 The micro times of the second correlation channel
+     * @param[in] n_tac_2 The number of events in the second correlation channel
      * @param[in] number_of_microtime_channels The maximum number of TAC channels of the micro times.
      */
     void set_microtimes(
-        unsigned short *tac_1, int n_tac_1,
-        unsigned short *tac_2, int n_tac_2,
-        unsigned int number_of_microtime_channels
+            unsigned short *tac_1, int n_tac_1,
+            unsigned short *tac_2, int n_tac_2,
+            unsigned int number_of_microtime_channels
     );
 
     /*!
-     * @brief Add macrotimes information to the event stream.
-     *
-     * This function adds macrotimes information to the event stream for correlation analysis.
-     *
-     * @param[in] t1 Time events in the first correlation channel.
-     * @param[in] n_t1 The number of time events in the first channel.
-     * @param[in] t2 Time events in the second correlation channel.
-     * @param[in] n_t2 The number of time events in the second channel.
-     */
+    * @param[in] t1 time events in the the first correlation channel
+    * @param[in] n_t1 The number of time events in the first channel
+    * @param[in] t1 time events in the the second correlation channel
+    * @param[in] n_t2 The number of time events in the second channel
+    */
     void set_macrotimes(
-        unsigned long long *t1, int n_t1,
-        unsigned long long *t2, int n_t2
+            unsigned long long *t1, int n_t1,
+            unsigned long long *t2, int n_t2
     );
 
     /*!
-     * @brief Get event times of the first and second correlation channel.
-     *
-     * This function returns the event times of the first and second correlation channel.
-     *
-     * @return A pair of vectors containing event times of the first and second correlation channel.
-     */
-     std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>> get_macrotimes() {
-      return {this->p1.times, this->p2.times};
-     }
-
+    * @brief get event times of first and second correlation channel
+    *
+    * @return event times of first and second correlation channel
+    */
+    std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>
+    get_macrotimes() {
+        return {this->p1.times, this->p2.times};
+    }
 
     /*!
-     * @brief Set time events and weights for the first and second correlation channels.
-     *
-     * This function sets the time events and weights for the first and second correlation channels.
-     *
-     * @param[in] t1 An array containing the time events of the first channel.
-     * @param[in] n_t1 The number of time events in the first channel.
-     * @param[in] weight_ch1 A vector of weights for the time events of the first channel.
-     * @param[in] n_weights_ch1 The number of weights for the first channel.
-     * @param[in] t2 An array containing the time events of the second channel.
-     * @param[in] n_t2 The number of time events in the second channel.
-     * @param[in] weight_ch2 A vector of weights for the time events of the second channel.
-     * @param[in] n_weights_ch2 The number of weights for the second channel.
-     */
+    *
+    * @param[in] time events of the first correlation channel
+    * @param[in] n_t1 The number of time events in the first channel
+    * @param[in] w1 A vector of weights for the time events of the first channel
+    * @param[in] n_weights_ch1 The number of weights of the first channel
+    * @param[in] t2 A vector of the time events of the second channel
+    * @param[in] n_t2 The number of time events in the second channel
+    * @param[in] w2 A vector of weights for the time events of the second channel
+    * @param[in] n_weights_ch2 The number of weights of the second channel
+    */
     void set_events(
             unsigned long long *t1, int n_t1,
             double *weight_ch1, int n_weights_ch1,
@@ -389,16 +344,15 @@ public:
             double *weight_ch2, int n_weights_ch2
     );
 
-
     /*!
-     * @brief Set weights used for correlation.
+     * @brief Set weights used for correlation
+     * 
+     * Set and update weights of the events in first and second correlation channel
      *
-     * This function sets and updates weights for the events in the first and second correlation channels.
-     *
-     * @param[in] weight_ch1 A vector of weights for the time events of the first channel.
-     * @param[in] n_weights_ch1 The number of weights for the first channel.
-     * @param[in] weight_ch2 A vector of weights for the time events of the second channel.
-     * @param[in] n_weights_ch2 The number of weights for the second channel.
+     * @param[in] w1 A vector of weights for the time events of the first channel
+     * @param[in] n_weights_ch1 The number of weights of the first channel
+     * @param[in] w2 A vector of weights for the time events of the second channel
+     * @param[in] n_weights_ch2 The number of weights of the second channel
      */
     void set_weights(
             double *weight_ch1, int n_weights_ch1,
@@ -406,13 +360,9 @@ public:
     );
 
     /*!
-     * @brief Get weights used for correlation.
-     *
-     * This function retrieves the weights for the events in the first and second correlation channels.
-     *
-     * @return A pair of vectors containing weights for the first and second correlation channels, respectively.
-     */
-    std::pair<std::vector<double>, std::vector<double>> get_weights(){
+     * @return weights in first and second correlation channel
+    */
+    std::pair<std::vector<double>, std::vector<double>> get_weights() {
         return {this->p1.weights, this->p2.weights};
     }
 
@@ -420,7 +370,7 @@ public:
      * @brief Get correlation bins (axis)
      *
      * @param[out] output x_axis / time axis of the correlation
-     * @param[out] n_output number of elements in the axis
+     * @param[out] n_out number of elements in the axis
      * of the x-axis
      */
     void get_x_axis(double **output, int *n_output);
@@ -474,18 +424,15 @@ public:
 
     std::pair<std::shared_ptr<TTTR>, std::shared_ptr<TTTR>> get_tttr();
 
-    /*!
-     * @brief Update weights based on a filter map and event information.
+ /*!
+     * Updates the weights. Non-zero weights are assigned a filter value that
+     * is defined by a filter map and the micro time of the event.
      *
-     * This function updates the weights. Non-zero weights are assigned a filter value based on a filter map
-     * and the micro time of the event.
-     *
-     * @param filter[in] A map of filters where the first element in the map is the routing channel number,
-     *                  and the second element is a vector that maps a micro time to a filter value.
-     * @param micro_times_1[in] Micro times of events in the first correlation channel.
-     * @param routing_channels_1[in] Routing channels of events in the first correlation channel.
-     * @param micro_times_2[in] Micro times of events in the second correlation channel.
-     * @param routing_channels_2[in] Routing channels of events in the second correlation channel.
+     * @param micro_times[in]
+     * @param routing_channels[in]
+     * @param filter[in] map of filters the first element in the map is the routing
+     * channel number, the second element of the map is a vector that maps a
+     * micro time to a filter value.
      */
     void set_filter(
             const std::map<short, std::vector<double>> &filter,
