@@ -83,12 +83,9 @@ conda:test:linux:
   script:
     - |
         source activate base
-        conda config --add channels -c tpeulen  # "file://`pwd`/bld-dir"
+        mamba install python tttrlib nose -c tpeulen
         git clone https://gitlab.peulen.xyz/skf/tttrlib && cd tttrlib && git fetch && git switch $CI_COMMIT_REF_NAME
-        mamba install python tttrlib nose scipy
-        # requires runner in privileged mode see
         mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
-        # sshfs -o password_stdin -oStrictHostKeyChecking=no -o Ciphers=aes128-ctr -o Compression=yes -p 2222 $FTP_USERNAME@peulen.xyz:/www www <<< $FTP_PASSWORD
         ln -s /srv/tttr-data tttr-data
         nosetests test
 
