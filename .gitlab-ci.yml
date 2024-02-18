@@ -115,7 +115,7 @@ deploy:doc:
         export TZ=Europe/Berlin
         apt-get update -qy && apt-get install -qy git nfs-common make
    script:
-     - conda config --add channels -c tpeulen # "file://`pwd`/bld-dir"
+     - conda config --add channels tpeulen # "file://`pwd`/bld-dir"
      - mount.nfs -o nolock 192.168.124.254:/mnt/user/www /srv
      - ln -s /srv/tttr-data tttr-data
      - cd doc
