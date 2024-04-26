@@ -172,6 +172,13 @@ is recommended.
 Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
 are not supported.
 
+## Citation
+If you use this software please also check the pre-print:
+>tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling;
+Thomas-Otavio Peulen, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb, Suren Felekyan, Andrej Sali, 
+Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze; [https://arxiv.org/abs/2402.17252](arXiv:2402.17252)
+>
+
 ## License
 
 Copyright 2007-2024 tttrlib developers.
