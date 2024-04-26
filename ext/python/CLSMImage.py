@@ -102,7 +102,10 @@ def __init__(
         if tttr_data is not None:
             header = tttr_data.header
             self.header = header
-            settings_kwargs.update(self.read_clsm_settings(tttr_data))
+            try:
+                settings_kwargs.update(self.read_clsm_settings(tttr_data))
+            except:
+                print("Error reading TTTR CLSM header")
         # Overwrite if user defined inputs make sense
         if isinstance(marker_frame_start, int):
             settings_kwargs['marker_frame_start'] = [marker_frame_start]
