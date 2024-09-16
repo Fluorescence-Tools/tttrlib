@@ -3,6 +3,12 @@
 
 #include <cstdint>
 
+// SM files
+typedef union sm_record {
+    uint64_t time;
+    uint32_t channel;
+} sm_record_t;
+
 
 // HydraHarp/TimeHarp260 T2 record
 typedef union pq_hh_t2_record {

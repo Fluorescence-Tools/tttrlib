@@ -27,6 +27,7 @@ TTTR::TTTR() :
     container_names.insert({std::string("SPC-600_4096"), BH_SPC600_4096_CONTAINER});
     container_names.insert({std::string("PHOTON-HDF5"), PHOTON_HDF_CONTAINER});
     container_names.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
+    container_names.insert({std::string("SM"), SM_CONTAINER});
     header = new TTTRHeader(tttr_container_type);
     allocate_memory_for_records(0);
 }
@@ -242,6 +243,96 @@ int TTTR::read_hdf_file(const char *fn){
     return 0;
 }
 
+int TTTR::read_sm_file(const char *filename){
+    // Function to read a 64-bit big-endian value
+
+    // Open the file using fopen
+    FILE* fp = fopen(filename, "rb");
+    if (fp == nullptr) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return 1;
+    }
+
+    if (!fp) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return 1;
+    }
+
+    // Decode header
+    header = new TTTRHeader(fp, SM_CONTAINER);
+
+    // Skip the header (165 bytes)
+    size_t HEADER_SIZE = header->header_end;
+    if (fseek(fp, HEADER_SIZE, SEEK_SET) != 0) {
+        std::cerr << "Error seeking past the header." << std::endl;
+        fclose(fp);
+        return 1;
+    }
+
+    // Determine file size to calculate remaining data size
+    fseek(fp, 0, SEEK_END);
+    long fileSize = ftell(fp);
+    fseek(fp, HEADER_SIZE, SEEK_SET); // Return to start of data after header
+
+    if (fileSize < HEADER_SIZE + 26) {
+        std::cerr << "Error: File is too short to contain expected data and trailing bytes." << std::endl;
+        fclose(fp);
+        return 1;
+    }
+
+    size_t dataSize = fileSize - HEADER_SIZE - 26;
+
+    // Allocate buffer to hold the data
+    std::vector<uint8_t> buffer(dataSize);
+    if (fread(buffer.data(), 1, dataSize, fp) != dataSize) {
+        std::cerr << "Error reading data from file." << std::endl;
+        fclose(fp);
+        return 1;
+    }
+
+    fclose(fp);  // Close the file after reading
+
+    // Define inline lambda functions for endian conversion
+    auto readBigEndian64 = [](const uint8_t* data) -> uint64_t {
+        return (static_cast<uint64_t>(data[0]) << 56) |
+               (static_cast<uint64_t>(data[1]) << 48) |
+               (static_cast<uint64_t>(data[2]) << 40) |
+               (static_cast<uint64_t>(data[3]) << 32) |
+               (static_cast<uint64_t>(data[4]) << 24) |
+               (static_cast<uint64_t>(data[5]) << 16) |
+               (static_cast<uint64_t>(data[6]) << 8)  |
+               (static_cast<uint64_t>(data[7]));
+    };
+
+    auto readBigEndian16 = [](const uint8_t* data) -> uint16_t {
+        return (static_cast<uint16_t>(data[0]) << 8) | static_cast<uint16_t>(data[1]);
+    };
+
+    // Process the data in 12-byte records
+    const size_t RECORD_SIZE = 12;
+    if (buffer.size() % RECORD_SIZE != 0) {
+        std::cerr << "Error: Data size is not a multiple of record size." << std::endl;
+        return 1;
+    }
+
+    size_t numRecords = buffer.size() / RECORD_SIZE;
+    n_valid_events = numRecords;
+    n_records_in_file = n_valid_events;
+    allocate_memory_for_records(numRecords);
+    for (size_t i = 0; i < numRecords; ++i) {
+        const uint8_t* record = buffer.data() + i * RECORD_SIZE;
+
+        // Read and interpret the 64-bit PH time
+        macro_times[i] = readBigEndian64(record);
+
+        // Read and interpret the 16-bit detector
+        routing_channels[i] = readBigEndian16(record + 8);
+    }
+
+    return 0;
+
+}
+
 int TTTR::read_file(const char *fn, int container_type) {
 #ifdef VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
@@ -263,7 +354,10 @@ int TTTR::read_file(const char *fn, int container_type) {
         fn = filename.c_str();
         if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
-        } else{
+        } else if (container_type == SM_CONTAINER){
+            read_sm_file(fn);
+        }
+        else{
             fp = fopen(fn, "rb");
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();

@@ -5,7 +5,8 @@
 Version 0.24
 ============
 
-**January, 2024**
+* Add support for sm files
+* Add support for CZ CF3 FCS files
 
 
 Version 0.23

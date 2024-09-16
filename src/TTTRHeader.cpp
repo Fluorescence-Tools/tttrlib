@@ -74,6 +74,9 @@ TTTRHeader::TTTRHeader(
     } else if(tttr_container_type == CZ_CONFOCOR3_CONTAINER) {
         header_end = read_cz_confocor3_header(fpin, json_data);
         tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+    } else if(tttr_container_type == SM_CONTAINER){
+        header_end = read_sm_header(fpin, json_data);
+        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
     }
     else if(tttr_container_type == PQ_HT3_CONTAINER){
         header_end = read_ht3_header(fpin, json_data);
@@ -142,6 +145,88 @@ size_t TTTRHeader::read_bh132_header(
 #endif
     return 4;
 }
+
+
+size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
+
+    add_tag(j, TTTRRecordType, (int) SM_RECORD_TYPE, tyInt8);
+
+    // Helper lambda to read and swap endianness
+    auto read_and_swap = [&](auto& value) {
+        fread(&value, sizeof(value), 1, file);
+        SwapEndian(value);
+    };
+
+    // Helper lambda to read a string with its size
+    auto read_string = [&](const std::string& tag_name) {
+        uint32_t size;
+        read_and_swap(size);
+        char* buffer = new char[size];
+        fread(buffer, sizeof(char), size, file);
+        add_tag(j, tag_name, buffer, tyAnsiString);
+        delete[] buffer;
+    };
+    sm_header_t header;  // Use only the 'header' structure
+
+    // Read and swap the version
+    read_and_swap(header.version);
+    add_tag(j, "version", (int) header.version, tyInt8);
+
+    read_string("comment");
+    read_string("simple");
+
+    read_and_swap(header.pointer1);
+    add_tag(j, "pointer1", (int) header.pointer1, tyInt8);
+
+    read_string("file_section_type");
+
+    read_and_swap(header.magic1);
+    add_tag(j, "magic1", (int) header.magic1, tyInt8);
+    read_and_swap(header.magic2);
+    add_tag(j, "magic2", (int) header.magic2, tyInt8);
+
+    read_string("col1_name");
+    read_and_swap(header.col1_resolution);
+    add_tag(j, "col1_resolution", (double) header.col1_resolution, tyFloat8);
+    read_and_swap(header.col1_offset);
+    add_tag(j, "col1_offset", (double) header.col1_offset, tyFloat8);
+    read_and_swap(header.col1_bho);
+    add_tag(j, "col1_bho", (int) header.col1_bho, tyInt8);
+
+    // Read the column 2 information
+    read_string("col2_name");
+    read_and_swap(header.col2_resolution);
+    add_tag(j, "col2_resolution", (double) header.col2_resolution, tyFloat8);
+    read_and_swap(header.col2_offset);
+    add_tag(j, "col2_offset", (double) header.col2_offset, tyFloat8);
+    read_and_swap(header.col2_bho);
+    add_tag(j, "col2_bho", (int) header.col2_bho, tyInt8);
+
+    read_string("col3_name");
+    read_and_swap(header.col3_resolution);
+    add_tag(j, "col3_resolution", (double) header.col3_resolution, tyFloat8);
+    read_and_swap(header.col3_offset);
+    add_tag(j, "col3_offset", (double) header.col3_offset, tyFloat8);
+
+    // Read the number of channels
+    int32_t num_channels;
+    read_and_swap(num_channels);
+    add_tag(j, "num_channels", (int) num_channels, tyInt8);
+
+    header.channel_labels.resize(num_channels);
+    for (uint32_t i = 0; i < num_channels; ++i) {
+        uint32_t size;
+        fread(&size, sizeof(size), 1, file);
+        SwapEndian(size);
+        fseek(file, size, SEEK_CUR);
+    }
+
+    add_tag(j, TTTRTagGlobRes, (double) header.col2_resolution, tyFloat8);
+
+    // Return the current file position, which is the cursor
+    return ftell(file);
+}
+
 
 
 size_t TTTRHeader::read_cz_confocor3_header(
@@ -483,6 +568,7 @@ void TTTRHeader::write_spc132_header(
     fwrite(&head, 4, 1, fp);
     fclose(fp);
 }
+
 
 void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::string modes){
     #ifdef VERBOSE_TTTRLIB
