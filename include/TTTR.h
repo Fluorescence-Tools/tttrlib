@@ -344,6 +344,16 @@ private:
     int read_hdf_file(const char *fn);
 
     /*!
+     * \brief Reads the essential content from a SM file.
+     *
+     * Reads the macro time, and routing channel number from the specified Photon SM file.
+     *
+     * \param fn Filename pointing to the Photon HDF file.
+     * \return Returns an integer indicating the success or failure of the file reading operation.
+     */
+    int read_sm_file(const char *fn);
+
+    /*!
      * \brief Reads a specified number of records from the file.
      *
      * Reads 'n_rec' records from the file. If 'n_rec' is not specified, all records in the file

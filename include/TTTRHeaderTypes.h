@@ -38,6 +38,7 @@
 #define BH_SPC600_4096_CONTAINER  4
 #define PHOTON_HDF_CONTAINER      5
 #define CZ_CONFOCOR3_CONTAINER    6
+#define SM_CONTAINER              7
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1
@@ -50,6 +51,7 @@
 #define BH_RECORD_TYPE_SPC600_256   8
 #define BH_RECORD_TYPE_SPC600_4096  9
 #define CZ_RECORD_TYPE_CONFOCOR3    10
+#define SM_RECORD_TYPE              11
 
 
 /*
@@ -138,6 +140,30 @@ typedef struct {
     uint64_t nRecords;
 } pq_ht3_TTModeHeader_t;
 
+
+
+// Header information structure
+typedef struct {
+    uint32_t version;
+    std::string comment;
+    std::string simple_str;
+    uint32_t pointer1;
+    std::string file_section_type;
+    uint32_t magic1;
+    uint32_t magic2;
+    std::string col1_name;
+    double col1_resolution;
+    double col1_offset;
+    uint32_t col1_bho;
+    std::string col2_name;
+    double col2_resolution;
+    double col2_offset;
+    uint32_t col2_bho;
+    std::string col3_name;
+    double col3_resolution;
+    double col3_offset;
+    std::vector<std::string> channel_labels;
+} sm_header_t;
 
 /// Carl Zeiss Confocor3 raw data
 typedef union cz_confocor3_settings{

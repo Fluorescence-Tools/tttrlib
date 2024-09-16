@@ -18,6 +18,7 @@
 #include <sstream>      // std::stringstream
 #include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
+#include <cstring> /* std::memcpy */
 
 #include <any>
 // #include <boost/any.hpp>
@@ -42,6 +43,37 @@ const std::string TTTRContainerType = "MeasDesc_ContainerType";   // Internal co
 const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
 const std::string TTTRTagBits = "TTResultFormat_BitsPerRecord";    // Bits per TTTR record
 const std::string FileTagEnd = "Header_End";                       // Always appended as last tag (BLOCKEND)
+
+
+/**
+ * Swaps the endianness of a given value.
+ *
+ * This function takes a reference to a value of any type `T` and swaps its byte order
+ * between little-endian and big-endian formats. It uses a union to access the raw bytes
+ * of the value and reverses the byte order using `std::reverse_copy`.
+ *
+ * @tparam T The type of the value whose endianness is to be swapped. Must be trivially
+ *            copyable and have a defined byte size.
+ * @param val A reference to the value whose endianness is to be swapped. The value is
+ *            modified in-place.
+ *
+ * Example:
+ *
+ * int32_t original = 0x12345678;
+ * SwapEndian(original);
+ * // original now contains 0x78563412
+ */
+template <typename T>
+void SwapEndian(T &val) {
+    union U {
+        T val;
+        std::array<std::uint8_t, sizeof(T)> raw;
+    } src, dst;
+
+    src.val = val;
+    std::reverse_copy(src.raw.begin(), src.raw.end(), dst.raw.begin());
+    val = dst.val;
+}
 
 
 class TTTRHeader {
@@ -275,8 +307,22 @@ public:
             bool rewind = true
     );
 
+    /**
+     * Reads and parses the header of an SM (Single molecule) record from the given file.
+     * The parsed information is stored in the provided JSON object `j`.
+     *
+     * This function performs the following tasks:
+     * 1. Adds a tag to the JSON object `j` for the record type.
+     * 2. Reads and processes the header information from the file.
+     *
+     * @param file A pointer to the file from which the header is read.
+     * @param j A reference to a nlohmann::json object where parsed information will be stored.
+     * @return The file position after reading the header.
+     */
+    static size_t read_sm_header(FILE* file, nlohmann::json &j);
+
     /*!
-     * @brief Reads the header of a Becker & Hickel SPC132 file and sets the reading routing.
+     * @brief Reads the header of a Becker & Hickl SPC132 file and sets the reading routing.
      *
      * @param fpin File pointer to the SPC132 file.
      * @param data Output parameter for JSON data.
