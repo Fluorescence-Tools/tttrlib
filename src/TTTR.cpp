@@ -327,6 +327,10 @@ int TTTR::read_sm_file(const char *filename){
 
         // Read and interpret the 16-bit detector
         routing_channels[i] = readBigEndian16(record + 8);
+
+        // Set micro time to default value
+        micro_times[i] = 0;
+
     }
 
     return 0;

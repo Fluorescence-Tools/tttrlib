@@ -23,7 +23,8 @@ class Tests(unittest.TestCase):
         (settings["photon_hdf_filename"], 'PHOTON-HDF5'),
         (settings["ht3_clsm_filename"], 'HT3'),
         (settings["ptu_hh_t2_filename"], 'PTU'),
-        (settings["ptu_hh_t3_filename"], 'PTU')
+        (settings["ptu_hh_t3_filename"], 'PTU'),
+        (settings["sm_filename"], 'SM')
     ]
 
     def test_append_event(self):
