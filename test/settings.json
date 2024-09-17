@@ -5,6 +5,7 @@
   "ptu_hh_t2_filename" : "./tttr-data/pq/ptu/pq_ptu_hh_t2.ptu",
   "ptu_hh_t3_filename" : "./tttr-data/pq/ptu/pq_ptu_hh_t3.ptu",
   "ht3_clsm_filename" : "./tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3",
+  "sm_filename" : "./tttr-data/sm/tl_sm.sm",
   "make_references": false,
   "test_files": [
       ["./tttr-data/bh/bh_spc132.spc", "SPC-130"],
