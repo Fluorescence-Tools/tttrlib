@@ -27,6 +27,7 @@
 
 #include "Histogram.h"
 #include "TTTRHeader.h"
+#include "FileCheck.h"
 #include "TTTRMask.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
@@ -682,6 +683,25 @@ public:
     * @param read_input If true, reads the content of the file.
     */
     TTTR(const char *filename, int container_type, bool read_input);
+
+    /**
+     * @brief Constructs a TTTR object based on the provided filename by inferring the file type.
+     *
+     * This constructor initializes a TTTR object by automatically determining the file type
+     * from the given filename. It utilizes the `inferTTTRFileType` function to identify
+     * the type of TTTR file and then calls the existing constructor with the inferred container type.
+     * The internal state related to the container type is initialized based on the file type inference.
+     *
+     * The constructor performs the following actions:
+     * - Infers the container type from the filename using `inferTTTRFileType`.
+     * - Initializes the TTTR object using the existing constructor `TTTR(const char *fn, int container_type, bool some_flag)`.
+     * - Sets the container type string based on the inferred container type.
+     * - Handles cases where the inferred container type is not supported by setting the container type string to `"Unknown"`
+     *   and logging an error message.
+     *
+     * @param filename The path to the TTTR file to be analyzed. The file type is inferred based on this filename.
+     */
+    TTTR(const char *filename);
 
     /*!
      * Constructor for TTTR object that reads the content of the file.

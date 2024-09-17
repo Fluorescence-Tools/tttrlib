@@ -121,11 +121,15 @@ TTTR::TTTR(const TTTR &p2){
 }
 
 TTTR::TTTR(const char *fn, int container_type, bool read_input) : TTTR(){
-    filename.assign(fn);
-    tttr_container_type = container_type;
-    if(read_input){
-        if(read_file())
-            find_used_routing_channels();
+    if(container_type >= 0){
+        filename.assign(fn);
+        tttr_container_type = container_type;
+        if(read_input){
+            if(read_file())
+                find_used_routing_channels();
+        }
+    } else{
+        std::cerr << "File " << fn << " not supported." << std::endl;
     }
 }
 
@@ -136,24 +140,25 @@ TTTR::TTTR(const char *fn, int container_type) : TTTR(fn, container_type, true) 
         );
     }
     catch(...) {
-        std::cerr << "Container type " << container_type
-        << " not supported." << std::endl;
+        std::cerr << "TTTR::TTTR(const char *fn, int container_type): Container type " << container_type << " not supported." << std::endl;
     }
 }
 
 TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
-//    try {
+    try {
         tttr_container_type_str.assign(container_type);
         tttr_container_type = container_names.left.at(std::string(container_type));
         filename.assign(fn);
         if(read_file())
             find_used_routing_channels();
-//    }
-//    catch(...) {
-//        std::cerr << "Container type " << container_type
-//        << " not supported." << std::endl;
-//    }
+    }
+    catch(...) {
+        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): Container type " << container_type << " not supported." << std::endl;
+    }
 }
+
+TTTR::TTTR(const char* filename) : TTTR(filename, inferTTTRFileType(filename), true) {}
+
 
 void TTTR::shift_macro_time(int shift) {
     for(size_t i=0; i<n_valid_events; i++){

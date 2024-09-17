@@ -7,6 +7,7 @@ Version 0.24
 
 * Add support for sm files
 * Add support for CZ CF3 FCS files
+* Improved type tttr file type inference to mitigate crashes
 
 
 Version 0.23
