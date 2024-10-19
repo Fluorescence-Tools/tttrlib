@@ -1,5 +1,8 @@
 #include "TTTR.h"
 
+// Static member definition outside the class
+boost::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
+
 
 TTTR::TTTR() :
         // private
@@ -20,14 +23,6 @@ TTTR::TTTR() :
         n_records_read(0),
         n_valid_events(0),
         processRecord(nullptr){
-    container_names.insert({std::string("PTU"), PQ_PTU_CONTAINER});
-    container_names.insert({std::string("HT3"), PQ_HT3_CONTAINER});
-    container_names.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
-    container_names.insert({std::string("SPC-600_256"), BH_SPC600_256_CONTAINER});
-    container_names.insert({std::string("SPC-600_4096"), BH_SPC600_4096_CONTAINER});
-    container_names.insert({std::string("PHOTON-HDF5"), PHOTON_HDF_CONTAINER});
-    container_names.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
-    container_names.insert({std::string("SM"), SM_CONTAINER});
     header = new TTTRHeader(tttr_container_type);
     allocate_memory_for_records(0);
 }
@@ -751,6 +746,42 @@ void selection_by_count_rate(
         }
         i = r;
     }
+}
+
+
+std::vector<long long> TTTR::burst_search(int L, int m, double T) {
+
+    int64_t i, i_start, i_stop;
+    uint8_t in_burst = 0;
+
+    std::vector<long long> bursts;  // Now storing interleaved start and stop indices
+    long long Ti = T / header->get_macro_time_resolution();
+
+    for (i = 0; i <= size() - m; ++i) {
+        if (macro_times[i + m - 1] - macro_times[i] <= Ti) {
+            if (!in_burst) {
+                in_burst = 1;
+                i_start = i;
+            }
+        } else if (in_burst) {
+            in_burst = 0;
+            i_stop = i + m - 2;
+            if (i_stop - i_start + 1 >= L) {
+                bursts.push_back(i_start);
+                bursts.push_back(i_stop);
+            }
+        }
+    }
+
+    if (in_burst) {
+        i_stop = i + m - 1;
+        if (i_stop - i_start + 1 >= L) {
+            bursts.push_back(i_start);
+            bursts.push_back(i_stop);
+        }
+    }
+
+    return bursts;
 }
 
 unsigned int TTTR::get_number_of_micro_time_channels(){

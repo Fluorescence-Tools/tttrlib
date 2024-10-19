@@ -211,7 +211,21 @@ private:
     TTTRHeader *header = nullptr;
 
     /// map to translates string container types to int container types
-    boost::bimap<std::string, int> container_names = {};
+    static boost::bimap<std::string, int> container_names;
+
+    // Static function to initialize the container_names
+    static boost::bimap<std::string, int> initialize_container_names() {
+        boost::bimap<std::string, int> m;
+        m.insert({std::string("PTU"), PQ_PTU_CONTAINER});
+        m.insert({std::string("HT3"), PQ_HT3_CONTAINER});
+        m.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
+        m.insert({std::string("SPC-600_256"), BH_SPC600_256_CONTAINER});
+        m.insert({std::string("SPC-600_4096"), BH_SPC600_4096_CONTAINER});
+        m.insert({std::string("PHOTON-HDF5"), PHOTON_HDF_CONTAINER});
+        m.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
+        m.insert({std::string("SM"), SM_CONTAINER});
+        return m;
+    }
 
     typedef bool (*processRecord_t)(
             uint32_t&,  // input
@@ -536,16 +550,36 @@ public:
       return get_n_valid_events();
      }
 
-     /*!
-      * \brief Retrieves the used routing channel numbers from the TTTR data.
-      *
-      * This function populates the provided output array with the routing channel
-      * numbers that are used in the TTTR file. The number of elements in the output
-      * array is stored in the n_output parameter.
-      *
-      * @param output Pointer to the output array to be populated.
-      * @param n_output Pointer to the number of elements in the output array.
-      */
+    /**
+    * Sliding window burst search.
+    *
+    * Finds bursts in the macro time array. A burst starts when the photon rate
+    * is above a minimum threshold, and ends when the rate falls below the same
+    * threshold. The rate-threshold is defined by the ratio `m`/`T` (`m` photons
+    * in a time interval `T`). A burst is discarded if it has less than `L`
+    * photons.
+    *
+    * Arguments:
+    *     L (int): minimum number of photons in a burst. Bursts with size
+    *         (or counts) < L are discarded.
+    *     m (int): number of consecutive photons used to compute the rate.
+    *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
+    *
+    * Returns:
+    *     vector<int64_t>: A vector of interleaved start and stop indices.
+    */
+    std::vector<long long> burst_search(int L, int m, double T);
+
+    /*!
+     * \brief Retrieves the used routing channel numbers from the TTTR data.
+     *
+     * This function populates the provided output array with the routing channel
+     * numbers that are used in the TTTR file. The number of elements in the output
+     * array is stored in the n_output parameter.
+     *
+     * @param output Pointer to the output array to be populated.
+     * @param n_output Pointer to the number of elements in the output array.
+     */
      void get_used_routing_channels(signed char **output, int *n_output);
 
      /*!
@@ -639,6 +673,26 @@ public:
      std::string get_tttr_container_type(){
         return tttr_container_type_str;
     }
+
+    /**
+     * @brief Retrieves a list of supported container names.
+     *
+     * This function returns a list of supported container names, e.g. 'PTU', 'SPC-130', etc..
+     *
+     * @return std::vector<std::string>
+     * A list of supported container names.
+     *
+     */
+     static std::vector<std::string> get_supported_container_names(){
+
+        // Extract container names from the right side of the bimap
+        std::vector<std::string> supported_container_names;
+        for (const auto& element : container_names.left) {
+            supported_container_names.push_back(element.first);
+        }
+
+        return supported_container_names;
+     }
 
      /*!
       * \brief Creates a new TTTR object by selecting specific events based on the provided indices.

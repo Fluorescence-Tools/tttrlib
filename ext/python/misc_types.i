@@ -33,8 +33,9 @@ import_array();
 %template(VectorUint128) std::vector<unsigned long long>;
 %template(VectorUint32_3D) std::vector<std::vector<std::vector<unsigned int>>>;
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
-%template(MapStringString) std::map<std::string, std::string>;
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
+%template(MapStringString) std::map<std::string, std::string>;
+%template(VectorString) std::vector<std::string>;
 
 %typemap(out) std::vector< double,std::allocator< double > > * {
 $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>(*($1)));
