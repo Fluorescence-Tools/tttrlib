@@ -24,11 +24,10 @@ jobs:
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          mamba-version: "*"
+          miniconda-version: "latest"
           channels: conda-forge,defaults
           channel-priority: true
+          activate-environment: base
 
       - name: Display Conda Settings
         shell: bash -el {0}
