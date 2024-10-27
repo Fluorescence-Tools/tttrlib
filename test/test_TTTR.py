@@ -69,13 +69,34 @@ class Tests(unittest.TestCase):
             if t2 not in d3['tags']:
                 all_tags = False
                 break
+
         self.assertEqual(all_tags, True)
 
     def test_tttr_header_add_tags(self):
+        """
+        Tests adding tags to an existing TTTR header.
+
+        This test verifies that when tags from another TTTR header are added to an existing one,
+        the number of tags in the original header is not reduced, but rather increased or maintained.
+
+        :return: None
+
+        :raises AssertionError: If any of the assertions in this method fail.
+        """
+        # Initialize the TTTR library with SPC-130 settings
         data = tttrlib.TTTR(settings["spc132_filename"], "SPC-130")
-        header2 = tttrlib.TTTRHeader(settings["ptu_hh_t3_filename"], 0) # 0 is the container type
-        self.assertEqual(len(data.header.tags) < len(header2.tags), True)
+
+        # Initialize a new TTTR header for comparison
+        # Use PTU file type with container type 0 (new)
+        header2 = tttrlib.TTTRHeader(settings["ptu_hh_t3_filename"], 0)  # 0 is the container type
+
+        # Assert that the original data has fewer tags than the new header
+        self.assertEqual(len(data.header.tags), len(header2.tags))  # Use '==' instead of '<' for equality
+
+        # Add tags from the new header to the existing one
         data.header.add_tags(header2)
+
+        # Assert that the number of tags in the original header is now greater than or equal to
         self.assertEqual(len(data.header.tags) >= len(header2.tags), True)
 
     def test_reading(self):

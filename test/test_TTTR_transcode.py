@@ -44,19 +44,37 @@ class Tests(unittest.TestCase):
 
     def test_write_tttr_new_header(self):
         """
-        The container and record type of TTTR container
-        is changed to save an SPC file as a PTU file to disk
+        Tests writing a TTTR container with updated header.
+
+        This test verifies that the TTTR library successfully saves a PTU file to disk,
+        and correctly reads it back into memory. The changes made to the header are specific
+        to SPC-130 and ensure compatibility with the updated container type and record type.
+
+        :return: None
+
+        :raises AssertionError: If any of the assertions in this method fail.
         """
+        # Create a temporary file for writing and reading
         _, filename = tempfile.mkstemp(suffix='.ptu')
+
+        # Initialize the TTTR library with SPC-130 settings
         data_spc = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
         header = data_spc.header
+
+        # Update the container and record type in the header
         # see: TTTRHeaderTypes.h
-        # PQ_PTU_CONTAINER          0
-        # PQ_RECORD_TYPE_HHT3v2       4
+        # PQ_PTU_CONTAINER          0 (new)
+        # PQ_RECORD_TYPE_HHT3v2       4 (new)
         header.tttr_container_type = 0
         header.tttr_record_type = 4
+
+        # Write the updated data to the temporary file
         data_spc.write(filename)
+
+        # Read the written data back into memory
         d2 = tttrlib.TTTR(filename)
+
+        # Assert that the micro_times, macro_times, and routing_channels match the original data
         self.assertEqual(np.allclose(d2.micro_times, data.micro_times), True)
         self.assertEqual(np.allclose(d2.macro_times, data.macro_times), True)
         self.assertEqual(np.allclose(d2.routing_channels, data.routing_channels), True)

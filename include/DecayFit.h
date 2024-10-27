@@ -107,7 +107,7 @@ struct DecayFitIntegrateSignals{
     double Fp(){
         double g = 1.0;
         if(corrections != nullptr){
-            g = corrections->g;
+            g = corrections->gamma;
         }
         if(g == 1.0){
             return (Sp - Bp);
@@ -117,15 +117,23 @@ struct DecayFitIntegrateSignals{
     }
 
     double Fs(){
-        double g = 1.0;
+        double g = 1.0, r;
         if(corrections != nullptr){
-            g = corrections->g;
+            g = corrections->gamma;
         }
         if(g == 1.0){
-            return (Ss - Bs);
+            r = (Ss - Bs);
         } else{
-            return (Ss - g * Bs) / (1. - g);
+            r = (Ss - g * Bs) / (1. - g);
         }
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "Fs()" << std::endl;
+        std::cout << "g:" << g << std::endl;
+        std::cout << "Ss:" << Ss << std::endl;
+        std::cout << "Bs:" << Bs << std::endl;
+        std::cout << "Fs:" << r << std::endl;
+#endif
+        return r;
     }
 
     double r(){
@@ -137,6 +145,15 @@ struct DecayFitIntegrateSignals{
             l1 = corrections->l1;
             l2 = corrections->l2;
         }
+
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "fp:" << fp << std::endl;
+        std::cout << "fs:" << fs << std::endl;
+        std::cout << "g:" << g << std::endl;
+        std::cout << "l1:" << l1 << std::endl;
+        std::cout << "l2:" << l2 << std::endl;
+#endif
+
         double nom = (fp - g * fs);
         double denom = (fp * (1. - 3. * l2) + (2. - 3. * l1) * g * fs);
         return nom / denom;

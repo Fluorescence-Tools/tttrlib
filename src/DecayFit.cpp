@@ -27,7 +27,7 @@ void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
     std::cout << "-- Nchannels_exp:" << Nchannels_exp << std::endl;
     std::cout << "-- Bp, Bs: " << Bp << ", " << Bs << std::endl;
     std::cout << "-- Sp, Ss: " << Sp << ", " << Ss << std::endl;
-    std::cout << "-- Bexpected, Bs: " << Bp << ", " << Bs << std::endl;
+    std::cout << "-- Bexpected: " << Bexpected << std::endl;
 #endif
 }
 

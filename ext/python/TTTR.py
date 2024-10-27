@@ -10,19 +10,22 @@ def event_types(self):
 
 def __getattr__(self, item):
     """
-    If an attribute `attribute` is accesses that does not exist
-    the corresponding getter by calling 'get_attribute' is called
-
-    :param self:
-    :param item:
-    :return:
+    If an attribute `attribute` is accessed that does not exist,
+    the corresponding getter method ('get_attribute') is called.
+    Works for both instance and static methods.
     """
     item = "get_" + str(item)
+    # Check if the static method or instance method exists in the class
     if hasattr(self.__class__, item):
-        call = getattr(self, item)
-        return call()
+        call = getattr(self.__class__, item)
+        if isinstance(call, staticmethod):
+            # If it's a static method, call it directly from the class
+            return call.__get__(None, self.__class__)()
+        else:
+            # Otherwise, assume it's an instance method
+            return call(self)
     else:
-        raise AttributeError
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
 def __len__(self):
     return self.get_n_valid_events()
