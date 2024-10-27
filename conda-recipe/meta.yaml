@@ -24,7 +24,7 @@ requirements:
     - ninja
     - make               # [linux]
     - doxygen
-    - swig
+    - swig 4.2.*
     - python
     - numpy
   host:
