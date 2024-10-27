@@ -27,7 +27,7 @@ jobs:
           miniconda-version: "latest"
           channels: conda-forge,defaults
           channel-priority: true
-          activate-environment: base
+
       - name: Display Conda Settings
         shell: bash -el {0}
         run: |
