@@ -12,7 +12,6 @@ ADD_DEFINITIONS(-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES)
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 
-INCLUDE(simd)
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
@@ -33,13 +32,14 @@ IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
   set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
 ENDIF()
 IF(WITH_AVX)
-  IF (MSVC)
-      # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
-      # /Oi is for intrinsics
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX -openmp:experimental /Oi")
-  ELSE(MSVC)
-      STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mavx -mfma")
-  ENDIF ()
+    INCLUDE(simd)
+    IF (MSVC)
+        # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
+        # /Oi is for intrinsics
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oi")
+    ELSE(MSVC)
+        STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mfma")
+    ENDIF ()
 ENDIF()
 
 # Debug build
@@ -88,13 +88,8 @@ endif()
 # INCLUDES AND LIBRARIES
 #######################################
 
-# Conda
-#######################################
-FIND_PACKAGE(Conda)
-
 ## Boost
 ###########################
-FIND_PACKAGE(CondaBoost)
 IF(Boost_USE_STATIC_LIBS)
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF(Boost_USE_STATIC_LIBS)
