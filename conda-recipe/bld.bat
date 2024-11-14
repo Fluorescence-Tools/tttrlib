@@ -25,7 +25,10 @@ cmake .. -G "NMake Makefiles" ^
  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
  -DCMAKE_SWIG_OUTDIR="%SP_DIR%" ^
  -DPYTHON_VERSION="%PYTHON_VERSION_NUMERIC%" ^
- -DBUILD_LIBRARY=ON
+ -DBUILD_LIBRARY=OFF ^
+ -DWITH_AVX=OFF ^
+ -DBoost_USE_STATIC_LIBS=OFF
+
 nmake install
 
 :: Add wrappers to path for each Python command line tool
