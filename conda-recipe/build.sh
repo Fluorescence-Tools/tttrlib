@@ -14,7 +14,6 @@ cmake -S .. -B . \
   -DWITH_AVX=OFF \
   -DBoost_USE_STATIC_LIBS=OFF \
   -DPython_ROOT_DIR="${PREFIX}/bin" \
-  -DPYTHON_VERSION=$(python -c 'import platform; print(platform.python_version())')\
   -G Ninja \
   ${CONFIG_ARGS}
 
