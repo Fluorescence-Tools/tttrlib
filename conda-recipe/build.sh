@@ -14,7 +14,7 @@ cmake -S .. -B . \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_LIBRARY=OFF \
   -DWITH_AVX=OFF \
-  -Boost_USE_STATIC_LIBS=OFF \
+  -DBoost_USE_STATIC_LIBS=OFF \
   -DPYTHON_VERSION=$(python -c 'import platform; print(platform.python_version())')\
   -G Ninja \
   "${CONFIG_ARGS}"
