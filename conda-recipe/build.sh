@@ -14,6 +14,7 @@ cmake -S .. -B . \
   -DWITH_AVX=OFF \
   -DBoost_USE_STATIC_LIBS=OFF \
   -DPython_ROOT_DIR="${PREFIX}/bin" \
+  -DBUILD_PYTHON_DOCS=ON \
   -G Ninja \
   ${CONFIG_ARGS}
 
