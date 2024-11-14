@@ -17,26 +17,19 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - llvm-openmp        # [osx]
-    - libgomp            # [linux]
-    - pkg-config         # [not win]
     - cmake
     - ninja
-    - make               # [linux]
     - doxygen
-    - swig 4.2.*
-    - python
-    - numpy
   host:
+    - swig <4.3.0
     - boost-cpp
     - hdf5
+    - pip
     - python
-    - setuptools
     - numpy
   run:
     - python
-    - {{ pin_compatible('numpy', max_pin='x.x') }}
-    - boost-cpp
+    - {{ pin_compatible('numpy') }}
     - hdf5
     - tqdm
     - click
