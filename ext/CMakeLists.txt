@@ -26,7 +26,7 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE(STATUS "Python version: '${PYTHON_VERSION}'")
     cmake_policy(SET CMP0094 NEW)
 
-    FIND_PACKAGE(Python ${PYTHON_VERSION} EXACT COMPONENTS Interpreter Development.Module NumPy)
+    FIND_PACKAGE(Python COMPONENTS Interpreter Development.Module NumPy)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
     LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
 
