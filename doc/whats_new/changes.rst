@@ -2,13 +2,18 @@
 
 .. _changes_0_23:
 
-Version 0.25
+Version 0.26
 ============
+* Improved support for Photon-HDF5
+
+Version 0.25
+------------
 * Add simpler option for burst search
 * Added get_supported_container_names
+* Added ttrlib to bioconda
 
 Version 0.24
------------
+------------
 * Add support for sm files
 * Add support for CZ CF3 FCS files
 * Improved type tttr file type inference to mitigate crashes
