@@ -15,6 +15,7 @@
 #include <memory>
 #include <numeric>
 #include <iostream>
+#include <boost/locale.hpp>
 #include <sstream>      // std::stringstream
 #include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
@@ -24,6 +25,15 @@
 // #include <boost/any.hpp>
 //#include <boost/filesystem.hpp>
 //#include <boost/locale.hpp>
+
+#ifdef BUILD_PHOTON_HDF
+#include "hdf5.h"
+#include <H5Cpp.h>
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
+#endif
 
 #include "json.hpp"
 
@@ -79,6 +89,9 @@ void SwapEndian(T &val) {
 class TTTRHeader {
 
     friend class TTTR;
+
+private:
+    void process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name);
 
 protected:
 
@@ -292,6 +305,8 @@ public:
             nlohmann::json &json_data,
             bool rewind = true
     );
+
+    int read_photon_hdf5_setup(const char *fn);
 
     /*!
      * @brief Reads the header of an HT3 file and sets the reading routing.

@@ -7,6 +7,7 @@
 #endif
 
 
+
 TTTRHeader::TTTRHeader() :
         header_end(0)
 {
@@ -388,6 +389,141 @@ size_t TTTRHeader::read_ht3_header(
     add_tag(data, TTTRNMicroTimes, (int) 32768 / std::max(1, ht3_header_begin.Binning), tyInt8);
     //return 880; // guessed by inspecting several ht3 files
     return (size_t) ftell(fpin);
+}
+
+// Helper function to process datasets in a given group
+void TTTRHeader::process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name) {
+    // Get all objects in the group
+    auto object_names = group.listObjectNames();
+    for (const auto& obj_name : object_names) {
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "Processing object: " << obj_name << std::endl;
+#endif
+
+        // Check if the object is a dataset
+        if (group.getObjectType(obj_name) != HighFive::ObjectType::Dataset) {
+#ifdef VERBOSE_TTTRLIB
+            std::cout << obj_name << " is not a dataset. Skipping." << std::endl;
+#endif
+            continue;
+        }
+
+        // Open the dataset
+        auto dataset = group.getDataSet(obj_name);
+        auto datatype = dataset.getDataType();
+        auto dataspace = dataset.getSpace();
+        auto dims = dataspace.getDimensions();
+
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "datatype in hdf: " << datatype.string() << std::endl;
+        std::cout << "dims.size(): " << dims.size() << std::endl;
+#endif
+
+        // Process scalar or vector data
+        if (dims.empty() || dims.size() == 1) {
+            bool is_scalar = dims.empty() || dims[0] == 1;
+            if (datatype == HighFive::AtomicType<int8_t>() || datatype == HighFive::AtomicType<uint8_t>() ||
+                datatype == HighFive::AtomicType<int16_t>() || datatype == HighFive::AtomicType<uint16_t>() ||
+                datatype == HighFive::AtomicType<int32_t>() || datatype == HighFive::AtomicType<uint32_t>() ||
+                datatype == HighFive::AtomicType<int64_t>() || datatype == HighFive::AtomicType<uint64_t>()) {
+
+                if (is_scalar) {
+                    int value;
+                    dataset.read(value);
+#ifdef VERBOSE_TTTRLIB
+                    std::cout << obj_name << " (int): " << value << std::endl;
+#endif
+                    add_tag(json_data, group_name + "." + obj_name, value, tyInt8, 0);
+                } else {
+                    std::vector<int> values;
+                    dataset.read(values);
+#ifdef VERBOSE_TTTRLIB
+                    std::cout << obj_name << " (int vector): ";
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        std::cout << values[idx] << " ";
+                    }
+                    std::cout << std::endl;
+#endif
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyInt8, idx);
+                    }
+                }
+            } else if (datatype == HighFive::AtomicType<float>() || datatype == HighFive::AtomicType<double>()) {
+                if (is_scalar) {
+                    double value;
+                    dataset.read(value);
+                    add_tag(json_data, group_name + "." + obj_name, value, tyFloat8, 0);
+                } else {
+                    std::vector<double> values;
+                    dataset.read(values);
+#ifdef VERBOSE_TTTRLIB
+                    std::cout << obj_name << " (float vector): ";
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        std::cout << values[idx] << " ";
+                    }
+                    std::cout << std::endl;
+#endif
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyFloat8, idx);
+                    }
+                }
+            } else {
+                std::string value;
+                dataset.read(value);
+
+                // Allocate memory and copy string data
+                char* allocated_str = new char[value.size() + 2];
+                std::strcpy(allocated_str, value.c_str());
+
+                add_tag(json_data, group_name + "." + obj_name, allocated_str, tyAnsiString, 0);
+
+                // Free allocated memory
+                delete[] allocated_str;
+            }
+        } else {
+#ifdef VERBOSE_TTTRLIB
+            std::cerr << "Unsupported number of dimensions: " << dims.size() << " for " << obj_name << std::endl;
+#endif
+        }
+    }
+}
+
+int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
+    try {
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "Opening file: " << fn << std::endl;
+#endif
+        // Open the HDF5 file using HighFive
+        HighFive::File file(fn, HighFive::File::ReadOnly);
+
+#ifdef VERBOSE_TTTRLIB
+        std::cout << "File opened successfully." << std::endl;
+#endif
+        json_data["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
+
+        if (file.exist("/setup")) {
+            process_hdf5_group_datasets(file.getGroup("/setup"), "setup");
+        }
+        if (file.exist("/identity")) {
+            process_hdf5_group_datasets(file.getGroup("/identity"), "identity");
+        }
+        if (file.exist("/photon_data/timestamps_specs")) {
+            process_hdf5_group_datasets(file.getGroup("/photon_data/timestamps_specs"), "timestamps_specs");
+            double v = get_tag(json_data, "timestamps_specs.timestamps_unit")["value"];
+            add_tag(json_data, TTTRTagGlobRes, v, tyFloat8);
+        }
+        if (file.exist("/photon_data/nanotimes_specs")) {
+            process_hdf5_group_datasets(file.getGroup("/photon_data/nanotimes_specs"), "nanotimes_specs");
+            int v1 = get_tag(json_data, "nanotimes_specs.tcspc_num_bins")["value"];
+            add_tag(json_data, TTTRNMicroTimes, v1, tyInt8);
+            double v2 = get_tag(json_data, "nanotimes_specs.tcspc_unit")["value"];
+            add_tag(json_data, TTTRTagRes, v2, tyFloat8);
+        }
+        return 0; // Return success
+    } catch (const HighFive::Exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return -1; // Return error
+    }
 }
 
 
@@ -822,13 +958,12 @@ void TTTRHeader::add_tag(
         nlohmann::json &json_data,
         const std::string &name,
         std::any value,
-        // boost::any value,
         unsigned int type,
         int idx
 ) {
     using namespace std;
     nlohmann::json tag;
-    tag["name"] = name; // boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
+    tag["name"] = boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
     tag["type"] = type;
     tag["idx"] = idx;
     if (type == tyEmpty8) {
@@ -843,12 +978,10 @@ void TTTRHeader::add_tag(
         tag["value"] = any_cast<std::vector<double>>(value);
     }
     else if (type == tyAnsiString) {
-        auto str = any_cast<char*>(value);
-        tag["value"] = str;
-        // the stuff below work better but depnds on boost
-        // auto str2 = std::string(str);
-        // auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
-        // tag["value"] = str3;
+         auto str = any_cast<char*>(value);
+         auto str2 = std::string(str);
+         auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
+         tag["value"] = str3;
     }
     else if (type == tyWideString) {
         auto str = any_cast<wchar_t *>(value);

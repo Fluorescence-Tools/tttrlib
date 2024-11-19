@@ -264,7 +264,7 @@ int inferTTTRFileType(const char* fn) {
             if (isPTUFile(filename)) {
                 return PQ_PTU_CONTAINER;
             }
-        } else if (extension == "hdf5") {
+        } else if (extension == "hdf5" || extension == "h5") {
             if (isHDF5File(filename)) {
                 return PHOTON_HDF_CONTAINER;
             }

@@ -23,6 +23,7 @@
 
 #ifdef BUILD_PHOTON_HDF
 #include "hdf5.h"
+#include <H5Cpp.h>
 #endif
 
 #include "Histogram.h"

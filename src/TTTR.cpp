@@ -186,63 +186,95 @@ void TTTR::find_used_routing_channels(){
 #endif
 }
 
-int TTTR::read_hdf_file(const char *fn){
+int TTTR::read_hdf_file(const char *fn) {
 #ifdef BUILD_PHOTON_HDF
     header = new TTTRHeader();
+    header->read_photon_hdf5_setup(fn);
 
     /* handles */
-    hid_t       ds_microtime, ds_n_sync_pulses, ds_routing_channels;
-    hid_t       space;
+    hid_t ds_microtime = -1, ds_n_sync_pulses = -1, ds_routing_channels = -1;
+    hid_t space = -1;
 
-    /* dataset and chunk dimensions*/
-    hsize_t     dims[1];
+    /* dataset and chunk dimensions */
+    hsize_t dims[1] = {0};
 
     /* open file */
     hdf5_file = H5Fopen(fn, H5F_ACC_RDONLY, H5P_DEFAULT);
-    ds_microtime        = H5Dopen(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT);
-    ds_n_sync_pulses    = H5Dopen(hdf5_file, "/photon_data/timestamps", H5P_DEFAULT);
-    ds_routing_channels = H5Dopen(hdf5_file, "/photon_data/detectors", H5P_DEFAULT);
+    if (hdf5_file < 0) {
+        std::cerr << "Error: Unable to open file: " << fn << std::endl;
+        return 1;
+    }
 
-    /*
-     * Get dataspace and allocate memory for read buffer.
-     */
-    space = H5Dget_space(ds_microtime);
-    H5Sget_simple_extent_dims(space, dims, nullptr);
-    allocate_memory_for_records(dims[0]);
-    /* All records are assumed to be valid.
-     * Invalid records are usually sorted out
-     * before storing the hdf5 file. */
-    n_valid_events = dims[0];
-    n_records_in_file = dims[0];
+    /* Check and handle /photon_data/timestamps */
+    if (H5Lexists(hdf5_file, "/photon_data/timestamps", H5P_DEFAULT) > 0) {
+        ds_n_sync_pulses = H5Dopen(hdf5_file, "/photon_data/timestamps", H5P_DEFAULT);
+        space = H5Dget_space(ds_n_sync_pulses);
+
+        // Allocate memory
+        H5Sget_simple_extent_dims(space, dims, nullptr);
+        n_valid_events = dims[0];
+        n_records_in_file = dims[0];
+        allocate_memory_for_records(n_valid_events);
+        H5Dread(
+                ds_n_sync_pulses,
+                H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                macro_times
+        );
+        H5Sclose(space);
+        H5Dclose(ds_n_sync_pulses);
+    } else {
+        std::cerr << "Warning: /photon_data/timestamps not found. Filling macro_times with zeros." << std::endl;
+        std::fill(macro_times, macro_times + n_records_in_file, 0);
+        return 1;
+    }
+
+    /* Check and handle /photon_data/detectors */
+    if (H5Lexists(hdf5_file, "/photon_data/detectors", H5P_DEFAULT) > 0) {
+        ds_routing_channels = H5Dopen(hdf5_file, "/photon_data/detectors", H5P_DEFAULT);
+        space = H5Dget_space(ds_routing_channels);
+        H5Sget_simple_extent_dims(space, dims, nullptr);
+        H5Dread(
+                ds_routing_channels,
+                H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                routing_channels
+        );
+        H5Sclose(space);
+        H5Dclose(ds_routing_channels);
+    } else {
+        std::cerr << "Warning: /photon_data/detectors not found. Filling routing_channels with zeros." << std::endl;
+        std::fill(routing_channels, routing_channels + n_records_in_file, 0);
+    }
+
+    /* Check and handle /photon_data/nanotimes */
+    if (H5Lexists(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT) > 0) {
+        ds_microtime = H5Dopen(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT);
+        space = H5Dget_space(ds_microtime);
+        H5Sget_simple_extent_dims(space, dims, nullptr);
+        allocate_memory_for_records(dims[0]);
+        H5Dread(
+                ds_microtime,
+                H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                micro_times
+        );
+        H5Sclose(space);
+        H5Dclose(ds_microtime);
+    } else {
 #ifdef VERBOSE_TTTRLIB
-    std::clog << "n_records_in_file: " << n_records_in_file << std::endl;
+        std::cerr << "Warning: /photon_data/nanotimes not found. Filling micro_times with zeros." << std::endl;
 #endif
-    /*
-     * Read the data
-     */
-    H5Dread(
-            ds_microtime,
-            H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            micro_times
-    );
-    H5Dread(
-            ds_n_sync_pulses,
-            H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            macro_times
-    );
-    H5Dread(
-            ds_routing_channels,
-            H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-            routing_channels
-    );
-    /* close file */
+        std::fill(micro_times, micro_times + n_records_in_file, 0);
+    }
+
+    /* Close the file */
     H5Fclose(hdf5_file);
-    H5Sclose(space);
+    return 0;
+
+#else
+    std::cerr << "Not built with Photon HDF interface." << std::endl;
     return 1;
 #endif
-    std::cerr << "Not build with Photon HDF interface." << std::endl;
-    return 0;
 }
+
 
 int TTTR::read_sm_file(const char *filename){
     // Function to read a 64-bit big-endian value
