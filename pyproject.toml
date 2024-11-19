@@ -1,5 +1,5 @@
 [project]
-version = "0.25.0"
+version = "0.26.0"
 name = "tttrlib"
 requires-python = ">=3.8"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
