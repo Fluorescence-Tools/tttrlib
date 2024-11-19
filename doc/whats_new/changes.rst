@@ -4,7 +4,7 @@
 
 Version 0.26
 ============
-* Improved support for Photon-HDF5
+* Improved support for Photon-HDF5 for better ALEX support
 
 Version 0.25
 ------------
