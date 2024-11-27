@@ -36,13 +36,12 @@ IF(BUILD_PYTHON_INTERFACE)
         # of the resulting wheel archive
         SET(MODULE_NAME ${PROJECT_NAME})
         set(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-        SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
         set(MY_INSTALL_PREFIX ${Python_SITELIB})
-        SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
     endif()
+    SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
