@@ -1,5 +1,6 @@
 cmake_policy(SET CMP0078 NEW)
 cmake_policy(SET CMP0086 NEW)
+cmake_policy(SET CMP0094 NEW)
 
 
 SET(MODULE_NAME ${PROJECT_NAME})
@@ -23,9 +24,6 @@ IF(BUILD_PYTHON_INTERFACE)
     ENDIF()
 
     MESSAGE(STATUS "Building Python interface")
-    MESSAGE(STATUS "Python version: '${PYTHON_VERSION}'")
-    cmake_policy(SET CMP0094 NEW)
-
     FIND_PACKAGE(Python COMPONENTS Interpreter Development.Module NumPy)
     INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
     LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
