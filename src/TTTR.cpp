@@ -337,8 +337,12 @@ int TTTR::read_sm_file(const char *filename){
                (static_cast<uint64_t>(data[7]));
     };
 
-    auto readBigEndian16 = [](const uint8_t* data) -> uint16_t {
-        return (static_cast<uint16_t>(data[0]) << 8) | static_cast<uint16_t>(data[1]);
+    // Function to read a 32-bit big-endian integer
+    auto readBigEndian32 = [](const uint8_t* data) -> uint32_t {
+        return (static_cast<uint32_t>(data[0]) << 24) |
+               (static_cast<uint32_t>(data[1]) << 16) |
+               (static_cast<uint32_t>(data[2]) << 8) |
+               static_cast<uint32_t>(data[3]);
     };
 
     // Process the data in 12-byte records
@@ -356,12 +360,13 @@ int TTTR::read_sm_file(const char *filename){
         const uint8_t* record = buffer.data() + i * RECORD_SIZE;
 
         // Read and interpret the 64-bit PH time
-        macro_times[i] = readBigEndian64(record);
-
+        uint64_t macro_time = readBigEndian64(record);
         // Read and interpret the 16-bit detector
-        routing_channels[i] = readBigEndian16(record + 8);
 
-        // Set micro time to default value
+        uint32_t routing_channel = readBigEndian32(record + 8);
+
+        macro_times[i] = macro_time;
+        routing_channels[i] = routing_channel;
         micro_times[i] = 0;
 
     }
