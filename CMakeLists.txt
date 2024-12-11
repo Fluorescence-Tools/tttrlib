@@ -127,12 +127,21 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# third party includes/code
-FILE(GLOB_RECURSE SRC_files_thirdparty "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/*.cpp")
-LIST(APPEND SRC_files ${SRC_files_thirdparty})
+# Third party
+#############################
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
-ADD_SUBDIRECTORY(ext)
+# LBFGS
+FILE(GLOB_RECURSE LBFGS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp")
+LIST(APPEND SRC_files ${LBFGS})
+
+# ALGLib
+FILE(GLOB_RECURSE ALGLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/alglib/*.cpp")
+LIST(APPEND SRC_files ${ALGLIB})
+
+# HighFive HDF5 reader
+ADD_SUBDIRECTORY(thirdparty/HighFive)
+LINK_LIBRARIES(HighFive::HighFive)
 
 
 IF(BUILD_LIBRARY)
@@ -171,6 +180,11 @@ IF(BUILD_LIBRARY)
       )
   ENDIF(INSTALL)
 ENDIF(BUILD_LIBRARY)
+
+# SWIG Extensions
+#####################################
+ADD_SUBDIRECTORY(ext)
+
 
 # Print additional (Debug) info
 #####################################
