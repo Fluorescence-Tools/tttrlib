@@ -501,6 +501,22 @@ public:
         long long macro_time_offset = 0
     );
 
+    /**
+     * @brief Assigns a microtime based on the alternating-laser excitation (ALEX) period.
+     *
+     * This method computes a microtime for each macrotime value by taking the modulo
+     * operation of the macrotime with respect to the specified ALEX period. Optionally,
+     * a period shift can be applied to adjust the macrotime before the computation.
+     *
+     * microtime = (macrotime - period_shift) modulo alex_period
+     *
+     * @param alex_period The ALEX period in units of macrotime.
+     * @param period_shift An optional shift applied to the macrotime before computing
+     *                     the microtime. Default is 0.
+     *
+     */
+    void alex_to_microtime(unsigned long alex_period, int period_shift=0);
+
     /*!
      * \brief Appends a single event to the TTTR object.
      *

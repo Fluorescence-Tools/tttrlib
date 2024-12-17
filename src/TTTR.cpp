@@ -375,6 +375,13 @@ int TTTR::read_sm_file(const char *filename){
 
 }
 
+void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        int64_t m = macro_times[i] - period_shift;
+        micro_times[i] = static_cast<unsigned short>(m % alex_period);
+    }
+}
+
 int TTTR::read_file(const char *fn, int container_type) {
 #ifdef VERBOSE_TTTRLIB
     std::clog << "READING TTTR FILE" << std::endl;
