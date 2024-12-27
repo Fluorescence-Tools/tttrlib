@@ -162,28 +162,14 @@ void TTTR::shift_macro_time(int shift) {
     }
 }
 
-void TTTR::find_used_routing_channels(){
+void TTTR::find_used_routing_channels() {
     used_routing_channels.clear();
-    for(size_t i = 0; i < n_valid_events; i++){
-        short c = routing_channels[i];
-        bool new_channel = true;
-        for(auto l: used_routing_channels){
-            if(c == l){
-                new_channel = false;
-                break;
-            }
-        }
-        if(new_channel){
-            used_routing_channels.push_back(c);
+    for (size_t i = 0; i < n_valid_events; i++) {
+        signed char channel = routing_channels[i];
+        if (std::find(used_routing_channels.begin(), used_routing_channels.end(), channel) == used_routing_channels.end()) {
+            used_routing_channels.push_back(channel);
         }
     }
-#ifdef VERBOSE_TTTRLIB
-    std::clog << "-- Used routing channels: ";
-    for(auto c: used_routing_channels){
-        std::clog << static_cast<unsigned>(c) << ", ";
-    }
-    std::clog << std::endl;
-#endif
 }
 
 int TTTR::read_hdf_file(const char *fn) {
