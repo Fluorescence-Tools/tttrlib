@@ -219,7 +219,7 @@ public:
      unsigned int get_number_of_micro_time_channels(){
          int v = get_tag(json_data, TTTRNMicroTimes)["value"];
          if(v < 0){
-             return 1;
+             return 0;
          } else{
              return v;
          }
