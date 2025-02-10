@@ -217,7 +217,12 @@ public:
      * the number of micro time channels.
      */
      unsigned int get_number_of_micro_time_channels(){
-        return (unsigned int) get_tag(json_data, TTTRNMicroTimes)["value"];
+         int v = get_tag(json_data, TTTRNMicroTimes)["value"];
+         if(v < 0){
+             return 1;
+         } else{
+             return v;
+         }
      }
 
     /// Resolution for the macro time in nanoseconds
