@@ -526,7 +526,6 @@ int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
     }
 }
 
-
 size_t TTTRHeader::read_ptu_header(
         std::FILE *fpin,
         int &tttr_record_type,
@@ -553,12 +552,10 @@ size_t TTTRHeader::read_ptu_header(
 
     // read the header
     fread(&Magic, 1, sizeof(Magic), fpin);
-    // check if file is a PQ-PTU file
     if (strncmp(Magic, "PQTTTR", 6) != 0) {
         throw std::string("\nWrong Magic, this is not a PTU file.");
     }
 
-    // Get the version
     tmp = fread(&version, 1, sizeof(version), fpin);
     if (tmp != sizeof(version)) {
         throw std::string("\nerror reading header, aborted.");
@@ -573,116 +570,91 @@ size_t TTTRHeader::read_ptu_header(
 #endif
     do {
         uint64_t Result;
-        // This loop all header items and displays the identifier and the associated
-        // value, independent of what the tags mean in detail. Only some selected
-        // items are explicitly retrieved and kept in memory because they are
-        // needed to subsequently interpret the TTTR record data.
         Result = fread(&TagHead, 1, sizeof(TagHead), fpin);
         if (Result != sizeof(TagHead))
             throw std::string("Incomplete File.");
-        // Record type
         if (TTTRTagTTTRRecType == TagHead.Ident)
             file_type = TagHead.TagValue;
         std::string key = TagHead.Ident;
 #ifdef VERBOSE_TTTRLIB
         std::clog << key << ":" << TagHead.Typ << ":" << TagHead.TagValue << ";" << std::endl;
 #endif
-        // The header end tag is skipped.
-       if(FileTagEnd != TagHead.Ident){
-            switch (TagHead.Typ) {
-                case tyEmpty8:
-                    add_tag(json_data, key, nullptr, TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyBool8:
-                    add_tag(json_data, key, *(bool *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyInt8:
-                case tyBitSet64:
-                case tyColor8:
-                    add_tag(json_data, key, *(int *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyFloat8:
-                    add_tag(json_data, key, *(double *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyTDateTime:
-                    double time;
-                    time = *(double *) &(TagHead.TagValue); time -= 25569; time *= 86400;
-                    add_tag(json_data, key, time, TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyFloat8Array:
-                    // sprintf(buffer_out, "<Float Array with %llu Entries>", TagHead.TagValue / sizeof(double));
-                    // only seek the Data, if one needs the data, it can be loaded here
-//                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
-                    b = (double *) calloc((size_t) TagHead.TagValue, 1);
-                    fread(b, 1, (size_t) TagHead.TagValue, fpin);
-                    vec.assign(b, b + TagHead.TagValue);
-                    add_tag(json_data, key, vec, TagHead.Typ, TagHead.Idx);
-                    free(b);
-                    break;
-                case tyAnsiString:
-                    AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
-                    Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                    if (Result != TagHead.TagValue) {
-                        free(AnsiBuffer);
-                        throw std::string("Incomplete File.");
-                    }
-                    add_tag(json_data, key,AnsiBuffer, TagHead.Typ, TagHead.Idx);
+        if (FileTagEnd != TagHead.Ident) {
+            if (TagHead.Typ == tyEmpty8) {
+                add_tag(json_data, key, nullptr, TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyBool8) {
+                add_tag(json_data, key, *(bool *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyInt8 || TagHead.Typ == tyBitSet64 || TagHead.Typ == tyColor8) {
+                add_tag(json_data, key, *(int *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyFloat8) {
+                add_tag(json_data, key, *(double *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyTDateTime) {
+                double time = *(double *) &(TagHead.TagValue); time -= 25569; time *= 86400;
+                add_tag(json_data, key, time, TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyFloat8Array) {
+                b = (double *) calloc((size_t) TagHead.TagValue, 1);
+                fread(b, 1, (size_t) TagHead.TagValue, fpin);
+                vec.assign(b, b + TagHead.TagValue);
+                add_tag(json_data, key, vec, TagHead.Typ, TagHead.Idx);
+                free(b);
+            } else if (TagHead.Typ == tyAnsiString) {
+                AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
+                Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
+                if (Result != TagHead.TagValue) {
                     free(AnsiBuffer);
-                    break;
-                case tyWideString:
-                      WideBuffer = (wchar_t *) calloc((size_t) TagHead.TagValue, 1);
-                      Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                      std::cerr << "ERROR: reading of tyWideString currently not supported" << std::endl;
-                      if (Result != TagHead.TagValue) {
-                          free(WideBuffer);
-                          throw std::string("Incomplete File");
-                      }
-                      add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
-                      free(WideBuffer);
-                    break;
-                case tyBinaryBlob:
-                    std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
-                    //sprintf(buffer_out, "<Binary Blob contains %llu Bytes>", TagHead.TagValue);
-                    // only seek the Data, if one needs the data, it can be loaded here
-                    fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
-                    break;
-                default:
-                    throw std::string("Illegal Type identifier! Broken file?");
+                    throw std::string("Incomplete File.");
+                }
+                add_tag(json_data, key, AnsiBuffer, TagHead.Typ, TagHead.Idx);
+                free(AnsiBuffer);
+            } else if (TagHead.Typ == tyWideString) {
+                size_t buffer_size = TagHead.TagValue;
+                WideBuffer = (wchar_t *) calloc((size_t) buffer_size, 1);
+                Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
+                if (Result != TagHead.TagValue) {
+                    free(WideBuffer);
+                    throw std::string("Incomplete File");
+                } else{
+                    add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
+                    free(WideBuffer);
+                }
+            } else if (TagHead.Typ == tyBinaryBlob) {
+                std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
+                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
+            } else {
+                throw std::string("Illegal Type identifier! Broken file?");
             }
         }
     } while (FileTagEnd != TagHead.Ident);
 
-    // select the reading routine
-    switch (file_type) {
-        case rtPicoHarpT2:
-            tttr_record_type = PQ_RECORD_TYPE_PHT2;
-            break;
-        case rtPicoHarpT3:
-            tttr_record_type = PQ_RECORD_TYPE_PHT3;
-            break;
-        case rtHydraHarpT2:
-            tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
-            break;
-        case rtMultiHarpT2:
-        case rtHydraHarp2T2:
-        case rtTimeHarp260NT2:
-        case rtTimeHarp260PT2:
-            tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
-            break;
-        case rtHydraHarpT3:
-        case rtMultiHarpT3:
-        case rtHydraHarp2T3:
-        case rtTimeHarp260NT3:
-        case rtTimeHarp260PT3:
-            tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
-            break;
-        default:
-            std::cerr << "PTU file type not supported." << std::endl;
+    if (file_type == rtPicoHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_PHT2;
+    } else if (file_type == rtPicoHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_PHT3;
+    } else if (file_type == rtHydraHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
+    } else if (
+            file_type == rtMultiHarpT2 ||
+            file_type == rtHydraHarp2T2 ||
+            file_type == rtTimeHarp260NT2 ||
+            file_type == rtTimeHarp260PT2
+    ) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
+    } else if (
+            file_type == rtHydraHarpT3 ||
+            file_type == rtMultiHarpT3 ||
+            file_type == rtHydraHarp2T3 ||
+            file_type == rtTimeHarp260NT3 ||
+            file_type == rtTimeHarp260PT3
+    ) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+    } else {
+        std::cerr << "PTU file type not supported." << std::endl;
     }
-    // Effective number of micro time channels
-    try{
+
+    try {
         int bining_factor = get_tag(json_data, "MeasDesc_BinningFactor")["value"];
-        add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true); //2**15
+        if (bining_factor < 1) bining_factor = 1;
+        add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true);
     } catch (...) {
         std::cerr << "ERROR: MeasDesc_BinningFactor not found." << std::endl;
     }
