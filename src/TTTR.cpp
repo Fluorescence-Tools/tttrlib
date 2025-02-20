@@ -837,17 +837,35 @@ void compute_intensity_trace(
         double macro_time_resolution
 ){
     int l, r;
-    int n_macro_time_clocks = (int) (time_window / macro_time_resolution);
+    int n_macro_time_clocks = (int)(time_window / macro_time_resolution);
+
     unsigned long long t_max = input[n_input - 1];
-    int n_bin = (int) (t_max / n_macro_time_clocks);
+
+    // +1 to ensure we have a bin for the maximum index
+    int n_bin = (int)(t_max / n_macro_time_clocks) + 1;
+
+    if (n_input <= 0 || n_macro_time_clocks <= 0) {
+        *n_output = 0;
+        *output   = NULL;
+        return;
+    }
 
     *n_output = n_bin;
     *output = (int*) calloc(n_bin, sizeof(int));
 
-    l = 0; r = 0;
-    while(r < n_input){
+    l = 0;
+    r = 0;
+    while(r < n_input - 1){
         r++;
-        int i_bin = int (input[l] / n_macro_time_clocks);
+
+        // Compute the bin index
+        int i_bin = (int)(input[l] / n_macro_time_clocks);
+
+        // Clamp using ternary
+        // First clamp to 0, then clamp to n_bin - 1
+        i_bin = (i_bin < 0)       ? 0 : i_bin;
+        i_bin = (i_bin >= n_bin) ? (n_bin - 1) : i_bin;
+
         if ((input[r] - input[l]) > n_macro_time_clocks){
             l = r;
         } else{
