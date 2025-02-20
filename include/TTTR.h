@@ -633,9 +633,9 @@ public:
       * @param output Pointer to the array to store the intensity trace.
       * @param n_output Pointer to the number of points in the intensity trace.
       * @param time_window_length The length of the integration time windows in
-      *        units of milliseconds.
+      *        units of seconds.
       */
-     void get_intensity_trace(int **output, int *n_output, double time_window_length = 1.0);
+     void get_intensity_trace(int **output, int *n_output, double time_window_length = 0.001);
 
      /*!
       * \brief Returns an array containing the routing channel numbers of the valid TTTR events.
