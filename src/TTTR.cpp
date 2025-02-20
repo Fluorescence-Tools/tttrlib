@@ -742,69 +742,128 @@ void ranges_by_time_window(
     *n_output = n_out;
 }
 
+
 void selection_by_count_rate(
-        int **output, int *n_output,
-        unsigned long long *time, int n_time,
-        double time_window, int n_ph_max,
-        double macro_time_calibration,
-        bool invert, bool make_mask
-){
-    auto tw = (unsigned long) (time_window / macro_time_calibration);
-    *output = (int*) calloc(sizeof(int), n_time);
-    int i = 0; *n_output = 0;
-    while(i < (n_time - 1)){
-        int n_ph;
-        // start at time[i] and increment r till time[r] - time[i] < tw
+        int **output,                 // [out] pointer to array of selected indices or mask
+        int *n_output,                // [out] number of elements put into *output
+        unsigned long long *time,     // [in]  array of time stamps
+        int n_time,                   // [in]  number of time stamps
+        double time_window,           // [in]  time window in physical units
+        int n_ph_max,                 // [in]  photon threshold
+        double macro_time_calibration,// [in]  conversion to the same units as time_window
+        bool invert,                  // [in]  invert the selection logic
+        bool make_mask                // [in]  if not selected, write -1 instead
+)
+{
+    // Edge case: no time stamps => nothing to do
+    if (n_time <= 0) {
+        *output = nullptr;
+        *n_output = 0;
+        return;
+    }
+
+    // Convert window to integer “ticks” in the same units as 'time[]'
+    // safer to cast to unsigned long long since 'time[]' is 64-bit
+    unsigned long long tw = static_cast<unsigned long long>(
+            time_window / macro_time_calibration
+    );
+
+    // Allocate enough room for every index (worst case: we write them all)
+    // Correct usage: calloc(# of elements, size of each)
+    *output = static_cast<int*>(std::calloc(n_time, sizeof(int)));
+    if (!*output) {
+        // Allocation failed => return safely
+        *n_output = 0;
+        return;
+    }
+
+    *n_output = 0;
+    int i = 0;
+
+    while (i < n_time) {
+        // Start a new window at i
         int r = i;
-        n_ph = 0;
-        while( ((time[r] - time[i]) < tw) && (r < (n_time - 1))){
-            r++;
-            n_ph++;
+        int n_ph = 0;
+
+        // Advance r while still within 'n_time' and the difference < tw
+        // This ensures we never do out-of-bounds access on time[r].
+        while (r < n_time && (time[r] - time[i]) < tw) {
+            ++r;
+            ++n_ph;
         }
-        // the right side of the TW is the start for the next time record
+
+        // Decide if this window meets the selection criteria
         bool select = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
-        if(select){
-            for(int k=i; k < r; k++){
-                (*n_output)++;
-                (*output)[(*n_output) - 1] = k;
-            }
-        } else if(make_mask){
-            for(int k=i; k < r; k++){
-                (*n_output)++;
-                (*output)[(*n_output) - 1] = -1;
+
+        if (select) {
+            // Mark indices [i, r-1] as "selected"
+            for (int k = i; k < r; ++k) {
+                (*output)[*n_output] = k;
+                ++(*n_output);
             }
         }
+        else if (make_mask) {
+            // Mark indices [i, r-1] as -1
+            for (int k = i; k < r; ++k) {
+                (*output)[*n_output] = -1;
+                ++(*n_output);
+            }
+        }
+
+        // Move i to the start of the next chunk
         i = r;
     }
 }
 
 
-std::vector<long long> TTTR::burst_search(int L, int m, double T) {
 
-    int64_t i, i_start, i_stop;
-    uint8_t in_burst = 0;
+std::vector<long long> TTTR::burst_search(int L, int m, double T)
+{
+    // If there aren't enough events for a window of size m, return empty.
+    if (static_cast<int64_t>(size()) < m) {
+        return {};
+    }
 
-    std::vector<long long> bursts;  // Now storing interleaved start and stop indices
-    long long Ti = T / header->get_macro_time_resolution();
+    bool in_burst = false;
+    int64_t i_start = 0, i_stop = 0;
 
-    for (i = 0; i <= size() - m; ++i) {
+    // Convert time T to “macro-time” units
+    const long long Ti = static_cast<long long>(T / header->get_macro_time_resolution());
+
+    std::vector<long long> bursts;
+    bursts.reserve(1000);
+
+    // Loop over all valid starting positions
+    // i + m - 1 <= size() - 1  ==>  i <= size() - m
+    int64_t n_events = static_cast<int64_t>(size());
+    for (int64_t i = 0; i <= n_events - m; ++i) {
+
+        // Check the time span of the window [i, i + m - 1]
         if (macro_times[i + m - 1] - macro_times[i] <= Ti) {
+            // We have a valid burst window
             if (!in_burst) {
-                in_burst = 1;
+                in_burst = true;
                 i_start = i;
             }
-        } else if (in_burst) {
-            in_burst = 0;
-            i_stop = i + m - 2;
-            if (i_stop - i_start + 1 >= L) {
-                bursts.push_back(i_start);
-                bursts.push_back(i_stop);
+        }
+        else {
+            // The window fails the time condition
+            if (in_burst) {
+                // We just ended a burst
+                in_burst = false;
+                i_stop = i + m - 2; // last index in the valid window
+                // Check if it meets the length requirement
+                if (i_stop - i_start + 1 >= L) {
+                    bursts.push_back(i_start);
+                    bursts.push_back(i_stop);
+                }
             }
         }
     }
 
+    // If we exit the loop but are still in a burst, it extends to the last event
     if (in_burst) {
-        i_stop = i + m - 1;
+        i_stop = static_cast<int64_t>(size()) - 1;  // last valid index
         if (i_stop - i_start + 1 >= L) {
             bursts.push_back(i_start);
             bursts.push_back(i_stop);
@@ -937,7 +996,7 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
         }
         {
             // we wrote all macro time overflows that do not fit
-            // in the record. Hence we have a valid photon
+            // in the record. Thus, we have a valid photon
             record.bits.mt = dMT;
             record.bits.adc = 4095 - micro_times[n];
             record.bits.rout = routing_channels[n];
