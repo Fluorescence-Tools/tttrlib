@@ -4,6 +4,7 @@
 #include <iostream> /* cout, clog */
 #include <vector>
 #include <utility>
+#include <algorithm> // Required for std::any_of
 
 #include <cstring>
 #include <complex>
