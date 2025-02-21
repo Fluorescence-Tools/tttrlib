@@ -690,9 +690,12 @@ size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, si
     return n_records_in_file;
 }
 
+
 void ranges_by_time_window(
-        int **output, int *n_output,
-        unsigned long long *input, int n_input,
+        int **output,
+        int *n_output,
+        unsigned long long *input,
+        int n_input,
         double minimum_window_length,
         double maximum_window_length,
         int minimum_number_of_photons_in_time_window,
@@ -700,46 +703,110 @@ void ranges_by_time_window(
         double macro_time_calibration,
         bool invert
 ) {
-    auto tw_min = (uint64_t) (minimum_window_length / macro_time_calibration);
-    auto tw_max = (uint64_t) (maximum_window_length / macro_time_calibration);
+    // Handle trivial case of no input
+    if (n_input <= 0) {
+        *output   = nullptr;
+        *n_output = 0;
+        return;
+    }
+
+    // Convert to integer “macro-time” ticks:
+    //  - If min length is <= 0, treat as zero  (no lower bound)
+    //  - If max length is <= 0, treat as unlimited (use UINT64_MAX)
+    uint64_t tw_min = 0;
+    if (minimum_window_length > 0.0) {
+        tw_min = static_cast<uint64_t>(minimum_window_length / macro_time_calibration);
+    }
+
+    uint64_t tw_max = UINT64_MAX;
+    bool has_max_tw = false;
+    if (maximum_window_length > 0.0) {
+        tw_max = static_cast<uint64_t>(maximum_window_length / macro_time_calibration);
+        has_max_tw = true;
+    }
+
 #ifdef VERBOSE_TTTRLIB
     std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
     std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
     std::clog << "-- maximum_window_length [ms]: " << maximum_window_length << std::endl;
-    std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons_in_time_window << std::endl;
-    std::clog << "-- maximum_number_of_photons_in_time_window: " << maximum_number_of_photons_in_time_window << std::endl;
+    std::clog << "-- minimum_number_of_photons_in_time_window: "
+              << minimum_number_of_photons_in_time_window << std::endl;
+    std::clog << "-- maximum_number_of_photons_in_time_window: "
+              << maximum_number_of_photons_in_time_window << std::endl;
     std::clog << "-- macro_time_calibration: " << macro_time_calibration << std::endl;
     std::clog << "-- tw_min [macro time clocks]: " << tw_min << std::endl;
-    std::clog << "-- tw_max [macro time clocks]: " << tw_max << std::endl;
+    if (has_max_tw) {
+        std::clog << "-- tw_max [macro time clocks]: " << tw_max << std::endl;
+    } else {
+        std::clog << "-- tw_max [macro time clocks]: NONE (no upper limit)" << std::endl;
+    }
 #endif
+
     std::vector<int> ss;
     ss.reserve(200);
 
     size_t tw_begin = 0;
-    while (tw_begin < n_input) {
-        // search for the end of a time window
+    while (tw_begin < static_cast<size_t>(n_input)) {
+
+        // search for the first index tw_end where (input[tw_end] - input[tw_begin]) >= tw_min
+        // or until the end of the array
         size_t tw_end = tw_begin;
-        uint64_t dt;
-        for (; tw_end < n_input; tw_end++){
+        uint64_t dt   = 0; // difference in macro-time ticks
+
+        for (; tw_end < static_cast<size_t>(n_input); tw_end++) {
             dt = input[tw_end] - input[tw_begin];
-            if(dt >= tw_min) break;
+            // Break once we've reached or exceeded the "minimum" window length
+            if (dt >= tw_min) {
+                break;
+            }
         }
+
+        // Number of photons in [tw_begin, tw_end)
+        // Note that tw_end is the first index that *exceeds* or *equals* tw_min
         size_t n_ph = tw_end - tw_begin;
-        bool is_selected =
-            ((tw_max < 0) || (dt < tw_max)) &&
-            ((minimum_number_of_photons_in_time_window < 0) || (n_ph >= minimum_number_of_photons_in_time_window)) &&
-            ((maximum_number_of_photons_in_time_window < 0) || (n_ph <= maximum_number_of_photons_in_time_window));
-        if(invert) is_selected = !is_selected;
-        if (is_selected) {
-            ss.push_back(tw_begin);
-            ss.push_back(tw_end);
+
+        // Build the selection logic:
+        // 1) If we do have a maximum time window, check dt < tw_max
+        //    Otherwise, skip the dt-check
+        // 2) If we have a minimum photon threshold (>=0), check n_ph >= that threshold
+        // 3) If we have a maximum photon threshold (>=0), check n_ph <= that threshold
+        bool pass_time_window = (!has_max_tw || (dt < tw_max));
+        bool pass_min_ph      = (minimum_number_of_photons_in_time_window < 0)
+                                || (static_cast<int>(n_ph) >= minimum_number_of_photons_in_time_window);
+        bool pass_max_ph      = (maximum_number_of_photons_in_time_window < 0)
+                                || (static_cast<int>(n_ph) <= maximum_number_of_photons_in_time_window);
+
+        bool is_selected = pass_time_window && pass_min_ph && pass_max_ph;
+
+        // Invert selection if requested
+        if (invert) {
+            is_selected = !is_selected;
         }
+
+        // If the current segment meets the selection criteria, record [tw_begin, tw_end]
+        // - Typically these represent “start index” and “end index”
+        if (is_selected) {
+            ss.push_back(static_cast<int>(tw_begin));
+            ss.push_back(static_cast<int>(tw_end));
+        }
+
+        // Move to tw_end
         tw_begin = tw_end;
     }
-    *output = (int *) malloc(ss.size() * sizeof(int));
-    for(size_t i = 0; i<ss.size(); i++) (*output)[i] = ss[i];
-    int n_out = ss.size();
-    *n_output = n_out;
+
+    // Allocate output array
+    *output = static_cast<int*>(std::malloc(ss.size() * sizeof(int)));
+    if (!*output) {
+        // If allocation fails, signal by returning an empty output
+        *n_output = 0;
+        return;
+    }
+
+    // Copy results to the user-provided pointer
+    for (size_t i = 0; i < ss.size(); i++) {
+        (*output)[i] = ss[i];
+    }
+    *n_output = static_cast<int>(ss.size());
 }
 
 
