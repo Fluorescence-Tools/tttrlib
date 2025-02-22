@@ -962,7 +962,14 @@ void compute_intensity_trace(
         double time_window,
         double macro_time_resolution
 ){
-    int l, r;
+    // Early exit if no data (n_input <= 0)
+    // or if the computed bin width (n_macro_time_clocks) is invalid:
+    if (n_input <= 0) {
+        *n_output = 0;
+        *output   = NULL;
+        return;
+    }
+
     int n_macro_time_clocks = (int)(time_window / macro_time_resolution);
 
     unsigned long long t_max = input[n_input - 1];
@@ -979,8 +986,8 @@ void compute_intensity_trace(
     *n_output = n_bin;
     *output = (int*) calloc(n_bin, sizeof(int));
 
-    l = 0;
-    r = 0;
+    int l = 0;
+    int r = 0;
     while(r < n_input - 1){
         r++;
 
