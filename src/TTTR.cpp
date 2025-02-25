@@ -1211,6 +1211,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
     return true;
 }
 
+
 void TTTR::compute_microtime_histogram(
         TTTR *tttr_data,
         double** histogram, int* n_histogram,
@@ -1218,79 +1219,163 @@ void TTTR::compute_microtime_histogram(
         unsigned short micro_time_coarsening,
         std::vector<int> *tttr_indices
 ) {
-    if (tttr_data == nullptr) return;
 
-    // Get resolution information
-    /////////////////////////////////
-    auto header = *(tttr_data->get_header());
-    bool skip_hist = false;
-
-    int n_channels = header.get_number_of_micro_time_channels();
-    if(n_channels == 0){
-        skip_hist = true;
+    // Check that the input and output pointers are valid.
+    if (tttr_data == nullptr || histogram == nullptr || n_histogram == nullptr ||
+        time == nullptr || n_time == nullptr) {
+        return;
     }
-    if(n_channels > micro_time_coarsening)
-        n_channels /= n_channels;
 
+    // Get header and verify its validity.
+    auto header_ptr = tttr_data->get_header();
+    if (header_ptr == nullptr) {
+        *n_histogram = 0;
+        *histogram = (double*) calloc(1, sizeof(double));
+        *n_time = 0;
+        *time = (double*) calloc(1, sizeof(double));
+        return;
+    }
+    auto header = *header_ptr;
+
+    // Prevent division by zero.
+    if (micro_time_coarsening == 0) {
+        micro_time_coarsening = 1;
+    }
+
+    // Get the number of micro time channels.
+    int n_channels = header.get_number_of_micro_time_channels();
+    if (n_channels == 0) {
+        *n_histogram = 0;
+        *histogram = (double *) calloc(1, sizeof(double));
+        *n_time = 0;
+        *time = (double *) calloc(1, sizeof(double));
+        return;
+    }
+
+    // Adjust n_channels based on the coarsening factor.
+    if (n_channels > micro_time_coarsening)
+        n_channels /= micro_time_coarsening;
+
+    // Get micro time resolution.
     double micro_time_resolution = header.get_micro_time_resolution();
-    if(micro_time_resolution < 0){
+    if (micro_time_resolution < 0) {
         micro_time_resolution = 1.0;
     }
 
-    // Allocate memory for outputs
-    auto t = (double *) malloc(n_channels * sizeof(double));
-    for (int i = 0; i < n_channels; i++) t[i] = micro_time_resolution * i * micro_time_coarsening;
-
-    auto hist = (double *) malloc(n_channels * sizeof(double));
-    for(int i=0; i<n_channels;i++) hist[i] = 0.0;
-
-    if(!skip_hist){
-        // get micro times
-        ////////////////////////////////
-        unsigned short *micro_times; int n_micro_times;
-        // tttr_indices -> all micro times
-        if(tttr_indices == nullptr){
-            tttr_data->get_micro_times(&micro_times, &n_micro_times);
-        } else{
-            n_micro_times = tttr_indices->size();
-            micro_times = (unsigned short*) malloc(sizeof(unsigned short) * n_micro_times);
-            for(int i = 0; i < n_micro_times; i++){
-                auto mt = tttr_data->micro_times[tttr_indices->data()[i]];
-                micro_times[i] = mt;
-            }
-        }
-#ifdef VERBOSE_TTTRLIB \
-        std::cout << "compute_histogram" << std::endl;
-        std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
-        std::cout << "-- n_channels: " << n_channels << std::endl;
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-        for(int i=0; i<n_micro_times;i++)
-            micro_times[i] /= micro_time_coarsening;
-#ifdef VERBOSE_TTTRLIB \
-        std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-
-        auto bin_edges = std::vector<unsigned short>(n_channels);
-        for (size_t i = 0; i < bin_edges.size(); i++) bin_edges[i] = i;
-
-        histogram1D<unsigned short>(
-                micro_times, n_micro_times,
-                nullptr, 0,
-                bin_edges.data(), bin_edges.size(),
-                hist, n_channels,
-                "lin", false
-        );
-
-        free(micro_times);
+    // Allocate memory for the time array.
+    double *t = (double *) malloc(n_channels * sizeof(double));
+    if (t == nullptr) {
+        *n_histogram = 0;
+        *histogram = (double *) calloc(1, sizeof(double));
+        *n_time = 0;
+        *time = (double *) calloc(1, sizeof(double));
+        return;
     }
+    for (int i = 0; i < n_channels; i++) {
+        t[i] = micro_time_resolution * i * micro_time_coarsening;
+    }
+
+    // Allocate memory for the histogram array.
+    double *hist = (double *) malloc(n_channels * sizeof(double));
+    if (hist == nullptr) {
+        free(t);
+        *n_histogram = 0;
+        *histogram = (double *) calloc(1, sizeof(double));
+        *n_time = 0;
+        *time = (double *) calloc(1, sizeof(double));
+        return;
+    }
+    for (int i = 0; i < n_channels; i++) {
+        hist[i] = 0.0;
+    }
+
+    // Compute the histogram if micro times are available.
+    unsigned short *micro_times = nullptr;
+    int n_micro_times = 0;
+
+    // Get micro times based on whether specific indices are provided.
+    if (tttr_indices == nullptr) {
+        tttr_data->get_micro_times(&micro_times, &n_micro_times);
+        if (micro_times == nullptr || n_micro_times <= 0) {
+            free(hist);
+            free(t);
+            *n_histogram = 0;
+            *histogram = (double *) calloc(1, sizeof(double));
+            *n_time = 0;
+            *time = (double *) calloc(1, sizeof(double));
+            return;
+        }
+    } else {
+        n_micro_times = tttr_indices->size();
+        if (n_micro_times <= 0) {
+            free(hist);
+            free(t);
+            *n_histogram = 0;
+            *histogram = (double *) calloc(1, sizeof(double));
+            *n_time = 0;
+            *time = (double *) calloc(1, sizeof(double));
+            return;
+        }
+        micro_times = (unsigned short*) malloc(sizeof(unsigned short) * n_micro_times);
+        if (micro_times == nullptr) {
+            free(hist);
+            free(t);
+            *n_histogram = 0;
+            *histogram = (double *) calloc(1, sizeof(double));
+            *n_time = 0;
+            *time = (double *) calloc(1, sizeof(double));
+            return;
+        }
+        for (int i = 0; i < n_micro_times; i++) {
+            int index = tttr_indices->data()[i];
+            // Optionally, add bounds-checking for 'index' here.
+            micro_times[i] = tttr_data->micro_times[index];
+        }
+    }
+
+#ifdef VERBOSE_TTTRLIB
+    std::cout << "compute_histogram" << std::endl;
+    std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
+    std::cout << "-- n_channels: " << n_channels << std::endl;
+    if(n_micro_times > 0)
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+
+    // Apply coarsening to the micro times.
+    for (int i = 0; i < n_micro_times; i++) {
+        micro_times[i] /= micro_time_coarsening;
+    }
+
+#ifdef VERBOSE_TTTRLIB
+    std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
+    if(n_micro_times > 0)
+        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
+#endif
+
+    // Create bin edges.
+    std::vector<unsigned short> bin_edges(n_channels);
+    for (size_t i = 0; i < bin_edges.size(); i++) {
+        bin_edges[i] = i;
+    }
+
+    // Calculate the histogram using histogram1D.
+    histogram1D<unsigned short>(
+            micro_times, n_micro_times,
+            nullptr, 0,
+            bin_edges.data(), bin_edges.size(),
+            hist, n_channels,
+            "lin", false
+    );
+
+    free(micro_times);
+
+    // Set output pointers.
     *histogram = hist;
     *n_histogram = n_channels;
-
     *time = t;
     *n_time = n_channels;
 }
+
 
 double TTTR::compute_mean_lifetime(
         TTTR* tttr_data,
