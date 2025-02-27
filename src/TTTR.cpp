@@ -131,14 +131,25 @@ TTTR::TTTR(const char *fn, int container_type, bool read_input) : TTTR(){
 
 TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
     try {
-        tttr_container_type_str.assign(container_type);
-        tttr_container_type = container_names.left.at(std::string(container_type));
+        std::string container_type_str_lower(container_type);
+        std::transform(container_type_str_lower.begin(), container_type_str_lower.end(),
+                       container_type_str_lower.begin(), ::tolower);
+
+        if (container_type_str_lower == "auto") {
+            tttr_container_type = inferTTTRFileType(fn);
+            tttr_container_type_str = container_names.right.at(tttr_container_type);
+        } else {
+            tttr_container_type_str.assign(container_type);
+            tttr_container_type = container_names.left.at(std::string(container_type));
+        }
+
         filename.assign(fn);
-        if(read_file())
+        if (read_file())
             find_used_routing_channels();
     }
-    catch(...) {
-        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): Container type " << container_type << " not supported." << std::endl;
+    catch (...) {
+        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): "
+                  << "Container type " << container_type << " not supported." << std::endl;
     }
 }
 
@@ -1217,7 +1228,8 @@ void TTTR::compute_microtime_histogram(
         double** histogram, int* n_histogram,
         double** time, int* n_time,
         unsigned short micro_time_coarsening,
-        std::vector<int> *tttr_indices
+        std::vector<int> *tttr_indices,
+        std::vector<int> *routing_channels
 ) {
 
     // Check that the input and output pointers are valid.
@@ -1285,17 +1297,15 @@ void TTTR::compute_microtime_histogram(
         *time = (double *) calloc(1, sizeof(double));
         return;
     }
-    for (int i = 0; i < n_channels; i++) {
-        hist[i] = 0.0;
-    }
+    memset(hist, 0, n_channels * sizeof(double));
 
-    // Compute the histogram if micro times are available.
-    unsigned short *micro_times = nullptr;
-    int n_micro_times = 0;
+    std::vector<unsigned short> selected_micro_times;
 
-    // Get micro times based on whether specific indices are provided.
     if (tttr_indices == nullptr) {
+        unsigned short *micro_times = nullptr;
+        int n_micro_times = 0;
         tttr_data->get_micro_times(&micro_times, &n_micro_times);
+
         if (micro_times == nullptr || n_micro_times <= 0) {
             free(hist);
             free(t);
@@ -1305,71 +1315,49 @@ void TTTR::compute_microtime_histogram(
             *time = (double *) calloc(1, sizeof(double));
             return;
         }
+
+        if (!routing_channels) {
+            for (int i = 0; i < n_micro_times; i++) {
+                selected_micro_times.push_back(micro_times[i] / micro_time_coarsening);
+            }
+        } else {
+            for (int i = 0; i < n_micro_times; i++) {
+                if (std::find(routing_channels->begin(), routing_channels->end(), tttr_data->routing_channels[i]) != routing_channels->end()) {
+                    selected_micro_times.push_back(micro_times[i] / micro_time_coarsening);
+                }
+            }
+        }
     } else {
-        n_micro_times = tttr_indices->size();
-        if (n_micro_times <= 0) {
-            free(hist);
-            free(t);
-            *n_histogram = 0;
-            *histogram = (double *) calloc(1, sizeof(double));
-            *n_time = 0;
-            *time = (double *) calloc(1, sizeof(double));
-            return;
-        }
-        micro_times = (unsigned short*) malloc(sizeof(unsigned short) * n_micro_times);
-        if (micro_times == nullptr) {
-            free(hist);
-            free(t);
-            *n_histogram = 0;
-            *histogram = (double *) calloc(1, sizeof(double));
-            *n_time = 0;
-            *time = (double *) calloc(1, sizeof(double));
-            return;
-        }
-        for (int i = 0; i < n_micro_times; i++) {
-            int index = tttr_indices->data()[i];
-            // Optionally, add bounds-checking for 'index' here.
-            micro_times[i] = tttr_data->micro_times[index];
+        for (int i : *tttr_indices) {
+            if (!routing_channels || std::find(routing_channels->begin(), routing_channels->end(), tttr_data->routing_channels[i]) != routing_channels->end()) {
+                selected_micro_times.push_back(tttr_data->micro_times[i] / micro_time_coarsening);
+            }
         }
     }
 
-#ifdef VERBOSE_TTTRLIB
-    std::cout << "compute_histogram" << std::endl;
-    std::cout << "-- micro_time_coarsening: " << micro_time_coarsening << std::endl;
-    std::cout << "-- n_channels: " << n_channels << std::endl;
-    if(n_micro_times > 0)
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-
-    // Apply coarsening to the micro times.
-    for (int i = 0; i < n_micro_times; i++) {
-        micro_times[i] /= micro_time_coarsening;
+    if (selected_micro_times.empty()) {
+        free(hist);
+        free(t);
+        *n_histogram = 0;
+        *histogram = (double *) calloc(1, sizeof(double));
+        *n_time = 0;
+        *time = (double *) calloc(1, sizeof(double));
+        return;
     }
 
-#ifdef VERBOSE_TTTRLIB
-    std::cout << "-- n_micro_times: " << n_micro_times << std::endl;
-    if(n_micro_times > 0)
-        std::cout << "-- micro_times[0]: " << micro_times[0] << std::endl;
-#endif
-
-    // Create bin edges.
     std::vector<unsigned short> bin_edges(n_channels);
     for (size_t i = 0; i < bin_edges.size(); i++) {
         bin_edges[i] = i;
     }
 
-    // Calculate the histogram using histogram1D.
     histogram1D<unsigned short>(
-            micro_times, n_micro_times,
+            selected_micro_times.data(), selected_micro_times.size(),
             nullptr, 0,
             bin_edges.data(), bin_edges.size(),
             hist, n_channels,
             "lin", false
     );
 
-    free(micro_times);
-
-    // Set output pointers.
     *histogram = hist;
     *n_histogram = n_channels;
     *time = t;
@@ -1424,7 +1412,7 @@ double TTTR::compute_mean_lifetime(
             m1_h += tttr_data->micro_times[vi];
     }
 
-    // Scale by background by background fraction
+    // Scale by background fraction
     if(background_fraction > 0.0){
         m1_bg = m1_bg * (m0_h / m0_bg) * background_fraction;
         m0_bg = m0_h * background_fraction;

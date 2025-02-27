@@ -15,6 +15,7 @@
 #include <memory>       /* shared_ptr */
 #include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
+#include <unordered_set>
 #include <cinttypes>    /* uint64, int64, etc */
 #include <fstream> /* ifstream */
 
@@ -1090,44 +1091,59 @@ public:
         return re;
     }
 
-     /*!
-      * @brief Computes a histogram of the TTTR data's micro times.
-      *
-      * @param tttr_data Pointer to the TTTR object containing the data.
-      * @param output Pointer to which the histogram will be written (memory is allocated by the method).
-      * @param n_output Pointer to the number of points in the histogram.
-      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
-      * @param n_time Pointer to the number of points in the time axis.
-      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
-      * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
-      */
-     static void compute_microtime_histogram(
-             TTTR *tttr_data,
-             double** output, int* n_output,
-             double **time, int *n_time,
-             unsigned short micro_time_coarsening = 1,
-             std::vector<int> *tttr_indices = nullptr
-     );
+
+    /*!
+    * @brief Computes a histogram of the TTTR data's micro times.
+    *
+    * @param tttr_data Pointer to the TTTR object containing the data.
+    * @param output Pointer to which the histogram will be written (memory is allocated by the method).
+    * @param n_output Pointer to the number of points in the histogram.
+    * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+    * @param n_time Pointer to the number of points in the time axis.
+    * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+    * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
+    * @param channels Optional list of routing channels to filter photons.
+    */
+    static void TTTR::compute_microtime_histogram(
+            TTTR *tttr_data,
+            double** output, int* n_output,
+            double** time, int* n_time,
+            unsigned short micro_time_coarsening = 1,
+            std::vector<int> *tttr_indices = nullptr,
+            std::vector<int> *channels = nullptr
+    );
 
      /*!
-      * @brief Computes and returns a histogram of the TTTR data's micro times.
-      *
-      * @param histogram Pointer to which the histogram will be written (memory is allocated by the method).
-      * @param n_histogram Pointer to the number of points in the histogram.
-      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
-      * @param n_time Pointer to the number of points in the time axis.
-      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
-      */
+     * @brief Computes and returns a histogram of the TTTR data's micro times.
+     *
+     * @param histogram Pointer to which the histogram will be written (memory is allocated by the method).
+     * @param n_histogram Pointer to the number of points in the histogram.
+     * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+     * @param n_time Pointer to the number of points in the time axis.
+     * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+     * @param channels Optional list of routing channels to filter photons.
+     */
      void get_microtime_histogram(
              double **histogram, int *n_histogram,
              double **time, int *n_time,
-             unsigned short micro_time_coarsening = 1
+             unsigned short micro_time_coarsening = 1,
+             std::vector<int> channels = std::vector<int>()
      ){
-      compute_microtime_histogram(
-              this, histogram, n_histogram,
-              time, n_time,
-              micro_time_coarsening
-      );
+         if(!channels.empty()){
+             compute_microtime_histogram(
+                     this, histogram, n_histogram,
+                     time, n_time,
+                     micro_time_coarsening,
+                     nullptr,
+                     &channels
+             );
+         } else{
+             compute_microtime_histogram(
+                     this, histogram, n_histogram,
+                     time, n_time,
+                     micro_time_coarsening
+             );
+         }
      }
 
      /*!
