@@ -1104,7 +1104,7 @@ public:
     * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
     * @param channels Optional list of routing channels to filter photons.
     */
-    static void TTTR::compute_microtime_histogram(
+Re    static void compute_microtime_histogram(
             TTTR *tttr_data,
             double** output, int* n_output,
             double** time, int* n_time,
