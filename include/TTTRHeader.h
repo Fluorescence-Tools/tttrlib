@@ -178,7 +178,6 @@ public:
             nlohmann::json &json_data,
             const std::string &name,
             std::any value,
-            // boost::any value,
             unsigned int type = tyAnsiString,
             int idx = -1
     );
