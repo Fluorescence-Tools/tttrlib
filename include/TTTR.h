@@ -314,6 +314,8 @@ private:
     /// The event type
     signed char *event_types;
 
+    long long macro_time_offset = 0; // Cache for macro time offset
+
     /// the number of time tagged data records in the TTTR file
     size_t n_records_in_file = 0;
 
@@ -419,6 +421,12 @@ protected:
 
 
 public:
+
+    /// \brief shift the micro time (wraps around by mod number of micro time channels)
+    TTTR& operator%(unsigned short mod_value);
+
+    // \brief shift the macro time
+    TTTR& operator<<(long long offset);
 
     /// \brief Returns a shared pointer to the current instance of TTTR.
     ///

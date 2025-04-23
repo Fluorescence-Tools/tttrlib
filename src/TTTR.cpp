@@ -591,7 +591,19 @@ void TTTR::set_header(TTTRHeader* v) {
 }
 
 void TTTR::get_macro_times(unsigned long long** output, int* n_output){
-    get_array<unsigned long long>(n_valid_events, macro_times, output, n_output);
+    if (n_output == nullptr || output == nullptr) {
+        throw std::invalid_argument("Output pointers must not be null.");
+    }
+
+    // Allocate memory for the output array
+    *n_output = static_cast<int>(n_valid_events); // Number of valid events
+    *output = new unsigned long long[*n_output];
+
+    // Compute shifted macro_times, ensuring no value is less than zero
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        long long shifted_time = static_cast<long long>(macro_times[i]) + macro_time_offset;
+        (*output)[i] = static_cast<unsigned long long>(std::max(shifted_time, 0LL)); // Clamp to zero
+    }
 }
 
 void TTTR::get_micro_times(unsigned short** output, int* n_output){
@@ -1196,9 +1208,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
     int record_type =header->get_tttr_record_type();
     int container_type = header->get_tttr_container_type();
     if(!valid_container_record_pair(container_type, record_type)){
-        std::cerr << "ERROR in TTTR::write: combination of "
-                     "container and record "
-                     "does not make sense." << std::endl;
+        std::cerr << "ERROR in TTTR::write: invalid container record combination." << std::endl;
         return false;
     }
     write_header(filename, header);
@@ -1210,8 +1220,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
         } else if(record_type == PQ_RECORD_TYPE_HHT3v2){
             write_hht3v2_events(fp, this);
         } else{
-            std::cerr << "ERROR: Record type "
-            << record_type << " not supported" << std::endl;
+            std::cerr << "ERROR: Record type " << record_type << " not supported" << std::endl;
         }
     } else {
         std::cerr << "ERROR: Cannot write to file: "
@@ -1222,6 +1231,27 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
     return true;
 }
 
+
+TTTR& TTTR::operator%(unsigned short mod_value) {
+    if (mod_value == 0) {
+        throw std::invalid_argument("Modulo by zero is undefined.");
+    }
+    int n_mt = header->get_effective_number_of_micro_time_channels();
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        micro_times[i] = static_cast<unsigned short>(
+                (static_cast<int>(micro_times[i]) - mod_value + n_mt) % n_mt
+        );
+    }
+
+    return *this; // Allow chaining
+}
+
+TTTR& TTTR::operator<<(long long offset) {
+    // Update macro time offset cache
+    macro_time_offset += offset;
+    // Do not alter the actual `macro_times` array
+    return *this; // Allow chaining
+}
 
 void TTTR::compute_microtime_histogram(
         TTTR *tttr_data,
