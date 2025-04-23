@@ -1246,12 +1246,32 @@ TTTR& TTTR::operator%(unsigned short mod_value) {
     return *this; // Allow chaining
 }
 
+
 TTTR& TTTR::operator<<(long long offset) {
     // Update macro time offset cache
     macro_time_offset += offset;
     // Do not alter the actual `macro_times` array
     return *this; // Allow chaining
 }
+
+
+void TTTR::shift_micro_time_by_channel(signed char channel, unsigned short shift_value) {
+    // Get the number of micro-time bins per macro-tick
+    unsigned int n_mt = header->get_effective_number_of_micro_time_channels();
+
+    // Avoid division by zero
+    if (n_mt == 0) return;
+
+    // For each valid event, if it’s on the requested channel, shift & wrap
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        if (routing_channels[i] == channel) {
+            // Add shift, then wrap within [0, n_mt)
+            unsigned int new_mt = static_cast<unsigned int>(micro_times[i]) + shift_value;
+            micro_times[i] = static_cast<unsigned short>(new_mt % n_mt);
+        }
+    }
+}
+
 
 void TTTR::compute_microtime_histogram(
         TTTR *tttr_data,

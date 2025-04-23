@@ -564,7 +564,17 @@ public:
             long long macro_time_offset=0
     );
 
-     /*!
+    /**
+     * @brief Shift the micro‐time of all events on a given routing channel.
+     *
+     * Wraps around modulo the number of micro‐time channels.
+     *
+     * @param channel       The routing channel to apply the shift to.
+     * @param shift_value   Number of micro‐time bins to add (can be larger than the number of bins).
+     */
+    void shift_micro_time_by_channel(signed char channel, unsigned short shift_value);
+
+    /*!
       * \brief Returns the number of valid events in the TTTR data.
       *
       * This function is a wrapper for the get_n_valid_events() method and returns
