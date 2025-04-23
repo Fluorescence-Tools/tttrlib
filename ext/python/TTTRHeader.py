@@ -41,6 +41,31 @@ def add_tags(self, header2):
     header1_dict["tags"] = tags_1
     self.set_json(json.dumps(header1_dict))
 
+def set_tag(self, name, value, value_type, idx=-1):
+    """
+    Set the tag with given name and value.
+    If idx is provided (not -1), overwrite any existing tag matching name+idx;
+    otherwise operate on the tag with name and idx=-1.
+    """
+    import json
+
+    # 1) Load current header dict
+    header = json.loads(self.json)
+    tags = header.get("tags", [])
+
+    # 2) Look for an existing tag and overwrite it
+    for i, tag in enumerate(tags):
+        if tag.get("name") == name and tag.get("idx", -1) == idx:
+            tags[i] = {"name": name, "idx": idx, "value": value, "type": value_type}
+            break
+    else:
+        # not found → append new
+        tags.append({"name": name, "idx": idx, "value": value, "type": value_type})
+
+    # 3) Write back via set_json
+    header["tags"] = tags
+    self.set_json(json.dumps(header))
+
 def __init__(self, *args, **kwargs):
     this = _tttrlib.new_TTTRHeader(*args, **kwargs)
     try:
