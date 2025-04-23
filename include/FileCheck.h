@@ -89,5 +89,15 @@ int inferTTTRFileType(const char* fn);
  */
 bool isCZConfocor3File(const std::string& filename);
 
+/**
+ * @brief Returns a list of supported file extensions.
+ * 
+ * This function returns a vector containing all the file extensions (file endings)
+ * that are supported by the library.
+ * 
+ * @return std::vector<std::string> A vector of supported file extensions.
+ */
+std::vector<std::string> get_supported_filetypes();
+
 
 #endif //TTTRLIB_FILECHECK_H

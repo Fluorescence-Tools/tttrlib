@@ -1,4 +1,20 @@
 #include "FileCheck.h"
+#include <vector>
+#include <string>
+
+std::vector<std::string> get_supported_filetypes() {
+    std::vector<std::string> supported_extensions = {
+        "ptu",   // PicoQuant Unified TTTR
+        "ht3",   // PicoQuant HydraHarp T3
+        "pt3",   // PicoQuant PicoHarp T3
+        "spc",   // Becker & Hickl FIFO
+        "sm",    // Single Molecule format
+        "h5",    // HDF5 format
+        "hdf5",  // HDF5 format (alternative extension)
+        "raw"    // Carl Zeiss Confocor3 raw data
+    };
+    return supported_extensions;
+}
 
 // HDF5 file signature: "\x89HDF\r\n\x1A\n"
 bool isHDF5File(const std::string& filename) {
