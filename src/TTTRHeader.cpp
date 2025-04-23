@@ -648,7 +648,8 @@ size_t TTTRHeader::read_ptu_header(
     ) {
         tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
     } else {
-        std::cerr << "PTU file type not supported." << std::endl;
+        std::cerr << "PTU file with undefined TTTRTagTTTRRecType." << std::endl;
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
     }
 
     try {
