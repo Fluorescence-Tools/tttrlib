@@ -47,30 +47,45 @@ def __add__(self, value):
     return t
 
 def __init__(self, *args, **kwargs):
+    import pathlib
+    import sys
+    
     if len(args) > 0:
-        import pathlib
-        if isinstance(args[0], str) or isinstance(args[0], pathlib.Path):
+        # Case 1: First argument is a filename (string or Path)
+        if isinstance(args[0], (str, pathlib.Path)):
             if len(args) == 1:
+                # Convert to absolute path and use posix separator for consistency
                 obj = str(pathlib.Path(args[0]).absolute().as_posix())
                 this = _tttrlib.new_TTTR(obj)
             else:
+                # Additional arguments - pass them all through
                 this = _tttrlib.new_TTTR(*args, **kwargs)
-        else:
+        
+        # Case 2: First argument is another TTTR object (for copying or selection)
+        elif args[0].__class__.__name__ == 'TTTR':
             this = _tttrlib.new_TTTR(*args, **kwargs)
+        
+        # Case 3: First argument is a numpy array or other data structure
+        else:
+            try:
+                this = _tttrlib.new_TTTR(*args, **kwargs)
+            except Exception as e:
+                err_type = str(type(args[0]))
+                raise TypeError(f"Cannot create TTTR object from first argument of type {err_type}. "
+                                f"Expected a filename (str/Path) or TTTR object. Error: {str(e)}")
     else:
+        # Case 4: No arguments - create an empty TTTR object
         this = _tttrlib.new_TTTR(*args, **kwargs)
+        
     self.this = this
 
 def __repr__(self):
-    return 'TTTR("%s", "%s")' % (
-        self.get_filename(),
-        self.get_tttr_container_type()
-    )
+    return f'TTTR("{self.get_filename()}", "{self.get_tttr_container_type()}")'
 
 def __str__(self):
-    s = "Filename: %s \n" % self.get_filename()
-    s += "Number of valid events: %d \n" % self.get_n_events()
-    s += "Number of micro time channels: %d \n" % self.get_number_of_micro_time_channels()
-    s += "Used routing channels: %s " % self.get_used_routing_channels()
-    return s
-
+    return (
+        f"Filename: {self.get_filename()}\n"
+        f"Number of valid events: {self.get_n_events()}\n"
+        f"Number of micro time channels: {self.get_number_of_micro_time_channels()}\n"
+        f"Used routing channels: {self.get_used_routing_channels()}"
+    )
