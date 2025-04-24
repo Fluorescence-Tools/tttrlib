@@ -163,8 +163,9 @@ bool isBH132File(const std::string& filename) {
     // Close the file
     fclose(file);
 
-    // Check if macro_time_clock is in the range and dataset is marked as invalid
-    if (rec.bits.macro_time_clock > 0 && rec.bits.macro_time_clock < 10000 && rec.bits.invalid) {
+    // Check if macro_time_clock is in the range and a dataset is marked as invalid
+    auto time_res = (double) rec.bits.macro_time_clock;
+    if (time_res > 0.0 && time_res < 500.0) {
         return true;  // This is a valid BH132 file
     }
 
