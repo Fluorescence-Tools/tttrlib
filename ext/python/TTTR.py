@@ -8,6 +8,10 @@ def routing_channels(self):
 def event_types(self):
     return self.get_event_type()
 
+@property
+def acquisition_time(self):
+    return (self.macro_times[-1] - self.macro_times[0]) * self.header.macro_time_resolution
+
 def __getattr__(self, item):
     """
     If an attribute `attribute` is accessed that does not exist,
