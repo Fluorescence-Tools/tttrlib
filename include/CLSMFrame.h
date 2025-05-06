@@ -82,7 +82,7 @@ public:
      * @param frame_stop [in] The stopping frame index for the CLSMFrame.
      * @param tttr [in] Pointer to a TTTR object containing time-resolved data.
      */
-    explicit CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr);
+    explicit CLSMFrame(size_t frame_start, size_t frame_stop, std::shared_ptr<TTTR> tttr);
 
     /*!
      * \brief Append a CLSMLine to the current CLSMFrame.

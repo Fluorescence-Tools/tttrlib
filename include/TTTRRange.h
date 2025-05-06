@@ -122,14 +122,17 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The stop time or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned long get_stop_time(TTTR* tttr) const{
+    unsigned long get_stop_time(std::shared_ptr<TTTR> tttr) const{
         unsigned long time = 0;
         if(tttr!= nullptr){
-            time = tttr->macro_times[*_tttr_indices.rbegin()];
+            if(_tttr_indices.empty()){
+                return 0;
+            }
+            return tttr->macro_times[*_tttr_indices.rbegin()];
         } else{
             std::cerr << "Access to TTTRRange::get_stop_time without TTTR object" << std::endl;
         }
-        return time;
+        return 0;
     }
 
     /**
@@ -138,14 +141,16 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The start time or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned long get_start_time(TTTR* tttr) const{
-        unsigned long start_time = 0;
+    unsigned long get_start_time(std::shared_ptr<TTTR> tttr) const{
         if(tttr!= nullptr){
-            start_time = tttr->macro_times[*_tttr_indices.begin()];
+            if(_tttr_indices.empty()){
+                return 0;
+            }
+            return tttr->macro_times[*_tttr_indices.begin()];
         } else{
             std::cerr << "Access to TTTRRange::get_start_time without TTTR object" << std::endl;
         }
-        return start_time;
+        return 0;
     }
 
     /**
@@ -154,7 +159,7 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return A vector containing the start and stop times.
      */
-    std::vector<unsigned long> get_start_stop_time(TTTR* tttr){
+    std::vector<unsigned long> get_start_stop_time(std::shared_ptr<TTTR> tttr){
         return {
                 get_start_time(tttr),
                 get_stop_time(tttr)
@@ -167,7 +172,7 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The duration or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned int get_duration(TTTR* tttr){
+    unsigned int get_duration(std::shared_ptr<TTTR> tttr){
         return get_stop_time(tttr) - get_start_time(tttr);
     }
 
@@ -248,7 +253,8 @@ public:
             std::shared_ptr<TTTR> tttr,
             double** histogram, int* n_histogram,
             double** time, int* n_time,
-            unsigned short micro_time_coarsening
+            unsigned short micro_time_coarsening,
+            int minlength
     ){
         auto v = get_tttr_indices();
         TTTR::compute_microtime_histogram(
@@ -256,7 +262,8 @@ public:
             histogram, n_histogram,
             time, n_time,
             micro_time_coarsening,
-            &v
+            &v, nullptr,
+            minlength
         );
     }
 

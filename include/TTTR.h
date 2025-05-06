@@ -1121,6 +1121,7 @@ public:
     * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
     * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
     * @param channels Optional list of routing channels to filter photons.
+    * @param minlength Minimal length of output array (optional)
     */
     static void compute_microtime_histogram(
             TTTR *tttr_data,
@@ -1128,7 +1129,8 @@ public:
             double** time, int* n_time,
             unsigned short micro_time_coarsening = 1,
             std::vector<int> *tttr_indices = nullptr,
-            std::vector<int> *channels = nullptr
+            std::vector<int> *channels = nullptr,
+            int minlength = -1
     );
 
      /*!
@@ -1145,7 +1147,8 @@ public:
              double **histogram, int *n_histogram,
              double **time, int *n_time,
              unsigned short micro_time_coarsening = 1,
-             std::vector<int> channels = std::vector<int>()
+             std::vector<int> channels = std::vector<int>(),
+             int minlength = -1
      ){
          if(!channels.empty()){
              compute_microtime_histogram(
@@ -1153,13 +1156,17 @@ public:
                      time, n_time,
                      micro_time_coarsening,
                      nullptr,
-                     &channels
+                     &channels,
+                     minlength
              );
          } else{
              compute_microtime_histogram(
                      this, histogram, n_histogram,
                      time, n_time,
-                     micro_time_coarsening
+                     micro_time_coarsening,
+                     nullptr,
+                     nullptr,
+                     minlength
              );
          }
      }

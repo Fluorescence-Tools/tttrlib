@@ -5,7 +5,7 @@
 
 CLSMFrame::CLSMFrame(): TTTRSelection() {}
 
-CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr) :
+CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, std::shared_ptr<TTTR> tttr) :
     TTTRSelection(frame_start, frame_stop, tttr)
 {}
 

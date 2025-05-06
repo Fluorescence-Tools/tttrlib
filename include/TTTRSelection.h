@@ -9,20 +9,20 @@ class TTTRSelection : public TTTRRange{
 
 protected:
 
-    TTTR* _tttr = nullptr;
+    std::shared_ptr<TTTR> _tttr = nullptr;
 
 public:
 
-    TTTR* get_tttr(){
+    std::shared_ptr<TTTR> get_tttr(){
         //auto p = std::make_shared<TTTR>(*this, selection, n_selection, true);
         return _tttr;
     }
 
-    void set_tttr(TTTR* tttr){
+    void set_tttr(std::shared_ptr<TTTR> tttr){
         _tttr = tttr;
     }
 
-    TTTRSelection(int start, int stop, TTTR* tttr){
+    TTTRSelection(int start, int stop, std::shared_ptr<TTTR> tttr){
         _tttr = tttr;
         _tttr_indices.insert(start);
         _tttr_indices.insert(stop);
@@ -35,7 +35,7 @@ public:
     }
 
     TTTRSelection(std::shared_ptr<TTTR> tttr = nullptr){
-        this->_tttr = tttr.get();
+        this->_tttr = tttr;
     }
 
 };

@@ -113,7 +113,7 @@ CLSMImage::CLSMImage (
     }
     // fill pixel
     if(fill && !channels.empty())
-        this->fill(this->tttr.get(), channels, false, micro_time_ranges);
+        this->fill(this->tttr, channels, false, micro_time_ranges);
 //    if(settings.macro_time_shift!=0)
 //        shift_line_start(settings.macro_time_shift);
 }
@@ -343,8 +343,8 @@ void CLSMImage::create_frames(bool clear_first){
 #endif
     for(size_t i=0; i < frame_edges.size() - 1; i++){
         auto frame = new CLSMFrame(
-                frame_edges[i], frame_edges[i + 1], tttr.get());
-        frame->set_tttr(tttr.get());
+                frame_edges[i], frame_edges[i + 1], tttr);
+        frame->set_tttr(tttr);
         append(frame);
 #ifdef VERBOSE_TTTRLIB
         std::cout << " " << i  << std::flush;
@@ -405,7 +405,7 @@ void CLSMImage::create_lines(){
             auto line = new CLSMLine();
             line->_tttr_indices.insert(line_start);
             line->_tttr_indices.insert(line_stop);
-            line->set_tttr(tttr.get());
+            line->set_tttr(tttr);
             line->set_pixel_duration(pixel_duration);
             frame->append(line);
         }
@@ -456,7 +456,7 @@ void CLSMImage::clear() {
 }
 
 void CLSMImage:: fill(
-        TTTR* tttr_data,
+        std::shared_ptr<TTTR> tttr_data,
         std::vector<int> channels,
         bool clear,
         const std::vector<std::pair<int,int>> &micro_time_ranges
@@ -473,7 +473,7 @@ void CLSMImage:: fill(
     std::clog << std::endl;
 #endif
     if(tttr_data == nullptr){
-        tttr_data = tttr.get();
+        tttr_data = tttr;
     }
     // Use all channels if channels is empty
     if(channels.empty()){

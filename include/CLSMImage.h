@@ -256,7 +256,7 @@ public:
      *                            only events within these ranges are considered.
      */
     void fill(
-            TTTR *tttr_data = nullptr,
+            std::shared_ptr<TTTR> tttr_data = nullptr,
             std::vector<int> channels = std::vector<int>(),
             bool clear = true,
             const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
@@ -283,7 +283,7 @@ public:
      *                            only events within these ranges are considered.
      */
     void fill_pixels(
-            TTTR *tttr_data,
+            std::shared_ptr<TTTR> tttr_data,
             std::vector<int> channels,
             bool clear_pixel = true,
             std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()

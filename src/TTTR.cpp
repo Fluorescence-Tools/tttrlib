@@ -1279,140 +1279,119 @@ void TTTR::compute_microtime_histogram(
         double** time, int* n_time,
         unsigned short micro_time_coarsening,
         std::vector<int> *tttr_indices,
-        std::vector<int> *routing_channels
+        std::vector<int> *routing_channels,
+        int minlength
 ) {
-
-    // Check that the input and output pointers are valid.
-    if (tttr_data == nullptr || histogram == nullptr || n_histogram == nullptr ||
-        time == nullptr || n_time == nullptr) {
+    // Validate pointers
+    if (!tttr_data || !histogram || !n_histogram || !time || !n_time) {
         return;
     }
 
-    // Get header and verify its validity.
+    // Prevent zero coarsening
+    if (micro_time_coarsening == 0) micro_time_coarsening = 1;
+
+    // Default resolution and base channel count
+    double resolution = 1.0;
+    int base_channels = 0;
+
     auto header_ptr = tttr_data->get_header();
-    if (header_ptr == nullptr) {
-        *n_histogram = 0;
-        *histogram = (double*) calloc(1, sizeof(double));
-        *n_time = 0;
-        *time = (double*) calloc(1, sizeof(double));
-        return;
-    }
-    auto header = *header_ptr;
-
-    // Prevent division by zero.
-    if (micro_time_coarsening == 0) {
-        micro_time_coarsening = 1;
+    if (header_ptr) {
+        auto header = *header_ptr;
+        double hdr_res = header.get_micro_time_resolution();
+        resolution = (hdr_res > 0 ? hdr_res : 1.0);
+        base_channels = header.get_number_of_micro_time_channels();
     }
 
-    // Get the number of micro time channels.
-    int n_channels = header.get_number_of_micro_time_channels();
-    if (n_channels == 0) {
-        *n_histogram = 0;
-        *histogram = (double *) calloc(1, sizeof(double));
-        *n_time = 0;
-        *time = (double *) calloc(1, sizeof(double));
-        return;
+    // Determine number of bins
+    int raw_bins = base_channels / micro_time_coarsening;
+    int n_channels;
+    if (minlength < 0) {
+        // use original behavior when minlength < 0
+        n_channels = std::max(1, raw_bins);
+    } else {
+        // enforce minimum length
+        n_channels = std::max(minlength, raw_bins);
     }
 
-    // Adjust n_channels based on the coarsening factor.
-    if (n_channels > micro_time_coarsening)
-        n_channels /= micro_time_coarsening;
-
-    // Get micro time resolution.
-    double micro_time_resolution = header.get_micro_time_resolution();
-    if (micro_time_resolution < 0) {
-        micro_time_resolution = 1.0;
+    // Build time axis
+    std::vector<double> t_vec(n_channels);
+    for (int i = 0; i < n_channels; ++i) {
+        t_vec[i] = resolution * i * micro_time_coarsening;
     }
 
-    // Allocate memory for the time array.
-    double *t = (double *) malloc(n_channels * sizeof(double));
-    if (t == nullptr) {
-        *n_histogram = 0;
-        *histogram = (double *) calloc(1, sizeof(double));
-        *n_time = 0;
-        *time = (double *) calloc(1, sizeof(double));
-        return;
-    }
-    for (int i = 0; i < n_channels; i++) {
-        t[i] = micro_time_resolution * i * micro_time_coarsening;
-    }
+    // Prepare histogram container
+    std::vector<double> hist_vec(n_channels, 0.0);
 
-    // Allocate memory for the histogram array.
-    double *hist = (double *) malloc(n_channels * sizeof(double));
-    if (hist == nullptr) {
-        free(t);
-        *n_histogram = 0;
-        *histogram = (double *) calloc(1, sizeof(double));
-        *n_time = 0;
-        *time = (double *) calloc(1, sizeof(double));
-        return;
-    }
-    memset(hist, 0, n_channels * sizeof(double));
-
-    std::vector<unsigned short> selected_micro_times;
-
-    if (tttr_indices == nullptr) {
-        unsigned short *micro_times = nullptr;
+    // Collect micro-time values
+    std::vector<unsigned short> selected;
+    if (!tttr_indices) {
+        unsigned short* micro_times = nullptr;
         int n_micro_times = 0;
         tttr_data->get_micro_times(&micro_times, &n_micro_times);
-
-        if (micro_times == nullptr || n_micro_times <= 0) {
-            free(hist);
-            free(t);
-            *n_histogram = 0;
-            *histogram = (double *) calloc(1, sizeof(double));
-            *n_time = 0;
-            *time = (double *) calloc(1, sizeof(double));
-            return;
-        }
-
-        if (!routing_channels) {
-            for (int i = 0; i < n_micro_times; i++) {
-                selected_micro_times.push_back(micro_times[i] / micro_time_coarsening);
-            }
-        } else {
-            for (int i = 0; i < n_micro_times; i++) {
-                if (std::find(routing_channels->begin(), routing_channels->end(), tttr_data->routing_channels[i]) != routing_channels->end()) {
-                    selected_micro_times.push_back(micro_times[i] / micro_time_coarsening);
+        if (micro_times && n_micro_times > 0) {
+            selected.reserve(n_micro_times);
+            for (int i = 0; i < n_micro_times; ++i) {
+                if (!routing_channels ||
+                    std::find(routing_channels->begin(), routing_channels->end(),
+                              tttr_data->routing_channels[i]) != routing_channels->end()) {
+                    selected.push_back(micro_times[i] / micro_time_coarsening);
                 }
             }
         }
     } else {
-        for (int i : *tttr_indices) {
-            if (!routing_channels || std::find(routing_channels->begin(), routing_channels->end(), tttr_data->routing_channels[i]) != routing_channels->end()) {
-                selected_micro_times.push_back(tttr_data->micro_times[i] / micro_time_coarsening);
+        selected.reserve(tttr_indices->size());
+        for (int idx : *tttr_indices) {
+            if (!routing_channels ||
+                std::find(routing_channels->begin(), routing_channels->end(),
+                          tttr_data->routing_channels[idx]) != routing_channels->end()) {
+                selected.push_back(tttr_data->micro_times[idx] / micro_time_coarsening);
             }
         }
     }
 
-    if (selected_micro_times.empty()) {
-        free(hist);
-        free(t);
-        *n_histogram = 0;
-        *histogram = (double *) calloc(1, sizeof(double));
-        *n_time = 0;
-        *time = (double *) calloc(1, sizeof(double));
+    // Handle empty data when using old behavior (minlength < 0)
+    if (selected.empty() && minlength < 0) {
+        // return empty arrays
+        *n_histogram = *n_time = 0;
+        *histogram = (double*) calloc(0, sizeof(double));
+        *time      = (double*) calloc(0, sizeof(double));
         return;
     }
 
+    // Create bin edges
     std::vector<unsigned short> bin_edges(n_channels);
-    for (size_t i = 0; i < bin_edges.size(); i++) {
-        bin_edges[i] = i;
+    std::iota(bin_edges.begin(), bin_edges.end(), 0);
+
+    // Compute histogram only if data present
+    if (!selected.empty()) {
+        histogram1D<unsigned short>(
+                selected.data(), selected.size(),
+                nullptr, 0,
+                bin_edges.data(), bin_edges.size(),
+                hist_vec.data(), n_channels,
+                "lin", false
+        );
     }
 
-    histogram1D<unsigned short>(
-            selected_micro_times.data(), selected_micro_times.size(),
-            nullptr, 0,
-            bin_edges.data(), bin_edges.size(),
-            hist, n_channels,
-            "lin", false
-    );
+    // Allocate output arrays
+    *histogram = static_cast<double*>(std::malloc(n_channels * sizeof(double)));
+    *time      = static_cast<double*>(std::malloc(n_channels * sizeof(double)));
+    if (!*histogram || !*time) {
+        std::free(*histogram);
+        std::free(*time);
+        *n_histogram = *n_time = 0;
+        *histogram = (double*) calloc(1, sizeof(double));
+        *time      = (double*) calloc(1, sizeof(double));
+        return;
+    }
 
-    *histogram = hist;
-    *n_histogram = n_channels;
-    *time = t;
-    *n_time = n_channels;
+    // Copy data into output
+    std::copy(hist_vec.begin(), hist_vec.end(), *histogram);
+    std::copy(t_vec.begin(), t_vec.end(), *time);
+
+    *n_histogram = *n_time = n_channels;
 }
+
 
 
 double TTTR::compute_mean_lifetime(
