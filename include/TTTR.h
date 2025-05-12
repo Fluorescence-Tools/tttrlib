@@ -719,16 +719,31 @@ public:
      * A list of supported container names.
      *
      */
-     static std::vector<std::string> get_supported_container_names(){
-
-        // Extract container names from the right side of the bimap
-        std::vector<std::string> supported_container_names;
-        for (const auto& element : container_names.left) {
-            supported_container_names.push_back(element.first);
+    static std::vector<std::string> get_supported_container_names() {
+        // 1) pull into a vector of (name, id)
+        std::vector<std::pair<std::string,int>> items;
+        items.reserve(container_names.size());
+        for (auto const& kv : container_names.left) {
+            // kv.first  = std::string
+            // kv.second = int
+            items.emplace_back(kv.first, kv.second);
         }
 
-        return supported_container_names;
-     }
+        // 2) sort by the int
+        std::sort(items.begin(), items.end(),
+                  [](auto const& a, auto const& b){
+                      return a.second < b.second;
+                  });
+
+        // 3) project out just the names
+        std::vector<std::string> supported;
+        supported.reserve(items.size());
+        for (auto const& p : items) {
+            supported.push_back(p.first);
+        }
+        return supported;
+    }
+
 
      /*!
       * \brief Creates a new TTTR object by selecting specific events based on the provided indices.
