@@ -80,82 +80,88 @@ static std::pair<int, int> find_clsm_start_stop(
 
 
 
-class CLSMSettings{
-
+class CLSMSettings {
     friend class CLSMImage;
 
 protected:
-
-    /// To skip incomplete frames
+    /// Skip events before the first frame marker?
     bool skip_before_first_frame_marker = false;
-    bool skip_after_last_frame_marker = false;
 
+    /// Skip events after the last frame marker?
+    bool skip_after_last_frame_marker  = false;
+
+    /// Which reading routine to use (e.g. CLSM_SP5, CLSM_SP8, or CLSM_DEFAULT)
     int reading_routine = CLSM_DEFAULT;
 
-    /// Defines the marker for a line start
+    /// Marker for a line start (routing channel or micro‐time channel)
     int marker_line_start = 0;
 
-    /// Defines the marker for a line stop
+    /// Marker for a line stop (routing channel or micro‐time channel)
     int marker_line_stop = 0;
 
-    /// Vector containing the tttr indices of the frame markers
+    /// Vector of TTTR indices that mark the start of each frame
     std::vector<int> marker_frame_start = {};
 
-    /// The event type used for the marker
+    /// The event type to interpret as a “marker” for frame/line
     int marker_event_type = 0;
 
+    /// Number of pixels per line. If 0, it will be auto‐determined from the first frame.
     int n_pixel_per_line = 0;
+
+    /// Number of lines per frame. If -1, auto‐detect based on first frame.
     int n_lines = 0;
 
-public:
+    /*** Bidirectional‐scan flag ***/
+    ///
+    /// If true, every odd‐indexed line was scanned in reverse direction.
+    /// After filling pixels, call CLSMImage::handleBidirectionalScanning() to flip them.
+    bool bidirectional_scan = false;
 
+public:
     /*!
      * \brief CLSMSettings Constructor.
      *
      * Constructs a CLSMSettings object with the specified parameters.
      *
-     * @param skip_before_first_frame_marker If true, skip TTTR events before the first frame marker (default is false).
-     * @param skip_after_last_frame_marker   If true, skip TTTR events after the last frame marker (default is false).
-     * @param reading_routine               An integer specifying the reading routine used to
-     *                                      read a CLSM image out of a TTTR data stream. A CLSM image can be encoded
-     *                                      in various ways in a TTTR stream.
-     * @param marker_line_start             Routing channel number or micro time channel number serving as a marker
-     *                                      for the start of a new line in a frame within the TTTR data stream.
-     * @param marker_line_stop              Routing channel number or micro time channel number serving as a marker
-     *                                      for the stop of a line in a frame within the TTTR data stream.
-     * @param marker_frame_start            Routing channel numbers (default reading routine)
-     *                                      or micro time channel number (SP8 reading routine) serving as a marker
-     *                                      for a new frame in the TTTR data stream.
-     * @param marker_event_type             Event types interpreted as markers for frames and lines.
-     * @param n_pixel_per_line              Number of pixels into which each line is separated.
-     *                                      If set to zero, the number of pixels per line corresponds to the number
-     *                                      of lines in the first frame.
-     * @param n_lines                       Number of lines (default is -1, auto-detect based on the first frame).
+     * @param skip_before_first_frame_marker If true, skip TTTR events before the first frame marker (default: false).
+     * @param skip_after_last_frame_marker   If true, skip TTTR events after the last frame marker (default: false).
+     * @param reading_routine               Integer specifying the reading routine used to
+     *                                      decode a CLSM image out of TTTR data. By default, CLSM_DEFAULT.
+     * @param marker_line_start             Routing‐channel or micro‐time index serving as a marker
+     *                                      for the start of a new line (default: 3).
+     * @param marker_line_stop              Routing‐channel or micro‐time index serving as a marker
+     *                                      for the end of a line (default: 2).
+     * @param marker_frame_start            Vector of routing‐channel (or micro‐time) indices serving
+     *                                      as frame‐start markers (default: {1}).
+     * @param marker_event_type             Event type to treat as a “marker” (default: 1).
+     * @param n_pixel_per_line              Number of pixels per line (default: 1). If set to zero,
+     *                                      the code will auto‐determine based on the first frame.
+     * @param n_lines                       Number of lines per frame. If -1, auto‐detect from the first frame (default: -1).
+     * @param bidirectional_scan            If true, every odd line was scanned in reverse direction (default: false).
      */
     explicit CLSMSettings(
-        bool skip_before_first_frame_marker = false,
-        bool skip_after_last_frame_marker = false,
-        int reading_routine = CLSM_DEFAULT,
-        int marker_line_start = 3,
-        int marker_line_stop = 2,
-        std::vector<int> marker_frame_start = std::vector<int>({1}),
-        int marker_event_type = 1,
-        int n_pixel_per_line = 1,
-        int n_lines = -1
-        // long long macro_time_shift = 0
-    ){
+            bool skip_before_first_frame_marker = false,
+            bool skip_after_last_frame_marker  = false,
+            int reading_routine                = CLSM_DEFAULT,
+            int marker_line_start              = 3,
+            int marker_line_stop               = 2,
+            std::vector<int> marker_frame_start = std::vector<int>({1}),
+            int marker_event_type              = 1,
+            int n_pixel_per_line               = 1,
+            int n_lines                        = -1,
+            bool bidirectional_scan            = false
+    ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
-        this->skip_after_last_frame_marker = skip_after_last_frame_marker;
-        this->reading_routine = reading_routine;
-        this->n_pixel_per_line = n_pixel_per_line;
-        this->n_lines = n_lines;
-        this->marker_event_type = marker_event_type;
-        this->marker_line_stop = marker_line_stop;
-        this->marker_line_start = marker_line_start;
-        this->marker_frame_start = marker_frame_start;
-//        this->macro_time_shift = macro_time_shift;
+        this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
+        this->reading_routine                = reading_routine;
+        this->marker_line_start              = marker_line_start;
+        this->marker_line_stop               = marker_line_stop;
+        this->marker_frame_start             = std::move(marker_frame_start);
+        this->marker_event_type              = marker_event_type;
+        this->n_pixel_per_line               = n_pixel_per_line;
+        this->n_lines                        = n_lines;
+        this->bidirectional_scan             = bidirectional_scan;
     }
-
 };
 
 

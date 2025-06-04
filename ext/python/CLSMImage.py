@@ -24,36 +24,52 @@ def __getattr__(self, item):
         return call()
     else:
         raise AttributeError
+
 @staticmethod
 def read_clsm_settings(tttr_data):
     settings = dict()
     if tttr_data is not None:
         header = tttr_data.header
+
+        # Read PTU‐style tags
         if tttr_data.get_tttr_container_type() == 'PTU':
             try:
-                settings["marker_frame_start"] = [2**(int(header.tag('ImgHdr_Frame')["value"])-1)]
+                settings["marker_frame_start"] = [2 ** (int(header.tag('ImgHdr_Frame')["value"]) - 1)]
             except:
-                settings["marker_frame_start"] = [8]
-            settings.update(
-                {
-                    "marker_line_start": 2**(int(header.tag('ImgHdr_LineStart')["value"])-1),
-                    "marker_line_stop": 2**(int(header.tag('ImgHdr_LineStop')["value"])-1),
-                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                    "marker_event_type": 1
-                }
-            )
+                settings["marker_frame_start"] = []
+
+            settings.update({
+                "marker_line_start": 2 ** (int(header.tag('ImgHdr_LineStart')["value"]) - 1),
+                "marker_line_stop":  2 ** (int(header.tag('ImgHdr_LineStop')["value"]) - 1),
+                "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
+                "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
+                "marker_event_type": 1
+            })
+
+            try:
+                bd = int(header.tag('ImgHdr_BiDirect')["value"])
+                settings["bidirectional_scan"] = (bd != 0)
+            except:
+                settings["bidirectional_scan"] = False
+
+        # Read HT3‐style tags
         elif tttr_data.get_tttr_container_type() == 'HT3':
-            settings.update(
-                {
-                    "marker_line_start": int(header.tag('ImgHdr_LineStart')["value"]),
-                    "marker_line_stop": int(header.tag('ImgHdr_LineStop')["value"]),
-                    "n_pixel_per_line": int(header.tag('ImgHdr_PixX')["value"]),
-                    "n_lines": int(header.tag('ImgHdr_PixY')["value"]),
-                    "marker_frame_start": [int(header.tag('ImgHdr_Frame')["value"])],
-                    "marker_event_type": 1
-                }
-            )
+            settings.update({
+                "marker_line_start":   int(header.tag('ImgHdr_LineStart')["value"]),
+                "marker_line_stop":    int(header.tag('ImgHdr_LineStop')["value"]),
+                "n_pixel_per_line":    int(header.tag('ImgHdr_PixX')["value"]),
+                "n_lines":             int(header.tag('ImgHdr_PixY')["value"]),
+                "marker_frame_start":  [int(header.tag('ImgHdr_Frame')["value"])],
+                "marker_event_type":   1
+            })
+
+            # --- NEW: read bidirectional‐scan flag ---
+            try:
+                bd = int(header.tag('ImgHdr_BiDirect')["value"])
+                settings["bidirectional_scan"] = (bd != 0)
+            except:
+                settings["bidirectional_scan"] = False
+
     return settings
 
 def __init__(
@@ -76,41 +92,37 @@ def __init__(
         'default': CLSM_DEFAULT
     }
 
+    # Always include bidirectional_scan=False by default
     settings_kwargs = {
         "skip_before_first_frame_marker": skip_before_first_frame_marker,
-        "skip_after_last_frame_marker": skip_after_last_frame_marker,
-        "reading_routine": rt[reading_routine],
-        "marker_line_start": marker_line_start,
-        "marker_line_stop": marker_line_stop,
-        "marker_frame_start": marker_frame_start,
-        "marker_event_type": marker_event_type,
-        "n_pixel_per_line": n_pixel_per_line
+        "skip_after_last_frame_marker":  skip_after_last_frame_marker,
+        "reading_routine":               rt[reading_routine],
+        "marker_line_start":             marker_line_start,
+        "marker_line_stop":              marker_line_stop,
+        "marker_frame_start":            marker_frame_start,
+        "marker_event_type":             marker_event_type,
+        "n_pixel_per_line":              n_pixel_per_line,
+        "bidirectional_scan":            False,   # <-- new default
     }
 
     if not isinstance(source, CLSMImage):
-        settings_kwargs.update(
-            {
-                "marker_frame_start": marker_frame_start,
-                "marker_line_start": marker_line_start,
-                "marker_line_stop": marker_line_stop,
-                "marker_event_type": marker_event_type,
-                "n_pixel_per_line": n_pixel_per_line,
-                "reading_routine": rt[reading_routine],
-                "skip_before_first_frame_marker": skip_before_first_frame_marker
-            }
-        )
+        # If the user provided TTTR data, try reading any header‐derived settings
         if tttr_data is not None:
             header = tttr_data.header
             self.header = header
             try:
-                settings_kwargs.update(self.read_clsm_settings(tttr_data))
+                auto_settings = self.read_clsm_settings(tttr_data)
+                # Merge in any auto‐read values (including bidirectional_scan, if present)
+                settings_kwargs.update(auto_settings)
             except:
                 print("Error reading TTTR CLSM header")
-        # Overwrite if user defined inputs make sense
+
+        # Override with user‐provided arguments (if not None/type‐correct)
         if isinstance(marker_frame_start, int):
             settings_kwargs['marker_frame_start'] = [marker_frame_start]
-        if isinstance(marker_frame_start, list):
+        elif isinstance(marker_frame_start, list):
             settings_kwargs['marker_frame_start'] = marker_frame_start
+
         if isinstance(marker_line_start, int):
             settings_kwargs['marker_line_start'] = marker_line_start
         if isinstance(marker_line_stop, int):
@@ -119,9 +131,10 @@ def __init__(
             settings_kwargs['marker_event_type'] = marker_event_type
         if isinstance(n_pixel_per_line, int):
             settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
+
         kwargs['tttr_data'] = tttr_data
 
-        # Defined setups overrule all setting
+        # Pre‐set routines override everything else
         if reading_routine == 'SP5':
             settings_kwargs["marker_event_type"] = 1
             settings_kwargs["marker_frame_start"] = [4, 6]
@@ -135,12 +148,23 @@ def __init__(
             if tttr_data is not None:
                 header = tttr_data.header
                 settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
-                settings_kwargs["marker_line_stop"] = int(header.tag('ImgHdr_LineStop')["value"])
+                settings_kwargs["marker_line_stop"]  = int(header.tag('ImgHdr_LineStop')["value"])
+                # If ImgHdr_BiDirect exists, preserve it:
+                try:
+                    bd = int(header.tag('ImgHdr_BiDirect')["value"])
+                    settings_kwargs["bidirectional_scan"] = (bd != 0)
+                except:
+                    pass
+
         clsm_settings = CLSMSettings(**settings_kwargs)
+
     else:
+        # Copy settings from the source CLSMImage
         clsm_settings = source.get_settings()
+
     kwargs['settings'] = clsm_settings
     this = _tttrlib.new_CLSMImage(**kwargs)
+
     try:
         self.this.append(this)
     except:

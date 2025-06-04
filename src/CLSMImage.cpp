@@ -61,7 +61,7 @@ void CLSMImage::determine_number_of_lines(){
     }
 }
 
-CLSMImage::CLSMImage (
+CLSMImage::CLSMImage(
         std::shared_ptr<TTTR> tttr_data,
         CLSMSettings settings,
         CLSMImage* source,
@@ -72,50 +72,79 @@ CLSMImage::CLSMImage (
 #ifdef VERBOSE_TTTRLIB
     std::clog << "Initializing CLSM image" << std::endl;
 #endif
-    if(source != nullptr){
+
+    if (source != nullptr) {
+        // Copy‐constructor path remains unchanged
 #ifdef VERBOSE_TTTRLIB
         std::clog << "-- Copying data from other object" << std::endl;
 #endif
         copy(*source, fill);
-    } else{
-#ifdef VERBOSE_TTTRLIBLIBLIB
+    } else {
+#ifdef VERBOSE_TTTRLIB
         std::clog << "-- Initializing new CLSM image..." << std::endl;
 #endif
+
         this->settings = settings;
-        this->n_pixel = settings.n_pixel_per_line;
+        this->n_pixel  = settings.n_pixel_per_line;
         tttr = tttr_data;
 
-        // early exist if sth is wrong
-        if(tttr.get() == nullptr){
+        // Early exit if TTTR pointer missing or no records
+        if (tttr.get() == nullptr) {
             std::clog << "WARNING: No TTTR object provided" << std::endl;
             return;
         }
-
-        if(this->settings.marker_frame_start.empty()){
-            std::clog << "WARNING: No frame marker provided" << std::endl;
-            return;
-        }
-
-        if(tttr_data->n_records_read == 0){
+        if (tttr_data->n_records_read == 0) {
             std::clog << "WARNING: No records in TTTR object" << std::endl;
             return;
         }
 
-        create_frames(true);
-        create_lines();
+        // “No frame marker” case ===
+        if (this->settings.marker_frame_start.empty()) {
+            std::clog << "WARNING: No frame marker provided - creating a single full-span frame" << std::endl;
+
+            // Determine total number of valid events
+            int n_events = tttr_data->get_n_valid_events();  // or tttr_data->n_valid_events
+
+            // Manually create one frame covering all events [0, n_events)
+            auto singleFrame = new CLSMFrame(0, n_events, tttr);
+            singleFrame->set_tttr(tttr);
+            frames.emplace_back(singleFrame);
+
+            // We know there will be exactly one frame
+            n_frames = 1;
+
+            // Now proceed to line creation as if there were a “frame edge” pair
+            create_lines();
+
+            // Figure out how many lines exist and remove incomplete ones
+            determine_number_of_lines();
+            remove_incomplete_frames();
+
+            // Finally create pixel containers within each line
+            create_pixels_in_lines();
+        }
+        else {
+            // “frame marker provided” path ===
+            create_frames(true);
+            create_lines();
+
 #ifdef VERBOSE_TTTRLIB
-        std::clog << "-- Initial number of frames: " << n_frames << std::endl;
-        std::clog << "-- Lines per frame: " << n_lines << std::endl;
+            std::clog << "-- Initial number of frames: " << n_frames << std::endl;
+            std::clog << "-- Lines per frame: " << n_lines << std::endl;
 #endif
-        determine_number_of_lines();
-        remove_incomplete_frames();
-        create_pixels_in_lines();
+            determine_number_of_lines();
+            remove_incomplete_frames();
+            create_pixels_in_lines();
+        }
     }
-    // fill pixel
-    if(fill && !channels.empty())
+
+    // If user asked to fill with photons (and specified channels), do so
+    if (fill && !channels.empty()) {
         this->fill(this->tttr, channels, false, micro_time_ranges);
-//    if(settings.macro_time_shift!=0)
-//        shift_line_start(settings.macro_time_shift);
+    }
+    // (Optionally shift line start if settings.macro_time_shift != 0)
+    // if (settings.macro_time_shift != 0)
+    //     shift_line_start(settings.macro_time_shift);
 }
 
 void CLSMImage::create_pixels_in_lines() {
@@ -455,7 +484,7 @@ void CLSMImage::clear() {
     }
 }
 
-void CLSMImage:: fill(
+void CLSMImage::fill(
         std::shared_ptr<TTTR> tttr_data,
         std::vector<int> channels,
         bool clear,
@@ -463,61 +492,108 @@ void CLSMImage:: fill(
 ) {
 #ifdef VERBOSE_TTTRLIB
     std::clog << "-- Filling pixels..." << std::endl;
-    std::clog << "-- Channels: "; for(auto ch: channels) std::clog << ch << " "; std::clog << std::endl;
+    std::clog << "-- Channels: ";
+    for(auto ch: channels) std::clog << ch << " ";
+    std::clog << std::endl;
     std::clog << "-- Clear pixel before fill: " << clear << std::endl;
     std::clog << "-- Assign photons to pixels" << std::endl;
-    std::clog << "-- Micro time ranges:";
+    std::clog << "-- Micro time ranges: ";
     for(auto r : micro_time_ranges){
         std::clog << "(" << r.first << "," << r.second << ") ";
     }
     std::clog << std::endl;
 #endif
+
+    // If no TTTR data pointer was passed in, use the stored one
     if(tttr_data == nullptr){
         tttr_data = tttr;
     }
-    // Use all channels if channels is empty
+
+    // If the channel list is empty, query all used routing channels from TTTR
     if(channels.empty()){
         std::clog << "WARNING: Image filled without channel numbers. Using all channels." << std::endl;
-        signed char *chs; int nchs;
+        signed char *chs;
+        int nchs;
         tttr_data->get_used_routing_channels(&chs, &nchs);
         for(int i = 0; i < nchs; i++){
             channels.emplace_back(chs[i]);
         }
         free(chs);
     }
+
+    // Iterate over each frame in the image
     for(auto frame : frames){
-        for(auto line : frame->lines){
+        // We need the line index to decide if a line is "reversed"
+        for(size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx){
+            CLSMLine* line = frame->lines[l_idx];
+
+            // Warn if a line has no pixel vector allocated
             if(line->pixels.empty()){
                 std::clog << "WARNING: Line without pixel." << std::endl;
                 continue;
             }
+
+            // If requested, clear each pixel's stored photon indices before filling
             if(clear){
                 for(auto &p: line->pixels){
                     p.clear();
                 }
             }
+
+            // Retrieve how long each pixel spans in macro‐time clocks
             auto pixel_duration = line->get_pixel_duration();
             size_t n_pixels_in_line = line->pixels.size();
-            // iterate though events in the line
+
+            // Determine if this line was scanned in reverse order (odd‐indexed lines)
+            bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
+
+            // Get the event indices that bound this line in the TTTR record array
             int start_idx = line->get_start();
-            int stop_idx = line->get_stop();
+            int stop_idx  = line->get_stop();
+
+            // The macro‐time clock at which this line began
             unsigned long line_start_time = line->get_start_time(tttr_data);
-            for(auto event_i=start_idx; event_i < stop_idx; event_i++){
-                if (tttr_data->event_types[event_i] != RECORD_PHOTON) continue;
+
+            // Walk through each TTTR event that falls within this line's event indices
+            for(int event_i = start_idx; event_i < stop_idx; ++event_i){
+                // Only process photon events, skip all others
+                if (tttr_data->event_types[event_i] != RECORD_PHOTON) {
+                    continue;
+                }
+
+                // Pull the routing channel for this photon event
                 auto c = tttr_data->routing_channels[event_i];
+
+                // Check if this photon belongs to any of the selected channels
                 for(auto &ci : channels){
                     if(c == ci){
-                        auto pixel_nbr = (tttr_data->macro_times[event_i] - line_start_time) / pixel_duration;
-                        // skip if photon is outside of line
-                        if(pixel_nbr >=  n_pixels_in_line) break;
-                        // Check if micro time is in micro time range
+                        // Compute the "raw" pixel index as if scanning left→right
+                        int raw_pixel = static_cast<int>(
+                                (tttr_data->macro_times[event_i] - line_start_time)
+                                / pixel_duration
+                        );
+
+                        // If the computed raw index falls outside the line, skip
+                        if(raw_pixel < 0 || raw_pixel >= static_cast<int>(n_pixels_in_line)){
+                            break;
+                        }
+
+                        // If the line was scanned right→left, flip the raw index
+                        size_t pixel_nbr = static_cast<size_t>(
+                                is_reversed
+                                ? (static_cast<int>(n_pixels_in_line) - 1 - raw_pixel)
+                                : raw_pixel
+                        );
+
+                        // Verify that the photon’s micro time falls within the specified ranges
                         bool add_ph = true;
                         auto micro_time = tttr_data->micro_times[event_i];
                         for(auto r: micro_time_ranges){
-                            add_ph &= micro_time >= r.first;
-                            add_ph &= micro_time <= r.second;
+                            add_ph &= (micro_time >= r.first);
+                            add_ph &= (micro_time <= r.second);
                         }
-                        // If photon was in micro time range add it
+
+                        // If it passes the micro‐time filter, insert the event index
                         if(add_ph){
                             line->pixels[pixel_nbr].insert(event_i);
                         }
@@ -526,6 +602,8 @@ void CLSMImage:: fill(
             }
         }
     }
+
+    // Mark the image as filled so downstream methods know pixels are populated
     _is_filled_ = true;
 }
 
