@@ -1305,6 +1305,83 @@ void CLSMImage::distribute(
 }
 
 
+void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
+#ifdef VERBOSE_TTTRLIB
+    std::clog << "-- Reshaping image from ("
+              << n_frames << " × " << n_lines << " × " << n_pixel
+              << ") to ("
+              << new_n_frames << " × " << new_n_lines << " × " << new_n_pixel
+              << ")" << std::endl;
+#endif
+
+    // 1) Check that total pixel count matches
+    size_t old_total = static_cast<size_t>(n_frames) * n_lines * n_pixel;
+    size_t new_total = static_cast<size_t>(new_n_frames) * new_n_lines * new_n_pixel;
+    if (old_total != new_total) {
+        std::cerr << "ERROR: Cannot reshape CLSMImage: total pixels ("
+                  << old_total << ") ≠ new layout ("
+                  << new_total << ")."
+                  << std::endl;
+        return;
+    }
+
+    // 2) Extract each pixel’s TTTR‐indices into a flat vector.
+    //    Match the exact container type (itlib::flat_set<…>) via decltype.
+    using PixelSet = decltype(std::declval<CLSMPixel>()._tttr_indices);
+    std::vector<PixelSet> flat_pixel_indices;
+    flat_pixel_indices.reserve(old_total);
+
+    for (size_t f = 0; f < static_cast<size_t>(n_frames); ++f) {
+        CLSMFrame* frame = frames[f];
+        for (size_t l = 0; l < static_cast<size_t>(n_lines); ++l) {
+            CLSMLine* line = frame->lines[l];
+            for (size_t p = 0; p < static_cast<size_t>(n_pixel); ++p) {
+                flat_pixel_indices.push_back(line->pixels[p]._tttr_indices);
+            }
+        }
+    }
+
+    // 3) Delete old frames (and their lines/pixels), then clear the vector.
+    for (auto* fr : frames) {
+        delete fr;
+    }
+    frames.clear();
+
+    // 4) Update stored dimensions
+    n_frames = new_n_frames;
+    n_lines  = new_n_lines;
+    n_pixel  = new_n_pixel;
+
+    // 5) Rebuild a fresh hierarchy (CLSMFrame → CLSMLine → pixels),
+    //    moving each saved PixelSet back into its new position.
+    size_t idx = 0;
+    for (size_t f = 0; f < static_cast<size_t>(n_frames); ++f) {
+        CLSMFrame* new_frame = new CLSMFrame();
+        new_frame->set_tttr(tttr);  // pass the shared_ptr directly
+
+        for (size_t l = 0; l < static_cast<size_t>(n_lines); ++l) {
+            CLSMLine* new_line = new CLSMLine();
+            new_line->set_tttr(tttr);  // pass the shared_ptr directly
+
+            new_line->pixels.resize(static_cast<size_t>(n_pixel));
+            for (size_t p = 0; p < static_cast<size_t>(n_pixel); ++p) {
+                new_line->pixels[p]._tttr_indices = std::move(flat_pixel_indices[idx]);
+                ++idx;
+            }
+
+            new_frame->append(new_line);
+        }
+
+        frames.emplace_back(new_frame);
+    }
+
+#ifdef VERBOSE_TTTRLIB
+    std::clog << "-- Reshape complete. Now dims are ("
+              << n_frames << " × " << n_lines << " × " << n_pixel << ")."
+              << std::endl;
+#endif
+}
+
 void CLSMImage::crop(
         int frame_start, int frame_stop,
         int line_start, int line_stop,

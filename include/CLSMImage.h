@@ -732,6 +732,14 @@ public:
         int pixel_start, int pixel_stop
     );
 
+    /**
+     * Reshape the image from (n_frames × n_lines × n_pixel) into
+     * (new_n_frames × new_n_lines × new_n_pixel). The total number of pixels
+     * must remain constant. After calling reshape, pixel (f, l, p) in the old
+     * layout moves to the new position in row‐major order.
+     */
+    void reshape(int new_n_frames, int new_n_lines, int new_n_pixel);
+
     /*!
      * \brief Stack frames in the CLSMImage.
      *
