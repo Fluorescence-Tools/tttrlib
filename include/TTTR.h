@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <cmath>
+#include <math.h>   // for floor()
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -102,28 +103,31 @@ void ranges_by_time_window(
 );
 
 
-/*!
- * \brief Computes the intensity trace for a sequence of time events.
+/**
+ * Compute an intensity trace from sorted timestamps.
  *
- * The intensity trace is calculated by partitioning the time events into
- * time windows with a minimum specified length and counting the number
- * of photons in each window.
+ * Parameters:
+ *   output                 - pointer to the returned array of counts
+ *   n_output               - pointer to the number of bins returned
+ *   input                  - sorted array of timestamps (same units as time_window)
+ *   n_input                - number of timestamps in `input[]`
+ *   time_window            - if overlapping==1: length of each sliding window;
+ *                            if overlapping==0: total time to cover (will be compared with t_max)
+ *   macro_time_resolution  - if overlapping==1: step size between successive window starts;
+ *                            if overlapping==0: non‐overlapping bin width
+ *   overlapping            - 1 ⇒ compute a sliding (overlapping) intensity trace;
+ *                            0 ⇒ compute non‐overlapping histogram bins
  *
- * \param output Pointer to an array storing the number of photons in each time window.
- * \param n_output Pointer to the variable storing the number of time windows.
- * \param input Array of time points representing the time events.
- * \param n_input Number of time points in the input array.
- * \param time_window_length Size of the time window in units of the macro time resolution.
- * \param macro_time_resolution The resolution of the macro time clock (default is 1.0).
+ * Behavior when overlapping==1 (“sliding‐window”):
+ *   - Each window j spans [j·res, j·res + time_window), for j = 0..floor(t_max/res).
+ *   - n_output = floor(t_max / res) + 1.
+ *   - At each j, count how many timestamps fall into that window.
  *
- * The function calculates the intensity trace by dividing the time events into
- * non-overlapping time windows of the specified length. The output array holds
- * the count of photons in each time window, and n_output is updated accordingly.
- * The input array contains the time points of events, and n_input is the total
- * number of events. The time_window_length parameter defines the size of the
- * time windows, and macro_time_resolution specifies the resolution of the macro
- * time clock (default is 1.0). The calculated intensity trace is stored in the
- * output array, and the total number of time windows is updated in n_output.
+ * Behavior when overlapping==0 (“non‐overlapping bins”):
+ *   - We cover up to max(t_max, time_window).  Define
+ *       total_span = fmax((double)t_max, time_window).
+ *   - n_output = ceil(total_span / macro_time_resolution).
+ *   - Bin j spans [j·res, (j+1)·res).  Count how many timestamps fall into each bin.
  */
 void compute_intensity_trace(
         int **output, int *n_output,

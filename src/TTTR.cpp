@@ -980,46 +980,55 @@ void TTTR::get_intensity_trace(
 }
 
 void compute_intensity_trace(
-        int **output, int *n_output,
-        unsigned long long *input, int n_input,
-        double time_window,
-        double macro_time_resolution
-){
-
-    int n_macro_time_clocks = (int)(time_window / macro_time_resolution);
-
-    if (n_input <= 0 || n_macro_time_clocks <= 0) {
+        int               **output,
+        int                *n_output,
+        unsigned long long *input,
+        int                 n_input,
+        double              time_window,
+        double              macro_time_resolution
+) {
+    if (n_input <= 0 || time_window <= 0.0 || macro_time_resolution <= 0.0) {
+        // Nothing to bin: return a zero‐length “trace” (we still allocate one zeroed int so caller can free()).
         *n_output = 0;
-        *output = (int *)calloc(1, sizeof(int));
+        *output   = (int*)calloc(1, sizeof(int));
         return;
     }
 
+    // 1) How many macro‐clocks fit into one bin?
+    //    (time_window is in sec, macro_time_resolution is sec/clock → clocks_per_bin is dimensionless)
+    long long clocks_per_bin = (long long) floor(time_window / macro_time_resolution);
+    if (clocks_per_bin < 1) {
+        // If time_window < macro_time_resolution, force at least 1 clock per bin
+        clocks_per_bin = 1;
+    }
+
+    // 2) Find the maximum timestamp (in macro‐clocks).
+    //    We assume input[] is nondecreasing; if not, you could scan for max instead.
     unsigned long long t_max = input[n_input - 1];
 
-    // +1 to ensure we have a bin for the maximum index
-    int n_bin = (int)(t_max / n_macro_time_clocks) + 1;
+    // 3) How many bins do we need so that the highest event still falls into a valid bin?
+    //    If t_max is exactly a multiple of clocks_per_bin,
+    //      then (t_max / clocks_per_bin) is an integer, and +1 ensures we have a bin index for it.
+    long long n_bins = (t_max / clocks_per_bin) + 1;
 
-    *n_output = n_bin;
-    *output = (int*) calloc(n_bin, sizeof(int));
+    *n_output = (int) n_bins;
+    *output = (int*) calloc(n_bins, sizeof(int));
+    if (*output == NULL) {
+        // Allocation failure—report zero bins.
+        *n_output = 0;
+        return;
+    }
 
-    int l = 0;
-    int r = 0;
-    while(r < n_input - 1){
-        r++;
-
-        // Compute the bin index
-        int i_bin = (int)(input[l] / n_macro_time_clocks);
-
-        // Clamp using ternary
-        // First clamp to 0, then clamp to n_bin - 1
-        i_bin = (i_bin < 0)       ? 0 : i_bin;
-        i_bin = (i_bin >= n_bin) ? (n_bin - 1) : i_bin;
-
-        if ((input[r] - input[l]) > n_macro_time_clocks){
-            l = r;
-        } else{
-            (*output)[i_bin] += 1;
+    // 4) Fill the histogram: for each timestamp t, bin = t / clocks_per_bin.
+    for (int i = 0; i < n_input; i++) {
+        unsigned long long t = input[i];
+        long long bin = (long long)(t / clocks_per_bin);
+        if (bin < 0) {
+            bin = 0;
+        } else if (bin >= n_bins) {
+            bin = n_bins - 1;
         }
+        (*output)[bin]++;
     }
 }
 
