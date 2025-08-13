@@ -21,6 +21,8 @@
 #include <fstream> /* ifstream */
 
 #include <boost/bimap.hpp>
+#include <filesystem>
+
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #ifdef BUILD_PHOTON_HDF

@@ -276,13 +276,8 @@ int TTTR::read_hdf_file(const char *fn) {
 int TTTR::read_sm_file(const char *filename){
     // Function to read a 64-bit big-endian value
 
-    // Open the file using fopen
-    FILE* fp = fopen(filename, "rb");
-    if (fp == nullptr) {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return 1;
-    }
-
+    // Open the file using Unicode-safe open_file
+    FILE* fp = open_file(std::string(filename), "rb");
     if (!fp) {
         std::cerr << "Error opening file: " << filename << std::endl;
         return 1;
@@ -390,21 +385,22 @@ int TTTR::read_file(const char *fn, int container_type) {
         container_type = tttr_container_type;
     }
 
-    // check if file exists
-    std::ifstream f(fn);
-    if(f.good()){
+    // check if file exists (UTF-8 safe)
+    std::filesystem::path p = std::filesystem::u8path(fn ? fn : "");
+    if (std::filesystem::exists(p)) {
 #ifdef VERBOSE_TTTRLIB
-        std::clog << "-- Filename: " << fn << std::endl;
-        std::clog << "-- Container type: " << container_type << std::endl;
+        std::clog << "-- Filename: " << std::filesystem::path(p).u8string() << std::endl;
 #endif
-        fn = filename.c_str();
+        // store canonical UTF-8 string version (optional)
+        this->filename = p.u8string();
+
+        fn = this->filename.c_str();
         if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
-        } else if (container_type == SM_CONTAINER){
+        } else if (container_type == SM_CONTAINER) {
             read_sm_file(fn);
-        }
-        else{
-            fp = fopen(fn, "rb");
+        } else {
+            fp = open_file(this->filename, "rb");
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
@@ -420,7 +416,9 @@ int TTTR::read_file(const char *fn, int container_type) {
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
-        } if( container_type == CZ_CONFOCOR3_CONTAINER) {
+        }
+
+        if (container_type == CZ_CONFOCOR3_CONTAINER) {
             // Confocor raw data has no channel number in events
             auto tag = header->get_tag(header->json_data, "channel");
             int channel = tag["value"];
@@ -435,8 +433,8 @@ int TTTR::read_file(const char *fn, int container_type) {
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
 #endif
             return 1;
-    } else{
-        std::clog << "-- WARNING: File " << filename << " does not exist" << std::endl;
+    } else {
+        std::clog << "-- WARNING: File " << std::filesystem::path(p).u8string() << " does not exist" << std::endl;
         return 0;
     }
 }
@@ -1221,7 +1219,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
         return false;
     }
     write_header(filename, header);
-    fp = fopen(filename.c_str(), "ab");
+    fp = open_file(filename, "ab");
     if (fp != nullptr) {
         // append records
         if (record_type == BH_RECORD_TYPE_SPC130) {

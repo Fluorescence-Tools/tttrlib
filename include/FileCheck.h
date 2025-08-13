@@ -4,8 +4,52 @@
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <boost/locale.hpp>
 
 #include "TTTRHeader.h"
+
+/**
+ * @brief Converts a UTF-8 encoded string to the system's native encoding for file operations.
+ * 
+ * This utility function converts a string from UTF-8 encoding to the system's
+ * native encoding to ensure proper handling of non-ASCII characters in filenames.
+ * 
+ * @param utf8_str The UTF-8 encoded string to convert.
+ * @return The string converted to the system's native encoding.
+ */
+std::string utf8_to_native(const std::string& utf8_str);
+
+/**
+ * @brief Converts a string from the system's native encoding to UTF-8.
+ * 
+ * This utility function converts a string from the system's native encoding
+ * to UTF-8 encoding to ensure proper handling of non-ASCII characters in filenames.
+ * 
+ * @param native_str The native encoded string to convert.
+ * @return The string converted to UTF-8 encoding.
+ */
+std::string native_to_utf8(const std::string& native_str);
+
+/**
+ * @brief Opens a file with support for non-ASCII filenames.
+ * 
+ * This function handles filename encoding conversions needed for proper
+ * handling of non-ASCII characters across different platforms.
+ * 
+ * @param filename The name of the file to open (UTF-8 encoded).
+ * @param mode The file opening mode (e.g., "rb", "w", etc.).
+ * @return A FILE pointer to the opened file, or nullptr if the file could not be opened.
+ */
+FILE* open_file(const std::string& filename, const char* mode);
 
 /**
  * @brief Checks if the given file is an HDF5 file.

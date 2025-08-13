@@ -1,6 +1,7 @@
 #include "TTTR.h"
 #include "TTTRRange.h"
 #include "TTTRHeader.h"
+#include "FileCheck.h"
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
@@ -114,7 +115,7 @@ TTTRHeader::TTTRHeader(
 TTTRHeader::TTTRHeader(
         std::string fn,
         int tttr_container_type
-) : TTTRHeader(fopen(fn.c_str(), "r"), tttr_container_type, true) {
+) : TTTRHeader(open_file(fn, "r"), tttr_container_type, true) {
 
 }
 
