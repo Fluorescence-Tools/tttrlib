@@ -1,3 +1,4 @@
+#include "include/Verbose.h"
 #ifndef TTTRLIB_CLSMLINE_H
 #define TTTRLIB_CLSMLINE_H
 
@@ -73,10 +74,10 @@ public:
         pixel_stop = std::min(pixel_stop, (int) size());
         pixel_start = std::max(0, pixel_start);
 
-        #ifdef VERBOSE_TTTRLIB
+        if (is_verbose()) {
         std::clog << "Crop line" << std::endl;
         std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
-        #endif
+}
 
         pixels.erase(pixels.begin() + pixel_stop, pixels.end());
         pixels.erase(pixels.begin(), pixels.begin() + pixel_start);

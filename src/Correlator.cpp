@@ -1,4 +1,5 @@
 #include <include/Correlator.h>
+#include "include/Verbose.h"
 
 
 Correlator::Correlator(
@@ -8,15 +9,15 @@ Correlator::Correlator(
         int n_casc,
         bool make_fine
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "CORRELATOR" << std::endl;
-#endif
+}
     curve.set_n_bins(n_bins);
     curve.set_n_casc(n_casc);
     if (tttr != nullptr) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Passed a TTTR object" << std::endl;
-#endif
+}
         set_tttr(tttr, tttr, make_fine);
     }
     set_correlation_method(method);
@@ -26,10 +27,10 @@ void Correlator::set_macrotimes(
         unsigned long long *t1v, int n_t1v,
         unsigned long long *t2v, int n_t2v
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting macro times..." << std::endl;
     std::clog << "-- n_t1v, n_t2v: " << n_t1v << "," << n_t2v << std::endl;
-#endif
+}
     is_valid = false;
     p1.times.resize(n_t1v);
     p2.times.resize(n_t1v);
@@ -41,11 +42,11 @@ void Correlator::set_weights(
         double* weight_ch1, int n_weights_ch1,
         double* weight_ch2, int n_weights_ch2
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting weights..." << std::endl;
     std::clog << "-- n_weights_ch1, n_weights_ch2: " <<
     n_weights_ch1 << "," << n_weights_ch2 << std::endl;
-#endif
+}
     is_valid = false;
     p1.resize(n_weights_ch1);
     p2.resize(n_weights_ch2);
@@ -65,16 +66,16 @@ void Correlator::set_events(
 }
 
 void Correlator::run(){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Running correlator..." << std::endl;
     std::clog << "-- Correlation mode: " << correlation_method << std::endl;
     std::clog << "-- Filling correlation vectors with zero." << std::endl;
-#endif
+}
     if(is_valid){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "CORRELATOR::RUN" << std::endl;
         std::clog << "-- Results are already valid." << std::endl;
-#endif
+}
         return;
     } else {
         if(!p1.empty() && !p2.empty()){
@@ -116,9 +117,9 @@ void Correlator::set_microtimes(
         unsigned short* tac_2, int n_tac_2,
         unsigned int number_of_microtime_channels
         ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting micro times..." << std::endl;
-#endif
+}
     is_valid = false;
     p1.make_fine(tac_1, n_tac_1, number_of_microtime_channels);
     p2.make_fine(tac_2, n_tac_2, number_of_microtime_channels);
@@ -130,11 +131,11 @@ uint64_t Correlator::dt(){
     uint64_t dt2 = p2.dt();
     /// The maximum time of an event in the first and second correlation channel, max(t1, t2)
     uint64_t maximum_macro_time = std::max(dt1, dt2);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Maximum time (Ch1): " << dt1 << std::endl;
     std::clog << "-- Maximum time (Ch2): " << dt2 << std::endl;
     std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;
-#endif
+}
     return maximum_macro_time;
 }
 
@@ -188,9 +189,9 @@ void Correlator::ccf_felekyan(
     // nc:                  number of evenly spaced elements per block
     // nb:                  number of blocks of increasing spacing
     // corrl:               pointer to correlation output
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Copying data to new arrays..." << std::endl;
-#endif
+}
     // the arrays can be modified inplace during the correlation. Thus, copied to a new array.
     auto t1c = (unsigned long long *) malloc(sizeof(unsigned long long) * np1);
     std::memcpy(t1c, t1, sizeof(unsigned long long) * np1);
@@ -352,19 +353,19 @@ void Correlator::ccf_wahl(
         CorrelatorPhotonStream &p1,
         CorrelatorPhotonStream &p2
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "CORRELATOR::CCF" << std::endl;
     std::clog << "-- Copying data to new arrays..." << std::endl;
-#endif
+}
     // the photon streams are modified inplace. Thus, copies are creates
     CorrelatorPhotonStream s1(p1);
     CorrelatorPhotonStream s2(p2);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "taus:" << std::endl;
     for(auto v: taus){
         std::clog << v << ",";
     }
-#endif
+}
     for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
         ccf_wahl_correlate(
                 0, s1.size(),
@@ -420,9 +421,9 @@ void Correlator::ccf_laurence(
 }
 
 void Correlator::normalize(Correlator* correlator, CorrelatorCurve &curve){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Normalizing correlation curve..." << std::endl;
-#endif
+}
     for(size_t i=0; i < curve.corr_normalized.size(); i++) curve.corr_normalized[i] = curve.correlation[i];
     uint64_t maximum_macro_time = correlator->dt();
     if(correlator->correlation_method == "wahl"){

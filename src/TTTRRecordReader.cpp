@@ -39,7 +39,7 @@ bool ProcessPHT3(
         int16_t &record_type
         ) {
     const int T3WRAPAROUND = 65536;
-    pq_ph_t3_record_t rec;
+    pq_ph_t3_record_t rec{};
     rec.allbits = TTTRRecord;
     if (    //this means we have a special record
             (rec.bits.channel == 0xF) &&
@@ -76,7 +76,7 @@ bool ProcessPHT2(
     int16_t &record_type
     ){
     const int T2WRAPAROUND = 210698240;
-    pq_ph_t2_record_t rec;
+    pq_ph_t2_record_t rec{};
     rec.allbits = TTTRRecord;
     if (rec.bits.channel == 0xF) //this means we have a special record
     {
@@ -109,7 +109,7 @@ bool ProcessHHT2v1(
         int16_t &record_type
         ) {
     const int64_t T2WRAPAROUND_V1 = 33552000;
-    pq_hh_t2_record_t rec;
+    pq_hh_t2_record_t rec{};
     rec.allbits = TTTRRecord;
 
     if ((rec.bits.special == 1) && (rec.bits.channel == 0x3F)) {
@@ -143,7 +143,7 @@ bool ProcessHHT2v2(
         int16_t &record_type
 ){
     const int64_t T2WRAPAROUND_V2 = 33554432;
-    pq_hh_t2_record_t rec;
+    pq_hh_t2_record_t rec{};
     rec.allbits = TTTRRecord;
     //an overflow record
     if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1))
@@ -185,7 +185,7 @@ bool ProcessHHT3v2(
 ) {
     const int T3WRAPAROUND = 1024;
 
-    pq_hh_t3_record_t rec;
+    pq_hh_t3_record_t rec{};
     rec.allbits = TTTRRecord;
     if ((rec.bits.special == 1) &&  (rec.bits.channel == 0x3F)) {
         overflow_counter += (int64_t) T3WRAPAROUND * rec.bits.n_sync;
@@ -211,7 +211,7 @@ bool ProcessHHT3v1(
 ) {
     const int T3WRAPAROUND = 1024;
 
-    pq_hh_t3_record_t rec;
+    pq_hh_t3_record_t rec{};
     rec.allbits = TTTRRecord;
     if ((rec.bits.special == 1) &&  (rec.bits.channel == 0x3F)) {
         overflow_counter += (int64_t) T3WRAPAROUND;
@@ -235,7 +235,7 @@ bool ProcessSPC130(
         int16_t &channel,
         int16_t &record_type
 ){
-    bh_spc130_record_t rec;
+    bh_spc130_record_t rec{};
     rec.allbits = TTTRRecord;
     if(!rec.bits.invalid){
         // normal record
@@ -245,7 +245,7 @@ bool ProcessSPC130(
         channel = (uint16_t) (rec.bits.rout);
         return true;
     } else if(rec.bits.invalid && rec.bits.mtov){
-        bh_overflow_t overflow_record;
+        bh_overflow_t overflow_record{};
         overflow_record.allbits = TTTRRecord;
         overflow_counter += overflow_record.bits.cnt;
         return false;
@@ -262,7 +262,7 @@ bool ProcessSPC600_4096(
         int16_t &channel,
         int16_t &record_type
         ){
-    bh_spc600_4096_record_t rec;
+    bh_spc600_4096_record_t rec{};
     rec.allbits = TTTRRecord;
     if(!rec.bits.invalid){
         // normal record
@@ -289,7 +289,7 @@ bool ProcessSPC600_256(
         int16_t &channel,
         int16_t &record_type
         ){
-    bh_spc600_256_record_t rec;
+    bh_spc600_256_record_t rec{};
     rec.allbits = TTTRRecord;
     if(!rec.bits.mtov && !rec.bits.invalid){
         // normal record
@@ -307,7 +307,7 @@ bool ProcessSPC600_256(
         return true;
     }
     if(rec.bits.invalid && rec.bits.mtov){
-            bh_overflow_t ovf;
+            bh_overflow_t ovf{};
             ovf.allbits = TTTRRecord;
             overflow_counter += ovf.bits.cnt;
             return false;

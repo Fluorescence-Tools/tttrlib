@@ -86,7 +86,7 @@ public:
     /*!
      * Function that optimizes parameters of model23 to data.
      *
-     * @param x[in,out] a vector of length that that contains the starting parameters
+     * @param x[in,out] a vector of length that contains the starting parameters
      * for the optimization and is used to return the optimized parameters.
      * [0] fluorescence lifetime - tau (in,out)
      * [1] fraction of scattered light - gamma (in,out)

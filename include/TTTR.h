@@ -941,7 +941,7 @@ public:
         }
         ranges_by_time_window(
                 output, n_output,
-                macro_times, n_valid_events,
+                macro_times, static_cast<int>(n_valid_events),
                 minimum_window_length,
                 maximum_window_length,
                 minimum_number_of_photons_in_time_window,

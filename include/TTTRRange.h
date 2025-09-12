@@ -122,17 +122,16 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The stop time or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned long get_stop_time(std::shared_ptr<TTTR> tttr) const{
-        unsigned long time = 0;
+    unsigned long long get_stop_time(std::shared_ptr<TTTR> tttr) const{
         if(tttr!= nullptr){
             if(_tttr_indices.empty()){
-                return 0;
+                return 0ULL;
             }
             return tttr->macro_times[*_tttr_indices.rbegin()];
         } else{
             std::cerr << "Access to TTTRRange::get_stop_time without TTTR object" << std::endl;
         }
-        return 0;
+        return 0ULL;
     }
 
     /**
@@ -141,16 +140,16 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The start time or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned long get_start_time(std::shared_ptr<TTTR> tttr) const{
+    unsigned long long get_start_time(std::shared_ptr<TTTR> tttr) const{
         if(tttr!= nullptr){
             if(_tttr_indices.empty()){
-                return 0;
+                return 0ULL;
             }
             return tttr->macro_times[*_tttr_indices.begin()];
         } else{
             std::cerr << "Access to TTTRRange::get_start_time without TTTR object" << std::endl;
         }
-        return 0;
+        return 0ULL;
     }
 
     /**
@@ -159,7 +158,7 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return A vector containing the start and stop times.
      */
-    std::vector<unsigned long> get_start_stop_time(std::shared_ptr<TTTR> tttr){
+    std::vector<unsigned long long> get_start_stop_time(std::shared_ptr<TTTR> tttr){
         return {
                 get_start_time(tttr),
                 get_stop_time(tttr)
@@ -172,7 +171,7 @@ public:
      * @param tttr Pointer to a TTTR object.
      * @return The duration or 0 if tttr is nullptr or the set is empty.
      */
-    unsigned int get_duration(std::shared_ptr<TTTR> tttr){
+    unsigned long long get_duration(std::shared_ptr<TTTR> tttr){
         return get_stop_time(tttr) - get_start_time(tttr);
     }
 

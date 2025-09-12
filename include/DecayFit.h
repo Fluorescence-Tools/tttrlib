@@ -1,3 +1,4 @@
+#include "include/Verbose.h"
 #ifndef TTTRLIB_DECAYFIT_H
 #define TTTRLIB_DECAYFIT_H
 
@@ -126,13 +127,13 @@ struct DecayFitIntegrateSignals{
         } else{
             r = (Ss - g * Bs) / (1. - g);
         }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::cout << "Fs()" << std::endl;
         std::cout << "g:" << g << std::endl;
         std::cout << "Ss:" << Ss << std::endl;
         std::cout << "Bs:" << Bs << std::endl;
         std::cout << "Fs:" << r << std::endl;
-#endif
+}
         return r;
     }
 
@@ -146,13 +147,13 @@ struct DecayFitIntegrateSignals{
             l2 = corrections->l2;
         }
 
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::cout << "fp:" << fp << std::endl;
         std::cout << "fs:" << fs << std::endl;
         std::cout << "g:" << g << std::endl;
         std::cout << "l1:" << l1 << std::endl;
         std::cout << "l2:" << l2 << std::endl;
-#endif
+}
 
         double nom = (fp - g * fs);
         double denom = (fp * (1. - 3. * l2) + (2. - 3. * l1) * g * fs);

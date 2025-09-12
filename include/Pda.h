@@ -1,3 +1,4 @@
+#include "include/Verbose.h"
 #ifndef TTTRLIB_PDA_H
 #define TTTRLIB_PDA_H
 
@@ -82,7 +83,7 @@ public:
         _histogram_function = new PdaCallback();
         _bg_ch1 = background_ch1;
         _bg_ch2 = background_ch2;
-        setPF(pF.data(), pF.size());
+        setPF(pF.data(), static_cast<int>(pF.size()));
     }
 
     ~Pda() = default;
@@ -119,7 +120,7 @@ public:
      * @param n_output[out] The number of species.
      */
     void get_amplitudes(double **output_view, int *n_output) {
-        *n_output = _amplitudes.size();
+        *n_output = static_cast<int>(_amplitudes.size());
         *output_view = _amplitudes.data();
     }
 
@@ -199,7 +200,7 @@ public:
      * @param n_output[out] The number of species.
      */
     void get_probabilities_ch1(double **output_view, int *n_output) {
-        *n_output = _probability_ch1.size();
+        *n_output = static_cast<int>(_probability_ch1.size());
         *output_view = _probability_ch1.data();
     }
 
@@ -246,9 +247,9 @@ public:
      * @param n_input[in] The number of elements in the input array.
      */
     void setPF(double *input, int n_input){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Setting pF " << std::endl;
-#endif
+}
         _is_valid_sgsr = false;
         pF.assign(input, input + n_input);
     }
@@ -260,7 +261,7 @@ public:
      * @param n_output[out] The number of elements in the output array.
      */
     void getPF(double** output_view, int* n_output){
-        *n_output = pF.size();
+        *n_output = static_cast<int>(pF.size());
         *output_view = pF.data();
     }
 

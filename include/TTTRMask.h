@@ -23,7 +23,7 @@ public:
     TTTRMask(TTTR* data);
 
     int size(){
-        return masked.size();
+        return static_cast<int>(masked.size());
     }
 
     void flip() {

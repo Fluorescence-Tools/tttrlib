@@ -1,4 +1,5 @@
 #include "TTTR.h"
+#include "include/Verbose.h"
 
 // Static member definition outside the class
 boost::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
@@ -33,9 +34,9 @@ TTTR::TTTR(unsigned long long *macro_times, int n_macrotimes,
            signed char *event_types, int n_event_types,
            bool find_used_channels
 ): TTTR() {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "INITIALIZING FROM VECTORS" << std::endl;
-#endif
+}
     this->filename = "NA";
     size_t n_elements;
     if (!(n_macrotimes == n_microtimes &&
@@ -68,9 +69,9 @@ TTTR::TTTR(
         int n_selection,
         bool find_used_channels) :  TTTR()
         {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "INITIALIZING FROM SELECTION" << std::endl;
-#endif
+}
     copy_from(parent, false);
     n_valid_events = (size_t) n_selection;
     if ((size_t) n_selection > parent.n_valid_events) {
@@ -79,7 +80,7 @@ TTTR::TTTR(
     allocate_memory_for_records(n_selection);
     for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
         auto sel = selection[sel_i];
-        sel = (sel < 0) ? parent.n_valid_events + sel : sel;
+        sel = (sel < 0) ? static_cast<int>(parent.n_valid_events) + sel : sel;
         macro_times[sel_i] = parent.macro_times[sel];
         micro_times[sel_i] = parent.micro_times[sel];
         event_types[sel_i] = parent.event_types[sel];
@@ -256,9 +257,9 @@ int TTTR::read_hdf_file(const char *fn) {
         H5Sclose(space);
         H5Dclose(ds_microtime);
     } else {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::cerr << "Warning: /photon_data/nanotimes not found. Filling micro_times with zeros." << std::endl;
-#endif
+}
         std::fill(micro_times, micro_times + n_records_in_file, 0);
     }
 
@@ -288,7 +289,7 @@ int TTTR::read_sm_file(const char *filename){
 
     // Skip the header (165 bytes)
     size_t HEADER_SIZE = header->header_end;
-    if (fseek(fp, HEADER_SIZE, SEEK_SET) != 0) {
+    if (fseek(fp, static_cast<long>(HEADER_SIZE), SEEK_SET) != 0) {
         std::cerr << "Error seeking past the header." << std::endl;
         fclose(fp);
         return 1;
@@ -297,7 +298,7 @@ int TTTR::read_sm_file(const char *filename){
     // Determine file size to calculate remaining data size
     fseek(fp, 0, SEEK_END);
     long fileSize = ftell(fp);
-    fseek(fp, HEADER_SIZE, SEEK_SET); // Return to start of data after header
+    fseek(fp, static_cast<long>(HEADER_SIZE), SEEK_SET); // Return to start of data after header
 
     if (fileSize < HEADER_SIZE + 26) {
         std::cerr << "Error: File is too short to contain expected data and trailing bytes." << std::endl;
@@ -375,9 +376,9 @@ void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
 }
 
 int TTTR::read_file(const char *fn, int container_type) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "READING TTTR FILE" << std::endl;
-#endif
+}
     if(fn == nullptr){
         fn = filename.c_str();
     }
@@ -388,9 +389,9 @@ int TTTR::read_file(const char *fn, int container_type) {
     // check if file exists (UTF-8 safe)
     std::filesystem::path p = std::filesystem::u8path(fn ? fn : "");
     if (std::filesystem::exists(p)) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Filename: " << std::filesystem::path(p).u8string() << std::endl;
-#endif
+}
         // store canonical UTF-8 string version (optional)
         this->filename = p.u8string();
 
@@ -404,15 +405,15 @@ int TTTR::read_file(const char *fn, int container_type) {
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
-#endif
+}
             processRecord = processRecord_map[tttr_record_type];
             n_records_in_file = get_number_of_records_by_file_size(fp, header->header_end, header->get_bytes_per_record());
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
             std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
-#endif
+}
             allocate_memory_for_records(n_records_in_file);
             read_records();
             fclose(fp);
@@ -422,16 +423,16 @@ int TTTR::read_file(const char *fn, int container_type) {
             // Confocor raw data has no channel number in events
             auto tag = header->get_tag(header->json_data, "channel");
             int channel = tag["value"];
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "-- Confocor3 channel: " << channel << std::endl;
-#endif
+}
             for(int i = 0; i < n_records_in_file; i++) {
                 routing_channels[i] = channel;
             }
         }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
-#endif
+}
             return 1;
     } else {
         std::clog << "-- WARNING: File " << std::filesystem::path(p).u8string() << " does not exist" << std::endl;
@@ -450,9 +451,9 @@ std::string TTTR::get_filename() {
 }
 
 void TTTR::allocate_memory_for_records(size_t n_rec){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
-#endif
+}
     if(tttr_container_type != PHOTON_HDF_CONTAINER) {
         macro_times = (unsigned long long*) malloc(
                 n_rec * sizeof(unsigned long long)
@@ -509,9 +510,9 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cout << "-- Records that will be read : " << n_rec << std::endl;
-#endif
+}
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
 
     // The data is read in two steps. In the first step bigger data chunks
@@ -525,10 +526,10 @@ void TTTR::read_records(
     // read data in chunks to speed up the access
     size_t number_of_objects;
     size_t bytes_per_record = header->get_bytes_per_record();
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cout << "-- Records that will be read : " << n_rec << std::endl;
     std::cout << "-- Bytes per record : " << bytes_per_record << std::endl;
-#endif
+}
     do{
         // Adjust chunk size if it's bigger than remaining records
         size_t remaining_records = n_rec - n_records_read;
@@ -567,9 +568,9 @@ void TTTR::read_records() {
 }
 
 TTTRHeader* TTTR::get_header() {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTR::get_header" << std::endl;
-#endif
+}
     if(header != nullptr){
         return header;
     } else{
@@ -580,9 +581,9 @@ TTTRHeader* TTTR::get_header() {
 }
 
 void TTTR::set_header(TTTRHeader* v) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTR::set_header" << std::endl;
-#endif
+}
     if(v != nullptr){
         header = new TTTRHeader(*v);
     }
@@ -705,9 +706,9 @@ size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, si
     n_records_in_file = (fileSize - offset) / bytes_per_record;
     // move back to the original position
     fseek(fp, (long) current_position, SEEK_SET);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
-#endif
+}
     return n_records_in_file;
 }
 
@@ -746,7 +747,7 @@ void ranges_by_time_window(
         has_max_tw = true;
     }
 
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- RANGES BY TIME WINDOW " << std::endl;
     std::clog << "-- minimum_window_length [ms]: " << minimum_window_length << std::endl;
     std::clog << "-- maximum_window_length [ms]: " << maximum_window_length << std::endl;
@@ -761,7 +762,7 @@ void ranges_by_time_window(
     } else {
         std::clog << "-- tw_max [macro time clocks]: NONE (no upper limit)" << std::endl;
     }
-#endif
+}
 
     std::vector<int> ss;
     ss.reserve(200);
@@ -927,7 +928,7 @@ std::vector<long long> TTTR::burst_search(int L, int m, double T)
     for (int64_t i = 0; i <= n_events - m; ++i) {
 
         // Check the time span of the window [i, i + m - 1]
-        if (macro_times[i + m - 1] - macro_times[i] <= Ti) {
+        if (macro_times[i + m - 1] - macro_times[i] <= static_cast<unsigned long long>(Ti)) {
             // We have a valid burst window
             if (!in_burst) {
                 in_burst = true;
@@ -971,7 +972,7 @@ void TTTR::get_intensity_trace(
 ){
     compute_intensity_trace(
             output, n_output,
-            this->macro_times, this->n_valid_events,
+            this->macro_times, static_cast<int>(this->n_valid_events),
             time_window_length,
             this->header->get_macro_time_resolution()
     );
@@ -1077,11 +1078,11 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     unsigned long long MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         // time since last macro_time record
-        dMT = tttr->macro_times[n] - MT_ov * 4096;
+        dMT = static_cast<unsigned>(tttr->macro_times[n] - MT_ov * 4096ULL);
         // Count the number of MT overflows
         MT_ov_last = dMT / 4096;
         // Subtract MT overflows from dMT
-        dMT -= MT_ov_last * 4096;
+        dMT -= static_cast<unsigned>(MT_ov_last * 4096ULL);
         // increment the global overflow counter
         MT_ov += MT_ov_last;
         // write overflows
@@ -1115,11 +1116,11 @@ void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr){
 
     for (size_t n = 0; n < tttr->size(); n++) {
         // time since last macro_time record
-        dMT = tttr->macro_times[n] - MT_ov * T3WRAPAROUND;
+        dMT = static_cast<unsigned>(tttr->macro_times[n] - static_cast<unsigned long long>(MT_ov) * T3WRAPAROUND);
         // Count the number of MT overflows
         MT_ov_last = dMT / T3WRAPAROUND;
         // Subtract MT overflows from dMT
-        dMT -= MT_ov_last * T3WRAPAROUND;
+        dMT -= static_cast<unsigned>(static_cast<unsigned long long>(MT_ov_last) * T3WRAPAROUND);
         // increment the global overflow counter
         MT_ov += MT_ov_last;
         // write overflows
@@ -1372,9 +1373,9 @@ void TTTR::compute_microtime_histogram(
     // Compute histogram only if data present
     if (!selected.empty()) {
         histogram1D<unsigned short>(
-                selected.data(), selected.size(),
+                selected.data(), static_cast<int>(selected.size()),
                 nullptr, 0,
-                bin_edges.data(), bin_edges.size(),
+                bin_edges.data(), static_cast<int>(bin_edges.size()),
                 hist_vec.data(), n_channels,
                 "lin", false
         );
@@ -1478,9 +1479,9 @@ void TTTR::append_events(
         (n_microtimes == n_routing_channels) &&
         (n_routing_channels == n_event_types)
     ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::cout << "-- Appending number of records: " << n_macrotimes << std::endl;
-#endif
+}
         size_t n_rec = this->n_valid_events + n_macrotimes;
         this->macro_times = (unsigned long long*) realloc(this->macro_times, n_rec * sizeof(unsigned long long));
         this->micro_times = (unsigned short*) realloc(this->micro_times, n_rec * sizeof(unsigned short));
@@ -1510,10 +1511,10 @@ void TTTR::append(
         long long macro_time_offset
 ){
     append_events(
-            other->macro_times, other->n_valid_events,
-            other->micro_times, other->n_valid_events,
-            other->routing_channels, other->n_valid_events,
-            other->event_types, other->n_valid_events,
+            other->macro_times, static_cast<int>(other->n_valid_events),
+            other->micro_times, static_cast<int>(other->n_valid_events),
+            other->routing_channels, static_cast<int>(other->n_valid_events),
+            other->event_types, static_cast<int>(other->n_valid_events),
             shift_macro_time,
             macro_time_offset
     );
@@ -1560,12 +1561,12 @@ double TTTR::compute_count_rate(
     }
     auto n = (double) v.size();
     double dT = (t_max - t_min);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "COMPUTE_COUNT_RATE" << std::endl;
     std::clog << "-- dT [mT units]:" << dT << std::endl;
     std::clog << "-- number of photons:" << n << std::endl;
     std::clog << "-- macrotime_resolution:" << macrotime_resolution << std::endl;
-#endif
+}
     return n  / (dT * macrotime_resolution);
 }
 

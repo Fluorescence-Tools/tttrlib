@@ -133,6 +133,8 @@ double DecayFit24::fit(double *x, short *fixed, MParam *p) {
 
     double tIstar, xm[5], B;
     int i, info;
+    (void)B; // silence unused variable warning
+    (void)i; // silence unused variable warning
 
     if (fit_settings.firstcall) init_fact();
     fit_settings.firstcall = 0;

@@ -47,7 +47,14 @@ static std::wstring utf8_to_wide(const std::string& s) {
 FILE* open_file(const std::string& filename, const char* mode) {
     std::wstring wfilename = utf8_to_wide(filename);
     std::wstring wmode     = utf8_to_wide(std::string(mode ? mode : "rb"));
-    FILE* file = _wfopen(wfilename.c_str(), wmode.c_str());
+    FILE* file = nullptr;
+#if defined(_MSC_VER)
+    if (_wfopen_s(&file, wfilename.c_str(), wmode.c_str()) != 0) {
+        file = nullptr;
+    }
+#else
+    file = _wfopen(wfilename.c_str(), wmode.c_str());
+#endif
     if (!file) {
         std::cerr << "Error opening file: " << filename << std::endl;
     }

@@ -24,6 +24,7 @@ Previous releases are available through the read-the-docs `page <https://tttrlib
    single_molecule.rst
    imaging.rst
    tools.rst
+   verbosity.rst
    api.rst
    zreferences
 

@@ -575,7 +575,10 @@ public:
      * @return      One-dimensional index corresponding to the input coordinates.
      */
     inline int to1D(int frame, int line, int pixel) {
-        return (frame * n_lines * n_pixel) + (line * n_pixel) + pixel;
+        size_t total = static_cast<size_t>(frame) * n_lines * n_pixel
+                     + static_cast<size_t>(line) * n_pixel
+                     + static_cast<size_t>(pixel);
+        return static_cast<int>(total);
     }
 
 
@@ -589,10 +592,12 @@ public:
      * @return      Vector containing frame, line, and pixel indices in that order.
      */
     inline std::vector<int> to3D(int idx) {
-        int frame = idx / (n_lines * n_pixel);
-        idx -= (frame * n_lines * n_pixel);
-        int line = idx / n_pixel;
-        int pixel = idx % n_pixel;
+        size_t denom = n_lines * n_pixel;
+        size_t sidx = static_cast<size_t>(idx);
+        int frame = static_cast<int>(sidx / denom);
+        sidx -= static_cast<size_t>(frame) * denom;
+        int line = static_cast<int>(sidx / n_pixel);
+        int pixel = static_cast<int>(sidx % n_pixel);
         return std::vector<int>{frame, line, pixel};
     }
 
@@ -608,16 +613,17 @@ public:
      * @return      Pointer to the CLSMPixel object.
      */
     CLSMPixel* getPixel(unsigned int idx) {
-        int frame, line, pixel;
+        size_t sidx = static_cast<size_t>(idx);
+        size_t denom = n_lines * n_pixel;
 
-        frame = idx / (n_lines * n_pixel);
-        idx -= (frame * n_lines * n_pixel);
-        line = idx / n_pixel;
-        pixel = idx % n_pixel;
+        int frame = static_cast<int>(sidx / denom);
+        sidx -= static_cast<size_t>(frame) * denom;
+        int line = static_cast<int>(sidx / n_pixel);
+        int pixel = static_cast<int>(sidx % n_pixel);
 
-        CLSMFrame* s_frame = frames[frame];
-        CLSMLine*  s_line  = s_frame->lines[line];
-        CLSMPixel* s_pixel = &(s_line->pixels[pixel]);
+        CLSMFrame* s_frame = frames[static_cast<size_t>(frame)];
+        CLSMLine*  s_line  = s_frame->lines[static_cast<size_t>(line)];
+        CLSMPixel* s_pixel = &(s_line->pixels[static_cast<size_t>(pixel)]);
         return s_pixel;
     }
 
@@ -630,7 +636,7 @@ public:
      * @return The number of frames in the CLSM image.
      */
     int get_n_frames() const {
-        return n_frames;
+        return static_cast<int>(n_frames);
     }
 
 
@@ -642,7 +648,7 @@ public:
      * @return The number of lines per frame in the CLSMImage.
      */
     int get_n_lines() const {
-        return n_lines;
+        return static_cast<int>(n_lines);
     }
 
 
@@ -654,7 +660,7 @@ public:
      * @return The number of pixels per line in a frame of the CLSMImage.
      */
     int get_n_pixel() const {
-        return n_pixel;
+        return static_cast<int>(n_pixel);
     }
 
     /*!

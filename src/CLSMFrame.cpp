@@ -2,11 +2,12 @@
 #include "include/CLSMLine.h"
 #include "include/CLSMFrame.h"
 #include "TTTRRange.h"
+#include "include/Verbose.h"
 
 CLSMFrame::CLSMFrame(): TTTRSelection() {}
 
 CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, std::shared_ptr<TTTR> tttr) :
-    TTTRSelection(frame_start, frame_stop, tttr)
+    TTTRSelection(static_cast<int>(frame_start), static_cast<int>(frame_stop), tttr)
 {}
 
 void CLSMFrame::append(CLSMLine * line){
@@ -20,11 +21,11 @@ void CLSMFrame::crop(
     line_stop = std::min(line_stop, (int) size());
     line_start = std::max(0, line_start);
 
-    #ifdef VERBOSE_TTTRLIB
+    if (is_verbose()) {
     std::clog << "Crop frame" << std::endl;
     std::clog << "-- Line range: " << line_start << ", " << line_stop << std::endl;
     std::clog << "-- Pixel range: " << pixel_start << ", " << pixel_stop << std::endl;
-    #endif
+}
 
     std::vector<CLSMLine*> lns;
     for(size_t i = 0; i < line_start; i++){

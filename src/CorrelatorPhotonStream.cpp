@@ -1,4 +1,5 @@
 #include "CorrelatorPhotonStream.h"
+#include "include/Verbose.h"
 
 
 void CorrelatorPhotonStream::make_fine_times(
@@ -6,9 +7,9 @@ void CorrelatorPhotonStream::make_fine_times(
         unsigned short *tac,
         unsigned int n_tac
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Make fine, number of micro time channels: " << n_tac << std::endl;
-#endif
+}
     for (size_t i = 0; i < n_times; i++) {
         t[i] = t[i] * n_tac + tac[i];
     }
@@ -37,24 +38,24 @@ unsigned long long CorrelatorPhotonStream::dt(){
 
 double CorrelatorPhotonStream::sum_of_weights(){
     double np = std::accumulate(weights.begin(), weights.end(), 0.0);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Sum of weights: " << np << std::endl;
-#endif
+}
     return np;
 }
 
 double CorrelatorPhotonStream::mean_count_rate(){
     double cr = sum_of_weights() / (double) dt();
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Mean count rate: " << cr << std::endl;
-#endif
+}
     return cr;
 }
 
 void CorrelatorPhotonStream::set_time_axis_calibration(double v) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Time axis calibration [sec/bin]: " << v << std::endl;
-#endif
+}
     time_axis_calibration = v;
 }
 

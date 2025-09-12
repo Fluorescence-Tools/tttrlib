@@ -1,4 +1,5 @@
 #include "DecayFit.h"
+#include "include/Verbose.h"
 
 void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
     LVI32Array *expdata = *(p->expdata);
@@ -22,13 +23,13 @@ void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
     Bp *= (Sp + Ss) /std::max(1., B);
     Bs *= (Sp + Ss) /std::max(1., B);
     Bexpected = corrections->gamma * B;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cout << "COMPUTE_SIGNAL_AND_BACKGROUND" << std::endl;
     std::cout << "-- Nchannels_exp:" << Nchannels_exp << std::endl;
     std::cout << "-- Bp, Bs: " << Bp << ", " << Bs << std::endl;
     std::cout << "-- Sp, Ss: " << Sp << ", " << Ss << std::endl;
     std::cout << "-- Bexpected: " << Bexpected << std::endl;
-#endif
+}
 }
 
 

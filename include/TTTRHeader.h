@@ -238,7 +238,8 @@ public:
                 json_data, "$TimePerPixel")["value"];
         double global_res = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
-        long pixel_duration = std::round(pixel_duration_d / global_res);
+        // Round to nearest integer duration in macro clock units and cast explicitly to int
+        int pixel_duration = static_cast<int>(std::llround(pixel_duration_d / global_res));
         return pixel_duration;
     }
 
@@ -249,7 +250,8 @@ public:
         double global_res_d = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
         double n_pixel = TTTRHeader::get_tag(json_data, "ImgHdr_PixX")["value"];
-        return std::ceil((pixel_duration_d * n_pixel) / global_res_d);
+        int line_duration = static_cast<int>(std::ceil((pixel_duration_d * n_pixel) / global_res_d));
+        return line_duration;
     }
 
     /*!

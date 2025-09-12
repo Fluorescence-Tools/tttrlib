@@ -111,6 +111,21 @@ intensity_image = clsm.intensity
 tttrlib is in active development. In case you notice unusual behaviour do not
 hesitate to contact the authors.
 
+## Verbosity / Debug output
+
+Some internal components can print additional diagnostic information to the standard error stream when verbosity is enabled. You can toggle this at runtime using the TTTRLIB_VERBOSE environment variable.
+
+- Enable verbosity (Linux/macOS, Bash):
+  - export TTTRLIB_VERBOSE=1
+- Enable verbosity (Windows CMD):
+  - set TTTRLIB_VERBOSE=1
+- Enable verbosity (Windows PowerShell):
+  - $env:TTTRLIB_VERBOSE = "1"
+
+Any non-empty value enables verbosity, except the following case-insensitive falsey values: 0, false, no, off. For example, setting TTTRLIB_VERBOSE=true or TTTRLIB_VERBOSE=debug will enable verbose output. Unsetting the variable, setting it to an empty string, or to one of the falsey values disables verbosity.
+
+Note: Verbose messages currently include details such as header parsing progress when reading files.
+
 ## Supported file formats
 
 ### PicoQuant (PQ)

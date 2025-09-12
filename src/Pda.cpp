@@ -1,4 +1,5 @@
 #include "include/Pda.h"
+#include "include/Verbose.h"
 
 
 void Pda::get_1dhistogram(
@@ -10,20 +11,20 @@ void Pda::get_1dhistogram(
         std::vector<double> species_amplitudes,
         std::vector<double> probabilities_ch1
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- RUN: get_1dhistogram..." << std::endl;
     std::clog << "-- x_min: " << x_min << std::endl;
     std::clog << "-- x_max: " << x_max << std::endl;
     std::clog << "-- n_bins: " << n_bins << std::endl;
     std::clog << "-- log_x: " << log_x << std::endl;
-#endif
+}
     auto Nbinsf = (double) n_bins;
     if(
         !species_amplitudes.empty() && !probabilities_ch1.empty()
     ){
         if(species_amplitudes.size() == probabilities_ch1.size()){
-            set_amplitudes(species_amplitudes.data(), species_amplitudes.size());
-            set_probabilities_ch1(probabilities_ch1.data(), probabilities_ch1.size());
+            set_amplitudes(species_amplitudes.data(), static_cast<int>(species_amplitudes.size()));
+            set_probabilities_ch1(probabilities_ch1.data(), static_cast<int>(probabilities_ch1.size()));
             evaluate();
         } else{
             std::cerr << "WARNING: species_amplitudes and probabilities_ch1"
@@ -31,16 +32,15 @@ void Pda::get_1dhistogram(
         }
     }
     if(s1s2.empty()){
-#ifdef VERBOSE_TTTRLIB
-        std::clog << "-- Using model s1s2 matrix! " << std::endl;
-#endif
+        if (is_verbose()) {
+            std::clog << "-- Using model s1s2 matrix! " << std::endl;
+        }
         s1s2 = _S1S2;
+    } else {
+        if (is_verbose()) {
+            std::clog << "-- Using input s1s2 matrix! " << std::endl;
+        }
     }
-#ifdef VERBOSE_TTTRLIB
-    else{
-        std::clog << "-- Using input s1s2 matrix! " << std::endl;
-    }
-#endif
     int n_max = (int) std::sqrt(s1s2.size()) - 1;
 
     (*n_histogram_x) = n_bins;
@@ -58,13 +58,13 @@ void Pda::get_1dhistogram(
     double xmincorr = log_x ?
                       log(x_min) - 0.5 * bin_width :
                       x_min - 0.5 * bin_width;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- n_max: " << n_max << std::endl;
     std::clog << "-- n_min: " << n_min << std::endl;
     std::clog << "-- bin_width: " << bin_width << std::endl;
     std::clog << "-- inverse_bin_width: " << inverse_bin_width << std::endl;
     std::clog << "-- xmincorr: " << xmincorr << std::endl;
-#endif
+}
 
     int ch1, ch2, first_ch2, bin;
     // histogram X
@@ -91,10 +91,10 @@ void Pda::get_1dhistogram(
 
 
 void Pda::evaluate() {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- evaluate PDA..." << std::endl;
     std::clog << "-- making sure array sizes match" << std::endl;
-#endif
+}
     for(int i =0; i < _S1S2.size(); i++) _S1S2[i] = 0;
     auto Nmax = get_max_number_of_photons();
     if(pF.size() < Nmax + 1){
@@ -115,9 +115,9 @@ void Pda::evaluate() {
             _amplitudes.emplace_back(0.0);
         }
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Computing S1S2 matrix" << std::endl;
-#endif
+}
     double bg_ch1 = get_ch1_background();
     double bg_ch2 = get_ch2_background();
     S1S2_pF(_S1S2, pF, Nmax, bg_ch1, bg_ch2,
@@ -184,9 +184,9 @@ void Pda::S1S2_pF(
     for(size_t pg_idx = 0; pg_idx < p_ch1.size(); pg_idx++) {
         auto p = p_ch1[pg_idx];
         auto a = amplitudes[pg_idx];
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
-#endif
+}
         tmp[0] = 1.;
         // Propagate the probabilities to other matrix rows
         for (size_t row = 1; row <= Nmax; row++) {
@@ -220,7 +220,7 @@ void Pda::poisson_0toN(
         double lam,
         int return_dim
 ) {
-    unsigned int i;
+    int i;
     return_p[start_idx] = exp(-lam);
     for (i = start_idx + 1; i < start_idx + return_dim; i++) {
         return_p[i] = return_p[i - 1] * lam / (double) i;
@@ -239,11 +239,11 @@ void Pda::compute_experimental_histograms(
         int minimum_number_of_photons,
         double minimum_time_window_length
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Make S1S2 matrix... " << std::endl;
     std::clog << "-- minimum_time_window_length: " << minimum_time_window_length << std::endl;
     std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons << std::endl;
-#endif
+}
     auto tmp_s1s2 = (double*) calloc(
             (maximum_number_of_photons + 1) * (maximum_number_of_photons + 1),
             sizeof(double)
@@ -264,34 +264,34 @@ void Pda::compute_experimental_histograms(
     tttr_data->get_routing_channel(
             &routing_channels, &n_routing_channels
     );
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Number of time windows: " << n_tw / 2 << std::endl;
     std::clog << "-- Getting routing channels... " << std::endl;
     std::clog << "-- Counting photons... " << std::endl;
-#endif
+}
     int n_tttr = 0;
     for(size_t i=0; i<n_tw/2; i++){
         size_t start = tws[i + 0];
         size_t stop = tws[i + 1];
         int n_ch1 = 0;
         int n_ch2 = 0;
-        int j;
+        size_t j;
         for(j=start; j<stop; j++){
             short channel = routing_channels[j];
             for(auto &c: channels_1) n_ch1 += (c==channel);
             for(auto &c: channels_2) n_ch2 += (c==channel);
         }
-        size_t n_photons = n_ch1 + n_ch2;
+        size_t n_photons = static_cast<size_t>(n_ch1 + n_ch2);
         if(
-                n_photons < minimum_number_of_photons ||
-                n_photons > maximum_number_of_photons
+                n_photons < static_cast<size_t>(minimum_number_of_photons) ||
+                n_photons > static_cast<size_t>(maximum_number_of_photons)
         ) continue;
-        tmp_tttr_indices.emplace_back(j); n_tttr++;
+        tmp_tttr_indices.emplace_back(static_cast<int>(j)); n_tttr++;
         tmp_s1s2[n_ch2 * (maximum_number_of_photons + 1) + n_ch1] += 1.0;
         tmp_ps[n_photons] += 1.0;
     }
     *tttr_indices = (int*) malloc(tmp_tttr_indices.size() * sizeof(int));
-    memcpy(*tttr_indices, tmp_tttr_indices.data(), tmp_tttr_indices.size());
+    memcpy(*tttr_indices, tmp_tttr_indices.data(), tmp_tttr_indices.size() * sizeof(int));
     *n_tttr_indices = n_tttr;
     *ps = tmp_ps;
     *dim_ps = (maximum_number_of_photons + 1);
