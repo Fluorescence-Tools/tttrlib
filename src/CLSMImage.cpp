@@ -106,7 +106,7 @@ CLSMImage::CLSMImage(
             std::clog << "WARNING: No frame marker provided - creating a single full-span frame" << std::endl;
 
             // Determine total number of valid events
-            int n_events = tttr_data->get_n_valid_events(); // or tttr_data->n_valid_events
+            int n_events = static_cast<int>(tttr_data->get_n_valid_events()); // or tttr_data->n_valid_events
 
             // Manually create one frame covering all events [0, n_events)
             auto singleFrame = new CLSMFrame(0, n_events, tttr);
@@ -171,7 +171,7 @@ void CLSMImage::append(CLSMFrame *frame) {
 
 void CLSMImage::rebin(int bin_line, int bin_pixel) {
     std::vector<unsigned int> mapping;
-    int n_px = n_frames * n_lines * n_pixel;
+    int n_px = static_cast<int>(n_frames * n_lines * n_pixel);
     mapping.reserve(2 * n_px);
     for (unsigned int f = 0; f < n_frames; f++) {
         for (unsigned int l = 0; l < n_lines; l++) {
@@ -195,7 +195,7 @@ std::vector<int> CLSMImage::get_frame_edges(
     int reading_routine,
     bool skip_before_first_frame_marker,
     bool skip_after_last_frame_marker) {
-    int n_events = tttr->get_n_valid_events();
+    int n_events = static_cast<int>(tttr->get_n_valid_events());
     std::vector<int> frame_edges;
     if (!skip_before_first_frame_marker)
         frame_edges.emplace_back(start_event);
@@ -550,7 +550,7 @@ void CLSMImage::fill(
             int stop_idx = line->get_stop();
 
             // The macro‐time clock at which this line began
-            unsigned long line_start_time = line->get_start_time(tttr_data);
+            unsigned long long line_start_time = line->get_start_time(tttr_data);
 
             // Walk through each TTTR event that falls within this line's event indices
             for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
@@ -637,7 +637,7 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
                                    i_line * (n_pixel) +
                                    i_pixel;
-                t[pixel_nbr] = pixel._tttr_indices.size();
+                t[pixel_nbr] = static_cast<unsigned short>(pixel._tttr_indices.size());
                 t_pixel++;
                 i_pixel++;
             }
@@ -659,10 +659,10 @@ void CLSMImage::get_fluorescence_decay(
     }
     size_t nf = (stack_frames) ? 1 : n_frames;
     size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / micro_time_coarsening;
-    *dim1 = nf;
-    *dim2 = n_lines;
-    *dim3 = n_pixel;
-    *dim4 = (int) n_tac;
+    *dim1 = static_cast<int>(nf);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
+    *dim4 = static_cast<int>(n_tac);
 
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
     auto *t = (unsigned char *) calloc(n_tac_total, sizeof(unsigned char));
@@ -741,14 +741,14 @@ void CLSMImage::get_fcs_image(
                     auto tttr_1 = TTTR(
                         *tttr,
                         v1.data(),
-                        v1.size(),
+                        static_cast<int>(v1.size()),
                         false
                     );
                     auto v2 = other_pixel.get_tttr_indices();
                     auto tttr_2 = TTTR(
                         *tttr,
                         v2.data(),
-                        v2.size(),
+                        static_cast<int>(v2.size()),
                         false
                     );
                     corr.set_tttr(
@@ -775,10 +775,10 @@ void CLSMImage::get_fcs_image(
         o_frame += !stack_frames;
     }
     *output = t;
-    *dim1 = nf;
-    *dim2 = n_lines;
-    *dim3 = n_pixel;
-    *dim4 = (int) n_corr;
+    *dim1 = static_cast<int>(nf);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
+    *dim4 = static_cast<int>(n_corr);
 }
 
 void CLSMImage::get_decay_of_pixels(
