@@ -3,11 +3,19 @@
 TTTR writing / Modify CLSM files
 ================================
 
-Here it is illustrated how TTTR data of CLSM experiments can be created and written. 
-Data of an existing CLSM experiment is read, masked, and the masked data is written to 
-a file that can be processed by any other software processing the original TTTR data.
+Overview
+--------
+This example illustrates how to create and write TTTR data derived from a CLSM
+experiment. It reads an existing CLSM TTTR dataset, masks events based on simple
+image criteria, and writes out a new TTTR file that other tools can process.
 
-In this example:
+Prerequisites
+-------------
+- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
+  not set.
+
+Workflow
+--------
 
 1. TTTR data set of a CLSM measurement is read
 2. a CLSM image for the TTTR data is created
@@ -20,20 +28,29 @@ In this example:
 
 The source code of this example can be used to build analysis pipelines to mix and match
 different software.
+
+See also
+--------
+- ``examples/flim/plot_read_clsm_data.py`` for reading and forming CLSM images.
+- ``examples/tttr/plot_tttr_files.py`` for inspecting TTTR containers.
 """
 #%%
+import os
+from pathlib import Path
 import json
 import tttrlib
 import numpy as np
 import pylab as plt
 
 #%%
-filename_tttr = '../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu'
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+filename_tttr = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
 tttr = tttrlib.TTTR(filename_tttr)
 
 clsm = tttrlib.CLSMImage(tttr, fill=True, channels=tttr.used_routing_channels)
 
-# simple filter that selectes indices in pixels by the number of photons
+# simple filter that selects indices in pixels by the number of photons
 def pixel_with_less_photons(clsm: tttrlib.CLSMImage, n_min: int = 3):
     idx_del = list()
     for frame in clsm:

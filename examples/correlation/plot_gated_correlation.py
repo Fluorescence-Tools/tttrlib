@@ -14,6 +14,8 @@ modified to correlate the prompt and the delayed excitation in a pulsed
 interleaved excitation experiment.
 
 """
+import os
+from pathlib import Path
 import matplotlib.pylab as plt
 import tttrlib
 import numpy as np
@@ -23,7 +25,9 @@ import numpy as np
 # in the example is a multiparameter fluorescence detection data
 # with two green and two red detectors for polarization resolved
 # fluorescence detection.
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # Here, we compute the cross correlation function between the parallel (P)

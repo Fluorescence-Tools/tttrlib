@@ -1,7 +1,17 @@
 """
-========
+======================
 FLIM-PIE
-========
+======================
+
+Overview
+--------
+Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).
+
+Prerequisites
+-------------
+- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
+  not set.
+
 In Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The
 exciting light source is usually a pulsed laser. When analyzing the detected fluorescence the
 interleaved excitation needs to be taken into account. For that, when two excitation sources are used,
@@ -21,7 +31,8 @@ import skimage.morphology
 import skimage.util
 import scipy
 import scipy.ndimage
-
+import os
+from pathlib import Path
 
 def plot_images(images, titles, cmaps=None, **kwargs):
     if cmaps is None:
@@ -43,7 +54,9 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 # First, we read the TTTR data, create CLSM image container, and define used channels.
 # We create a CLSM container for the green photons and the red photons. Moreover, we create
 # containers for red photons in the prompt and the delay time window.
-filename_data = '../../tttr-data/imaging/pq/ht3/mGBP_DA.ht3'
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+filename_data = str(DATA_ROOT / 'imaging/pq/ht3/mGBP_DA.ht3')
 tttr_data = tttrlib.TTTR(filename_data)
 
 clsm_green = tttrlib.CLSMImage(tttr_data)

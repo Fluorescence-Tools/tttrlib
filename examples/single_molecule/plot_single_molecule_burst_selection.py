@@ -16,7 +16,7 @@ Additional parameters to discriminate bursts are:
     3. The maximum allowed window length ``maximum_window_length``
     4. The maximum number of events in a window ``maximum_number_of_photons_in_time_window``
 
-The the parameters of the C function and the function header are shown below
+The parameters of the C function and the function header are shown below
 
 .. code:: c
 
@@ -39,11 +39,16 @@ to select single molecule events confocal single-molecule FRET experiments as
 shown below.
 """
 
+import os
+from pathlib import Path
 import numpy as np
 import tttrlib
 import pylab as plt
 
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 
 def save_burst_id(
@@ -80,11 +85,11 @@ sel = np.array(sel)
 # Select the "green" donor and the "red" acceptor events separately for plotting and
 # compute intensity traces The selection is plotted in blue.
 
-green_indeces = data.get_selection_by_channel([0, 8])
-red_indeces = data.get_selection_by_channel([1, 9])
+green_indices = data.get_selection_by_channel([0, 8])
+red_indices = data.get_selection_by_channel([1, 9])
 
-intensity_trace_green = data[green_indeces].get_intensity_trace(maximum_window_length)
-intensity_trace_red = data[red_indeces].get_intensity_trace(maximum_window_length)
+intensity_trace_green = data[green_indices].get_intensity_trace(maximum_window_length)
+intensity_trace_red = data[red_indices].get_intensity_trace(maximum_window_length)
 bursts_selected = data[sel].get_intensity_trace(maximum_window_length)
 
 #%%

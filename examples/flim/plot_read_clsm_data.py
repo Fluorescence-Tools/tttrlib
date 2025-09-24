@@ -6,7 +6,7 @@ In laser scanning microscopy (LSM) with time-tagged time resolved (TTTR)
 detection, the LSM image is stored in a stream of events. Events are either
 photons or special events that can for instance mark the beginning of a
 new frame, a new  line in laser scanning, or the end of a line.
-```tttrlib`` uses a special LSM container that maps the photon events in a
+``tttrlib`` uses a special LSM container that maps the photon events in a
 TTTR stream to pixels in an image. When a LSM container is constructed the
 TTTR stream is read and the beginning and the end of a frame, line, and pixel
 are identified.
@@ -24,15 +24,20 @@ or meta-data contained in the TTTR file is read.
 """
 
 #%%
+import os
+from pathlib import Path
 import pylab as plt
 from matplotlib.pyplot import imread
 import tttrlib
 import numpy as np
 
+# Determine data root from environment or fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+
 #%%
 # The first step, when constructing a LSM image from TTTR data is to
 # read the data contained in a TTTR file into a TTTR container.
-tttr_data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
+tttr_data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3'), 'HT3')
 
 #%%
 # Next, a LSM image container is constructed. There are multiple options to
@@ -84,7 +89,7 @@ plt.show()
 # -----------------
 # Leica instruments use a non-default marker encoding and different
 # marker reading routines.
-sp5_filename = '../../tttr-data/imaging/leica/sp5/LSM_1.ptu'
+sp5_filename = str(DATA_ROOT / 'imaging/leica/sp5/LSM_1.ptu')
 sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
 clsm_image = tttrlib.CLSMImage(
     tttr_data=sp5_data,
@@ -96,7 +101,7 @@ clsm_image = tttrlib.CLSMImage(
 plt.imshow(clsm_image.intensity.sum(axis=0))
 plt.show()
 
-sp8_filename = '../../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+sp8_filename = str(DATA_ROOT / 'imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')
 data = tttrlib.TTTR(sp8_filename, 'PTU')
 clsm_image = tttrlib.CLSMImage(
     tttr_data=data,

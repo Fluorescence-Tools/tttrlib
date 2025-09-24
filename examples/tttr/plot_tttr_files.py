@@ -3,13 +3,32 @@
 Working with TTTR files
 =======================
 
-To open TTTR files import the ``tttrlib`` library.
+Overview
+--------
+This example introduces the basic usage of the ``tttrlib.TTTR`` class to access
+macro/micro times, routing channels, event types, and the TTTR header. It shows
+both method-based accessors (e.g., ``get_macro_times()``) and equivalent
+attribute access (e.g., ``macro_times``).
+
+Prerequisites
+-------------
+- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
+  not set.
+
+See also
+--------
+- ``examples/tttr/plot_tttr_header.py`` for header inspection and JSON editing.
+- ``examples/tttr/plot_tttr_microtime_histogram.py`` for microtime inspection.
 
 """
-import pathlib
+import os
+from pathlib import Path
 import tttrlib
 
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # TTTR attributes
@@ -26,7 +45,7 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 #
 # TTTR files are handled by creating :class:`TTTR` objects that contain the TTTR
 # data of the files. The data contained in the files can be accessed by the methods
-# provided by the TTTR class. Opening and and accessing the information contained in
+# provided by the TTTR class. Opening and accessing the information contained in
 # TTTR files is demonstrated by the Python code examples shown below. A TTTR object
 # provides getter methods to access the data contained in the associated file.
 
