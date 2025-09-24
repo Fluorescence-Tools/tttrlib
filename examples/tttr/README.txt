@@ -3,4 +3,5 @@
 Working with TTTR objects
 -------------------------
 
-Examples on working with ``tttrlib.TTTR`` objects.
+Examples for reading/writing/transcoding TTTR files, inspecting headers,
+microtime histograms, and I/O performance benchmarking.

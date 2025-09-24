@@ -257,7 +257,8 @@ class SubSectionTitleOrder:
         if os.path.basename(src_path) == "release_highlights":
             return "0"
 
-        readme = os.path.join(src_path, "README.rst")
+        # Prefer README.txt (reST-in-.txt) for section titles
+        readme = os.path.join(src_path, "README.txt")
 
         try:
             with open(readme, 'r') as f:
