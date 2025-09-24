@@ -127,6 +127,7 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_ref, model_fconv)
 
+    @unittest.skipIf(platform == "win32", "Skipping AVX test on Windows")
     def test_fconv_avx(self):
         period = 12.0
         lifetime_spectrum = np.array([1.0, 4.1])
@@ -146,16 +147,14 @@ class Tests(unittest.TestCase):
             x=lifetime_spectrum,
             dt=dt
         )
-        # AVX wont be supported on Apple -> M1
-        if platform != "darwin":
-            model_fconv_avx = np.zeros_like(irf)
-            tttrlib.fconv_avx(
-                fit=model_fconv_avx,
-                irf=irf,
-                x=lifetime_spectrum,
-                dt=dt
-            )
-            np.testing.assert_array_almost_equal(model_fconv_avx, model_fconv)
+        model_fconv_avx = np.zeros_like(irf)
+        tttrlib.fconv_avx(
+            fit=model_fconv_avx,
+            irf=irf,
+            x=lifetime_spectrum,
+            dt=dt
+        )
+        np.testing.assert_array_almost_equal(model_fconv_avx, model_fconv)
 
     def test_fconv_per(self):
         period = 13.0
@@ -195,6 +194,7 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_fconv_per, ref)
 
+    @unittest.skipIf(platform == "win32", "Skipping AVX per test on Windows")
     def test_fconv_per_avx(self):
         period = 13.0
         lifetime_spectrum = np.array([1.0, 4.1])
@@ -218,19 +218,17 @@ class Tests(unittest.TestCase):
             stop=-1,
             dt=dt
         )
-        # AVX wont be supported on Apple -> M1
-        if platform != "darwin":
-            model_fconv_avx = np.zeros_like(irf)
-            tttrlib.fconv_per_avx(
-                fit=model_fconv_avx,
-                irf=irf,
-                x=lifetime_spectrum,
-                period=period,
-                start=0,
-                stop=-1,
-                dt=dt
-            )
-            np.testing.assert_array_almost_equal(model_fconv_avx, model_fconv_per)
+        model_fconv_avx = np.zeros_like(irf)
+        tttrlib.fconv_per_avx(
+            fit=model_fconv_avx,
+            irf=irf,
+            x=lifetime_spectrum,
+            period=period,
+            start=0,
+            stop=-1,
+            dt=dt
+        )
+        np.testing.assert_array_almost_equal(model_fconv_avx, model_fconv_per)
 
     def test_fconv_per_cs(self):
         period = 13.0
@@ -341,4 +339,3 @@ class Tests(unittest.TestCase):
             ]
         )
         np.testing.assert_array_almost_equal(ref, irf_shift)
-

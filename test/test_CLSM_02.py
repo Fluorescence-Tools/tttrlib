@@ -12,14 +12,18 @@ settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
 settings = json.load(open(settings_path))
 env_root = os.getenv("TTTRLIB_DATA")
 if env_root:
-    env_root = env_root.strip().strip('"')
+    env_root = env_root.strip().strip('\'"')
     data_root = Path(env_root)
 else:
     data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
 data_root = data_root.resolve()
-if not data_root.is_dir():
-    raise FileNotFoundError(f"Data directory not found: {data_root}")
 
+# Determine if data directory exists
+DATA_AVAILABLE = data_root.is_dir()
+if not DATA_AVAILABLE:
+    print(f"WARNING: Data directory not found: {data_root}")
+
+# Helper function to get full path
 def get_data_path(rel_path):
     p = (data_root / rel_path).resolve()
     if not p.exists():
@@ -73,7 +77,7 @@ clsm = {
 
 make_reference = settings['make_references']
 
-
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping CLSM tests")
 class TestCLSM(unittest.TestCase):
 
     def test_zeiss980_1(self):

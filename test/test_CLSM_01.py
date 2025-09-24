@@ -15,13 +15,15 @@ settings = json.load(open(settings_path))
 # Resolve data root
 env_root = os.getenv("TTTRLIB_DATA")
 if env_root:
-    env_root = env_root.strip().strip('"')
+    env_root = env_root.strip().strip('\'"')
     data_root = Path(env_root)
 else:
     data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
 data_root = data_root.resolve()
-if not data_root.is_dir():
-    raise FileNotFoundError(f"Data directory not found: {data_root}")
+# Determine if data directory exists
+DATA_AVAILABLE = data_root.is_dir()
+if not DATA_AVAILABLE:
+    print(f"WARNING: Data directory not found: {data_root}")
 # Helper to get full path
 def get_data_path(rel_path):
     p = (data_root / rel_path).resolve()
@@ -63,6 +65,7 @@ sp5_reading_parameter = {
 }
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping CLSM tests")
 class TestCLSM(unittest.TestCase):
 
     # If this is set to True as set of files are written as a
@@ -70,6 +73,8 @@ class TestCLSM(unittest.TestCase):
     make_reference = settings['make_references']
 
     def test_leica_sp8_image_1(self):
+        if not os.path.exists(sp8_filename):
+            self.skipTest(f"Data file not found: {sp8_filename}")
         data = tttrlib.TTTR(sp8_filename, 'PTU')
         clsm_image = tttrlib.CLSMImage(
             tttr_data=data,
@@ -120,6 +125,8 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_get_frame_edges(self):
+        if not os.path.exists(sp8_filename):
+            self.skipTest(f"Data file not found: {sp8_filename}")
         # SP8
         # Use the previously resolved sp8_filename which handles data path resolution
         filename = sp8_filename
@@ -193,6 +200,9 @@ class TestCLSM(unittest.TestCase):
         )
 
     def test_open_clsm_ptu_read_header(self):
+        missing = [f for f in pq_test_files if not os.path.exists(f)]
+        if missing:
+            self.skipTest(f"Data files not found: {missing}")
         for ptu_file in pq_test_files:
             print(ptu_file)
             data = tttrlib.TTTR(ptu_file)

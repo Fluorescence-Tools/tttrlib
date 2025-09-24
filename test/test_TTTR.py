@@ -18,17 +18,17 @@ repo_root = Path(__file__).resolve().parents[1]
 # Get data root from environment variable or use default from settings
 env_root = os.getenv("TTTRLIB_DATA")
 if env_root:
-    # Strip surrounding quotes and whitespace if present
-    env_root = env_root.strip().strip('"')
+    env_root = env_root.strip().strip('\'"')
     data_root = Path(env_root)
 else:
     # Use the relative data_root from settings, resolved against repo root
     data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
 # Ensure the path is absolute
 data_root = data_root.resolve()
-# Verify the data directory exists
-if not data_root.is_dir():
-    raise FileNotFoundError(f"Data directory not found: {data_root}")
+# Determine if data directory exists
+DATA_AVAILABLE = data_root.is_dir()
+if not DATA_AVAILABLE:
+    print(f"WARNING: Data directory not found: {data_root}")
 
 # Helper function to get full path
 def get_data_path(rel_path):
@@ -54,6 +54,7 @@ print(f"Using data root: {data_root}")
 data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping TTTR tests")
 class Tests(unittest.TestCase):
 
     make_references = settings["make_references"]

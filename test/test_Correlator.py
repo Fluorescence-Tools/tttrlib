@@ -18,13 +18,15 @@ settings = json.load(open(settings_path))
 # Resolve data root
 env_root = os.getenv("TTTRLIB_DATA")
 if env_root:
-    env_root = env_root.strip().strip('"')
+    env_root = env_root.strip().strip('\'"')
     data_root = Path(env_root)
 else:
     data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
 data_root = data_root.resolve()
-if not data_root.is_dir():
-    raise FileNotFoundError(f"Data directory not found: {data_root}")
+# Determine if data directory exists
+DATA_AVAILABLE = data_root.is_dir()
+if not DATA_AVAILABLE:
+    print(f"WARNING: Data directory not found: {data_root}")
 # Helper to get full path
 def get_data_path(rel_path):
     p = (data_root / rel_path).resolve()
@@ -39,6 +41,7 @@ for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
 spc132_filename = settings["spc132_filename"]
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping Correlator tests")
 class Tests(unittest.TestCase):
 
     data = tttrlib.TTTR(spc132_filename, 'SPC-130')
