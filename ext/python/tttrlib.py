@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import typing
+import pathlib
 
 if sys.version_info[0] < 3:
     from importlib_metadata import version
