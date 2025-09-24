@@ -1,19 +1,45 @@
 from __future__ import division
 
 import unittest
-
+import os
+from pathlib import Path
 import json
 import tttrlib
 import numpy as np
 
-settings = json.load(open(file="./test/settings.json"))
-
-sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
-sp8_filename = './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+# Determine repository root (two levels up from this file)
+repo_root = Path(__file__).resolve().parents[1]
+# Load settings JSON
+settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+settings = json.load(open(settings_path))
+# Resolve data root
+env_root = os.getenv("TTTRLIB_DATA")
+if env_root:
+    env_root = env_root.strip().strip('"')
+    data_root = Path(env_root)
+else:
+    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
+data_root = data_root.resolve()
+if not data_root.is_dir():
+    raise FileNotFoundError(f"Data directory not found: {data_root}")
+# Helper to get full path
+def get_data_path(rel_path):
+    p = (data_root / rel_path).resolve()
+    if not p.exists():
+        print(f"WARNING: File {p} does not exist")
+    return str(p)
+# Update settings file paths
+for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
+           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
+    if key in settings:
+        settings[key] = get_data_path(settings[key])
+# Update hardcoded filenames used in this test
+sp5_filename = get_data_path('imaging/leica/sp5/LSM_1.ptu')
+sp8_filename = get_data_path('imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')
+ht3_filename = get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')
 pq_test_files = [
-    './tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
-    './tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
+    get_data_path('imaging/pq/Microtime200_HH400/beads.ptu'),
+    get_data_path('imaging/pq/Microtime200_TH260/beads.ptu')
 ]
 
 sp8_reading_parameter = {
@@ -95,7 +121,8 @@ class TestCLSM(unittest.TestCase):
 
     def test_get_frame_edges(self):
         # SP8
-        filename = "./tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
+        # Use the previously resolved sp8_filename which handles data path resolution
+        filename = sp8_filename
         tttr = tttrlib.TTTR(filename)
         kw = {
             "start_event": 0,
@@ -131,8 +158,8 @@ class TestCLSM(unittest.TestCase):
             channels=[0],
         )
 
-        fn = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
-        tttr = tttrlib.TTTR(fn, 'PTU')
+        # Use the resolved sp5_filename variable for correct path handling
+        tttr = tttrlib.TTTR(sp5_filename, 'PTU')
         kw = {
             "start_event": 0,
             "stop_event": -1,

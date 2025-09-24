@@ -4,11 +4,38 @@ import unittest
 import json
 import numpy as np
 import scipy.spatial
+import os
+from pathlib import Path
 
 import tttrlib
 
 
-settings = json.load(open(file="./test/settings.json"))
+# Determine repository root (two levels up from this file)
+repo_root = Path(__file__).resolve().parents[1]
+# Load settings JSON
+settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+settings = json.load(open(settings_path))
+# Resolve data root
+env_root = os.getenv("TTTRLIB_DATA")
+if env_root:
+    env_root = env_root.strip().strip('"')
+    data_root = Path(env_root)
+else:
+    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
+data_root = data_root.resolve()
+if not data_root.is_dir():
+    raise FileNotFoundError(f"Data directory not found: {data_root}")
+# Helper to get full path
+def get_data_path(rel_path):
+    p = (data_root / rel_path).resolve()
+    if not p.exists():
+        print(f"WARNING: File {p} does not exist")
+    return str(p)
+# Update settings file paths
+for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
+           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
+    if key in settings:
+        settings[key] = get_data_path(settings[key])
 spc132_filename = settings["spc132_filename"]
 
 
@@ -98,7 +125,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = './tttr-data/bh/bh_spc132.spc'
+        # Use the resolved spc132_filename from settings
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         ch1_indeces = data.get_selection_by_channel([8])
@@ -151,8 +178,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = './tttr-data/bh/bh_spc132.spc'
-
+        # Use the resolved spc132_filename from settings
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         correlator = tttrlib.Correlator(
@@ -281,7 +307,6 @@ class Tests(unittest.TestCase):
     #     data = self.data
     #
     #     # import tttrlib
-    #     # import pylab as p
     #     # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
     #
     #     # get the indices of the two channels

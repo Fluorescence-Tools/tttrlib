@@ -1,29 +1,47 @@
 from __future__ import division
 
 import unittest
-
+import os
+from pathlib import Path
 import json
 import numpy as np
 import tttrlib
 
-settings = json.load(open(file="./test/settings.json"))
+repo_root = Path(__file__).resolve().parents[1]
+settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+settings = json.load(open(settings_path))
+env_root = os.getenv("TTTRLIB_DATA")
+if env_root:
+    env_root = env_root.strip().strip('"')
+    data_root = Path(env_root)
+else:
+    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
+data_root = data_root.resolve()
+if not data_root.is_dir():
+    raise FileNotFoundError(f"Data directory not found: {data_root}")
 
+def get_data_path(rel_path):
+    p = (data_root / rel_path).resolve()
+    if not p.exists():
+        print(f"WARNING: File {p} does not exist")
+    return str(p)
+
+for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
+            "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
+    if key in settings:
+        settings[key] = get_data_path(settings[key])
 
 clsm = {
     'sp5': {
-        'filename': './tttr-data/imaging/leica/sp5/LSM_1.ptu',
-        'reading_parameter': {
-            "reading_routine": 'SP5'
-        }
+        'filename': get_data_path('imaging/leica/sp5/LSM_1.ptu'),
+        'reading_parameter': {"reading_routine": 'SP5'}
     },
     'sp8': {
-        'filename': './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu',
-        'reading_parameter': {
-            "reading_routine": 'SP8'
-        }
+        'filename': get_data_path('imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'),
+        'reading_parameter': {"reading_routine": 'SP8'}
     },
     'seidel_ht3_sample_1': {
-        'filename': './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3',
+        'filename': get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3'),
         'reading_parameter': {
             "marker_frame_start": [4],
             "marker_line_start": 1,
@@ -35,8 +53,8 @@ clsm = {
         }
     },
     'seidel_ht3_sample_2': {
-        'filename': './tttr-data/imaging/pq/ht3/crn_clv_img.ht3',
-        'irf': './tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3',
+        'filename': get_data_path('imaging/pq/ht3/crn_clv_img.ht3'),
+        'irf': get_data_path('imaging/pq/ht3/crn_clv_mirror.ht3'),
         'reading_parameter': {
             "marker_frame_start": [4],
             "marker_line_start": 1,
@@ -48,7 +66,7 @@ clsm = {
         }
     },
     'zeiss980_1': {
-        'filename': './tttr-data/imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu',
+        'filename': get_data_path('imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu'),
         'reading_parameter': {}
     }
 }

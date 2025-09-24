@@ -1,20 +1,45 @@
 from __future__ import division
 
 import unittest
+import os
+from pathlib import Path
 
 import json
 import tttrlib
 import numpy as np
 import skimage
 
-settings = json.load(open(file="./test/settings.json"))
+repo_root = Path(__file__).resolve().parents[1]
+settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+settings = json.load(open(settings_path))
+env_root = os.getenv("TTTRLIB_DATA")
+if env_root:
+    env_root = env_root.strip().strip('"')
+    data_root = Path(env_root)
+else:
+    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
+data_root = data_root.resolve()
+if not data_root.is_dir():
+    raise FileNotFoundError(f"Data directory not found: {data_root}")
 
-sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
-sp8_filename = './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+def get_data_path(rel_path):
+    p = (data_root / rel_path).resolve()
+    if not p.exists():
+        print(f"WARNING: File {p} does not exist")
+    return str(p)
+
+# Update settings file paths if needed
+for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
+            "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
+    if key in settings:
+        settings[key] = get_data_path(settings[key])
+
+sp5_filename = get_data_path('imaging/leica/sp5/LSM_1.ptu')
+sp8_filename = get_data_path('imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')
+ht3_filename = get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')
 pq_test_files = [
-    './tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
-    './tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
+    get_data_path('imaging/pq/Microtime200_HH400/beads.ptu'),
+    get_data_path('imaging/pq/Microtime200_TH260/beads.ptu')
 ]
 
 sp8_reading_parameter = {
@@ -111,5 +136,3 @@ class TestCLSMTransform(unittest.TestCase):
         if self.make_reference:
             skimage.io.imsave(fn, img_transformed, check_contrast=False, imagej=True)
         np.testing.assert_array_almost_equal(skimage.io.imread(fn), img_transformed)
-
-

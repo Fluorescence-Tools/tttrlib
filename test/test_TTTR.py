@@ -5,10 +5,51 @@ import unittest
 import json
 import numpy as np
 import tempfile
+from pathlib import Path
 
 import tttrlib
 
-settings = json.load(open(file="./test/settings.json"))
+# Load settings
+settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
+settings = json.load(open(settings_path))
+
+# Determine the repository root (two levels up from this file)
+repo_root = Path(__file__).resolve().parents[1]
+# Get data root from environment variable or use default from settings
+env_root = os.getenv("TTTRLIB_DATA")
+if env_root:
+    # Strip surrounding quotes and whitespace if present
+    env_root = env_root.strip().strip('"')
+    data_root = Path(env_root)
+else:
+    # Use the relative data_root from settings, resolved against repo root
+    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
+# Ensure the path is absolute
+data_root = data_root.resolve()
+# Verify the data directory exists
+if not data_root.is_dir():
+    raise FileNotFoundError(f"Data directory not found: {data_root}")
+
+# Helper function to get full path
+def get_data_path(rel_path):
+    path = (data_root / rel_path).resolve()
+    if not path.exists():
+        print(f"WARNING: File {path} does not exist")
+    return str(path)
+
+# Initialize test data with full paths
+for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename", 
+           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
+    if key in settings:
+        settings[key] = get_data_path(settings[key])
+
+# Update test files with full paths
+if "test_files" in settings:
+    settings["test_files"] = [
+        [get_data_path(path), ftype] for path, ftype in settings["test_files"]
+    ]
+
+print(f"Using data root: {data_root}")
 
 data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
 
@@ -91,7 +132,7 @@ class Tests(unittest.TestCase):
         header2 = tttrlib.TTTRHeader(settings["ptu_hh_t3_filename"], 0)  # 0 is the container type
 
         # Assert that the original data has fewer tags than the new header
-        self.assertEqual(len(data.header.tags), len(header2.tags))  # Use '==' instead of '<' for equality
+        self.assertLess(len(data.header.tags), len(header2.tags))  # Use '<' to ensure original has fewer tags
 
         # Add tags from the new header to the existing one
         data.header.add_tags(header2)
