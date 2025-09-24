@@ -2,6 +2,7 @@
 #define TTTRLIB_CLSMFRAME_H
 
 #include <vector>
+#include <memory>
 
 #include "TTTR.h" /* TTTRRange */
 #include "CLSMPixel.h"
@@ -15,20 +16,32 @@ class CLSMFrame: public TTTRSelection{
 
 private:
 
-    std::vector<CLSMLine*> lines;
+    std::vector<CLSMLine> lines;
     TTTR* _tttr = nullptr;
 
 public:
 
     /*!
-     * \brief Get a vector containing pointers to the CLSMLines in the CLSMFrame.
+     * \brief Get a vector containing the CLSMLines in the CLSMFrame.
      *
-     * This function returns a vector containing pointers to the CLSMLines stored
+     * This function returns a vector containing the CLSMLines stored
      * in the CLSMFrame.
      *
-     * @return A vector of CLSMLine pointers.
+     * @return A vector of CLSMLine objects.
      */
-    std::vector<CLSMLine*> get_lines() {
+    std::vector<CLSMLine>& get_lines() {
+        return lines;
+    }
+
+    /*!
+     * \brief Get a vector containing the CLSMLines in the CLSMFrame.
+     *
+     * This function returns a vector containing the CLSMLines stored
+     * in the CLSMFrame.
+     *
+     * @return A vector of CLSMLine objects.
+     */
+    const std::vector<CLSMLine>& get_lines() const {
         return lines;
     }
 
@@ -56,21 +69,17 @@ public:
      * @param fill [in] If set to false, the content of the pixels is not copied.
      */
     CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRSelection(old_frame) {
-        for (auto& l : old_frame.lines) {
-            lines.emplace_back(new CLSMLine(*l, fill));
+        for (const auto& l : old_frame.lines) {
+            lines.emplace_back(l);
         }
     }
 
     /*!
      * \brief Destructor for CLSMFrame.
      *
-     * Deletes dynamically allocated CLSMLine objects in the lines vector.
+     * No dynamically allocated objects to delete.
      */
-    virtual ~CLSMFrame() {
-        for (auto& l : lines) {
-            delete l;
-        }
-    }
+    virtual ~CLSMFrame() = default;
 
     /*!
      * \brief Constructor for CLSMFrame with specified frame indices and a TTTR object.
@@ -87,9 +96,11 @@ public:
     /*!
      * \brief Append a CLSMLine to the current CLSMFrame.
      *
-     * @param line [in] Pointer to the CLSMLine to be appended.
+     * @param line [in] The CLSMLine to be appended.
      */
-    void append(CLSMLine* line);
+    void append(const CLSMLine& line){
+        lines.emplace_back(line);
+    }
 
     /*!
      * \brief Retrieve a pointer to the CLSMLine with the specified line number.
@@ -98,7 +109,7 @@ public:
      * @return A pointer to the CLSMLine with the requested number.
      */
     CLSMLine* operator[](unsigned int i_line) {
-        return lines[i_line];
+        return &lines[i_line];
     }
 
     /*!
@@ -112,7 +123,7 @@ public:
      */
     CLSMFrame& operator+=(const CLSMFrame& rhs) {
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            *lines[i] += *rhs.lines[i];
+            lines[i] += rhs.lines[i];
         }
         return *this;
     }
@@ -133,6 +144,10 @@ public:
         int pixel_start, int pixel_stop
     );
 
+    // Reserve capacity for lines to avoid reallocations during line creation
+    void reserve_lines(size_t n) {
+        lines.reserve(n);
+    }
 
 };
 

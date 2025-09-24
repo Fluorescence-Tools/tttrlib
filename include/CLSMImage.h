@@ -10,6 +10,8 @@
 #include <complex>
 #include <cmath>
 
+#include <memory>
+
 #include "pocketfft/pocketfft_hdronly.h"
 
 #include "TTTR.h" /* TTTR */
@@ -179,7 +181,7 @@ private:
     /// Used to tack if the CLSMImage is in a filled state
     bool _is_filled_ = false;
 
-    std::vector<CLSMFrame *> frames;
+    std::vector<CLSMFrame> frames;
 
     void remove_incomplete_frames();
 
@@ -373,9 +375,8 @@ public:
      *
      * @return Vector of CLSMFrame pointers representing the frames in the CLSMImage.
      */
-    std::vector<CLSMFrame *> get_frames() {
-        return frames;
-    }
+    const std::vector<CLSMFrame>& get_frames() const { return frames; }
+    std::vector<CLSMFrame>& get_frames() { return frames; }
 
     /*!
      * \brief Computes an intensity image.
@@ -621,9 +622,9 @@ public:
         int line = static_cast<int>(sidx / n_pixel);
         int pixel = static_cast<int>(sidx % n_pixel);
 
-        CLSMFrame* s_frame = frames[static_cast<size_t>(frame)];
-        CLSMLine*  s_line  = s_frame->lines[static_cast<size_t>(line)];
-        CLSMPixel* s_pixel = &(s_line->pixels[static_cast<size_t>(pixel)]);
+        CLSMFrame* s_frame = &frames[static_cast<size_t>(frame)];
+        CLSMLine*  s_line  = &s_frame->lines[static_cast<size_t>(line)];
+        CLSMPixel* s_pixel = &s_line->pixels[static_cast<size_t>(pixel)];
         return s_pixel;
     }
 
@@ -682,7 +683,7 @@ public:
      *
      * @param frame The CLSMFrame to be appended.
      */
-    void append(CLSMFrame *frame);
+    void append(CLSMFrame frame);
 
     /*!
      * \brief Move the content of the Pixels based on source and target pixel indices.
@@ -759,9 +760,9 @@ public:
      * of each corresponding pixel in all frames.
      */
     void stack_frames() {
-        CLSMFrame* f0 = frames[0];
+        CLSMFrame* f0 = &frames[0];
         for (unsigned int i = 1; i < n_frames; i++) {
-            *f0 += *frames[i];
+            *f0 += frames[i];
         }
         frames.resize(1);
         n_frames = 1;
@@ -811,12 +812,7 @@ public:
      * Frees memory by deleting dynamically allocated CLSMFrame objects in the frames vector.
      * It ensures proper cleanup of resources when a CLSMImage object is destroyed.
      */
-    virtual ~CLSMImage() {
-        for (auto frame : frames) {
-            delete frame;
-        }
-    }
-
+    virtual ~CLSMImage() = default;
 
     /*!
      * \brief Accessor for CLSMFrame at the specified index in CLSMImage.
@@ -827,7 +823,7 @@ public:
      * @return Pointer to the CLSMFrame at the specified index.
      */
     CLSMFrame* operator[](unsigned int i_frame) {
-        return frames[i_frame];
+        return &frames[i_frame];
     }
 
 
@@ -855,9 +851,14 @@ public:
      * @param subtract_average [in] Specifies background correction: "stack" subtracts the average over all frames,
      *                              "frame" subtracts the average of each frame. Default is no correction.
      * @param mask [in] Stack of images used as a mask to select pixels (optional).
-     * @param dmask1 [in] Number of frames in the mask.
-     * @param dmask2 [in] Number of lines in the mask.
+     * @param dmask1 [in] Number of frames; if smaller than ROI, the first mask frame
+     *                      is applied to all ROI frames greater than dmask1.
+     * @param dmask2 [in] Number of lines; if smaller than ROI, the outside region is
+     *                      selected, and the mask is applied to all lines smaller than
+     *                      dmask2.
      * @param dmask3 [in] Number of pixels per line in the mask.
+     * @param selected_frames List of frames used to define the ROIs. If empty, all frames
+     *                        in the input are used.
      */
     static void compute_ics(
             double **output, int *dim1, int *dim2, int *dim3,
@@ -868,7 +869,8 @@ public:
             std::vector<int> y_range = std::vector<int>({0, -1}),
             std::vector<std::pair<int, int>> frames_index_pairs = std::vector<std::pair<int, int>>(),
             std::string subtract_average = "",
-            uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1
+            uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1,
+            std::vector<int> selected_frames = std::vector<int>()
     );
 
     /*!
@@ -1039,8 +1041,8 @@ public:
         if(tttr != nullptr){
             auto header = tttr->get_header();
             
-            auto f = frames[frame];
-            auto l = f->lines[line];
+            auto f = &frames[frame];
+            auto l = &f->lines[line];
 
             int start = l->get_start();
             int stop = l->get_stop();
@@ -1071,7 +1073,16 @@ public:
         return get_line_duration(frame, line) / settings.n_pixel_per_line;
     }
 
-};
+    /*!
+     * \brief Reserve pixel capacity based on average photon count.
+     *
+     * Reserve capacity for each pixel's TTTR index set based on an estimated average photon count per pixel.
+     * This should be called before filling the image to avoid repeated reallocations.
+     *
+     * @param avg_photons Estimated average photon count per pixel.
+     */
+    void reserve_pixel_capacity(size_t avg_photons);
 
+};
 
 #endif //TTTRLIB_CLSMIMAGE_H
