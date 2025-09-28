@@ -51,6 +51,7 @@ def __add__(self, value):
     return t
 
 def __init__(self, *args, **kwargs):
+    import pathlib
     import sys
     
     if len(args) > 0:
@@ -83,9 +84,7 @@ def __init__(self, *args, **kwargs):
     self.this = this
 
 def __repr__(self):
-    # Use pathlib to normalize path to POSIX style (forward slashes), handling UNC paths correctly
-    filename = pathlib.Path(self.get_filename()).as_posix()
-    return f'TTTR("{filename}", "{self.get_tttr_container_type()}")'
+    return f'TTTR("{self.get_filename()}", "{self.get_tttr_container_type()}")'
 
 def __str__(self):
     return (
