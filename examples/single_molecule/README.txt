@@ -3,6 +3,5 @@
 Single-molecule
 ---------------
 
-Examples for burst selection, multiparameter analysis, and probability
-distribution analysis (PDA) on single-molecule TTTR data.
+Application of ``tttrlib`` to single-molecule data.
 

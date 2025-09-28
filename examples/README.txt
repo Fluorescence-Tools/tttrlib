@@ -14,12 +14,6 @@ How to use
 - In docs: after building the documentation, browse the rendered gallery at
   `auto_examples/index`.
 
-Data paths
-----------
-Many examples expect a dataset tree. You can set the environment variable
-`TTTRLIB_DATA` to point to the dataset root. If not set, examples fall back to
-`../../tttr-data` relative to the example file.
-
 Notes
 -----
 - Subfolders called `broken/` are ignored by Sphinx-Gallery (work-in-progress
