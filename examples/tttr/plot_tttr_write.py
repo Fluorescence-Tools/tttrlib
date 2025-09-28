@@ -3,19 +3,11 @@
 TTTR writing / Modify CLSM files
 ================================
 
-Overview
---------
-This example illustrates how to create and write TTTR data derived from a CLSM
-experiment. It reads an existing CLSM TTTR dataset, masks events based on simple
-image criteria, and writes out a new TTTR file that other tools can process.
+Here it is illustrated how TTTR data of CLSM experiments can be created and written. 
+Data of an existing CLSM experiment is read, masked, and the masked data is written to 
+a file that can be processed by any other software processing the original TTTR data.
 
-Prerequisites
--------------
-- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
-  not set.
-
-Workflow
---------
+In this example:
 
 1. TTTR data set of a CLSM measurement is read
 2. a CLSM image for the TTTR data is created
@@ -28,11 +20,6 @@ Workflow
 
 The source code of this example can be used to build analysis pipelines to mix and match
 different software.
-
-See also
---------
-- ``examples/flim/plot_read_clsm_data.py`` for reading and forming CLSM images.
-- ``examples/tttr/plot_tttr_files.py`` for inspecting TTTR containers.
 """
 #%%
 import os

@@ -3,22 +3,7 @@
 Working with TTTR files
 =======================
 
-Overview
---------
-This example introduces the basic usage of the ``tttrlib.TTTR`` class to access
-macro/micro times, routing channels, event types, and the TTTR header. It shows
-both method-based accessors (e.g., ``get_macro_times()``) and equivalent
-attribute access (e.g., ``macro_times``).
-
-Prerequisites
--------------
-- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
-  not set.
-
-See also
---------
-- ``examples/tttr/plot_tttr_header.py`` for header inspection and JSON editing.
-- ``examples/tttr/plot_tttr_microtime_histogram.py`` for microtime inspection.
+To open TTTR files import the ``tttrlib`` library.
 
 """
 import os

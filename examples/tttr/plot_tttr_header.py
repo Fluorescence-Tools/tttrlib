@@ -3,17 +3,6 @@
 TTTR-Header
 ===========
 
-Overview
---------
-Demonstrates how to access and edit TTTR header meta-data via
-``tttrlib.TTTRHeader``. Shows how to inspect time calibration, number of
-microtime channels, and how to read/write the JSON representation of headers.
-
-Prerequisites
--------------
-- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
-  not set.
-
 Introduction
 ============
 TTTR files can contain additional meta-data. In tttrlib the meta data can be
@@ -32,11 +21,6 @@ Accessing header data
 Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
 For that, a ``TTTR`` object provides a header attribute. The header attribute is
 of the type :class:`.Header`.
-
-See also
---------
-- ``examples/tttr/plot_tttr_files.py`` for basic TTTR data access.
-- ``examples/tttr/plot_tttr_microtime_histogram.py`` for microtime inspection.
 """
 
 import os

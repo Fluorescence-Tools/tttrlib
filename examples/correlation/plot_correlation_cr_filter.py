@@ -5,30 +5,23 @@ Count rate filtered correlation
 
 Overview
 --------
-The background in fluorescence intensity traces affects computed correlation
-functions. A simple mitigation is to filter out low count‐rate time windows
-before correlating.
+The background in the fluorescence intensity affects the computed
+fluorescence correlation curves. To mitigate the effect of the background
+on the correlation curves, low count rate regions in a photon stream can be
+discriminated before correlation.
 
-This example demonstrates multi‐tau correlation on raw data and on filtered
-data (using a sliding time window and a minimum count threshold) to show the
-impact of background suppression.
+The example below illustrates a correlation analysis for a single molecule
+FRET experiments to illustrate different options to discriminate low
+count rate regions in a photon stream for computing correlation functions of
+background filtered data.
 
-Prerequisites
--------------
-- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
-  not set.
+Note, in the single-molecule example data the background has a significant
+contribution to the correlation functions. In the example a sliding time-window
+(TW) is used to select regions in the photon stream with less than a certain
+amount of photons that are discriminated.
 
-Workflow and outputs
---------------------
-- Compute baseline green–green and green–red correlations using
-  `tttrlib.Correlator`.
-- Select high count‐rate windows via time‐window scanning.
-- Recompute correlations on the filtered selection and compare curves.
-
-See also
---------
-- ``examples/tttr/plot_tttr_microtime_histogram.py`` for microtime inspection.
-- ``examples/correlation/plot_gated_correlation.py`` for microtime‐gated FCS.
+Such a filter can be used to remove the background in a single-molecule experiment
+that decreased the correlation amplitude.
 
 """
 import os
