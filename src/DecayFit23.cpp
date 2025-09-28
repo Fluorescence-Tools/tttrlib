@@ -1,38 +1,91 @@
 #include "DecayFit23.h"
 #include "include/Verbose.h"
 
+#include <algorithm>
+#include <limits>
+
 
 static DecayFitIntegrateSignals fit_signals;
 static DecayFitCorrections fit_corrections;
 static DecayFitSettings fit_settings;
 
+namespace {
+
+constexpr double kMinTau = 1.0e-3;
+constexpr double kMinRho = 1.0e-6;
+constexpr double kMinGamma = 0.0;
+constexpr double kMaxGamma = 0.999;
+
+inline double clamp_value(double value, double lower, double upper) {
+    return std::max(lower, std::min(value, upper));
+}
+
+struct Decay23Parameters {
+    double tau;
+    double gamma;
+    double r0;
+    double rho;
+};
+
+inline Decay23Parameters sanitise_parameters(const double *param) {
+    Decay23Parameters result{};
+    result.tau = param[0] < kMinTau ? kMinTau : param[0];
+    result.gamma = clamp_value(param[1], kMinGamma, kMaxGamma);
+    result.r0 = param[2];
+    result.rho = param[3] < kMinRho ? kMinRho : param[3];
+    return result;
+}
+
+inline void apply_corrections(double *corrections) {
+    fit_corrections.period = corrections[0];
+    fit_corrections.g = corrections[1];
+    fit_corrections.l1 = corrections[2];
+    fit_corrections.l2 = corrections[3];
+    fit_corrections.convolution_stop = static_cast<int>(corrections[4]);
+}
+
+inline double safe_harmonic_mean(double a, double b) {
+    if (b <= 0.) {
+        return a;
+    }
+    const double denom = 1. / a + 1. / b;
+    if (denom <= std::numeric_limits<double>::min()) {
+        return a;
+    }
+    return 1. / denom;
+}
+
+} // namespace
+
 
 
 void DecayFit23::correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r) {
-    xm[0] = x[0];
-    if (xm[0] < 0.001) {
-        xm[0] = 0.001;    // tau > 0
-        fit_settings.penalty = -x[0];
-    } else fit_settings.penalty = 0.;
+    fit_signals.corrections = &fit_corrections;
 
-    fit_corrections.set_gamma(x[1]);
-    fit_corrections.period = corrections->data[0];
-    fit_corrections.g = corrections->data[1];
-    fit_corrections.l1 = corrections->data[2];
-    fit_corrections.l2 = corrections->data[3];
-    fit_corrections.convolution_stop = (int) corrections->data[4];
+    const Decay23Parameters initial = sanitise_parameters(x);
 
-    xm[2] = x[2];
-    // anisotropy
-    double r = fit_signals.r();
+    xm[0] = initial.tau;
+    fit_settings.penalty = (x[0] < kMinTau) ? -x[0] : 0.;
+
+    fit_corrections.set_gamma(initial.gamma);
+    apply_corrections(corrections->data);
+
+    xm[1] = initial.gamma;
+    xm[2] = initial.r0;
+
+    double rho_value = initial.rho;
     if (!fit_settings.fixedrho) {
-        xm[3] = fit_signals.rho(x[0], x[2]); // rho = tau/(r0/r-1)
-        x[3] = xm[3];
-    } else xm[3] = x[3];
+        rho_value = fit_signals.rho(xm[0], xm[2]);
+        x[3] = rho_value;
+    }
+    if (rho_value < kMinRho) {
+        rho_value = kMinRho;
+    }
+    xm[3] = rho_value;
 
     if (return_r) {
         x[7] = fit_signals.rs();
-        x[6] = r;
+        x[6] = fit_signals.r();
     }
 if (is_verbose()) {
     std::cout << "CORRECT_INPUT23" << std::endl;
@@ -55,25 +108,20 @@ int DecayFit23::modelf(
         double *corrections,      // [period g l1 l2]
         double *mfunction)        // out: model function in Jordi-girl format
 {
+    (void)dt; // parameter kept for API compatibility
+    fit_signals.corrections = &fit_corrections;
+
     double x[4]; // amplitude, relaxation time array
-    double tau, gamma, r0, rho, taurho;
-    int i;
-/************************ Input arguments ***********************/
-    tau = param[0];
-    gamma = param[1];
-    r0 = param[2];
-    rho = param[3] * dt / dt;
+    const Decay23Parameters safe_param = sanitise_parameters(param);
+    const double tau = safe_param.tau;
+    const double gamma = safe_param.gamma;
+    const double r0 = safe_param.r0;
+    const double rho = safe_param.rho;
 
     fit_corrections.set_gamma(gamma);
-    fit_corrections.period = corrections[0];
-    fit_corrections.g = corrections[1];
-    fit_corrections.l1 = corrections[2];
-    fit_corrections.l2 = corrections[3];
-    fit_corrections.convolution_stop = (int) corrections[4];
+    apply_corrections(corrections);
 
-/************************* Model function ***********************/
-
-    taurho = 1. / (1. / tau + 1. / rho);
+    const double taurho = safe_harmonic_mean(tau, rho);
 
     /// vv
     x[0] = 1.;
@@ -87,16 +135,24 @@ int DecayFit23::modelf(
 
     /// vh
     x[0] = 1. / fit_corrections.g;
-    x[2] = 1. / fit_corrections.g * r0 * (-1. + 3. * fit_corrections.l2);
+    x[2] = x[0] * r0 * (-1. + 3. * fit_corrections.l2);
     fconv_per_cs(mfunction + Nchannels, x, irf + Nchannels,
                  2, Nchannels - 1, Nchannels,
                  fit_corrections.period, fit_corrections.convolution_stop, dt);
 
     /// add background
-    double sum_m = 0., tmpf;
-    for (i = 0; i < 2 * Nchannels; i++) sum_m += mfunction[i];
-    tmpf = (1. - gamma) / sum_m;
-    for (i = 0; i < 2 * Nchannels; i++) mfunction[i] = mfunction[i] * tmpf + bg[i] * gamma;
+    double sum_m = 0.;
+    for (int i = 0; i < 2 * Nchannels; i++) sum_m += mfunction[i];
+    if (sum_m <= 0.) {
+        for (int i = 0; i < 2 * Nchannels; i++) {
+            mfunction[i] = bg[i] * gamma;
+        }
+    } else {
+        const double scale = (1. - gamma) / sum_m;
+        for (int i = 0; i < 2 * Nchannels; i++) {
+            mfunction[i] = mfunction[i] * scale + bg[i] * gamma;
+        }
+    }
 
 if (is_verbose()) {
     std::cout << "COMPUTE MODEL23" << std::endl;
