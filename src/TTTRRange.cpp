@@ -9,6 +9,11 @@ TTTRRange::TTTRRange(int start, int stop){
     _tttr_indices.insert(stop);
 }
 
+std::vector<int> TTTRRange::get_tttr_indices() const{
+    std::vector<int> v(_tttr_indices.begin(), _tttr_indices.end());
+    return v;
+}
+
 double TTTRRange::compute_mean_lifetime(
         std::vector<int> &tttr_indices,
         TTTR *tttr_data,

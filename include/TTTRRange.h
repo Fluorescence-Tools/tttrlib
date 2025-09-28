@@ -73,10 +73,7 @@ public:
      *
      * @return A vector containing the TTTR indices in the set.
      */
-    std::vector<int> get_tttr_indices(){
-        std::vector<int> v(_tttr_indices.begin(), _tttr_indices.end());
-        return v;
-    }
+    virtual std::vector<int> get_tttr_indices() const;
 
     /**
      * @brief Gets the start index of the TTTR range.

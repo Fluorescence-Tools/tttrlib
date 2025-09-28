@@ -1,10 +1,12 @@
 #ifndef TTTRLIB_CLSMPIXEL_H
 #define TTTRLIB_CLSMPIXEL_H
 
-#include "TTTR.h"
-#include "TTTRRange.h"
+#include <utility>
 
-class CLSMPixel : public TTTRRange{
+#include "TTTR.h"
+#include "TTTRSelection.h"
+
+class CLSMPixel : public TTTRSelection{
 
     friend class CLSMLine;
     friend class CLSMImage;
@@ -13,13 +15,17 @@ public:
 
     virtual ~CLSMPixel() = default;
 
-    CLSMPixel(const CLSMPixel& p2) : TTTRRange(p2){};
-
-    CLSMPixel(CLSMPixel* p2 = nullptr) : TTTRRange(){
-        if(p2 != nullptr){
-            _tttr_indices = p2->_tttr_indices;
-        }
+    CLSMPixel(){
+        set_dense(true);
     }
+
+    CLSMPixel(const CLSMPixel& p2) : TTTRSelection(p2){}
+
+    explicit CLSMPixel(std::shared_ptr<TTTR> tttr) : TTTRSelection(std::move(tttr)){
+        set_dense(true);
+    }
+
+    CLSMPixel& operator=(const CLSMPixel& other) = default;
 
 };
 

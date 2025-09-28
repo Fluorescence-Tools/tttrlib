@@ -40,7 +40,9 @@ public:
         }
     }
 
-    CLSMLine() = default;
+    CLSMLine(){
+        set_dense(false);
+    }
 
     CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRSelection(old_line){
         // private attributes
@@ -52,11 +54,13 @@ public:
     }
 
     explicit CLSMLine(unsigned int line_start){
-        _tttr_indices.insert(line_start);
+        set_dense(false);
+        set_range(static_cast<int>(line_start), static_cast<int>(line_start));
     }
 
     CLSMLine(int line_start, unsigned int n_pixel){
-        _tttr_indices.insert(line_start);
+        set_dense(false);
+        set_range(line_start, line_start);
         pixels.resize(n_pixel);
     }
 
