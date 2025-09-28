@@ -805,18 +805,24 @@ public:
                     std::vector<std::pair<int, int>>()
     );
 
-    /*!
-     * \brief Destructor for CLSMImage.
-     *
-     * Frees memory by deleting dynamically allocated CLSMFrame objects in the frames vector.
-     * It ensures proper cleanup of resources when a CLSMImage object is destroyed.
-     */
-    virtual ~CLSMImage() {
-        for (auto frame : frames) {
-            delete frame;
+    ~CLSMImage(){
+        for (auto& f : frames) {
+            delete f;
         }
     }
 
+    CLSMImage& operator=(const CLSMImage& other) {
+        if (this != &other) {
+            // Free existing resources
+            for (auto& f : frames) {
+                delete f;
+            }
+            frames.clear();
+            // Copy new data
+            copy(other, true);
+        }
+        return *this;
+    }
 
     /*!
      * \brief Accessor for CLSMFrame at the specified index in CLSMImage.
@@ -855,8 +861,11 @@ public:
      * @param subtract_average [in] Specifies background correction: "stack" subtracts the average over all frames,
      *                              "frame" subtracts the average of each frame. Default is no correction.
      * @param mask [in] Stack of images used as a mask to select pixels (optional).
-     * @param dmask1 [in] Number of frames in the mask.
-     * @param dmask2 [in] Number of lines in the mask.
+     * @param dmask1 [in] Number of frames; if smaller than ROI, the first mask frame
+     *                      is applied to all ROI frames greater than dmask1.
+     * @param dmask2 [in] Number of lines; if smaller than ROI, the outside region is
+     *                      selected, and the mask is applied to all lines smaller than
+     *                      dmask2.
      * @param dmask3 [in] Number of pixels per line in the mask.
      */
     static void compute_ics(

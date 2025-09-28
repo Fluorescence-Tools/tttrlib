@@ -255,7 +255,7 @@ std::vector<int> CLSMImage::get_line_edges(
     }
     std::vector<int> line_edges;
     if (stop_event < 0)
-        stop_event = tttr->n_valid_events;
+        stop_event = static_cast<int>(tttr->n_valid_events);
 
     if (reading_routine == CLSM_SP5) {
         line_edges.emplace_back(start_event);
@@ -320,7 +320,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
         std::clog << "-- reading_routine: " << reading_routine << std::endl;
     }
 
-    if (frame_stop < 0) frame_stop = tttr->n_valid_events;
+    if (frame_stop < 0) frame_stop = static_cast<int>(tttr->n_valid_events);
     std::vector<int> line_edges;
     for (int i_event = frame_start; i_event < frame_stop; i_event++) {
         std::pair<int, int> start_stop;
@@ -615,9 +615,9 @@ void CLSMImage::strip(const std::vector<int> &tttr_indices, int offset) {
 }
 
 void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3) {
-    *dim1 = (int) n_frames;
-    *dim2 = (int) n_lines;
-    *dim3 = (int) n_pixel;
+    *dim1 = static_cast<int>(n_frames);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
     if (is_verbose()) {
         std::clog << "Get intensity image" << std::endl;
@@ -799,8 +799,8 @@ void CLSMImage::get_decay_of_pixels(
         std::clog << "-- Micro time coarsening: " << tac_coarsening << std::endl;
         std::clog << "-- Resulting number of micro time channels: " << n_tac << std::endl;
     }
-    *dim1 = (int) n_decays;
-    *dim2 = (int) n_tac;
+    *dim1 = static_cast<int>(n_decays);
+    *dim2 = static_cast<int>(n_tac);
     size_t n_tac_total = n_decays * n_tac;
     auto *t = (unsigned int *) calloc(n_tac_total, sizeof(unsigned int));
     if ((dmask1 != n_frames) || (dmask2 != n_lines) || (dmask3 != n_pixel)) {
@@ -856,9 +856,9 @@ void CLSMImage::get_mean_micro_time(
                 }
             }
         }
-        *dim1 = (int) n_frames;
-        *dim2 = (int) n_lines;
-        *dim3 = (int) n_pixel;
+        *dim1 = static_cast<int>(n_frames);
+        *dim2 = static_cast<int>(n_lines);
+        *dim3 = static_cast<int>(n_pixel);
         *output = t;
     } else {
         int w_frame = 1;
@@ -879,9 +879,9 @@ void CLSMImage::get_mean_micro_time(
                 r[pixel_nbr] = tttr_data->get_mean_microtime(&tr, microtime_resolution, minimum_number_of_photons);
             }
         }
-        *dim1 = (int) w_frame;
-        *dim2 = (int) n_lines;
-        *dim3 = (int) n_pixel;
+        *dim1 = static_cast<int>(w_frame);
+        *dim2 = static_cast<int>(n_lines);
+        *dim3 = static_cast<int>(n_pixel);
         *output = r;
     }
 }
@@ -954,10 +954,10 @@ void CLSMImage::get_phasor(
         std::clog << "-- stack_frames: " << stack_frames << std::endl;
         std::clog << "-- minimum_number_of_photons: " << minimum_number_of_photons << std::endl;
     }
-    *dim1 = (int) o_frames;
-    *dim2 = (int) n_lines;
-    *dim3 = (int) n_pixel;
-    *dim4 = (int) 2;
+    *dim1 = static_cast<int>(o_frames);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
+    *dim4 = static_cast<int>(2);
     *output = t;
 }
 
@@ -1043,9 +1043,9 @@ void CLSMImage::get_mean_lifetime(
             }
         }
     }
-    *dim1 = (int) o_frames;
-    *dim2 = (int) n_lines;
-    *dim3 = (int) n_pixel;
+    *dim1 = static_cast<int>(o_frames);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
     *output = t;
 }
 
@@ -1355,9 +1355,9 @@ void CLSMImage::compute_ics(
     free(roi);
 
     // Assign output
-    *dim1 = (int) nf;
-    *dim2 = (int) nl;
-    *dim3 = (int) np;
+    *dim1 = static_cast<int>(nf);
+    *dim2 = static_cast<int>(nl);
+    *dim3 = static_cast<int>(np);
     *output = out_tmp;
     return;
 }
@@ -1474,7 +1474,7 @@ void CLSMImage::crop(
     int line_start, int line_stop,
     int pixel_start, int pixel_stop
 ) {
-    frame_stop = std::min(std::max(0, frame_stop), (int) size());
+    frame_stop = std::min(std::max(0, frame_stop), static_cast<int>(size()));
     frame_start = std::max(0, frame_start);
 
     if (is_verbose()) {

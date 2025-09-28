@@ -61,6 +61,23 @@ public:
         }
     }
 
+    CLSMFrame& operator=(const CLSMFrame& other) {
+        if (this != &other) {
+            // Free existing resources
+            for (auto& l : lines) {
+                delete l;
+            }
+            lines.clear();
+
+            // Copy new data
+            for (auto& l : other.lines) {
+                lines.emplace_back(new CLSMLine(*l, true));
+            }
+            TTTRSelection::operator=(other);
+        }
+        return *this;
+    }
+
     /*!
      * \brief Destructor for CLSMFrame.
      *
