@@ -140,8 +140,15 @@ FILE(GLOB_RECURSE ALGLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/alglib/*.cpp")
 LIST(APPEND SRC_files ${ALGLIB})
 
 # HighFive HDF5 reader
-ADD_SUBDIRECTORY(thirdparty/HighFive)
-LINK_LIBRARIES(HighFive::HighFive)
+IF(BUILD_PHOTON_HDF)
+  IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")
+    ADD_SUBDIRECTORY(thirdparty/HighFive)
+    LINK_LIBRARIES(HighFive::HighFive)
+  ELSE()
+    MESSAGE(WARNING "HighFive third-party sources are missing; disabling photon HDF support")
+    SET(BUILD_PHOTON_HDF OFF CACHE BOOL "Build photon hdf5 reader" FORCE)
+  ENDIF()
+ENDIF()
 
 
 IF(BUILD_LIBRARY)
