@@ -1,11 +1,9 @@
 %{
 #include "ImageLocalization.h"
+struct LocalizationAccess : localization {
+    using localization::model2DGaussian;
+};
 %}
-
-// Add typemaps for std::vector<std::vector<double>>
-%include "std_vector.i"
-%template(VectorDouble) std::vector<double>;
-%template(VectorVectorDouble) std::vector<std::vector<double>>;
 
 %extend localization{
     // Python-friendly wrapper for fit2DGaussian that accepts nested lists
@@ -70,22 +68,29 @@
 
     // Python-friendly wrapper for model2DGaussian that returns nested lists
     static PyObject* model2DGaussian_array(std::vector<double> vars, int rows, int cols) {
-        // Create std::vector<std::vector<double>> with specified dimensions
-        std::vector<std::vector<double>> cpp_data(rows, std::vector<double>(cols, 0.0));
-        
-        // Call the original method
-        localization::model2DGaussian(vars, cpp_data);
-        
-        // Convert result to Python nested list
+        if (rows <= 0 || cols <= 0) {
+            PyErr_SetString(PyExc_ValueError, "Rows and columns must be positive");
+            return nullptr;
+        }
+        if (vars.size() < 6) {
+            PyErr_SetString(PyExc_ValueError, "Expected at least 6 parameters for Gaussian model");
+            return nullptr;
+        }
+
+        const size_t total = static_cast<size_t>(rows) * static_cast<size_t>(cols);
+        std::vector<double> buffer(total, 0.0);
+        LocalizationAccess::model2DGaussian(vars.data(), buffer.data(), cols, rows);
+
         PyObject* result = PyList_New(rows);
         for (int i = 0; i < rows; i++) {
             PyObject* row = PyList_New(cols);
             for (int j = 0; j < cols; j++) {
-                PyList_SetItem(row, j, PyFloat_FromDouble(cpp_data[i][j]));
+                double value = buffer[static_cast<size_t>(i) * static_cast<size_t>(cols) + j];
+                PyList_SetItem(row, j, PyFloat_FromDouble(value));
             }
             PyList_SetItem(result, i, row);
         }
-        
+
         return result;
     }
 
@@ -103,16 +108,17 @@
             *dim1 = *dim2 = 0;
             return;
         }
-        // produce model in temporary 2D vector
-        std::vector<std::vector<double>> cpp_data(rows, std::vector<double>(cols, 0.0));
-        localization::model2DGaussian(vars, cpp_data);
-
-        // allocate contiguous buffer expected by ARGOUTVIEWM_ARRAY2
-        size_t n = static_cast<size_t>(rows) * static_cast<size_t>(cols);
-        double *buf = (double*) malloc(n * sizeof(double));
-        for (int i = 0; i < rows; ++i) {
-            std::copy(cpp_data[i].begin(), cpp_data[i].end(), buf + static_cast<size_t>(i) * cols);
+        const size_t total = static_cast<size_t>(rows) * static_cast<size_t>(cols);
+        double *buf = (double*) malloc(total * sizeof(double));
+        if (!buf) {
+            *output = nullptr;
+            *dim1 = *dim2 = 0;
+            PyErr_NoMemory();
+            return;
         }
+
+        LocalizationAccess::model2DGaussian(vars.data(), buf, cols, rows);
+
         *output = buf;
         *dim1 = rows;
         *dim2 = cols;
@@ -120,3 +126,5 @@
 }
 
 %include "ImageLocalization.h"
+
+%pythoncode "../ext/python/ImageLocalizer.py"

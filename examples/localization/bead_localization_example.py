@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import tttrlib
+from tttrlib import ImageLocalizer
 
 def load_and_process_tttr_data(filename):
     """
@@ -119,7 +120,7 @@ def detect_peaks_simple(intensity_image, threshold_factor=3.0, min_distance=5):
     print(f"Found {len(peaks)} peak candidates")
     return peaks
 
-def fit_gaussian_peaks(intensity_image, peak_positions):
+def fit_gaussian_peaks(clsm_image, intensity_image, peak_positions, frame=0):
     """
     Fit 2D Gaussians to detected peaks using tttrlib localization
     
@@ -133,81 +134,53 @@ def fit_gaussian_peaks(intensity_image, peak_positions):
     print("Fitting 2D Gaussians to detected peaks...")
     
     fitted_peaks = []
-    
+    localizer = ImageLocalizer()
+
     for i, (peak_x, peak_y) in enumerate(peak_positions):
         print(f"Fitting peak {i+1}/{len(peak_positions)} at ({peak_x}, {peak_y})")
-        
+
         # Extract region around peak for fitting
         fit_size = 15  # Size of fitting region
         x_min = max(0, peak_x - fit_size//2)
         x_max = min(intensity_image.shape[1], peak_x + fit_size//2 + 1)
         y_min = max(0, peak_y - fit_size//2)
         y_max = min(intensity_image.shape[0], peak_y + fit_size//2 + 1)
-        
+
         region = intensity_image[y_min:y_max, x_min:x_max]
-        
+
         if region.size == 0:
             continue
-            
-        # Convert to format expected by localization using SWIG vector types
-        data_2d = tttrlib.VectorDouble_2D()
-        for row in region:
-            row_vector = tttrlib.VectorDouble()
-            for val in row:
-                row_vector.append(float(val))
-            data_2d.append(row_vector)
-        
-        # Initial parameters for 2D Gaussian fit
-        # vars = [x0, y0, A, sigma, ellipticity, bg, x1, y1, A1, x2, y2, A2, 
-        #         info, wi_nowi, fit_bg, ellipt_circ, model, twoIstar]
-        vars = [0.0] * 18
-        
-        # Initial guess
-        vars[0] = fit_size // 2  # x0 (center in local coordinates)
-        vars[1] = fit_size // 2  # y0 (center in local coordinates)
-        vars[2] = float(np.max(region) - np.min(region))  # Amplitude
-        vars[3] = 2.0  # sigma
-        vars[4] = 1.0  # ellipticity (1.0 = circular)
-        vars[5] = float(np.min(region))  # background
-        
-        # Fitting options
-        vars[14] = 0  # fit_bg (0 = fit background)
-        vars[15] = 1  # ellipt_circ (1 = circular Gaussian)
-        vars[16] = 0  # model (0 = single Gaussian)
-        
+
         try:
-            # Perform the fit using tttrlib localization
-            localization = tttrlib.localization()
-            result = localization.fit2DGaussian(vars, data_2d)
-            
-            if result > 0:  # Successful fit
-                # Convert back to global coordinates
-                fitted_x = x_min + vars[0]
-                fitted_y = y_min + vars[1]
-                amplitude = vars[2]
-                sigma = vars[3]
-                background = vars[5]
-                chi2 = vars[17] if len(vars) > 17 else 0
-                
+            result = localizer.fit(
+                clsm_image,
+                frame=frame,
+                roi=((y_min, y_max), (x_min, x_max)),
+            )
+
+            if result.success:
+                fitted_x, fitted_y = result.to_global()
                 fitted_peaks.append({
                     'x': fitted_x,
                     'y': fitted_y,
-                    'amplitude': amplitude,
-                    'sigma': sigma,
-                    'background': background,
-                    'chi2': chi2,
+                    'amplitude': result.amplitude,
+                    'sigma': result.sigma,
+                    'background': result.background,
+                    'chi2': result.chi2,
                     'original_x': peak_x,
                     'original_y': peak_y
                 })
-                
-                print(f"  Fitted: ({fitted_x:.2f}, {fitted_y:.2f}), "
-                      f"σ={sigma:.2f}, A={amplitude:.1f}")
+
+                print(
+                    f"  Fitted: ({fitted_x:.2f}, {fitted_y:.2f}), "
+                    f"σ={result.sigma:.2f}, A={result.amplitude:.1f}"
+                )
             else:
-                print(f"  Fit failed for peak at ({peak_x}, {peak_y})")
-                
+                print(f"  Fit failed for peak at ({peak_x}, {peak_y}) (status={result.status})")
+
         except Exception as e:
             print(f"  Error fitting peak at ({peak_x}, {peak_y}): {e}")
-    
+
     print(f"Successfully fitted {len(fitted_peaks)} peaks")
     return fitted_peaks
 
@@ -292,7 +265,11 @@ def main():
         tttr_data, clsm_image = load_and_process_tttr_data(data_file)
         
         # Get intensity image (sum over all frames)
-        intensity_image = clsm_image.get_intensity()
+        intensity_stack = np.asarray(clsm_image.get_intensity())
+        if intensity_stack.ndim == 3:
+            intensity_image = intensity_stack[0]
+        else:
+            intensity_image = intensity_stack
         
         print(f"Intensity image shape: {intensity_image.shape}")
         print(f"Intensity range: {np.min(intensity_image)} - {np.max(intensity_image)}")
@@ -304,8 +281,8 @@ def main():
             print("No peaks detected. Try adjusting the threshold_factor.")
             return
         
-        # Fit Gaussian peaks
-        fitted_peaks = fit_gaussian_peaks(intensity_image, peak_positions)
+        # Fit Gaussian peaks directly on the CLSM data
+        fitted_peaks = fit_gaussian_peaks(clsm_image, intensity_image, peak_positions)
         
         # Visualize results
         visualize_results(intensity_image, peak_positions, fitted_peaks)

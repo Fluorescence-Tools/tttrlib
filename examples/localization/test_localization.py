@@ -8,6 +8,7 @@ without requiring the specific data file.
 
 import numpy as np
 import tttrlib
+from tttrlib import ImageLocalizer
 
 def test_localization_basic():
     """
@@ -17,8 +18,8 @@ def test_localization_basic():
     
     try:
         # Test if localization class is available
-        localization = tttrlib.localization()
-        print("✓ Localization class successfully imported")
+        localization = ImageLocalizer()
+        print("✓ ImageLocalizer successfully initialised")
         
         # Create synthetic 2D Gaussian data for testing
         size = 21
@@ -45,36 +46,24 @@ def test_localization_basic():
         gaussian = np.ascontiguousarray(gaussian, dtype=np.float64)
         
         # Set up fitting parameters
-        vars = [0.0] * 18
-        vars[0] = center + 0.5  # x0 (add small offset to test fitting)
-        vars[1] = center - 0.3  # y0 
-        vars[2] = amplitude * 0.9  # Initial amplitude guess
-        vars[3] = sigma * 1.1  # Initial sigma guess
-        vars[4] = 1.0  # ellipticity (circular)
-        vars[5] = background * 1.2  # Initial background guess
-        vars[14] = 0  # fit background
-        vars[15] = 1  # circular Gaussian
-        vars[16] = 0  # single Gaussian model
-        
-        print("✓ Set up fitting parameters")
-        
-        # Perform the fit using NumPy-friendly overload
-        result = localization.fit2DGaussian_numpy(vars, gaussian, gaussian.shape[0], gaussian.shape[1])
-        
-        if result > 0:
-            fitted_x = vars[0]
-            fitted_y = vars[1]
-            fitted_amplitude = vars[2]
-            fitted_sigma = vars[3]
-            fitted_bg = vars[5]
-            
+        result = localization.fit(gaussian, initial=None, return_model=True)
+
+        if result.success:
+            fitted_x, fitted_y = result.center
+            fitted_amplitude = result.amplitude
+            fitted_sigma = result.sigma
+            fitted_bg = result.background
+
             print("✓ Gaussian fitting successful!")
-            print(f"  Fitted parameters:")
+            print("  Fitted parameters:")
             print(f"    Center: ({fitted_x:.2f}, {fitted_y:.2f}) [True: ({x0}, {y0})]")
             print(f"    Sigma: {fitted_sigma:.2f} [True: {sigma}]")
             print(f"    Amplitude: {fitted_amplitude:.1f} [True: {amplitude}]")
             print(f"    Background: {fitted_bg:.1f} [True: {background}]")
-            
+
+            if result.model is not None:
+                print("  Model image successfully generated")
+
             # Check accuracy
             pos_error = np.sqrt((fitted_x - x0)**2 + (fitted_y - y0)**2)
             sigma_error = abs(fitted_sigma - sigma) / sigma * 100
