@@ -13,9 +13,12 @@ class TTTRSelection : public TTTRRange{
 protected:
 
     struct SelectionBits{
-        unsigned char dense : 1;
-        unsigned char inverted : 1;
-        unsigned char reserved : 6;
+        unsigned char dense : 1;         // 0x01
+        unsigned char inverted : 1;      // 0x02
+        unsigned char channel_flip : 1;  // 0x04 - when set on a frame, indicates a channel change at this selection
+        unsigned char is_z_stack : 1;    // 0x08 - frame belongs to a Z-stack acquisition
+        unsigned char is_time_series : 1;// 0x10 - frame belongs to a time-series acquisition
+        unsigned char reserved : 3;      // remaining reserved bits
     };
 
     union SelectionMask{
@@ -33,8 +36,11 @@ protected:
 public:
 
     enum SelectionFlags : uint8_t {
-        SelectionDense   = 0x01,
-        SelectionInverted = 0x02
+        SelectionDense        = 0x01,
+        SelectionInverted     = 0x02,
+        SelectionChannelFlip  = 0x04,
+        SelectionFrameZStack  = 0x08,
+        SelectionFrameTime    = 0x10
     };
 
     std::shared_ptr<TTTR> get_tttr(){
@@ -69,6 +75,32 @@ public:
 
     void set_inverted(bool inverted){
         _selection_mask.bits.inverted = inverted ? 1U : 0U;
+    }
+
+    // Channel flip flag indicates a change in channel sequence at this selection (usually on frames)
+    bool has_channel_flip() const{
+        return _selection_mask.bits.channel_flip != 0U;
+    }
+
+    void set_channel_flip(bool flip){
+        _selection_mask.bits.channel_flip = flip ? 1U : 0U;
+    }
+
+    // Frame-type markers (optional metadata)
+    bool is_z_stack_frame() const{
+        return _selection_mask.bits.is_z_stack != 0U;
+    }
+
+    void set_z_stack_frame(bool v){
+        _selection_mask.bits.is_z_stack = v ? 1U : 0U;
+    }
+
+    bool is_time_series_frame() const{
+        return _selection_mask.bits.is_time_series != 0U;
+    }
+
+    void set_time_series_frame(bool v){
+        _selection_mask.bits.is_time_series = v ? 1U : 0U;
     }
 
     void set_range_start(int start);

@@ -5,8 +5,14 @@
 void TTTRSelection::set_selection_flags(uint8_t flags){
     SelectionMask mask;
     mask.value = flags;
+    // Apply dense/inverted via setters to keep internal invariants
     set_dense(mask.bits.dense != 0U);
     set_inverted(mask.bits.inverted != 0U);
+    // Preserve and apply additional bits without disturbing range/index state
+    _selection_mask.bits.channel_flip   = mask.bits.channel_flip;
+    _selection_mask.bits.is_z_stack     = mask.bits.is_z_stack;
+    _selection_mask.bits.is_time_series = mask.bits.is_time_series;
+    // Keep any remaining reserved bits zeroed for now
     _selection_mask.bits.reserved = 0U;
 }
 
