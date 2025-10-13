@@ -34,6 +34,7 @@ advanced data analysis pipelines.
 * Fast reading TTTR files (IO limited)
 * Generation / analysis of fluorescence decays
 * Time window analysis
+* Simple ISM processing (Adaptive Pixel Reassignment, Focus-ISM background rejection)
 * Correlation of time event traces
 * Filtering of time event traces to generate instrument response functions for fluorescence decays analysis without the need of independent measurements..
 * Fast photon distribution analysis
