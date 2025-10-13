@@ -47,6 +47,7 @@
 
 /* Microscopy */
 %include "CLSM.i"
+%include "CLSMISM.i"
 %include "Localization.i"
 
 /* Phasor analysis */

@@ -55,13 +55,15 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 
 // Float/Double
 %apply(double* INPLACE_ARRAY1, int DIM1) {(double* inplace_output, int n_output)}
-
+%apply(double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double* inplace_output, int n_output1, int n_output2)}
+%apply(double* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {(double* inplace_output, int n_output1, int n_output2, int n_output3)}
 // Input array
 /*---------------------*/
 
 // Float/Double
 %apply(double* IN_ARRAY1, int DIM1) {(double *input, int n_input)}
-%apply(double* IN_ARRAY2, int DIM1, DIM2) {(double *input, int n_input1, int n_input2)}
+%apply(double* IN_ARRAY2, int DIM1, int DIM2) {(double *input, int n_input1, int n_input2)}
+%apply(double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(const double* data, int dim0, int dim1, int dim2)}
 
 // Integers
 %apply(char* IN_ARRAY1, int DIM1) {(char *input, int n_input)}
@@ -87,6 +89,9 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply(double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* n_output1, int* n_output2)}
 %apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** output, int* n_output)}
 %apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* dim1, int* dim2, int* dim3)}
+%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** focus_out, int* focus_nz, int* focus_ny, int* focus_nx)}
+%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** background_out, int* background_nz, int* background_ny, int* background_nx)}
+%apply (double** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(double** output, int* out_dim1, int* out_dim2, int* out_dim3)}
 %apply (float** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(float **output, int *dim1, int *dim2, int *dim3, int *dim4)}
 
 // integers
