@@ -1,3 +1,5 @@
+import numpy as np
+
 @property
 def shape(self):
     return self.n_frames, self.n_lines, self.n_pixel
@@ -8,6 +10,36 @@ def __repr__(self):
         self.n_lines,
         self.n_pixel
     )
+
+class _ChannelSlice(object):
+    def __init__(self, parent, ch):
+        self._img = parent
+        # normalize negative channel index
+        n_ch = int(parent.n_channels)
+        if ch < 0:
+            ch = n_ch + ch
+        if ch < 0 or ch >= n_ch:
+            raise IndexError("channel index out of range")
+        self._ch = int(ch)
+
+    def __len__(self):
+        return int(self._img.get_channel_frame_count(self._ch))
+
+    def __getitem__(self, i):
+        n = len(self)
+        if i < 0:
+            i = n + i
+        if i < 0 or i >= n:
+            raise IndexError("frame index out of range in channel slice")
+        return self._img.get_frame_for_channel(self._ch, int(i))
+
+# Override __getitem__ to support CLSMImage[ch][frame][line][pixel] for multi-channel images
+# Falls back to old behavior (frames-first) if only a single channel exists
+def __getitem__(self, idx):
+    if isinstance(idx, int) and int(self.n_channels) > 1:
+        return _ChannelSlice(self, idx)
+    # Fallback to flat frame access
+    return self.frame_at(int(idx))
 
 def __getattr__(self, item):
     """
@@ -83,6 +115,7 @@ def __init__(
         reading_routine='default',
         skip_before_first_frame_marker=False,
         skip_after_last_frame_marker=False,
+        split_by_channel=False,
         **kwargs
 ):
     source = kwargs.get('source', None)
@@ -103,6 +136,7 @@ def __init__(
         "marker_event_type":             marker_event_type,
         "n_pixel_per_line":              n_pixel_per_line,
         "bidirectional_scan":            False,   # <-- new default
+        "split_by_channel":              bool(split_by_channel),
     }
 
     if not isinstance(source, CLSMImage):
@@ -171,60 +205,77 @@ def __init__(
         self.this = this
 
 @staticmethod
-def compute_frc(image_1, image_2, bin_width = 2.0):
-    # type: (np.ndarray, np.ndarray, int) -> (np.ndarray, np.ndarray)
-    """ Computes the Fourier Ring/Shell Correlation of two 2-D images
+def compute_frc(
+        image_1,
+        image_2,
+        bin_width=2.0,
+        apply_hann=True,
+        eps=1e-12,
+):
+    """Compute the Fourier Ring Correlation (FRC) between two 2-D images."""
 
-    :param image_1:
-    :param image_2:
-    :param bin_width:
-    :return:
-    """
-    image_1 = image_1 / np.sum(image_1)
-    image_2 = image_2 / np.sum(image_2)
-    f1, f2 = np.fft.fft2(image_1), np.fft.fft2(image_2)
-    af1f2 = np.real(f1 * np.conj(f2))
-    af1_2, af2_2 = np.abs(f1)**2, np.abs(f2)**2
-    nx, ny = af1f2.shape
-    x = np.arange(-np.floor(nx / 2.0), np.ceil(nx / 2.0))
-    y = np.arange(-np.floor(ny / 2.0), np.ceil(ny / 2.0))
-    distances = list()
-    wf1f2 = list()
-    wf1 = list()
-    wf2 = list()
-    for xi, yi in np.array(np.meshgrid(x,y)).T.reshape(-1, 2):
-        distances.append(np.sqrt(xi**2 + xi**2))
-        xi = int(xi)
-        yi = int(yi)
-        wf1f2.append(af1f2[xi, yi])
-        wf1.append(af1_2[xi, yi])
-        wf2.append(af2_2[xi, yi])
+    image_1 = np.asarray(image_1, dtype=np.float64)
+    image_2 = np.asarray(image_2, dtype=np.float64)
 
-    bins = np.arange(0, np.sqrt((nx//2)**2 + (ny//2)**2), bin_width)
-    f1f2_r, bin_edges = np.histogram(
-        distances,
-        bins=bins,
-        weights=wf1f2
-    )
-    f12_r, bin_edges = np.histogram(
-        distances,
-        bins=bins,
-        weights=wf1
-    )
-    f22_r, bin_edges = np.histogram(
-        distances,
-        bins=bins,
-        weights=wf2
-    )
-    density = f1f2_r / np.sqrt(f12_r * f22_r)
+    if image_1.shape != image_2.shape:
+        raise ValueError("Images passed to compute_frc must share the same shape.")
+
+    total_1 = float(np.sum(image_1))
+    total_2 = float(np.sum(image_2))
+    if total_1 <= 0 or total_2 <= 0:
+        raise ValueError("Images must have a positive sum for FRC computation.")
+
+    image_1 = image_1 / total_1
+    image_2 = image_2 / total_2
+
+    if apply_hann and min(image_1.shape) > 1:
+        window_x = np.hanning(image_1.shape[0])
+        window_y = np.hanning(image_1.shape[1])
+        window = np.outer(window_x, window_y)
+        image_1 = image_1 * window
+        image_2 = image_2 * window
+
+    fft1 = np.fft.fftshift(np.fft.fft2(image_1))
+    fft2 = np.fft.fftshift(np.fft.fft2(image_2))
+
+    cross_power = np.real(fft1 * np.conj(fft2))
+    auto_1 = np.abs(fft1) ** 2
+    auto_2 = np.abs(fft2) ** 2
+
+    ny, nx = image_1.shape
+    if bin_width <= 0:
+        raise ValueError("bin_width must be positive.")
+
+    yy, xx = np.indices((ny, nx))
+    cy = (ny - 1) / 2.0
+    cx = (nx - 1) / 2.0
+    radius = np.sqrt((yy - cy) ** 2 + (xx - cx) ** 2)
+
+    bin_index = np.floor(radius / bin_width).astype(np.int32)
+    max_bin = int(bin_index.max())
+    bin_edges = np.arange(max_bin + 2, dtype=np.float64) * float(bin_width)
+
+    flat_index = bin_index.ravel()
+    cross_sum = np.bincount(flat_index, weights=cross_power.ravel(), minlength=max_bin + 1)
+    auto1_sum = np.bincount(flat_index, weights=auto_1.ravel(), minlength=max_bin + 1)
+    auto2_sum = np.bincount(flat_index, weights=auto_2.ravel(), minlength=max_bin + 1)
+
+    denom = np.sqrt(auto1_sum * auto2_sum)
+    valid = denom > eps
+
+    density = np.zeros_like(cross_sum, dtype=np.float64)
+    density[valid] = cross_sum[valid] / (denom[valid] + eps)
+    density = np.clip(density, -1.0, 1.0)
+
     return density, bin_edges
 
 
 def get_frc(
-        self,                 # type: tttrlib.CLSMImage,
-        other = None,         # type: tttrlib.CLSMImage
-        bin_width = 2.0,      # type: int
-        attribute="intensity" # type: str
+        self,
+        other=None,
+        bin_width=2.0,
+        attribute="intensity",
+        apply_hann=True,
 ):
     img1 = getattr(self, attribute)
     if other is None:
@@ -234,4 +285,4 @@ def get_frc(
         img2 = getattr(other, attribute)
         im1 = img1.sum(axis=0)
         im2 = img2.sum(axis=0)
-    return CLSMImage.compute_frc(im1, im2, bin_width)
+    return CLSMImage.compute_frc(im1, im2, bin_width=bin_width, apply_hann=apply_hann)
