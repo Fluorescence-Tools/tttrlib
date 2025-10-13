@@ -459,7 +459,7 @@ if (is_verbose()) {
                 n_rec * sizeof(unsigned long long)
                 );
         micro_times = (unsigned short*) malloc(
-                n_rec * sizeof(unsigned int)
+                n_rec * sizeof(unsigned short)
         );
         routing_channels = (signed char*) malloc(
                 n_rec * sizeof(signed char)
@@ -584,8 +584,17 @@ void TTTR::set_header(TTTRHeader* v) {
 if (is_verbose()) {
     std::clog << "-- TTTR::set_header" << std::endl;
 }
+    // If we already own a header and it's not the same pointer, delete it to avoid leaks
+    if(header != nullptr && header != v){
+        delete header;
+        header = nullptr;
+    }
+    // Assign a copy of the provided header (if any)
     if(v != nullptr){
         header = new TTTRHeader(*v);
+    } else {
+        // If null is passed, keep header as nullptr
+        header = nullptr;
     }
 }
 
