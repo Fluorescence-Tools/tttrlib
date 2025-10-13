@@ -23,6 +23,7 @@ static int myErr = 0; // flag to save error state
 %attribute(CLSMImage, int, n_frames, get_n_frames);
 %attribute(CLSMImage, int, n_lines, get_n_lines);
 %attribute(CLSMImage, int, n_pixel, get_n_pixel);
+%attribute(CLSMImage, int, n_channels, get_n_channels);
 %attribute(CLSMFrame, size_t, n_lines, size);
 %attribute(CLSMLine, size_t, n_pixel, size);
 %attribute(CLSMLine, unsigned long long, pixel_duration, get_pixel_duration);
@@ -31,13 +32,13 @@ static int myErr = 0; // flag to save error state
 %ignore CLSMImage();
 %ignore CLSMImage(const CLSMImage& p2, bool fill=false);
 
-// Use shared_prt for CLSMImage to pass CLSMImage around
 %shared_ptr(CLSMImage)
 
 %include "CLSMPixel.h"
 %include "CLSMLine.h"
 %include "CLSMFrame.h"
 %include "CLSMImage.h"
+%include "std_vector.i"
 
 // https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
 %exception CLSMImage::__getitem__ {
@@ -53,6 +54,18 @@ static int myErr = 0; // flag to save error state
 %extend CLSMImage {
 
     CLSMFrame* __getitem__(int i) {
+        if (i >= $self->size()){
+            myErr = 1;
+            return 0;
+        }
+        if (i < 0) {
+            i = $self->size() + i;
+        }
+        return (*($self))[i];
+    }
+
+    // Explicit frame accessor to allow Python wrapper to bypass overridden __getitem__
+    CLSMFrame* frame_at(int i) {
         if (i >= $self->size()){
             myErr = 1;
             return 0;

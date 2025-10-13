@@ -1,5 +1,6 @@
 #include "include/CLSMImage.h"
 #include "include/Verbose.h"
+#include <memory>
 
 void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     if (is_verbose()) {
@@ -32,6 +33,10 @@ void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     n_frames = p2.n_frames;
     n_lines = p2.n_lines;
     n_pixel = p2.n_pixel;
+    // Copy channel layout as well
+    n_channels = p2.n_channels;
+    channel_offsets = p2.channel_offsets;
+    channel_counts = p2.channel_counts;
     if (is_verbose()) {
         std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel <<
                 std::endl;
@@ -61,6 +66,50 @@ void CLSMImage::determine_number_of_lines() {
     for (auto &f: frames) {
         if (f->lines.size() > n_lines)
             n_lines = f->lines.size();
+    }
+}
+
+void CLSMImage::compute_channel_layout() {
+    // Respect settings: if not splitting by channel, keep a flat single-channel layout
+    n_channels = 1;
+    channel_offsets.clear();
+    channel_counts.clear();
+
+    if (!settings.split_by_channel) {
+        channel_offsets.push_back(0);
+        channel_counts.push_back(frames.size());
+        return;
+    }
+
+    if (frames.empty()) {
+        channel_offsets.push_back(0);
+        channel_counts.push_back(0);
+        return;
+    }
+
+    size_t current_count = 0;
+    channel_offsets.push_back(0);
+
+    for (size_t i = 0; i < frames.size(); ++i) {
+        if (i > 0 && frames[i]->has_channel_flip()) {
+            // finalize previous channel
+            channel_counts.push_back(current_count);
+            // start new channel at i
+            channel_offsets.push_back(i);
+            current_count = 0;
+            n_channels++;
+        }
+        current_count++;
+    }
+    // finalize last channel
+    channel_counts.push_back(current_count);
+
+    // sanity: if no flips were detected, ensure n_channels is 1 with one count
+    if (n_channels == 1) {
+        channel_offsets.clear();
+        channel_counts.clear();
+        channel_offsets.push_back(0);
+        channel_counts.push_back(frames.size());
     }
 }
 
@@ -140,10 +189,17 @@ CLSMImage::CLSMImage(
         }
     }
 
-    // If user asked to fill with photons (and specified channels), do so
-    if (fill && !channels.empty()) {
+    // If user asked to fill with photons, do so first. The fill() method will
+    // handle an empty 'channels' list by defaulting to all used routing channels.
+    // This ensures that Python calls like CLSMImage(d, split_by_channel=True, fill=True)
+    // actually populate the pixels on construction.
+    if (fill) {
         this->fill(this->tttr, channels, false, micro_time_ranges);
     }
+
+    // Compute channel layout based on per-frame channel flip flags
+    compute_channel_layout();
+    
     // (Optionally shift line start if settings.macro_time_shift != 0)
     // if (settings.macro_time_shift != 0)
     //     shift_line_start(settings.macro_time_shift);
@@ -518,8 +574,45 @@ void CLSMImage::fill(
         free(chs);
     }
 
+    // If requested, split frames by channel: duplicate each original frame for every routing channel
+    size_t channel_block_size = frames.size();
+    bool do_split_fill = settings.split_by_channel && channels.size() > 1;
+    if (do_split_fill) {
+        if (n_channels <= 1) {
+            size_t original_frames = frames.size();
+            std::vector<CLSMFrame*> original = frames;
+            frames.clear();
+            n_frames = 0;
+            for (size_t ci = 0; ci < channels.size(); ++ci) {
+                for (size_t fi = 0; fi < original_frames; ++fi) {
+                    auto nf = new CLSMFrame(*original[fi], false); // copy structure, empty pixels
+                    nf->set_tttr(tttr_data);
+                    // Mark the first frame of each channel block (except the first) as a flip point
+                    if (ci > 0 && fi == 0) {
+                        nf->set_channel_flip(true);
+                    }
+                    frames.emplace_back(nf);
+                    n_frames++;
+                }
+            }
+            // Clean up originals (we created full copies)
+            for (auto of : original) {
+                delete of;
+            }
+            channel_block_size = original_frames;
+        } else {
+            // Already split previously; infer block size from layout if available
+            if (!channel_counts.empty()) {
+                channel_block_size = channel_counts[0];
+            } else if (channels.size() > 0) {
+                channel_block_size = frames.size() / channels.size();
+            }
+        }
+    }
+
     // Iterate over each frame in the image
-    for (auto frame: frames) {
+    for (size_t f_idx = 0; f_idx < frames.size(); ++f_idx) {
+        CLSMFrame* frame = frames[f_idx];
         // We need the line index to decide if a line is "reversed"
         for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
             CLSMLine *line = frame->lines[l_idx];
@@ -561,40 +654,53 @@ void CLSMImage::fill(
                 // Pull the routing channel for this photon event
                 auto c = tttr_data->routing_channels[event_i];
 
-                // Check if this photon belongs to any of the selected channels
-                for (auto &ci: channels) {
-                    if (c == ci) {
-                        // Compute the "raw" pixel index as if scanning left→right
-                        int raw_pixel = static_cast<int>(
-                            (tttr_data->macro_times[event_i] - line_start_time)
-                            / pixel_duration
-                        );
-
-                        // If the computed raw index falls outside the line, skip
-                        if (raw_pixel < 0 || raw_pixel >= static_cast<int>(n_pixels_in_line)) {
-                            break;
-                        }
-
-                        // If the line was scanned right→left, flip the raw index
-                        size_t pixel_nbr = static_cast<size_t>(
-                            is_reversed
-                                ? (static_cast<int>(n_pixels_in_line) - 1 - raw_pixel)
-                                : raw_pixel
-                        );
-
-                        // Verify that the photon’s micro time falls within the specified ranges
-                        bool add_ph = true;
-                        auto micro_time = tttr_data->micro_times[event_i];
-                        for (auto r: micro_time_ranges) {
-                            add_ph &= (micro_time >= r.first);
-                            add_ph &= (micro_time <= r.second);
-                        }
-
-                        // If it passes the micro‐time filter, insert the event index
-                        if (add_ph) {
-                            line->pixels[pixel_nbr].insert(event_i);
-                        }
+                // Decide if this photon should be included in this frame (channel-aware)
+                bool channel_match = false;
+                if (do_split_fill) {
+                    // Determine the channel assigned to this frame by its block index
+                    size_t ch_idx = (channel_block_size > 0) ? (f_idx / channel_block_size) : 0;
+                    if (ch_idx < channels.size()) {
+                        channel_match = (c == channels[ch_idx]);
                     }
+                } else {
+                    // Non-split: accept any photon whose route is in the 'channels' list
+                    for (auto &ci : channels) {
+                        if (c == ci) { channel_match = true; break; }
+                    }
+                }
+                if (!channel_match) {
+                    continue;
+                }
+
+                // Compute the "raw" pixel index as if scanning left→right
+                int raw_pixel = static_cast<int>(
+                    (tttr_data->macro_times[event_i] - line_start_time)
+                    / pixel_duration
+                );
+
+                // If the computed raw index falls outside the line, skip
+                if (raw_pixel < 0 || raw_pixel >= static_cast<int>(n_pixels_in_line)) {
+                    continue;
+                }
+
+                // If the line was scanned right→left, flip the raw index
+                size_t pixel_nbr = static_cast<size_t>(
+                    is_reversed
+                        ? (static_cast<int>(n_pixels_in_line) - 1 - raw_pixel)
+                        : raw_pixel
+                );
+
+                // Verify that the photon’s micro time falls within the specified ranges
+                bool add_ph = true;
+                auto micro_time = tttr_data->micro_times[event_i];
+                for (auto r: micro_time_ranges) {
+                    add_ph &= (micro_time >= r.first);
+                    add_ph &= (micro_time <= r.second);
+                }
+
+                // If it passes the micro‐time filter, insert the event index
+                if (add_ph) {
+                    line->pixels[pixel_nbr].insert(event_i);
                 }
             }
         }
@@ -1442,11 +1548,11 @@ void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
     //    moving each saved pixel back into its new position.
     size_t idx = 0;
     for (size_t f = 0; f < static_cast<size_t>(n_frames); ++f) {
-        CLSMFrame *new_frame = new CLSMFrame();
+        std::unique_ptr<CLSMFrame> new_frame(new CLSMFrame());
         new_frame->set_tttr(tttr); // pass the shared_ptr directly
 
         for (size_t l = 0; l < static_cast<size_t>(n_lines); ++l) {
-            CLSMLine *new_line = new CLSMLine();
+            std::unique_ptr<CLSMLine> new_line(new CLSMLine());
             new_line->set_tttr(tttr); // pass the shared_ptr directly
 
             new_line->pixels.resize(static_cast<size_t>(n_pixel));
@@ -1456,10 +1562,10 @@ void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
                 ++idx;
             }
 
-            new_frame->append(new_line);
+            new_frame->append(new_line.release());
         }
 
-        frames.emplace_back(new_frame);
+        frames.emplace_back(new_frame.release());
     }
 
     if (is_verbose()) {
@@ -1502,3 +1608,8 @@ void CLSMImage::crop(
     n_lines = frs[0]->lines.size();
     n_pixel = frs[0]->lines[0]->pixels.size();
 }
+
+
+// ISM super-resolution reconstruction (AMD-like iterative) using pocketfft
+
+

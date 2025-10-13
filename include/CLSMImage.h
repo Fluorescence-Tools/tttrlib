@@ -117,6 +117,10 @@ protected:
     /// After filling pixels, call CLSMImage::handleBidirectionalScanning() to flip them.
     bool bidirectional_scan = false;
 
+    /// When true, split frames into separate channel groups using channel-flip markers.
+    /// When false (default), keep a flat single-channel view regardless of flips.
+    bool split_by_channel = false;
+
 public:
     /*!
      * \brief CLSMSettings Constructor.
@@ -138,6 +142,7 @@ public:
      *                                      the code will auto‐determine based on the first frame.
      * @param n_lines                       Number of lines per frame. If -1, auto‐detect from the first frame (default: -1).
      * @param bidirectional_scan            If true, every odd line was scanned in reverse direction (default: false).
+     * @param split_by_channel              If true, split frames into multiple channels using channel-flip markers (default: false).
      */
     explicit CLSMSettings(
             bool skip_before_first_frame_marker = false,
@@ -149,7 +154,8 @@ public:
             int marker_event_type              = 1,
             int n_pixel_per_line               = 1,
             int n_lines                        = -1,
-            bool bidirectional_scan            = false
+            bool bidirectional_scan            = false,
+            bool split_by_channel              = false
     ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
@@ -161,6 +167,7 @@ public:
         this->n_pixel_per_line               = n_pixel_per_line;
         this->n_lines                        = n_lines;
         this->bidirectional_scan             = bidirectional_scan;
+        this->split_by_channel               = split_by_channel;
     }
 };
 
@@ -180,6 +187,11 @@ private:
     bool _is_filled_ = false;
 
     std::vector<CLSMFrame *> frames;
+
+    // Channel layout: frames may be grouped by channel. If only one channel, fall back to flat frames.
+    size_t n_channels = 1;
+    std::vector<size_t> channel_offsets; // starting frame index for each channel in 'frames'
+    std::vector<size_t> channel_counts;  // number of frames per channel
 
     void remove_incomplete_frames();
 
@@ -204,6 +216,9 @@ protected:
     void create_lines();
 
     void determine_number_of_lines();
+
+    // Recompute channel grouping from per-frame selection flags (channel flip)
+    void compute_channel_layout();
 
 public:
 
@@ -663,6 +678,41 @@ public:
         return static_cast<int>(n_pixel);
     }
 
+    // Channel-aware accessors
+    int get_n_channels() const {
+        return static_cast<int>(n_channels);
+    }
+
+    int get_channel_frame_count(int ch) const {
+        if (n_channels <= 1) return static_cast<int>(n_frames);
+        if (ch < 0 || static_cast<size_t>(ch) >= channel_counts.size()) return 0;
+        return static_cast<int>(channel_counts[static_cast<size_t>(ch)]);
+    }
+
+    // Flat frame accessor (for Python to bypass custom __getitem__ if needed)
+    CLSMFrame* frame_at(unsigned int i_frame) {
+        return frames[i_frame];
+    }
+
+    // Channel+frame accessor
+    CLSMFrame* get_frame_for_channel(int ch, int frame) {
+        if (n_channels <= 1) {
+            // Fallback: interpret 'ch' as 0 and frame as flat index
+            if (frame < 0) return nullptr;
+            if (static_cast<size_t>(frame) >= frames.size()) return nullptr;
+            return frames[static_cast<size_t>(frame)];
+        }
+        if (ch < 0) return nullptr;
+        size_t c = static_cast<size_t>(ch);
+        if (c >= channel_offsets.size()) return nullptr;
+        size_t off = channel_offsets[c];
+        size_t cnt = channel_counts[c];
+        if (frame < 0) return nullptr;
+        size_t f = static_cast<size_t>(frame);
+        if (f >= cnt) return nullptr;
+        return frames[off + f];
+    }
+
     /*!
      * \brief Copy information from another CLSMImage object.
      *
@@ -879,6 +929,7 @@ public:
             std::string subtract_average = "",
             uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1
     );
+
 
     /*!
      * \brief Copies a region of interest (ROI) from the input images, performs background
