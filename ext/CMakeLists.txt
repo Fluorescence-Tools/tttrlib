@@ -41,6 +41,21 @@ IF(BUILD_PYTHON_INTERFACE)
     endif()
     SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
 
+    # Ensure SWIG reruns when any of the included interface or helper Python files change.
+    file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i")
+    list(REMOVE_ITEM SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/tttrlib.i")
+    file(GLOB SWIG_PYTHON_HELPERS
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py"
+    )
+    # Exclude the generated wrapper (lives in the build directory, not the source tree)
+    list(FILTER SWIG_PYTHON_HELPERS EXCLUDE REGEX ".*/tttrlib.py$")
+
+    set(SWIG_DEPENDENCIES "${SWIG_INTERFACE_FILES};${SWIG_PYTHON_HELPERS}")
+    if(SWIG_DEPENDENCIES)
+        list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
+        set_property(SOURCE python/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${SWIG_DEPENDENCIES}")
+    endif()
+
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
     MESSAGE(STATUS "CMAKE_SWIG_OUTDIR: '${CMAKE_SWIG_OUTDIR}'")
@@ -75,6 +90,17 @@ IF(BUILD_PYTHON_INTERFACE)
     INSTALL(FILES ${WRAPPER_PY_FILE}
             DESTINATION ${MY_INSTALL_PREFIX}
             COMPONENT bindings)
+
+    # Provide a lightweight target to regenerate only the SWIG-generated Python wrapper.
+    add_custom_target(${MODULE_NAME}_python_wrapper
+            DEPENDS ${WRAPPER_PY_FILE}
+            COMMENT "Regenerate SWIG-generated Python wrapper ${WRAPPER_PY_FILE}")
+
+    # Backward compatible alias so users can run: cmake --build <build-dir> --target python_wrapper
+    if(NOT TARGET python_wrapper)
+        add_custom_target(python_wrapper
+                DEPENDS ${MODULE_NAME}_python_wrapper)
+    endif()
 
     # Install the SWIG library
     INSTALL(TARGETS ${MODULE_NAME}
