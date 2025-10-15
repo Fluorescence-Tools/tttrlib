@@ -188,6 +188,18 @@ is recommended.
 Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
 are not supported.
 
+## Building from Source
+
+For detailed instructions on building wheels, platform-specific requirements, and development setup, see the [installation documentation](doc/install.ipynb).
+
+### Quick Build
+
+```console
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
+cd tttrlib
+pip install -e .
+```
+
 ## Citation
 If you use this software please also check the pre-print:
 >tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling;
