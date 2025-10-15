@@ -66,17 +66,17 @@ build-verbosity = 2
 skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
 test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
-[tool.cibuildwheel.macos]
-# Newer C++ features with old SDK:
-# https://conda-forge.org/docs/maintainer/knowledge_base.html
-archs = ["arm64"]
-before-all = [
-    "brew install boost",
-    "brew reinstall --build-from-source boost"
-]
-environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="11.0"}
-# Bundle Boost dylibs into the wheel using delocate
-repair-wheel-command = "delocate-listdeps {wheel} && delocate-wheel --require-archs {delocate_archs} --dylibs-only -w {dest_dir} -v {wheel}"
+# [tool.cibuildwheel.macos]
+# # Newer C++ features with old SDK:
+# # https://conda-forge.org/docs/maintainer/knowledge_base.html
+# archs = ["arm64"]
+# before-all = [
+#     "brew install boost",
+#     "brew reinstall --build-from-source boost"
+# ]
+# environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="11.0"}
+# # Bundle Boost dylibs into the wheel using delocate
+# repair-wheel-command = "delocate-listdeps {wheel} && delocate-wheel --require-archs {delocate_archs} --dylibs-only -w {dest_dir} -v {wheel}"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
