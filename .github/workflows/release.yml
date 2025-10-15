@@ -2,6 +2,7 @@
 name: Build and Upload Packages
 
 on:
+  workflow_dispatch:
 #  push:
 #    branches:
 #      - develop

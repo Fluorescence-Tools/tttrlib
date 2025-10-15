@@ -1,6 +1,7 @@
 name: Conda Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - development  # You can change this to the branch you want to trigger on
