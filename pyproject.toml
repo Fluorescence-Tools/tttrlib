@@ -1,7 +1,7 @@
 [project]
 version = "0.26.0"
 name = "tttrlib"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
 readme = "README.md"
 authors = [{ name = "Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com" }]
