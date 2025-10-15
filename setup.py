@@ -150,6 +150,10 @@ else:
 # RPATH (unchanged)
 if sys.platform == "darwin":
     common_cmake_opts += ["-DCMAKE_INSTALL_RPATH=@loader_path"]
+    # Force architecture from environment if CMAKE_OSX_ARCHITECTURES is set
+    osx_arch = os.environ.get("CMAKE_OSX_ARCHITECTURES")
+    if osx_arch:
+        common_cmake_opts.append(f"-DCMAKE_OSX_ARCHITECTURES={osx_arch}")
 elif sys.platform.startswith("linux"):
     common_cmake_opts += ["-DCMAKE_INSTALL_RPATH=$ORIGIN"]
 
