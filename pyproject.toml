@@ -66,8 +66,6 @@ fallback_version = "0.26.0"
 build-verbosity = 2
 skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
 test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
-# Continue building other wheels even if one fails
-free-threaded-support = false
 
 [tool.cibuildwheel.macos]
 # Newer C++ features with old SDK:
