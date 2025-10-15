@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=1.22.0",
+    "numpy<2.0.0",
     "tqdm",
     "click",
     "click-didyoumean",
@@ -48,11 +48,10 @@ repository = "https://github.com/fluorescence-tools/tttrlib.git"
 [build-system]
 requires = [
     "wheel",
-    "setuptools>=68",
-    "cmake_build_extension>=0.5",
-    "oldest-supported-numpy",
-    "delvewheel",
-    "cmake",
+    "setuptools>=64",
+    "setuptools_scm>=8",
+    "cmake-build-extension",
+    "numpy<2.0.0",
     "swig<4.2",
     "ninja"
 ]
