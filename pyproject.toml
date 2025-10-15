@@ -75,7 +75,7 @@ repair-wheel-command = ""
 # https://conda-forge.org/docs/maintainer/knowledge_base.html
 archs = ["x86_64"]
 before-all = "brew install boost"
-environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="10.14"}
+environment = {CFLAGS="-g -Wall -arch x86_64", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1 -arch x86_64", LDFLAGS="-arch x86_64", MACOSX_DEPLOYMENT_TARGET="10.14", ARCHFLAGS="-arch x86_64", CMAKE_OSX_ARCHITECTURES="x86_64"}
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
