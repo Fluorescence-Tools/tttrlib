@@ -1,4 +1,5 @@
 #include "CLSMISM.h"
+#include "info.h"
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -15,14 +16,24 @@
 // Include pocketfft single-header from thirdparty
 #include "pocketfft/pocketfft_hdronly.h"
 
+// AVX/FMA intrinsics for vectorization
+#if defined(__AVX__) || defined(__AVX2__) || defined(__FMA__)
+#include <immintrin.h>
+#endif
+
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884L
 #endif
 
-
+// Runtime AVX/FMA control using CPU feature detection from info.h
+// Set TTTRLIB_USE_AVX=0 to disable AVX optimizations at runtime
+// Set TTTRLIB_USE_FMA=0 to disable FMA optimizations at runtime
+static bool g_use_avx = tttrlib::cpu_features::get_avx_enabled();
+static bool g_use_fma = tttrlib::cpu_features::get_fma_enabled();
 
 namespace {
 
+// AVX-optimized Gaussian normalization
 static void normalized_gaussian(const std::vector<double>& radial2, double sigma, std::vector<double>& out) {
     const size_t n = radial2.size();
     out.resize(n);
@@ -33,17 +44,89 @@ static void normalized_gaussian(const std::vector<double>& radial2, double sigma
     }
     double denom = 2.0 * sigma * sigma;
     double sum = 0.0;
+    
+    if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+    // AVX vectorized computation: process 4 doubles at a time
+    const size_t vec_size = 4;
+    const size_t n_vec = (n / vec_size) * vec_size;
+    
+    __m256d v_denom = _mm256_set1_pd(denom);
+    __m256d v_sum = _mm256_setzero_pd();
+    
+    for (size_t i = 0; i < n_vec; i += vec_size) {
+        // Load 4 radial2 values
+        __m256d v_r2 = _mm256_loadu_pd(&radial2[i]);
+        // Compute -radial2[i] / denom
+        __m256d v_arg = _mm256_div_pd(_mm256_sub_pd(_mm256_setzero_pd(), v_r2), v_denom);
+        
+        // Compute exp (no AVX intrinsic, need scalar fallback)
+        double tmp[4];
+        _mm256_storeu_pd(tmp, v_arg);
+        for (int j = 0; j < 4; ++j) {
+            tmp[j] = std::exp(tmp[j]);
+        }
+        __m256d v_val = _mm256_loadu_pd(tmp);
+        
+        // Store results
+        _mm256_storeu_pd(&out[i], v_val);
+        
+        // Accumulate sum
+        v_sum = _mm256_add_pd(v_sum, v_val);
+    }
+    
+    // Horizontal sum of v_sum
+    double sum_arr[4];
+    _mm256_storeu_pd(sum_arr, v_sum);
+    sum = sum_arr[0] + sum_arr[1] + sum_arr[2] + sum_arr[3];
+    
+    // Process remaining elements
+    for (size_t i = n_vec; i < n; ++i) {
+        double val = std::exp(-radial2[i] / denom);
+        out[i] = val;
+        sum += val;
+    }
+#else
+    // Scalar fallback when AVX not compiled in
     for (size_t i = 0; i < n; ++i) {
         double val = std::exp(-radial2[i] / denom);
         out[i] = val;
         sum += val;
     }
+#endif
+    } else {
+    // Scalar fallback when AVX disabled at runtime
+    for (size_t i = 0; i < n; ++i) {
+        double val = std::exp(-radial2[i] / denom);
+        out[i] = val;
+        sum += val;
+    }
+    }
+    
     if (sum <= std::numeric_limits<double>::min()) {
         double inv = 1.0 / static_cast<double>(n);
         std::fill(out.begin(), out.end(), inv);
     } else {
         double inv_sum = 1.0 / sum;
+        if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+        // AVX vectorized normalization
+        const size_t n_vec = (n / 4) * 4;
+        __m256d v_inv_sum = _mm256_set1_pd(inv_sum);
+        for (size_t i = 0; i < n_vec; i += 4) {
+            __m256d v_val = _mm256_loadu_pd(&out[i]);
+            v_val = _mm256_mul_pd(v_val, v_inv_sum);
+            _mm256_storeu_pd(&out[i], v_val);
+        }
+        for (size_t i = n_vec; i < n; ++i) {
+            out[i] *= inv_sum;
+        }
+#else
         for (double& v : out) v *= inv_sum;
+#endif
+        } else {
+        for (double& v : out) v *= inv_sum;
+        }
     }
 }
 
@@ -117,13 +200,59 @@ static void fourier_shift_inplace(CImage& F, double dx, double dy) {
     // Multiply spectrum by exp(-i 2π (u*dx/Nx + v*dy/Ny))
     const size_t W = F.W, H = F.H;
     const double two_pi = 2.0 * M_PI;
+    const double dx_norm = dx / (double)W;
+    const double dy_norm = dy / (double)H;
+    
     for (size_t v=0; v<H; ++v) {
         double ky = (v<=H/2) ? (double)v : (double)v - (double)H; // wrap to neg freqs
-        for (size_t u=0; u<W; ++u) {
+        double ky_dy = ky * dy_norm;
+        
+        if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+        // Process 2 complex numbers (4 doubles) at a time
+        const size_t w_vec = (W / 2) * 2;
+        for (size_t u = 0; u < w_vec; u += 2) {
+            double kx0 = (u<=W/2) ? (double)u : (double)u - (double)W;
+            double kx1 = (u+1<=W/2) ? (double)(u+1) : (double)(u+1) - (double)W;
+            
+            double phase0 = -two_pi * (kx0*dx_norm + ky_dy);
+            double phase1 = -two_pi * (kx1*dx_norm + ky_dy);
+            
+            double cos0 = std::cos(phase0), sin0 = std::sin(phase0);
+            double cos1 = std::cos(phase1), sin1 = std::sin(phase1);
+            
+            // Complex multiplication: (a+bi)*(c+di) = (ac-bd) + (ad+bc)i
+            cpx& f0 = F(v, u);
+            cpx& f1 = F(v, u+1);
+            
+            double f0_r = f0.real(), f0_i = f0.imag();
+            double f1_r = f1.real(), f1_i = f1.imag();
+            
+            f0 = cpx(f0_r*cos0 - f0_i*sin0, f0_r*sin0 + f0_i*cos0);
+            f1 = cpx(f1_r*cos1 - f1_i*sin1, f1_r*sin1 + f1_i*cos1);
+        }
+        // Process remaining elements
+        for (size_t u = w_vec; u < W; ++u) {
             double kx = (u<=W/2) ? (double)u : (double)u - (double)W;
-            double phase = -two_pi * (kx*dx / (double)W + ky*dy / (double)H);
+            double phase = -two_pi * (kx*dx_norm + ky_dy);
             cpx ph(std::cos(phase), std::sin(phase));
             F(v,u) *= ph;
+        }
+#else
+        for (size_t u=0; u<W; ++u) {
+            double kx = (u<=W/2) ? (double)u : (double)u - (double)W;
+            double phase = -two_pi * (kx*dx_norm + ky_dy);
+            cpx ph(std::cos(phase), std::sin(phase));
+            F(v,u) *= ph;
+        }
+#endif
+        } else {
+        for (size_t u=0; u<W; ++u) {
+            double kx = (u<=W/2) ? (double)u : (double)u - (double)W;
+            double phase = -two_pi * (kx*dx_norm + ky_dy);
+            cpx ph(std::cos(phase), std::sin(phase));
+            F(v,u) *= ph;
+        }
         }
     }
 }
@@ -150,10 +279,44 @@ static std::pair<double,double> phase_correlation_shift(const Image& a, const Im
 
     // Cross power spectrum CPS = Fa * conj(Fb) / |Fa*conj(Fb)| (avoid div by 0)
     CImage CPS(W,H);
-    for (size_t i=0;i<W*H;++i) {
+    const size_t total = W*H;
+    if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+    // Process 2 complex numbers at a time (4 doubles)
+    const size_t n_vec = (total / 2) * 2;
+    const double eps = 1e-12;
+    
+    for (size_t i = 0; i < n_vec; i += 2) {
+        // Load 2 complex numbers from Fa and Fb
+        cpx num0 = Fa.data[i] * std::conj(Fb.data[i]);
+        cpx num1 = Fa.data[i+1] * std::conj(Fb.data[i+1]);
+        
+        double mag0 = std::abs(num0);
+        double mag1 = std::abs(num1);
+        
+        CPS.data[i] = (mag0 > eps) ? (num0 / mag0) : cpx(0.0, 0.0);
+        CPS.data[i+1] = (mag1 > eps) ? (num1 / mag1) : cpx(0.0, 0.0);
+    }
+    
+    // Process remaining elements
+    for (size_t i = n_vec; i < total; ++i) {
+        cpx num = Fa.data[i] * std::conj(Fb.data[i]);
+        double mag = std::abs(num);
+        CPS.data[i] = (mag > eps) ? (num / mag) : cpx(0.0, 0.0);
+    }
+#else
+    for (size_t i=0;i<total;++i) {
         cpx num = Fa.data[i] * std::conj(Fb.data[i]);
         double mag = std::abs(num);
         CPS.data[i] = (mag>1e-12) ? (num / mag) : cpx(0.0,0.0);
+    }
+#endif
+    } else {
+    for (size_t i=0;i<total;++i) {
+        cpx num = Fa.data[i] * std::conj(Fb.data[i]);
+        double mag = std::abs(num);
+        CPS.data[i] = (mag>1e-12) ? (num / mag) : cpx(0.0,0.0);
+    }
     }
 
     // Inverse FFT -> correlation surface
@@ -184,13 +347,57 @@ static Image wiener_deconvolution(const Image& img, const Image& psf, double K) 
     fft2d::rfft2(img, Fimg);
     fft2d::rfft2(psf, Fpsf);
 
-    for (size_t i=0;i<W*H;++i) {
+    const size_t total = W*H;
+    if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+    // Process 2 complex numbers at a time
+    const size_t n_vec = (total / 2) * 2;
+    
+    for (size_t i = 0; i < n_vec; i += 2) {
+        cpx Hk0 = Fpsf.data[i];
+        cpx Hk1 = Fpsf.data[i+1];
+        double H2_0 = std::norm(Hk0);
+        double H2_1 = std::norm(Hk1);
+        cpx G0 = Fimg.data[i];
+        cpx G1 = Fimg.data[i+1];
+        
+        cpx denom0 = cpx(H2_0 + K, 0.0);
+        cpx denom1 = cpx(H2_1 + K, 0.0);
+        
+        cpx Hw0 = (H2_0>0.0 || K>0.0) ? (std::conj(Hk0)/denom0) : cpx(0.0,0.0);
+        cpx Hw1 = (H2_1>0.0 || K>0.0) ? (std::conj(Hk1)/denom1) : cpx(0.0,0.0);
+        
+        Fout.data[i] = Hw0 * G0;
+        Fout.data[i+1] = Hw1 * G1;
+    }
+    
+    for (size_t i = n_vec; i < total; ++i) {
+        cpx Hk = Fpsf.data[i];
+        double H2 = std::norm(Hk);
+        cpx G = Fimg.data[i];
+        cpx denom = cpx(H2 + K, 0.0);
+        cpx Hw = (H2>0.0 || K>0.0) ? (std::conj(Hk)/denom) : cpx(0.0,0.0);
+        Fout.data[i] = Hw * G;
+    }
+#else
+    for (size_t i=0;i<total;++i) {
         cpx Hk = Fpsf.data[i];
         double H2 = std::norm(Hk); // |H|^2
         cpx G = Fimg.data[i];
         cpx denom = cpx(H2 + K, 0.0);
         cpx Hw = (H2>0.0 || K>0.0) ? (std::conj(Hk)/denom) : cpx(0.0,0.0);
         Fout.data[i] = Hw * G;
+    }
+#endif
+    } else {
+    for (size_t i=0;i<total;++i) {
+        cpx Hk = Fpsf.data[i];
+        double H2 = std::norm(Hk); // |H|^2
+        cpx G = Fimg.data[i];
+        cpx denom = cpx(H2 + K, 0.0);
+        cpx Hw = (H2>0.0 || K>0.0) ? (std::conj(Hk)/denom) : cpx(0.0,0.0);
+        Fout.data[i] = Hw * G;
+    }
     }
     Image out;
     fft2d::irfft2(Fout, out);
@@ -203,14 +410,59 @@ static Image sum_images(const std::vector<Image>& imgs) {
     Image acc(imgs[0].W, imgs[0].H, 0.0);
     for (const auto& im: imgs) {
         if (im.W!=acc.W || im.H!=acc.H) throw std::runtime_error("sum_images: size mismatch");
+        if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+        // AVX vectorized accumulation
+        const size_t n = acc.data.size();
+        const size_t n_vec = (n / 4) * 4;
+        for (size_t i = 0; i < n_vec; i += 4) {
+            __m256d v_acc = _mm256_loadu_pd(&acc.data[i]);
+            __m256d v_im = _mm256_loadu_pd(&im.data[i]);
+            v_acc = _mm256_add_pd(v_acc, v_im);
+            _mm256_storeu_pd(&acc.data[i], v_acc);
+        }
+        for (size_t i = n_vec; i < n; ++i) {
+            acc.data[i] += im.data[i];
+        }
+#else
         for (size_t i=0;i<acc.data.size();++i) acc.data[i]+=im.data[i];
+#endif
+        } else {
+        for (size_t i=0;i<acc.data.size();++i) acc.data[i]+=im.data[i];
+        }
     }
     return acc;
 }
 
 static double sum_image(const Image& img) {
     double s = 0.0;
+    if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+    // AVX vectorized sum
+    const size_t n = img.data.size();
+    const size_t n_vec = (n / 4) * 4;
+    __m256d v_sum = _mm256_setzero_pd();
+    
+    for (size_t i = 0; i < n_vec; i += 4) {
+        __m256d v_data = _mm256_loadu_pd(&img.data[i]);
+        v_sum = _mm256_add_pd(v_sum, v_data);
+    }
+    
+    // Horizontal sum
+    double sum_arr[4];
+    _mm256_storeu_pd(sum_arr, v_sum);
+    s = sum_arr[0] + sum_arr[1] + sum_arr[2] + sum_arr[3];
+    
+    // Process remaining elements
+    for (size_t i = n_vec; i < n; ++i) {
+        s += img.data[i];
+    }
+#else
     for (double v : img.data) s += v;
+#endif
+    } else {
+    for (double v : img.data) s += v;
+    }
     return s;
 }
 
@@ -808,11 +1060,66 @@ static void focus_ism_core(
 
             // LS estimate of B; can be swapped to NLL later
             double num = 0.0, den = 0.0;
+            if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+            // AVX vectorized computation
+            const size_t n_vec = (active_det / 4) * 4;
+            __m256d v_num = _mm256_setzero_pd();
+            __m256d v_den = _mm256_setzero_pd();
+            
+            for (size_t i = 0; i < n_vec; i += 4) {
+                __m256d v_gauss = _mm256_loadu_pd(&gauss_buffer[i]);
+                __m256d v_gaussA = _mm256_loadu_pd(&gaussA[i]);
+                __m256d v_micro = _mm256_loadu_pd(&micro_n[i]);
+                
+                __m256d v_di = _mm256_sub_pd(v_gauss, v_gaussA);
+                __m256d v_resid = _mm256_sub_pd(v_micro, v_gaussA);
+                
+#if defined(__FMA__)
+                if (g_use_fma) {
+                    // FMA: num += di * resid
+                    v_num = _mm256_fmadd_pd(v_di, v_resid, v_num);
+                    // FMA: den += di * di
+                    v_den = _mm256_fmadd_pd(v_di, v_di, v_den);
+                } else {
+                    v_num = _mm256_add_pd(v_num, _mm256_mul_pd(v_di, v_resid));
+                    v_den = _mm256_add_pd(v_den, _mm256_mul_pd(v_di, v_di));
+                }
+#else
+                v_num = _mm256_add_pd(v_num, _mm256_mul_pd(v_di, v_resid));
+                v_den = _mm256_add_pd(v_den, _mm256_mul_pd(v_di, v_di));
+#endif
+            }
+            
+            // Horizontal sum
+            double num_arr[4], den_arr[4];
+            _mm256_storeu_pd(num_arr, v_num);
+            _mm256_storeu_pd(den_arr, v_den);
+            num = num_arr[0] + num_arr[1] + num_arr[2] + num_arr[3];
+            den = den_arr[0] + den_arr[1] + den_arr[2] + den_arr[3];
+            
+            // Process remaining elements
+            for (size_t i = n_vec; i < active_det; ++i) {
+                double di = gauss_buffer[i] - gaussA[i];
+                double resid = micro_n[i] - gaussA[i];
+                num += di * resid;
+                den += di * di;
+            }
+#else
             for (size_t i = 0; i < active_det; ++i) {
                 double di = gauss_buffer[i] - gaussA[i];
                 double resid = micro_n[i] - gaussA[i];
                 num += di * resid;
                 den += di * di;
+            }
+#endif
+            } else {
+            for (size_t i = 0; i < active_det; ++i) {
+                double di = gauss_buffer[i] - gaussA[i];
+                double resid = micro_n[i] - gaussA[i];
+                num += di * resid;
+                den += di * di;
+            }
             }
             double B = (den > eps_norm) ? (num / den) : 0.0;
             if (!std::isfinite(B)) B = 0.0;
@@ -820,11 +1127,64 @@ static void focus_ism_core(
 
             // SSE cost
             double sse = 0.0;
+            if (g_use_avx) {
+#if defined(__AVX__) || defined(__AVX2__)
+            const size_t n_vec = (active_det / 4) * 4;
+            __m256d v_sse = _mm256_setzero_pd();
+            __m256d v_B = _mm256_set1_pd(B);
+            
+            for (size_t i = 0; i < n_vec; i += 4) {
+                __m256d v_gauss = _mm256_loadu_pd(&gauss_buffer[i]);
+                __m256d v_gaussA = _mm256_loadu_pd(&gaussA[i]);
+                __m256d v_micro = _mm256_loadu_pd(&micro_n[i]);
+                
+                __m256d v_di = _mm256_sub_pd(v_gauss, v_gaussA);
+#if defined(__FMA__)
+                if (g_use_fma) {
+                    // FMA: model = gaussA + B * di
+                    __m256d v_model = _mm256_fmadd_pd(v_B, v_di, v_gaussA);
+                    __m256d v_diff = _mm256_sub_pd(v_model, v_micro);
+                    // FMA: sse += diff * diff
+                    v_sse = _mm256_fmadd_pd(v_diff, v_diff, v_sse);
+                } else {
+                    __m256d v_model = _mm256_add_pd(v_gaussA, _mm256_mul_pd(v_B, v_di));
+                    __m256d v_diff = _mm256_sub_pd(v_model, v_micro);
+                    v_sse = _mm256_add_pd(v_sse, _mm256_mul_pd(v_diff, v_diff));
+                }
+#else
+                __m256d v_model = _mm256_add_pd(v_gaussA, _mm256_mul_pd(v_B, v_di));
+                __m256d v_diff = _mm256_sub_pd(v_model, v_micro);
+                v_sse = _mm256_add_pd(v_sse, _mm256_mul_pd(v_diff, v_diff));
+#endif
+            }
+            
+            // Horizontal sum
+            double sse_arr[4];
+            _mm256_storeu_pd(sse_arr, v_sse);
+            sse = sse_arr[0] + sse_arr[1] + sse_arr[2] + sse_arr[3];
+            
+            // Process remaining elements
+            for (size_t i = n_vec; i < active_det; ++i) {
+                double di = gauss_buffer[i] - gaussA[i];
+                double model = gaussA[i] + B * di;
+                double diff = model - micro_n[i];
+                sse += diff * diff;
+            }
+#else
             for (size_t i = 0; i < active_det; ++i) {
                 double di = gauss_buffer[i] - gaussA[i];
                 double model = gaussA[i] + B * di;
                 double diff = model - micro_n[i];
                 sse += diff * diff;
+            }
+#endif
+            } else {
+            for (size_t i = 0; i < active_det; ++i) {
+                double di = gauss_buffer[i] - gaussA[i];
+                double model = gaussA[i] + B * di;
+                double diff = model - micro_n[i];
+                sse += diff * diff;
+            }
             }
 
             if (sse < best_cost) {
