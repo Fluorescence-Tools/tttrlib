@@ -162,12 +162,18 @@ if (Test-Path $Marker) {
 
     try {
         if ($Has7z) {
-            & $SevenZip x -y "-o$BoostSrcRoot" "-mmt=on" "-bso0" "-bsp0" $ArchivePath | Out-Null
+            Write-Host "Extracting with 7-Zip (this may take 1-2 minutes)..."
+            # Remove -bso0 -bsp0 to show progress, use fewer threads to avoid timeout
+            & $SevenZip x -y "-o$BoostSrcRoot" "-mmt=2" $ArchivePath
+            if ($LASTEXITCODE -ne 0) { throw "7z extraction failed with exit code $LASTEXITCODE" }
         } elseif ($HasTar -and ($ArchivePath -match '\.tar(\.xz)?$')) {
+            Write-Host "Extracting with tar..."
             tar -xf $ArchivePath -C $BoostSrcRoot
         } else {
+            Write-Host "Extracting with Expand-Archive..."
             Expand-Archive -Force -Path $ArchivePath -DestinationPath $BoostSrcRoot
         }
+        Write-Host "Extraction completed."
     } catch {
         throw "Extraction failed: $($_.Exception.Message)"
     }
@@ -200,9 +206,15 @@ if (-not $BoostRoot) {
 
 Write-Host "Boost source root: $BoostRoot"
 
-# Build and install Boost
-Push-Location $BoostRoot
-try {
+# Check if Boost is already installed (from cache)
+$BoostInstallMarker = Join-Path $BoostInstall ".boost_installed.ok"
+if (Test-Path $BoostInstallMarker) {
+    Write-Host "Boost already installed at: $BoostInstall (from cache)"
+    Write-Host "Skipping build step."
+} else {
+    # Build and install Boost
+    Push-Location $BoostRoot
+    try {
     # Bootstrap b2 if needed
     if (-not (Test-Path (Join-Path $BoostRoot "b2.exe"))) {
         Write-Host "Bootstrapping b2 ..."
@@ -257,8 +269,13 @@ try {
     }
     
     Write-Host "Boost installed successfully."
+    
+    # Create marker file to indicate successful installation
+    New-Item -ItemType File -Path $BoostInstallMarker -Force | Out-Null
+    Write-Host "Created installation marker: $BoostInstallMarker"
+    }
+    finally { Pop-Location }
 }
-finally { Pop-Location }
 
 # -------------------
 # Export env
