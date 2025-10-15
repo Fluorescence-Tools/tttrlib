@@ -4,10 +4,8 @@ name = "tttrlib"
 requires-python = ">=3.8"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
 readme = "README.md"
-authors = [
-{name = "author = Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com"},
-]
-license = {file = "LICENSE.txt"}
+authors = [{ name = "Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com" }]
+license = { text = "BSD-3-Clause" }
 
 keywords = [
     "fluorescence",
@@ -19,12 +17,9 @@ keywords = [
 
 classifiers = [
     "Topic :: Software Development",
-    "Development Status :: 2 - Pre-Alpha",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
-    "Intended Audience :: Education",
-    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
@@ -32,71 +27,85 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Image Processing",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: C++",
-    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
 ]
 
-dynamic = ["dependencies"]
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+    "numpy>=1.22.0",
+    "tqdm",
+    "click",
+    "click-didyoumean",
+    "scikit-image",
+    "matplotlib-base",
+]
 
 [project.urls]
-    homepage = "https://github.com/fluorescence-tools/tttrlib"
-    documentation = "https://docs.peulen.xyz/tttrlib"
-    repository = "https://github.com/fluorescence-tools/tttrlib.git"
-
+homepage = "https://github.com/fluorescence-tools/tttrlib"
+documentation = "https://docs.peulen.xyz/tttrlib"
+repository = "https://github.com/fluorescence-tools/tttrlib.git"
 
 [build-system]
-    requires = [
-        "wheel",
-        "setuptools",
-        "cmake_build_extension",
-        "numpy"
-    ]
-    build-backend = "setuptools.build_meta"
+requires = [
+    "wheel",
+    "setuptools>=68",
+    "cmake_build_extension>=0.5",
+    "oldest-supported-numpy",
+    "delvewheel",
+    "cmake",
+    "swig<4.2",
+    "ninja"
+]
+build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+# Fallback version when not in a git repo or when version is explicitly set
+fallback_version = "0.26.0"
 
 [tool.cibuildwheel]
-# Normal options, etc.
 build-verbosity = 2
-
-test-command = 'python -c "import tttrlib; d = tttrlib.TTTR(); print(d)"'
-
-# Skip CPython 32-bit builds
 skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
+test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
-# Install test dependencies
-test-requires = []
+# Bundle non-whitelisted shared libs (Boost) into the wheel
+repair-wheel-command = ""
 
 [tool.cibuildwheel.macos]
 # Newer C++ features with old SDK:
 # https://conda-forge.org/docs/maintainer/knowledge_base.html
+archs = ["x86_64", "arm64"]
 environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="10.14"}
 
-[[tool.cibuildwheel.overrides]]
-select = "cp3{8,9,10}-*"
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+archs = ["x86_64", "aarch64"]
+before-all = [
+    "dnf install -y boost-devel cmake hdf5-devel"
+]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
-    # On Linux we need to use different package managers depending on image used
-    [tool.cibuildwheel.linux]
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
 
-    before-all = [
-        "yum update -y --nogpgcheck",
-        "yum install -y epel-release",
-        "yum -y install boost-devel swig cmake"
-    ]
+# Build Boost once per run; install into {project}\dist\boost-install
+before-all = "powershell -ExecutionPolicy Bypass -File .github/ci/build_boost_windows.ps1"
 
-    manylinux-x86_64-image = "manylinux_2_28"
-    manylinux-i686-image = "manylinux_2_28"
-    manylinux-aarch64-image = "manylinux_2_28"
-    manylinux-ppc64le-image = "manylinux_2_28"
-    manylinux-s390x-image = "manylinux_2_28"
-    manylinux-pypy_x86_64-image = "manylinux_2_28"
-    manylinux-pypy_i686-image = "manylinux_2_28"
-    manylinux-pypy_aarch64-image = "manylinux_2_28"
+# Install delvewheel in the build environment for wheel repair
+before-build = "pip install delvewheel"
 
-    archs = [
-        "x86_64",
-        # "aarch64",
-        # "ppc64le"
-    ]
+# Bundle Boost DLLs into the wheel (and make them discoverable at import time)
+# Read BOOST_LIB_PATH from .boost_env file and pass to delvewheel
+repair-wheel-command = "powershell -Command \"$boost_lib = (Get-Content .boost_env | Select-String 'BOOST_LIB_PATH=').ToString().Split('=')[1]; python -m delvewheel repair --add-path $boost_lib -w {dest_dir} {wheel}\""
+
+[tool.cibuildwheel.windows.environment]
+# Use Visual Studio generator instead of Ninja
+CMAKE_GENERATOR = "Visual Studio 17 2022"
+
+# Avoid Boost auto-link surprises on MSVC
+BOOST_ALL_NO_LIB = "1"
+
+# Note: Boost paths are communicated via .boost_env file
+# The build_boost_windows.ps1 script writes paths to .boost_env, and setup.py reads it
+# The repair-wheel-command also reads BOOST_LIB_PATH from .boost_env for delvewheel
+# Fallback: setup.py auto-detects from dist/boost-install if file doesn't exist
