@@ -7,11 +7,16 @@
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
 
-// CPUID for runtime CPU feature detection
-#if defined(__GNUC__) || defined(__clang__)
-#include <cpuid.h>
-#elif defined(_MSC_VER)
-#include <intrin.h>
+// CPUID for runtime CPU feature detection (x86/x64 only)
+#if (defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86))
+    #if defined(__GNUC__) || defined(__clang__)
+        #include <cpuid.h>
+    #elif defined(_MSC_VER)
+        #include <intrin.h>
+    #endif
+    #define TTTRLIB_X86_FEATURES 1
+#else
+    #define TTTRLIB_X86_FEATURES 0
 #endif
 
 // Runtime CPU feature detection
@@ -23,7 +28,8 @@ namespace cpu_features {
         has_avx = false;
         has_fma = false;
         
-#if defined(_MSC_VER)
+#if TTTRLIB_X86_FEATURES
+    #if defined(_MSC_VER)
         // MSVC
         int cpu_info[4];
         __cpuid(cpu_info, 0);
@@ -34,14 +40,16 @@ namespace cpu_features {
             has_avx = (cpu_info[2] & (1 << 28)) != 0;  // ECX bit 28
             has_fma = (cpu_info[2] & (1 << 12)) != 0;  // ECX bit 12
         }
-#elif defined(__GNUC__) || defined(__clang__)
+    #elif defined(__GNUC__) || defined(__clang__)
         // GCC/Clang
         unsigned int eax, ebx, ecx, edx;
         if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
             has_avx = (ecx & bit_AVX) != 0;
             has_fma = (ecx & bit_FMA) != 0;
         }
+    #endif
 #endif
+        // On non-x86 architectures (e.g., ARM), AVX/FMA are not available
     }
     
     // Helper to check environment variable for feature override
