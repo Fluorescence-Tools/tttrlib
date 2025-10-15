@@ -5,6 +5,7 @@ doc/auto_examples
 tmp/
 .vscode
 .cache
+.venv
 .vs
 .ipynb_checkpoints
 cmake-build-*/
@@ -15,6 +16,7 @@ __pycache__
 tttr-data
 .idea/
 leftovers/
+.boost_env
 
 # Documentation and tools
 doc/_*
