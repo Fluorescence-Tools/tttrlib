@@ -73,7 +73,7 @@ repair-wheel-command = ""
 [tool.cibuildwheel.macos]
 # Newer C++ features with old SDK:
 # https://conda-forge.org/docs/maintainer/knowledge_base.html
-archs = ["x86_64", "arm64"]
+archs = ["x86_64"]
 before-all = "brew install boost"
 environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="10.14"}
 
