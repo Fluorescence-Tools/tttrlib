@@ -71,10 +71,12 @@ test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__
 # Newer C++ features with old SDK:
 # https://conda-forge.org/docs/maintainer/knowledge_base.html
 archs = ["arm64"]
-before-all = "brew install boost"
-environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1"}
+before-all = [
+    "brew install boost",
+    "brew reinstall --build-from-source boost"
+]
+environment = {CFLAGS="-g -Wall", CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY=1", MACOSX_DEPLOYMENT_TARGET="11.0"}
 # Bundle Boost dylibs into the wheel using delocate
-# delocate will automatically infer the correct MACOSX_DEPLOYMENT_TARGET from bundled libraries
 repair-wheel-command = "delocate-listdeps {wheel} && delocate-wheel --require-archs {delocate_archs} --dylibs-only -w {dest_dir} -v {wheel}"
 
 [tool.cibuildwheel.linux]
