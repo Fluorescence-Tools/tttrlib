@@ -1,8 +1,5 @@
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
-
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
@@ -31,9 +28,13 @@ OPTION(Boost_USE_STATIC_LIBS "Static boost build" OFF)
 
 ## System specific compiler flags
 ################################
-# AVX
-IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
-  set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
+# AVX - Only enable on Intel x86_64 machines (all platforms)
+# Disable on ARM (aarch64, arm64) and other non-x86_64 architectures
+IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+  set(WITH_AVX OFF CACHE STRING "Disable AVX on non-x86_64 architectures (ARM, etc.)." FORCE)
+  MESSAGE(STATUS "SIMD/AVX disabled: Not an x86_64 machine (detected: ${CMAKE_HOST_SYSTEM_PROCESSOR})")
+ELSE()
+  MESSAGE(STATUS "SIMD/AVX enabled: x86_64 machine detected (${CMAKE_SYSTEM_NAME})")
 ENDIF()
 IF(WITH_AVX)
     INCLUDE(simd)
@@ -95,11 +96,46 @@ endif()
 ## Boost
 ###########################
 IF(Boost_USE_STATIC_LIBS)
-  SET(Boost_USE_STATIC_LIBS ON)
-ENDIF(Boost_USE_STATIC_LIBS)
+    SET(Boost_USE_STATIC_LIBS ON)
+ENDIF()
 FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS locale)
-LINK_LIBRARIES(Boost::locale)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+# Note: Boost::locale is linked in subdirectories where targets are defined
+
+# Bundle Boost runtime libraries with Python bindings (only for pip/wheel builds)
+# For conda builds, Boost is provided by conda-forge and doesn't need bundling
+if(BUILD_PYTHON_INTERFACE AND CALL_FROM_SETUP_PY)
+  # Automatically bundle all Boost components that were found
+  foreach(_component IN LISTS Boost_FIND_COMPONENTS)
+    set(_target "Boost::${_component}")
+    if(TARGET ${_target})
+      get_target_property(_lib_location ${_target} IMPORTED_LOCATION_RELEASE)
+      if(NOT _lib_location)
+        get_target_property(_lib_location ${_target} IMPORTED_LOCATION)
+      endif()
+      
+      if(_lib_location)
+        # On Windows, find the corresponding DLL
+        if(WIN32)
+          get_filename_component(_lib_dir "${_lib_location}" DIRECTORY)
+          get_filename_component(_lib_name "${_lib_location}" NAME_WE)
+          # Try bin directory for DLL
+          get_filename_component(_prefix "${_lib_dir}" DIRECTORY)
+          file(GLOB _runtime_libs "${_prefix}/bin/${_lib_name}*.dll" "${_lib_dir}/${_lib_name}*.dll")
+        else()
+          # On Unix, the .so file is both link and runtime library
+          get_filename_component(_lib_dir "${_lib_location}" DIRECTORY)
+          get_filename_component(_lib_name "${_lib_location}" NAME)
+          file(GLOB _runtime_libs "${_lib_dir}/${_lib_name}*")
+        endif()
+        
+        foreach(_runtime_lib IN LISTS _runtime_libs)
+          install(FILES "${_runtime_lib}" DESTINATION "." COMPONENT bindings)
+        endforeach()
+      endif()
+    endif()
+  endforeach()
+endif()
 
 ## HDF5
 ###########################cd
@@ -157,6 +193,10 @@ IF(BUILD_LIBRARY)
   # cmake needs unique target name, thus place shared in front of project
   ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
   ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
+  
+  # Link libraries
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME}Shared Boost::locale)
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME}Static Boost::locale)
 
   # Define which headers are going to be included in the install target
   FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
