@@ -37,7 +37,7 @@ dependencies = [
     "click",
     "click-didyoumean",
     "scikit-image",
-    "matplotlib-base",
+    "matplotlib",
 ]
 
 [project.urls]
