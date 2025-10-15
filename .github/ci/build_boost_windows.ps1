@@ -12,9 +12,10 @@ $BoostVersion       = "1.86.0"
 $MinArchiveSizeMB   = 10
 
 # Use source package with b2 pre-built (faster than full source)
+# Prefer .zip over .7z for more reliable extraction on Windows runners
 $AssetNames = @(
-    "boost-$BoostVersion-b2-nodocs.7z",
-    "boost-$BoostVersion-b2-nodocs.zip"
+    "boost-$BoostVersion-b2-nodocs.zip",
+    "boost-$BoostVersion-b2-nodocs.7z"
 )
 
 # Build configuration
@@ -161,19 +162,25 @@ if (Test-Path $Marker) {
     $HasTar = (Get-Command tar -ErrorAction SilentlyContinue) -ne $null
 
     try {
-        if ($Has7z) {
+        # Prefer Expand-Archive for .zip files (more reliable on Windows)
+        if ($ArchivePath -match '\.zip$') {
+            Write-Host "Extracting with Expand-Archive (this may take 1-2 minutes)..."
+            $ProgressPreference = 'SilentlyContinue'  # Disable progress bar for speed
+            Expand-Archive -Force -Path $ArchivePath -DestinationPath $BoostSrcRoot
+            Write-Host "Extraction completed."
+        } elseif ($Has7z) {
             Write-Host "Extracting with 7-Zip (this may take 1-2 minutes)..."
-            # Remove -bso0 -bsp0 to show progress, use fewer threads to avoid timeout
+            # Use fewer threads to avoid I/O contention
             & $SevenZip x -y "-o$BoostSrcRoot" "-mmt=2" $ArchivePath
             if ($LASTEXITCODE -ne 0) { throw "7z extraction failed with exit code $LASTEXITCODE" }
+            Write-Host "Extraction completed."
         } elseif ($HasTar -and ($ArchivePath -match '\.tar(\.xz)?$')) {
             Write-Host "Extracting with tar..."
             tar -xf $ArchivePath -C $BoostSrcRoot
+            Write-Host "Extraction completed."
         } else {
-            Write-Host "Extracting with Expand-Archive..."
-            Expand-Archive -Force -Path $ArchivePath -DestinationPath $BoostSrcRoot
+            throw "No suitable extraction tool found for $ArchivePath"
         }
-        Write-Host "Extraction completed."
     } catch {
         throw "Extraction failed: $($_.Exception.Message)"
     }
