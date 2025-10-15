@@ -72,7 +72,7 @@ if sys.platform == "win32":
     boost_dir = os.environ.get("Boost_DIR")
     boost_root = os.environ.get("BOOST_ROOT")
     cmake_prefix = os.environ.get("CMAKE_PREFIX_PATH")
-    
+
     # Check if cibuildwheel placeholders weren't expanded (they contain {project})
     if boost_dir and "{project}" in boost_dir:
         boost_dir = None
@@ -80,7 +80,7 @@ if sys.platform == "win32":
         boost_root = None
     if cmake_prefix and "{project}" in cmake_prefix:
         cmake_prefix = None
-    
+
     # Try reading from .boost_env file written by build script
     if not boost_root or not boost_dir:
         boost_env_file = ROOT_DIR / ".boost_env"
@@ -95,7 +95,7 @@ if sys.platform == "win32":
                         boost_dir = line.split("=", 1)[1]
                     elif line.startswith("CMAKE_PREFIX_PATH=") and not cmake_prefix:
                         cmake_prefix = line.split("=", 1)[1]
-    
+
     # Fallback: construct paths from project root if env vars not set or not expanded
     if not boost_root:
         # Detect architecture for architecture-specific Boost install directory
@@ -106,7 +106,7 @@ if sys.platform == "win32":
             arch_suffix = "-arm64"
         else:
             arch_suffix = ""
-        
+
         boost_install = ROOT_DIR / "dist" / f"boost-install{arch_suffix}"
         if boost_install.exists():
             boost_root = str(boost_install)
@@ -117,18 +117,18 @@ if sys.platform == "win32":
             if boost_install_generic.exists():
                 boost_root = str(boost_install_generic)
                 print(f"[setup.py] Using fallback BOOST_ROOT (generic): {boost_root}")
-    
+
     if not boost_dir and boost_root:
         # Try to find the Boost CMake config directory
         boost_cmake = Path(boost_root) / "lib" / "cmake" / "Boost-1.86.0"
         if boost_cmake.exists():
             boost_dir = str(boost_cmake)
             print(f"[setup.py] Using fallback Boost_DIR: {boost_dir}")
-    
+
     print(f"[setup.py] Boost_DIR: {boost_dir}")
     print(f"[setup.py] BOOST_ROOT: {boost_root}")
     print(f"[setup.py] CMAKE_PREFIX_PATH: {cmake_prefix}")
-    
+
     if boost_dir:
         # Convert to forward slashes for CMake
         boost_dir = str(Path(boost_dir)).replace("\\", "/")
