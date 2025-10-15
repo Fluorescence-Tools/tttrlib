@@ -393,6 +393,7 @@ if (is_verbose()) {
     return (size_t) ftell(fpin);
 }
 
+#ifdef BUILD_PHOTON_HDF
 // Helper function to process datasets in a given group
 void TTTRHeader::process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name) {
     // Get all objects in the group
@@ -527,6 +528,14 @@ if (is_verbose()) {
         return -1; // Return error
     }
 }
+#else
+
+int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
+    (void) fn;
+    return -1;
+}
+
+#endif
 
 size_t TTTRHeader::read_ptu_header(
         std::FILE *fpin,

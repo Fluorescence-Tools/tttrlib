@@ -91,7 +91,9 @@ class TTTRHeader {
     friend class TTTR;
 
 private:
+#ifdef BUILD_PHOTON_HDF
     void process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name);
+#endif
 
 protected:
 
