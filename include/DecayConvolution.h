@@ -9,14 +9,13 @@
 #include <string.h> /* strcmp */
 
 #if defined(__AVX__)
-#if defined(_MSC_VER)
+  #if defined(_MSC_VER)
     /* Microsoft C/C++-compatible compiler */
     #include <intrin.h>
-  #elif defined(__GNUC__) || defined(__clang__)
-    /* GNU or Clang compiler */
-    #include <avxintrin.h>
+  #else
+    /* GNU or Clang compiler - use immintrin.h which includes all intrinsics */
+    #include <immintrin.h>
   #endif
-  #include <immintrin.h>
 
   #ifndef __FMA__
     #define __FMA__ 1

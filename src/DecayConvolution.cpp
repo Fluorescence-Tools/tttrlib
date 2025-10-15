@@ -138,12 +138,12 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] = double(tmp.m256d_f64[0]);
+            fit[i] += double(tmp.m256d_f64[0]);
             fit[i] += double(tmp.m256d_f64[1]);
             fit[i] += double(tmp.m256d_f64[2]);
             fit[i] += double(tmp.m256d_f64[3]);
 #else
-            fit[i] = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
         }
     }
@@ -187,7 +187,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
         double expcurr = exp(-dt/x[2*ne+1]);
         double tail_a = 1./(1.-exp(-period/x[2*ne+1]));
         double fitcurr = 0;
-        fit[0] += (fitcurr + l2[0]);
+        fit[0] += (fitcurr + l2[0])*x[2*ne];
         for (int i=start1; i<stop1; i++){
             fitcurr=(fitcurr + l2[i - 1])*expcurr + l2[i];
             fit[i] += fitcurr*x[2*ne];
@@ -298,12 +298,12 @@ if (is_verbose()) {
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] = double(tmp.m256d_f64[0]);
+            fit[i] += double(tmp.m256d_f64[0]);
             fit[i] += double(tmp.m256d_f64[1]);
             fit[i] += double(tmp.m256d_f64[2]);
             fit[i] += double(tmp.m256d_f64[3]);
 #else
-            fit[i] = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
         }
         // fitcurr *= scale[ne];
