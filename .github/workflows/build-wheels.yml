@@ -21,6 +21,8 @@ jobs:
 
       # Used to host cibuildwheel
       - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Install Boost (macOS)
         if: runner.os == 'macOS'
