@@ -18,9 +18,9 @@ Comments start with `#` and empty lines are ignored.
 
 #### Windows (`build_boost_windows_simple.ps1`)
 - Reads `boost-config.txt`
-- Installs `boost` package (all headers) via vcpkg
-- Installs all components listed in config (e.g., `boost-locale`, `boost-bimap`)
-- Equivalent to `boost-devel` on Linux (vcpkg doesn't have a single metapackage)
+- Installs only the components listed (e.g., `boost-locale`, `boost-bimap`)
+- vcpkg automatically installs required Boost headers as dependencies
+- Much faster than Linux/macOS (only installs what's needed, not all 174 packages)
 
 #### Linux (via `pyproject.toml`)
 - Installs `boost-devel` package via dnf
