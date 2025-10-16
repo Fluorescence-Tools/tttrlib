@@ -107,6 +107,11 @@ CMAKE_GENERATOR = "Visual Studio 17 2022"
 # Avoid Boost auto-link surprises on MSVC
 BOOST_ALL_NO_LIB = "1"
 
+# Help CMake find Python in the cibuildwheel environment
+# These are passed as CMake cache variables
+Python_EXECUTABLE = "$PYTHON"
+Python_ROOT_DIR = "$PYTHON_PREFIX"
+
 # Note: Boost paths are communicated via .boost_env file
 # The build_boost_windows.ps1 script writes paths to .boost_env, and setup.py reads it
 # The repair-wheel-command also reads BOOST_LIB_PATH from .boost_env for delvewheel
