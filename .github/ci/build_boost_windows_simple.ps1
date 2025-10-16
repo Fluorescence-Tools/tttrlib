@@ -10,6 +10,24 @@ $ProgressPreference = 'SilentlyContinue'
 # -------------------
 # Configuration
 # -------------------
+# Read Boost components from centralized config file
+$ConfigFile = Join-Path $PSScriptRoot "boost-config.txt"
+$BoostComponents = @()
+if (Test-Path $ConfigFile) {
+    Get-Content $ConfigFile | ForEach-Object {
+        $line = $_.Trim()
+        # Skip empty lines and comments
+        if ($line -and -not $line.StartsWith("#")) {
+            $BoostComponents += $line
+        }
+    }
+    Write-Host "Loaded Boost components from config: $($BoostComponents -join ', ')"
+} else {
+    # Fallback if config file doesn't exist
+    $BoostComponents = @("locale")
+    Write-Warning "Config file not found, using default: locale"
+}
+
 # Detect architecture
 $TargetArch = if ($env:CIBW_ARCHS_WINDOWS) { $env:CIBW_ARCHS_WINDOWS } else { $env:PROCESSOR_ARCHITECTURE }
 $Triplet = if ($TargetArch -eq "ARM64") { "arm64-windows" } else { "x64-windows" }
@@ -59,10 +77,18 @@ if ((Test-Path $BoostMarker) -and -not $ForceBuild) {
     Write-Host "Installing Boost via vcpkg..."
     Write-Host "This may take 3-5 minutes on first install..."
     
-    # Install boost (all headers) and boost-locale (compiled library)
-    # boost provides all header-only libraries (bimap, filesystem, etc.)
-    # boost-locale provides the compiled locale library
-    & $vcpkgCmd install "boost:$Triplet" "boost-locale:$Triplet" --recurse
+    # Build list of packages to install
+    # Always install boost (all headers) plus specific compiled components
+    $packages = @("boost:$Triplet")
+    foreach ($component in $BoostComponents) {
+        # Skip header-only components (they're included in boost package)
+        if ($component -notin @("bimap", "filesystem", "any", "multi_array")) {
+            $packages += "boost-${component}:$Triplet"
+        }
+    }
+    
+    Write-Host "Installing packages: $($packages -join ', ')"
+    & $vcpkgCmd install $packages --recurse
     
     if ($LASTEXITCODE -ne 0) {
         throw "vcpkg install failed with exit code $LASTEXITCODE"

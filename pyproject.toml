@@ -74,6 +74,8 @@ test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__
 # Build only for x86_64 (native arch on macos-13 runner)
 # arm64 cross-compilation requires additional setup
 archs = ["x86_64"]
+# Note: Boost components are defined in .github/ci/boost-config.txt
+# Homebrew's boost package includes all components
 before-all = [
     "brew install boost hdf5 cmake",
 ]
@@ -92,6 +94,8 @@ HDF5_ROOT = "/usr/local"
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 archs = ["x86_64", "aarch64"]
+# Note: Boost components are defined in .github/ci/boost-config.txt
+# boost-devel package includes all components
 before-all = [
     "dnf install -y boost-devel cmake hdf5-devel"
 ]
@@ -100,6 +104,8 @@ repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 
+# Note: Boost components are defined in .github/ci/boost-config.txt
+# The build script reads this file and installs components via vcpkg
 # Build Boost once per run; install into {project}\dist\boost-install
 before-all = "powershell -ExecutionPolicy Bypass -File .github/ci/build_boost_windows_simple.ps1"
 

@@ -1,0 +1,10 @@
+# Boost Configuration for tttrlib
+# This file defines which Boost components are required across all platforms
+# Format: one component per line, comments start with #
+
+# Compiled libraries (need linking)
+locale
+
+# Header-only libraries (no linking required, but must be available)
+# Note: On some platforms these are implicit, but we list them for clarity
+bimap
