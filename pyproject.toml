@@ -78,9 +78,15 @@ before-all = [
     "brew install boost hdf5 cmake",
 ]
 before-build = "pip install delocate"
-environment = {MACOSX_DEPLOYMENT_TARGET="11.0"}
 # Bundle Boost dylibs into the wheel using delocate
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "13.0"
+# Help CMake find Homebrew-installed libraries
+CMAKE_PREFIX_PATH = "/usr/local"
+BOOST_ROOT = "/usr/local"
+HDF5_ROOT = "/usr/local"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
