@@ -32,6 +32,12 @@ IF(BUILD_PYTHON_INTERFACE)
     MESSAGE(STATUS "Building Python interface")
     
     # Use Python3 explicitly for better compatibility with Python 3.13+
+    # For conda builds, use the Python from PREFIX (host environment)
+    if(DEFINED ENV{PREFIX})
+        set(Python3_ROOT_DIR "$ENV{PREFIX}")
+        set(Python3_FIND_STRATEGY LOCATION)
+        MESSAGE(STATUS "Using Python3_ROOT_DIR from conda PREFIX: $ENV{PREFIX}")
+    endif()
     FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
     
     # Debug output
