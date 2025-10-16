@@ -166,12 +166,14 @@ if (Test-Path $CmakeDir) {
 # Write .boost_env file for setup.py
 # -------------------
 $EnvFile = Join-Path $ProjRoot ".boost_env"
+# Note: BOOST_LIB_PATH must point to bin directory (where DLLs are) for delvewheel
+$BoostBinDir = Join-Path $BoostInstall "bin"
 $EnvContent = @"
 BOOST_ROOT=$($env:BOOST_ROOT)
 BOOST_INCLUDEDIR=$($env:BOOST_INCLUDEDIR)
 BOOST_LIBRARYDIR=$($env:BOOST_LIBRARYDIR)
 CMAKE_PREFIX_PATH=$($env:CMAKE_PREFIX_PATH)
-BOOST_LIB_PATH=$($env:BOOST_LIBRARYDIR)
+BOOST_LIB_PATH=$BoostBinDir
 "@
 
 if ($env:Boost_DIR) {
