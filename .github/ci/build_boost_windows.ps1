@@ -143,7 +143,7 @@ function Install-BoostViaChocolatey {
             }
             Copy-Item -Recurse -Force $libDir $normalizedLibDir
             
-            Write-Host "✓ Boost installed successfully via Chocolatey"
+            Write-Host "SUCCESS: Boost installed successfully via Chocolatey"
             return $true
         } else {
             Write-Warning "Chocolatey Boost installation incomplete"
@@ -599,7 +599,7 @@ $env:CMAKE_PREFIX_PATH = $BoostInstall
 $env:Path              = "$($env:BOOST_LIBRARYDIR);$($env:Path)"
 
 # Find and export Boost_DIR for CMake config files
-$CmakeDir = Join-Path $BoostInstall "lib\cmake"
+$CmakeDir = Join-Path $BoostInstall "lib/cmake"
 if (Test-Path $CmakeDir) {
     $BoostCmakeDir = Get-ChildItem -Path $CmakeDir -Directory -Filter "Boost-*" | Select-Object -First 1
     if (-not $BoostCmakeDir) {
