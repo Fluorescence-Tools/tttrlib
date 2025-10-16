@@ -466,7 +466,13 @@ if (-not $SkipBuild) {
             Write-Host "Cleaning old extraction..."
             Remove-Item -Recurse -Force $BoostSrcRoot -ErrorAction Stop
         }
-        Copy-Item -Recurse -Force $ExtractCache $BoostSrcRoot
+        Write-Host "Restoring from cache..."
+        # Use robocopy for better handling of long paths
+        $robocopyResult = robocopy $ExtractCache $BoostSrcRoot /E /NFL /NDL /NJH /NJS /nc /ns /np
+        if ($LASTEXITCODE -ge 8) {
+            Write-Warning "Robocopy failed, trying PowerShell copy..."
+            Copy-Item -Recurse -Force $ExtractCache $BoostSrcRoot
+        }
     } else {
         Write-Host "Extracting Boost ..."
         if (Test-Path $BoostSrcRoot) { 
@@ -508,9 +514,22 @@ if (-not $SkipBuild) {
             throw "Extraction failed: $($_.Exception.Message)"
         }
 
-        if (Test-Path $ExtractCache) { Remove-Item -Recurse -Force $ExtractCache }
-        Copy-Item -Recurse -Force $BoostSrcRoot $ExtractCache
-        New-Item -ItemType File -Path $Marker | Out-Null
+        # Cache the extraction (use robocopy for better handling of long paths)
+        if (Test-Path $ExtractCache) { Remove-Item -Recurse -Force $ExtractCache -ErrorAction SilentlyContinue }
+        Write-Host "Caching extraction for future use..."
+        try {
+            # Use robocopy for more reliable copying with long paths
+            $robocopyResult = robocopy $BoostSrcRoot $ExtractCache /E /NFL /NDL /NJH /NJS /nc /ns /np
+            # Robocopy exit codes: 0-7 are success, 8+ are errors
+            if ($LASTEXITCODE -ge 8) {
+                Write-Warning "Robocopy returned exit code $LASTEXITCODE, trying PowerShell copy..."
+                Copy-Item -Recurse -Force $BoostSrcRoot $ExtractCache -ErrorAction Stop
+            }
+            New-Item -ItemType File -Path $Marker -Force | Out-Null
+        } catch {
+            Write-Warning "Failed to cache extraction: $($_.Exception.Message)"
+            # Continue anyway, we have the extraction in BoostSrcRoot
+        }
     }
 
     # Find directory containing b2.exe or bootstrap.bat
