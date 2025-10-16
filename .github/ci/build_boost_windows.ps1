@@ -185,7 +185,7 @@ function Get-PrebuiltBoost {
     if (Test-Path $prebuiltFile) {
         $size = (Get-Item $prebuiltFile).Length / 1MB
         if ($size -gt 50) {
-            Write-Host "Using cached pre-built binary: $prebuiltFile ($([math]::Round($size, 2)) MB)"
+            Write-Host "Using cached pre-built binary: $prebuiltFile (" $([math]::Round($size, 2)) "MB)"
             return $prebuiltFile
         } else {
             Write-Warning "Cached file too small, re-downloading..."
@@ -211,10 +211,10 @@ function Get-PrebuiltBoost {
             if (Test-Path $prebuiltFile) {
                 $size = (Get-Item $prebuiltFile).Length / 1MB
                 if ($size -gt 50) {  # Pre-built should be >50MB
-                    Write-Host "Downloaded pre-built binary: $prebuiltFile ($([math]::Round($size, 2)) MB)"
+                    Write-Host "Downloaded pre-built binary: $prebuiltFile (" $([math]::Round($size, 2)) "MB)"
                     return $prebuiltFile
                 } else {
-                    Write-Warning "Downloaded file too small ($([math]::Round($size, 2)) MB), trying next URL..."
+                    Write-Warning "Downloaded file too small (" $([math]::Round($size, 2)) "MB), trying next URL..."
                     Remove-Item $prebuiltFile -Force -ErrorAction SilentlyContinue
                 }
             }
