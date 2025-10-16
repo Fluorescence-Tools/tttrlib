@@ -74,7 +74,7 @@ test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__
 # Build for both Intel (x86_64) and Apple Silicon (arm64)
 archs = ["x86_64", "arm64"]
 before-all = [
-    "brew install boost",
+    "brew install boost hdf5 cmake",
 ]
 environment = {MACOSX_DEPLOYMENT_TARGET="11.0"}
 # Bundle Boost dylibs into the wheel using delocate
