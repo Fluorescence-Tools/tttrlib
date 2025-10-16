@@ -56,10 +56,12 @@ if ((Test-Path $BoostMarker) -and -not $ForceBuild) {
     # -------------------
     # Install Boost via vcpkg
     # -------------------
-    Write-Host "Installing boost-locale:$Triplet via vcpkg..."
+    Write-Host "Installing Boost components via vcpkg..."
     Write-Host "This may take 2-5 minutes on first install..."
     
-    & $vcpkgCmd install "boost-locale:$Triplet" --recurse
+    # Install boost-locale (needed for locale support) and boost-bimap (header-only, needed for TTTR.h)
+    # Note: boost-bimap is header-only but vcpkg needs explicit install
+    & $vcpkgCmd install "boost-locale:$Triplet" "boost-bimap:$Triplet" --recurse
     
     if ($LASTEXITCODE -ne 0) {
         throw "vcpkg install failed with exit code $LASTEXITCODE"
