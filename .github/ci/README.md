@@ -19,8 +19,8 @@ Comments start with `#` and empty lines are ignored.
 #### Windows (`build_boost_windows_simple.ps1`)
 - Reads `boost-config.txt`
 - Installs `boost` package (all headers) via vcpkg
-- Installs compiled components (e.g., `boost-locale`) individually
-- Header-only components are automatically included in the `boost` package
+- Installs all components listed in config (e.g., `boost-locale`, `boost-bimap`)
+- Equivalent to `boost-devel` on Linux (vcpkg doesn't have a single metapackage)
 
 #### Linux (via `pyproject.toml`)
 - Installs `boost-devel` package via dnf

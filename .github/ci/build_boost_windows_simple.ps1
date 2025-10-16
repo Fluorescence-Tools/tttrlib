@@ -77,14 +77,15 @@ if ((Test-Path $BoostMarker) -and -not $ForceBuild) {
     Write-Host "Installing Boost via vcpkg..."
     Write-Host "This may take 3-5 minutes on first install..."
     
-    # Build list of packages to install
-    # Always install boost (all headers) plus specific compiled components
+    # Install boost (all headers) and all compiled libraries listed in config
+    # This is equivalent to boost-devel on Linux or brew install boost on macOS
+    # Note: vcpkg doesn't have a single "boost-devel" metapackage, so we install:
+    # - boost: all header-only libraries
+    # - boost-<component>: each compiled library from config
     $packages = @("boost:$Triplet")
     foreach ($component in $BoostComponents) {
-        # Skip header-only components (they're included in boost package)
-        if ($component -notin @("bimap", "filesystem", "any", "multi_array")) {
-            $packages += "boost-${component}:$Triplet"
-        }
+        # All components get installed (vcpkg will skip if header-only)
+        $packages += "boost-${component}:$Triplet"
     }
     
     Write-Host "Installing packages: $($packages -join ', ')"
