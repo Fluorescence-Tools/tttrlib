@@ -1,6 +1,10 @@
 cmake_policy(SET CMP0078 NEW)
 cmake_policy(SET CMP0086 NEW)
 cmake_policy(SET CMP0094 NEW)
+# Use FindPython3 instead of FindPython for better Python 3.13 support
+if(POLICY CMP0148)
+    cmake_policy(SET CMP0148 NEW)
+endif()
 
 
 SET(MODULE_NAME ${PROJECT_NAME})
@@ -26,9 +30,19 @@ IF(BUILD_PYTHON_INTERFACE)
     ENDIF()
 
     MESSAGE(STATUS "Building Python interface")
-    FIND_PACKAGE(Python COMPONENTS Interpreter Development.Module NumPy)
-    INCLUDE_DIRECTORIES(BEFORE ${Python_NumPy_PATH} ${Python_INCLUDE_DIRS})
-    LINK_LIBRARIES(${Python_LIBRARY} Python::NumPy)
+    
+    # Use Python3 explicitly for better compatibility with Python 3.13+
+    FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+    
+    # Debug output
+    MESSAGE(STATUS "Python3_FOUND: ${Python3_FOUND}")
+    MESSAGE(STATUS "Python3_VERSION: ${Python3_VERSION}")
+    MESSAGE(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+    MESSAGE(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+    MESSAGE(STATUS "Python3_NumPy_INCLUDE_DIRS: ${Python3_NumPy_INCLUDE_DIRS}")
+    
+    INCLUDE_DIRECTORIES(BEFORE ${Python3_NumPy_INCLUDE_DIRS} ${Python3_INCLUDE_DIRS})
+    LINK_LIBRARIES(Python3::Module Python3::NumPy)
 
     # Handle where to install the resulting Python package
     if(CALL_FROM_SETUP_PY)
@@ -39,7 +53,7 @@ IF(BUILD_PYTHON_INTERFACE)
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
-        set(MY_INSTALL_PREFIX ${Python_SITELIB})
+        set(MY_INSTALL_PREFIX ${Python3_SITELIB})
     endif()
     SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
 
@@ -71,15 +85,14 @@ IF(BUILD_PYTHON_INTERFACE)
     )
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
-            ${PYTHON_LIBRARY}
+            Python3::Module
             ${CMAKE_THREAD_LIBS_INIT}
             Boost::locale
     )
-    IF (NOT PYTHON_LINK_LIBRARIES)
-        IF (APPLE)
-            SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
-        ENDIF()
-    ENDIF(NOT PYTHON_LINK_LIBRARIES)
+    # On macOS, use dynamic lookup for Python symbols
+    IF (APPLE)
+        SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
+    ENDIF()
 
     # =======
     # Install
