@@ -101,7 +101,7 @@ repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 archs = ["AMD64"]
 
 # Build Boost once per run; install into {project}\dist\boost-install
-before-all = "powershell -ExecutionPolicy Bypass -File .github/ci/build_boost_windows.ps1"
+before-all = "powershell -ExecutionPolicy Bypass -File .github/ci/build_boost_windows_simple.ps1"
 
 # Install delvewheel in the build environment for wheel repair
 before-build = "pip install delvewheel"

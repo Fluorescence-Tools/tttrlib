@@ -112,7 +112,13 @@ function Install-BoostViaVcpkg {
         }
         
         # Find vcpkg installed directory
-        $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { Split-Path (Split-Path $vcpkgCmd -Parent) -Parent }
+        # vcpkgCmd is the full path to vcpkg.exe (e.g., C:\vcpkg\vcpkg.exe)
+        # We need only one Split-Path to get the vcpkg root directory
+        $vcpkgRoot = if ($env:VCPKG_ROOT) { 
+            $env:VCPKG_ROOT 
+        } else {
+            Split-Path $vcpkgCmd -Parent
+        }
         $vcpkgInstalled = Join-Path $vcpkgRoot "installed\$triplet"
         
         if (-not (Test-Path $vcpkgInstalled)) {
