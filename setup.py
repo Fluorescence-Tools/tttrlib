@@ -39,6 +39,18 @@ init_py = inspect.cleandoc(
     """
 )
 
+# Determine the correct Python root directory
+# On Windows venvs, sys.executable is in Scripts/, so we need the parent
+# On Unix venvs, sys.executable is in bin/, so we need the parent
+# For system Python on Windows, sys.executable is in the root, so parent is correct
+python_exe_parent = Path(sys.executable).parent
+if python_exe_parent.name in ("Scripts", "bin"):
+    # Virtual environment - go up one more level
+    python_root = python_exe_parent.parent
+else:
+    # System Python or other layout
+    python_root = python_exe_parent
+
 common_cmake_opts = [
     "-DCALL_FROM_SETUP_PY:BOOL=ON",
     "-DBUILD_PYTHON_DOCS:BOOL=OFF",
@@ -49,7 +61,7 @@ common_cmake_opts = [
     "-DBUILD_PHOTON_HDF:BOOL=ON",
     "-DBUILD_LIBRARY:BOOL=OFF",
     f"-DPYTHON_VERSION:STRING={platform.python_version()}",
-    f"-DPython_ROOT_DIR:PATH={Path(sys.executable).parent}",
+    f"-DPython_ROOT_DIR:PATH={python_root}",
     "-DBoost_USE_STATIC_LIBS:BOOL=OFF",        # dynamic Boost
     "-DCMAKE_C_VISIBILITY_PRESET=hidden",
     "-DCMAKE_CXX_VISIBILITY_PRESET=hidden",

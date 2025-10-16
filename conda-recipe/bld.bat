@@ -6,7 +6,7 @@ cd %SRC_DIR%
 echo "Build app wrapper"
 :: build app wrapper
 copy "%RECIPE_DIR%\app_wrapper.c" .
-cl app_wrapper.c shell32.lib
+cl /nologo /O2 /W3 /Fe:app_wrapper.exe app_wrapper.c shell32.lib
 if errorlevel 1 exit 1
 
 rmdir b2 /s /q
