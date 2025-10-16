@@ -67,7 +67,7 @@ fallback_version = "0.26.0"
 
 [tool.cibuildwheel]
 build-verbosity = 2
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp314-*"]
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp314-*", "cp314t-*"]
 test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
 [tool.cibuildwheel.macos]
