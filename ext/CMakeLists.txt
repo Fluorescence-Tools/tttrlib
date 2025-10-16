@@ -37,6 +37,11 @@ IF(BUILD_PYTHON_INTERFACE)
         set(Python3_ROOT_DIR "$ENV{PREFIX}")
         set(Python3_FIND_STRATEGY LOCATION)
         MESSAGE(STATUS "Using Python3_ROOT_DIR from conda PREFIX: $ENV{PREFIX}")
+    elseif(DEFINED Python_ROOT_DIR)
+        # For cibuildwheel, use Python_ROOT_DIR if provided
+        set(Python3_ROOT_DIR "${Python_ROOT_DIR}")
+        set(Python3_FIND_STRATEGY LOCATION)
+        MESSAGE(STATUS "Using Python3_ROOT_DIR from Python_ROOT_DIR: ${Python_ROOT_DIR}")
     endif()
     FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
     
