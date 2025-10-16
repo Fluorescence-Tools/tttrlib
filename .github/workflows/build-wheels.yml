@@ -26,7 +26,22 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install boost
 
+      # Install Chocolatey if not present (for fast Boost installation)
+      - name: Install Chocolatey (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing Chocolatey..."
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          } else {
+            Write-Host "Chocolatey already installed"
+          }
+
       # Cache Boost build on Windows to avoid rebuilding
+      # Caches both the downloaded/extracted files and the built installation
       - name: Cache Boost (Windows)
         if: runner.os == 'Windows'
         uses: actions/cache@v4
@@ -34,8 +49,12 @@ jobs:
           path: |
             dist/cache
             dist/boost-install-x64
-          key: boost-1.86.0-windows-${{ runner.os }}-${{ runner.arch }}
+            dist/boost-install-arm64
+            C:\local\boost_*
+          key: boost-choco-${{ runner.os }}-${{ runner.arch }}-v3
           restore-keys: |
+            boost-choco-${{ runner.os }}-
+            boost-1.86.0-windows-prebuilt-${{ runner.os }}-
             boost-1.86.0-windows-${{ runner.os }}-
 
       - name: Install cibuildwheel
