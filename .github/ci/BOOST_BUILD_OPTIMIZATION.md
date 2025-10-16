@@ -2,37 +2,38 @@
 
 ## Overview
 
-The Windows wheel build process has been optimized to significantly reduce Boost build times from **15-20 minutes** down to **2-3 minutes** with Chocolatey, or **< 1 minute** with cache hits.
+The Windows wheel build process has been optimized to significantly reduce Boost build times from **15-20 minutes** down to **2-5 minutes** with vcpkg, or **< 1 minute** with cache hits.
 
 ## Optimization Strategies
 
-### 1. Chocolatey Package Manager (Primary Method - Fastest!)
+### 1. vcpkg Package Manager (Primary Method - Fastest!)
 
-**What it does:** Installs pre-built Boost binaries via Chocolatey package manager.
+**What it does:** Installs pre-built Boost binaries via vcpkg package manager.
 
 **Benefits:**
-- **Saves 12-17 minutes** compared to source build
-- **2-3 minutes** total install time (first run)
+- **Saves 10-15 minutes** compared to source build
+- **2-5 minutes** total install time (first run)
 - **< 1 minute** with GitHub Actions cache
-- No compilation required
-- Pre-built with MSVC 14.3 (Visual Studio 2022)
+- **No admin privileges required**
+- Pre-built with MSVC (Visual Studio 2022)
 - Automatic dependency handling
+- Works on GitHub-hosted Windows runners (vcpkg pre-installed)
 
 **How it works:**
-1. Checks if Chocolatey is available and running as administrator
-2. Installs `boost-msvc-14.3` package via `choco install`
-3. Copies from `C:\local\boost_*` to project directory
+1. Checks if vcpkg is available (via PATH or VCPKG_ROOT)
+2. Installs `boost-locale:x64-windows` via `vcpkg install`
+3. Copies from vcpkg installed directory to project directory
 4. Normalizes directory structure for CMake
-5. Falls back to source build if Chocolatey unavailable or fails
+5. Falls back to source build if vcpkg unavailable or fails
 
 **Requirements:**
-- Chocolatey installed (auto-installed in GitHub Actions)
-- Administrator privileges (GitHub Actions runners have this)
+- vcpkg installed (pre-installed on GitHub Actions Windows runners)
+- No administrator privileges needed
 
 **Configuration:**
 ```powershell
 # In build_boost_windows.ps1
-$UseChocolatey = $true  # Set to $false to force source build
+$UseVcpkg = $true  # Set to $false to force source build
 ```
 
 ### 2. Enhanced Caching Strategy

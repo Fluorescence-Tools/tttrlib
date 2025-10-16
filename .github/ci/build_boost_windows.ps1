@@ -13,7 +13,7 @@ $BoostVersionUnderscore = $BoostVersion.Replace(".", "_")
 $MinArchiveSizeMB   = 10
 
 # Try package managers first (fastest), then fall back to source build
-$UseChocolatey = $true  # Use Chocolatey if available (fastest method)
+$UseVcpkg = $true  # Use vcpkg if available (fastest method, no admin required)
 
 # Use source package with b2 pre-built (faster than full source)
 # Prefer .zip over .7z for more reliable extraction on Windows runners
@@ -74,84 +74,96 @@ if (-not $ForceBuild -and $env:BOOST_ROOT -and (Test-Path (Join-Path $env:BOOST_
 }
 
 # -------------------
-# Chocolatey installation (fastest method)
+# vcpkg installation (fastest method, no admin required)
 # -------------------
-function Install-BoostViaChocolatey {
+function Install-BoostViaVcpkg {
     param([string]$installPath, [string]$targetArch)
     
-    # Check if Chocolatey is available
-    $chocoCmd = Get-Command choco -ErrorAction SilentlyContinue
-    if (-not $chocoCmd) {
-        Write-Host "Chocolatey not available"
-        return $false
+    Write-Host "Installing Boost via vcpkg..."
+    
+    # Check if vcpkg is available
+    $vcpkgCmd = Get-Command vcpkg -ErrorAction SilentlyContinue
+    if (-not $vcpkgCmd) {
+        Write-Host "vcpkg not found in PATH, checking VCPKG_ROOT..."
+        if ($env:VCPKG_ROOT -and (Test-Path (Join-Path $env:VCPKG_ROOT "vcpkg.exe"))) {
+            $vcpkgCmd = Join-Path $env:VCPKG_ROOT "vcpkg.exe"
+            Write-Host "Found vcpkg at: $vcpkgCmd"
+        } else {
+            Write-Host "vcpkg not available (set VCPKG_ROOT or add to PATH)"
+            return $false
+        }
+    } else {
+        $vcpkgCmd = $vcpkgCmd.Source
     }
-    
-    # Check if running as administrator (required for Chocolatey)
-    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $isAdmin) {
-        Write-Warning "Chocolatey requires administrator privileges (not elevated)"
-        return $false
-    }
-    
-    Write-Host "Installing Boost via Chocolatey (requires admin)..."
-    
-    # Determine package name based on MSVC version
-    # boost-msvc-14.3 is for VS 2022 (MSVC 14.3)
-    $packageName = "boost-msvc-14.3"
     
     try {
-        # Install Boost via Chocolatey (installs to C:\local\boost_<version>)
-        Write-Host "Running: choco install $packageName -y --no-progress"
-        $output = choco install $packageName -y --no-progress 2>&1
+        # Determine triplet based on architecture
+        $triplet = if ($targetArch -eq "ARM64") { "arm64-windows" } else { "x64-windows" }
+        
+        Write-Host "Installing boost-locale:$triplet via vcpkg..."
+        Write-Host "This may take 2-5 minutes on first install..."
+        
+        # Install only the components we need
+        & $vcpkgCmd install "boost-locale:$triplet" --recurse
         
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Chocolatey install failed with exit code $LASTEXITCODE"
-            Write-Host "Output: $output"
+            Write-Warning "vcpkg install failed with exit code $LASTEXITCODE"
             return $false
         }
         
-        # Find the installed Boost directory
-        $chocoBoostDirs = Get-ChildItem -Path "C:\local" -Directory -Filter "boost_*" -ErrorAction SilentlyContinue | 
-                         Sort-Object Name -Descending | 
-                         Select-Object -First 1
+        # Find vcpkg installed directory
+        $vcpkgRoot = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { Split-Path (Split-Path $vcpkgCmd -Parent) -Parent }
+        $vcpkgInstalled = Join-Path $vcpkgRoot "installed\$triplet"
         
-        if (-not $chocoBoostDirs) {
-            Write-Warning "Could not find Chocolatey-installed Boost in C:\local"
+        if (-not (Test-Path $vcpkgInstalled)) {
+            Write-Warning "vcpkg installed directory not found: $vcpkgInstalled"
             return $false
         }
         
-        $chocoBoostPath = $chocoBoostDirs.FullName
-        Write-Host "Found Chocolatey Boost at: $chocoBoostPath"
+        Write-Host "Found vcpkg Boost at: $vcpkgInstalled"
         
         # Copy to our expected location
         if (Test-Path $installPath) { 
             Remove-Item -Recurse -Force $installPath -ErrorAction SilentlyContinue 
         }
+        New-Item -ItemType Directory -Force -Path $installPath | Out-Null
         
         Write-Host "Copying Boost to: $installPath"
-        Copy-Item -Recurse -Force $chocoBoostPath $installPath
+        
+        # Copy include directory
+        $vcpkgInclude = Join-Path $vcpkgInstalled "include"
+        if (Test-Path $vcpkgInclude) {
+            Copy-Item -Recurse -Force $vcpkgInclude $installPath
+        }
+        
+        # Copy lib directory
+        $vcpkgLib = Join-Path $vcpkgInstalled "lib"
+        if (Test-Path $vcpkgLib) {
+            Copy-Item -Recurse -Force $vcpkgLib $installPath
+        }
+        
+        # Copy bin directory (DLLs)
+        $vcpkgBin = Join-Path $vcpkgInstalled "bin"
+        if (Test-Path $vcpkgBin) {
+            Copy-Item -Recurse -Force $vcpkgBin $installPath
+        }
         
         # Verify installation
-        $includeDir = Join-Path $installPath "boost"
-        $libDir = Join-Path $installPath "lib64-msvc-14.3"
+        $includeDir = Join-Path $installPath "include\boost"
+        $libDir = Join-Path $installPath "lib"
         
         if ((Test-Path $includeDir) -and (Test-Path $libDir)) {
-            # Normalize lib directory
-            $normalizedLibDir = Join-Path $installPath "lib"
-            if (Test-Path $normalizedLibDir) { 
-                Remove-Item -Recurse -Force $normalizedLibDir -ErrorAction SilentlyContinue 
-            }
-            Copy-Item -Recurse -Force $libDir $normalizedLibDir
-            
-            Write-Host "SUCCESS: Boost installed successfully via Chocolatey"
+            Write-Host "SUCCESS: Boost installed successfully via vcpkg"
             return $true
         } else {
-            Write-Warning "Chocolatey Boost installation incomplete"
+            Write-Warning "vcpkg Boost installation incomplete"
+            Write-Host "Include dir: $includeDir (exists: $(Test-Path $includeDir))"
+            Write-Host "Lib dir: $libDir (exists: $(Test-Path $libDir))"
             return $false
         }
         
     } catch {
-        Write-Warning "Failed to install Boost via Chocolatey: $($_.Exception.Message)"
+        Write-Warning "Failed to install Boost via vcpkg: $($_.Exception.Message)"
         return $false
     }
 }
@@ -401,18 +413,18 @@ if (Test-Path $BoostInstallMarker) {
 } else {
     $SkipBuild = $false
     
-    # Try Chocolatey first (fastest method)
-    $ChocoSuccess = $false
-    if ($UseChocolatey) {
-        Write-Host "Attempting to install Boost via Chocolatey..."
-        $ChocoSuccess = Install-BoostViaChocolatey -installPath $BoostInstall -targetArch $TargetArch
+    # Try vcpkg first (fastest method, no admin required)
+    $VcpkgSuccess = $false
+    if ($UseVcpkg) {
+        Write-Host "Attempting to install Boost via vcpkg..."
+        $VcpkgSuccess = Install-BoostViaVcpkg -installPath $BoostInstall -targetArch $TargetArch
         
-        if ($ChocoSuccess) {
-            Write-Host "Successfully installed Boost via Chocolatey (skipping source build)"
+        if ($VcpkgSuccess) {
+            Write-Host "Successfully installed Boost via vcpkg (skipping source build)"
             New-Item -ItemType File -Path $BoostInstallMarker -Force | Out-Null
             $SkipBuild = $true
         } else {
-            Write-Host "Chocolatey installation failed or unavailable, falling back to source build..."
+            Write-Host "vcpkg installation failed or unavailable, falling back to source build..."
         }
     }
 }
