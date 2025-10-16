@@ -185,7 +185,8 @@ function Get-PrebuiltBoost {
     if (Test-Path $prebuiltFile) {
         $size = (Get-Item $prebuiltFile).Length / 1MB
         if ($size -gt 50) {
-            Write-Host "Using cached pre-built binary: $prebuiltFile (" $([math]::Round($size, 2)) "MB)"
+            $sizeMB = [math]::Round($size, 2)
+            Write-Host "Using cached pre-built binary: $prebuiltFile - $sizeMB MB"
             return $prebuiltFile
         } else {
             Write-Warning "Cached file too small, re-downloading..."
@@ -197,7 +198,7 @@ function Get-PrebuiltBoost {
     foreach ($url in $prebuiltUrls) {
         try {
             Write-Host "Downloading pre-built Boost from: $url"
-            Write-Host "This may take a few minutes (200+ MB)..."
+            Write-Host "This may take a few minutes - 200+ MB..."
             
             # Try Start-BitsTransfer first (best for SourceForge)
             try {
@@ -211,10 +212,12 @@ function Get-PrebuiltBoost {
             if (Test-Path $prebuiltFile) {
                 $size = (Get-Item $prebuiltFile).Length / 1MB
                 if ($size -gt 50) {  # Pre-built should be >50MB
-                    Write-Host "Downloaded pre-built binary: $prebuiltFile (" $([math]::Round($size, 2)) "MB)"
+                    $sizeMB = [math]::Round($size, 2)
+                    Write-Host "Downloaded pre-built binary: $prebuiltFile - $sizeMB MB"
                     return $prebuiltFile
                 } else {
-                    Write-Warning "Downloaded file too small (" $([math]::Round($size, 2)) "MB), trying next URL..."
+                    $sizeMB = [math]::Round($size, 2)
+                    Write-Warning "Downloaded file too small - $sizeMB MB, trying next URL..."
                     Remove-Item $prebuiltFile -Force -ErrorAction SilentlyContinue
                 }
             }
