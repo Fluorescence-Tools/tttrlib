@@ -50,11 +50,11 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: tools/install_macos_sdk.sh
 
-      - name: Configure build for x86
+      - name: Configure MSVC for x64
         if: startsWith(matrix.os, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: amd64_x86
+          arch: x64
 
       - name: Set up micromamba (conda-forge strict)
         uses: mamba-org/setup-micromamba@v2
