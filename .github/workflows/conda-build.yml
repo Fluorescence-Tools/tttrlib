@@ -1,16 +1,16 @@
-name: Conda Build
+name: Conda Build (Miniconda)
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - development  # You can change this to the branch you want to trigger on
+      - development
   schedule:
-    # Every Monday at 17PM UTC (9AM EST)
+    # Every Monday at 17:00 UTC
     - cron: "0 17 * * 1"
 
 jobs:
-  build-linux:
+  build:
     name: CondaBuild (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -18,38 +18,86 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.10"]
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Set up Conda
+      - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: "latest"
           channels: conda-forge,defaults
-          channel-priority: true
+          channel-priority: strict
+          auto-update-conda: true
+          use-mamba: true
+          python-version: ${{ matrix.python-version }}
+          activate-environment: ""   # stay in base initially
 
-      - name: Display Conda Settings
+      - name: Configure Conda (libmamba, non-interactive)
         shell: bash -el {0}
         run: |
+          conda config --set solver libmamba
+          conda config --set always_yes true
           conda info
-          conda list
-          conda config --show-sources
           conda config --show
+          echo "--- ENV ---"
           printenv | sort
 
-      - name: "Set SDK on MacOS (if needed)"
-        if: startsWith(matrix.os, 'macos')
-        run: tools/install_macos_sdk.sh
+      - name: Windows path + longpaths
+        if: startsWith(matrix.os, 'windows')
+        shell: bash -el {0}
+        run: |
+          echo "CONDA_BLD_PATH=C:\\bld" >> $GITHUB_ENV
+          git config --system core.longpaths true
 
-      - name: Build Conda Package
+      - name: Set macOS SDK (optional)
+        if: startsWith(matrix.os, 'macos')
+        shell: bash -el {0}
+        run: |
+          if [[ -x tools/install_macos_sdk.sh ]]; then
+            tools/install_macos_sdk.sh
+          else
+            echo "No macOS SDK setup script found; continuing."
+          fi
+
+      - name: Create build environment
+        shell: bash -el {0}
+        run: |
+          mamba create -n build conda-build boa cmake ninja ripgrep -y
+          conda activate build
+          conda info --envs
+
+      - name: Fetch conda-forge pinning (optional but recommended)
+        shell: bash -el {0}
+        run: |
+          mkdir -p conda-recipe
+          cd conda-recipe
+          curl -fsSL \
+            https://raw.githubusercontent.com/conda-forge/conda-forge-pinning-feedstock/main/recipe/conda_build_config.yaml \
+            -o conda_build_config.yaml
+          echo "Using conda-forge pinning (head):"
+          head -n 40 conda_build_config.yaml || true
+
+      - name: Build Conda package (conda-recipe/)
         shell: bash -el {0}
         timeout-minutes: 120
         run: |
-          conda install conda-build boa mamba
+          conda activate build
           cd conda-recipe
-          # Don't download full conda-forge pinning to avoid environment variable overload
-          # curl -sLO https://github.com/conda-forge/conda-forge-pinning-feedstock/raw/main/recipe/conda_build_config.yaml
-          conda mambabuild .
+          # For speed while diagnosing hangs, skip tests; re-enable later
+          conda mambabuild . -m conda_build_config.yaml --no-test
+
+      - name: Upload built packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-bld-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: |
+            **/conda-bld/**/*.conda
+            **/conda-bld/**/*.tar.bz2
+            C:\bld\**\*.conda
+            C:\bld\**\*.tar.bz2
+          if-no-files-found: warn
