@@ -92,8 +92,7 @@ HDF5_ROOT = "/usr/local"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
-manylinux-aarch64-image = "manylinux_2_28"
-archs = ["x86_64", "aarch64"]
+archs = ["x86_64"]
 # Note: Boost components are defined in .github/ci/boost-config.txt
 # boost-devel package includes all components
 before-all = [

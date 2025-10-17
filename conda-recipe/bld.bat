@@ -1,6 +1,4 @@
-:: Update submodules
-git submodule update --recursive --init --remote
-
+:: Submodules should already be checked out by GitHub Actions checkout step
 cd %SRC_DIR%
 
 echo "Build app wrapper"
