@@ -1,7 +1,8 @@
 # tttrlib
 [![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![PyPI version](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
-![conda build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
+![Conda Build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
+![Build Wheels](https://github.com/fluorescence-tools/tttrlib/actions/workflows/build-wheels.yml/badge.svg)
 
 
 ## General description
