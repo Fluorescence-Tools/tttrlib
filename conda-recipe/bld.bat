@@ -1,12 +1,19 @@
 :: Submodules should already be checked out by GitHub Actions checkout step
 cd %SRC_DIR%
 
-:: Activate the compiler
-call "%BUILD_PREFIX%\etc\conda\activate.d\vs2017_compiler_activation.bat"
-if errorlevel 1 (
-    echo "Failed to activate VS2017 compiler"
+:: Manually activate the VS2017 compiler from conda's vs2017_win-64 package
+:: The activation scripts should be sourced automatically by conda-build, but we'll do it explicitly
+for /f "usebackq tokens=*" %%i in (`"%BUILD_PREFIX%\Library\bin\vswhere.exe" -products * -version "[15.0,16.0)" -property installationPath`) do (
+    set "VSINSTALLDIR=%%i"
+)
+
+if not defined VSINSTALLDIR (
+    echo "Visual Studio 2017 not found via vswhere"
     exit 1
 )
+
+echo "Found VS2017 at: %VSINSTALLDIR%"
+call "%VSINSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
 
 rmdir b2 /s /q
 mkdir b2
