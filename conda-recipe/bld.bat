@@ -1,6 +1,13 @@
 :: Submodules should already be checked out by GitHub Actions checkout step
 cd %SRC_DIR%
 
+:: Activate the compiler
+call "%BUILD_PREFIX%\etc\conda\activate.d\vs2017_compiler_activation.bat"
+if errorlevel 1 (
+    echo "Failed to activate VS2017 compiler"
+    exit 1
+)
+
 rmdir b2 /s /q
 mkdir b2
 cd b2
