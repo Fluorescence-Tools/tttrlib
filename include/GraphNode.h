@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <cstdint>
 
 /**
  * @brief Base class for graph node functionality in CLSM hierarchy.
