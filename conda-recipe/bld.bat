@@ -1,12 +1,6 @@
 :: Submodules should already be checked out by GitHub Actions checkout step
 cd %SRC_DIR%
 
-echo "Build app wrapper"
-:: build app wrapper
-copy "%RECIPE_DIR%\app_wrapper.c" .
-cl /nologo /O2 /W3 /Fe:app_wrapper.exe app_wrapper.c shell32.lib
-if errorlevel 1 exit 1
-
 rmdir b2 /s /q
 mkdir b2
 cd b2
@@ -26,10 +20,3 @@ cmake .. -G "NMake Makefiles" ^
  -DBoost_USE_STATIC_LIBS=OFF
 
 nmake install
-
-:: Add wrappers to path for each Python command line tool
-:: (all files without an extension)
-cd %SRC_DIR%\bin
-for /f %%f in ('dir /b *.py') do copy "%SRC_DIR%\bin\%%f" "%PREFIX%\Library\bin\%%f"
-for /f %%f in ('dir /b *.') do copy "%SRC_DIR%\app_wrapper.exe" "%PREFIX%\Library\bin\%%f.exe"
-if errorlevel 1 exit 1
