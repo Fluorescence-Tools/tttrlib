@@ -47,7 +47,23 @@ IF(WITH_AVX)
     ENDIF ()
 ENDIF()
 
-# Debug build
+# OpenMP - Works on all architectures (x86_64, ARM, etc.)
+OPTION(WITH_OPENMP "Enable OpenMP parallelization for correlation" ON)
+IF(WITH_OPENMP)
+    FIND_PACKAGE(OpenMP)
+    IF(OpenMP_CXX_FOUND)
+        MESSAGE(STATUS "OpenMP enabled: ${OpenMP_CXX_VERSION} (${CMAKE_HOST_SYSTEM_PROCESSOR})")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    ELSE()
+        MESSAGE(WARNING "OpenMP requested but not found - correlation will run single-threaded")
+        SET(WITH_OPENMP OFF)
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "OpenMP disabled")
+ENDIF()
+
+# Build type specific optimizations
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   SET(VERBOSE_TTTRLIB ON)
   if(MSVC)
@@ -55,7 +71,38 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   ELSE(MSVC)
       ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
   ENDIF(MSVC)
-ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
+  # Aggressive optimizations for Release builds
+  MESSAGE(STATUS "Release build: Enabling aggressive optimizations")
+  if(MSVC)
+    # MSVC optimizations
+    ADD_COMPILE_OPTIONS(
+      /O2          # Maximum optimization (speed)
+      /Ob2         # Inline function expansion
+      /Oi          # Enable intrinsic functions
+      /Ot          # Favor fast code
+      /GL          # Whole program optimization
+      /fp:fast     # Fast floating point
+      /arch:AVX2   # Use AVX2 instructions (if available)
+    )
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")  # Link-time code generation
+    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+  ELSE()
+    # GCC/Clang optimizations
+    ADD_COMPILE_OPTIONS(
+      -O3                    # Maximum optimization
+      -march=native          # Optimize for current CPU
+      -mtune=native          # Tune for current CPU
+      -ffast-math            # Fast math operations
+      -funroll-loops         # Unroll loops
+      -finline-functions     # Inline functions
+      -fomit-frame-pointer   # Omit frame pointer
+      -flto                  # Link-time optimization
+    )
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
+    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+  ENDIF()
+ENDIF ()
 
 # Operation sytem specific flags
 IF (MSVC)
