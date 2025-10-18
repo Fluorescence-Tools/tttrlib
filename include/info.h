@@ -90,6 +90,42 @@ namespace cpu_features {
         return is_feature_enabled_by_env("TTTRLIB_USE_FMA", has_fma);
     }
     
+    // Get OpenMP status (compile-time + environment override)
+    inline bool get_openmp_enabled() {
+#ifdef _OPENMP
+        // OpenMP available at compile time
+        bool default_enabled = true;
+#else
+        // OpenMP not available at compile time
+        bool default_enabled = false;
+#endif
+        return is_feature_enabled_by_env("TTTRLIB_USE_OPENMP", default_enabled);
+    }
+    
+    // Get number of OpenMP threads (respects OMP_NUM_THREADS and TTTRLIB_NUM_THREADS)
+    inline int get_openmp_num_threads() {
+#ifdef _OPENMP
+        // Check TTTRLIB-specific override first
+        const char* tttr_threads = std::getenv("TTTRLIB_NUM_THREADS");
+        if (tttr_threads != nullptr) {
+            int n = std::atoi(tttr_threads);
+            if (n > 0) return n;
+        }
+        
+        // Fall back to OMP_NUM_THREADS or default
+        const char* omp_threads = std::getenv("OMP_NUM_THREADS");
+        if (omp_threads != nullptr) {
+            int n = std::atoi(omp_threads);
+            if (n > 0) return n;
+        }
+        
+        // Default: use all available threads
+        return 0; // 0 means use OpenMP default
+#else
+        return 1; // Single-threaded if OpenMP not available
+#endif
+    }
+    
 } // namespace cpu_features
 } // namespace tttrlib
 

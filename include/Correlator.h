@@ -12,10 +12,25 @@
 #include <climits>
 #include <map>
 
+#if defined(__AVX__)
+  #if defined(_MSC_VER)
+    /* Microsoft C/C++-compatible compiler */
+    #include <intrin.h>
+  #else
+    /* GNU or Clang compiler - use immintrin.h which includes all intrinsics */
+    #include <immintrin.h>
+  #endif
+
+  #ifndef __FMA__
+    #define __FMA__ 1
+  #endif
+#endif
+
 #include "TTTR.h"
 #include "CorrelatorPhotonStream.h"
 #include "CorrelatorCurve.h"
 #include "CLSMImage.h"
+#include "info.h"
 
 
 class Correlator {
@@ -48,6 +63,33 @@ protected:
      * @param corrl correlation output
      */
     static void ccf_felekyan(
+            const unsigned long long *t1,
+            const unsigned long long *t2,
+            const double *weights1,
+            const double *weights2,
+            unsigned int nc,
+            unsigned int nb,
+            unsigned int np1,
+            unsigned int np2,
+            const unsigned long long *xdat, double *corrl
+    );
+
+    /*!
+     * AVX-optimized version of ccf_felekyan
+     * Only called when runtime AVX detection confirms support
+     * 
+     * @param t1 macrotime vector of first correlation channel
+     * @param t2 macrotime vector of second correlation channel
+     * @param weights1 weights of first correlation channel
+     * @param weights2 weights of second correlation channel
+     * @param nc number of evenly spaced elements per block
+     * @param nb number of blocks of increasing spacing
+     * @param np1 number of photons in first channel
+     * @param np2 number of photons in second channel
+     * @param xdat correlation time bins (timeaxis)
+     * @param corrl correlation output
+     */
+    static void ccf_felekyan_avx(
             const unsigned long long *t1,
             const unsigned long long *t2,
             const double *weights1,
