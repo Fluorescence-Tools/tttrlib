@@ -5,6 +5,7 @@
 #include <memory>
 #include <algorithm>
 #include <cstdint>
+#include <climits>
 
 /**
  * @brief Base class for graph node functionality in CLSM hierarchy.
