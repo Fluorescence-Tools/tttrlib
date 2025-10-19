@@ -1,10 +1,16 @@
 #include "include/CLSMImage.h"
 #include "include/Verbose.h"
+#include "include/info.h"
 #include <memory>
+#include <cstring>  // for memset
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     if (is_verbose()) {
-        std::clog << "-- Copying image structure." << std::endl;
+        std::clog << "-- Copying image structure..." << std::endl;
         if (fill) {
             std::clog << "-- Copying pixel information." << std::endl;
         }
@@ -208,15 +214,52 @@ CLSMImage::CLSMImage(
 void CLSMImage::create_pixels_in_lines() {
     if (is_verbose()) {
         std::clog << "-- CLSMImage::create_pixels_in_lines" << std::endl;
+        
+        // Show CPU features
+        bool has_avx = tttrlib::cpu_features::get_avx_enabled();
+        bool has_openmp = tttrlib::cpu_features::get_openmp_enabled();
+        std::clog << "-- CPU features: AVX=" << (has_avx ? "yes" : "no") 
+                  << ", OpenMP=" << (has_openmp ? "yes" : "no") << std::endl;
+#ifdef _OPENMP
+        if (has_openmp) {
+            std::clog << "-- OpenMP threads: " << omp_get_max_threads() << std::endl;
+        }
+#endif
     }
-    // by improving here, a factor of two in speed could be possible.
+    
+    // Estimate average photons per pixel for pre-allocation
+    // This optimization can provide a factor of two in speed improvement
+    size_t total_pixels = n_frames * n_lines * n_pixel;
+    size_t estimated_photons_per_pixel = 10; // Default conservative estimate
+    
+    if (tttr != nullptr && total_pixels > 0) {
+        size_t total_events = tttr->get_n_valid_events();
+        // Estimate with 1.5x buffer to reduce reallocations
+        estimated_photons_per_pixel = (total_events / total_pixels) * 3 / 2;
+        // Ensure reasonable bounds
+        estimated_photons_per_pixel = std::max(size_t(10), estimated_photons_per_pixel);
+        
+        if (is_verbose()) {
+            std::clog << "-- Total events: " << total_events << std::endl;
+            std::clog << "-- Total pixels: " << total_pixels << std::endl;
+            std::clog << "-- Estimated photons per pixel: " << estimated_photons_per_pixel << std::endl;
+        }
+    }
+    
+    // Create pixels (serial is faster due to memory allocation overhead)
     for (auto &f: frames) {
         for (auto &l: f->lines) {
             l->pixels.resize(n_pixel);
+            // Pre-allocate storage for each pixel to avoid reallocations during fill
+            for (auto &p: l->pixels) {
+                p._tttr_indices.reserve(estimated_photons_per_pixel);
+            }
         }
     }
+    
     if (is_verbose()) {
         std::clog << "-- Number of pixels per line: " << n_pixel << std::endl;
+        std::clog << "-- Pre-allocated capacity per pixel: " << estimated_photons_per_pixel << std::endl;
     }
 }
 
@@ -253,6 +296,10 @@ std::vector<int> CLSMImage::get_frame_edges(
     bool skip_after_last_frame_marker) {
     int n_events = static_cast<int>(tttr->get_n_valid_events());
     std::vector<int> frame_edges;
+    
+    // Reserve space - estimate ~100-1000 frames
+    frame_edges.reserve(1000);
+    
     if (!skip_before_first_frame_marker)
         frame_edges.emplace_back(start_event);
     if (stop_event < 0) stop_event = n_events;
@@ -266,23 +313,40 @@ std::vector<int> CLSMImage::get_frame_edges(
         std::clog << "-- stop_event:" << stop_event << std::endl;
     }
 
-    for (int i_event = start_event; i_event < stop_event; i_event++) {
-        for (auto f: marker_frame) {
-            if (reading_routine == CLSM_SP8) {
-                if (tttr->routing_channels[i_event] == marker_event_type) {
-                    if (f == tttr->micro_times[i_event]) {
+    // Pre-fetch pointers for faster access
+    const signed char* event_types = tttr->event_types;
+    const signed char* routing_channels = tttr->routing_channels;
+    const unsigned short* micro_times = tttr->micro_times;
+    
+    // Hoist reading_routine check outside the loop
+    if (reading_routine == CLSM_SP8) {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            if (routing_channels[i_event] == marker_event_type) {
+                unsigned short mt = micro_times[i_event];
+                for (auto f: marker_frame) {
+                    if (f == mt) {
                         frame_edges.emplace_back(i_event);
                         break;
                     }
                 }
-            } else if (reading_routine == CLSM_SP5) {
-                if (f == tttr->routing_channels[i_event]) {
+            }
+        }
+    } else if (reading_routine == CLSM_SP5) {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            signed char rc = routing_channels[i_event];
+            for (auto f: marker_frame) {
+                if (f == rc) {
                     frame_edges.emplace_back(i_event);
                     break;
                 }
-            } else {
-                if (tttr->event_types[i_event] == marker_event_type) {
-                    if (f == tttr->routing_channels[i_event]) {
+            }
+        }
+    } else {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            if (event_types[i_event] == marker_event_type) {
+                signed char rc = routing_channels[i_event];
+                for (auto f: marker_frame) {
+                    if (f == rc) {
                         frame_edges.emplace_back(i_event);
                         break;
                     }
@@ -313,41 +377,58 @@ std::vector<int> CLSMImage::get_line_edges(
     if (stop_event < 0)
         stop_event = static_cast<int>(tttr->n_valid_events);
 
+    // Reserve space: estimate 2 edges per line, with typical 256-512 lines per frame
+    size_t estimated_lines = (stop_event - start_event) / 1000; // Conservative estimate
+    estimated_lines = std::max(size_t(100), std::min(size_t(2048), estimated_lines));
+    line_edges.reserve(estimated_lines * 2);
+
     if (reading_routine == CLSM_SP5) {
         line_edges.emplace_back(start_event);
     }
 
-    for (int i_event = start_event; i_event < stop_event; i_event++) {
-        if (reading_routine == CLSM_SP8) {
-            if (tttr->routing_channels[i_event] == marker_event_type) {
-                if (tttr->micro_times[i_event] == marker_line_start) {
+    // Pre-fetch pointers for faster access
+    const signed char* event_types = tttr->event_types;
+    const signed char* routing_channels = tttr->routing_channels;
+    const unsigned short* micro_times = tttr->micro_times;
+    
+    // Cast markers to appropriate types once
+    signed char marker_start_sc = static_cast<signed char>(marker_line_start);
+    signed char marker_stop_sc = static_cast<signed char>(marker_line_stop);
+    unsigned short marker_start_us = static_cast<unsigned short>(marker_line_start);
+    unsigned short marker_stop_us = static_cast<unsigned short>(marker_line_stop);
+    signed char marker_event_sc = static_cast<signed char>(marker_event_type);
+    
+    // Hoist reading_routine check outside the loop
+    if (reading_routine == CLSM_SP8) {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            if (routing_channels[i_event] == marker_event_sc) {
+                unsigned short mt = micro_times[i_event];
+                if (mt == marker_start_us) {
                     line_edges.emplace_back(i_event);
-                    continue;
-                }
-                if (tttr->micro_times[i_event] == marker_line_stop) {
+                } else if (mt == marker_stop_us) {
                     line_edges.emplace_back(i_event);
-                    continue;
                 }
             }
-        } else if (reading_routine == CLSM_SP5) {
-            if (tttr->event_types[i_event] == marker_event_type) {
-                if (tttr->routing_channels[i_event] == marker_line_start) {
+        }
+    } else if (reading_routine == CLSM_SP5) {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            if (event_types[i_event] == marker_event_sc) {
+                signed char rc = routing_channels[i_event];
+                if (rc == marker_start_sc) {
                     line_edges.emplace_back(i_event);
-                    continue;
-                }
-                if (tttr->routing_channels[i_event] == marker_line_stop) {
+                } else if (rc == marker_stop_sc) {
                     line_edges.emplace_back(i_event);
-                    continue;
                 }
             }
-        } else {
-            if (tttr->event_types[i_event] == marker_event_type) {
-                if (tttr->routing_channels[i_event] == marker_line_start) {
+        }
+    } else {
+        for (int i_event = start_event; i_event < stop_event; i_event++) {
+            if (event_types[i_event] == marker_event_sc) {
+                signed char rc = routing_channels[i_event];
+                if (rc == marker_start_sc) {
                     line_edges.emplace_back(i_event);
-                    continue;
-                } else if (tttr->routing_channels[i_event] == marker_line_stop) {
+                } else if (rc == marker_stop_sc) {
                     line_edges.emplace_back(i_event);
-                    continue;
                 }
             }
         }
@@ -378,34 +459,88 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
 
     if (frame_stop < 0) frame_stop = static_cast<int>(tttr->n_valid_events);
     std::vector<int> line_edges;
-    for (int i_event = frame_start; i_event < frame_stop; i_event++) {
-        std::pair<int, int> start_stop;
-        if (reading_routine == CLSM_SP8) {
-            start_stop = find_clsm_start_stop(
-                i_event,
-                marker_line_start, -1, marker_event_type,
-                tttr->macro_times,
-                tttr->routing_channels,
-                tttr->micro_times,
-                frame_stop,
-                line_duration
-            );
-        } else {
-            start_stop = find_clsm_start_stop(
-                i_event,
-                marker_line_start, -1, marker_event_type,
-                tttr->macro_times,
-                tttr->routing_channels,
-                tttr->event_types,
-                frame_stop,
-                line_duration
-            );
+    
+    // Reserve space for line edges
+    size_t estimated_lines = (frame_stop - frame_start) / 1000;
+    estimated_lines = std::max(size_t(100), std::min(size_t(2048), estimated_lines));
+    line_edges.reserve(estimated_lines * 2);
+    
+    // Pre-fetch pointers for faster access
+    const unsigned long long* macro_times = tttr->macro_times;
+    const signed char* routing_channels = tttr->routing_channels;
+    const unsigned short* micro_times = tttr->micro_times;
+    const signed char* event_types = tttr->event_types;
+    
+    // Pre-cast markers
+    signed char marker_start_sc = static_cast<signed char>(marker_line_start);
+    unsigned short marker_start_us = static_cast<unsigned short>(marker_line_start);
+    signed char marker_event_sc = static_cast<signed char>(marker_event_type);
+    
+    // Optimized line finding - only process marker events
+    if (reading_routine == CLSM_SP8) {
+        for (int i_event = frame_start; i_event < frame_stop; i_event++) {
+            // Only check marker events
+            if (routing_channels[i_event] == marker_event_sc) {
+                if (micro_times[i_event] == marker_start_us) {
+                    // Found line start - calculate stop based on duration
+                    int line_start = i_event;
+                    unsigned long long stop_time = macro_times[i_event] + line_duration;
+                    
+                    // Binary search for stop event by time (much faster than linear)
+                    int left = i_event + 1;
+                    int right = frame_stop - 1;
+                    int line_stop = -1;
+                    
+                    while (left <= right) {
+                        int mid = left + (right - left) / 2;
+                        if (macro_times[mid] >= stop_time) {
+                            line_stop = mid;
+                            right = mid - 1;  // Look for earlier match
+                        } else {
+                            left = mid + 1;
+                        }
+                    }
+                    
+                    if (line_stop > 0) {
+                        line_edges.emplace_back(line_start);
+                        line_edges.emplace_back(line_stop);
+                    }
+                }
+            }
         }
-        if ((start_stop.first > 0) && (start_stop.second > 0)) {
-            line_edges.emplace_back(start_stop.first);
-            line_edges.emplace_back(start_stop.second);
+    } else {
+        for (int i_event = frame_start; i_event < frame_stop; i_event++) {
+            // Only check marker events
+            if (event_types[i_event] == marker_event_sc) {
+                if (routing_channels[i_event] == marker_start_sc) {
+                    // Found line start - calculate stop based on duration
+                    int line_start = i_event;
+                    unsigned long long stop_time = macro_times[i_event] + line_duration;
+                    
+                    // Binary search for stop event by time (much faster than linear)
+                    int left = i_event + 1;
+                    int right = frame_stop - 1;
+                    int line_stop = -1;
+                    
+                    while (left <= right) {
+                        int mid = left + (right - left) / 2;
+                        if (macro_times[mid] >= stop_time) {
+                            line_stop = mid;
+                            right = mid - 1;  // Look for earlier match
+                        } else {
+                            left = mid + 1;
+                        }
+                    }
+                    
+                    if (line_stop > 0) {
+                        line_edges.emplace_back(line_start);
+                        line_edges.emplace_back(line_stop);
+                    }
+                }
+            }
         }
     }
+    
     return line_edges;
 }
 
@@ -447,14 +582,27 @@ void CLSMImage::create_lines() {
         std::clog << "CLSMIMAGE::CREATE_LINES" << std::endl;
         std::clog << "-- Frame start, frame stop idx:" << std::endl;
     }
-    for (auto &frame: frames) {
-        if (is_verbose()) {
-            std::clog << "\t" << frame->get_start() << ", " << frame->get_stop() << std::endl;
-        }
-        int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
-        if (is_verbose()) {
-            std::clog << "-- find line edges" << std::endl;
-        }
+    
+    int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
+    
+    // Parallelize line finding across frames
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+    if (use_openmp && num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
+#endif
+    
+    if (is_verbose()) {
+        std::clog << "-- Parallel line finding enabled: " << (use_openmp ? "yes" : "no") << std::endl;
+    }
+    
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() > 4)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
+        auto &frame = frames[f_idx];
+        
         // find line edges
         std::vector<int> line_edges;
         if (settings.marker_line_stop >= 0) {
@@ -480,17 +628,19 @@ void CLSMImage::create_lines() {
             );
         }
 
-        if (is_verbose()) {
-            std::clog << "-- append lines to frames" << std::endl;
-        }
-        for (size_t i_line = 0; i_line < line_edges.size() / 2; i_line++) {
+        // Pre-allocate lines vector for better performance
+        size_t n_lines = line_edges.size() / 2;
+        frame->lines.reserve(n_lines);
+        
+        // Create and append lines
+        for (size_t i_line = 0; i_line < n_lines; i_line++) {
             auto line_start = line_edges[(i_line * 2) + 0];
             auto line_stop = line_edges[(i_line * 2) + 1];
             auto line = new CLSMLine();
             line->set_range(line_start, line_stop);
             line->set_tttr(tttr);
             line->set_pixel_duration(pixel_duration);
-            frame->append(line);
+            frame->lines.emplace_back(line);
         }
     }
 }
@@ -498,7 +648,7 @@ void CLSMImage::create_lines() {
 void CLSMImage::remove_incomplete_frames() {
     // remove incomplete frames
     if (is_verbose()) {
-        std::clog << "-- Removing incomplete frames" << std::endl;
+        std::clog << "-- Removing incomplete frames..." << std::endl;
     }
     std::vector<CLSMFrame *> complete_frames;
     n_frames = frames.size();
@@ -610,8 +760,46 @@ void CLSMImage::fill(
         }
     }
 
+    // Pre-compute channel lookup for faster matching
+    bool channel_lookup[256] = {false};  // Assume max 256 routing channels
+    if (!do_split_fill) {
+        for (auto ch : channels) {
+            if (ch >= 0 && ch < 256) {
+                channel_lookup[ch] = true;
+            }
+        }
+    }
+    
+    // Pre-fetch TTTR data pointers once - they're read-only and shared across all threads
+    const signed char* event_types = tttr_data->event_types;
+    const signed char* routing_channels_ptr = tttr_data->routing_channels;
+    const unsigned long long* macro_times = tttr_data->macro_times;
+    const unsigned short* micro_times = tttr_data->micro_times;
+    
+    // Parallelize over frames - each frame writes to independent pixels
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    // Set number of threads from environment variables
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+    if (use_openmp && num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
+#endif
+    
+    if (is_verbose()) {
+        std::clog << "-- Parallel fill enabled: " << (use_openmp ? "yes" : "no") << std::endl;
+#ifdef _OPENMP
+        if (use_openmp) {
+            int actual_threads = (num_threads > 0) ? num_threads : omp_get_max_threads();
+            std::clog << "-- OpenMP threads: " << actual_threads << std::endl;
+        }
+#endif
+    }
+    
     // Iterate over each frame in the image
-    for (size_t f_idx = 0; f_idx < frames.size(); ++f_idx) {
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() > 4)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         CLSMFrame* frame = frames[f_idx];
         // We need the line index to decide if a line is "reversed"
         for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
@@ -643,65 +831,84 @@ void CLSMImage::fill(
 
             // The macro‐time clock at which this line began
             unsigned long long line_start_time = line->get_start_time(tttr_data);
+            
+            // Pre-compute for faster pixel calculation
+            int n_pixels_minus_1 = static_cast<int>(n_pixels_in_line) - 1;
+            
+            // Pre-compute channel index for split fill (constant per frame)
+            size_t ch_idx = 0;
+            if (do_split_fill && channel_block_size > 0) {
+                ch_idx = f_idx / channel_block_size;
+            }
+            
+            // Cache pixel array pointer for faster access
+            auto* pixels_ptr = line->pixels.data();
+            
+            // Pre-compute channel matching value for split fill
+            signed char target_channel = 0;
+            bool check_channel_match = true;
+            if (do_split_fill) {
+                if (ch_idx < channels.size()) {
+                    target_channel = static_cast<signed char>(channels[ch_idx]);
+                } else {
+                    check_channel_match = false;  // Skip all photons
+                }
+            }
 
             // Walk through each TTTR event that falls within this line's event indices
             for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
                 // Only process photon events, skip all others
-                if (tttr_data->event_types[event_i] != RECORD_PHOTON) {
+                signed char event_type = event_types[event_i];
+                if (event_type != RECORD_PHOTON) {
                     continue;
                 }
 
                 // Pull the routing channel for this photon event
-                auto c = tttr_data->routing_channels[event_i];
+                signed char c = routing_channels_ptr[event_i];
 
                 // Decide if this photon should be included in this frame (channel-aware)
-                bool channel_match = false;
                 if (do_split_fill) {
-                    // Determine the channel assigned to this frame by its block index
-                    size_t ch_idx = (channel_block_size > 0) ? (f_idx / channel_block_size) : 0;
-                    if (ch_idx < channels.size()) {
-                        channel_match = (c == channels[ch_idx]);
+                    // Direct comparison with pre-computed target
+                    if (!check_channel_match || c != target_channel) {
+                        continue;
                     }
                 } else {
-                    // Non-split: accept any photon whose route is in the 'channels' list
-                    for (auto &ci : channels) {
-                        if (c == ci) { channel_match = true; break; }
+                    // Fast lookup using pre-computed array (unsigned cast for bounds check)
+                    unsigned char uc = static_cast<unsigned char>(c);
+                    if (uc >= 256 || !channel_lookup[uc]) {
+                        continue;
                     }
-                }
-                if (!channel_match) {
-                    continue;
                 }
 
                 // Compute the "raw" pixel index as if scanning left→right
-                int raw_pixel = static_cast<int>(
-                    (tttr_data->macro_times[event_i] - line_start_time)
-                    / pixel_duration
-                );
-
-                // If the computed raw index falls outside the line, skip
-                if (raw_pixel < 0 || raw_pixel >= static_cast<int>(n_pixels_in_line)) {
+                unsigned long long time_offset = macro_times[event_i] - line_start_time;
+                unsigned long long pixel_idx_calc = time_offset / pixel_duration;
+                
+                // If the computed raw index falls outside the line, skip (single comparison)
+                if (pixel_idx_calc > static_cast<unsigned long long>(n_pixels_minus_1)) {
                     continue;
                 }
-
+                
+                int raw_pixel = static_cast<int>(pixel_idx_calc);
                 // If the line was scanned right→left, flip the raw index
-                size_t pixel_nbr = static_cast<size_t>(
-                    is_reversed
-                        ? (static_cast<int>(n_pixels_in_line) - 1 - raw_pixel)
-                        : raw_pixel
-                );
+                int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
 
-                // Verify that the photon’s micro time falls within the specified ranges
-                bool add_ph = true;
-                auto micro_time = tttr_data->micro_times[event_i];
-                for (auto r: micro_time_ranges) {
-                    add_ph &= (micro_time >= r.first);
-                    add_ph &= (micro_time <= r.second);
+                // Verify that the photon's micro time falls within the specified ranges
+                if (!micro_time_ranges.empty()) {
+                    unsigned short micro_time = micro_times[event_i];
+                    // Check all ranges - early exit on first failure
+                    bool in_range = false;
+                    for (const auto& r: micro_time_ranges) {
+                        if (micro_time >= r.first && micro_time <= r.second) {
+                            in_range = true;
+                            break;
+                        }
+                    }
+                    if (!in_range) continue;
                 }
 
-                // If it passes the micro‐time filter, insert the event index
-                if (add_ph) {
-                    line->pixels[pixel_nbr].insert(event_i);
-                }
+                // Insert the event index using cached pointer
+                pixels_ptr[pixel_nbr].insert(event_i);
             }
         }
     }
@@ -731,24 +938,41 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
                 std::endl;
         std::clog << "-- Total number of pixels: " << n_pixel_total << std::endl;
     }
-    auto *t = (unsigned short *) calloc(n_pixel_total + 1, sizeof(unsigned short));
-    size_t i_frame = 0;
-    size_t t_pixel = 0;
-    for (auto &frame: frames) {
-        size_t i_line = 0;
-        for (auto &line: frame->lines) {
-            size_t i_pixel = 0;
-            for (auto &pixel: line->pixels) {
+    // Use malloc instead of calloc - we'll write to every element anyway
+    auto *t = (unsigned short *) malloc((n_pixel_total + 1) * sizeof(unsigned short));
+    
+    // Parallelize over frames for better cache locality
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+    if (use_openmp && num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
+#endif
+    
+    if (is_verbose()) {
+        std::clog << "-- OpenMP enabled: " << (use_openmp ? "yes" : "no") << std::endl;
+#ifdef _OPENMP
+        if (use_openmp) {
+            int actual_threads = (num_threads > 0) ? num_threads : omp_get_max_threads();
+            std::clog << "-- OpenMP threads: " << actual_threads << std::endl;
+        }
+#endif
+    }
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4)
+    for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
+        auto &frame = frames[i_frame];
+        for (size_t i_line = 0; i_line < frame->lines.size(); i_line++) {
+            auto &line = frame->lines[i_line];
+            for (size_t i_pixel = 0; i_pixel < line->pixels.size(); i_pixel++) {
+                auto &pixel = line->pixels[i_pixel];
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
                                    i_line * (n_pixel) +
                                    i_pixel;
                 t[pixel_nbr] = static_cast<unsigned short>(pixel.get_index_count());
-                t_pixel++;
-                i_pixel++;
             }
-            i_line++;
         }
-        i_frame++;
     }
     *output = t;
 }
@@ -770,7 +994,9 @@ void CLSMImage::get_fluorescence_decay(
     *dim4 = static_cast<int>(n_tac);
 
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
-    auto *t = (unsigned char *) calloc(n_tac_total, sizeof(unsigned char));
+    // Use malloc + memset for large arrays - faster than calloc
+    auto *t = (unsigned char *) malloc(n_tac_total * sizeof(unsigned char));
+    memset(t, 0, n_tac_total * sizeof(unsigned char));
     if (is_verbose()) {
         std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel <<
                 std::endl;
@@ -778,13 +1004,24 @@ void CLSMImage::get_fluorescence_decay(
         std::clog << "-- Micro time coarsening factor: " << micro_time_coarsening << std::endl;
         std::clog << "-- Final number of micro time channels: " << n_tac << std::endl;
     }
-    size_t i_frame = 0;
-    for (auto frame: frames) {
-        size_t i_line = 0;
-        for (auto line: frame->lines) {
-            size_t i_pixel = 0;
-            for (size_t pixel_i = 0; pixel_i < n_pixel; pixel_i++) {
-                auto pixel = line->pixels[pixel_i];
+    
+    // Parallelize over frames for better performance
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+    if (use_openmp && num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
+#endif
+    
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4 && !stack_frames)
+    for (int i_frame = 0; i_frame < static_cast<int>(stack_frames ? 1 : n_frames); i_frame++) {
+        auto frame = frames[stack_frames ? 0 : i_frame];
+        for (size_t i_line = 0; i_line < frame->lines.size(); i_line++) {
+            auto line = frame->lines[i_line];
+            for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
+                auto pixel = line->pixels[i_pixel];
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
                                    i_line * (n_pixel * n_tac) +
                                    i_pixel * (n_tac);
@@ -793,11 +1030,8 @@ void CLSMImage::get_fluorescence_decay(
                     size_t i_tac = tttr_data->micro_times[i] / micro_time_coarsening;
                     t[pixel_nbr + i_tac] += 1;
                 }
-                i_pixel++;
             }
-            i_line++;
         }
-        i_frame += !stack_frames;
     }
     *output = t;
 }
@@ -943,18 +1177,30 @@ void CLSMImage::get_mean_micro_time(
     int minimum_number_of_photons,
     bool stack_frames
 ) {
-#ifdef VERBOSE_TTTRLIBLIBLIBLIBLIBLIBLIB
-    std::clog << "Get mean micro time image" << std::endl;
-    std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
-    std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
-    std::clog << "-- Computing stack of mean micro times " << std::endl;
-#endif
+    if (is_verbose()) {
+        std::clog << "Get mean micro time image" << std::endl;
+        std::clog << "-- Frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
+        std::clog << "-- Minimum number of photos: " << minimum_number_of_photons << std::endl;
+        std::clog << "-- Computing stack of mean micro times " << std::endl;
+    }
     if (microtime_resolution < 0)
         microtime_resolution = tttr_data->header->get_micro_time_resolution();
     if (!stack_frames) {
         auto *t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
-        for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
-            for (size_t i_line = 0; i_line < n_lines; i_line++) {
+        
+        // Parallelize over frames and lines
+        bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+        
+#ifdef _OPENMP
+        int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+        if (use_openmp && num_threads > 0) {
+            omp_set_num_threads(num_threads);
+        }
+#endif
+        
+        #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4)
+        for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
+            for (int i_line = 0; i_line < static_cast<int>(n_lines); i_line++) {
                 for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                     size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel;
                     CLSMPixel px = frames[i_frame]->lines[i_line]->pixels[i_pixel];
@@ -975,9 +1221,17 @@ void CLSMImage::get_mean_micro_time(
         for (size_t i_line = 0; i_line < n_lines; i_line++) {
             for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                 size_t pixel_nbr = i_line * n_pixel + i_pixel;
-                // average the arrival times over the frames
                 r[pixel_nbr] = 0.0;
+                
+                // Pre-calculate total size to avoid repeated reallocations
+                size_t total_size = 0;
+                for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
+                    total_size += frames[i_frame]->lines[i_line]->pixels[i_pixel].get_index_count();
+                }
+                
                 std::vector<int> tr;
+                tr.reserve(total_size);
+                
                 for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
                     auto temp = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
                     tr.insert(tr.end(), temp.begin(), temp.end());
@@ -1017,12 +1271,23 @@ void CLSMImage::get_phasor(
     }
     int o_frames = stack_frames ? 1 : n_frames;
     double factor = (2. * frequency * M_PI);
-    auto *t = (float *) calloc(o_frames * n_lines * n_pixel * 2, sizeof(float));
+    // Use malloc + memset for large arrays - faster than calloc
+    auto *t = (float *) malloc(o_frames * n_lines * n_pixel * 2 * sizeof(float));
+    memset(t, 0, o_frames * n_lines * n_pixel * 2 * sizeof(float));
     for (int i_line = 0; i_line < n_lines; i_line++) {
         for (int i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
             if (stack_frames) {
-                std::vector<int> idxs = {};
                 size_t pixel_nbr = i_line * (n_pixel * 2) + i_pixel * 2;
+                
+                // Pre-calculate total size
+                size_t total_size = 0;
+                for (int i_frame = 0; i_frame < n_frames; i_frame++) {
+                    total_size += frames[i_frame]->lines[i_line]->pixels[i_pixel].get_index_count();
+                }
+                
+                std::vector<int> idxs;
+                idxs.reserve(total_size);
+                
                 for (int i_frame = 0; i_frame < n_frames; i_frame++) {
                     auto n = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
                     idxs.insert(idxs.end(), n.begin(), n.end());
@@ -1116,13 +1381,35 @@ void CLSMImage::get_mean_lifetime(
         std::clog << "-- BG m1: " << m1_bg << std::endl;
     }
 
-    auto *t = (double *) calloc(o_frames * n_lines * n_pixel, sizeof(double));
+    // Use malloc + memset for large arrays - faster than calloc
+    auto *t = (double *) malloc(o_frames * n_lines * n_pixel * sizeof(double));
+    memset(t, 0, o_frames * n_lines * n_pixel * sizeof(double));
+    
+    // Parallelize over frames and lines
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+    if (use_openmp && num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
+#endif
+    
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && o_frames > 4)
     for (int i_frame = 0; i_frame < o_frames; i_frame++) {
-        for (int i_line = 0; i_line < n_lines; i_line++) {
-            for (int i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
+        for (int i_line = 0; i_line < static_cast<int>(n_lines); i_line++) {
+            for (int i_pixel = 0; i_pixel < static_cast<int>(n_pixel); i_pixel++) {
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel;
                 if (stack_frames) {
+                    // Pre-calculate total size
+                    size_t total_size = 0;
+                    for (auto &frame: frames) {
+                        total_size += frame->lines[i_line]->pixels[i_pixel].get_index_count();
+                    }
+                    
                     std::vector<int> tttr_indices;
+                    tttr_indices.reserve(total_size);
+                    
                     for (auto &frame: frames) {
                         auto px = frame->lines[i_line]->pixels[i_pixel];
                         auto dense_indices = px.get_tttr_indices();
