@@ -23,3 +23,6 @@ doc/_*
 doc/_build/
 doc/paper*
 /doc/examples/
+
+# Optimization documentation
+optimization-docs/
