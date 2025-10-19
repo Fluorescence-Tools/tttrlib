@@ -1,17 +1,77 @@
 import numpy as np
 
 @property
+def intensity(self):
+    """
+    Get the intensity array of the CLSM image.
+    
+    Returns:
+        numpy.ndarray: Intensity array with shape:
+            - If split_by_channel is False or n_channels == 1: (n_frames, n_lines, n_pixel)
+            - If split_by_channel is True with multiple channels: (n_channels, frames_per_channel, n_lines, n_pixel)
+    """
+    # Get the raw intensity array from C++ (shape: n_frames, n_lines, n_pixel)
+    raw_intensity = self.get_intensity()
+    
+    n_ch = int(self.n_channels)
+    if n_ch > 1:
+        # Multi-channel mode: reshape to (n_channels, frames_per_channel, n_lines, n_pixel)
+        # Build the reshaped array by stacking each channel's frames
+        channel_arrays = []
+        for ch in range(n_ch):
+            # Calculate offset and count for this channel
+            offset = sum(int(self.get_channel_frame_count(i)) for i in range(ch))
+            count = int(self.get_channel_frame_count(ch))
+            # Extract frames for this channel
+            channel_data = raw_intensity[offset:offset+count]
+            channel_arrays.append(channel_data)
+        
+        # Stack along new first dimension (channels)
+        return np.array(channel_arrays)
+    else:
+        # Single-channel mode: return as-is (n_frames, n_lines, n_pixel)
+        return raw_intensity
+
+@property
 def shape(self):
-    return self.n_frames, self.n_lines, self.n_pixel
+    """
+    Return the shape of the CLSM image.
+    
+    - If split_by_channel is False or n_channels == 1: (n_frames, n_lines, n_pixel)
+    - If split_by_channel is True with multiple channels: (n_channels, frames_per_channel, n_lines, n_pixel)
+    """
+    n_ch = int(self.n_channels)
+    if n_ch > 1:
+        # Multi-channel mode: return (n_channels, frames_per_channel, n_lines, n_pixel)
+        frames_per_channel = int(self.get_channel_frame_count(0))
+        return n_ch, frames_per_channel, self.n_lines, self.n_pixel
+    else:
+        # Single-channel mode: return (n_frames, n_lines, n_pixel)
+        return self.n_frames, self.n_lines, self.n_pixel
 
 def __repr__(self):
-    return 'tttrlib.CLSMImage(%s, %s, %s)' % (
-        self.n_frames,
-        self.n_lines,
-        self.n_pixel
-    )
+    """String representation showing the shape of the CLSM image."""
+    n_ch = int(self.n_channels)
+    if n_ch > 1:
+        frames_per_channel = int(self.get_channel_frame_count(0))
+        return 'tttrlib.CLSMImage(%s, %s, %s, %s)' % (
+            n_ch,
+            frames_per_channel,
+            self.n_lines,
+            self.n_pixel
+        )
+    else:
+        return 'tttrlib.CLSMImage(%s, %s, %s)' % (
+            self.n_frames,
+            self.n_lines,
+            self.n_pixel
+        )
 
 class _ChannelSlice(object):
+    """Slice of a CLSMImage for a specific channel.
+    
+    Provides access to frames and properties (like intensity) for a single channel.
+    """
     def __init__(self, parent, ch):
         self._img = parent
         # normalize negative channel index
@@ -32,12 +92,29 @@ class _ChannelSlice(object):
         if i < 0 or i >= n:
             raise IndexError("frame index out of range in channel slice")
         return self._img.get_frame_for_channel(self._ch, int(i))
+    
+    @property
+    def intensity(self):
+        """Get intensity array for this channel only."""
+        full_intensity = self._img.get_intensity()
+        # Calculate offset by summing frame counts of previous channels
+        offset = sum(int(self._img.get_channel_frame_count(i)) for i in range(self._ch))
+        count = int(self._img.get_channel_frame_count(self._ch))
+        return full_intensity[offset:offset+count]
+    
+    @property
+    def shape(self):
+        """Shape of this channel: (n_frames, n_lines, n_pixel)."""
+        return (len(self), self._img.n_lines, self._img.n_pixel)
+    
+    def __repr__(self):
+        return f'_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})'
 
 # Override __getitem__ to support CLSMImage[ch][frame][line][pixel] for multi-channel images
 # Falls back to old behavior (frames-first) if only a single channel exists
 def __getitem__(self, idx):
     if isinstance(idx, int) and int(self.n_channels) > 1:
-        return _ChannelSlice(self, idx)
+        return self._ChannelSlice(self, idx)
     # Fallback to flat frame access
     return self.frame_at(int(idx))
 
