@@ -55,8 +55,8 @@ static std::vector<int> collect_stacked_pixel_indices(
     // Pre-calculate total size to avoid repeated reallocations
     size_t total_size = 0;
     for (const auto& frame : frames) {
-        auto& lines = frame->get_lines();
-        auto& pixels = lines[i_line]->get_pixels();
+        const auto& lines = frame->get_lines();
+        const auto& pixels = lines[i_line]->get_pixels();
         total_size += pixels[i_pixel].get_index_count();
     }
     
@@ -65,8 +65,8 @@ static std::vector<int> collect_stacked_pixel_indices(
     indices.reserve(total_size);
     
     for (const auto& frame : frames) {
-        auto& lines = frame->get_lines();
-        auto& pixels = lines[i_line]->get_pixels();
+        const auto& lines = frame->get_lines();
+        const auto& pixels = lines[i_line]->get_pixels();
         auto dense_indices = pixels[i_pixel].get_tttr_indices();
         indices.insert(indices.end(), dense_indices.begin(), dense_indices.end());
     }
