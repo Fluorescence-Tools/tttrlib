@@ -3,9 +3,19 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
+
+// Maximum number of routing channels (can be overridden via CMake)
+#ifndef TTTRLIB_MAX_ROUTING_CHANNELS
+#define TTTRLIB_MAX_ROUTING_CHANNELS 256
+#endif
 
 // CPUID for runtime CPU feature detection (x86/x64 only)
 #if (defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86))
@@ -123,6 +133,34 @@ namespace cpu_features {
         return 0; // 0 means use OpenMP default
 #else
         return 1; // Single-threaded if OpenMP not available
+#endif
+    }
+    
+    // Configure OpenMP threads and optionally log settings
+    // Returns: actual number of threads that will be used
+    inline int configure_openmp(bool verbose = false) {
+#ifdef _OPENMP
+        bool use_openmp = get_openmp_enabled();
+        int num_threads = get_openmp_num_threads();
+        
+        if (use_openmp && num_threads > 0) {
+            omp_set_num_threads(num_threads);
+        }
+        
+        if (verbose) {
+            std::clog << "-- Parallel processing enabled: " << (use_openmp ? "yes" : "no") << std::endl;
+            if (use_openmp) {
+                int actual_threads = (num_threads > 0) ? num_threads : omp_get_max_threads();
+                std::clog << "-- OpenMP threads: " << actual_threads << std::endl;
+            }
+        }
+        
+        return use_openmp ? ((num_threads > 0) ? num_threads : omp_get_max_threads()) : 1;
+#else
+        if (verbose) {
+            std::clog << "-- Parallel processing enabled: no (OpenMP not available)" << std::endl;
+        }
+        return 1;
 #endif
     }
     
