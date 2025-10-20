@@ -18,6 +18,10 @@ static int myErr = 0; // flag to save error state
     (double *images, int input_frames, int input_lines, int input_pixel),
     (double *images_2, int input_frames_2, int input_lines_2, int input_pixel_2)
 }
+// Typemap for CLSMFrame::get_intensity (2D array output)
+%apply (unsigned short** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {
+    (unsigned short** output, int* dim1, int* dim2)
+}
 // documentation see
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
 %attribute(CLSMImage, int, n_frames, get_n_frames);
@@ -109,6 +113,8 @@ static int myErr = 0; // flag to save error state
     size_t __len__(){
         return $self->size();
     }
+
+    %pythoncode "./ext/python/CLSMFrame.py"
 }
 
 %exception CLSMLine::__getitem__ {

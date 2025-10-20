@@ -259,6 +259,28 @@ public:
     bool skip_after_last_frame_marker = false;
 
     /*!
+     * \brief Split frames by routing channel.
+     *
+     * Duplicates each original frame for every routing channel, creating separate
+     * frame copies that can be filled independently per channel. This is useful for
+     * multi-channel CLSM data where you want to separate photons by routing channel.
+     *
+     * After calling this method:
+     * - settings.split_by_channel is set to true
+     * - n_frames is multiplied by the number of channels
+     * - Each channel block is marked with channel flip flags
+     * - Original frames are replaced with empty copies (structure preserved)
+     *
+     * @param channels            List of routing channels to split by.
+     * @param tttr_data           TTTR data pointer (uses stored tttr if nullptr).
+     * @return                    The channel block size (original number of frames).
+     */
+    size_t split_frames_by_channel(
+            const std::vector<int>& channels,
+            std::shared_ptr<TTTR> tttr_data = nullptr
+    );
+
+    /*!
      * \brief Fills the time-tagged time-resolved (TTTR) indices of the pixels with the
      *        indices of the photons that fall within each pixel.
      *
@@ -275,12 +297,21 @@ public:
      *                            to the pixels.
      * @param micro_time_ranges   List of pairs representing micro-time ranges. If provided,
      *                            only events within these ranges are considered.
+     *                            Can be a single range list (applied to all channels) or
+     *                            a vector of range lists (one per channel).
+     * @param micro_time_bitmap   Pre-computed bitmap for micro-time filtering (65536 elements).
+     *                            If provided (not nullptr), this is used instead of micro_time_ranges.
+     *                            - If n_micro_time_bitmap == 65536: single bitmap for all channels
+     *                            - If n_micro_time_bitmap == 65536 * n_channels: per-channel bitmaps
+     * @param n_micro_time_bitmap Size of the bitmap array (65536 for single, 65536*n_channels for per-channel).
      */
     void fill(
             std::shared_ptr<TTTR> tttr_data = nullptr,
             std::vector<int> channels = std::vector<int>(),
             bool clear = true,
-            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
+            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>(),
+            bool* micro_time_bitmap = nullptr,
+            int n_micro_time_bitmap = 0
     );
 
     /*!

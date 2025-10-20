@@ -3,10 +3,223 @@
 #include "include/info.h"
 #include <memory>
 #include <cstring>  // for memset
+#include <iostream>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+// Portable prefetch macro for better cache utilization
+// Works on x86, x64, ARM, ARM64, and other architectures
+#if defined(__GNUC__) || defined(__clang__)
+    // GCC/Clang builtin - automatically translates to:
+    //   x86/x64: PREFETCHT0
+    //   ARM32: PLD (Preload Data)
+    //   ARM64: PRFM (Prefetch Memory)
+    //   Other: appropriate instruction or no-op
+    #define PREFETCH(addr) __builtin_prefetch(addr, 0, 0)
+    
+    // ARM-specific: prefetch for write (optional, can improve performance)
+    #if defined(__arm__) || defined(__aarch64__)
+        #define PREFETCH_WRITE(addr) __builtin_prefetch(addr, 1, 0)
+    #else
+        #define PREFETCH_WRITE(addr) __builtin_prefetch(addr, 1, 0)
+    #endif
+    
+#elif defined(_MSC_VER)
+    #if defined(_M_ARM) || defined(_M_ARM64)
+        // MSVC on ARM: use ARM intrinsics
+        #include <arm_neon.h>
+        #define PREFETCH(addr) __prefetch(addr)
+        #define PREFETCH_WRITE(addr) __prefetch(addr)
+    #else
+        // MSVC on x86/x64: use SSE intrinsics
+        #include <intrin.h>
+        #define PREFETCH(addr) _mm_prefetch((const char*)(addr), _MM_HINT_T0)
+        #define PREFETCH_WRITE(addr) _mm_prefetch((const char*)(addr), _MM_HINT_T0)
+    #endif
+#else
+    // Fallback for unknown compilers
+    #define PREFETCH(addr) ((void)0)
+    #define PREFETCH_WRITE(addr) ((void)0)
+#endif
+
+
+// Helper function to collect TTTR indices from stacked frames for a specific pixel
+// Avoids repeated allocation by pre-calculating total size
+static std::vector<int> collect_stacked_pixel_indices(
+    const std::vector<CLSMFrame*>& frames,
+    size_t i_line,
+    size_t i_pixel
+) {
+    // Pre-calculate total size to avoid repeated reallocations
+    size_t total_size = 0;
+    for (const auto& frame : frames) {
+        auto& lines = frame->get_lines();
+        auto& pixels = lines[i_line]->get_pixels();
+        total_size += pixels[i_pixel].get_index_count();
+    }
+    
+    // Reserve space and collect indices
+    std::vector<int> indices;
+    indices.reserve(total_size);
+    
+    for (const auto& frame : frames) {
+        auto& lines = frame->get_lines();
+        auto& pixels = lines[i_line]->get_pixels();
+        auto dense_indices = pixels[i_pixel].get_tttr_indices();
+        indices.insert(indices.end(), dense_indices.begin(), dense_indices.end());
+    }
+    
+    return indices;
+}
+
+// Helper to setup micro-time filtering bitmap
+// Returns: {bitmap_pointer, owns_bitmap_flag, use_filter_flag}
+static std::tuple<bool*, bool, bool> setup_microtime_filter(
+    bool* micro_time_bitmap,
+    int n_micro_time_bitmap,
+    const std::vector<std::pair<int, int>>& micro_time_ranges,
+    const std::vector<int>& channels,
+    bool do_split_fill,
+    size_t ch_idx
+) {
+    bool* micro_time_valid = nullptr;
+    bool owns_bitmap = false;
+    bool use_micro_time_filter = false;
+    
+    // Determine bitmap type
+    bool has_per_channel_bitmap = (micro_time_bitmap != nullptr && 
+                                  n_micro_time_bitmap == 65536 * static_cast<int>(channels.size()));
+    bool has_global_bitmap = (micro_time_bitmap != nullptr && n_micro_time_bitmap == 65536);
+    
+    if (has_per_channel_bitmap) {
+        // Per-channel bitmap: select the appropriate channel's bitmap
+        if (do_split_fill && ch_idx < channels.size()) {
+            micro_time_valid = micro_time_bitmap + (ch_idx * 65536);
+            use_micro_time_filter = true;
+        } else if (!do_split_fill) {
+            micro_time_valid = micro_time_bitmap;  // Base pointer
+            use_micro_time_filter = true;
+        }
+    } else if (has_global_bitmap) {
+        // Global bitmap: use for all channels
+        micro_time_valid = micro_time_bitmap;
+        use_micro_time_filter = true;
+    } else if (!micro_time_ranges.empty()) {
+        // Build bitmap from ranges (allocate on heap)
+        micro_time_valid = new bool[65536];
+        std::memset(micro_time_valid, 0, 65536);
+        
+        // Set valid ranges using memset for contiguous ranges
+        for (const auto& r: micro_time_ranges) {
+            int start = std::max(0, r.first);
+            int end = std::min(65535, r.second);
+            if (end >= start) {
+                std::memset(&micro_time_valid[start], 1, end - start + 1);
+            }
+        }
+        use_micro_time_filter = true;
+        owns_bitmap = true;
+    }
+    
+    return std::make_tuple(micro_time_valid, owns_bitmap, use_micro_time_filter);
+}
+
+// Helper to check if a photon passes micro-time filter
+static inline bool passes_microtime_filter(
+    unsigned short micro_time,
+    bool* micro_time_valid,
+    bool has_per_channel_bitmap,
+    bool do_split_fill,
+    signed char photon_channel,
+    const std::vector<int>& channels
+) {
+    // For per-channel bitmaps in non-split mode, find the channel index
+    if (has_per_channel_bitmap && !do_split_fill) {
+        for (size_t i = 0; i < channels.size(); i++) {
+            if (photon_channel == static_cast<signed char>(channels[i])) {
+                const bool* channel_bitmap = micro_time_valid + (i * 65536);
+                return channel_bitmap[micro_time];
+            }
+        }
+        return false;  // Channel not in list
+    } else {
+        // Global bitmap or split-fill with per-channel bitmap
+        return micro_time_valid[micro_time];
+    }
+}
+
+// Helper function to display micro-time bitmap information in verbose mode
+static void display_microtime_bitmap_info(
+    const bool* micro_time_bitmap,
+    int n_micro_time_bitmap,
+    size_t n_channels
+) {
+    if (micro_time_bitmap == nullptr) {
+        std::clog << "-- Micro time bitmap: NOT PROVIDED (will use ranges if specified)" << std::endl;
+        return;
+    }
+    
+    std::clog << "-- Micro time bitmap provided: size = " << n_micro_time_bitmap << std::endl;
+    
+    // Determine bitmap type
+    if (n_micro_time_bitmap == 65536) {
+        std::clog << "-- Bitmap type: GLOBAL (single bitmap for all channels)" << std::endl;
+    } else if (n_micro_time_bitmap == 65536 * static_cast<int>(n_channels)) {
+        std::clog << "-- Bitmap type: PER-CHANNEL (" << n_channels << " channels)" << std::endl;
+    } else {
+        std::clog << "-- WARNING: Bitmap size mismatch (expected 65536 or " 
+                  << (65536 * n_channels) << ")" << std::endl;
+    }
+    
+    // Count valid micro-times and show first 5000
+    int total_valid = 0;
+    int display_limit = std::min(5000, n_micro_time_bitmap);
+    
+    std::clog << "-- Bitmap content (first " << display_limit << " elements):" << std::endl;
+    std::clog << "   Valid ranges: ";
+    
+    bool in_range = false;
+    int range_start = -1;
+    int ranges_shown = 0;
+    const int max_ranges_to_show = 20;
+    
+    for (int i = 0; i < n_micro_time_bitmap; i++) {
+        if (micro_time_bitmap[i]) {
+            total_valid++;
+            
+            if (i < display_limit) {
+                if (!in_range) {
+                    range_start = i;
+                    in_range = true;
+                }
+            }
+        } else {
+            if (in_range && i <= display_limit && ranges_shown < max_ranges_to_show) {
+                if (ranges_shown > 0) std::clog << ", ";
+                std::clog << "[" << range_start << "-" << (i-1) << "]";
+                ranges_shown++;
+                in_range = false;
+            }
+        }
+    }
+    
+    // Close last range if still open
+    if (in_range && ranges_shown < max_ranges_to_show) {
+        if (ranges_shown > 0) std::clog << ", ";
+        std::clog << "[" << range_start << "-" << std::min(display_limit-1, n_micro_time_bitmap-1) << "]";
+    }
+    
+    if (ranges_shown >= max_ranges_to_show) {
+        std::clog << " ... (showing first " << max_ranges_to_show << " ranges)";
+    }
+    std::clog << std::endl;
+    
+    std::clog << "-- Total valid micro-times: " << total_valid << " / " << n_micro_time_bitmap 
+              << " (" << (100.0 * total_valid / n_micro_time_bitmap) << "%)" << std::endl;
+}
+
 
 void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     if (is_verbose()) {
@@ -318,38 +531,47 @@ std::vector<int> CLSMImage::get_frame_edges(
     const signed char* routing_channels = tttr->routing_channels;
     const unsigned short* micro_times = tttr->micro_times;
     
+    // Build lookup table for frame markers - O(1) instead of O(n) per event
+    bool frame_marker_lookup_u16[65536] = {false};  // For SP8 (micro_times)
+    bool frame_marker_lookup_i8[TTTRLIB_MAX_ROUTING_CHANNELS] = {false};  // For SP5/default (routing_channels)
+    
+    if (reading_routine == CLSM_SP8) {
+        for (auto f: marker_frame) {
+            if (f >= 0 && f < 65536) {
+                frame_marker_lookup_u16[f] = true;
+            }
+        }
+    } else {
+        for (auto f: marker_frame) {
+            if (f >= -128 && f < 128) {
+                frame_marker_lookup_i8[static_cast<unsigned char>(f)] = true;
+            }
+        }
+    }
+    
     // Hoist reading_routine check outside the loop
     if (reading_routine == CLSM_SP8) {
         for (int i_event = start_event; i_event < stop_event; i_event++) {
             if (routing_channels[i_event] == marker_event_type) {
                 unsigned short mt = micro_times[i_event];
-                for (auto f: marker_frame) {
-                    if (f == mt) {
-                        frame_edges.emplace_back(i_event);
-                        break;
-                    }
+                if (frame_marker_lookup_u16[mt]) {
+                    frame_edges.emplace_back(i_event);
                 }
             }
         }
     } else if (reading_routine == CLSM_SP5) {
         for (int i_event = start_event; i_event < stop_event; i_event++) {
             signed char rc = routing_channels[i_event];
-            for (auto f: marker_frame) {
-                if (f == rc) {
-                    frame_edges.emplace_back(i_event);
-                    break;
-                }
+            if (frame_marker_lookup_i8[static_cast<unsigned char>(rc)]) {
+                frame_edges.emplace_back(i_event);
             }
         }
     } else {
         for (int i_event = start_event; i_event < stop_event; i_event++) {
             if (event_types[i_event] == marker_event_type) {
                 signed char rc = routing_channels[i_event];
-                for (auto f: marker_frame) {
-                    if (f == rc) {
-                        frame_edges.emplace_back(i_event);
-                        break;
-                    }
+                if (frame_marker_lookup_i8[static_cast<unsigned char>(rc)]) {
+                    frame_edges.emplace_back(i_event);
                 }
             }
         }
@@ -585,21 +807,15 @@ void CLSMImage::create_lines() {
     
     int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
     
-    // Parallelize line finding across frames
-    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    // Configure OpenMP for parallel line finding
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
     
-#ifdef _OPENMP
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-    if (use_openmp && num_threads > 0) {
-        omp_set_num_threads(num_threads);
-    }
-#endif
+    // Use adaptive threshold: parallelize if work per thread is sufficient
+    // Minimum 2 frames per thread to avoid overhead
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
     
-    if (is_verbose()) {
-        std::clog << "-- Parallel line finding enabled: " << (use_openmp ? "yes" : "no") << std::endl;
-    }
-    
-    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() > 4)
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         auto &frame = frames[f_idx];
         
@@ -632,16 +848,23 @@ void CLSMImage::create_lines() {
         size_t n_lines = line_edges.size() / 2;
         frame->lines.reserve(n_lines);
         
-        // Create and append lines
+        // Batch allocate lines for better memory locality
+        std::vector<CLSMLine*> new_lines(n_lines);
+        for (size_t i_line = 0; i_line < n_lines; i_line++) {
+            new_lines[i_line] = new CLSMLine();
+        }
+        
+        // Configure lines in second pass (better cache utilization)
         for (size_t i_line = 0; i_line < n_lines; i_line++) {
             auto line_start = line_edges[(i_line * 2) + 0];
             auto line_stop = line_edges[(i_line * 2) + 1];
-            auto line = new CLSMLine();
-            line->set_range(line_start, line_stop);
-            line->set_tttr(tttr);
-            line->set_pixel_duration(pixel_duration);
-            frame->lines.emplace_back(line);
+            new_lines[i_line]->set_range(line_start, line_stop);
+            new_lines[i_line]->set_tttr(tttr);
+            new_lines[i_line]->set_pixel_duration(pixel_duration);
         }
+        
+        // Move lines into frame
+        frame->lines = std::move(new_lines);
     }
 }
 
@@ -687,11 +910,77 @@ void CLSMImage::clear() {
     }
 }
 
+size_t CLSMImage::split_frames_by_channel(
+    const std::vector<int>& channels,
+    std::shared_ptr<TTTR> tttr_data
+) {
+    if (is_verbose()) {
+        std::clog << "-- Splitting frames by channel..." << std::endl;
+        std::clog << "-- Number of channels: " << channels.size() << std::endl;
+        std::clog << "-- Original frames: " << frames.size() << std::endl;
+    }
+    
+    // Use stored TTTR if none provided
+    if (tttr_data == nullptr) {
+        tttr_data = tttr;
+    }
+    
+    // Enable split_by_channel setting
+    settings.split_by_channel = true;
+    
+    // If already split or only one channel, return current size
+    if (n_channels > 1 || channels.size() <= 1) {
+        if (is_verbose()) {
+            std::clog << "-- Already split or single channel, skipping" << std::endl;
+        }
+        return frames.size();
+    }
+    
+    // Store original frames
+    size_t original_frames = frames.size();
+    std::vector<CLSMFrame*> original = frames;
+    
+    // Clear and rebuild frame list
+    frames.clear();
+    n_frames = 0;
+    
+    // Duplicate each frame for each channel
+    for (size_t ci = 0; ci < channels.size(); ++ci) {
+        for (size_t fi = 0; fi < original_frames; ++fi) {
+            // Copy structure but leave pixels empty
+            auto nf = new CLSMFrame(*original[fi], false);
+            nf->set_tttr(tttr_data);
+            
+            // Mark the first frame of each channel block (except the first) as a flip point
+            if (ci > 0 && fi == 0) {
+                nf->set_channel_flip(true);
+            }
+            
+            frames.emplace_back(nf);
+            n_frames++;
+        }
+    }
+    
+    // Clean up original frames (we created full copies)
+    for (auto of : original) {
+        delete of;
+    }
+    
+    if (is_verbose()) {
+        std::clog << "-- New total frames: " << n_frames << std::endl;
+        std::clog << "-- Channel block size: " << original_frames << std::endl;
+    }
+    
+    return original_frames;
+}
+
 void CLSMImage::fill(
     std::shared_ptr<TTTR> tttr_data,
     std::vector<int> channels,
     bool clear,
-    const std::vector<std::pair<int, int> > &micro_time_ranges
+    const std::vector<std::pair<int, int> > &micro_time_ranges,
+    bool* micro_time_bitmap,
+    int n_micro_time_bitmap
 ) {
     if (is_verbose()) {
         std::clog << "-- Filling pixels..." << std::endl;
@@ -705,6 +994,9 @@ void CLSMImage::fill(
             std::clog << "(" << r.first << "," << r.second << ") ";
         }
         std::clog << std::endl;
+        
+        // Display bitmap information using helper function
+        display_microtime_bitmap_info(micro_time_bitmap, n_micro_time_bitmap, channels.size());
     }
 
     // If no TTTR data pointer was passed in, use the stored one
@@ -714,9 +1006,10 @@ void CLSMImage::fill(
 
     // If the channel list is empty, query all used routing channels from TTTR
     if (channels.empty()) {
-        std::clog << "WARNING: Image filled without channel numbers. Using all channels." << std::endl;
-        signed char *chs;
-        int nchs;
+        if (is_verbose()) {
+            std::clog << "WARNING: Image filled without channel numbers. Using all channels." << std::endl;
+        }
+        signed char *chs; int nchs;
         tttr_data->get_used_routing_channels(&chs, &nchs);
         for (int i = 0; i < nchs; i++) {
             channels.emplace_back(chs[i]);
@@ -729,27 +1022,8 @@ void CLSMImage::fill(
     bool do_split_fill = settings.split_by_channel && channels.size() > 1;
     if (do_split_fill) {
         if (n_channels <= 1) {
-            size_t original_frames = frames.size();
-            std::vector<CLSMFrame*> original = frames;
-            frames.clear();
-            n_frames = 0;
-            for (size_t ci = 0; ci < channels.size(); ++ci) {
-                for (size_t fi = 0; fi < original_frames; ++fi) {
-                    auto nf = new CLSMFrame(*original[fi], false); // copy structure, empty pixels
-                    nf->set_tttr(tttr_data);
-                    // Mark the first frame of each channel block (except the first) as a flip point
-                    if (ci > 0 && fi == 0) {
-                        nf->set_channel_flip(true);
-                    }
-                    frames.emplace_back(nf);
-                    n_frames++;
-                }
-            }
-            // Clean up originals (we created full copies)
-            for (auto of : original) {
-                delete of;
-            }
-            channel_block_size = original_frames;
+            // Use the public method to split frames
+            channel_block_size = split_frames_by_channel(channels, tttr_data);
         } else {
             // Already split previously; infer block size from layout if available
             if (!channel_counts.empty()) {
@@ -761,10 +1035,10 @@ void CLSMImage::fill(
     }
 
     // Pre-compute channel lookup for faster matching
-    bool channel_lookup[256] = {false};  // Assume max 256 routing channels
+    bool channel_lookup[TTTRLIB_MAX_ROUTING_CHANNELS] = {false};
     if (!do_split_fill) {
         for (auto ch : channels) {
-            if (ch >= 0 && ch < 256) {
+            if (ch >= 0 && ch < TTTRLIB_MAX_ROUTING_CHANNELS) {
                 channel_lookup[ch] = true;
             }
         }
@@ -776,29 +1050,14 @@ void CLSMImage::fill(
     const unsigned long long* macro_times = tttr_data->macro_times;
     const unsigned short* micro_times = tttr_data->micro_times;
     
-    // Parallelize over frames - each frame writes to independent pixels
-    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    // Configure OpenMP and get actual thread count
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
     
-#ifdef _OPENMP
-    // Set number of threads from environment variables
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-    if (use_openmp && num_threads > 0) {
-        omp_set_num_threads(num_threads);
-    }
-#endif
+    // Adaptive threshold based on number of threads
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
     
-    if (is_verbose()) {
-        std::clog << "-- Parallel fill enabled: " << (use_openmp ? "yes" : "no") << std::endl;
-#ifdef _OPENMP
-        if (use_openmp) {
-            int actual_threads = (num_threads > 0) ? num_threads : omp_get_max_threads();
-            std::clog << "-- OpenMP threads: " << actual_threads << std::endl;
-        }
-#endif
-    }
-    
-    // Iterate over each frame in the image
-    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() > 4)
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         CLSMFrame* frame = frames[f_idx];
         // We need the line index to decide if a line is "reversed"
@@ -835,11 +1094,24 @@ void CLSMImage::fill(
             // Pre-compute for faster pixel calculation
             int n_pixels_minus_1 = static_cast<int>(n_pixels_in_line) - 1;
             
+            // Use reciprocal multiplication instead of division (3-5x faster)
+            double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
+            
             // Pre-compute channel index for split fill (constant per frame)
             size_t ch_idx = 0;
             if (do_split_fill && channel_block_size > 0) {
                 ch_idx = f_idx / channel_block_size;
             }
+            
+            // Setup micro-time filtering using helper
+            auto [micro_time_valid, owns_bitmap, use_micro_time_filter] = setup_microtime_filter(
+                micro_time_bitmap, n_micro_time_bitmap, micro_time_ranges,
+                channels, do_split_fill, ch_idx
+            );
+            
+            // Determine bitmap type for filter checking
+            bool has_per_channel_bitmap = (micro_time_bitmap != nullptr && 
+                                          n_micro_time_bitmap == 65536 * static_cast<int>(channels.size()));
             
             // Cache pixel array pointer for faster access
             auto* pixels_ptr = line->pixels.data();
@@ -857,6 +1129,13 @@ void CLSMImage::fill(
 
             // Walk through each TTTR event that falls within this line's event indices
             for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
+                // Prefetch next iteration's data for better cache utilization
+                if (event_i + 16 < stop_idx) {
+                    PREFETCH(&event_types[event_i + 16]);
+                    PREFETCH(&routing_channels_ptr[event_i + 16]);
+                    PREFETCH(&macro_times[event_i + 16]);
+                }
+                
                 // Only process photon events, skip all others
                 signed char event_type = event_types[event_i];
                 if (event_type != RECORD_PHOTON) {
@@ -875,40 +1154,39 @@ void CLSMImage::fill(
                 } else {
                     // Fast lookup using pre-computed array (unsigned cast for bounds check)
                     unsigned char uc = static_cast<unsigned char>(c);
-                    if (uc >= 256 || !channel_lookup[uc]) {
+                    if (uc >= TTTRLIB_MAX_ROUTING_CHANNELS || !channel_lookup[uc]) {
                         continue;
                     }
                 }
 
-                // Compute the "raw" pixel index as if scanning left→right
+                // Compute the "raw" pixel index using reciprocal multiplication (faster than division)
                 unsigned long long time_offset = macro_times[event_i] - line_start_time;
-                unsigned long long pixel_idx_calc = time_offset / pixel_duration;
+                double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
+                int raw_pixel = static_cast<int>(pixel_idx_float);
                 
                 // If the computed raw index falls outside the line, skip (single comparison)
-                if (pixel_idx_calc > static_cast<unsigned long long>(n_pixels_minus_1)) {
+                if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) {
                     continue;
                 }
-                
-                int raw_pixel = static_cast<int>(pixel_idx_calc);
                 // If the line was scanned right→left, flip the raw index
                 int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
 
-                // Verify that the photon's micro time falls within the specified ranges
-                if (!micro_time_ranges.empty()) {
+                // Verify that the photon's micro time falls within the specified ranges (bitmap lookup)
+                if (use_micro_time_filter) {
                     unsigned short micro_time = micro_times[event_i];
-                    // Check all ranges - early exit on first failure
-                    bool in_range = false;
-                    for (const auto& r: micro_time_ranges) {
-                        if (micro_time >= r.first && micro_time <= r.second) {
-                            in_range = true;
-                            break;
-                        }
+                    if (!passes_microtime_filter(micro_time, micro_time_valid, has_per_channel_bitmap, 
+                                                 do_split_fill, c, channels)) {
+                        continue;
                     }
-                    if (!in_range) continue;
                 }
 
                 // Insert the event index using cached pointer
                 pixels_ptr[pixel_nbr].insert(event_i);
+            }
+            
+            // Clean up micro-time filter bitmap only if we allocated it
+            if (owns_bitmap && micro_time_valid != nullptr) {
+                delete[] micro_time_valid;
             }
         }
     }
@@ -932,48 +1210,41 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
     *dim2 = static_cast<int>(n_lines);
     *dim3 = static_cast<int>(n_pixel);
     size_t n_pixel_total = n_frames * n_pixel * n_lines;
+    
     if (is_verbose()) {
         std::clog << "Get intensity image" << std::endl;
-        std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel <<
-                std::endl;
+        std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel << std::endl;
         std::clog << "-- Total number of pixels: " << n_pixel_total << std::endl;
     }
-    // Use malloc instead of calloc - we'll write to every element anyway
-    auto *t = (unsigned short *) malloc((n_pixel_total + 1) * sizeof(unsigned short));
     
-    // Parallelize over frames for better cache locality
-    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    // Allocate output array for all frames
+    auto *t = (unsigned short *) malloc(n_pixel_total * sizeof(unsigned short));
     
-#ifdef _OPENMP
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-    if (use_openmp && num_threads > 0) {
-        omp_set_num_threads(num_threads);
-    }
-#endif
+    // Configure OpenMP for parallel intensity computation
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
     
-    if (is_verbose()) {
-        std::clog << "-- OpenMP enabled: " << (use_openmp ? "yes" : "no") << std::endl;
-#ifdef _OPENMP
-        if (use_openmp) {
-            int actual_threads = (num_threads > 0) ? num_threads : omp_get_max_threads();
-            std::clog << "-- OpenMP threads: " << actual_threads << std::endl;
-        }
-#endif
-    }
-    #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4)
+    // Adaptive threshold based on number of threads
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+    
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames >= min_frames_for_parallel)
     for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
         auto &frame = frames[i_frame];
-        for (size_t i_line = 0; i_line < frame->lines.size(); i_line++) {
-            auto &line = frame->lines[i_line];
-            for (size_t i_pixel = 0; i_pixel < line->pixels.size(); i_pixel++) {
-                auto &pixel = line->pixels[i_pixel];
-                size_t pixel_nbr = i_frame * (n_lines * n_pixel) +
-                                   i_line * (n_pixel) +
-                                   i_pixel;
-                t[pixel_nbr] = static_cast<unsigned short>(pixel.get_index_count());
-            }
+        
+        // Use CLSMFrame::get_intensity() to get frame data
+        unsigned short *frame_intensity = nullptr;
+        int frame_lines = 0, frame_pixels = 0;
+        frame->get_intensity(&frame_intensity, &frame_lines, &frame_pixels);
+        
+        // Copy frame intensity into the output array at the correct offset
+        if (frame_intensity != nullptr) {
+            size_t frame_offset = i_frame * n_lines * n_pixel;
+            size_t frame_size = frame_lines * frame_pixels;
+            std::memcpy(&t[frame_offset], frame_intensity, frame_size * sizeof(unsigned short));
+            free(frame_intensity);
         }
     }
+    
     *output = t;
 }
 
@@ -1005,15 +1276,9 @@ void CLSMImage::get_fluorescence_decay(
         std::clog << "-- Final number of micro time channels: " << n_tac << std::endl;
     }
     
-    // Parallelize over frames for better performance
-    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
-    
-#ifdef _OPENMP
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-    if (use_openmp && num_threads > 0) {
-        omp_set_num_threads(num_threads);
-    }
-#endif
+    // Configure OpenMP for parallel decay computation
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4 && !stack_frames)
     for (int i_frame = 0; i_frame < static_cast<int>(stack_frames ? 1 : n_frames); i_frame++) {
@@ -1188,15 +1453,9 @@ void CLSMImage::get_mean_micro_time(
     if (!stack_frames) {
         auto *t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
         
-        // Parallelize over frames and lines
-        bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
-        
-#ifdef _OPENMP
-        int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-        if (use_openmp && num_threads > 0) {
-            omp_set_num_threads(num_threads);
-        }
-#endif
+        // Configure OpenMP for parallel mean microtime computation
+        int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+        bool use_openmp = (num_threads > 1);
         
         #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4)
         for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
@@ -1223,19 +1482,8 @@ void CLSMImage::get_mean_micro_time(
                 size_t pixel_nbr = i_line * n_pixel + i_pixel;
                 r[pixel_nbr] = 0.0;
                 
-                // Pre-calculate total size to avoid repeated reallocations
-                size_t total_size = 0;
-                for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
-                    total_size += frames[i_frame]->lines[i_line]->pixels[i_pixel].get_index_count();
-                }
-                
-                std::vector<int> tr;
-                tr.reserve(total_size);
-                
-                for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
-                    auto temp = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
-                    tr.insert(tr.end(), temp.begin(), temp.end());
-                }
+                // Collect indices from all frames for this pixel
+                auto tr = collect_stacked_pixel_indices(frames, i_line, i_pixel);
                 r[pixel_nbr] = tttr_data->get_mean_microtime(&tr, microtime_resolution, minimum_number_of_photons);
             }
         }
@@ -1279,19 +1527,8 @@ void CLSMImage::get_phasor(
             if (stack_frames) {
                 size_t pixel_nbr = i_line * (n_pixel * 2) + i_pixel * 2;
                 
-                // Pre-calculate total size
-                size_t total_size = 0;
-                for (int i_frame = 0; i_frame < n_frames; i_frame++) {
-                    total_size += frames[i_frame]->lines[i_line]->pixels[i_pixel].get_index_count();
-                }
-                
-                std::vector<int> idxs;
-                idxs.reserve(total_size);
-                
-                for (int i_frame = 0; i_frame < n_frames; i_frame++) {
-                    auto n = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
-                    idxs.insert(idxs.end(), n.begin(), n.end());
-                }
+                // Collect indices from all frames for this pixel
+                auto idxs = collect_stacked_pixel_indices(frames, i_line, i_pixel);
                 auto r = DecayPhasor::compute_phasor(
                     tttr_data->micro_times, tttr_data->n_valid_events,
                     frequency,
@@ -1385,15 +1622,9 @@ void CLSMImage::get_mean_lifetime(
     auto *t = (double *) malloc(o_frames * n_lines * n_pixel * sizeof(double));
     memset(t, 0, o_frames * n_lines * n_pixel * sizeof(double));
     
-    // Parallelize over frames and lines
-    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
-    
-#ifdef _OPENMP
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-    if (use_openmp && num_threads > 0) {
-        omp_set_num_threads(num_threads);
-    }
-#endif
+    // Configure OpenMP for parallel mean lifetime computation
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && o_frames > 4)
     for (int i_frame = 0; i_frame < o_frames; i_frame++) {
@@ -1401,21 +1632,8 @@ void CLSMImage::get_mean_lifetime(
             for (int i_pixel = 0; i_pixel < static_cast<int>(n_pixel); i_pixel++) {
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel;
                 if (stack_frames) {
-                    // Pre-calculate total size
-                    size_t total_size = 0;
-                    for (auto &frame: frames) {
-                        total_size += frame->lines[i_line]->pixels[i_pixel].get_index_count();
-                    }
-                    
-                    std::vector<int> tttr_indices;
-                    tttr_indices.reserve(total_size);
-                    
-                    for (auto &frame: frames) {
-                        auto px = frame->lines[i_line]->pixels[i_pixel];
-                        auto dense_indices = px.get_tttr_indices();
-                        tttr_indices.insert(tttr_indices.end(),
-                                            dense_indices.begin(), dense_indices.end());
-                    }
+                    // Collect indices from all frames for this pixel
+                    auto tttr_indices = collect_stacked_pixel_indices(frames, i_line, i_pixel);
                     t[pixel_nbr] = TTTRRange::compute_mean_lifetime(
                         tttr_indices, tttr_data, minimum_number_of_photons,
                         nullptr, m0_irf, m1_irf, dt,

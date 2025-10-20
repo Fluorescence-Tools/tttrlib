@@ -193,8 +193,28 @@ def __init__(
         skip_before_first_frame_marker=False,
         skip_after_last_frame_marker=False,
         split_by_channel=False,
+        filename=None,
         **kwargs
 ):
+    import pathlib
+    import tttrlib
+    
+    # Handle first argument: can be TTTR object, string, or Path
+    # - If TTTR object: use as-is
+    # - If string or Path: create TTTR object from filename
+    # - If None: check filename parameter
+    if tttr_data is not None:
+        if isinstance(tttr_data, (str, pathlib.Path)):
+            # Convert filename to TTTR object
+            tttr_data = tttrlib.TTTR(tttr_data)
+        # else: assume it's already a TTTR object, use as-is
+    elif filename is not None:
+        # filename parameter provided as keyword argument
+        if isinstance(filename, (str, pathlib.Path)):
+            tttr_data = tttrlib.TTTR(filename)
+        else:
+            raise TypeError("filename must be a string or Path object")
+    
     source = kwargs.get('source', None)
     rt = {
         'SP8': CLSM_SP8,
@@ -280,6 +300,9 @@ def __init__(
         self.this.append(this)
     except:
         self.this = this
+    
+    # Store TTTR object as an attribute for easy access
+    self.tttr_data = tttr_data
 
 @staticmethod
 def compute_frc(

@@ -150,6 +150,17 @@ public:
         int pixel_start, int pixel_stop
     );
 
+    /*!
+     * \brief Get the intensity array for this frame.
+     *
+     * This function computes the intensity (photon count) for each pixel in the frame
+     * and returns it as a 2D array (lines × pixels).
+     *
+     * @param output [out] Pointer to the output array (will be allocated).
+     * @param dim1 [out] Number of lines.
+     * @param dim2 [out] Number of pixels per line.
+     */
+    void get_intensity(unsigned short **output, int *dim1, int *dim2);
 
 };
 
