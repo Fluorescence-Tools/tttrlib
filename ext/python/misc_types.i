@@ -67,6 +67,7 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 
 // Integers
 %apply(char* IN_ARRAY1, int DIM1) {(char *input, int n_input)}
+%apply(unsigned char* IN_ARRAY1, int DIM1) {(unsigned char* input, int n_input)}
 %apply(short* IN_ARRAY1, int DIM1) {(short* input, int n_input)}
 %apply(signed char* IN_ARRAY1, int DIM1) {(signed char* input, int n_input)}
 %apply(unsigned short* IN_ARRAY1, int DIM1) {(unsigned short* input, int n_input)}
@@ -74,6 +75,9 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply(unsigned int* IN_ARRAY1, int DIM1) {(unsigned int* input, int n_input)}
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
+
+// Bool arrays (for micro-time bitmap)
+%apply(bool* IN_ARRAY1, int DIM1) {(bool* micro_time_bitmap, int n_micro_time_bitmap)}
 
 // Output arrays views
 /*---------------------*/
@@ -102,11 +106,15 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 %apply(short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(short** output, int* n_output)}
 %apply(unsigned short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned short** output, int* n_output)}
 %apply(char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(char** output, int* n_output)}
+%apply(unsigned char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned char** output, int* n_output)}
 %apply(signed char** ARGOUTVIEW_ARRAY1, int* DIM1) {(signed char** output, int* n_output)}
 %apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(unsigned int** output, int* dim1, int* dim2)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 %apply (unsigned short** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned short** output, int* dim1, int* dim2, int* dim3)}
 %apply (unsigned int** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned int** output, int* dim1, int* dim2, int* dim3)}
 
-// Bool
+// Bool (input arrays)
+%apply(bool* IN_ARRAY1, int DIM1) {(bool* input, int n_input)}
+
+// Bool (output arrays)
 %apply(bool** ARGOUTVIEWM_ARRAY1, int* DIM1) {(bool **output, int *n_output)}

@@ -1,4 +1,9 @@
 #include "TTTRMask.h"
+#include "info.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 void TTTRMask::set_tttr(TTTR* tttr){
     masked.resize(tttr->size(), false);
@@ -14,10 +19,40 @@ void TTTRMask::select_channels(
         bool mask
 ) {
     set_tttr(tttr);
+    
+    // Build lookup table for O(1) channel checking
+    // Routing channels are typically in range [-128, 127] or [0, 255]
+    constexpr int LOOKUP_SIZE = 256;
+    bool channel_lookup[LOOKUP_SIZE] = {false};
+    
     for (int i = 0; i < n_routing_channels; i++) {
-        int ch = routing_channels[i];
-        for (int j = 0; j < tttr->size(); j++) {
-            if (tttr->routing_channels[j] == ch) {
+        // Handle signed char by offsetting to [0, 255]
+        unsigned char ch_idx = static_cast<unsigned char>(routing_channels[i]);
+        channel_lookup[ch_idx] = true;
+    }
+    
+    int n = static_cast<int>(tttr->size());
+    signed char* channels = tttr->routing_channels;
+    
+    // Use OpenMP for large datasets
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    if (use_openmp && n > 100000) {
+        #pragma omp parallel for schedule(static)
+        for (int j = 0; j < n; j++) {
+            unsigned char ch_idx = static_cast<unsigned char>(channels[j]);
+            if (channel_lookup[ch_idx]) {
+                masked[j] = mask;
+            }
+        }
+    } else
+#endif
+    {
+        // Serial version for small datasets or when OpenMP disabled
+        for (int j = 0; j < n; j++) {
+            unsigned char ch_idx = static_cast<unsigned char>(channels[j]);
+            if (channel_lookup[ch_idx]) {
                 masked[j] = mask;
             }
         }
@@ -29,14 +64,46 @@ void TTTRMask::select_microtime_ranges(
         std::vector<std::pair<int, int>> micro_time_ranges
 ) {
     set_tttr(tttr);
-    for(int i=0; i < tttr->size(); i++){
-        auto micro_time = tttr->micro_times[i];
-        bool out_of_bounds = false;
-        for(auto r: micro_time_ranges){
-            out_of_bounds |= micro_time <= r.first;
-            out_of_bounds |= micro_time >= r.second;
+    
+    if (micro_time_ranges.empty()) {
+        return;  // No ranges to filter
+    }
+    
+    int n = static_cast<int>(tttr->size());
+    unsigned short* micro_times = tttr->micro_times;
+    
+    // Build bitmap for O(1) lookup (micro times are 16-bit: 0-65535)
+    constexpr int MICROTIME_MAX = 65536;
+    bool micro_time_valid[MICROTIME_MAX];
+    std::memset(micro_time_valid, 0, MICROTIME_MAX);
+    
+    // Mark valid ranges in bitmap using memset for contiguous ranges
+    for (const auto& r : micro_time_ranges) {
+        int start = std::max(0, r.first + 1);  // Exclusive lower bound
+        int end = std::min(MICROTIME_MAX - 1, r.second - 1);  // Exclusive upper bound
+        if (end >= start) {
+            std::memset(&micro_time_valid[start], 1, end - start + 1);
         }
-        masked[i] = masked[i] || out_of_bounds;
+    }
+    
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    if (use_openmp && n > 100000) {
+        #pragma omp parallel for schedule(static)
+        for(int i = 0; i < n; i++){
+            unsigned short micro_time = micro_times[i];
+            // Mask photons that are OUTSIDE valid ranges (out_of_bounds = !valid)
+            masked[i] = masked[i] || !micro_time_valid[micro_time];
+        }
+    } else
+#endif
+    {
+        for(int i = 0; i < n; i++){
+            unsigned short micro_time = micro_times[i];
+            // Mask photons that are OUTSIDE valid ranges (out_of_bounds = !valid)
+            masked[i] = masked[i] || !micro_time_valid[micro_time];
+        }
     }
 }
 

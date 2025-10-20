@@ -12,7 +12,7 @@ class TTTRMask{
 
 private:
 
-    std::vector<bool> masked = {};
+    std::vector<uint8_t> masked = {};  // Use uint8_t instead of bool for direct memory access
 
 public:
 
@@ -27,15 +27,48 @@ public:
     }
 
     void flip() {
-        masked.flip();
+        for (auto& m : masked) {
+            m = m ? 0 : 1;
+        }
     }
 
     void set_mask(std::vector<bool> mask){
-        masked = mask;
+        masked.resize(mask.size());
+        for (size_t i = 0; i < mask.size(); i++) {
+            masked[i] = mask[i] ? 1 : 0;
+        }
     }
 
-    std::vector<bool>& get_mask(){
-        return masked;
+    std::vector<bool> get_mask_as_vector(){
+        std::vector<bool> result(masked.size());
+        for (size_t i = 0; i < masked.size(); i++) {
+            result[i] = masked[i] != 0;
+        }
+        return result;
+    }
+
+    /*!
+     * @brief Get mask as byte array
+     * 
+     * Returns pointer to internal memory directly - no allocation or copy needed.
+     * 
+     * @param output Pointer to unsigned char array (points to internal memory)
+     * @param n_output Size of the output array
+     */
+    void get_mask(unsigned char** output, int* n_output){
+        *n_output = static_cast<int>(masked.size());
+        *output = masked.data();
+    }
+
+    /*!
+     * @brief Set mask from byte array
+     * 
+     * @param input Unsigned char array (0 or 1 values)
+     * @param n_input Size of input array
+     */
+    void set_mask(unsigned char* input, int n_input){
+        masked.resize(n_input);
+        std::memcpy(masked.data(), input, n_input);
     }
 
     void set_tttr(TTTR* tttr);
