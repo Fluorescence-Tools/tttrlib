@@ -1,46 +1,20 @@
 #include <include/Correlator.h>
 #include "include/Verbose.h"
+#include "info.h"
 
+// OpenMP for parallel processing
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-// Static variables to cache feature availability (checked once at first use)
-static bool g_avx_checked = false;
-static bool g_avx_available = false;
-static bool g_openmp_checked = false;
-static bool g_openmp_available = false;
-static int g_openmp_num_threads = 0;
-
-static inline bool is_avx_available() {
-    if (!g_avx_checked) {
-        g_avx_available = tttrlib::cpu_features::get_avx_enabled();
-        g_avx_checked = true;
-if (is_verbose()) {
-        std::clog << "AVX runtime detection: " << (g_avx_available ? "enabled" : "disabled") << std::endl;
-}
-    }
-    return g_avx_available;
-}
-
-static inline bool is_openmp_available() {
-    if (!g_openmp_checked) {
-        g_openmp_available = tttrlib::cpu_features::get_openmp_enabled();
-        g_openmp_num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-        g_openmp_checked = true;
-if (is_verbose()) {
-        std::clog << "OpenMP runtime detection: " << (g_openmp_available ? "enabled" : "disabled");
-#ifdef _OPENMP
-        if (g_openmp_available) {
-            int actual_threads = (g_openmp_num_threads > 0) ? g_openmp_num_threads : omp_get_max_threads();
-            std::clog << " (" << actual_threads << " threads)";
-        }
+// AVX intrinsics for vectorization
+#if defined(__AVX__) || defined(__AVX2__)
+#include <immintrin.h>
 #endif
-        std::clog << std::endl;
-}
-    }
-    return g_openmp_available;
-}
+
+// Runtime AVX control using CPU feature detection from info.h
+// Set TTTRLIB_USE_AVX=0 to disable AVX optimizations at runtime
+static bool g_use_avx = tttrlib::cpu_features::get_avx_enabled();
 
 
 Correlator::Correlator(
@@ -129,31 +103,17 @@ if (is_verbose()) {
                         p1, p2
                 );
             } else if (correlation_method == "felekyan") {
-                if (is_avx_available()) {
-                    ccf_felekyan_avx(
-                            (const unsigned long long *) p1.times.data(),
-                            (const unsigned long long *) p2.times.data(),
-                            p1.weights.data(), p2.weights.data(),
-                            (unsigned int) curve.settings.n_bins,
-                            (unsigned int) curve.settings.n_casc,
-                            (unsigned int) p1.size(),
-                            (unsigned int) p2.size(),
-                            curve.x_axis.data(),
-                            curve.correlation.data()
-                    );
-                } else {
-                    ccf_felekyan(
-                            (const unsigned long long *) p1.times.data(),
-                            (const unsigned long long *) p2.times.data(),
-                            p1.weights.data(), p2.weights.data(),
-                            (unsigned int) curve.settings.n_bins,
-                            (unsigned int) curve.settings.n_casc,
-                            (unsigned int) p1.size(),
-                            (unsigned int) p2.size(),
-                            curve.x_axis.data(),
-                            curve.correlation.data()
-                    );
-                }
+                ccf_felekyan(
+                        (const unsigned long long *) p1.times.data(),
+                        (const unsigned long long *) p2.times.data(),
+                        p1.weights.data(), p2.weights.data(),
+                        (unsigned int) curve.settings.n_bins,
+                        (unsigned int) curve.settings.n_casc,
+                        (unsigned int) p1.size(),
+                        (unsigned int) p2.size(),
+                        curve.x_axis.data(),
+                        curve.correlation.data()
+                );
             } else if (correlation_method == "laurence") {
                 ccf_laurence(curve.x_axis, curve.correlation, p1, p2);
             } else{
@@ -258,7 +218,7 @@ if (is_verbose()) {
     std::memcpy(w2, weights2, sizeof(double) * np2);
 
     //Initializes some variables for for loops
-    int i=0;  // Signed int required for OpenMP on MSVC
+    unsigned int i=0;
     unsigned int j=0;
     unsigned int k=0;
     unsigned int p=0;
@@ -281,17 +241,7 @@ if (is_verbose()) {
         p=0;
 
         // Goes through every photon in first array
-        // OpenMP: Parallelize outer loop - each photon in channel 1 is independent
-#ifdef _OPENMP
-        if (is_openmp_available() && np1 > 1000) {
-            if (g_openmp_num_threads > 0) {
-                omp_set_num_threads(g_openmp_num_threads);
-            }
-            #pragma omp parallel for schedule(dynamic, 100) private(i, j, limit_l, limit_r, index) firstprivate(p)
-            for (i=0;i<(int)np1;i++) {
-#else
         for (i=0;i<np1;i++) {
-#endif
             //if (photons1[i]!=0)
             //{
             // Calculates minimal and maximal time for photons in second array
@@ -311,7 +261,6 @@ if (is_verbose()) {
                         // Calculates time between two photons
                         index= t2c[j] - limit_l + (unsigned long long)(k * nc);
                         // Adds one to correlation at the appropriate timelag
-                        #pragma omp atomic
                         corrl[index]+=(double) (w1[i] * w2[j]);
                     }
                         // Increases starting photon in second array, to save time
@@ -325,7 +274,6 @@ if (is_verbose()) {
                         // Calculates time between two photons
                         index= t2c[j] - limit_l + (unsigned long long)(k * nc);
                         // Adds one to correlation at the appropriate timelag
-                        #pragma omp atomic
                         corrl[index]+=(double) (w1[i] * w2[j]);
                     }
                         // Increases starting photon in second array, to save time
@@ -335,10 +283,7 @@ if (is_verbose()) {
                 j++;
             };
             //};
-        }
-#ifdef _OPENMP
-        } // Close OpenMP parallel for if it was opened
-#endif
+        };
         //After second iteration;
         if (k>0)
         {
@@ -381,198 +326,6 @@ if (is_verbose()) {
         }
         np2=j;
     }
-}
-
-void Correlator::ccf_felekyan_avx(
-        const unsigned long long *t1,
-        const unsigned long long *t2,
-        const double *weights1,
-        const double *weights2,
-        unsigned int nc,
-        unsigned int nb,
-        unsigned int np1,
-        unsigned int np2,
-        const unsigned long long *xdat, double *corrl
-) {
-#ifdef __AVX__
-if (is_verbose()) {
-    std::clog << "-- Using AVX-optimized Felekyan correlation" << std::endl;
-    std::clog << "-- Copying data to new arrays..." << std::endl;
-}
-    // the arrays can be modified inplace during the correlation. Thus, copied to a new array.
-    auto t1c = (unsigned long long *) malloc(sizeof(unsigned long long) * np1);
-    std::memcpy(t1c, t1, sizeof(unsigned long long) * np1);
-    auto t2c = (unsigned long long *) malloc(sizeof(unsigned long long) * np2);
-    std::memcpy(t2c, t2, sizeof(unsigned long long) * np2);
-    auto w1 = (double *) malloc(sizeof(double) * np1);
-    std::memcpy(w1, weights1, sizeof(double) * np1);
-    auto w2 = (double *) malloc(sizeof(double) * np2);
-    std::memcpy(w2, weights2, sizeof(double) * np2);
-
-    //Initializes some variables for for loops
-    int i=0;  // Signed int required for OpenMP on MSVC
-    unsigned int j=0;
-    unsigned int k=0;
-    unsigned int p=0;
-    unsigned int im;
-
-    //Initializes some parameters
-    unsigned long long index;
-    unsigned long long pw;
-    unsigned long long limit_l;
-    unsigned long long limit_r;
-
-    // Goes through every block
-    for (k=0;k<nb;k++)
-    {
-        // Determines spacing; used 2time spacing of one
-        if (k==0) {pw=1;}
-        else {pw=pow(2, k-1);};
-
-        // p is the starting photon in second array
-        p=0;
-
-        // Goes through every photon in first array
-        // OpenMP: Parallelize outer loop - each photon in channel 1 is independent
-        // Use dynamic scheduling for load balancing (photons have varying correlation counts)
-#ifdef _OPENMP
-        if (is_openmp_available() && np1 > 1000) {
-            if (g_openmp_num_threads > 0) {
-                omp_set_num_threads(g_openmp_num_threads);
-            }
-            #pragma omp parallel for schedule(dynamic, 100) private(i, j, limit_l, limit_r, index) firstprivate(p)
-            for (i=0;i<(int)np1;i++) {
-#else
-        for (i=0;i<np1;i++) {
-#endif
-            // Calculates minimal and maximal time for photons in second array
-            limit_l= (unsigned long long)(xdat[k*nc]/pw + t1c[i]);
-            limit_r= limit_l+nc;
-
-            j=p;
-            
-            // AVX-optimized inner loop
-            __m256d w1_vec = _mm256_set1_pd(w1[i]);
-            unsigned int j_vec = j;
-            unsigned int end_j_vec = (np2 >= 4) ? np2 - 3 : 0;
-            
-            // Process 4 elements at a time
-            for (; j_vec < end_j_vec && (t2c[j_vec] <= limit_r); j_vec += 4) {
-                // Check if we can vectorize
-                if (j_vec + 3 >= np2 || t2c[j_vec + 3] > limit_r) break;
-                
-                // Load 4 weights
-                __m256d w2_vec = _mm256_loadu_pd(&w2[j_vec]);
-                
-                // Multiply weights
-                __m256d prod = _mm256_mul_pd(w1_vec, w2_vec);
-                
-                // Store to temporary array
-                double temp[4];
-                _mm256_storeu_pd(temp, prod);
-                
-                // Process each element
-                for (unsigned int kk = 0; kk < 4; kk++) {
-                    unsigned int jj = j_vec + kk;
-                    if (jj >= np2 || t2c[jj] > limit_r) break;
-                    
-                    if (k == 0) {
-                        if (t2c[jj] >= limit_l) {
-                            index = t2c[jj] - limit_l + (unsigned long long)(k * nc);
-                            #pragma omp atomic
-                            corrl[index] += temp[kk];
-                        } else if (jj == p) {
-                            p++;
-                        }
-                    } else {
-                        if (t2c[jj] > limit_l) {
-                            index = t2c[jj] - limit_l + (unsigned long long)(k * nc);
-                            #pragma omp atomic
-                            corrl[index] += temp[kk];
-                        } else if (jj == p) {
-                            p++;
-                        }
-                    }
-                }
-            }
-            
-            // Process remaining elements with scalar code
-            for (j = j_vec; (j<np2) && (t2c[j] <= limit_r); j++)
-            {
-                if (k == 0) {
-                    if (t2c[j] >= limit_l) {
-                        index= t2c[j] - limit_l + (unsigned long long)(k * nc);
-                        #pragma omp atomic
-                        corrl[index]+=(double) (w1[i] * w2[j]);
-                    } else {
-                        p++;
-                    }
-                } else {
-                    if (t2c[j] > limit_l) {
-                        index= t2c[j] - limit_l + (unsigned long long)(k * nc);
-                        #pragma omp atomic
-                        corrl[index]+=(double) (w1[i] * w2[j]);
-                    } else {
-                        p++;
-                    }
-                }
-            }
-        }
-#ifdef _OPENMP
-        } // Close OpenMP parallel for if it was opened
-#endif
-        
-        //After second iteration;
-        if (k>0)
-        {
-            // Bitwise shift right => Corresponds to dividing by 2 and rounding down
-            // If two photons are in the same time bin, sums intensities and sets one to 0 to save calculation time
-            for(im=0;im<np1;im++) { t1c[im] /= 2;};
-            for(im=1;im<np1;im++)
-            {
-                if (t1c[im] == t1c[im - 1])
-                { w1[im]+=w1[im - 1]; w1[im - 1]=0;};
-            };
-            for(im=0;im<np2;im++) { t2c[im] /= 2;};
-            for(im=1;im<np2;im++)
-            {
-                if (t2c[im] == t2c[im - 1])
-                { w2[im]+=w2[im - 1]; w2[im - 1]=0;};
-            };
-        };
-        //
-        j=0;
-        for (i=0; i<np1; i++)
-        {
-            if (w1[i] != 0)
-            {
-                w1[j] = w1[i];
-                t1c[j] = t1c[i];
-                j++;
-            }
-        }
-        np1=j;
-        j=0;
-        for (i=0; i<np2; i++)
-        {
-            if (w2[i] != 0)
-            {
-                w2[j] = w2[i];
-                t2c[j] = t2c[i];
-                j++;
-            }
-        }
-        np2=j;
-    }
-    
-    free(t1c);
-    free(t2c);
-    free(w1);
-    free(w2);
-#else
-    // Fallback to non-AVX version if AVX not available at compile time
-    ccf_felekyan(t1, t2, weights1, weights2, nc, nb, np1, np2, xdat, corrl);
-#endif
 }
 
 inline void ccf_wahl_correlate(
@@ -593,101 +346,84 @@ inline void ccf_wahl_correlate(
     size_t offset = tau_offset / scale;
 
     p = start_2;
-    for (i1 = start_1; i1 < end_1; i1++) {
-        if (w1[i1] == 0) continue;
-        size_t edge_l = t1[i1] + offset;
-        size_t edge_r = edge_l + n_bins;
-        for (i2 = p; i2 < end_2; i2++) {
-            if (t2[i2] > edge_r) break;
-            if (t2[i2] > edge_l) {
-                index = t2[i2] - edge_l + i_casc * n_bins;
-                corr[index] += (w1[i1] * w2[i2]);
-            } else {
+    
+#if defined(__AVX__) || defined(__AVX2__)
+    // Use AVX optimization if available at runtime
+    if (g_use_avx) {
+        // AVX-optimized version: process inner loop with SIMD
+        for (i1 = start_1; i1 < end_1; i1++) {
+            if (w1[i1] == 0) continue;
+            
+            double w1_val = w1[i1];
+            size_t edge_l = t1[i1] + offset;
+            size_t edge_r = edge_l + n_bins;
+            
+            // Broadcast w1[i1] to all lanes of AVX register
+            __m256d v_w1 = _mm256_set1_pd(w1_val);
+            
+            // Process inner loop with AVX (4 doubles at a time)
+            i2 = p;
+            
+            // Scalar processing until we find valid range
+            while (i2 < end_2 && t2[i2] <= edge_l) {
                 p++;
+                i2++;
+            }
+            
+            // Vectorized processing of valid range
+            while (i2 + 3 < end_2) {
+                // Check if all 4 elements are within bounds
+                if (t2[i2 + 3] > edge_r) break;
+                
+                // Load 4 weights from w2
+                __m256d v_w2 = _mm256_loadu_pd(&w2[i2]);
+                
+                // Compute w1[i1] * w2[i2:i2+3]
+                __m256d v_product = _mm256_mul_pd(v_w1, v_w2);
+                
+                // Calculate indices and accumulate
+                // Note: This part needs scalar processing due to indirect indexing
+                double products[4];
+                _mm256_storeu_pd(products, v_product);
+                
+                for (int k = 0; k < 4; k++) {
+                    if (t2[i2 + k] > edge_l && t2[i2 + k] <= edge_r) {
+                        index = t2[i2 + k] - edge_l + i_casc * n_bins;
+                        corr[index] += products[k];
+                    }
+                }
+                
+                i2 += 4;
+            }
+            
+            // Process remaining elements with scalar code
+            for (; i2 < end_2; i2++) {
+                if (t2[i2] > edge_r) break;
+                if (t2[i2] > edge_l) {
+                    index = t2[i2] - edge_l + i_casc * n_bins;
+                    corr[index] += (w1_val * w2[i2]);
+                }
             }
         }
-    }
-}
-
-inline void ccf_wahl_correlate_avx(
-        size_t start_1, size_t end_1,
-        size_t start_2, size_t end_2,
-        size_t i_casc, size_t n_bins,
-        std::vector<unsigned long long> &taus, std::vector<double> &corr,
-        const unsigned long long *t1, const double *w1, size_t nt1,
-        const unsigned long long *t2, const double *w2, size_t nt2
-) {
-#ifdef __AVX__
-    size_t i1, i2, p, index;
-    start_1 = std::max(start_1, (size_t) 0);
-    start_2 = std::max(start_2, (size_t) 0);
-    end_1 = std::min(nt1, end_1);
-    end_2 = std::min(nt2, end_2);
-    auto scale = (unsigned long long) pow(2.0, i_casc);
-    size_t tau_offset = taus[i_casc * n_bins];
-    size_t offset = tau_offset / scale;
-
-    p = start_2;
-    for (i1 = start_1; i1 < end_1; i1++) {
-        if (w1[i1] == 0) continue;
-        
-        size_t edge_l = t1[i1] + offset;
-        size_t edge_r = edge_l + n_bins;
-        
-        // Broadcast w1[i1] to all elements of AVX register
-        __m256d w1_vec = _mm256_set1_pd(w1[i1]);
-        
-        // Process 4 elements at a time with AVX
-        i2 = p;
-        size_t end_2_vec = (end_2 >= 4) ? end_2 - 3 : 0;
-        
-        // Vectorized loop - process 4 weights at once
-        for (; i2 < end_2_vec; i2 += 4) {
-            // Check if all 4 elements are within range
-            if (t2[i2] > edge_r) break;
-            
-            // Check if we can process 4 elements
-            bool can_vectorize = (i2 + 3 < end_2) && 
-                                 (t2[i2 + 3] <= edge_r);
-            
-            if (!can_vectorize) break;
-            
-            // Load 4 weights from w2
-            __m256d w2_vec = _mm256_loadu_pd(&w2[i2]);
-            
-            // Multiply w1[i1] * w2[i2:i2+3]
-            __m256d prod = _mm256_mul_pd(w1_vec, w2_vec);
-            
-            // Process each element individually for indexing
-            // (correlation bins are not contiguous, so we can't vectorize the store)
-            double temp[4];
-            _mm256_storeu_pd(temp, prod);
-            
-            for (size_t k = 0; k < 4; k++) {
-                if (t2[i2 + k] > edge_l) {
-                    index = t2[i2 + k] - edge_l + i_casc * n_bins;
-                    corr[index] += temp[k];
-                } else if (i2 + k == p) {
+    } else
+#endif
+    {
+        // Scalar version (used when AVX not compiled in OR disabled at runtime)
+        for (i1 = start_1; i1 < end_1; i1++) {
+            if (w1[i1] == 0) continue;
+            size_t edge_l = t1[i1] + offset;
+            size_t edge_r = edge_l + n_bins;
+            for (i2 = p; i2 < end_2; i2++) {
+                if (t2[i2] > edge_r) break;
+                if (t2[i2] > edge_l) {
+                    index = t2[i2] - edge_l + i_casc * n_bins;
+                    corr[index] += (w1[i1] * w2[i2]);
+                } else {
                     p++;
                 }
             }
         }
-        
-        // Process remaining elements with scalar code
-        for (; i2 < end_2; i2++) {
-            if (t2[i2] > edge_r) break;
-            if (t2[i2] > edge_l) {
-                index = t2[i2] - edge_l + i_casc * n_bins;
-                corr[index] += (w1[i1] * w2[i2]);
-            } else {
-                p++;
-            }
-        }
     }
-#else
-    // Fallback to non-AVX version if AVX not available at compile time
-    ccf_wahl_correlate(start_1, end_1, start_2, end_2, i_casc, n_bins, taus, corr, t1, w1, nt1, t2, w2, nt2);
-#endif
 }
 
 void Correlator::ccf_wahl(
@@ -700,7 +436,7 @@ if (is_verbose()) {
     std::clog << "CORRELATOR::CCF" << std::endl;
     std::clog << "-- Copying data to new arrays..." << std::endl;
 }
-    // the photon streams are modified inplace. Thus, copies are creates
+    // the photon streams are modified inplace. Thus, copies are created
     CorrelatorPhotonStream s1(p1);
     CorrelatorPhotonStream s2(p2);
 if (is_verbose()) {
@@ -708,21 +444,123 @@ if (is_verbose()) {
     for(auto v: taus){
         std::clog << v << ",";
     }
-    if (is_avx_available()) {
-        std::clog << std::endl << "-- Using AVX-optimized correlation" << std::endl;
-    }
 }
-    for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
-        if (is_avx_available()) {
-            ccf_wahl_correlate_avx(
-                    0, s1.size(),
-                    0, s2.size(),
-                    i_casc, n_bins,
-                    taus, corr,
-                    s1.times.data(), s1.weights.data(), s1.size(),
-                    s2.times.data(), s2.weights.data(), s2.size()
-            );
-        } else {
+
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    if (use_openmp) {
+        int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+        if (num_threads > 0) {
+            omp_set_num_threads(num_threads);
+        }
+        
+        if (is_verbose()) {
+            std::clog << "-- OpenMP enabled with " << omp_get_max_threads() << " threads" << std::endl;
+            std::clog << "-- Initial stream sizes: s1=" << s1.size() << ", s2=" << s2.size() << std::endl;
+        }
+        
+        // Parallelize across cascades - each thread computes its own coarsened streams
+        // This avoids memory bottleneck from pre-computing all cascades
+        #pragma omp parallel
+        {
+            // Thread-local correlation buffer and streams
+            std::vector<double> local_corr(corr.size(), 0.0);
+            
+            #pragma omp for schedule(dynamic) nowait
+            for (long long i_casc = 0; i_casc < (long long)n_casc; i_casc++) {
+                // Each thread creates its own coarsened copy for this cascade
+                std::vector<unsigned long long> t1 = s1.times;
+                std::vector<double> w1 = s1.weights;
+                std::vector<unsigned long long> t2 = s2.times;
+                std::vector<double> w2 = s2.weights;
+                
+                // Coarsen i_casc times
+                for (long long coarsen_step = 0; coarsen_step < i_casc; coarsen_step++) {
+                    // Coarsen t1/w1
+                    for(size_t i = 0; i < t1.size(); i++) 
+                        t1[i] /= 2;
+                    for (size_t i = 1; i < t1.size(); i++) {
+                        if (t1[i] == t1[i - 1]) {
+                            w1[i] += w1[i - 1];
+                            w1[i - 1] = 0.0;
+                        }
+                    }
+                    size_t j = 0;
+                    for (size_t i = 0; i < t1.size(); i++) {
+                        if (w1[i] != 0) {
+                            w1[j] = w1[i];
+                            t1[j] = t1[i];
+                            j++;
+                        }
+                    }
+                    t1.resize(j);
+                    w1.resize(j);
+                    
+                    // Coarsen t2/w2
+                    for(size_t i = 0; i < t2.size(); i++) 
+                        t2[i] /= 2;
+                    for (size_t i = 1; i < t2.size(); i++) {
+                        if (t2[i] == t2[i - 1]) {
+                            w2[i] += w2[i - 1];
+                            w2[i - 1] = 0.0;
+                        }
+                    }
+                    j = 0;
+                    for (size_t i = 0; i < t2.size(); i++) {
+                        if (w2[i] != 0) {
+                            w2[j] = w2[i];
+                            t2[j] = t2[i];
+                            j++;
+                        }
+                    }
+                    t2.resize(j);
+                    w2.resize(j);
+                }
+                
+                if (is_verbose()) {
+                    #pragma omp critical
+                    {
+                        std::clog << "-- Cascade " << i_casc << ": sizes t1=" << t1.size() 
+                                  << ", t2=" << t2.size() << " (thread " << omp_get_thread_num() << ")" << std::endl;
+                    }
+                }
+                
+                // Correlate
+                ccf_wahl_correlate(
+                        0, t1.size(),
+                        0, t2.size(),
+                        (size_t)i_casc, n_bins,
+                        taus, local_corr,
+                        t1.data(), w1.data(), t1.size(),
+                        t2.data(), w2.data(), t2.size()
+                );
+            }
+            
+            // Accumulate results into global correlation array
+            if (is_verbose()) {
+                #pragma omp critical
+                {
+                    std::clog << "-- Thread " << omp_get_thread_num() << " reducing results" << std::endl;
+                }
+            }
+            
+            #pragma omp critical
+            {
+                for (size_t i = 0; i < corr.size(); i++) {
+                    corr[i] += local_corr[i];
+                }
+            }
+        }
+        
+        if (is_verbose()) {
+            std::clog << "-- OpenMP correlation complete" << std::endl;
+        }
+    } else
+#endif
+    {
+        // Serial version (OpenMP disabled or not available)
+        for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
             ccf_wahl_correlate(
                     0, s1.size(),
                     0, s2.size(),
@@ -731,9 +569,9 @@ if (is_verbose()) {
                     s1.times.data(), s1.weights.data(), s1.size(),
                     s2.times.data(), s2.weights.data(), s2.size()
             );
+            s1.coarsen();
+            s2.coarsen();
         }
-        s1.coarsen();
-        s2.coarsen();
     }
 }
 
