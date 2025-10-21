@@ -125,6 +125,19 @@ public:
 
     std::vector<int> get_tttr_indices() const override;
 
+    /**
+     * @brief Gets TTTR indices as a raw pointer and size (optimized for Python/NumPy).
+     * 
+     * This zero-copy accessor provides direct access to the internal data.
+     * For TTTRSelection, this only works efficiently for dense, non-inverted selections.
+     * For inverted or sparse selections, use the vector-returning version.
+     * The pointer remains valid as long as the TTTRSelection object is not modified.
+     *
+     * @param output Pointer to receive the data pointer (const int*)
+     * @param n_output Pointer to receive the number of elements
+     */
+    void get_tttr_indices(int** output, int* n_output) const override;
+
 private:
     int resolve_start(const std::vector<int>& values) const;
     int resolve_stop(const std::vector<int>& values) const;

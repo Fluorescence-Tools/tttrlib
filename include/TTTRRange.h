@@ -76,6 +76,23 @@ public:
     virtual std::vector<int> get_tttr_indices() const;
 
     /**
+     * @brief Gets TTTR indices as a raw pointer and size.
+     * 
+     * This zero-copy accessor provides direct access to the internal data,
+     * ideal for NumPy wrapping and avoiding vector allocations.
+     * The pointer remains valid as long as the TTTRRange object is not modified.
+     *
+     * @param output Pointer to receive the data pointer (const int*)
+     * @param n_output Pointer to receive the number of elements
+     */
+    virtual void get_tttr_indices(int** output, int* n_output) const {
+        // Access underlying vector from flat_set
+        const auto& container = _tttr_indices.container();
+        *output = const_cast<int*>(container.data());
+        *n_output = static_cast<int>(container.size());
+    }
+
+    /**
      * @brief Gets the start index of the TTTR range.
      *
      * @return The start index or -1 if the set is empty.

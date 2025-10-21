@@ -6,8 +6,11 @@
 %ignore TTTRSelection(const TTTRSelection& p2);
 %ignore TTTRSelection(int start, int stop);
 
+// Ignore the vector-returning version of get_tttr_indices (slow, creates copy)
+// Use the pointer-based overload instead for efficient NumPy wrapping
+%ignore TTTRSelection::get_tttr_indices() const;
+
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
-%attributeval(TTTRSelection, std::vector<int>, tttr_indices, get_tttr_indices);
 %attributeval(TTTRSelection, std::vector<int>, start_stop, get_start_stop);
 %attribute(TTTRSelection, int, start, get_start);
 %attribute(TTTRSelection, int, stop, get_stop);

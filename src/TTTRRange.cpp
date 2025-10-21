@@ -10,8 +10,12 @@ TTTRRange::TTTRRange(int start, int stop){
 }
 
 std::vector<int> TTTRRange::get_tttr_indices() const{
-    std::vector<int> v(_tttr_indices.begin(), _tttr_indices.end());
-    return v;
+    // Use move semantics for RVO optimization
+    // Reserve exact size to avoid reallocation
+    std::vector<int> v;
+    v.reserve(_tttr_indices.size());
+    v.assign(_tttr_indices.begin(), _tttr_indices.end());
+    return v;  // RVO/NRVO will elide the copy
 }
 
 double TTTRRange::compute_mean_lifetime(
@@ -42,8 +46,8 @@ double TTTRRange::get_mean_lifetime(
         std::vector<double> *background, double m0_bg, double m1_bg,
         double background_fraction
 ) {
-    auto s = get_tttr_indices();
-    std::vector<int> t(s.begin(), s.end());
+    // Avoid double copy: get_tttr_indices() already creates a vector
+    auto t = get_tttr_indices();
     return TTTRRange::compute_mean_lifetime(
             t,
             tttr_data,

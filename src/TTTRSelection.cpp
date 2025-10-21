@@ -105,7 +105,8 @@ int TTTRSelection::resolve_stop(const std::vector<int>& values) const{
 }
 
 std::vector<int> TTTRSelection::get_tttr_indices() const{
-    auto stored = TTTRRange::get_tttr_indices();
+    // Use const ref to avoid unnecessary copy
+    const auto& stored = TTTRRange::get_tttr_indices();
     int start = resolve_start(stored);
     int stop = resolve_stop(stored);
 
@@ -152,9 +153,21 @@ std::vector<int> TTTRSelection::get_tttr_indices() const{
 }
 
 size_t TTTRSelection::get_index_count() const{
-    auto stored = TTTRRange::get_tttr_indices();
-    int start = resolve_start(stored);
-    int stop = resolve_stop(stored);
+    // Access underlying container directly to avoid vector copy
+    const auto& container = _tttr_indices.container();
+    size_t stored_size = container.size();
+    
+    // Resolve start/stop directly from members or stored data
+    int start = _range_start;
+    int stop = _range_stop;
+    
+    if(start < 0 && stored_size > 0){
+        start = container[0];  // First element (flat_set is sorted)
+    }
+    if(stop < 0 && stored_size > 0){
+        stop = container[stored_size - 1];  // Last element
+    }
+    
     if(start < 0 || stop < start){
         return 0U;
     }
@@ -162,13 +175,37 @@ size_t TTTRSelection::get_index_count() const{
     size_t span = static_cast<size_t>(stop - start + 1);
     if(is_dense()){
         if(!is_inverted()){
-            return stored.size();
+            return stored_size;
         }
-        if(span < stored.size()){
+        if(span < stored_size){
             return 0U;
         }
-        return span - stored.size();
+        return span - stored_size;
     }
 
     return is_inverted() ? 0U : span;
+}
+
+void TTTRSelection::get_tttr_indices(int** output, int* n_output) const{
+    // For dense, non-inverted selections, we can use the base class implementation
+    // which provides zero-copy access to the underlying container
+    if(is_dense() && !is_inverted()){
+        TTTRRange::get_tttr_indices(output, n_output);
+        return;
+    }
+    
+    // For inverted or sparse selections, we need to build the result
+    // Fall back to creating a temporary vector (less efficient but correct)
+    // Note: This will allocate memory that Python must manage
+    auto indices = get_tttr_indices();  // Get the vector
+    
+    // Allocate new memory for the output
+    // Python/NumPy will take ownership via ARGOUTVIEWM_ARRAY1
+    *n_output = static_cast<int>(indices.size());
+    if(*n_output > 0){
+        *output = new int[*n_output];
+        std::copy(indices.begin(), indices.end(), *output);
+    } else {
+        *output = nullptr;
+    }
 }
