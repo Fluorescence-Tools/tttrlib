@@ -62,20 +62,35 @@ namespace cpu_features {
         // On non-x86 architectures (e.g., ARM), AVX/FMA are not available
     }
     
+    // Cross-platform helper to safely get environment variable
+    inline const char* safe_getenv(const char* env_var_name, char* buffer, size_t buffer_size) {
+#ifdef _WIN32
+        size_t required_size = 0;
+        errno_t err = getenv_s(&required_size, buffer, buffer_size, env_var_name);
+        return (err == 0 && required_size > 0) ? buffer : nullptr;
+#else
+        (void)buffer;       // Unused on non-Windows
+        (void)buffer_size;  // Unused on non-Windows
+        return std::getenv(env_var_name);
+#endif
+    }
+    
+    // Helper to check if string represents a false value
+    inline bool is_false_value(const char* value) {
+        return std::strcmp(value, "0") == 0 || 
+               std::strcmp(value, "false") == 0 || 
+               std::strcmp(value, "FALSE") == 0 ||
+               std::strcmp(value, "off") == 0 ||
+               std::strcmp(value, "OFF") == 0;
+    }
+    
     // Helper to check environment variable for feature override
     inline bool is_feature_enabled_by_env(const char* env_var_name, bool default_value) {
-        const char* env_val = std::getenv(env_var_name);
+        char env_buffer[256];
+        const char* env_val = safe_getenv(env_var_name, env_buffer, sizeof(env_buffer));
+        
         if (env_val != nullptr) {
-            // Check if explicitly disabled
-            if (std::strcmp(env_val, "0") == 0 || 
-                std::strcmp(env_val, "false") == 0 || 
-                std::strcmp(env_val, "FALSE") == 0 ||
-                std::strcmp(env_val, "off") == 0 ||
-                std::strcmp(env_val, "OFF") == 0) {
-                return false;
-            }
-            // Any other value means enabled
-            return true;
+            return !is_false_value(env_val);
         }
         return default_value;
     }
@@ -115,15 +130,17 @@ namespace cpu_features {
     // Get number of OpenMP threads (respects OMP_NUM_THREADS and TTTRLIB_NUM_THREADS)
     inline int get_openmp_num_threads() {
 #ifdef _OPENMP
+        char env_buffer[32];
+        
         // Check TTTRLIB-specific override first
-        const char* tttr_threads = std::getenv("TTTRLIB_NUM_THREADS");
+        const char* tttr_threads = safe_getenv("TTTRLIB_NUM_THREADS", env_buffer, sizeof(env_buffer));
         if (tttr_threads != nullptr) {
             int n = std::atoi(tttr_threads);
             if (n > 0) return n;
         }
         
         // Fall back to OMP_NUM_THREADS or default
-        const char* omp_threads = std::getenv("OMP_NUM_THREADS");
+        const char* omp_threads = safe_getenv("OMP_NUM_THREADS", env_buffer, sizeof(env_buffer));
         if (omp_threads != nullptr) {
             int n = std::atoi(omp_threads);
             if (n > 0) return n;
