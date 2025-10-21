@@ -147,8 +147,8 @@ int localization::modelThree2DGaussian(double *vars, double *model, int xlen, in
 
 int localization::fit2DGaussian(std::vector<double> vars, std::vector<std::vector<double>> &data) {
     int xlen, ylen;
-    xlen = data.size();
-    ylen = data[0].size();
+    xlen = static_cast<int>(data.size());
+    ylen = static_cast<int>(data[0].size());
 
     //bfgs.minimize needs to take a void * as argument type
     //Therefore a pointer type is supplied

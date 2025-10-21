@@ -235,7 +235,7 @@ if (is_verbose()) {
     {
         // Determines spacing; used 2time spacing of one
         if (k==0) {pw=1;}
-        else {pw=pow(2, k-1);};
+        else {pw=static_cast<unsigned long long>(pow(2, k-1));};
 
         // p is the starting photon in second array
         p=0;
@@ -581,7 +581,7 @@ void Correlator::ccf_laurence(
             CorrelatorPhotonStream &p1,
             CorrelatorPhotonStream &p2
 ){
-    int nbins = taus.size();
+    int nbins = static_cast<int>(taus.size());
     long i, j, k, l;
     
     std::vector<long> jmin(taus.size(), 0);
@@ -592,8 +592,8 @@ void Correlator::ccf_laurence(
         double w1 = p1.weights[i];
         
         for(int k = 0; k < nbins - 1; k++){
-            double tau_min = taus[k + 0]; // lower edge of tau bin
-            double tau_max = taus[k + 1]; // upper edge of tau bin
+            double tau_min = static_cast<double>(taus[k + 0]); // lower edge of tau bin
+            double tau_max = static_cast<double>(taus[k + 1]); // upper edge of tau bin
 
             if(k == 0){
                 j = jmin[k];
@@ -661,7 +661,7 @@ void Correlator::normalize_ccf_wahl(
     double cr2 = (double) np2 / std::max(1.0, (double) dt2);
     double maximum_macro_time = (double) std::max(dt1, dt2);
     for (unsigned int j = 0; j < x_axis.size(); j++) {
-        double pw = (uint64_t) pow(2.0, (int) (double(j - 1) / n_bins));
+        double pw = static_cast<double>(static_cast<uint64_t>(pow(2.0, static_cast<int>(static_cast<double>(j - 1) / n_bins))));
         double delta_t = (double) (maximum_macro_time - x_axis[j]);
         corr[j] /= pw; 
         corr[j] /= (cr1 * cr2 * delta_t);
@@ -681,8 +681,8 @@ void Correlator::normalize_ccf_laurence(
     double n1 = p1.sum_of_weights();
     double n2 = p2.sum_of_weights();
 
-    for (int i = 0; i < axis.size() - 1; i++) {
-        double dtau = axis[i + 1] - axis[i];
+    for (int i = 0; i < static_cast<int>(axis.size()) - 1; i++) {
+        double dtau = static_cast<double>(axis[i + 1] - axis[i]);
         double scale = (duration / dtau - 1.0);
 
         // double w1 = 0.0;

@@ -67,7 +67,7 @@ static std::vector<int> collect_stacked_pixel_indices(
     for (const auto& frame : frames) {
         const auto& lines = frame->get_lines();
         const auto& pixels = lines[i_line]->get_pixels();
-        auto dense_indices = pixels[i_pixel].get_tttr_indices();
+        const auto& dense_indices = pixels[i_pixel].get_tttr_indices();
         indices.insert(indices.end(), dense_indices.begin(), dense_indices.end());
     }
     
@@ -1290,7 +1290,7 @@ void CLSMImage::get_fluorescence_decay(
                 size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
                                    i_line * (n_pixel * n_tac) +
                                    i_pixel * (n_tac);
-                auto indices = pixel.get_tttr_indices();
+                const auto& indices = pixel.get_tttr_indices();
                 for (auto i: indices) {
                     size_t i_tac = tttr_data->micro_times[i] / micro_time_coarsening;
                     t[pixel_nbr + i_tac] += 1;
@@ -1327,11 +1327,21 @@ void CLSMImage::get_fcs_image(
         std::clog << "-- Correlating... " << n_corr << std::endl;
     }
     size_t o_frame = 0;
+    
+    // Reuse TTTR objects and shared_ptrs to reduce allocations
+    // Create once per frame instead of per pixel
     //#pragma omp parallel for default(none) shared(tttr, o_frame, t, clsm_other)
     for (unsigned int i_frame = 0; i_frame < n_frames; i_frame++) {
         auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
         auto frame = frames[i_frame];
         auto other_frame = clsm_other->frames[i_frame];
+        
+        // Pre-allocate reusable TTTR objects to avoid repeated construction
+        TTTR tttr_1(*tttr, nullptr, 0, false);
+        TTTR tttr_2(*tttr, nullptr, 0, false);
+        auto tttr_1_ptr = std::make_shared<TTTR>(tttr_1);
+        auto tttr_2_ptr = std::make_shared<TTTR>(tttr_2);
+        
         for (unsigned int i_line = 0; i_line < n_lines; i_line++) {
             auto line = frame->lines[i_line];
             auto other_line = other_frame->lines[i_line];
@@ -1341,24 +1351,30 @@ void CLSMImage::get_fcs_image(
                 int count1 = static_cast<int>(pixel.get_index_count());
                 int count2 = static_cast<int>(other_pixel.get_index_count());
                 if ((count1 > min_photons) && (count2 > min_photons)) {
-                    auto v1 = pixel.get_tttr_indices();
-                    auto tttr_1 = TTTR(
+                    // Get indices once - use const ref to avoid copies
+                    const auto& v1 = pixel.get_tttr_indices();
+                    const auto& v2 = other_pixel.get_tttr_indices();
+                    
+                    // Create TTTR objects for this pixel pair
+                    TTTR tttr_1_temp(
                         *tttr,
-                        v1.data(),
+                        const_cast<int*>(v1.data()),
                         static_cast<int>(v1.size()),
                         false
                     );
-                    auto v2 = other_pixel.get_tttr_indices();
-                    auto tttr_2 = TTTR(
+                    TTTR tttr_2_temp(
                         *tttr,
-                        v2.data(),
+                        const_cast<int*>(v2.data()),
                         static_cast<int>(v2.size()),
                         false
                     );
-                    corr.set_tttr(
-                        std::make_shared<TTTR>(tttr_1),
-                        std::make_shared<TTTR>(tttr_2)
-                    );
+                    
+                    // Update shared pointers
+                    *tttr_1_ptr = tttr_1_temp;
+                    *tttr_2_ptr = tttr_2_temp;
+                    
+                    corr.set_tttr(tttr_1_ptr, tttr_2_ptr);
+                    
                     double *correlation;
                     int temp;
                     if (!normalized_correlation) {
@@ -1421,7 +1437,7 @@ void CLSMImage::get_decay_of_pixels(
                 for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                     auto pixel = line->pixels[i_pixel];
                     if (mask[i_frame * (n_lines * n_pixel) + i_line * (n_pixel) + i_pixel]) {
-                        auto indices = pixel.get_tttr_indices();
+                        const auto& indices = pixel.get_tttr_indices();
                         for (auto i: indices) {
                             size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
                             t[w_frame * n_tac + i_tac] += 1;
@@ -1517,7 +1533,7 @@ void CLSMImage::get_phasor(
         g_irf = gs[0];
         s_irf = gs[1];
     }
-    int o_frames = stack_frames ? 1 : n_frames;
+    int o_frames = stack_frames ? 1 : static_cast<int>(n_frames);
     double factor = (2. * frequency * M_PI);
     // Use malloc + memset for large arrays - faster than calloc
     auto *t = (float *) malloc(o_frames * n_lines * n_pixel * 2 * sizeof(float));
@@ -1541,17 +1557,17 @@ void CLSMImage::get_phasor(
             } else {
                 for (int i_frame = 0; i_frame < n_frames; i_frame++) {
                     size_t pixel_nbr = i_frame * (n_lines * n_pixel * 2) + i_line * (n_pixel * 2) + i_pixel * 2;
-                    auto s = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
-                    std::vector<int> t(s.begin(), s.end());
+                    const auto& s = frames[i_frame]->lines[i_line]->pixels[i_pixel].get_tttr_indices();
+                    std::vector<int> indices(s.begin(), s.end());
                     auto r = DecayPhasor::compute_phasor(
                         tttr_data->micro_times, tttr_data->n_valid_events,
                         frequency,
                         minimum_number_of_photons,
                         g_irf, s_irf,
-                        &t
+                        &indices
                     );
-                    t[pixel_nbr + 0] = (float) r[0];
-                    t[pixel_nbr + 1] = (float) r[1];
+                    t[pixel_nbr + 0] = static_cast<int>(r[0]);
+                    t[pixel_nbr + 1] = static_cast<int>(r[1]);
                 }
             }
         }
@@ -1721,13 +1737,13 @@ void CLSMImage::get_roi(
     int stop_x = x_range[1];
     int start_y = y_range[0];
     int stop_y = y_range[1];
-    stop_x = (stop_x < 0) ? np : stop_x % np;
-    stop_y = (stop_y < 0) ? nl : stop_y % nl;
+    stop_x = (stop_x < 0) ? static_cast<int>(np) : stop_x % static_cast<int>(np);
+    stop_y = (stop_y < 0) ? static_cast<int>(nl) : stop_y % static_cast<int>(nl);
 
     // Compute the shape of the output array
     int ncol_roi = stop_x - start_x;
     int nrows_roi = stop_y - start_y;
-    int nframes_roi = selected_frames.size();
+    int nframes_roi = static_cast<int>(selected_frames.size());
     int pixel_in_roi = nrows_roi * ncol_roi;
 
     if (is_verbose()) {
@@ -1743,7 +1759,7 @@ void CLSMImage::get_roi(
         }
         selected_frames.reserve(nf);
         for (int i = 0; i < nf; i++) selected_frames.emplace_back(i);
-        nframes_roi = selected_frames.size();
+        nframes_roi = static_cast<int>(selected_frames.size());
     }
     if (is_verbose()) {
         if (use_mask)
@@ -1983,8 +1999,8 @@ void CLSMImage::transform(unsigned int *input, int n_input) {
         // source (s)
         CLSMPixel *source_pixel = source->getPixel(input[i + 0]);
         CLSMPixel *target_pixel = target->getPixel(input[i + 1]);
-        // Append tttr indices to pixel
-        auto source_indices = source_pixel->get_tttr_indices();
+        // Append tttr indices to pixel - use const ref to avoid copy
+        const auto& source_indices = source_pixel->get_tttr_indices();
         for (auto tr_idx: source_indices) {
             target_pixel->insert(tr_idx);
         }

@@ -183,7 +183,7 @@ bool isCZConfocor3File(const std::string& filename) {
 
     if (read_size != 1) return false;
 
-    float  frequency_float = rec.bits.frequency;
+    float frequency_float = static_cast<float>(rec.bits.frequency);
     double mt_clk = (frequency_float != 0.0f) ? (1.0 / frequency_float) : 0.0;
 
     if (frequency_float <= 0 || mt_clk >= 4000) return false;

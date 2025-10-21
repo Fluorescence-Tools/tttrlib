@@ -19,13 +19,13 @@ void CorrelatorPhotonStream::make_fine(
         unsigned short *tac, int n_tac,
         unsigned int number_of_microtime_channels
 ){
-    if(n_tac < (int) size()){
+    if(n_tac < static_cast<int>(size())){
         std::cerr << "Error: The number of micro time events is smaller than the number of"
                      "macro time events." << std::endl;
         resize(n_tac);
     }
     CorrelatorPhotonStream::make_fine_times(
-            times.data(), times.size(),
+            times.data(), static_cast<unsigned int>(times.size()),
             tac, number_of_microtime_channels
     );
     set_time_axis_calibration(time_axis_calibration / number_of_microtime_channels);
@@ -105,7 +105,7 @@ void CorrelatorPhotonStream::set_weights(
 ){
     // use the tttr
     if(tttr != nullptr){
-        int n = tttr->size();
+        int n = static_cast<int>(tttr->size());
         if(routing_channels.empty()){
             routing_channels.assign(tttr->routing_channels, tttr->routing_channels + n);
         }

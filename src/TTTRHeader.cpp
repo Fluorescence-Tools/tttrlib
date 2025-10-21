@@ -217,7 +217,7 @@ size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
     add_tag(j, "num_channels", (int) num_channels, tyInt8);
 
     header.channel_labels.resize(num_channels);
-    for (uint32_t i = 0; i < num_channels; ++i) {
+    for (int32_t i = 0; i < num_channels; ++i) {
         uint32_t size;
         fread(&size, sizeof(size), 1, file);
         SwapEndian(size);
@@ -448,7 +448,7 @@ if (is_verbose()) {
                     std::cout << std::endl;
 }
                     for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyInt8, idx);
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyInt8, static_cast<int>(idx));
                     }
                 }
             } else if (datatype == HighFive::AtomicType<float>() || datatype == HighFive::AtomicType<double>()) {
@@ -467,7 +467,7 @@ if (is_verbose()) {
                     std::cout << std::endl;
 }
                     for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyFloat8, idx);
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyFloat8, static_cast<int>(idx));
                     }
                 }
             } else {
