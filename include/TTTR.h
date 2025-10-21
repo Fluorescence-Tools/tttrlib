@@ -235,28 +235,6 @@ private:
         return m;
     }
 
-    typedef bool (*processRecord_t)(
-            uint32_t&,  // input
-            uint64_t&,  // overflow counter
-            uint64_t&,  // true number of sync pulses
-            uint32_t&,  // microtime
-            int16_t&,   // channel number (16bit more than enough, negative numbers - potential future special cases
-            int16_t&    // the event type: photon, or marker (overflows are treated separately and removed during reading)
-    );
-
-    std::map<int, processRecord_t> processRecord_map = {
-            {PQ_RECORD_TYPE_HHT2v1,      ProcessHHT2v1},
-            {PQ_RECORD_TYPE_HHT2v2,      ProcessHHT2v2},
-            {PQ_RECORD_TYPE_HHT3v1,      ProcessHHT3v1},
-            {PQ_RECORD_TYPE_HHT3v2,      ProcessHHT3v2},
-            {PQ_RECORD_TYPE_PHT2,        ProcessPHT2},
-            {PQ_RECORD_TYPE_PHT3,        ProcessPHT3},
-            {BH_RECORD_TYPE_SPC600_256,  ProcessSPC600_256},
-            {BH_RECORD_TYPE_SPC600_4096, ProcessSPC600_4096},
-            {BH_RECORD_TYPE_SPC130,      ProcessSPC130},
-            {CZ_RECORD_TYPE_CONFOCOR3,   ProcessCzRaw}
-    };
-
     /*!
      * The type of the TTTR file.
      *
@@ -292,21 +270,6 @@ private:
 
     /// the data contained in the current TTTRRecord
     uint64_t TTTRRecord;
-
-    /*!
-    * The reading routine for a photon accepts as a first argument a
-    * pointer to a 64bit integer.
-    * The integer is processed by the reading routing and writes to the
-    * @return The return value is true if the record is not an overflow record.
-    */
-    bool (*processRecord)(
-            uint32_t&, // input
-            uint64_t&, // overflow counter
-            uint64_t&, // true number of sync pulses
-            uint32_t&, // microtime
-            int16_t&,   // channel number (16bit more than enough, negative numbers - potential future special cases
-            int16_t&   // the event type: photon, or marker (overflows are treated separately and removed during reading)
-    );
 
     /// The number of sync pulses
     unsigned long long *macro_times;
@@ -407,6 +370,8 @@ private:
      *
      * Reads records from the current file position to the end of the file.
      * No specific number of records is specified.
+     *
+     * Uses optimized template-dispatched processing for maximum performance.
      */
     void read_records();
 

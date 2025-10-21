@@ -22,8 +22,7 @@ TTTR::TTTR() :
         // protected
         n_records_in_file(0),
         n_records_read(0),
-        n_valid_events(0),
-        processRecord(nullptr){
+        n_valid_events(0){
     header = new TTTRHeader(tttr_container_type);
     allocate_memory_for_records(0);
 }
@@ -408,7 +407,6 @@ if (is_verbose()) {
 if (is_verbose()) {
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
 }
-            processRecord = processRecord_map[tttr_record_type];
             n_records_in_file = get_number_of_records_by_file_size(fp, header->header_end, header->get_bytes_per_record());
 if (is_verbose()) {
             std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
@@ -504,63 +502,109 @@ void TTTR::deallocate_memory_of_records(){
     }
 }
 
+// Optimized template-dispatched record reading
 void TTTR::read_records(
         size_t n_rec,
         bool rewind,
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-if (is_verbose()) {
-    std::cout << "-- Records that will be read : " << n_rec << std::endl;
-}
     if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
-
-    // The data is read in two steps. In the first step bigger data chunks
-    // are read. In the second the records are read and processed record by
-    // record.
+    
     n_records_read = 0;
     overflow_counter = 0;
     n_valid_events = 0;
-    size_t offset;
-
-    // read data in chunks to speed up the access
-    size_t number_of_objects;
+    
     size_t bytes_per_record = header->get_bytes_per_record();
-if (is_verbose()) {
-    std::cout << "-- Records that will be read : " << n_rec << std::endl;
-    std::cout << "-- Bytes per record : " << bytes_per_record << std::endl;
-}
-    do{
-        // Adjust chunk size if it's bigger than remaining records
+    size_t buffer_size = chunk * bytes_per_record;
+    auto tmp = (signed char *)malloc(buffer_size);
+    if (!tmp) {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        return;
+    }
+    
+    // Cache pointers
+    unsigned long long* macro_ptr = macro_times;
+    unsigned short* micro_ptr = micro_times;
+    signed char* routing_ptr = routing_channels;
+    signed char* event_ptr = event_types;
+    
+    size_t number_of_objects;
+    do {
         size_t remaining_records = n_rec - n_records_read;
         size_t adjusted_chunk = remaining_records < chunk ? remaining_records : chunk;
-
-        auto tmp = (signed char *)malloc(bytes_per_record * adjusted_chunk);
-        if (!tmp) {
-            // Handle memory allocation failure
-            std::cerr << "Memory allocation failed!" << std::endl;
-            return;
-        }
         number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
-
-        for (size_t j = 0; j < number_of_objects; j++) {
-            offset = bytes_per_record * j;
-            n_valid_events += processRecord(
-                    *(uint32_t *) &tmp[offset],
-                    overflow_counter,
-                    *(uint64_t *) &macro_times[n_valid_events],
-                    *(uint32_t *) &micro_times[n_valid_events],
-                    *(int16_t *)  &routing_channels[n_valid_events],
-                    *(int16_t *)  &event_types[n_valid_events]
-            );
+        
+        // Template dispatch based on record type for compile-time optimization
+        switch(tttr_record_type) {
+            case PQ_RECORD_TYPE_PHT3:
+                process_records_batch<PQ_RECORD_TYPE_PHT3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_PHT2:
+                process_records_batch<PQ_RECORD_TYPE_PHT2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT3v1:
+                process_records_batch<PQ_RECORD_TYPE_HHT3v1>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT3v2:
+                process_records_batch<PQ_RECORD_TYPE_HHT3v2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT2v1:
+                process_records_batch<PQ_RECORD_TYPE_HHT2v1>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT2v2:
+                process_records_batch<PQ_RECORD_TYPE_HHT2v2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC130:
+                process_records_batch<BH_RECORD_TYPE_SPC130>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC600_256:
+                process_records_batch<BH_RECORD_TYPE_SPC600_256>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC600_4096:
+                process_records_batch<BH_RECORD_TYPE_SPC600_4096>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case CZ_RECORD_TYPE_CONFOCOR3:
+                process_records_batch<CZ_RECORD_TYPE_CONFOCOR3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            default:
+                // This should never happen - all record types have template specializations
+                std::cerr << "ERROR: Unsupported TTTR record type: " << tttr_record_type << std::endl;
+                std::cerr << "This is a bug - please report it!" << std::endl;
+                free(tmp);
+                return;
         }
-        free(tmp);
+        
         n_records_read += number_of_objects;
     } while(number_of_objects > 0);
+    
+    free(tmp);
 }
 
 void TTTR::read_records(size_t n_rec){
-    read_records(n_rec, true, 16384);
+    // Use 512KB chunks for optimal I/O performance
+    // Template dispatch eliminates function pointer overhead
+    read_records(n_rec, true, 524288);
 }
 
 void TTTR::read_records() {
