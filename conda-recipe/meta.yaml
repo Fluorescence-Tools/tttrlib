@@ -27,7 +27,6 @@ requirements:
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
     - boost-cpp
-    - hdf5
     - python
     - pip
     - numpy
@@ -38,11 +37,6 @@ requirements:
     - boost-cpp
     - tqdm
     - numpy
-    - click
-    - click-didyoumean
-    - scikit-image
-    - matplotlib-base
-    - hdf5
 
 test:
  imports:
