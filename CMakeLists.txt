@@ -66,6 +66,7 @@ ENDIF()
 # Build type specific optimizations
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   SET(VERBOSE_TTTRLIB ON)
+  MESSAGE(STATUS "Debug build: Enabling all warnings")
   if(MSVC)
     ADD_COMPILE_OPTIONS(/Wall)
   ELSE(MSVC)
@@ -73,8 +74,12 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   ENDIF(MSVC)
 ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
   # Aggressive optimizations for Release builds
-  MESSAGE(STATUS "Release build: Enabling aggressive optimizations")
+  MESSAGE(STATUS "Release build: Enabling aggressive optimizations and disabling warnings")
   if(MSVC)
+    # Remove default warning levels to avoid D9025 warning
+    string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/W[0-4]" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    
     # MSVC optimizations
     ADD_COMPILE_OPTIONS(
       /O2          # Maximum optimization (speed)
@@ -82,9 +87,12 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       /Oi          # Enable intrinsic functions
       /Ot          # Favor fast code
       /GL          # Whole program optimization
-      /fp:fast     # Fast floating point
       /arch:AVX2   # Use AVX2 instructions (if available)
+      /w           # Disable all warnings in Release builds
     )
+    # Suppress informational pragma messages from external libraries (HighFive)
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")  # Disable deprecation warnings
     SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")  # Link-time code generation
     SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
   ELSE()
@@ -93,11 +101,11 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       -O3                    # Maximum optimization
       -march=native          # Optimize for current CPU
       -mtune=native          # Tune for current CPU
-      -ffast-math            # Fast math operations
       -funroll-loops         # Unroll loops
       -finline-functions     # Inline functions
       -fomit-frame-pointer   # Omit frame pointer
       -flto                  # Link-time optimization
+      -w                     # Disable all warnings in Release builds
     )
     SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
     SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
