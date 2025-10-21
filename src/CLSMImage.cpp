@@ -687,8 +687,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
     estimated_lines = std::max(size_t(100), std::min(size_t(2048), estimated_lines));
     line_edges.reserve(estimated_lines * 2);
     
-    // Pre-fetch pointers for faster access
-    const unsigned long long* macro_times = tttr->macro_times;
+    // Pre-fetch pointers for faster access (except macro_times which may be compressed)
     const signed char* routing_channels = tttr->routing_channels;
     const unsigned short* micro_times = tttr->micro_times;
     const signed char* event_types = tttr->event_types;
@@ -706,7 +705,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
                 if (micro_times[i_event] == marker_start_us) {
                     // Found line start - calculate stop based on duration
                     int line_start = i_event;
-                    unsigned long long stop_time = macro_times[i_event] + line_duration;
+                    unsigned long long stop_time = tttr->get_macro_time_at(i_event) + line_duration;
                     
                     // Binary search for stop event by time (much faster than linear)
                     int left = i_event + 1;
@@ -715,7 +714,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
                     
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
-                        if (macro_times[mid] >= stop_time) {
+                        if (tttr->get_macro_time_at(mid) >= stop_time) {
                             line_stop = mid;
                             right = mid - 1;  // Look for earlier match
                         } else {
@@ -737,7 +736,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
                 if (routing_channels[i_event] == marker_start_sc) {
                     // Found line start - calculate stop based on duration
                     int line_start = i_event;
-                    unsigned long long stop_time = macro_times[i_event] + line_duration;
+                    unsigned long long stop_time = tttr->get_macro_time_at(i_event) + line_duration;
                     
                     // Binary search for stop event by time (much faster than linear)
                     int left = i_event + 1;
@@ -746,7 +745,7 @@ std::vector<int> CLSMImage::get_line_edges_by_duration(
                     
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
-                        if (macro_times[mid] >= stop_time) {
+                        if (tttr->get_macro_time_at(mid) >= stop_time) {
                             line_stop = mid;
                             right = mid - 1;  // Look for earlier match
                         } else {

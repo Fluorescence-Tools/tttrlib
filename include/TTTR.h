@@ -271,17 +271,52 @@ private:
     /// the data contained in the current TTTRRecord
     uint64_t TTTRRecord;
 
-    /// The number of sync pulses
+private:
+    /// The number of sync pulses (PRIVATE - use get/set_macro_time_at)
     unsigned long long *macro_times;
 
-    /// Micro time
+    /// Delta-compressed macro times (32-bit deltas when compression is enabled)
+    uint32_t *macro_times_compressed;
+
+    /// Keyframes: periodic 64-bit reference points for delta compression
+    unsigned long long *macro_time_keyframes;
+
+    /// Number of keyframes
+    size_t n_keyframes;
+
+    /// Keyframe interval (number of events between keyframes)
+    size_t keyframe_interval;
+
+    /// Flag indicating if macro time compression is enabled
+    bool macro_time_compression_enabled;
+
+    /// Static flag: automatically compress macro times when reading files (default: true)
+    static bool auto_compress_on_read;
+
+    /// Micro time (PRIVATE - use get/set_micro_time_at)
     unsigned short *micro_times;
 
-    /// The channel number
+    /// The channel number (PRIVATE - use get/set_routing_channel_at)
     signed char *routing_channels;
 
-    /// The event type
+    /// The event type (PRIVATE - use get/set_event_type_at)
     signed char *event_types;
+
+    // Friend declarations for functions that need direct array access for performance
+    template<int RecordType>
+    friend void process_records_batch(
+        const signed char* buffer,
+        size_t num_records,
+        size_t bytes_per_record,
+        uint64_t& overflow_counter,
+        unsigned long long* macro_times,
+        unsigned short* micro_times,
+        signed char* routing_channels,
+        signed char* event_types,
+        size_t& valid_count
+    );
+
+public:
 
     long long macro_time_offset = 0; // Cache for macro time offset
 
@@ -293,6 +328,9 @@ private:
 
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events = 0;
+
+    /// the capacity of allocated memory (for efficient resizing)
+    size_t capacity = 0;
 
     /*!
      * \brief Allocates memory for storing time-tagged records.
@@ -308,6 +346,143 @@ private:
      * \see deallocate_memory_for_records
      */
     void allocate_memory_for_records(size_t n_rec);
+
+    /*!  
+     * \brief Reallocates memory for storing time-tagged records with capacity management.
+     *
+     * This method reallocates memory to store a specified number of time-tagged records,
+     * using a growth factor to reduce the number of reallocations.
+     *
+     * \param n_rec Number of records to allocate memory for.
+     * \param exact_size If true, allocate exactly n_rec; if false, use growth factor.
+     */
+    void reallocate_memory_for_records(size_t n_rec, bool exact_size = false);
+
+    /*!
+     * \brief Compresses macro times using delta encoding.
+     *
+     * Converts 64-bit macro times to 32-bit deltas relative to a base value.
+     * This reduces memory usage by 50% for macro times.
+     */
+    void compress_macro_times();
+
+    /*!
+     * \brief Decompresses macro times from delta encoding.
+     *
+     * Converts 32-bit deltas back to 64-bit absolute macro times.
+     */
+    void decompress_macro_times();
+
+    /*!
+     * \brief Gets a macro time value at a specific index (transparent compression).
+     *
+     * Uses keyframe-based decompression for reliable access to arbitrarily long time spans.
+     *
+     * \param index Index of the event.
+     * \return The macro time value at the specified index.
+     */
+    inline unsigned long long get_macro_time_at(size_t index) const {
+        if (macro_time_compression_enabled) {
+            // Find the keyframe for this index
+            size_t keyframe_idx = index / keyframe_interval;
+            unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+            return keyframe + (unsigned long long)macro_times_compressed[index];
+        } else {
+            return macro_times[index];
+        }
+    }
+
+    /*!
+     * \brief Sets a macro time value at a specific index (transparent compression).
+     *
+     * Uses keyframe-based compression for reliable storage of arbitrarily long time spans.
+     *
+     * \param index Index of the event.
+     * \param value The macro time value to set.
+     */
+    inline void set_macro_time_at(size_t index, unsigned long long value) {
+        if (macro_time_compression_enabled) {
+            // Find the keyframe for this index
+            size_t keyframe_idx = index / keyframe_interval;
+            unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+            
+            // Store delta from keyframe
+            if (value >= keyframe) {
+                unsigned long long delta = value - keyframe;
+                if (delta > UINT32_MAX) {
+                    std::cerr << "WARNING: Macro time delta from keyframe exceeds 32-bit range." << std::endl;
+                    macro_times_compressed[index] = UINT32_MAX;
+                } else {
+                    macro_times_compressed[index] = (uint32_t)delta;
+                }
+            } else {
+                std::cerr << "WARNING: Macro time is before keyframe." << std::endl;
+                macro_times_compressed[index] = 0;
+            }
+        } else {
+            macro_times[index] = value;
+        }
+    }
+
+    /*!
+     * \brief Gets a micro time value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The micro time value at the specified index.
+     */
+    inline unsigned short get_micro_time_at(size_t index) const {
+        return micro_times[index];
+    }
+
+    /*!
+     * \brief Sets a micro time value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The micro time value to set.
+     */
+    inline void set_micro_time_at(size_t index, unsigned short value) {
+        micro_times[index] = value;
+    }
+
+    /*!
+     * \brief Gets a routing channel value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The routing channel value at the specified index.
+     */
+    inline signed char get_routing_channel_at(size_t index) const {
+        return routing_channels[index];
+    }
+
+    /*!
+     * \brief Sets a routing channel value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The routing channel value to set.
+     */
+    inline void set_routing_channel_at(size_t index, signed char value) {
+        routing_channels[index] = value;
+    }
+
+    /*!
+     * \brief Gets an event type value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The event type value at the specified index.
+     */
+    inline signed char get_event_type_at(size_t index) const {
+        return event_types[index];
+    }
+
+    /*!
+     * \brief Sets an event type value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The event type value to set.
+     */
+    inline void set_event_type_at(size_t index, signed char value) {
+        event_types[index] = value;
+    }
 
     /*!
      * \brief Deallocates memory used for storing time-tagged records.
@@ -668,6 +843,112 @@ public:
       * @return Number of valid events in the TTTR file.
       */
      size_t get_n_valid_events();
+
+     /*!
+      * \brief Shrinks the allocated memory to fit exactly the number of valid events.
+      *
+      * This function reallocates memory to match exactly the number of valid events,
+      * freeing any excess capacity. Useful after a series of operations that may have
+      * over-allocated memory.
+      */
+     void shrink_to_fit();
+
+     /*!
+      * \brief Reserves memory for a specified number of events.
+      *
+      * This function pre-allocates memory for the specified number of events,
+      * which can improve performance when the final size is known in advance.
+      * Does nothing if the current capacity is already sufficient.
+      *
+      * @param n Number of events to reserve memory for.
+      */
+     void reserve(size_t n);
+
+     /*!
+      * \brief Returns the current memory capacity in number of events.
+      *
+      * This function returns the total allocated capacity, which may be larger than
+      * the number of valid events.
+      *
+      * @return Current capacity in number of events.
+      */
+     size_t get_capacity() const { return capacity; }
+
+     /*!
+      * \brief Returns the memory usage in bytes.
+      *
+      * This function calculates and returns the total memory used by the TTTR data arrays.
+      * Takes into account whether macro time compression is enabled.
+      *
+      * @return Memory usage in bytes.
+      */
+     size_t get_memory_usage_bytes() const {
+         if (macro_time_compression_enabled) {
+             // 32-bit deltas + keyframe overhead
+             size_t delta_size = capacity * sizeof(uint32_t);
+             size_t keyframe_size = n_keyframes * sizeof(unsigned long long);
+             return delta_size + keyframe_size + capacity * (sizeof(unsigned short) + 2 * sizeof(signed char));
+         } else {
+             return capacity * (sizeof(unsigned long long) + sizeof(unsigned short) + 2 * sizeof(signed char));
+         }
+     }
+
+     /*!
+      * \brief Enables keyframe-based delta compression for macro times.
+      *
+      * Uses periodic 64-bit keyframes with 32-bit deltas between them.
+      * This allows compression of arbitrarily long time spans.
+      * 
+      * @param keyframe_interval Number of events between keyframes (default: 1000000)
+      *                          Smaller = more keyframes = more memory but safer
+      *                          Larger = fewer keyframes = less memory but requires longer monotonic segments
+      * @param force If true, recompresses even if already compressed.
+      * @return True if compression succeeded, false on error.
+      */
+     bool enable_macro_time_compression(size_t keyframe_interval = 1000000, bool force = false);
+
+     /*!
+      * \brief Disables delta compression for macro times.
+      *
+      * Converts 32-bit deltas back to 64-bit absolute macro times.
+      */
+     void disable_macro_time_compression();
+
+     /*!
+      * \brief Checks if macro time compression is enabled.
+      *
+      * @return True if compression is enabled, false otherwise.
+      */
+     bool is_macro_time_compression_enabled() const {
+         return macro_time_compression_enabled;
+     }
+
+     /*!
+      * \brief Returns the compression ratio for macro times.
+      *
+      * @return Compression ratio (e.g., 0.5 means 50% of original size).
+      */
+     double get_macro_time_compression_ratio() const {
+         return macro_time_compression_enabled ? 0.5 : 1.0;
+     }
+
+     /*!
+      * \brief Sets whether to automatically compress macro times when reading files.
+      *
+      * @param enable If true, files will be automatically compressed after reading (default behavior).
+      */
+     static void set_auto_compress_on_read(bool enable) {
+         auto_compress_on_read = enable;
+     }
+
+     /*!
+      * \brief Checks if automatic compression on read is enabled.
+      *
+      * @return True if files will be automatically compressed after reading.
+      */
+     static bool get_auto_compress_on_read() {
+         return auto_compress_on_read;
+     }
 
      /*!
       * \brief Returns the container type used to open the TTTR file.

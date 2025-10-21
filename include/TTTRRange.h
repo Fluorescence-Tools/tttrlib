@@ -141,7 +141,7 @@ public:
             if(_tttr_indices.empty()){
                 return 0ULL;
             }
-            return tttr->macro_times[*_tttr_indices.rbegin()];
+            return tttr->get_macro_time_at(*_tttr_indices.rbegin());
         } else{
             std::cerr << "Access to TTTRRange::get_stop_time without TTTR object" << std::endl;
         }
@@ -159,7 +159,7 @@ public:
             if(_tttr_indices.empty()){
                 return 0ULL;
             }
-            return tttr->macro_times[*_tttr_indices.begin()];
+            return tttr->get_macro_time_at(*_tttr_indices.begin());
         } else{
             std::cerr << "Access to TTTRRange::get_start_time without TTTR object" << std::endl;
         }

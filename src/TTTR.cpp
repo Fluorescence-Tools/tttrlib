@@ -3,6 +3,7 @@
 
 // Static member definition outside the class
 boost::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
+bool TTTR::auto_compress_on_read = true;  // Enable automatic compression by default
 
 
 TTTR::TTTR() :
@@ -16,6 +17,11 @@ TTTR::TTTR() :
         fp_records_begin(0),
         TTTRRecord(0),
         macro_times(nullptr),
+        macro_times_compressed(nullptr),
+        macro_time_keyframes(nullptr),
+        n_keyframes(0),
+        keyframe_interval(1000000),
+        macro_time_compression_enabled(false),
         micro_times(nullptr),
         routing_channels(nullptr),
         event_types(nullptr),
@@ -54,7 +60,7 @@ if (is_verbose()) {
     allocate_memory_for_records(n_elements);
     n_valid_events = n_elements;
     for(size_t i=0; i<n_elements; i++){
-        this->macro_times[i] = macro_times[i];
+        set_macro_time_at(i, macro_times[i]);
         this->micro_times[i] = micro_times[i];
         this->event_types[i] = event_types[i];
         this->routing_channels[i] = routing_channels[i];
@@ -80,7 +86,7 @@ if (is_verbose()) {
     for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
         auto sel = selection[sel_i];
         sel = (sel < 0) ? static_cast<int>(parent.n_valid_events) + sel : sel;
-        macro_times[sel_i] = parent.macro_times[sel];
+        set_macro_time_at(sel_i, parent.get_macro_time_at(sel));
         micro_times[sel_i] = parent.micro_times[sel];
         event_types[sel_i] = parent.event_types[sel];
         routing_channels[sel_i] = parent.routing_channels[sel];
@@ -103,7 +109,7 @@ void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     if (include_big_data){
         allocate_memory_for_records(p2.n_valid_events);
         for (size_t i = 0; i < p2.n_valid_events; i++) {
-            macro_times[i] = p2.macro_times[i];
+            set_macro_time_at(i, p2.get_macro_time_at(i));
             micro_times[i] = p2.micro_times[i];
             routing_channels[i] = p2.routing_channels[i];
             event_types[i] = p2.event_types[i];
@@ -169,7 +175,7 @@ TTTR::TTTR(const char* filename) : TTTR(filename, inferTTTRFileType(filename), t
 
 void TTTR::shift_macro_time(int shift) {
     for(size_t i=0; i<n_valid_events; i++){
-        macro_times[i] += shift;
+        set_macro_time_at(i, get_macro_time_at(i) + shift);
     }
 }
 
@@ -369,7 +375,7 @@ int TTTR::read_sm_file(const char *filename){
 
 void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
     for (size_t i = 0; i < n_valid_events; ++i) {
-        int64_t m = macro_times[i] - period_shift;
+        int64_t m = get_macro_time_at(i) - period_shift;
         micro_times[i] = static_cast<unsigned short>(m % alex_period);
     }
 }
@@ -430,6 +436,9 @@ if (is_verbose()) {
         }
 if (is_verbose()) {
             std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
+            if (macro_time_compression_enabled) {
+                std::clog << "-- Macro times compressed during read with " << n_keyframes << " keyframes" << std::endl;
+            }
 }
             return 1;
     } else {
@@ -452,36 +461,61 @@ void TTTR::allocate_memory_for_records(size_t n_rec){
 if (is_verbose()) {
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 }
-    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_times = (unsigned long long*) malloc(
-                n_rec * sizeof(unsigned long long)
-                );
-        micro_times = (unsigned short*) malloc(
-                n_rec * sizeof(unsigned short)
-        );
-        routing_channels = (signed char*) malloc(
-                n_rec * sizeof(signed char)
-        );
-        event_types = (signed char*) malloc(
-                n_rec * sizeof(signed char)
-        );
-    } 
-    else {
-        #ifdef BUILD_PHOTON_HDF
-        macro_times = (unsigned long long*) H5allocate_memory(
-                n_rec * sizeof(unsigned long long), false
-        );
-        micro_times = (unsigned short*) H5allocate_memory(
-                n_rec * sizeof(unsigned short), false
-        );
-        routing_channels = (signed char*) H5allocate_memory(
-                n_rec * sizeof(signed char), false
-        );
-        event_types = (signed char*) H5allocate_memory(
-                n_rec * sizeof(signed char), false
-        );
-        #endif
+    
+    // If auto-compression is enabled, allocate compressed storage directly
+    if (auto_compress_on_read && n_rec > 0) {
+if (is_verbose()) {
+        std::clog << "-- Allocating compressed storage (32-bit deltas + keyframes)" << std::endl;
+}
+        // Calculate keyframes
+        n_keyframes = (n_rec + keyframe_interval - 1) / keyframe_interval;
+        
+        if(tttr_container_type != PHOTON_HDF_CONTAINER) {
+            macro_times_compressed = (uint32_t*) malloc(n_rec * sizeof(uint32_t));
+            macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
+            micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
+            routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
+            event_types = (signed char*) malloc(n_rec * sizeof(signed char));
+        } else {
+            #ifdef BUILD_PHOTON_HDF
+            macro_times_compressed = (uint32_t*) H5allocate_memory(n_rec * sizeof(uint32_t), false);
+            macro_time_keyframes = (unsigned long long*) H5allocate_memory(n_keyframes * sizeof(unsigned long long), false);
+            micro_times = (unsigned short*) H5allocate_memory(n_rec * sizeof(unsigned short), false);
+            routing_channels = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
+            event_types = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
+            #endif
+        }
+        macro_times = nullptr;
+        macro_time_compression_enabled = true;
+        
+if (is_verbose()) {
+        size_t compressed_size = n_rec * sizeof(uint32_t) + n_keyframes * sizeof(unsigned long long);
+        size_t uncompressed_size = n_rec * sizeof(unsigned long long);
+        std::clog << "-- Compressed storage: " << (compressed_size / 1024.0 / 1024.0) << " MB" << std::endl;
+        std::clog << "-- vs Uncompressed: " << (uncompressed_size / 1024.0 / 1024.0) << " MB" << std::endl;
+        std::clog << "-- Saved: " << ((uncompressed_size - compressed_size) / 1024.0 / 1024.0) << " MB" << std::endl;
+}
+    } else {
+        // Normal allocation (uncompressed)
+        if(tttr_container_type != PHOTON_HDF_CONTAINER) {
+            macro_times = (unsigned long long*) malloc(n_rec * sizeof(unsigned long long));
+            micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
+            routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
+            event_types = (signed char*) malloc(n_rec * sizeof(signed char));
+        } else {
+            #ifdef BUILD_PHOTON_HDF
+            macro_times = (unsigned long long*) H5allocate_memory(n_rec * sizeof(unsigned long long), false);
+            micro_times = (unsigned short*) H5allocate_memory(n_rec * sizeof(unsigned short), false);
+            routing_channels = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
+            event_types = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
+            #endif
+        }
+        macro_times_compressed = nullptr;
+        macro_time_keyframes = nullptr;
+        macro_time_compression_enabled = false;
     }
+    
+    capacity = n_rec;
 }
 
 void TTTR::deallocate_memory_of_records(){
@@ -491,15 +525,112 @@ void TTTR::deallocate_memory_of_records(){
         free(routing_channels);
         free(micro_times);
         free(event_types);
+        if(macro_times_compressed != nullptr) {
+            free(macro_times_compressed);
+            macro_times_compressed = nullptr;
+        }
+        if(macro_time_keyframes != nullptr) {
+            free(macro_time_keyframes);
+            macro_time_keyframes = nullptr;
+        }
     } else {
         #ifdef BUILD_PHOTON_HDF
         H5free_memory(macro_times);
         H5free_memory(routing_channels);
         H5free_memory(micro_times);
         H5free_memory(event_types);
+        if(macro_times_compressed != nullptr) {
+            H5free_memory(macro_times_compressed);
+            macro_times_compressed = nullptr;
+        }
+        if(macro_time_keyframes != nullptr) {
+            H5free_memory(macro_time_keyframes);
+            macro_time_keyframes = nullptr;
+        }
         H5garbage_collect();
         #endif
     }
+    capacity = 0;
+    n_keyframes = 0;
+}
+
+void TTTR::reallocate_memory_for_records(size_t n_rec, bool exact_size){
+    // If we already have enough capacity, no need to reallocate
+    if(n_rec <= capacity) {
+        return;
+    }
+    
+    size_t new_capacity;
+    if(exact_size) {
+        new_capacity = n_rec;
+    } else {
+        // Use growth factor of 1.5x to reduce number of reallocations
+        // This is a good balance between memory overhead and reallocation frequency
+        new_capacity = capacity + capacity / 2;
+        if(new_capacity < n_rec) {
+            new_capacity = n_rec;
+        }
+        // Add a minimum growth to avoid too many reallocations for small sizes
+        if(new_capacity < capacity + 1024) {
+            new_capacity = capacity + 1024;
+        }
+    }
+    
+if (is_verbose()) {
+    std::clog << "-- Reallocating memory from " << capacity << " to " << new_capacity << " TTTR records." << std::endl;
+}
+    
+    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
+        macro_times = (unsigned long long*) realloc(
+                macro_times, new_capacity * sizeof(unsigned long long)
+        );
+        micro_times = (unsigned short*) realloc(
+                micro_times, new_capacity * sizeof(unsigned short)
+        );
+        routing_channels = (signed char*) realloc(
+                routing_channels, new_capacity * sizeof(signed char)
+        );
+        event_types = (signed char*) realloc(
+                event_types, new_capacity * sizeof(signed char)
+        );
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        // HDF5 memory cannot be reallocated, so we need to allocate new and copy
+        unsigned long long* new_macro = (unsigned long long*) H5allocate_memory(
+                new_capacity * sizeof(unsigned long long), false
+        );
+        unsigned short* new_micro = (unsigned short*) H5allocate_memory(
+                new_capacity * sizeof(unsigned short), false
+        );
+        signed char* new_routing = (signed char*) H5allocate_memory(
+                new_capacity * sizeof(signed char), false
+        );
+        signed char* new_event = (signed char*) H5allocate_memory(
+                new_capacity * sizeof(signed char), false
+        );
+        
+        // Copy old data
+        if(capacity > 0) {
+            memcpy(new_macro, macro_times, capacity * sizeof(unsigned long long));
+            memcpy(new_micro, micro_times, capacity * sizeof(unsigned short));
+            memcpy(new_routing, routing_channels, capacity * sizeof(signed char));
+            memcpy(new_event, event_types, capacity * sizeof(signed char));
+            
+            // Free old memory
+            H5free_memory(macro_times);
+            H5free_memory(micro_times);
+            H5free_memory(routing_channels);
+            H5free_memory(event_types);
+        }
+        
+        macro_times = new_macro;
+        micro_times = new_micro;
+        routing_channels = new_routing;
+        event_types = new_event;
+        #endif
+    }
+    
+    capacity = new_capacity;
 }
 
 // Optimized template-dispatched record reading
@@ -523,20 +654,144 @@ void TTTR::read_records(
         return;
     }
     
-    // Cache pointers
+    // Cache pointers - handle both compressed and uncompressed
     unsigned long long* macro_ptr = macro_times;
+    unsigned long long* temp_macro_buffer = nullptr;
+    uint32_t* macro_compressed_ptr = macro_times_compressed;
     unsigned short* micro_ptr = micro_times;
     signed char* routing_ptr = routing_channels;
     signed char* event_ptr = event_types;
     
+    // If compression is enabled, allocate temporary buffer for batch processing
+    if (macro_time_compression_enabled) {
+        temp_macro_buffer = (unsigned long long*) malloc(chunk * sizeof(unsigned long long));
+        if (!temp_macro_buffer) {
+            std::cerr << "Memory allocation for temporary macro time buffer failed!" << std::endl;
+            free(tmp);
+            return;
+        }
+    }
+    
+    // Track keyframe state for efficient compression
+    unsigned long long current_keyframe_base = 0;
+    size_t events_until_next_keyframe = keyframe_interval;
+    size_t current_keyframe_idx = 0;
+    
     size_t number_of_objects;
-    do {
-        size_t remaining_records = n_rec - n_records_read;
-        size_t adjusted_chunk = remaining_records < chunk ? remaining_records : chunk;
-        number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
-        
-        // Template dispatch based on record type for compile-time optimization
-        switch(tttr_record_type) {
+    
+    // Split into two paths: compressed vs uncompressed for better performance
+    if (macro_time_compression_enabled) {
+        // COMPRESSED PATH - with on-the-fly compression
+        do {
+            size_t remaining_records = n_rec - n_records_read;
+            size_t adjusted_chunk = remaining_records < chunk ? remaining_records : chunk;
+            number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
+            
+            size_t events_before = n_valid_events;
+            
+            // Use temp buffer for macro times, real arrays for others
+            // NOTE: process_records_batch writes at index [valid_count], not [0]
+            // So we need to offset the temp buffer pointer by events_before
+            unsigned long long* temp_ptr = temp_macro_buffer - events_before;
+            
+            // Template dispatch based on record type for compile-time optimization
+            switch(tttr_record_type) {
+            case PQ_RECORD_TYPE_PHT3:
+                process_records_batch<PQ_RECORD_TYPE_PHT3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_PHT2:
+                process_records_batch<PQ_RECORD_TYPE_PHT2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT3v1:
+                process_records_batch<PQ_RECORD_TYPE_HHT3v1>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT3v2:
+                process_records_batch<PQ_RECORD_TYPE_HHT3v2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT2v1:
+                process_records_batch<PQ_RECORD_TYPE_HHT2v1>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_HHT2v2:
+                process_records_batch<PQ_RECORD_TYPE_HHT2v2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC130:
+                process_records_batch<BH_RECORD_TYPE_SPC130>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC600_256:
+                process_records_batch<BH_RECORD_TYPE_SPC600_256>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case BH_RECORD_TYPE_SPC600_4096:
+                process_records_batch<BH_RECORD_TYPE_SPC600_4096>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case CZ_RECORD_TYPE_CONFOCOR3:
+                process_records_batch<CZ_RECORD_TYPE_CONFOCOR3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            default:
+                // This should never happen - all record types have template specializations
+                std::cerr << "ERROR: Unsupported TTTR record type: " << tttr_record_type << std::endl;
+                std::cerr << "This is a bug - please report it!" << std::endl;
+                free(tmp);
+                return;
+            }
+            
+            // Compress the macro times we just read
+            // Optimized: compute deltas directly, avoiding intermediate absolute time storage
+            size_t batch_size = n_valid_events - events_before;
+            
+            // Data was written to temp_ptr[events_before..n_valid_events-1]
+            // which is actually temp_macro_buffer[0..batch_size-1] due to pointer offset
+            const unsigned long long* __restrict src = temp_macro_buffer;
+            uint32_t* __restrict dst = macro_compressed_ptr + events_before;
+            
+            // Optimized compression loop - minimal branches, direct delta computation
+            for (size_t i = 0; i < batch_size; i++) {
+                unsigned long long abs_time = src[i];
+                
+                // Check if we need a new keyframe (using counter instead of modulo)
+                if (events_until_next_keyframe >= keyframe_interval) {
+                    macro_time_keyframes[current_keyframe_idx++] = abs_time;
+                    current_keyframe_base = abs_time;
+                    events_until_next_keyframe = 0;
+                    dst[i] = 0;  // First event in keyframe segment has delta=0
+                } else {
+                    // Store delta from current keyframe
+                    dst[i] = (uint32_t)(abs_time - current_keyframe_base);
+                }
+                
+                events_until_next_keyframe++;
+            }
+            
+            n_records_read += number_of_objects;
+        } while(number_of_objects > 0);
+    } else {
+        // UNCOMPRESSED PATH - direct write, no compression overhead
+        do {
+            size_t remaining_records = n_rec - n_records_read;
+            size_t adjusted_chunk = remaining_records < chunk ? remaining_records : chunk;
+            number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
+            
+            // Template dispatch based on record type for compile-time optimization
+            switch(tttr_record_type) {
             case PQ_RECORD_TYPE_PHT3:
                 process_records_batch<PQ_RECORD_TYPE_PHT3>(
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
@@ -588,16 +843,19 @@ void TTTR::read_records(
                     macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
                 break;
             default:
-                // This should never happen - all record types have template specializations
                 std::cerr << "ERROR: Unsupported TTTR record type: " << tttr_record_type << std::endl;
-                std::cerr << "This is a bug - please report it!" << std::endl;
                 free(tmp);
                 return;
-        }
-        
-        n_records_read += number_of_objects;
-    } while(number_of_objects > 0);
+            }
+            
+            n_records_read += number_of_objects;
+        } while(number_of_objects > 0);
+    }
     
+    // Free temporary buffers
+    if (temp_macro_buffer != nullptr) {
+        free(temp_macro_buffer);
+    }
     free(tmp);
 }
 
@@ -652,9 +910,22 @@ void TTTR::get_macro_times(unsigned long long** output, int* n_output){
     *output = new unsigned long long[*n_output];
 
     // Compute shifted macro_times, ensuring no value is less than zero
-    for (size_t i = 0; i < n_valid_events; ++i) {
-        long long shifted_time = static_cast<long long>(macro_times[i]) + macro_time_offset;
-        (*output)[i] = static_cast<unsigned long long>(std::max(shifted_time, 0LL)); // Clamp to zero
+    // Handle both compressed and uncompressed storage transparently
+    if (macro_time_compression_enabled) {
+        // Decompress on-the-fly using keyframes
+        for (size_t i = 0; i < n_valid_events; ++i) {
+            size_t keyframe_idx = i / keyframe_interval;
+            unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+            unsigned long long decompressed_time = keyframe + (unsigned long long)macro_times_compressed[i];
+            long long shifted_time = static_cast<long long>(decompressed_time) + macro_time_offset;
+            (*output)[i] = static_cast<unsigned long long>(std::max(shifted_time, 0LL)); // Clamp to zero
+        }
+    } else {
+        // Direct access to uncompressed data
+        for (size_t i = 0; i < n_valid_events; ++i) {
+            long long shifted_time = static_cast<long long>(macro_times[i]) + macro_time_offset;
+            (*output)[i] = static_cast<unsigned long long>(std::max(shifted_time, 0LL)); // Clamp to zero
+        }
     }
 }
 
@@ -686,6 +957,86 @@ void TTTR::get_event_type(signed char** output, int* n_output){
 
 size_t TTTR::get_n_valid_events(){
     return (int) n_valid_events;
+}
+
+void TTTR::shrink_to_fit(){
+    if(capacity == n_valid_events) {
+        // Already at optimal size
+        return;
+    }
+    
+    if (is_verbose()) {
+        std::clog << "-- Shrinking memory from capacity " << capacity << " to " << n_valid_events << " events." << std::endl;
+    }
+    
+    if(n_valid_events == 0) {
+        // Free all memory if no valid events
+        deallocate_memory_of_records();
+        macro_times = nullptr;
+        micro_times = nullptr;
+        routing_channels = nullptr;
+        event_types = nullptr;
+        return;
+    }
+    
+    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
+        macro_times = (unsigned long long*) realloc(
+                macro_times, n_valid_events * sizeof(unsigned long long)
+        );
+        micro_times = (unsigned short*) realloc(
+                micro_times, n_valid_events * sizeof(unsigned short)
+        );
+        routing_channels = (signed char*) realloc(
+                routing_channels, n_valid_events * sizeof(signed char)
+        );
+        event_types = (signed char*) realloc(
+                event_types, n_valid_events * sizeof(signed char)
+        );
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        // HDF5 memory cannot be reallocated, so we need to allocate new and copy
+        unsigned long long* new_macro = (unsigned long long*) H5allocate_memory(
+                n_valid_events * sizeof(unsigned long long), false
+        );
+        unsigned short* new_micro = (unsigned short*) H5allocate_memory(
+                n_valid_events * sizeof(unsigned short), false
+        );
+        signed char* new_routing = (signed char*) H5allocate_memory(
+                n_valid_events * sizeof(signed char), false
+        );
+        signed char* new_event = (signed char*) H5allocate_memory(
+                n_valid_events * sizeof(signed char), false
+        );
+        
+        // Copy data
+        memcpy(new_macro, macro_times, n_valid_events * sizeof(unsigned long long));
+        memcpy(new_micro, micro_times, n_valid_events * sizeof(unsigned short));
+        memcpy(new_routing, routing_channels, n_valid_events * sizeof(signed char));
+        memcpy(new_event, event_types, n_valid_events * sizeof(signed char));
+        
+        // Free old memory
+        H5free_memory(macro_times);
+        H5free_memory(micro_times);
+        H5free_memory(routing_channels);
+        H5free_memory(event_types);
+        
+        macro_times = new_macro;
+        micro_times = new_micro;
+        routing_channels = new_routing;
+        event_types = new_event;
+        #endif
+    }
+    
+    capacity = n_valid_events;
+}
+
+void TTTR::reserve(size_t n){
+    if(n <= capacity) {
+        // Already have sufficient capacity
+        return;
+    }
+    
+    reallocate_memory_for_records(n, true);
 }
 
 size_t TTTR::get_n_events(){
@@ -981,7 +1332,7 @@ std::vector<long long> TTTR::burst_search(int L, int m, double T)
     for (int64_t i = 0; i <= n_events - m; ++i) {
 
         // Check the time span of the window [i, i + m - 1]
-        if (macro_times[i + m - 1] - macro_times[i] <= static_cast<unsigned long long>(Ti)) {
+        if (get_macro_time_at(i + m - 1) - get_macro_time_at(i) <= static_cast<unsigned long long>(Ti)) {
             // We have a valid burst window
             if (!in_burst) {
                 in_burst = true;
@@ -1131,7 +1482,7 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     unsigned long long MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         // time since last macro_time record
-        dMT = static_cast<unsigned>(tttr->macro_times[n] - MT_ov * 4096ULL);
+        dMT = static_cast<unsigned>(tttr->get_macro_time_at(n) - MT_ov * 4096ULL);
         // Count the number of MT overflows
         MT_ov_last = dMT / 4096;
         // Subtract MT overflows from dMT
@@ -1169,7 +1520,7 @@ void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr){
 
     for (size_t n = 0; n < tttr->size(); n++) {
         // time since last macro_time record
-        dMT = static_cast<unsigned>(tttr->macro_times[n] - static_cast<unsigned long long>(MT_ov) * T3WRAPAROUND);
+        dMT = static_cast<unsigned>(tttr->get_macro_time_at(n) - static_cast<unsigned long long>(MT_ov) * T3WRAPAROUND);
         // Count the number of MT overflows
         MT_ov_last = dMT / T3WRAPAROUND;
         // Subtract MT overflows from dMT
@@ -1535,18 +1886,22 @@ void TTTR::append_events(
 if (is_verbose()) {
         std::cout << "-- Appending number of records: " << n_macrotimes << std::endl;
 }
+        // Decompress if compressed (appending requires uncompressed storage)
+        if (macro_time_compression_enabled) {
+            decompress_macro_times();
+        }
+        
         size_t n_rec = this->n_valid_events + n_macrotimes;
-        this->macro_times = (unsigned long long*) realloc(this->macro_times, n_rec * sizeof(unsigned long long));
-        this->micro_times = (unsigned short*) realloc(this->micro_times, n_rec * sizeof(unsigned short));
-        this->routing_channels = (signed char*) realloc(this->routing_channels, n_rec * sizeof(signed char));
-        this->event_types = (signed char*) realloc(this->event_types, n_rec * sizeof(signed char));
+        // Use reallocate_memory_for_records with growth factor for better performance
+        reallocate_memory_for_records(n_rec, false);
+        
         if(n_valid_events > 0){
             if(shift_macro_time){
-                macro_time_offset += this->macro_times[n_valid_events - 1];
+                macro_time_offset += get_macro_time_at(n_valid_events - 1);
             }
         }
         for(int i_rec=0; i_rec < n_macrotimes; i_rec++){
-            this->macro_times[i_rec + n_valid_events] = macro_times[i_rec] + macro_time_offset;
+            set_macro_time_at(i_rec + n_valid_events, macro_times[i_rec] + macro_time_offset);
             this->micro_times[i_rec + n_valid_events] = micro_times[i_rec];
             this->routing_channels[i_rec + n_valid_events] = routing_channels[i_rec];
             this->event_types[i_rec + n_valid_events] = event_types[i_rec];
@@ -1606,8 +1961,8 @@ double TTTR::compute_count_rate(
         v = *tttr_indices;
     }
     for(auto &i: v){
-        t_min = std::min((double) tttr_data->macro_times[i], t_min);
-        t_max = std::max((double) tttr_data->macro_times[i], t_max);
+        t_min = std::min((double) tttr_data->get_macro_time_at(i), t_min);
+        t_max = std::max((double) tttr_data->get_macro_time_at(i), t_max);
     }
     if(macrotime_resolution < 0) {
         macrotime_resolution = tttr_data->header->get_macro_time_resolution();
@@ -1652,4 +2007,204 @@ double TTTR::compute_mean_microtime(
         value = -1.0;
     }
     return value;
+}
+
+void TTTR::compress_macro_times() {
+    if (n_valid_events == 0) {
+        return;
+    }
+
+    if (is_verbose()) {
+        std::clog << "-- Compressing macro times for " << n_valid_events << " events using keyframes." << std::endl;
+        std::clog << "-- Keyframe interval: " << keyframe_interval << " events" << std::endl;
+    }
+
+    // Calculate number of keyframes needed
+    n_keyframes = (n_valid_events + keyframe_interval - 1) / keyframe_interval;
+    
+    if (is_verbose()) {
+        std::clog << "-- Number of keyframes: " << n_keyframes << std::endl;
+    }
+
+    // Allocate keyframe storage
+    if (macro_time_keyframes != nullptr) {
+        if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+            free(macro_time_keyframes);
+        } else {
+            #ifdef BUILD_PHOTON_HDF
+            H5free_memory(macro_time_keyframes);
+            #endif
+        }
+    }
+
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        macro_time_keyframes = (unsigned long long*) H5allocate_memory(n_keyframes * sizeof(unsigned long long), false);
+        #endif
+    }
+
+    // Store keyframes (every keyframe_interval-th event)
+    for (size_t i = 0; i < n_keyframes; i++) {
+        size_t event_idx = i * keyframe_interval;
+        if (event_idx < n_valid_events) {
+            macro_time_keyframes[i] = macro_times[event_idx];
+        } else {
+            // Last keyframe for partial segment
+            macro_time_keyframes[i] = macro_times[n_valid_events - 1];
+        }
+    }
+
+    // Allocate compressed storage
+    if (macro_times_compressed != nullptr) {
+        if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+            free(macro_times_compressed);
+        } else {
+            #ifdef BUILD_PHOTON_HDF
+            H5free_memory(macro_times_compressed);
+            #endif
+        }
+    }
+
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        macro_times_compressed = (uint32_t*) malloc(capacity * sizeof(uint32_t));
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        macro_times_compressed = (uint32_t*) H5allocate_memory(capacity * sizeof(uint32_t), false);
+        #endif
+    }
+
+    // Compress: store deltas relative to keyframes
+    size_t warnings = 0;
+    for (size_t i = 0; i < n_valid_events; i++) {
+        size_t keyframe_idx = i / keyframe_interval;
+        unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+        
+        if (macro_times[i] >= keyframe) {
+            unsigned long long delta = macro_times[i] - keyframe;
+            if (delta > UINT32_MAX) {
+                if (warnings < 10) {  // Limit warnings
+                    std::cerr << "WARNING: Delta from keyframe exceeds 32-bit range at index " << i 
+                              << ". Delta: " << delta << std::endl;
+                }
+                warnings++;
+                macro_times_compressed[i] = UINT32_MAX;
+            } else {
+                macro_times_compressed[i] = (uint32_t)delta;
+            }
+        } else {
+            // This shouldn't happen with monotonic data
+            if (warnings < 10) {
+                std::cerr << "WARNING: Macro time before keyframe at index " << i << std::endl;
+            }
+            warnings++;
+            macro_times_compressed[i] = 0;
+        }
+    }
+    
+    if (warnings > 10) {
+        std::cerr << "... and " << (warnings - 10) << " more warnings suppressed." << std::endl;
+        std::cerr << "Consider using a smaller keyframe interval." << std::endl;
+    }
+
+    // Free the original 64-bit storage
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        free(macro_times);
+        macro_times = nullptr;
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        H5free_memory(macro_times);
+        macro_times = nullptr;
+        #endif
+    }
+
+    macro_time_compression_enabled = true;
+
+    if (is_verbose()) {
+        size_t saved_bytes = capacity * (sizeof(unsigned long long) - sizeof(uint32_t));
+        std::clog << "-- Compression complete. Saved " << (saved_bytes / 1024.0 / 1024.0) 
+                  << " MB (" << (saved_bytes * 100.0 / (capacity * sizeof(unsigned long long))) 
+                  << "% reduction)." << std::endl;
+    }
+}
+
+void TTTR::decompress_macro_times() {
+    if (!macro_time_compression_enabled || macro_times_compressed == nullptr) {
+        return;
+    }
+
+    if (is_verbose()) {
+        std::clog << "-- Decompressing macro times for " << n_valid_events << " events." << std::endl;
+    }
+
+    // Allocate 64-bit storage
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        macro_times = (unsigned long long*) malloc(capacity * sizeof(unsigned long long));
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        macro_times = (unsigned long long*) H5allocate_memory(capacity * sizeof(unsigned long long), false);
+        #endif
+    }
+
+    // Decompress: reconstruct absolute times from keyframes + deltas
+    for (size_t i = 0; i < n_valid_events; i++) {
+        size_t keyframe_idx = i / keyframe_interval;
+        unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+        macro_times[i] = keyframe + (unsigned long long)macro_times_compressed[i];
+    }
+
+    // Free compressed storage
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        free(macro_times_compressed);
+        free(macro_time_keyframes);
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        H5free_memory(macro_times_compressed);
+        H5free_memory(macro_time_keyframes);
+        #endif
+    }
+    macro_times_compressed = nullptr;
+    macro_time_keyframes = nullptr;
+    n_keyframes = 0;
+
+    macro_time_compression_enabled = false;
+
+    if (is_verbose()) {
+        std::clog << "-- Decompression complete." << std::endl;
+    }
+}
+
+bool TTTR::enable_macro_time_compression(size_t kf_interval, bool force) {
+    if (macro_time_compression_enabled && !force) {
+        if (is_verbose()) {
+            std::clog << "-- Macro time compression already enabled." << std::endl;
+        }
+        return true;
+    }
+
+    if (macro_time_compression_enabled && force) {
+        // Decompress first, then recompress
+        decompress_macro_times();
+    }
+
+    // Set keyframe interval
+    keyframe_interval = kf_interval;
+    if (keyframe_interval == 0) {
+        keyframe_interval = 1000000;  // Default
+    }
+
+    compress_macro_times();
+    return macro_time_compression_enabled;  // Returns true if compression succeeded
+}
+
+void TTTR::disable_macro_time_compression() {
+    if (!macro_time_compression_enabled) {
+        if (is_verbose()) {
+            std::clog << "-- Macro time compression already disabled." << std::endl;
+        }
+        return;
+    }
+
+    decompress_macro_times();
 }

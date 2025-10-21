@@ -363,6 +363,7 @@ struct RecordProcessor<CZ_RECORD_TYPE_CONFOCOR3> {
 
 // Template function for batch processing with compile-time dispatch
 // Optimized with loop unrolling (4x) and branch prediction hints
+// Standard version: outputs absolute macro times
 template<int RecordType>
 inline void process_records_batch(
     const signed char* buffer,

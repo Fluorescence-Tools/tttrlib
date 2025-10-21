@@ -157,7 +157,8 @@ void TTTRMask::select_count_rate(TTTR* tttr, double time_window, int n_ph_max, b
     int i = 0;
     while (i < tttr->size() - 1){
         int n_ph = 0; int r = i;
-        while((tttr->macro_times[r] - tttr->macro_times[i] < tw) && (r < tttr->size() - 1)){
+        unsigned long long t_i = tttr->get_macro_time_at(i);
+        while((tttr->get_macro_time_at(r) - t_i < tw) && (r < tttr->size() - 1)){
             r++; n_ph++;
         }
         masked[i] = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);

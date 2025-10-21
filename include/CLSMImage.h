@@ -1136,8 +1136,8 @@ public:
             int start = l->get_start();
             int stop = l->get_stop();
 
-            unsigned long long t_stop = tttr->macro_times[stop];
-            unsigned long long t_start = tttr->macro_times[start];
+            unsigned long long t_stop = tttr->get_macro_time_at(stop);
+            unsigned long long t_start = tttr->get_macro_time_at(start);
             unsigned long long dt = t_stop - t_start;
             double res = header->get_macro_time_resolution() * 1000.0;
             re = dt * res;

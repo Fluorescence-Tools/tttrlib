@@ -67,7 +67,7 @@ void CorrelatorPhotonStream::set_tttr(
     set_time_axis_calibration(tttr->get_header()->get_macro_time_resolution());
 
     resize(tttr->size());
-    for(size_t i = 0; i < size(); i++) times[i] = tttr->macro_times[i];
+    for(size_t i = 0; i < size(); i++) times[i] = tttr->get_macro_time_at(i);
 
     if(make_fine){
         unsigned int number_of_microtime_channels = tttr->get_number_of_micro_time_channels();
