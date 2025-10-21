@@ -18,3 +18,24 @@ def __getattr__(self, item):
 def __len__(self):
     return len(self.get_indices())
 
+@property
+def mask(self):
+    """
+    Get mask as numpy array (optimized, zero-copy view of C++ memory)
+    
+    :return: numpy bool array (view of internal C++ memory)
+    """
+    return self.get_mask_array()
+
+@mask.setter
+def mask(self, value):
+    """
+    Set mask from numpy array (optimized)
+    
+    :param value: numpy bool array or list
+    """
+    import numpy as np
+    if not isinstance(value, np.ndarray):
+        value = np.array(value, dtype=bool)
+    self.set_mask_array(value)
+
