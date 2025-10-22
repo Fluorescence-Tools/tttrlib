@@ -29,13 +29,13 @@ requirements:
     - boost-cpp
     - python
     - pip
-    - numpy < 2.0
+    - numpy <2.0
   run:
     - python
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
     - boost-cpp
-    - numpy < 2.0
+    - numpy <2.0
 
 test:
  imports:
