@@ -7,7 +7,8 @@
 #include <map>
 #include <string>
 #include <functional>
-#include "itlib/flat_set.hpp"
+#include <boost/container/flat_set.hpp>
+#include <boost/container/small_vector.hpp>
 
 /*!
  * \brief Base class for nodes in a layer-based architecture with split/combine operations.
@@ -79,8 +80,10 @@ protected:
     // Compact bitfield combining all properties (saves 12+ bytes per node)
     NodeProperties properties_;
     
-    // TTTR data - the core of each node
-    itlib::flat_set<int> tttr_indices_;
+    // TTTR data - the core of each node with lazy allocation
+    /// Using unique_ptr to avoid overhead for empty containers
+    using indices_set = boost::container::flat_set<int>;
+    std::unique_ptr<indices_set> tttr_indices_;
     
     // Multiple parent support
     std::vector<LayerNode*> parent_nodes_;
@@ -195,21 +198,21 @@ public:
     /*!
      * \brief Get TTTR indices for this node.
      */
-    virtual const itlib::flat_set<int>& get_tttr_indices() const;
+    virtual const indices_set& get_tttr_indices() const;
 
     /*!
      * \brief Set TTTR indices directly.
      * 
      * \param indices TTTR indices to set
      */
-    virtual void set_tttr_indices(const itlib::flat_set<int>& indices);
+    virtual void set_tttr_indices(const indices_set& indices);
 
     /*!
      * \brief Add TTTR indices to this node.
      * 
      * \param indices TTTR indices to add
      */
-    void add_tttr_indices(const itlib::flat_set<int>& indices);
+    void add_tttr_indices(const indices_set& indices);
 
     /*!
      * \brief Clear TTTR indices.
@@ -219,7 +222,7 @@ public:
     /*!
      * \brief Get number of TTTR events in this node.
      */
-    size_t size() const { return get_tttr_indices().size(); }
+    size_t size() const { return tttr_indices_ ? tttr_indices_->size() : 0; }
 
     // === Accessors ===
 

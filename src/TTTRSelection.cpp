@@ -25,36 +25,48 @@ void TTTRSelection::set_dense(bool dense){
 
     _selection_mask.bits.dense = 0U;
     if(was_dense){
-        auto start = _range_start;
-        auto stop = _range_stop;
-        _tttr_indices.clear();
+        auto start = get_start();
+        auto stop = get_stop();
+        TTTRRange::clear();  // Use base class method
         if(start >= 0){
-            _tttr_indices.insert(start);
+            TTTRRange::insert(start);
         }
         if(stop >= 0 && stop != start){
-            _tttr_indices.insert(stop);
+            TTTRRange::insert(stop);
         }
     }
 }
 
 void TTTRSelection::set_range_start(int start){
-    if(!is_dense() && _range_start >= 0){
-        _tttr_indices.erase(_range_start);
+    if(!is_dense()){
+        // In sparse mode, we need to maintain start/stop as explicit indices
+        // Clear all existing indices and rebuild with new start and current stop
+        int old_stop = get_stop();
+        TTTRRange::clear();
+        if(start >= 0){
+            TTTRRange::insert(start);
+        }
+        if(old_stop >= 0 && old_stop != start){
+            TTTRRange::insert(old_stop);
+        }
     }
-    _range_start = start;
-    if(!is_dense() && start >= 0){
-        _tttr_indices.insert(start);
-    }
+    // In dense mode, start is implicit (first index in set)
 }
 
 void TTTRSelection::set_range_stop(int stop){
-    if(!is_dense() && _range_stop >= 0){
-        _tttr_indices.erase(_range_stop);
+    if(!is_dense()){
+        // In sparse mode, we need to maintain start/stop as explicit indices
+        // Clear all existing indices and rebuild with current start and new stop
+        int old_start = get_start();
+        TTTRRange::clear();
+        if(old_start >= 0){
+            TTTRRange::insert(old_start);
+        }
+        if(stop >= 0 && stop != old_start){
+            TTTRRange::insert(stop);
+        }
     }
-    _range_stop = stop;
-    if(!is_dense() && stop >= 0){
-        _tttr_indices.insert(stop);
-    }
+    // In dense mode, stop is implicit (last index in set)
 }
 
 void TTTRSelection::set_range(int start, int stop){
@@ -70,23 +82,18 @@ void TTTRSelection::insert(int idx){
         set_dense(true);
     }
     TTTRRange::insert(idx);
-    if(_range_start < 0 || idx < _range_start){
-        _range_start = idx;
-    }
-    if(_range_stop < 0 || idx > _range_stop){
-        _range_stop = idx;
-    }
+    // Range is automatically maintained by TTTRRange (first/last elements)
 }
 
 void TTTRSelection::clear(){
     TTTRRange::clear();
-    _range_start = -1;
-    _range_stop = -1;
+    // Range is automatically cleared by TTTRRange
 }
 
 int TTTRSelection::resolve_start(const std::vector<int>& values) const{
-    if(_range_start >= 0){
-        return _range_start;
+    int start = get_start();
+    if(start >= 0){
+        return start;
     }
     if(!values.empty()){
         return values.front();
@@ -95,8 +102,9 @@ int TTTRSelection::resolve_start(const std::vector<int>& values) const{
 }
 
 int TTTRSelection::resolve_stop(const std::vector<int>& values) const{
-    if(_range_stop >= 0){
-        return _range_stop;
+    int stop = get_stop();
+    if(stop >= 0){
+        return stop;
     }
     if(!values.empty()){
         return values.back();
@@ -153,20 +161,12 @@ std::vector<int> TTTRSelection::get_tttr_indices() const{
 }
 
 size_t TTTRSelection::get_index_count() const{
-    // Access underlying container directly to avoid vector copy
-    const auto& container = _tttr_indices.container();
-    size_t stored_size = container.size();
+    // Get size directly from flat_set
+    size_t stored_size = _tttr_indices ? _tttr_indices->size() : 0;
     
-    // Resolve start/stop directly from members or stored data
-    int start = _range_start;
-    int stop = _range_stop;
-    
-    if(start < 0 && stored_size > 0){
-        start = container[0];  // First element (flat_set is sorted)
-    }
-    if(stop < 0 && stored_size > 0){
-        stop = container[stored_size - 1];  // Last element
-    }
+    // Get start/stop from base class
+    int start = get_start();
+    int stop = get_stop();
     
     if(start < 0 || stop < start){
         return 0U;
@@ -188,7 +188,7 @@ size_t TTTRSelection::get_index_count() const{
 
 void TTTRSelection::get_tttr_indices(int** output, int* n_output) const{
     // For dense, non-inverted selections, we can use the base class implementation
-    // which provides zero-copy access to the underlying container
+    // which allocates a copy using malloc() that Python can safely free()
     if(is_dense() && !is_inverted()){
         TTTRRange::get_tttr_indices(output, n_output);
         return;
@@ -199,13 +199,17 @@ void TTTRSelection::get_tttr_indices(int** output, int* n_output) const{
     // Note: This will allocate memory that Python must manage
     auto indices = get_tttr_indices();  // Get the vector
     
-    // Allocate new memory for the output
+    // Allocate new memory for the output using malloc() because Python will call free()
     // Python/NumPy will take ownership via ARGOUTVIEWM_ARRAY1
     *n_output = static_cast<int>(indices.size());
     if(*n_output > 0){
-        *output = new int[*n_output];
-        std::copy(indices.begin(), indices.end(), *output);
+        *output = static_cast<int*>(std::malloc(*n_output * sizeof(int)));
+        if(*output){
+            std::memcpy(*output, indices.data(), *n_output * sizeof(int));
+        }
     } else {
-        *output = nullptr;
+        // Allocate dummy array for empty case using malloc() (Python will call free())
+        *output = static_cast<int*>(std::malloc(sizeof(int)));
+        if(*output) (*output)[0] = 0;
     }
 }

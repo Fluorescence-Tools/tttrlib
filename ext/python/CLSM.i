@@ -22,6 +22,9 @@ static int myErr = 0; // flag to save error state
 %apply (unsigned short** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {
     (unsigned short** output, int* dim1, int* dim2)
 }
+
+// Typemap for CLSMImage::get_memory_usage_detailed (size_t* output parameters)
+%apply size_t *OUTPUT { size_t* overhead, size_t* indices, size_t* ranges }
 // documentation see
 // https://github.com/swig/swig/blob/6f2399e86da13a9feb436e3977e15d2b9738294e/Lib/typemaps/attribute.swg
 %attribute(CLSMImage, int, n_frames, get_n_frames);
@@ -84,6 +87,27 @@ static int myErr = 0; // flag to save error state
         return $self->size();
     }
 
+    %pythoncode %{
+        @property
+        def tttr_indices(self):
+            """Zero-copy access to TTTR indices as numpy array.
+            
+            Returns a view into C++ memory. The array is valid as long as this
+            object exists. Store a reference to this object if you need the array
+            to outlive the immediate scope.
+            
+            Example (safe):
+                img = tttrlib.CLSMImage('file.ptu', fill=True)
+                line = img[0][1]
+                indices = line.tttr_indices  # Safe: 'line' and 'img' are alive
+                
+            Example (also safe - image keeps everything alive):
+                img = tttrlib.CLSMImage('file.ptu', fill=True)
+                indices = img[0][1].tttr_indices  # Safe: 'img' owns the line
+            """
+            return self.get_tttr_indices()
+    %}
+
     %pythoncode "./ext/python/CLSMImage.py"
 }
 
@@ -113,6 +137,20 @@ static int myErr = 0; // flag to save error state
     size_t __len__(){
         return $self->size();
     }
+    
+    CLSMFrame* copy(bool fill=true) {
+        return new CLSMFrame(*$self, fill);
+    }
+
+    %pythoncode %{
+        @property
+        def tttr_indices(self):
+            """Zero-copy access to TTTR indices as numpy array.
+            
+            Returns a view into C++ memory. Keep the parent CLSMImage alive.
+            """
+            return self.get_tttr_indices()
+    %}
 
     %pythoncode "./ext/python/CLSMFrame.py"
 }
@@ -142,5 +180,27 @@ static int myErr = 0; // flag to save error state
     size_t __len__(){
         return $self->size();
     }
+
+    %pythoncode %{
+        @property
+        def tttr_indices(self):
+            """Zero-copy access to TTTR indices as numpy array.
+            
+            Returns a view into C++ memory. Keep the parent CLSMImage alive.
+            """
+            return self.get_tttr_indices()
+    %}
+}
+
+%extend CLSMPixel {
+    %pythoncode %{
+        @property
+        def tttr_indices(self):
+            """Zero-copy access to TTTR indices as numpy array.
+            
+            Returns a view into C++ memory. Keep the parent CLSMImage alive.
+            """
+            return self.get_tttr_indices()
+    %}
 }
 

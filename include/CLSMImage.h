@@ -1162,6 +1162,36 @@ public:
         return get_line_duration(frame, line) / settings.n_pixel_per_line;
     }
 
+    /*!
+     * \brief Get the total memory usage of the CLSMImage in bytes.
+     *
+     * This function calculates the total memory used by the CLSMImage, including:
+     * - Frame, line, and pixel container overhead
+     * - TTTR indices stored in pixels
+     * - Range markers (start/stop) for frames, lines, and pixels
+     *
+     * @return Total memory usage in bytes.
+     */
+    size_t get_memory_usage_bytes() const;
+
+    /*!
+     * \brief Get detailed memory usage statistics for the CLSMImage.
+     *
+     * This function provides a breakdown of memory usage by component:
+     * - overhead: Container and object overhead
+     * - indices: TTTR photon indices storage
+     * - ranges: Start/stop range markers
+     *
+     * @param overhead [out] Memory used by container overhead (bytes)
+     * @param indices [out] Memory used by TTTR indices (bytes)
+     * @param ranges [out] Memory used by range markers (bytes)
+     */
+    void get_memory_usage_detailed(
+        size_t* overhead,
+        size_t* indices,
+        size_t* ranges
+    ) const;
+
 };
 
 

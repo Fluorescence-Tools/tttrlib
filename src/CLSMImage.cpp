@@ -57,7 +57,7 @@ static std::vector<int> collect_stacked_pixel_indices(
     for (const auto& frame : frames) {
         const auto& lines = frame->get_lines();
         const auto& pixels = lines[i_line]->get_pixels();
-        total_size += pixels[i_pixel].get_index_count();
+        total_size += pixels[i_pixel].size();
     }
     
     // Reserve space and collect indices
@@ -463,10 +463,6 @@ void CLSMImage::create_pixels_in_lines() {
     for (auto &f: frames) {
         for (auto &l: f->lines) {
             l->pixels.resize(n_pixel);
-            // Pre-allocate storage for each pixel to avoid reallocations during fill
-            for (auto &p: l->pixels) {
-                p._tttr_indices.reserve(estimated_photons_per_pixel);
-            }
         }
     }
     
@@ -1046,8 +1042,10 @@ void CLSMImage::fill(
     // Pre-fetch TTTR data pointers once - they're read-only and shared across all threads
     const signed char* event_types = tttr_data->event_types;
     const signed char* routing_channels_ptr = tttr_data->routing_channels;
-    const unsigned long long* macro_times = tttr_data->macro_times;
     const unsigned short* micro_times = tttr_data->micro_times;
+    
+    // Note: macro_times cannot be cached as a pointer when compression is enabled
+    // We'll use get_macro_time_at() accessor instead
     
     // Configure OpenMP and get actual thread count
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
@@ -1132,7 +1130,7 @@ void CLSMImage::fill(
                 if (event_i + 16 < stop_idx) {
                     PREFETCH(&event_types[event_i + 16]);
                     PREFETCH(&routing_channels_ptr[event_i + 16]);
-                    PREFETCH(&macro_times[event_i + 16]);
+                    // Note: Cannot prefetch macro_times when using compression
                 }
                 
                 // Only process photon events, skip all others
@@ -1159,7 +1157,8 @@ void CLSMImage::fill(
                 }
 
                 // Compute the "raw" pixel index using reciprocal multiplication (faster than division)
-                unsigned long long time_offset = macro_times[event_i] - line_start_time;
+                // Use accessor to handle both compressed and uncompressed macro times
+                unsigned long long time_offset = tttr_data->get_macro_time_at(event_i) - line_start_time;
                 double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
                 int raw_pixel = static_cast<int>(pixel_idx_float);
                 
@@ -1186,6 +1185,16 @@ void CLSMImage::fill(
             // Clean up micro-time filter bitmap only if we allocated it
             if (owns_bitmap && micro_time_valid != nullptr) {
                 delete[] micro_time_valid;
+            }
+        }
+    }
+
+    // Shrink all pixel vectors to eliminate capacity overhead
+    // This reduces memory from ~1.5-2x to exactly the needed size
+    for (auto &f: frames) {
+        for (auto &l: f->lines) {
+            for (auto &p: l->pixels) {
+                p.shrink_to_fit();
             }
         }
     }
@@ -1347,8 +1356,8 @@ void CLSMImage::get_fcs_image(
             for (unsigned int i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                 auto pixel = line->pixels[i_pixel];
                 auto other_pixel = other_line->pixels[i_pixel];
-                int count1 = static_cast<int>(pixel.get_index_count());
-                int count2 = static_cast<int>(other_pixel.get_index_count());
+                int count1 = static_cast<int>(pixel.size());
+                int count2 = static_cast<int>(other_pixel.size());
                 if ((count1 > min_photons) && (count2 > min_photons)) {
                     // Get indices once - use const ref to avoid copies
                     const auto& v1 = pixel.get_tttr_indices();
@@ -1802,7 +1811,7 @@ void CLSMImage::get_roi(
                     if (clsm != nullptr) {
                         auto frame = clsm->frames[f];
                         auto line = frame->lines[l];
-                        value = static_cast<double>(line->pixels[p].get_index_count());
+                        value = static_cast<double>(line->pixels[p].size());
                     } else if (images != nullptr) {
                         value = images[f * (nl * np) + l * nl + p];
                     }
@@ -2078,7 +2087,7 @@ void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
             new_line->pixels.resize(static_cast<size_t>(n_pixel));
             for (size_t p = 0; p < static_cast<size_t>(n_pixel); ++p) {
                 new_line->pixels[p] = std::move(flat_pixels[idx]);
-                new_line->pixels[p].set_tttr(tttr);
+                // Pixels don't need tttr reference - only lines do
                 ++idx;
             }
 
@@ -2131,5 +2140,102 @@ void CLSMImage::crop(
 
 
 // ISM super-resolution reconstruction (AMD-like iterative) using pocketfft
+
+size_t CLSMImage::get_memory_usage_bytes() const {
+    size_t total = sizeof(CLSMImage);
+    
+    // Frame vector overhead
+    total += frames.capacity() * sizeof(CLSMFrame*);
+    
+    // Memory for each frame
+    for (const auto& frame : frames) {
+        if (frame != nullptr) {
+            total += frame->get_memory_usage_bytes();
+        }
+    }
+    
+    // Channel layout vectors
+    total += channel_offsets.capacity() * sizeof(size_t);
+    total += channel_counts.capacity() * sizeof(size_t);
+    
+    // Marker frame vector
+    total += marker_frame.capacity() * sizeof(int);
+    
+    return total;
+}
+
+void CLSMImage::get_memory_usage_detailed(
+    size_t* overhead,
+    size_t* indices,
+    size_t* ranges
+) const {
+    if (overhead) *overhead = 0;
+    if (indices) *indices = 0;
+    if (ranges) *ranges = 0;
+    
+    // CLSMImage object overhead
+    if (overhead) {
+        *overhead += sizeof(CLSMImage);
+        *overhead += frames.capacity() * sizeof(CLSMFrame*);
+        *overhead += channel_offsets.capacity() * sizeof(size_t);
+        *overhead += channel_counts.capacity() * sizeof(size_t);
+        *overhead += marker_frame.capacity() * sizeof(int);
+    }
+    
+    // Accumulate from all frames
+    for (const auto& frame : frames) {
+        if (frame == nullptr) continue;
+        
+        // Frame overhead
+        if (overhead) {
+            *overhead += sizeof(CLSMFrame);
+            *overhead += frame->lines.capacity() * sizeof(CLSMLine*);
+        }
+        
+        // Range markers for frame
+        if (ranges) {
+            *ranges += 2 * sizeof(int);  // _range_start, _range_stop
+        }
+        
+        // Process each line
+        for (const auto& line : frame->lines) {
+            if (line == nullptr) continue;
+            
+            // Line overhead
+            if (overhead) {
+                *overhead += sizeof(CLSMLine);
+                *overhead += line->pixels.capacity() * sizeof(CLSMPixel);
+            }
+            
+            // Range markers for line
+            if (ranges) {
+                *ranges += 2 * sizeof(int);  // _range_start, _range_stop
+                *ranges += sizeof(int);      // pixel_duration
+            }
+            
+            // Process each pixel
+            for (const auto& pixel : line->pixels) {
+                // Pixel overhead
+                if (overhead) {
+                    *overhead += sizeof(CLSMPixel);
+                }
+                
+                // Range markers for pixel
+                if (ranges) {
+                    *ranges += 2 * sizeof(int);  // _range_start, _range_stop
+                    *ranges += sizeof(uint8_t);  // SelectionMask
+                }
+                
+                // TTTR indices - use public method to get index count
+                if (indices) {
+                    size_t n_indices = pixel.size();
+                    // Estimate capacity as size * 1.5 (typical vector growth)
+                    // This is an approximation since we can't access capacity directly
+                    *indices += static_cast<size_t>(n_indices * 1.5) * sizeof(int);
+                }
+            }
+        }
+    }
+}
 
 

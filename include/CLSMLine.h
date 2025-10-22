@@ -16,16 +16,25 @@ private:
 
     std::vector<CLSMPixel> pixels;
     int pixel_duration = -1;
+    std::shared_ptr<TTTR> _tttr = nullptr;  // Only lines need TTTR reference, not pixels
 
 public:
 
     /// Get the number of pixels per line a frame of the CLSMImage
-    size_t size() final{
+    size_t size() const override final{
         return pixels.size();
     }
 
     std::vector<CLSMPixel>& get_pixels(){
         return pixels;
+    }
+    
+    std::shared_ptr<TTTR> get_tttr(){
+        return _tttr;
+    }
+
+    void set_tttr(std::shared_ptr<TTTR> tttr){
+        _tttr = std::move(tttr);
     }
 
     void set_pixel_duration(int v){
@@ -92,6 +101,20 @@ public:
             pixels[i] += rhs.pixels[i];
         }
         return *this;
+    }
+
+    /*!
+     * \brief Get the memory usage of this line in bytes.
+     *
+     * @return Total memory usage in bytes.
+     */
+    size_t get_memory_usage_bytes() const {
+        size_t total = sizeof(CLSMLine);
+        total += pixels.capacity() * sizeof(CLSMPixel);
+        for (const auto& p : pixels) {
+            total += p.get_memory_usage_bytes() - sizeof(CLSMPixel);
+        }
+        return total;
     }
 
 };

@@ -1,11 +1,15 @@
 #ifndef TTTRLIB_TTTRRANGE_H
 #define TTTRLIB_TTTRRANGE_H
 
-#include <memory> /* std::shared_ptr */
+#include <algorithm> /* std::find */
+#include <cstdlib>  /* std::malloc, std::free */
+#include <cstring>  /* std::memcpy */
+#include <memory>   /* std::shared_ptr */
 #include <set>
 #include <vector>
-//#include<boost/container/flat_set.hpp>
-#include "itlib/flat_set.hpp"
+#include <cstdint>  /* uint16_t */
+#include <boost/container/flat_set.hpp>
+#include <boost/container/small_vector.hpp>
 
 #include "TTTR.h"
 
@@ -13,14 +17,33 @@
  * @brief Represents a range of TTTR indices.
  */
 class TTTRRange {
+    // Friend classes that need direct access to _tttr_indices
+    friend class TTTRSelection;
+
+public:
+    /// Public typedef for derived classes that need the type
+    /// Changed from flat_set to vector since CLSM indices are inserted in order
+    /// This eliminates sorting overhead and reduces capacity waste from 1.5x to 1.0x
+    /// Note: small_vector causes segfaults with SWIG during cleanup, so using std::vector
+    using indices_set = std::vector<int>;
 
 protected:
+    /// Protected accessor for derived classes
+    const std::unique_ptr<indices_set>& get_indices_ptr() const {
+        return _tttr_indices;
+    }
+    
+    /// Protected accessor for derived classes
+    std::unique_ptr<indices_set>& get_indices_ptr() {
+        return _tttr_indices;
+    }
 
-    //boost::container::flat_set<int> _tttr_indices{};
-    //std::flat_set<int> _tttr_indices{};
-
-    /// Set of TTTR indices in the range.
-    itlib::flat_set<int> _tttr_indices{};
+private:
+    /// Set of TTTR indices with lazy allocation
+    /// Using unique_ptr to avoid 24-byte overhead for empty containers
+    /// Only allocates when indices are actually inserted
+    /// PRIVATE: Use public methods (insert, clear, get_tttr_indices) or protected get_indices_ptr()
+    std::unique_ptr<indices_set> _tttr_indices;
 
 public:
 
@@ -44,21 +67,25 @@ public:
      */
     TTTRRange(int start=-1, int stop=-1, TTTRRange* other = nullptr){
         if((start >=0) && (stop >= 0)){
-            _tttr_indices.insert(start);
-            _tttr_indices.insert(stop);
+            _tttr_indices = std::make_unique<indices_set>();
+            _tttr_indices->push_back(start);
+            if (stop != start) _tttr_indices->push_back(stop);
         } else if(other != nullptr){
-            _tttr_indices.insert(other->get_start());
-            _tttr_indices.insert(other->get_stop());
+            _tttr_indices = std::make_unique<indices_set>();
+            int s = other->get_start();
+            int e = other->get_stop();
+            if (s >= 0) _tttr_indices->push_back(s);
+            if (e >= 0 && e != s) _tttr_indices->push_back(e);
         }
     }
 
     /**
-     * @brief Gets the number of TTTR indices in the range.
+     * @brief Returns the size of the `tttr_indices` set.
      *
      * @return The size of the `tttr_indices` set.
      */
-    virtual size_t size(){
-        return _tttr_indices.size();
+    virtual size_t size() const {
+        return _tttr_indices ? _tttr_indices->size() : 0;
     }
 
     /**
@@ -67,6 +94,38 @@ public:
      * @param p2 Reference to another TTTRRange to copy.
      */
     TTTRRange(const TTTRRange& p2);
+    
+    /**
+     * @brief Copy assignment operator.
+     *
+     * @param other Reference to another TTTRRange to copy.
+     * @return Reference to this object.
+     */
+    TTTRRange& operator=(const TTTRRange& other) {
+        if (this != &other) {
+            if (other._tttr_indices) {
+                _tttr_indices = std::make_unique<indices_set>(*other._tttr_indices);
+            } else {
+                _tttr_indices.reset();
+            }
+        }
+        return *this;
+    }
+    
+    /**
+     * @brief Move constructor.
+     */
+    TTTRRange(TTTRRange&&) noexcept = default;
+    
+    /**
+     * @brief Move assignment operator.
+     */
+    TTTRRange& operator=(TTTRRange&&) noexcept = default;
+    
+    /**
+     * @brief Virtual destructor.
+     */
+    virtual ~TTTRRange() = default;
 
     /**
      * @brief Gets the vector of TTTR indices assigned to the range.
@@ -78,18 +137,29 @@ public:
     /**
      * @brief Gets TTTR indices as a raw pointer and size.
      * 
-     * This zero-copy accessor provides direct access to the internal data,
-     * ideal for NumPy wrapping and avoiding vector allocations.
-     * The pointer remains valid as long as the TTTRRange object is not modified.
+     * Allocates a copy of the internal data that Python can safely own and free.
+     * The SWIG typemap will call free() on this pointer when the numpy array is garbage collected.
      *
-     * @param output Pointer to receive the data pointer (const int*)
+     * @param output Pointer to receive the data pointer (int*)
      * @param n_output Pointer to receive the number of elements
      */
     virtual void get_tttr_indices(int** output, int* n_output) const {
-        // Access underlying vector from flat_set
-        const auto& container = _tttr_indices.container();
-        *output = const_cast<int*>(container.data());
-        *n_output = static_cast<int>(container.size());
+        if (!_tttr_indices || _tttr_indices->empty()) {
+            // For empty containers, allocate a dummy array that Python can own
+            // Use malloc() because Python's SWIG typemap will call free()
+            *output = static_cast<int*>(std::malloc(sizeof(int)));
+            if (*output) (*output)[0] = 0;  // Initialize to avoid valgrind warnings
+            *n_output = 0;  // But report size as 0
+            return;
+        }
+        // Allocate a copy using malloc() so Python can safely free() it
+        // This prevents double-free when both C++ destructor and Python GC clean up
+        size_t n = _tttr_indices->size();
+        *output = static_cast<int*>(std::malloc(n * sizeof(int)));
+        if (*output) {
+            std::memcpy(*output, &*_tttr_indices->begin(), n * sizeof(int));
+        }
+        *n_output = static_cast<int>(n);
     }
 
     /**
@@ -98,11 +168,10 @@ public:
      * @return The start index or -1 if the set is empty.
      */
     int get_start() const{
-        if(!_tttr_indices.empty()){
-            return *_tttr_indices.begin();
-        } else{
-            return -1;
+        if(_tttr_indices && !_tttr_indices->empty()){
+            return *_tttr_indices->begin();
         }
+        return -1;
     }
 
     /**
@@ -111,11 +180,10 @@ public:
      * @return The stop index or -1 if the set is empty.
      */
     int get_stop() const{
-        if(!_tttr_indices.empty()){
-            return *_tttr_indices.rbegin();
-        } else{
-            return -1;
+        if(_tttr_indices && !_tttr_indices->empty()){
+            return _tttr_indices->back();
         }
+        return -1;
     }
 
     /**
@@ -138,12 +206,12 @@ public:
      */
     unsigned long long get_stop_time(std::shared_ptr<TTTR> tttr) const{
         if(tttr!= nullptr){
-            if(_tttr_indices.empty()){
+            if(!_tttr_indices || _tttr_indices->empty()){
                 return 0ULL;
             }
-            return tttr->get_macro_time_at(*_tttr_indices.rbegin());
+            return tttr->get_macro_time_at(_tttr_indices->back());
         } else{
-            std::cerr << "Access to TTTRRange::get_stop_time without TTTR object" << std::endl;
+            std::cerr << "Warning: TTTRRange::get_stop_time called without TTTR object" << std::endl;
         }
         return 0ULL;
     }
@@ -156,12 +224,12 @@ public:
      */
     unsigned long long get_start_time(std::shared_ptr<TTTR> tttr) const{
         if(tttr!= nullptr){
-            if(_tttr_indices.empty()){
+            if(!_tttr_indices || _tttr_indices->empty()){
                 return 0ULL;
             }
-            return tttr->get_macro_time_at(*_tttr_indices.begin());
+            return tttr->get_macro_time_at(*_tttr_indices->begin());
         } else{
-            std::cerr << "Access to TTTRRange::get_start_time without TTTR object" << std::endl;
+            std::cerr << "Warning: TTTRRange::get_start_time called without TTTR object" << std::endl;
         }
         return 0ULL;
     }
@@ -195,14 +263,29 @@ public:
      * @param idx The index to insert.
      */
     void insert(int idx){
-        _tttr_indices.insert(idx);
+        if(!_tttr_indices){
+            _tttr_indices = std::make_unique<indices_set>();
+        }
+        _tttr_indices->push_back(idx);
     }
 
     /**
      * @brief Clears the TTTR index set.
      */
     void clear(){
-        _tttr_indices.clear();
+        _tttr_indices.reset();  // Deallocate memory
+    }
+    
+    /**
+     * @brief Shrink vector capacity to fit actual size.
+     * 
+     * Call after filling is complete to eliminate capacity overhead.
+     * Reduces memory from ~1.5-2x size to exactly size.
+     */
+    void shrink_to_fit(){
+        if(_tttr_indices){
+            _tttr_indices->shrink_to_fit();
+        }
     }
 
     /**
@@ -215,14 +298,18 @@ public:
      * @return Updated offset index.
      */
     int strip(const std::vector<int> &tttr_indices, int offset = 0){
-        if(!_tttr_indices.empty()){
-            for(; offset < tttr_indices.size(); offset++){
-                int v = tttr_indices[offset];
-                if(v >= *_tttr_indices.rbegin()){
-                    break;
-                } else {
-                    _tttr_indices.erase(v);
-                }
+        if(!_tttr_indices || _tttr_indices->empty()) return offset;
+        
+        const int stop = _tttr_indices->back();
+        for(; offset < static_cast<int>(tttr_indices.size()); ++offset){
+            int v = tttr_indices[offset];
+            if(v >= stop){
+                break;
+            }
+            // For vector, use std::remove + erase idiom
+            auto it = std::find(_tttr_indices->begin(), _tttr_indices->end(), v);
+            if (it != _tttr_indices->end()) {
+                _tttr_indices->erase(it);
             }
         }
         return offset;
@@ -354,7 +441,9 @@ public:
     * @return True if the two TTTRRanges are equal, false otherwise.
     */
     bool operator==(const TTTRRange& other) const {
-        return _tttr_indices == other._tttr_indices;
+        if(!_tttr_indices && !other._tttr_indices) return true;
+        if(!_tttr_indices || !other._tttr_indices) return false;
+        return *_tttr_indices == *other._tttr_indices;
     }
 
     /**
@@ -375,9 +464,15 @@ public:
      * @return Reference to the modified TTTRRange.
      */
     TTTRRange& operator+=(const TTTRRange& rhs){
-        for(auto &v: rhs._tttr_indices){
-            _tttr_indices.insert(v);
+        if(!rhs._tttr_indices) return *this;
+        if(!_tttr_indices){
+            _tttr_indices = std::make_unique<indices_set>();
         }
+        // Reserve space to avoid reallocation during insert
+        // This is critical for small_vector to prevent iterator invalidation
+        _tttr_indices->reserve(_tttr_indices->size() + rhs._tttr_indices->size());
+        // Bulk insert - safe because we pre-reserved space
+        _tttr_indices->insert(_tttr_indices->end(), rhs._tttr_indices->begin(), rhs._tttr_indices->end());
         return *this;
     }
 

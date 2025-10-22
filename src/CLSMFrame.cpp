@@ -7,8 +7,10 @@
 CLSMFrame::CLSMFrame(): TTTRSelection() {}
 
 CLSMFrame::CLSMFrame(size_t frame_start, size_t frame_stop, std::shared_ptr<TTTR> tttr) :
-    TTTRSelection(static_cast<int>(frame_start), static_cast<int>(frame_stop), tttr)
-{}
+    TTTRSelection(static_cast<int>(frame_start), static_cast<int>(frame_stop))
+{
+    set_tttr(std::move(tttr));
+}
 
 void CLSMFrame::append(CLSMLine * line){
     lines.emplace_back(line);
@@ -70,4 +72,20 @@ void CLSMFrame::get_intensity(unsigned short **output, int *dim1, int *dim2) {
     }
     
     *output = intensity;
+}
+
+size_t CLSMFrame::get_memory_usage_bytes() const {
+    size_t total = sizeof(CLSMFrame);
+    
+    // Lines vector overhead
+    total += lines.capacity() * sizeof(CLSMLine*);
+    
+    // Memory for each line
+    for (const auto& line : lines) {
+        if (line != nullptr) {
+            total += line->get_memory_usage_bytes();
+        }
+    }
+    
+    return total;
 }

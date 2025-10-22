@@ -17,6 +17,7 @@ private:
 
     std::vector<CLSMLine*> lines;
     TTTR* _tttr = nullptr;
+    std::shared_ptr<TTTR> _tttr_shared = nullptr;  // For compatibility with set_tttr
 
 public:
 
@@ -31,6 +32,19 @@ public:
     std::vector<CLSMLine*> get_lines() {
         return lines;
     }
+    
+    std::shared_ptr<TTTR> get_tttr(){
+        return _tttr_shared;
+    }
+
+    void set_tttr(std::shared_ptr<TTTR> tttr){
+        _tttr_shared = tttr;
+        _tttr = tttr.get();
+        // Propagate to all lines
+        for (auto& line : lines) {
+            line->set_tttr(tttr);
+        }
+    }
 
 
     /*!
@@ -38,7 +52,7 @@ public:
      *
      * @return The number of lines in the CLSMFrame.
      */
-    size_t size() final{
+    size_t size() const override final{
         return lines.size();
     }
 
@@ -161,6 +175,13 @@ public:
      * @param dim2 [out] Number of pixels per line.
      */
     void get_intensity(unsigned short **output, int *dim1, int *dim2);
+
+    /*!
+     * \brief Get the memory usage of this frame in bytes.
+     *
+     * @return Total memory usage in bytes.
+     */
+    size_t get_memory_usage_bytes() const;
 
 };
 

@@ -1,20 +1,25 @@
 #include "TTTRRange.h"
 
 TTTRRange::TTTRRange(const TTTRRange& p2){
-    _tttr_indices = p2._tttr_indices;
+    if(p2._tttr_indices){
+        _tttr_indices = std::make_unique<indices_set>(*p2._tttr_indices);
+    }
 }
 
 TTTRRange::TTTRRange(int start, int stop){
-    _tttr_indices.insert(start);
-    _tttr_indices.insert(stop);
+    _tttr_indices = std::make_unique<indices_set>();
+    _tttr_indices->push_back(start);
+    if (stop != start) _tttr_indices->push_back(stop);
 }
 
 std::vector<int> TTTRRange::get_tttr_indices() const{
     // Use move semantics for RVO optimization
     // Reserve exact size to avoid reallocation
     std::vector<int> v;
-    v.reserve(_tttr_indices.size());
-    v.assign(_tttr_indices.begin(), _tttr_indices.end());
+    if(_tttr_indices){
+        v.reserve(_tttr_indices->size());
+        v.assign(_tttr_indices->begin(), _tttr_indices->end());
+    }
     return v;  // RVO/NRVO will elide the copy
 }
 

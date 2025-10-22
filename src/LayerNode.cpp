@@ -36,14 +36,19 @@ void LayerNode::remove_parent_node(LayerNode* parent_node) {
 void LayerNode::execute_operation() {
     if (parent_nodes_.empty()) {
         // No parents - initialize with empty data
-        tttr_indices_.clear();
+        tttr_indices_.reset();
         properties_.tttr_data_valid = true;
     } else if (parent_nodes_.size() == 1) {
         // Single parent - this is typically a split operation
         // For individual nodes, we don't split here but rather get data from parent
         if (properties_.operation == OPERATION_SPLIT || properties_.operation == OPERATION_PASSTHROUGH) {
             // Copy data from parent (actual splitting happens at layer level)
-            tttr_indices_ = parent_nodes_[0]->get_tttr_indices();
+            const auto& parent_indices = parent_nodes_[0]->get_tttr_indices();
+            if(!parent_indices.empty()){
+                tttr_indices_ = std::make_unique<indices_set>(parent_indices);
+            } else {
+                tttr_indices_.reset();
+            }
             properties_.tttr_data_valid = true;
         }
     } else {
@@ -102,7 +107,7 @@ void LayerNode::set_custom_combine_function(std::function<void(const std::vector
 
 void LayerNode::execute_combine(const std::vector<LayerNode*>& parent_nodes) {
     if (parent_nodes.empty()) {
-        tttr_indices_.clear();
+        tttr_indices_.reset();
         properties_.tttr_data_valid = true;
         return;
     }
@@ -126,25 +131,31 @@ void LayerNode::execute_combine(const std::vector<LayerNode*>& parent_nodes) {
     properties_.tttr_data_valid = true;
 }
 
-const itlib::flat_set<int>& LayerNode::get_tttr_indices() const {
+const LayerNode::indices_set& LayerNode::get_tttr_indices() const {
     ensure_tttr_data_valid();
-    return tttr_indices_;
+    static const indices_set empty_set;
+    return tttr_indices_ ? *tttr_indices_ : empty_set;
 }
 
-void LayerNode::set_tttr_indices(const itlib::flat_set<int>& indices) {
-    tttr_indices_ = indices;
+void LayerNode::set_tttr_indices(const LayerNode::indices_set& indices) {
+    if(!tttr_indices_){
+        tttr_indices_ = std::make_unique<indices_set>();
+    }
+    *tttr_indices_ = indices;
     properties_.tttr_data_valid = true;
 }
 
-void LayerNode::add_tttr_indices(const itlib::flat_set<int>& indices) {
-    for (const auto& idx : indices) {
-        tttr_indices_.insert(idx);
+void LayerNode::add_tttr_indices(const LayerNode::indices_set& indices) {
+    if(!tttr_indices_){
+        tttr_indices_ = std::make_unique<indices_set>();
     }
+    // Bulk insert is more efficient
+    tttr_indices_->insert(indices.begin(), indices.end());
     properties_.tttr_data_valid = true;
 }
 
 void LayerNode::clear_tttr_indices() {
-    tttr_indices_.clear();
+    tttr_indices_.reset();  // Deallocate memory
     properties_.tttr_data_valid = true;
 }
 
@@ -174,7 +185,7 @@ void LayerNode::split_by_markers(LayerNode* parent_node, const std::vector<Layer
     auto it = parent_indices.begin();
     for (size_t i = 0; i < child_nodes.size(); ++i) {
         size_t count = indices_per_child + (i < remainder ? 1 : 0);
-        itlib::flat_set<int> child_indices;
+        LayerNode::indices_set child_indices;
         
         for (size_t j = 0; j < count && it != parent_indices.end(); ++j, ++it) {
             child_indices.insert(*it);
@@ -202,12 +213,15 @@ void LayerNode::split_by_position(LayerNode* parent_node, const std::vector<Laye
 // ===== Combine Strategy Implementations =====
 
 void LayerNode::combine_by_union(const std::vector<LayerNode*>& parent_nodes) {
-    tttr_indices_.clear();
+    tttr_indices_.reset();
     for (const auto* parent : parent_nodes) {
         if (parent) {
             const auto& parent_indices = parent->get_tttr_indices();
-            for (const auto& idx : parent_indices) {
-                tttr_indices_.insert(idx);
+            if(!parent_indices.empty()){
+                if(!tttr_indices_){
+                    tttr_indices_ = std::make_unique<indices_set>();
+                }
+                tttr_indices_->insert(parent_indices.begin(), parent_indices.end());
             }
         }
     }
@@ -215,23 +229,29 @@ void LayerNode::combine_by_union(const std::vector<LayerNode*>& parent_nodes) {
 
 void LayerNode::combine_by_intersection(const std::vector<LayerNode*>& parent_nodes) {
     if (parent_nodes.empty()) {
-        tttr_indices_.clear();
+        tttr_indices_.reset();
         return;
     }
 
     // Start with first parent's indices
-    tttr_indices_ = parent_nodes[0]->get_tttr_indices();
+    const auto& first_parent = parent_nodes[0]->get_tttr_indices();
+    if(!first_parent.empty()){
+        tttr_indices_ = std::make_unique<indices_set>(first_parent);
+    } else {
+        tttr_indices_.reset();
+        return;
+    }
     
     // Intersect with each subsequent parent
     for (size_t i = 1; i < parent_nodes.size(); ++i) {
         if (parent_nodes[i]) {
             const auto& parent_indices = parent_nodes[i]->get_tttr_indices();
-            itlib::flat_set<int> intersection;
+            auto intersection = std::make_unique<indices_set>();
             
             // Manual intersection - only keep indices that exist in both sets
-            for (const auto& idx : tttr_indices_) {
+            for (const auto& idx : *tttr_indices_) {
                 if (parent_indices.find(idx) != parent_indices.end()) {
-                    intersection.insert(idx);
+                    intersection->insert(idx);
                 }
             }
             

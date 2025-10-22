@@ -28,10 +28,11 @@ protected:
         SelectionMask() : value(0U){}
     };
 
-    std::shared_ptr<TTTR> _tttr = nullptr;
     SelectionMask _selection_mask{};
-    int _range_start = -1;
-    int _range_stop = -1;
+    // Removed _range_start and _range_stop - use get_start()/get_stop() from TTTRRange
+    // This saves 8 bytes per pixel (26.4 MB for 3.3M pixels)
+    // Removed _tttr - moved to CLSMLine (only lines need it, not pixels)
+    // This saves 16 bytes per pixel (52.8 MB for 3.3M pixels)
 
 public:
 
@@ -42,14 +43,6 @@ public:
         SelectionFrameZStack  = 0x08,
         SelectionFrameTime    = 0x10
     };
-
-    std::shared_ptr<TTTR> get_tttr(){
-        return _tttr;
-    }
-
-    void set_tttr(std::shared_ptr<TTTR> tttr){
-        _tttr = std::move(tttr);
-    }
 
     static_assert(sizeof(SelectionMask) == sizeof(uint8_t), "SelectionMask must remain a single byte");
 
@@ -110,11 +103,11 @@ public:
     void set_range(int start, int stop);
 
     int get_range_start() const{
-        return _range_start;
+        return get_start();  // Use TTTRRange::get_start()
     }
 
     int get_range_stop() const{
-        return _range_stop;
+        return get_stop();  // Use TTTRRange::get_stop()
     }
 
     void insert(int idx);
@@ -143,21 +136,15 @@ private:
     int resolve_stop(const std::vector<int>& values) const;
 
 public:
-    TTTRSelection(int start, int stop, std::shared_ptr<TTTR> tttr){
-        _tttr = std::move(tttr);
+    TTTRSelection() = default;
+    
+    TTTRSelection(int start, int stop){
         set_range(start, stop);
     }
 
     /// Copy constructor
     TTTRSelection(const TTTRSelection& p2) : TTTRRange(p2){
-        _tttr = p2._tttr;
         _selection_mask.value = p2._selection_mask.value;
-        _range_start = p2._range_start;
-        _range_stop = p2._range_stop;
-    }
-
-    TTTRSelection(std::shared_ptr<TTTR> tttr = nullptr){
-        this->_tttr = std::move(tttr);
     }
 
 };
