@@ -412,7 +412,9 @@ CLSMImage::CLSMImage(
     // handle an empty 'channels' list by defaulting to all used routing channels.
     // This ensures that Python calls like CLSMImage(d, split_by_channel=True, fill=True)
     // actually populate the pixels on construction.
-    if (fill) {
+    // However, if we copied from a source with fill=true, the pixels are already filled,
+    // so we should not refill them from TTTR data.
+    if (fill && source == nullptr) {
         this->fill(this->tttr, channels, false, micro_time_ranges);
     }
 

@@ -70,6 +70,8 @@ public:
      * @param fill [in] If set to false, the content of the pixels is not copied.
      */
     CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRSelection(old_frame) {
+        _tttr_shared = old_frame._tttr_shared;
+        _tttr = old_frame._tttr;
         for (auto& l : old_frame.lines) {
             lines.emplace_back(new CLSMLine(*l, fill));
         }
@@ -84,6 +86,8 @@ public:
             lines.clear();
 
             // Copy new data
+            _tttr_shared = other._tttr_shared;
+            _tttr = other._tttr;
             for (auto& l : other.lines) {
                 lines.emplace_back(new CLSMLine(*l, true));
             }

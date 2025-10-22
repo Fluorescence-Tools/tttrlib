@@ -43,7 +43,10 @@ public:
 
     unsigned long long get_pixel_duration(){
         if(pixel_duration < 0){
-            return (size_t) (get_duration(_tttr) / size());
+            if(_tttr && size() > 0){
+                return (size_t) (get_duration(_tttr) / size());
+            }
+            return 0;  // Return 0 if no TTTR data or no pixels
         } else{
             return pixel_duration;
         }
@@ -54,7 +57,9 @@ public:
     }
 
     CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRSelection(old_line){
-        // private attributes
+        // Copy private attributes
+        pixel_duration = old_line.pixel_duration;
+        _tttr = old_line._tttr;
         pixels.resize(old_line.pixels.size());
         pixels = old_line.pixels;
         if(!fill){
