@@ -182,6 +182,30 @@ namespace cpu_features {
     }
     
 } // namespace cpu_features
+
+namespace env {
+
+    // Returns whether macro-time compression should be enabled when reading
+    inline bool compress_on_read_enabled() {
+        char env_buffer[256];
+        const char* env_val = cpu_features::safe_getenv("TTTR_COMPRESS_ON_READ", env_buffer, sizeof(env_buffer));
+        if (env_val != nullptr) {
+            return !cpu_features::is_false_value(env_val);
+        }
+        return true;
+    }
+
+    // Initialize auto_compress_on_read with logging
+    // This is used as a static initializer in TTTR class
+    inline bool init_auto_compress_on_read() {
+        bool enabled = compress_on_read_enabled();
+        // Note: Logging would require including Verbose.h, which creates circular dependency
+        // So logging is handled in TTTR.cpp instead
+        return enabled;
+    }
+
+} // namespace env
+
 } // namespace tttrlib
 
 #endif //TTTRLIB_INFO_H

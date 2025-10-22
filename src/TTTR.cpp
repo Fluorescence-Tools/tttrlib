@@ -1,9 +1,15 @@
 #include "TTTR.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 // Static member definition outside the class
 boost::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
-bool TTTR::auto_compress_on_read = true;  // Enable automatic compression by default
+bool TTTR::auto_compress_on_read = []() {
+    bool enabled = tttrlib::env::init_auto_compress_on_read();
+    if (!enabled && is_verbose()) {
+        std::clog << "TTTR: auto-compress on read disabled via TTTR_COMPRESS_ON_READ" << std::endl;
+    }
+    return enabled;
+}();
 
 
 TTTR::TTTR() :
@@ -82,15 +88,39 @@ if (is_verbose()) {
     if ((size_t) n_selection > parent.n_valid_events) {
         std::clog << "WARNING: The dimension of the selection exceeds the parents dimension." << std::endl;
     }
-    allocate_memory_for_records(n_selection);
-    for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
-        auto sel = selection[sel_i];
+    
+    // Check if selection is sequential (compression-compatible)
+    // Compression requires monotonically increasing macro times
+    bool is_sequential = true;
+    std::vector<int> resolved_selection(n_selection);
+    for(size_t i = 0; i < n_selection; i++){
+        int sel = selection[i];
         sel = (sel < 0) ? static_cast<int>(parent.n_valid_events) + sel : sel;
+        resolved_selection[i] = sel;
+        if(i > 0 && sel < resolved_selection[i-1]){
+            is_sequential = false;
+        }
+    }
+    
+    // Disable compression for this instance if selection is not sequential
+    // Must be done BEFORE allocate_memory_for_records to prevent compressed allocation
+    if(!is_sequential){
+        macro_time_compression_enabled = false;
+    } else {
+        // Keep parent's compression state for sequential selections
+        macro_time_compression_enabled = parent.macro_time_compression_enabled;
+    }
+    
+    allocate_memory_for_records(n_selection);
+    
+    for(size_t sel_i = 0; sel_i < n_selection; sel_i++){
+        int sel = resolved_selection[sel_i];
         set_macro_time_at(sel_i, parent.get_macro_time_at(sel));
         micro_times[sel_i] = parent.micro_times[sel];
         event_types[sel_i] = parent.event_types[sel];
         routing_channels[sel_i] = parent.routing_channels[sel];
     }
+    
     if(find_used_channels) find_used_routing_channels();
 }
 
@@ -106,6 +136,12 @@ void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     n_records_read = p2.n_records_read;
     n_valid_events = p2.n_valid_events;
     fp_records_begin = p2.fp_records_begin;
+    
+    // Copy compression-related fields
+    keyframe_interval = p2.keyframe_interval;
+    macro_time_compression_enabled = p2.macro_time_compression_enabled;
+    n_keyframes = p2.n_keyframes;
+    
     if (include_big_data){
         allocate_memory_for_records(p2.n_valid_events);
         for (size_t i = 0; i < p2.n_valid_events; i++) {
@@ -218,16 +254,38 @@ int TTTR::read_hdf_file(const char *fn) {
         n_valid_events = dims[0];
         n_records_in_file = dims[0];
         allocate_memory_for_records(n_valid_events);
-        H5Dread(
-                ds_n_sync_pulses,
-                H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                macro_times
-        );
+        
+        // Read into temporary buffer if compression is enabled
+        if (macro_time_compression_enabled) {
+            unsigned long long* temp_macro_times = (unsigned long long*) malloc(n_valid_events * sizeof(unsigned long long));
+            H5Dread(
+                    ds_n_sync_pulses,
+                    H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    temp_macro_times
+            );
+            // Copy to compressed storage using set_macro_time_at
+            for (size_t i = 0; i < n_valid_events; i++) {
+                set_macro_time_at(i, temp_macro_times[i]);
+            }
+            free(temp_macro_times);
+        } else {
+            H5Dread(
+                    ds_n_sync_pulses,
+                    H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    macro_times
+            );
+        }
         H5Sclose(space);
         H5Dclose(ds_n_sync_pulses);
     } else {
         std::cerr << "Warning: /photon_data/timestamps not found. Filling macro_times with zeros." << std::endl;
-        std::fill(macro_times, macro_times + n_records_in_file, 0);
+        if (macro_time_compression_enabled) {
+            for (size_t i = 0; i < n_records_in_file; i++) {
+                set_macro_time_at(i, 0);
+            }
+        } else {
+            std::fill(macro_times, macro_times + n_records_in_file, 0);
+        }
         return 1;
     }
 
@@ -253,7 +311,7 @@ int TTTR::read_hdf_file(const char *fn) {
         ds_microtime = H5Dopen(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT);
         space = H5Dget_space(ds_microtime);
         H5Sget_simple_extent_dims(space, dims, nullptr);
-        allocate_memory_for_records(dims[0]);
+        // Memory already allocated at line 256, don't reallocate
         H5Dread(
                 ds_microtime,
                 H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -262,9 +320,7 @@ int TTTR::read_hdf_file(const char *fn) {
         H5Sclose(space);
         H5Dclose(ds_microtime);
     } else {
-if (is_verbose()) {
         std::cerr << "Warning: /photon_data/nanotimes not found. Filling micro_times with zeros." << std::endl;
-}
         std::fill(micro_times, micro_times + n_records_in_file, 0);
     }
 
@@ -462,8 +518,8 @@ if (is_verbose()) {
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 }
     
-    // If auto-compression is enabled, allocate compressed storage directly
-    if (auto_compress_on_read && n_rec > 0) {
+    // If auto-compression is enabled AND not disabled for this instance, allocate compressed storage
+    if (auto_compress_on_read && macro_time_compression_enabled && n_rec > 0) {
 if (is_verbose()) {
         std::clog << "-- Allocating compressed storage (32-bit deltas + keyframes)" << std::endl;
 }
@@ -1061,13 +1117,28 @@ void TTTR::get_selection_by_count_rate(
         double time_window, int n_ph_max,
         bool invert, bool make_mask
 ){
-    selection_by_count_rate(
-            output, n_output,
-            macro_times, (int) n_valid_events,
-            time_window, n_ph_max,
-            header->get_macro_time_resolution(),
-            invert, make_mask
-    );
+    // If using compression, extract macro times first
+    if (macro_time_compression_enabled) {
+        std::vector<unsigned long long> temp_macro_times(n_valid_events);
+        for (size_t i = 0; i < n_valid_events; i++) {
+            temp_macro_times[i] = get_macro_time_at(i);
+        }
+        selection_by_count_rate(
+                output, n_output,
+                temp_macro_times.data(), (int) n_valid_events,
+                time_window, n_ph_max,
+                header->get_macro_time_resolution(),
+                invert, make_mask
+        );
+    } else {
+        selection_by_count_rate(
+                output, n_output,
+                macro_times, (int) n_valid_events,
+                time_window, n_ph_max,
+                header->get_macro_time_resolution(),
+                invert, make_mask
+        );
+    }
 }
 
 void TTTR::get_time_window_ranges(
@@ -1082,15 +1153,32 @@ void TTTR::get_time_window_ranges(
     if(macro_time_calibration < 0){
         macro_time_calibration = header->get_macro_time_resolution();
     }
-    ranges_by_time_window(
-            output, n_output,
-            macro_times, (int) n_valid_events,
-            minimum_window_length, maximum_window_length,
-            minimum_number_of_photons_in_time_window,
-            maximum_number_of_photons_in_time_window,
-            macro_time_calibration,
-            invert
-    );
+    // If using compression, extract macro times first
+    if (macro_time_compression_enabled) {
+        std::vector<unsigned long long> temp_macro_times(n_valid_events);
+        for (size_t i = 0; i < n_valid_events; i++) {
+            temp_macro_times[i] = get_macro_time_at(i);
+        }
+        ranges_by_time_window(
+                output, n_output,
+                temp_macro_times.data(), (int) n_valid_events,
+                minimum_window_length, maximum_window_length,
+                minimum_number_of_photons_in_time_window,
+                maximum_number_of_photons_in_time_window,
+                macro_time_calibration,
+                invert
+        );
+    } else {
+        ranges_by_time_window(
+                output, n_output,
+                macro_times, (int) n_valid_events,
+                minimum_window_length, maximum_window_length,
+                minimum_number_of_photons_in_time_window,
+                maximum_number_of_photons_in_time_window,
+                macro_time_calibration,
+                invert
+        );
+    }
 }
 
 std::shared_ptr<TTTR> TTTR::select(int *selection, int n_selection) {
@@ -1918,14 +2006,31 @@ void TTTR::append(
         bool shift_macro_time,
         long long macro_time_offset
 ){
-    append_events(
-            other->macro_times, static_cast<int>(other->n_valid_events),
-            other->micro_times, static_cast<int>(other->n_valid_events),
-            other->routing_channels, static_cast<int>(other->n_valid_events),
-            other->event_types, static_cast<int>(other->n_valid_events),
-            shift_macro_time,
-            macro_time_offset
-    );
+    // If other is using compression, we need to decompress first
+    if (other->macro_time_compression_enabled) {
+        // Extract macro times into a temporary buffer
+        std::vector<unsigned long long> temp_macro_times(other->n_valid_events);
+        for (size_t i = 0; i < other->n_valid_events; i++) {
+            temp_macro_times[i] = other->get_macro_time_at(i);
+        }
+        append_events(
+                temp_macro_times.data(), static_cast<int>(other->n_valid_events),
+                other->micro_times, static_cast<int>(other->n_valid_events),
+                other->routing_channels, static_cast<int>(other->n_valid_events),
+                other->event_types, static_cast<int>(other->n_valid_events),
+                shift_macro_time,
+                macro_time_offset
+        );
+    } else {
+        append_events(
+                other->macro_times, static_cast<int>(other->n_valid_events),
+                other->micro_times, static_cast<int>(other->n_valid_events),
+                other->routing_channels, static_cast<int>(other->n_valid_events),
+                other->event_types, static_cast<int>(other->n_valid_events),
+                shift_macro_time,
+                macro_time_offset
+        );
+    }
 }
 
 void TTTR::append_event(

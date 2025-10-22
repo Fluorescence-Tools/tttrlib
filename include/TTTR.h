@@ -404,20 +404,30 @@ public:
         if (macro_time_compression_enabled) {
             // Find the keyframe for this index
             size_t keyframe_idx = index / keyframe_interval;
-            unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
             
-            // Store delta from keyframe
-            if (value >= keyframe) {
-                unsigned long long delta = value - keyframe;
-                if (delta > UINT32_MAX) {
-                    std::cerr << "WARNING: Macro time delta from keyframe exceeds 32-bit range." << std::endl;
-                    macro_times_compressed[index] = UINT32_MAX;
+            // Check if keyframe needs initialization or update
+            // During sequential building, update keyframe to minimum value seen
+            if (keyframe_idx < n_keyframes) {
+                unsigned long long& keyframe = macro_time_keyframes[keyframe_idx];
+                
+                // If this is the first value in this keyframe interval, or value is smaller
+                if (index % keyframe_interval == 0 || value < keyframe) {
+                    keyframe = value;
+                    macro_times_compressed[index] = 0;
+                } else if (value >= keyframe) {
+                    unsigned long long delta = value - keyframe;
+                    if (delta > UINT32_MAX) {
+                        // Delta too large - adjust keyframe down
+                        keyframe = value;
+                        macro_times_compressed[index] = 0;
+                    } else {
+                        macro_times_compressed[index] = (uint32_t)delta;
+                    }
                 } else {
-                    macro_times_compressed[index] = (uint32_t)delta;
+                    // Value before keyframe - should not happen in sorted data
+                    // Set to 0 and continue (keyframe already correct)
+                    macro_times_compressed[index] = 0;
                 }
-            } else {
-                std::cerr << "WARNING: Macro time is before keyframe." << std::endl;
-                macro_times_compressed[index] = 0;
             }
         } else {
             macro_times[index] = value;

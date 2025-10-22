@@ -22,8 +22,8 @@ class TTTRRange {
 
 public:
     /// Public typedef for derived classes that need the type
-    /// Changed from flat_set to vector since CLSM indices are inserted in order
-    /// This eliminates sorting overhead and reduces capacity waste from 1.5x to 1.0x
+    /// Changed from flat_set to vector with sorted insertion
+    /// Maintains sorted order via std::lower_bound in insert() method
     /// Note: small_vector causes segfaults with SWIG during cleanup, so using std::vector
     using indices_set = std::vector<int>;
 
@@ -258,7 +258,7 @@ public:
     }
 
     /**
-     * @brief Inserts an index into the TTTR index vector.
+     * @brief Inserts an index into the TTTR index vector in sorted order.
      *
      * @param idx The index to insert.
      */
@@ -266,7 +266,9 @@ public:
         if(!_tttr_indices){
             _tttr_indices = std::make_unique<indices_set>();
         }
-        _tttr_indices->push_back(idx);
+        // Insert in sorted position to maintain order
+        auto it = std::lower_bound(_tttr_indices->begin(), _tttr_indices->end(), idx);
+        _tttr_indices->insert(it, idx);
     }
 
     /**

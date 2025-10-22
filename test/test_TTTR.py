@@ -19,12 +19,17 @@ repo_root = Path(__file__).resolve().parents[1]
 env_root = os.getenv("TTTRLIB_DATA")
 if env_root:
     env_root = env_root.strip().strip('\'"')
-    data_root = Path(env_root)
+    # Use os.path.abspath to preserve drive letters (avoid UNC path conversion)
+    data_root = Path(os.path.abspath(env_root))
 else:
-    # Use the relative data_root from settings, resolved against repo root
-    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
-# Ensure the path is absolute
-data_root = data_root.resolve()
+    # Use the data_root from settings directly (already absolute path like V:\tttr-data)
+    data_root_str = settings.get("data_root", "./tttr-data")
+    if os.path.isabs(data_root_str):
+        # If already absolute, use it directly to preserve drive letters
+        data_root = Path(data_root_str)
+    else:
+        # If relative, resolve against repo root
+        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
 # Determine if data directory exists
 DATA_AVAILABLE = data_root.is_dir()
 if not DATA_AVAILABLE:
@@ -32,10 +37,12 @@ if not DATA_AVAILABLE:
 
 # Helper function to get full path
 def get_data_path(rel_path):
-    path = (data_root / rel_path).resolve()
+    # Use os.path.join and abspath to preserve drive letters
+    path_str = os.path.abspath(os.path.join(str(data_root), rel_path))
+    path = Path(path_str)
     if not path.exists():
         print(f"WARNING: File {path} does not exist")
-    return str(path)
+    return path_str
 
 # Initialize test data with full paths
 for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename", 
@@ -51,6 +58,8 @@ if "test_files" in settings:
 
 print(f"Using data root: {data_root}")
 
+# Global data object - kept for backward compatibility but not used in tests
+# All tests now use self.data from setUp() for proper isolation
 data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
 
 
@@ -68,6 +77,12 @@ class Tests(unittest.TestCase):
         (settings["ptu_hh_t3_filename"], 'PTU'),
         (settings["sm_filename"], 'SM')
     ]
+    
+    def setUp(self):
+        """Create a fresh copy of test data for each test to ensure isolation."""
+        # Reload data from file for each test to ensure complete isolation
+        # This prevents tests from interfering with each other through shared state
+        self.data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
 
     def test_append_event(self):
         data = tttrlib.TTTR()
@@ -133,13 +148,13 @@ class Tests(unittest.TestCase):
         header2 = tttrlib.TTTRHeader(settings["ptu_hh_t3_filename"], 0)  # 0 is the container type
 
         # Assert that the original data has fewer tags than the new header
-        self.assertLess(len(data.header.tags), len(header2.tags))  # Use '<' to ensure original has fewer tags
+        self.assertLess(len(self.data.header.tags), len(header2.tags))  # Use '<' to ensure original has fewer tags
 
         # Add tags from the new header to the existing one
-        data.header.add_tags(header2)
+        self.data.header.add_tags(header2)
 
         # Assert that the number of tags in the original header is now greater than or equal to
-        self.assertEqual(len(data.header.tags) >= len(header2.tags), True)
+        self.assertEqual(len(self.data.header.tags) >= len(header2.tags), True)
 
     def test_reading(self):
         test_files = self.test_files
@@ -191,9 +206,11 @@ class Tests(unittest.TestCase):
                 file_path,
                 container_type.replace('\\', '/')
             )
+            # Normalize both paths for comparison (handle both / and \ separators)
+            actual_repr = data.__repr__().replace('\\', '/')
             self.assertEqual(
                 ref,
-                data.__repr__()
+                actual_repr
             )
 
     def test_microtime_histogram(self):
@@ -265,44 +282,44 @@ class Tests(unittest.TestCase):
 
     def test_slicing(self):
         # single element
-        d = data[0]
-        self.assertEqual(d.routing_channels, data.routing_channels[0])
-        self.assertEqual(d.event_types, data.event_types[0])
-        self.assertEqual(d.micro_times, data.micro_times[0])
-        self.assertEqual(d.macro_times, data.macro_times[0])
+        d = self.data[0]
+        self.assertEqual(d.routing_channels, self.data.routing_channels[0])
+        self.assertEqual(d.event_types, self.data.event_types[0])
+        self.assertEqual(d.micro_times, self.data.micro_times[0])
+        self.assertEqual(d.macro_times, self.data.macro_times[0])
 
         # steps of two
-        d = data[:10:2]
-        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:2]), True)
-        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:2]), True)
-        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:2]), True)
-        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:2]), True)
+        d = self.data[:10:2]
+        self.assertEqual(np.allclose(d.routing_channels, self.data.routing_channels[:10:2]), True)
+        self.assertEqual(np.allclose(d.event_types, self.data.event_types[:10:2]), True)
+        self.assertEqual(np.allclose(d.micro_times, self.data.micro_times[:10:2]), True)
+        self.assertEqual(np.allclose(d.macro_times, self.data.macro_times[:10:2]), True)
 
         # reverse oder
-        d = data[:10:-1]
-        self.assertEqual(np.allclose(d.routing_channels, data.routing_channels[:10:-1]), True)
-        self.assertEqual(np.allclose(d.event_types, data.event_types[:10:-1]), True)
-        self.assertEqual(np.allclose(d.micro_times, data.micro_times[:10:-1]), True)
-        self.assertEqual(np.allclose(d.macro_times, data.macro_times[:10:-1]), True)
+        d = self.data[:10:-1]
+        self.assertEqual(np.allclose(d.routing_channels, self.data.routing_channels[:10:-1]), True)
+        self.assertEqual(np.allclose(d.event_types, self.data.event_types[:10:-1]), True)
+        self.assertEqual(np.allclose(d.micro_times, self.data.micro_times[:10:-1]), True)
+        self.assertEqual(np.allclose(d.macro_times, self.data.macro_times[:10:-1]), True)
 
     def test_join(self):
-        d = tttrlib.TTTR(data)
-        d.append(data)
+        d = tttrlib.TTTR(self.data)
+        d.append(self.data)
         self.assertEqual(
-            len(d), 2 * len(data)
+            len(d), 2 * len(self.data)
         )
         # by default the data macro time data is shifted
         self.assertEqual(
-            d.macro_times[len(data)],
-            data.macro_times[len(data) - 1] + data.macro_times[0]
+            d.macro_times[len(self.data)],
+            self.data.macro_times[len(self.data) - 1] + self.data.macro_times[0]
         )
         # if shift_macro_time is set to False it is not shifted
         # an optional constant offset is added independently
-        d2 = tttrlib.TTTR(data)
-        d2.append(data, shift_macro_time=False, macro_time_offset=11)
+        d2 = tttrlib.TTTR(self.data)
+        d2.append(self.data, shift_macro_time=False, macro_time_offset=11)
         self.assertEqual(
-            d2.macro_times[len(data)],
-            int(data.macro_times[0] + 11)
+            d2.macro_times[len(self.data)],
+            int(self.data.macro_times[0] + 11)
         )
         # merge by __add__
         d3 = d + d
@@ -311,7 +328,7 @@ class Tests(unittest.TestCase):
     def test_header_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
-        p1 = data.header
+        p1 = self.data.header
         p2 = tttrlib.TTTRHeader(p1)
         self.assertEqual(
             p1.macro_time_resolution,
@@ -333,10 +350,10 @@ class Tests(unittest.TestCase):
     def test_tttr_copy_constructor(self):
         # import tttrlib
         # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
-        d2 = tttrlib.TTTR(data)
+        d2 = tttrlib.TTTR(self.data)
         self.assertEqual(
             np.allclose(
-                data.macro_times,
+                self.data.macro_times,
                 d2.macro_times
             ),
             True
@@ -348,8 +365,8 @@ class Tests(unittest.TestCase):
         # used_routing_channels, TTTR objects fallback to
         # the corresponding getter by calling 'get_accessed_attribute'
         np.testing.assert_array_equal(
-            data.used_routing_channels,
-            data.get_used_routing_channels()
+            self.data.used_routing_channels,
+            self.data.get_used_routing_channels()
         )
 
     def test_constructor(self):
@@ -378,24 +395,24 @@ class Tests(unittest.TestCase):
             )
 
     def test_constructor_with_selection(self):
-        data_subset = data[:1000]
+        data_subset = self.data[:1000]
         ch1_indeces = data_subset.get_selection_by_channel([8])
         data_ch1 = tttrlib.TTTR(data_subset, ch1_indeces)
         self.assertEqual(
             np.allclose(
-                data.macro_times[ch1_indeces],
+                self.data.macro_times[ch1_indeces],
                 data_ch1.macro_times
             ),
             True
         )
         # selections wrap over
-        d2 = tttrlib.TTTR(data, [-1])
+        d2 = tttrlib.TTTR(self.data, [-1])
         self.assertEqual(
-            d2.macro_times[0], data.macro_times[-1]
+            d2.macro_times[0], self.data.macro_times[-1]
         )
 
     def test_tttr_by_selection(self):
-        ds = data.get_tttr_by_selection([1, 2])
+        ds = self.data.get_tttr_by_selection([1, 2])
         self.assertEqual(
             np.allclose(
                 ds.macro_times,
@@ -405,8 +422,8 @@ class Tests(unittest.TestCase):
         )
 
     def test_tttr_by_channel(self):
-        tttr1 = data.get_tttr_by_channel([0])
-        tttr2 = data.get_tttr_by_channel([8])
+        tttr1 = self.data.get_tttr_by_channel([0])
+        tttr2 = self.data.get_tttr_by_channel([8])
         self.assertEqual(len(tttr1), 56499)
         self.assertEqual(len(tttr2), 79468)
 
@@ -416,20 +433,20 @@ class Tests(unittest.TestCase):
             'time_window': 10.0e-3,  # = 10 ms (macro_time_resolution is in seconds)
             'invert': True  # set invert to True to select TW with more than 60 ph
         }
-        tttr_sel = data.get_tttr_by_count_rate(**filter_options)
+        tttr_sel = self.data.get_tttr_by_count_rate(**filter_options)
 
     def test_constructor_with_array(self):
-        macro_times = data.macro_times
-        micro_times = data.micro_times
-        routing_channels = data.routing_channels
-        event_types = data.event_types
+        macro_times = self.data.macro_times
+        micro_times = self.data.micro_times
+        routing_channels = self.data.routing_channels
+        event_types = self.data.event_types
         data2 = tttrlib.TTTR(
             macro_times,
             micro_times,
             routing_channels,
             event_types
         )
-        np.testing.assert_array_equal(data.macro_times, data2.macro_times)
+        np.testing.assert_array_equal(self.data.macro_times, data2.macro_times)
 
     def test_TTTRRange(self):
         # empty range object
