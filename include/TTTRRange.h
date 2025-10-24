@@ -8,8 +8,6 @@
 #include <set>
 #include <vector>
 #include <cstdint>  /* uint16_t */
-#include <boost/container/flat_set.hpp>
-#include <boost/container/small_vector.hpp>
 
 #include "TTTR.h"
 
@@ -350,6 +348,8 @@ public:
      * @param time Pointer to the time array.
      * @param n_time Pointer to the size of the time array.
      * @param micro_time_coarsening Microtime coarsening factor.
+     * @param minlength Minimum number of photons required; if fewer are present,
+     *        an empty/zero histogram is returned.
      */
     void get_microtime_histogram(
             std::shared_ptr<TTTR> tttr,

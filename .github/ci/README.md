@@ -1,93 +1,65 @@
-# CI Build Scripts
+# CI Build Configuration
 
-This directory contains scripts and configuration for building tttrlib across different platforms.
+This directory contains configuration for building tttrlib across different platforms.
 
-## Boost Configuration
+## Build Configuration
 
-Boost dependencies are managed centrally via `boost-config.txt`.
+All build configuration is managed via:
+- `pyproject.toml` - cibuildwheel configuration
+- `CMakeLists.txt` - CMake build configuration
 
-### Configuration File: `boost-config.txt`
+## Platform-Specific Details
 
-This file lists all required Boost components, one per line:
-- **Compiled libraries** (require linking): `locale`, `filesystem`, `thread`, etc.
-- **Header-only libraries** (for documentation): `bimap`, `any`, `multi_array`, etc.
+### Windows
+- Uses Visual Studio 17 2022 generator
+- Requires: CMake, Python, SWIG, Ninja
 
-Comments start with `#` and empty lines are ignored.
+### Linux
+- Uses manylinux_2_28 image
+- Requires: CMake, Python, SWIG, Ninja
+- Package manager: dnf
 
-### Platform-Specific Handling
+### macOS
+- Requires: CMake, Python, SWIG, Ninja
+- Package manager: Homebrew
 
-#### Windows (`build_boost_windows_simple.ps1`)
-- Reads `boost-config.txt`
-- Installs only the components listed (e.g., `boost-locale`, `boost-bimap`)
-- vcpkg automatically installs required Boost headers as dependencies
-- Much faster than Linux/macOS (only installs what's needed, not all 174 packages)
+## System Dependencies
 
-#### Linux (via `pyproject.toml`)
-- Installs `boost-devel` package via dnf
-- This includes all Boost libraries (headers + compiled)
-- Components in `boost-config.txt` serve as documentation
+Minimal system dependencies:
+- **CMake** - build configuration
+- **Python** - development headers
+- **SWIG** - Python bindings generation
+- **Ninja** - build system
 
-#### macOS (via `pyproject.toml`)
-- Installs `boost` package via Homebrew
-- This includes all Boost libraries (headers + compiled)
-- Components in `boost-config.txt` serve as documentation
+All other dependencies are header-only:
+- **HighFive** - HDF5 interface (header-only)
+- **tttrlib::bimap** - Boost bimap replacement (header-only)
+- **tttrlib::string_encoding** - String encoding utilities (header-only)
 
-## Adding New Boost Dependencies
+## Build Process
 
-1. **Update `boost-config.txt`**: Add the component name
-2. **Test locally**: Run the appropriate build script
-3. **Verify**: Check that CMakeLists.txt includes the component if it's a compiled library
-
-### Example: Adding `boost-filesystem`
-
-```txt
-# boost-config.txt
-locale
-filesystem  # Add this line
-bimap
-```
-
-If it's a compiled library, also update `CMakeLists.txt`:
-```cmake
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS locale filesystem)
-```
-
-## Scripts
-
-### `build_boost_windows_simple.ps1`
-Simplified Windows Boost installation script using vcpkg.
-
-**Usage:**
-```powershell
-# Normal build
-.\.github\ci\build_boost_windows_simple.ps1
-
-# Force rebuild (ignore cache)
-.\.github\ci\build_boost_windows_simple.ps1 -ForceBuild
-```
-
-**Features:**
-- Reads components from `boost-config.txt`
-- Installs via vcpkg (fast, no admin required)
-- Copies to `dist/boost-install-{arch}` for caching
-- Creates `.boost_env` file for setup.py
-- Supports x64 and ARM64 architectures
-
-### `build_boost_windows.ps1` (Legacy)
-Original script with source build fallback. Kept for reference but no longer used.
+1. **Configure**: CMake generates build files
+2. **Build**: Ninja compiles C++ code
+3. **Bind**: SWIG generates Python bindings
+4. **Test**: pytest runs unit tests
+5. **Package**: cibuildwheel creates wheels
 
 ## Troubleshooting
 
-### Windows: vcpkg not found
-Ensure vcpkg is in PATH or set `VCPKG_ROOT` environment variable.
+### Build Failures
+1. Check CMakeLists.txt for configuration errors
+2. Verify Python and SWIG versions
+3. Check platform-specific build logs
 
-### Linux: boost-devel not available
-The manylinux_2_28 image includes dnf. For other distros, adjust the package manager command.
+### Missing Dependencies
+Ensure all required tools are installed:
+```bash
+cmake --version
+python --version
+swig -version
+```
 
-### macOS: Homebrew installation fails
-Ensure Homebrew is installed and up to date: `brew update`
+## Historical Notes
 
-### Missing Boost component
-1. Check if it's listed in `boost-config.txt`
-2. For compiled libraries, verify it's in `CMakeLists.txt` FIND_PACKAGE
-3. Check build logs for specific error messages
+- `MIGRATION_NOTES.md` - Contains historical build migration information
+- Boost and HDF5 system dependencies have been removed (using header-only alternatives)

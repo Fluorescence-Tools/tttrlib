@@ -3,29 +3,14 @@
 
 // ------------------------- UTF helpers -------------------------
 
-// Convert UTF-8 -> "native" single-byte encoding via Boost.Locale (useful on POSIX).
+// Convert UTF-8 -> "native" single-byte encoding (ISO-8859-1).
 // On Windows we prefer UTF-16 + _wfopen for filenames; these helpers remain for text conversions.
 std::string utf8_to_native(const std::string& utf8_str) {
-    try {
-        // Use the user's environment locale ("") and fail hard on invalid sequences.
-        static boost::locale::generator gen;
-        static std::locale loc = gen(""); // system locale
-        return boost::locale::conv::from_utf<char>(utf8_str, loc, boost::locale::conv::stop);
-    } catch (const std::exception& e) {
-        std::cerr << "Error converting from UTF-8: " << e.what() << std::endl;
-        return utf8_str;
-    }
+    return tttrlib::string_encoding::utf8_to_native(utf8_str);
 }
 
 std::string native_to_utf8(const std::string& native_str) {
-    try {
-        static boost::locale::generator gen;
-        static std::locale loc = gen(""); // system locale
-        return boost::locale::conv::to_utf<char>(native_str, loc, boost::locale::conv::stop);
-    } catch (const std::exception& e) {
-        std::cerr << "Error converting to UTF-8: " << e.what() << std::endl;
-        return native_str;
-    }
+    return tttrlib::string_encoding::native_to_utf8(native_str);
 }
 
 // ---------------------- Unicode-safe fopen ----------------------

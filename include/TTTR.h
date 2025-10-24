@@ -20,8 +20,8 @@
 #include <cinttypes>    /* uint64, int64, etc */
 #include <fstream> /* ifstream */
 
-#include <boost/bimap.hpp>
 #include <filesystem>
+#include "bimap.h"
 
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
@@ -219,11 +219,11 @@ private:
     TTTRHeader *header = nullptr;
 
     /// map to translates string container types to int container types
-    static boost::bimap<std::string, int> container_names;
+    static tttrlib::bimap<std::string, int> container_names;
 
     // Static function to initialize the container_names
-    static boost::bimap<std::string, int> initialize_container_names() {
-        boost::bimap<std::string, int> m;
+    static tttrlib::bimap<std::string, int> initialize_container_names() {
+        tttrlib::bimap<std::string, int> m;
         m.insert({std::string("PTU"), PQ_PTU_CONTAINER});
         m.insert({std::string("HT3"), PQ_HT3_CONTAINER});
         m.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
@@ -1419,6 +1419,8 @@ public:
      * @param n_time Pointer to the number of points in the time axis.
      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
      * @param channels Optional list of routing channels to filter photons.
+     * @param minlength Minimum number of photons required; if the selection contains fewer photons,
+     *                  an empty/zero histogram is returned (default -1 disables the check).
      */
      void get_microtime_histogram(
              double **histogram, int *n_histogram,

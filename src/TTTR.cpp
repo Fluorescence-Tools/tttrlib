@@ -2,7 +2,7 @@
 #include "Verbose.h"
 
 // Static member definition outside the class
-boost::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
+tttrlib::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
 bool TTTR::auto_compress_on_read = []() {
     bool enabled = tttrlib::env::init_auto_compress_on_read();
     if (!enabled && is_verbose()) {

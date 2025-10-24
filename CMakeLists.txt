@@ -24,7 +24,6 @@ OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
-OPTION(Boost_USE_STATIC_LIBS "Static boost build" OFF)
 
 ## System specific compiler flags
 ################################
@@ -148,63 +147,14 @@ endif()
 # INCLUDES AND LIBRARIES
 #######################################
 
-## Boost
+## Boost - REMOVED: Using standard C++17 replacements instead
 ###########################
-IF(Boost_USE_STATIC_LIBS)
-    SET(Boost_USE_STATIC_LIBS ON)
-ENDIF()
-FIND_PACKAGE(Boost 1.36 REQUIRED COMPONENTS locale)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-# Note: Boost::locale is linked in subdirectories where targets are defined
 
-# Bundle Boost runtime libraries with Python bindings (only for pip/wheel builds)
-# For conda builds, Boost is provided by conda-forge and doesn't need bundling
-if(BUILD_PYTHON_INTERFACE AND CALL_FROM_SETUP_PY)
-  # Automatically bundle all Boost components that were found
-  foreach(_component IN LISTS Boost_FIND_COMPONENTS)
-    set(_target "Boost::${_component}")
-    if(TARGET ${_target})
-      get_target_property(_lib_location ${_target} IMPORTED_LOCATION_RELEASE)
-      if(NOT _lib_location)
-        get_target_property(_lib_location ${_target} IMPORTED_LOCATION)
-      endif()
-      
-      if(_lib_location)
-        # On Windows, find the corresponding DLL
-        if(WIN32)
-          get_filename_component(_lib_dir "${_lib_location}" DIRECTORY)
-          get_filename_component(_lib_name "${_lib_location}" NAME_WE)
-          # Try bin directory for DLL
-          get_filename_component(_prefix "${_lib_dir}" DIRECTORY)
-          file(GLOB _runtime_libs "${_prefix}/bin/${_lib_name}*.dll" "${_lib_dir}/${_lib_name}*.dll")
-        else()
-          # On Unix, the .so file is both link and runtime library
-          get_filename_component(_lib_dir "${_lib_location}" DIRECTORY)
-          get_filename_component(_lib_name "${_lib_location}" NAME)
-          file(GLOB _runtime_libs "${_lib_dir}/${_lib_name}*")
-        endif()
-        
-        foreach(_runtime_lib IN LISTS _runtime_libs)
-          install(FILES "${_runtime_lib}" DESTINATION "." COMPONENT bindings)
-        endforeach()
-      endif()
-    endif()
-  endforeach()
-endif()
 
-## HDF5
-###########################cd
+## HDF5 - Handled by HighFive (header-only)
+###########################
 IF(BUILD_PHOTON_HDF)
-  FIND_PACKAGE(HDF5 COMPONENTS CXX C)
-  IF(HDF5_FOUND)
-    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-    LINK_LIBRARIES(${HDF5_LIBRARIES})
-    ADD_COMPILE_DEFINITIONS(BUILD_PHOTON_HDF)
-    # needed for build on Windows
-    ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
-  ELSE(HDF5_FOUND)
-    SET(BUILD_PHOTON_HDF FALSE)
-  ENDIF(HDF5_FOUND)
+  ADD_COMPILE_DEFINITIONS(BUILD_PHOTON_HDF)
 ENDIF(BUILD_PHOTON_HDF)
 
 IF(VERBOSE_TTTRLIB)
@@ -249,9 +199,7 @@ IF(BUILD_LIBRARY)
   ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
   ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
   
-  # Link libraries
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME}Shared Boost::locale)
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME}Static Boost::locale)
+  # Link libraries (Boost removed - using C++17 standard library)
 
   # Define which headers are going to be included in the install target
   FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")

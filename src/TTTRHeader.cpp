@@ -947,7 +947,7 @@ void TTTRHeader::add_tag(
 ) {
     using namespace std;
     nlohmann::json tag;
-    tag["name"] = boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
+    tag["name"] = tttrlib::string_encoding::iso_8859_1_to_utf8(name); // there are sometimes conversion issues
     tag["type"] = type;
     tag["idx"] = idx;
     if (type == tyEmpty8) {
@@ -964,7 +964,7 @@ void TTTRHeader::add_tag(
     else if (type == tyAnsiString) {
          auto str = any_cast<char*>(value);
          auto str2 = std::string(str);
-         auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
+         auto str3 = tttrlib::string_encoding::iso_8859_1_to_utf8(str2);
          tag["value"] = str3;
     }
     else if (type == tyWideString) {

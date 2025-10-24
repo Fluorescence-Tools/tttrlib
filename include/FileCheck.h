@@ -13,7 +13,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <boost/locale.hpp>
+#include "string_encoding.h"
 
 #include "TTTRHeader.h"
 

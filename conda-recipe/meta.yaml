@@ -26,16 +26,14 @@ requirements:
     - doxygen
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
-    - boost-cpp
     - python
     - pip
-    - numpy <2.0
+    - numpy
   run:
     - python
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
-    - boost-cpp
-    - numpy <2.0
+    - numpy
 
 test:
   imports:

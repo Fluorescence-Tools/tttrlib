@@ -7,8 +7,7 @@
 #include <map>
 #include <string>
 #include <functional>
-#include <boost/container/flat_set.hpp>
-#include <boost/container/small_vector.hpp>
+#include <set>
 
 /*!
  * \brief Base class for nodes in a layer-based architecture with split/combine operations.
@@ -82,7 +81,7 @@ protected:
     
     // TTTR data - the core of each node with lazy allocation
     /// Using unique_ptr to avoid overhead for empty containers
-    using indices_set = boost::container::flat_set<int>;
+    using indices_set = std::set<int>;
     std::unique_ptr<indices_set> tttr_indices_;
     
     // Multiple parent support

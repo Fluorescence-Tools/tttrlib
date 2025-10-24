@@ -15,16 +15,13 @@
 #include <memory>
 #include <numeric>
 #include <iostream>
-#include <boost/locale.hpp>
 #include <sstream>      // std::stringstream
+#include "string_encoding.h"
 #include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
 #include <cstring> /* std::memcpy */
 
 #include <any>
-// #include <boost/any.hpp>
-//#include <boost/filesystem.hpp>
-//#include <boost/locale.hpp>
 
 #ifdef BUILD_PHOTON_HDF
 #include "hdf5.h"

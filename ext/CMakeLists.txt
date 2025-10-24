@@ -98,7 +98,6 @@ IF(BUILD_PYTHON_INTERFACE)
             ${MODULE_NAME}
             Python3::Module
             ${CMAKE_THREAD_LIBS_INIT}
-            Boost::locale
     )
     # On macOS, use dynamic lookup for Python symbols
     IF (APPLE)
@@ -155,7 +154,6 @@ IF(BUILD_R_INTERFACE)
             ${HDF5_LIBRARIES}
             ${R_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
-            ${Boost_LIBRARIES}
             OpenMP::OpenMP_CXX
     )
 ENDIF()

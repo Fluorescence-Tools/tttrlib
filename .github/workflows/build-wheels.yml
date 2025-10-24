@@ -27,32 +27,6 @@ jobs:
           python-version: '3.x'
           check-latest: false
 
-      - name: Install Boost (macOS)
-        if: runner.os == 'macOS'
-        run: brew install boost
-
-      # Cache vcpkg binary packages to avoid recompiling Boost
-      - name: Cache vcpkg (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:/vcpkg/packages
-            C:/vcpkg/downloads
-            C:/vcpkg/buildtrees
-            C:/vcpkg/archives
-            dist/boost-install-x64
-            dist/boost-install-arm64
-          key: vcpkg-boost-${{ runner.os }}-${{ hashFiles('.github/ci/boost-config.txt') }}-v3
-          restore-keys: |
-            vcpkg-boost-${{ runner.os }}-
-
-      # Enable vcpkg binary caching
-      - name: Setup vcpkg binary caching (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          echo "VCPKG_BINARY_SOURCES=clear;files,C:/vcpkg/archives,readwrite" >> $env:GITHUB_ENV
-
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
 

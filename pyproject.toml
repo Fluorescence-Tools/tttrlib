@@ -74,60 +74,33 @@ test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__
 # Build only for x86_64 (native arch on macos-13 runner)
 # arm64 cross-compilation requires additional setup
 archs = ["x86_64"]
-# Note: Boost components are defined in .github/ci/boost-config.txt
-# Homebrew's boost package includes all components
 before-all = [
-    "brew install boost hdf5 cmake",
+    "brew install cmake",
 ]
 before-build = "pip install delocate"
-# Bundle Boost dylibs into the wheel using delocate
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "13.0"
-# Help CMake find Homebrew-installed libraries
 CMAKE_PREFIX_PATH = "/usr/local"
-BOOST_ROOT = "/usr/local"
-HDF5_ROOT = "/usr/local"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
-# Note: Boost components are defined in .github/ci/boost-config.txt
-# boost-devel package includes all components
 before-all = [
-    "dnf install -y boost-devel cmake hdf5-devel"
+    "dnf install -y cmake"
 ]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
-
-# Note: Boost components are defined in .github/ci/boost-config.txt
-# The build script reads this file and installs components via vcpkg
-# Build Boost once per run; install into {project}\dist\boost-install
-before-all = "powershell -ExecutionPolicy Bypass -File .github/ci/build_boost_windows_simple.ps1"
-
-# Install delvewheel in the build environment for wheel repair
 before-build = "pip install delvewheel"
-
-# Bundle Boost DLLs into the wheel (and make them discoverable at import time)
-# Read BOOST_LIB_PATH from .boost_env file and pass to delvewheel
-repair-wheel-command = "powershell -Command \"$boost_lib = (Get-Content .boost_env | Select-String 'BOOST_LIB_PATH=').ToString().Split('=')[1]; python -m delvewheel repair --add-path $boost_lib -w {dest_dir} {wheel}\""
+repair-wheel-command = "python -m delvewheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 # Use Visual Studio generator instead of Ninja
 CMAKE_GENERATOR = "Visual Studio 17 2022"
 
-# Avoid Boost auto-link surprises on MSVC
-BOOST_ALL_NO_LIB = "1"
-
 # Help CMake find Python in the cibuildwheel environment
-# These are passed as CMake cache variables
 Python_EXECUTABLE = "$PYTHON"
 Python_ROOT_DIR = "$PYTHON_PREFIX"
-
-# Note: Boost paths are communicated via .boost_env file
-# The build_boost_windows.ps1 script writes paths to .boost_env, and setup.py reads it
-# The repair-wheel-command also reads BOOST_LIB_PATH from .boost_env for delvewheel
-# Fallback: setup.py auto-detects from dist/boost-install if file doesn't exist
