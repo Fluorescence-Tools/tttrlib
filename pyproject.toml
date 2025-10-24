@@ -75,7 +75,7 @@ test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__
 # arm64 cross-compilation requires additional setup
 archs = ["x86_64"]
 before-all = [
-    "brew install cmake",
+    "brew install cmake hdf5",
 ]
 before-build = "pip install delocate"
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
@@ -88,12 +88,13 @@ CMAKE_PREFIX_PATH = "/usr/local"
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
 before-all = [
-    "dnf install -y cmake"
+    "dnf install -y cmake hdf5-devel"
 ]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
+before-all = "vcpkg install hdf5:x64-windows"
 before-build = "pip install delvewheel"
 repair-wheel-command = "python -m delvewheel repair -w {dest_dir} {wheel}"
 
@@ -104,3 +105,6 @@ CMAKE_GENERATOR = "Visual Studio 17 2022"
 # Help CMake find Python in the cibuildwheel environment
 Python_EXECUTABLE = "$PYTHON"
 Python_ROOT_DIR = "$PYTHON_PREFIX"
+
+# Help CMake find HDF5
+CMAKE_PREFIX_PATH = "C:/vcpkg/installed/x64-windows"

@@ -26,8 +26,10 @@
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #ifdef BUILD_PHOTON_HDF
-#include "hdf5.h"
-#include <H5Cpp.h>
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
 #endif
 
 #include "Histogram.h"

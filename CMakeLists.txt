@@ -147,9 +147,6 @@ endif()
 # INCLUDES AND LIBRARIES
 #######################################
 
-## Boost - REMOVED: Using standard C++17 replacements instead
-###########################
-
 
 ## HDF5 - Handled by HighFive (header-only)
 ###########################
@@ -183,10 +180,8 @@ LIST(APPEND SRC_files ${ALGLIB})
 # HighFive HDF5 reader
 IF(BUILD_PHOTON_HDF)
   IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")
-    # Prevent HighFive from searching for HDF5 - we use it header-only
-    SET(HIGHFIVE_FIND_HDF5 OFF)
     ADD_SUBDIRECTORY(thirdparty/HighFive)
-    LINK_LIBRARIES(HighFive::Include)
+    LINK_LIBRARIES(HighFive::HighFive)
   ELSE()
     MESSAGE(WARNING "HighFive third-party sources are missing; disabling photon HDF support")
     SET(BUILD_PHOTON_HDF OFF CACHE BOOL "Build photon hdf5 reader" FORCE)

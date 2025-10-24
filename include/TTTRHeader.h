@@ -24,8 +24,6 @@
 #include <any>
 
 #ifdef BUILD_PHOTON_HDF
-#include "hdf5.h"
-#include <H5Cpp.h>
 #include <highfive/H5File.hpp>
 #include <highfive/H5Group.hpp>
 #include <highfive/H5DataSet.hpp>
