@@ -2,14 +2,14 @@
 #define TTTRLIB_STRING_ENCODING_H
 
 #include <string>
-#include <codecvt>
+#include <cstdint>
 
 namespace tttrlib {
 
 /**
  * @brief String encoding conversion utilities
  * 
- * Provides UTF-8 ↔ ISO-8859-1 (Latin-1) conversions using standard C++17 features.
+ * Provides UTF-8 ↔ ISO-8859-1 (Latin-1) conversions without deprecated C++ features.
  */
 namespace string_encoding {
 
@@ -19,26 +19,42 @@ namespace string_encoding {
  * @return Native encoded string
  */
 inline std::string utf8_to_native(const std::string& utf8_str) {
-    try {
-        // Use standard C++17 codecvt for UTF-8 to wide char conversion
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        std::wstring wide = converter.from_bytes(utf8_str);
+    std::string result;
+    for (size_t i = 0; i < utf8_str.length(); ++i) {
+        unsigned char c = static_cast<unsigned char>(utf8_str[i]);
         
-        // Convert wide char to ISO-8859-1 (Latin-1)
-        std::string result;
-        for (wchar_t wc : wide) {
-            if (wc <= 0xFF) {
-                result += static_cast<char>(wc);
+        if (c < 0x80) {
+            // Single byte ASCII character
+            result += static_cast<char>(c);
+        } else if ((c & 0xE0) == 0xC0 && i + 1 < utf8_str.length()) {
+            // Two-byte UTF-8 sequence
+            unsigned char c2 = static_cast<unsigned char>(utf8_str[++i]);
+            uint32_t codepoint = ((c & 0x1F) << 6) | (c2 & 0x3F);
+            if (codepoint <= 0xFF) {
+                result += static_cast<char>(codepoint);
             } else {
-                // Character outside Latin-1 range, use replacement character
                 result += '?';
             }
+        } else if ((c & 0xF0) == 0xE0 && i + 2 < utf8_str.length()) {
+            // Three-byte UTF-8 sequence
+            unsigned char c2 = static_cast<unsigned char>(utf8_str[++i]);
+            unsigned char c3 = static_cast<unsigned char>(utf8_str[++i]);
+            uint32_t codepoint = ((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+            if (codepoint <= 0xFF) {
+                result += static_cast<char>(codepoint);
+            } else {
+                result += '?';
+            }
+        } else if ((c & 0xF8) == 0xF0 && i + 3 < utf8_str.length()) {
+            // Four-byte UTF-8 sequence (outside Latin-1 range)
+            i += 3;
+            result += '?';
+        } else {
+            // Invalid UTF-8 sequence, skip
+            result += '?';
         }
-        return result;
-    } catch (const std::exception& e) {
-        // On conversion error, return original string
-        return utf8_str;
     }
+    return result;
 }
 
 /**
@@ -47,20 +63,18 @@ inline std::string utf8_to_native(const std::string& utf8_str) {
  * @return UTF-8 encoded string
  */
 inline std::string native_to_utf8(const std::string& native_str) {
-    try {
-        // Convert ISO-8859-1 (Latin-1) to wide char
-        std::wstring wide;
-        for (unsigned char c : native_str) {
-            wide += static_cast<wchar_t>(c);
+    std::string result;
+    for (unsigned char c : native_str) {
+        if (c < 0x80) {
+            // ASCII character
+            result += static_cast<char>(c);
+        } else {
+            // Latin-1 character (0x80-0xFF) -> UTF-8 two-byte sequence
+            result += static_cast<char>(0xC0 | (c >> 6));
+            result += static_cast<char>(0x80 | (c & 0x3F));
         }
-        
-        // Convert wide char to UTF-8
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        return converter.to_bytes(wide);
-    } catch (const std::exception& e) {
-        // On conversion error, return original string
-        return native_str;
     }
+    return result;
 }
 
 /**
