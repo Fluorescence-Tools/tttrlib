@@ -21,6 +21,7 @@ requirements:
     - cmake
     - ninja
     - make # [not win]
+    - hdf5
   host:
     - swig <4.2
     - doxygen
@@ -29,11 +30,13 @@ requirements:
     - python
     - pip
     - numpy
+    - hdf5
   run:
     - python
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
     - numpy
+    - hdf5
 
 test:
   imports:
