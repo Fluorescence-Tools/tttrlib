@@ -11,7 +11,7 @@ namespace tttrlib {
  * Provides a lightweight bidirectional mapping between two types.
  * Supports insert and lookup in both directions.
  * Compatible with boost::bimap interface (.left, .right accessors).
- * 
+ *
  * @tparam Left Type for left-side keys
  * @tparam Right Type for right-side keys
  */
