@@ -127,7 +127,6 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_ref, model_fconv)
 
-    @unittest.skipIf(platform == "win32", "Skipping AVX test on Windows")
     def test_fconv_avx(self):
         period = 12.0
         lifetime_spectrum = np.array([1.0, 4.1])
@@ -194,7 +193,6 @@ class Tests(unittest.TestCase):
         )
         np.testing.assert_array_almost_equal(model_fconv_per, ref)
 
-    @unittest.skipIf(platform == "win32", "Skipping AVX per test on Windows")
     def test_fconv_per_avx(self):
         period = 13.0
         lifetime_spectrum = np.array([1.0, 4.1])
