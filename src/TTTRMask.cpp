@@ -134,6 +134,10 @@ std::vector<int> TTTRMask::get_selected_ranges() {
                 break;
             }
         }
+        // If we reached the end without finding a selected element, exit
+        if(start >= size()){
+            break;
+        }
         // linear search for last element
         for(stop=start + 1; stop < size(); stop++){
             if(masked[stop] == 0){
@@ -142,6 +146,8 @@ std::vector<int> TTTRMask::get_selected_ranges() {
         }
         rng.emplace_back(start);
         rng.emplace_back(stop);
+        // Move start to the end of the current range to continue searching
+        start = stop;
     }
 
     return rng;

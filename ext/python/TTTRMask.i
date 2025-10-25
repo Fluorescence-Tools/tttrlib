@@ -25,6 +25,8 @@
 // Rename methods for Python
 %rename(get_mask_array) TTTRMask::get_mask(unsigned char** output, int* n_output);
 %rename(set_mask_array) TTTRMask::set_mask(unsigned char* input, int n_input);
+%rename(_get_indices) TTTRMask::get_indices;
+%rename(_get_selected_ranges) TTTRMask::get_selected_ranges;
 
 %extend TTTRMask{%pythoncode "./ext/python/TTTRMask.py"}
 
