@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstring>  // for memset
 #include <iostream>
+#include <map>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -281,10 +282,26 @@ void CLSMImage::determine_number_of_lines() {
     if (is_verbose()) {
         std::clog << "-- CLSMImage::determine_number_of_lines" << std::endl;
     }
-    n_lines = 0;
-    for (auto &f: frames) {
-        if (f->lines.size() > n_lines)
-            n_lines = f->lines.size();
+    // Use n_lines from settings (metadata) if available and positive
+    // If n_lines is -1 or 0, determine from actual frame data
+    if (settings.n_lines > 0) {
+        n_lines = settings.n_lines;
+    } else {
+        // Determine from frames: find the most common line count
+        std::map<size_t, int> line_count_histogram;
+        for (auto &f: frames) {
+            line_count_histogram[f->lines.size()]++;
+        }
+        
+        // Find the most frequently occurring line count
+        n_lines = 0;
+        int max_count = 0;
+        for (auto &pair : line_count_histogram) {
+            if (pair.second > max_count) {
+                max_count = pair.second;
+                n_lines = pair.first;
+            }
+        }
     }
 }
 

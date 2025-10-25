@@ -136,6 +136,14 @@ def __getattr__(self, item):
 
 @staticmethod
 def read_clsm_settings(tttr_data):
+    """
+    Read CLSM settings from TTTR header metadata.
+
+    Handles both PTU and HT3 file formats with robust error handling
+    for missing or malformed metadata.
+
+    FIXED VERSION - uses 2^idx for markers
+    """
     settings = dict()
     if tttr_data is not None:
         header = tttr_data.header
@@ -143,23 +151,42 @@ def read_clsm_settings(tttr_data):
         # Read PTU‐style tags
         if tttr_data.get_tttr_container_type() == 'PTU':
             try:
-                settings["marker_frame_start"] = [2 ** (int(header.tag('ImgHdr_Frame')["value"]) - 1)]
+                frame_raw = int(header.tag('ImgHdr_Frame')["value"])
             except:
-                settings["marker_frame_start"] = []
-
-            settings.update({
-                "marker_line_start": 2 ** (int(header.tag('ImgHdr_LineStart')["value"]) - 1),
-                "marker_line_stop":  2 ** (int(header.tag('ImgHdr_LineStop')["value"]) - 1),
-                "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
-                "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
-                "marker_event_type": 1
-            })
+                frame_raw = None
 
             try:
-                bd = int(header.tag('ImgHdr_BiDirect')["value"])
-                settings["bidirectional_scan"] = (bd != 0)
+                line_start_raw = int(header.tag('ImgHdr_LineStart')["value"])
+                line_stop_raw = int(header.tag('ImgHdr_LineStop')["value"])
             except:
-                settings["bidirectional_scan"] = False
+                # Missing line markers - not a CLSM image
+                return settings
+            
+
+            if line_start_raw == 0:
+                # STED files: ImgHdr_LineStart=0 means use 2^index encoding
+                marker_frame = [4]
+                settings.update({
+                    "marker_line_start": 2 ** line_start_raw,      # 2^0 = 1
+                    "marker_line_stop":  2 ** line_stop_raw,       # 2^1 = 2
+                    "marker_frame_start": marker_frame,
+                    "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_event_type": 1
+                })
+            else:
+                if frame_raw:
+                    marker_frame = [2 ** (frame_raw - 1)]
+                else:
+                    marker_frame = []
+                settings.update({
+                    "marker_line_start": 2 ** (line_start_raw - 1),
+                    "marker_line_stop":  2 ** (line_stop_raw - 1),
+                    "marker_frame_start": marker_frame,
+                    "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
+                    "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
+                    "marker_event_type": 1
+                })
 
         # Read HT3‐style tags
         elif tttr_data.get_tttr_container_type() == 'HT3':
@@ -172,14 +199,59 @@ def read_clsm_settings(tttr_data):
                 "marker_event_type":   1
             })
 
-            # --- NEW: read bidirectional‐scan flag ---
-            try:
-                bd = int(header.tag('ImgHdr_BiDirect')["value"])
-                settings["bidirectional_scan"] = (bd != 0)
-            except:
-                settings["bidirectional_scan"] = False
+        # --- NEW: read bidirectional‐scan flag ---
+        try:
+            bd = int(header.tag('ImgHdr_BiDirect')["value"])
+            settings["bidirectional_scan"] = (bd != 0)
+        except:
+            settings["bidirectional_scan"] = False
 
     return settings
+
+@staticmethod
+def get_metadata(tttr_data):
+    """
+    Extract all image-related metadata from TTTR header.
+    
+    Returns a dictionary with all ImgHdr_* tags and other imaging metadata.
+    Handles missing tags gracefully by returning None for unavailable values.
+    """
+    metadata = {}
+    if tttr_data is None:
+        return metadata
+    
+    header = tttr_data.header
+    
+    # List of common image metadata tags
+    img_tags = [
+        'ImgHdr_Frame', 'ImgHdr_LineStart', 'ImgHdr_LineStop',
+        'ImgHdr_PixX', 'ImgHdr_PixY', 'ImgHdr_TimePerPixel',
+        'ImgHdr_PixResol', 'ImgHdr_X0', 'ImgHdr_Y0', 'ImgHdr_Z0',
+        'ImgHdr_BiDirect', 'ImgHdr_Dimensions', 'ImgHdr_Ident'
+    ]
+    
+    for tag_name in img_tags:
+        try:
+            tag_value = header.tag(tag_name)["value"]
+            metadata[tag_name] = tag_value
+        except:
+            metadata[tag_name] = None
+    
+    # Add acquisition metadata
+    acq_tags = [
+        'MeasDesc_AcquisitionTime', 'TTResult_NumberOfRecords',
+        'TTResult_SyncRate', 'MeasDesc_GlobalResolution',
+        'MeasDesc_Resolution', 'MeasDesc_NumberMicrotimes'
+    ]
+    
+    for tag_name in acq_tags:
+        try:
+            tag_value = header.tag(tag_name)["value"]
+            metadata[tag_name] = tag_value
+        except:
+            metadata[tag_name] = None
+    
+    return metadata
 
 def __init__(
         self,
@@ -244,7 +316,9 @@ def __init__(
             try:
                 auto_settings = self.read_clsm_settings(tttr_data)
                 # Merge in any auto‐read values (including bidirectional_scan, if present)
-                settings_kwargs.update(auto_settings)
+                # Only update if auto_settings is not empty (i.e., valid CLSM settings were found)
+                if auto_settings:
+                    settings_kwargs.update(auto_settings)
             except:
                 print("Error reading TTTR CLSM header")
 
@@ -287,6 +361,7 @@ def __init__(
                 except:
                     pass
 
+
         clsm_settings = CLSMSettings(**settings_kwargs)
 
     else:
@@ -303,6 +378,91 @@ def __init__(
     
     # Store TTTR object as an attribute for easy access
     self.tttr_data = tttr_data
+    
+    # Store metadata for easy access
+    self.metadata = self.get_metadata(tttr_data) if tttr_data is not None else {}
+
+def get_image_info(self):
+    """
+    Get formatted image information from metadata.
+    
+    Returns a dictionary with human-readable image parameters:
+    - dimensions: (width, height) in pixels
+    - pixel_size: time per pixel in seconds
+    - bidirectional: whether bidirectional scanning was used
+    - frame_marker: frame start marker value
+    - line_markers: (start, stop) line marker values
+    - num_records: total number of photon records
+    - sync_rate: sync rate in Hz
+    - acquisition_time: acquisition time in ms
+    """
+    info = {}
+    
+    if not self.metadata:
+        return info
+    
+    # Image dimensions
+    width = self.metadata.get('ImgHdr_PixX')
+    height = self.metadata.get('ImgHdr_PixY')
+    if width is not None and height is not None:
+        info['dimensions'] = (int(width), int(height))
+    
+    # Pixel timing
+    time_per_pixel = self.metadata.get('ImgHdr_TimePerPixel')
+    if time_per_pixel is not None:
+        info['pixel_time_ms'] = float(time_per_pixel)
+    
+    # Bidirectional scanning
+    bidirect = self.metadata.get('ImgHdr_BiDirect')
+    if bidirect is not None:
+        info['bidirectional'] = bool(bidirect)
+    
+    # Markers
+    frame_marker = self.metadata.get('ImgHdr_Frame')
+    if frame_marker is not None:
+        info['frame_marker'] = int(frame_marker)
+    
+    line_start = self.metadata.get('ImgHdr_LineStart')
+    line_stop = self.metadata.get('ImgHdr_LineStop')
+    if line_start is not None and line_stop is not None:
+        info['line_markers'] = (int(line_start), int(line_stop))
+    
+    # Acquisition parameters
+    num_records = self.metadata.get('TTResult_NumberOfRecords')
+    if num_records is not None:
+        info['num_photons'] = int(num_records)
+    
+    sync_rate = self.metadata.get('TTResult_SyncRate')
+    if sync_rate is not None:
+        info['sync_rate_hz'] = int(sync_rate)
+    
+    acq_time = self.metadata.get('MeasDesc_AcquisitionTime')
+    if acq_time is not None:
+        info['acquisition_time_ms'] = int(acq_time)
+    
+    # Resolution
+    global_res = self.metadata.get('MeasDesc_GlobalResolution')
+    if global_res is not None:
+        info['global_resolution_s'] = float(global_res)
+    
+    return info
+
+def __repr_with_metadata__(self):
+    """Extended representation including metadata."""
+    info = self.get_image_info()
+    dims = info.get('dimensions', (self.n_pixel, self.n_lines))
+    repr_str = f'tttrlib.CLSMImage({self.n_frames}, {self.n_lines}, {self.n_pixel})'
+    
+    if info:
+        repr_str += f'\n  Dimensions: {dims[0]}x{dims[1]} pixels'
+        if 'pixel_time_ms' in info:
+            repr_str += f'\n  Pixel time: {info["pixel_time_ms"]} ms'
+        if 'bidirectional' in info:
+            repr_str += f'\n  Bidirectional: {info["bidirectional"]}'
+        if 'num_photons' in info:
+            repr_str += f'\n  Photons: {info["num_photons"]}'
+    
+    return repr_str
 
 @staticmethod
 def compute_frc(
