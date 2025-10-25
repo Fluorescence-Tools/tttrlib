@@ -1,3 +1,6 @@
 [submodule "thirdparty/HighFive"]
 	path = thirdparty/HighFive
 	url = https://github.com/highfive-devs/HighFive
+[submodule "thirdparty/nlohmann_json"]
+	path = thirdparty/nlohmann_json
+	url = https://github.com/nlohmann/json.git
