@@ -30,7 +30,7 @@
 #include <highfive/H5DataType.hpp>
 #endif
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
