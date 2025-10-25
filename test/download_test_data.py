@@ -24,6 +24,11 @@ from pathlib import Path
 from urllib.parse import urljoin
 from typing import List, Set
 
+# Force UTF-8 encoding for stdout on Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 try:
     import requests
 except ImportError:
@@ -109,10 +114,10 @@ def download_file(url: str, output_path: Path, chunk_size: int = 8192) -> bool:
         
         # Check if file already exists
         if output_path.exists():
-            print(f"  ✓ Already exists: {output_path.name}")
+            print(f"  [OK] Already exists: {output_path.name}")
             return True
         
-        print(f"  ⬇ Downloading: {output_path.name}")
+        print(f"  [DL] Downloading: {output_path.name}")
         
         response = requests.get(url, stream=True, timeout=30)
         response.raise_for_status()
@@ -133,14 +138,14 @@ def download_file(url: str, output_path: Path, chunk_size: int = 8192) -> bool:
         if total_size > 0:
             print(f"    100.0% ({downloaded / 1024 / 1024:.1f} MB)")
         
-        print(f"  ✓ Downloaded: {output_path.name}")
+        print(f"  [OK] Downloaded: {output_path.name}")
         return True
         
     except requests.RequestException as e:
-        print(f"  ✗ Failed to download {output_path.name}: {e}")
+        print(f"  [FAIL] Failed to download {output_path.name}: {e}")
         return False
     except Exception as e:
-        print(f"  ✗ Error downloading {output_path.name}: {e}")
+        print(f"  [FAIL] Error downloading {output_path.name}: {e}")
         return False
 
 
@@ -182,8 +187,8 @@ def download_all(output_dir: Path, verbose: bool = True) -> bool:
     
     print("-" * 60)
     print(f"\nDownload Summary:")
-    print(f"  ✓ Successful: {success_count}")
-    print(f"  ✗ Failed: {fail_count}")
+    print(f"  [OK] Successful: {success_count}")
+    print(f"  [FAIL] Failed: {fail_count}")
     print(f"  Total: {len(files)}\n")
     
     return fail_count == 0

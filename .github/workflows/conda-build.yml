@@ -150,11 +150,24 @@ jobs:
             channel_priority: strict
       
       - name: Restore test data from cache
+        id: cache-restore
         uses: actions/cache/restore@v3
         with:
           path: ./tttr-data
           key: tttr-test-data-${{ hashFiles('test/settings.json') }}
-          fail-on-cache-miss: true
+          fail-on-cache-miss: false
+      
+      - name: Download test data if cache miss
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        shell: bash -l {0}
+        run: |
+          micromamba run -n test pip install requests
+          python test/download_test_data.py --output-dir ./tttr-data
+      
+      - name: Index conda packages
+        shell: bash -l {0}
+        run: |
+          micromamba run -n test conda index ./conda-packages
       
       - name: Install conda package
         shell: bash -l {0}
