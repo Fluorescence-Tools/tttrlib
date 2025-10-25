@@ -28,6 +28,7 @@ jobs:
           python test/download_test_data.py --output-dir ./tttr-data
       
       - name: Cache test data
+        if: always()
         uses: actions/cache/save@v3
         with:
           path: ./tttr-data

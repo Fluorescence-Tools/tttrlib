@@ -5,6 +5,8 @@ on:
     workflows: ["Download Test Data"]
     types: [completed]
   workflow_dispatch:
+  push:
+  pull_request:
   release:
     types: [published]
 
@@ -16,6 +18,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-13]
+    # Don't require test data for building wheels, only for testing
+    # The test job will handle cache restoration
         
     steps:
       - uses: actions/checkout@v5
@@ -69,15 +73,33 @@ jobs:
           pip install pytest pytest-cov numpy scipy
       
       - name: Restore test data from cache
+        id: cache-restore
         uses: actions/cache/restore@v3
         with:
           path: ./tttr-data
           key: tttr-test-data-${{ hashFiles('test/settings.json') }}
-          fail-on-cache-miss: true
+          fail-on-cache-miss: false
+      
+      - name: Download test data if cache miss
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+          python test/download_test_data.py --output-dir ./tttr-data
       
       - name: Install wheel
         run: |
-          pip install wheelhouse/*.whl
+          PYTHON_VERSION=${{ matrix.python-version }}
+          PYTHON_TAG="cp${PYTHON_VERSION//./}"
+          echo "Looking for wheels matching: $PYTHON_TAG"
+          WHEEL=$(ls wheelhouse/*${PYTHON_TAG}*.whl 2>/dev/null | head -1)
+          if [ -z "$WHEEL" ]; then
+            echo "No matching wheel found for Python $PYTHON_VERSION"
+            ls -la wheelhouse/
+            exit 1
+          fi
+          echo "Installing: $WHEEL"
+          pip install "$WHEEL"
       
       - name: Run tests on installed wheel
         run: |
