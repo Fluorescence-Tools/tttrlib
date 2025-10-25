@@ -168,6 +168,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Third party
 #############################
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nlohmann_json/include)
 
 # LBFGS
 FILE(GLOB_RECURSE LBFGS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp")
