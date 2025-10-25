@@ -1,5 +1,5 @@
 {
-  "data_root": "./tttr-data",
+  "data_root": "tttr-data",
   "spc132_filename" : "bh/bh_spc132.spc",
   "spc630_filename" : "bh/bh_spc630_256.spc",
   "photon_hdf_filename" : "hdf/1a_1b_Mix.hdf5",
@@ -7,6 +7,17 @@
   "ptu_hh_t3_filename" : "pq/ptu/pq_ptu_hh_t3.ptu",
   "ht3_clsm_filename" : "imaging/pq/ht3/pq_ht3_clsm.ht3",
   "sm_filename" : "sm/tl_sm.sm",
+  "clsm_confocal_filename" : "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu",
+  "clsm_sted_filename" : "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu",
+  "sted_reading_parameters": {
+    "marker_frame_start": [4],
+    "marker_line_start": 1,
+    "marker_line_stop": 2,
+    "marker_event_type": 1,
+    "n_pixel_per_line": 500,
+    "reading_routine": "default",
+    "skip_before_first_frame_marker": false
+  },
   "make_references": false,
   "test_files": [
       ["bh/bh_spc132.spc", "SPC-130"],
