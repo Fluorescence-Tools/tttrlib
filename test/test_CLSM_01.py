@@ -206,4 +206,10 @@ class TestCLSM(unittest.TestCase):
         for ptu_file in pq_test_files:
             print(ptu_file)
             data = tttrlib.TTTR(ptu_file)
+            # Skip files without frame marker (not CLSM images)
+            try:
+                frame_marker = data.header.tag('ImgHdr_Frame')["value"]
+            except:
+                print(f"  Skipping: No frame marker found")
+                continue
             clsm = tttrlib.CLSMImage(data)
