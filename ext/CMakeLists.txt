@@ -38,12 +38,18 @@ IF(BUILD_PYTHON_INTERFACE)
         set(Python3_FIND_STRATEGY LOCATION)
         MESSAGE(STATUS "Using Python3_ROOT_DIR from conda PREFIX: $ENV{PREFIX}")
     elseif(DEFINED Python_ROOT_DIR)
-        # For cibuildwheel, use Python_ROOT_DIR if provided
+        # For cibuildwheel and setup.py, use Python_ROOT_DIR if provided
         set(Python3_ROOT_DIR "${Python_ROOT_DIR}")
         set(Python3_FIND_STRATEGY LOCATION)
         MESSAGE(STATUS "Using Python3_ROOT_DIR from Python_ROOT_DIR: ${Python_ROOT_DIR}")
     endif()
     FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+    
+    # Mark Python_EXECUTABLE as used if it was provided (for setup.py compatibility)
+    # This suppresses CMake warning about unused manually-specified variables
+    if(DEFINED Python_EXECUTABLE)
+        MESSAGE(STATUS "Python_EXECUTABLE provided but not used (Python3_EXECUTABLE is used instead): ${Python_EXECUTABLE}")
+    endif()
     
     # Debug output
     MESSAGE(STATUS "Python3_FOUND: ${Python3_FOUND}")
