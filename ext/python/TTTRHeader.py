@@ -66,6 +66,60 @@ def set_tag(self, name, value, value_type, idx=-1):
     header["tags"] = tags
     self.set_json(json.dumps(header))
 
+def to_csv(self, filename=None):
+    """
+    Export the TTTR header tags as a CSV table.
+    
+    Parameters
+    ----------
+    filename : str, optional
+        If provided, write the CSV to this file. If None, return as string.
+    
+    Returns
+    -------
+    str or None
+        If filename is None, returns the CSV string. Otherwise, writes to file and returns None.
+    
+    Examples
+    --------
+    >>> header = tttrlib.TTTRHeader()
+    >>> # Export to file
+    >>> header.to_csv('header.csv')
+    >>> # Get as string
+    >>> csv_string = header.to_csv()
+    """
+    import csv
+    import io
+    import json
+    
+    # Get tags from header
+    tags = self.tags
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header row
+    writer.writerow(['name', 'idx', 'value', 'type'])
+    
+    # Write data rows
+    for tag in tags:
+        name = tag.get('name', '')
+        idx = tag.get('idx', -1)
+        value = tag.get('value', '')
+        value_type = tag.get('type', '')
+        writer.writerow([name, idx, value, value_type])
+    
+    csv_string = output.getvalue()
+    
+    # If filename provided, write to file
+    if filename is not None:
+        with open(filename, 'w', newline='') as f:
+            f.write(csv_string)
+        return None
+    
+    return csv_string
+
 def __init__(self, *args, **kwargs):
     this = _tttrlib.new_TTTRHeader(*args, **kwargs)
     try:
