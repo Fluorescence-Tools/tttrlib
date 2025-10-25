@@ -1,9 +1,10 @@
 name: Conda Build
 
 on:
+  workflow_run:
+    workflows: ["Download Test Data"]
+    types: [completed]
   workflow_dispatch:
-  push:
-    branches: [ development ]
   release:
     types: [ released, prereleased ]
   schedule:
@@ -107,3 +108,60 @@ jobs:
         with:
           name: conda-packages-${{ matrix.os }}-py${{ matrix.python-version }}
           path: ${{ env.OUT_DIR }}/**/*.tar.bz2
+
+  test_conda:
+    name: Test conda packages on ${{ matrix.os }} - Python ${{ matrix.python-version }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ "3.10" ]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download conda packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: conda-packages-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: conda-packages
+          merge-multiple: true
+      
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: test
+          create-args: >-
+            python=${{ matrix.python-version }}
+            pytest
+            pytest-cov
+            numpy
+            scipy
+            requests
+          cache-downloads: true
+          condarc: |
+            channels:
+              - conda-forge
+              - bioconda
+            channel_priority: strict
+      
+      - name: Restore test data from cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+          fail-on-cache-miss: true
+      
+      - name: Install conda package
+        shell: bash -l {0}
+        run: |
+          micromamba install -y -c ./conda-packages tttrlib
+      
+      - name: Run tests on installed conda package
+        shell: bash -l {0}
+        run: |
+          pytest test/ -v --tb=short
+        env:
+          TTTRLIB_DATA: ./tttr-data
