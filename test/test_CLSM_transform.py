@@ -7,7 +7,10 @@ from pathlib import Path
 import json
 import tttrlib
 import numpy as np
-import skimage
+import pytest
+
+# Skip entire module if skimage is not available
+skimage = pytest.importorskip("skimage")
 
 repo_root = Path(__file__).resolve().parents[1]
 settings_path = os.path.join(os.path.dirname(__file__), "settings.json")

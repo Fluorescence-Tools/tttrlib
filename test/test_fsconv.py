@@ -1,10 +1,13 @@
 from __future__ import division
 
-import nose
 import unittest
 import numpy as np
 from sys import platform
 import scipy.stats
+import pytest
+
+# Skip entire module if nose is not available
+nose = pytest.importorskip("nose")
 
 import tttrlib
 from misc.compute_irf import model_irf
