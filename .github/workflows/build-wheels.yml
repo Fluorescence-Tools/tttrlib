@@ -41,9 +41,6 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
-        env:
-          # Skip Python 3.11 on dev branches to reduce build time
-          CIBW_SKIP: ${{ github.ref == 'refs/heads/main' && 'pp*,*-win32,*-manylinux_i686,*-musllinux_*,cp313-*,cp314-*,cp314t-*' || 'pp*,*-win32,*-manylinux_i686,*-musllinux_*,cp311-*,cp313-*,cp314-*,cp314t-*' }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -57,7 +54,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-13]
-        python-version: ${{ fromJson(github.ref == 'refs/heads/main' && '["3.10", "3.11"]' || '["3.10"]') }}
+        python-version: ['3.10', '3.11']
     
     steps:
       - uses: actions/checkout@v3

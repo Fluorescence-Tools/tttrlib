@@ -112,6 +112,9 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ "3.10" ]
+    env:
+      # Use absolute path for TTTRLIB_DATA to avoid CWD-related confusion on all OSes
+      TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
     
     steps:
       - uses: actions/checkout@v4
@@ -157,7 +160,41 @@ jobs:
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         shell: bash -l {0}
         run: |
-          micromamba run -n test python test/download_test_data.py --output-dir ./tttr-data
+          micromamba run -n test python test/download_test_data.py --output-dir "$TTTRLIB_DATA"
+      
+      - name: Verify test data presence
+        shell: bash -l {0}
+        run: |
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "TTTRLIB_DATA: $TTTRLIB_DATA"
+          python -c "import os; print('TTTRLIB_DATA env seen by Python =', os.getenv('TTTRLIB_DATA'))"
+          echo "Listing tttr-data directory (top-level):"
+          ls -la "$TTTRLIB_DATA" || true
+          echo "Listing tttr-data recursively (first 200 lines):"
+          find "$TTTRLIB_DATA" -maxdepth 5 -type f | sort | head -n 200 || true
+          echo "Checking for critical files..."
+          missing=0
+          req=(
+            "imaging/leica/sp5/LSM_1.ptu"
+            "imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
+            "imaging/pq/ht3/pq_ht3_clsm.ht3"
+            "imaging/pq/ht3/crn_clv_img.ht3"
+            "imaging/pq/ht3/crn_clv_mirror.ht3"
+            "imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu"
+          )
+          for rel in "${req[@]}"; do
+            if [ ! -f "$TTTRLIB_DATA/$rel" ]; then
+              echo "MISSING: $TTTRLIB_DATA/$rel"
+              missing=1
+            else
+              echo "FOUND:   $TTTRLIB_DATA/$rel"
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more required test data files are missing."
+            echo "You can re-run the downloader locally with: python test/download_test_data.py --output-dir ./tttr-data"
+            exit 1
+          fi
       
       - name: Index conda packages
         shell: bash -l {0}
@@ -173,5 +210,3 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest test/ -v --tb=short --ignore=test/test_fsconv.py
-        env:
-          TTTRLIB_DATA: ./tttr-data
