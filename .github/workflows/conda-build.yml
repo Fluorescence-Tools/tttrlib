@@ -1,6 +1,8 @@
 name: Conda Build
 
 on:
+  push:
+  pull_request:
   workflow_run:
     workflows: ["Download Test Data"]
     types: [completed]
