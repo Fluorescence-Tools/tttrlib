@@ -110,7 +110,7 @@ jobs:
       
       - name: Run tests on installed wheel
         run: |
-          pytest test/ -v --tb=short --ignore=test/test_fsconv.py
+          pytest test/ -v --tb=short
         env:
           TTTRLIB_DATA: ./tttr-data
 
