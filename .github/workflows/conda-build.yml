@@ -14,7 +14,7 @@ on:
     - cron: "0 11 * * 1"
 
 concurrency:
-  group: test-data-${{ github.ref }}
+  group: conda-build-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -35,18 +35,6 @@ jobs:
       UPLOAD_LABEL: ${{ startsWith(github.ref, 'refs/tags/') && (github.event_name == 'release') && (github.event.action == 'released' || github.event.action == 'prereleased') && 'main' || 'dev' }}
 
     steps:
-      - name: Free Disk Space (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu')
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Checkout (with tags & submodules)
         uses: actions/checkout@v4
         with:

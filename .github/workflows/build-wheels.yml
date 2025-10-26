@@ -11,7 +11,7 @@ on:
     types: [published]
 
 concurrency:
-  group: test-data-${{ github.ref }}
+  group: build-wheels-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
