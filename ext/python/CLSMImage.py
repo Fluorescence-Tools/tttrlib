@@ -151,57 +151,88 @@ def read_clsm_settings(tttr_data):
         # Read PTU‐style tags
         if tttr_data.get_tttr_container_type() == 'PTU':
             try:
-                frame_raw = int(header.tag('ImgHdr_Frame')["value"])
-            except:
-                frame_raw = None
-
-            try:
-                line_start_raw = int(header.tag('ImgHdr_LineStart')["value"])
-                line_stop_raw = int(header.tag('ImgHdr_LineStop')["value"])
-            except:
+                line_start_tag = header.tag('ImgHdr_LineStart')
+                line_stop_tag = header.tag('ImgHdr_LineStop')
+                line_start_val = line_start_tag.get("value", None)
+                line_stop_val = line_stop_tag.get("value", None)
+                if line_start_val is None or line_stop_val is None:
+                    return settings
+                line_start_raw = int(line_start_val)
+                line_stop_raw = int(line_stop_val)
+            except (KeyError, ValueError, TypeError):
                 # Missing line markers - not a CLSM image
                 return settings
-            
 
             if line_start_raw == 0:
-                # STED files: ImgHdr_LineStart=0 means use 2^index encoding
-                marker_frame = [4]
+                # Unusual file: ImgHdr_LineStart=0 means use 2^index encoding
+                try:
+                    frame_tag = header.tag('ImgHdr_Frame')
+                    frame_val = frame_tag.get("value", None)
+                    frame_raw = int(frame_val) if frame_val is not None else None
+                except (KeyError, ValueError, TypeError):
+                    frame_raw = None
+
+                marker_frame = [2 ** (frame_raw - 1)] if frame_raw and frame_raw > 0 else [4]
+
+                try:
+                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
+                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
+                except (KeyError, ValueError, TypeError):
+                    pix_x = 0
+                    pix_y = 0
+
                 settings.update({
                     "marker_line_start": 2 ** line_start_raw,      # 2^0 = 1
-                    "marker_line_stop":  2 ** line_stop_raw,       # 2^1 = 2
+                    "marker_line_stop":  2 ** line_stop_raw,
                     "marker_frame_start": marker_frame,
-                    "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
-                    "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
+                    "n_pixel_per_line":  pix_x,
+                    "n_lines":           pix_y,
                     "marker_event_type": 1
                 })
             else:
-                if frame_raw:
-                    marker_frame = [2 ** (frame_raw - 1)]
-                else:
-                    marker_frame = []
+                try:
+                    frame_tag = header.tag('ImgHdr_Frame')
+                    frame_val = frame_tag.get("value", None)
+                    frame_raw = int(frame_val) if frame_val is not None else None
+                except (KeyError, ValueError, TypeError):
+                    frame_raw = None
+
+                marker_frame = [2 ** (frame_raw - 1)] if frame_raw and frame_raw > 0 else []
+
+                try:
+                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
+                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
+                except (KeyError, ValueError, TypeError):
+                    pix_x = 0
+                    pix_y = 0
+
                 settings.update({
                     "marker_line_start": 2 ** (line_start_raw - 1),
                     "marker_line_stop":  2 ** (line_stop_raw - 1),
                     "marker_frame_start": marker_frame,
-                    "n_pixel_per_line":  int(header.tag('ImgHdr_PixX')["value"]),
-                    "n_lines":           int(header.tag('ImgHdr_PixY')["value"]),
+                    "n_pixel_per_line":  pix_x,
+                    "n_lines":           pix_y,
                     "marker_event_type": 1
                 })
 
         # Read HT3‐style tags
         elif tttr_data.get_tttr_container_type() == 'HT3':
-            settings.update({
-                "marker_line_start":   int(header.tag('ImgHdr_LineStart')["value"]),
-                "marker_line_stop":    int(header.tag('ImgHdr_LineStop')["value"]),
-                "n_pixel_per_line":    int(header.tag('ImgHdr_PixX')["value"]),
-                "n_lines":             int(header.tag('ImgHdr_PixY')["value"]),
-                "marker_frame_start":  [int(header.tag('ImgHdr_Frame')["value"])],
-                "marker_event_type":   1
-            })
+            try:
+                settings.update({
+                    "marker_line_start":   int(header.tag('ImgHdr_LineStart').get("value", 0)),
+                    "marker_line_stop":    int(header.tag('ImgHdr_LineStop').get("value", 0)),
+                    "n_pixel_per_line":    int(header.tag('ImgHdr_PixX').get("value", 0)),
+                    "n_lines":             int(header.tag('ImgHdr_PixY').get("value", 0)),
+                    "marker_frame_start":  [int(header.tag('ImgHdr_Frame').get("value", 0))],
+                    "marker_event_type":   1
+                })
+            except (KeyError, ValueError, TypeError):
+                pass
 
         # --- NEW: read bidirectional‐scan flag ---
         try:
-            bd = int(header.tag('ImgHdr_BiDirect')["value"])
+            bd_tag = header.tag('ImgHdr_BiDirect')
+            bd = int(bd_tag.get("value", 0))
             settings["bidirectional_scan"] = (bd != 0)
         except:
             settings["bidirectional_scan"] = False
