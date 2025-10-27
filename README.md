@@ -30,6 +30,16 @@ Scilab and R. Currently, tttrlib is wrapped for the use in Python.
 `tttrlib` is programmed in C++ and wrapped for python. Thus, it can be used to integrate time-resolved data into 
 advanced data analysis pipelines.
 
+## How to contribute?
+
+If you encounter a TTTR file format that is not yet supported, please help us extend the library:
+
+1. Open a GitHub issue describing the format, the instrument, and the expected outcome.
+2. Share a demo file with Thomas Peulen (and confirm that it may be incorporated into the public test suite). Please keep the file small—ideally under 100 MB—and include any expected results for verification.
+3. If your analysis depends on a specific workflow, document the steps so we can reproduce it.
+
+With the issue details, sample data, and workflow description in hand, we will work on integrating your contribution into the automated test suite.
+
 ### Capabilities
 
 * Fast reading TTTR files (IO limited)
@@ -202,15 +212,12 @@ pip install -e .
 ```
 
 ## Citation
-If you use this software please also check the pre-print:
->tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling;
-Thomas-Otavio Peulen, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb, Suren Felekyan, Andrej Sali, 
-Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze; [https://arxiv.org/abs/2402.17252](arXiv:2402.17252)
->
+If you use this software please cite the open-access publication:
+> Thomas-Otavio Peulen, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb, Suren Felekyan, Andrej Sali, Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze. "tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling." *Bioinformatics* 41(2): btaf025, February 2025. [https://doi.org/10.1093/bioinformatics/btaf025](https://doi.org/10.1093/bioinformatics/btaf025)
 
 ## License
 
 Copyright 2007-2024 tttrlib developers.
 Licensed under the BSD-3-Clause
 
-[3]: https://github.com/Fluorescence-Tools/tttrlib/blob/master/doc/logos/mashup.png?raw=true "tttrlib FLIM"
+[3]: https://github.com/Fluorescence-Tools/tttrlib/blob/main/doc/logos/mashup.png?raw=true "tttrlib FLIM"
