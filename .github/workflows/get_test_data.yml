@@ -27,6 +27,12 @@ jobs:
       - name: Download test data
         run: |
           python test/download_test_data.py --output-dir ./tttr-data
+
+      - name: Verify downloaded files
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python test/download_verify_test_data.py
       
       - name: Upload test data artifact
         uses: actions/upload-artifact@v4

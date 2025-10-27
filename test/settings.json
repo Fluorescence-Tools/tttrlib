@@ -9,12 +9,18 @@
   "sm_filename" : "sm/tl_sm.sm",
   "clsm_confocal_filename" : "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu",
   "clsm_sted_filename" : "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu",
-  "sted_reading_parameters": {
+  "required_files": [
+    "imaging/leica/sp5/LSM_1.ptu",
+    "imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu",
+    "imaging/pq/ht3/crn_clv_img.ht3",
+    "imaging/pq/ht3/crn_clv_mirror.ht3",
+    "imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu"
+  ],
+  "aberior_mfd_sted_reading_parameters": {
     "marker_frame_start": [4],
     "marker_line_start": 1,
     "marker_line_stop": 2,
     "marker_event_type": 1,
-    "n_pixel_per_line": 500,
     "reading_routine": "default",
     "skip_before_first_frame_marker": false
   },

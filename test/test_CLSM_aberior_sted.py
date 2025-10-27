@@ -48,7 +48,7 @@ def get_data_path(rel_path):
 sted_file = get_data_path(settings.get("clsm_sted_filename", "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu"))
 
 # Get STED reading parameters from settings (use auto-detection by default)
-sted_reading_parameters = settings.get("sted_reading_parameters", {})
+aberior_mfd_sted_reading_parameters = settings.get("aberior_mfd_sted_reading_parameters", {})
 
 # Try to find multiple STED files in the aberior directory
 fn_pattern = os.path.join(str(data_root), "imaging/aberior/pq-mfd-sted/*.ptu")
@@ -108,7 +108,7 @@ class TestAberiorSTED(unittest.TestCase):
     def test_sted_clsm_image_creation(self):
         """Test CLSMImage creation with STED settings."""
         d = tttrlib.TTTR(self.primary_file)
-        img = tttrlib.CLSMImage(d, **sted_reading_parameters)
+        img = tttrlib.CLSMImage(d, **aberior_mfd_sted_reading_parameters)
         
         self.assertIsNotNone(img)
         self.assertGreater(img.n_frames, 0)
@@ -118,7 +118,7 @@ class TestAberiorSTED(unittest.TestCase):
     def test_sted_clsm_image_fill_ungated(self):
         """Test filling CLSMImage with ungated data."""
         d = tttrlib.TTTR(self.primary_file)
-        img = tttrlib.CLSMImage(d, **sted_reading_parameters)
+        img = tttrlib.CLSMImage(d, **aberior_mfd_sted_reading_parameters)
         
         channels = [0, 1]
         img.fill(channels=channels)
@@ -130,7 +130,7 @@ class TestAberiorSTED(unittest.TestCase):
     def test_sted_clsm_image_fill_gated(self):
         """Test filling CLSMImage with gated microtime data."""
         d = tttrlib.TTTR(self.primary_file)
-        img = tttrlib.CLSMImage(d, **sted_reading_parameters)
+        img = tttrlib.CLSMImage(d, **aberior_mfd_sted_reading_parameters)
         
         channels = [0, 1]
         gate_range = (5000, 24000)

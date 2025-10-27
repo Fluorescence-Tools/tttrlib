@@ -168,33 +168,9 @@ jobs:
           echo "Workspace: $GITHUB_WORKSPACE"
           echo "TTTRLIB_DATA: $TTTRLIB_DATA"
           python -c "import os; print('TTTRLIB_DATA env seen by Python =', os.getenv('TTTRLIB_DATA'))"
-          echo "Listing tttr-data directory (top-level):"
-          ls -la "$TTTRLIB_DATA" || true
-          echo "Listing tttr-data recursively (first 200 lines):"
-          find "$TTTRLIB_DATA" -maxdepth 5 -type f | sort | head -n 200 || true
-          echo "Checking for critical files..."
-          missing=0
-          req=(
-            "imaging/leica/sp5/LSM_1.ptu"
-            "imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu"
-            "imaging/pq/ht3/pq_ht3_clsm.ht3"
-            "imaging/pq/ht3/crn_clv_img.ht3"
-            "imaging/pq/ht3/crn_clv_mirror.ht3"
-            "imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu"
-          )
-          for rel in "${req[@]}"; do
-            if [ ! -f "$TTTRLIB_DATA/$rel" ]; then
-              echo "MISSING: $TTTRLIB_DATA/$rel"
-              missing=1
-            else
-              echo "FOUND:   $TTTRLIB_DATA/$rel"
-            fi
-          done
-          if [ "$missing" -ne 0 ]; then
-            echo "One or more required test data files are missing."
-            echo "You can re-run the downloader locally with: python test/download_test_data.py --output-dir ./tttr-data"
-            exit 1
-          fi
+          # Use the repository's canonical verifier which reads test/settings.json
+          micromamba run -n test python test/verify_test_data.py --list-only || true
+          micromamba run -n test python test/verify_test_data.py
       
       - name: Index conda packages
         shell: bash -l {0}

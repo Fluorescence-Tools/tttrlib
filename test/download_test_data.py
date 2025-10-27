@@ -77,7 +77,12 @@ def get_required_files() -> Set[str]:
         for test_file in settings["test_files"]:
             if isinstance(test_file, list) and len(test_file) > 0:
                 required_files.add(test_file[0])
-    
+
+    # Add explicitly required files list (e.g., CLSM datasets)
+    for extra in settings.get("required_files", []):
+        if extra:
+            required_files.add(extra)
+
     return sorted(required_files)
 
 
