@@ -13,7 +13,7 @@ cmake -S .. -B . \
   -DBUILD_PYTHON_INTERFACE=ON \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_LIBRARY=OFF \
-  -DWITH_AVX=OFF \
+  -DWITH_AVX=ON \
   -DPython_ROOT_DIR="${PREFIX}/bin" \
   -DBUILD_PYTHON_DOCS=ON \
   -G Ninja \
