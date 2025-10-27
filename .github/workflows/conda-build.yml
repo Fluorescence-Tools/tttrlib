@@ -169,8 +169,8 @@ jobs:
           echo "TTTRLIB_DATA: $TTTRLIB_DATA"
           python -c "import os; print('TTTRLIB_DATA env seen by Python =', os.getenv('TTTRLIB_DATA'))"
           # Use the repository's canonical verifier which reads test/settings.json
-          micromamba run -n test python test/verify_test_data.py --list-only || true
-          micromamba run -n test python test/verify_test_data.py
+          micromamba run -n test python test/download_verify_test_data.py --list-only || true
+          micromamba run -n test python test/download_verify_test_data.py
       
       - name: Index conda packages
         shell: bash -l {0}
