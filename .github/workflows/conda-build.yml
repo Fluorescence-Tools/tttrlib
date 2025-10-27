@@ -185,4 +185,4 @@ jobs:
       - name: Run tests on installed conda package
         shell: bash -l {0}
         run: |
-          pytest test/ -v --tb=short --ignore=test/test_fsconv.py
+          pytest test/ -v --tb=short

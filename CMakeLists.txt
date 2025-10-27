@@ -37,13 +37,6 @@ ELSE()
 ENDIF()
 IF(WITH_AVX)
     INCLUDE(simd)
-    IF (MSVC)
-        # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
-        # /Oi is for intrinsics
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oi")
-    ELSE(MSVC)
-        STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mfma")
-    ENDIF ()
 ENDIF()
 
 # OpenMP - Works on all architectures (x86_64, ARM, etc.)
@@ -98,8 +91,6 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
     # GCC/Clang optimizations
     ADD_COMPILE_OPTIONS(
       -O3                    # Maximum optimization
-      -march=native          # Optimize for current CPU
-      -mtune=native          # Tune for current CPU
       -funroll-loops         # Unroll loops
       -finline-functions     # Inline functions
       -fomit-frame-pointer   # Omit frame pointer
