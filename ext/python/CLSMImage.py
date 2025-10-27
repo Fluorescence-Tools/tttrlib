@@ -195,6 +195,13 @@ def read_clsm_settings(tttr_data):
                 })
             else:
                 try:
+                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
+                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
+                except (KeyError, ValueError, TypeError):
+                    pix_x = 0
+                    pix_y = 0
+
+                try:
                     frame_tag = header.tag('ImgHdr_Frame')
                     frame_val = frame_tag.get("value", None)
                     frame_raw = int(frame_val) if frame_val is not None else None
@@ -203,18 +210,11 @@ def read_clsm_settings(tttr_data):
 
                 marker_frame = []
                 if frame_raw is not None and frame_raw > 0:
-                    marker_frame = [1 << frame_raw]
-
-                try:
-                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
-                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
-                except (KeyError, ValueError, TypeError):
-                    pix_x = 0
-                    pix_y = 0
+                    marker_frame = [1 << (frame_raw - 1)]
 
                 settings.update({
-                    "marker_line_start": line_start_raw,
-                    "marker_line_stop":  line_stop_raw,
+                    "marker_line_start": 1 << (line_start_raw - 1),      # 2^0 = 1
+                    "marker_line_stop":  1 << (line_stop_raw - 1),
                     "marker_frame_start": marker_frame,
                     "n_pixel_per_line":  pix_x,
                     "n_lines":           pix_y,
@@ -244,6 +244,7 @@ def read_clsm_settings(tttr_data):
             settings["bidirectional_scan"] = False
 
     return settings
+
 
 @staticmethod
 def get_metadata(tttr_data):
