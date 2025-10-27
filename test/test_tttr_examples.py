@@ -10,22 +10,8 @@ import gc
 
 import tttrlib
 
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-
-repo_root = Path(__file__).resolve().parents[1]
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(os.path.abspath(env_root))
-else:
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        data_root = Path(data_root_str)
-    else:
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-
-DATA_AVAILABLE = data_root.is_dir()
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
 
 class TestTTTRBatchOperations(unittest.TestCase):
