@@ -43,6 +43,12 @@ IF(WITH_AVX)
     INCLUDE(simd)
 ENDIF()
 
+IF(WITH_AVX)
+    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=1)
+ELSE()
+    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=0)
+ENDIF()
+
 # OpenMP - Works on all architectures (x86_64, ARM, etc.)
 OPTION(WITH_OPENMP "Enable OpenMP parallelization for correlation" ON)
 IF(WITH_OPENMP)

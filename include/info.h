@@ -97,6 +97,16 @@ namespace cpu_features {
     
     // Get AVX status (CPU detection + environment override)
     inline bool get_avx_enabled() {
+#if defined(TTTRLIB_WITH_AVX)
+        constexpr bool avx_compiled_in = (TTTRLIB_WITH_AVX != 0);
+#else
+        constexpr bool avx_compiled_in = true;
+#endif
+
+        if (!avx_compiled_in) {
+            return false;
+        }
+
         bool has_avx = false;
         bool has_fma = false;
         detect_features(has_avx, has_fma);
