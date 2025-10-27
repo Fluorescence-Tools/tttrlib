@@ -165,16 +165,26 @@ class Tests(unittest.TestCase):
             file_root, _ = os.path.splitext(os.path.basename(file_type[0]))
             data = tttrlib.TTTR(*file_type)
 
+            reference_path = Path(__file__).resolve().parent / 'data' / 'reference' / f"{file_root}.npz"
             if make_references:
                 routing_channels = data.routing_channels
                 micro_times = data.micro_times
                 macro_times = data.macro_times
+                reference_path.parent.mkdir(parents=True, exist_ok=True)
                 np.savez_compressed(
-                    './test/data/reference/' + file_root + ".npz",
+                    reference_path,
                     routing_channels, micro_times, macro_times
                 )
-            reference_file = './test/data/reference/' + file_root + '.npz'
-            reference = np.load(reference_file)
+            elif not reference_path.exists():
+                routing_channels = data.routing_channels
+                micro_times = data.micro_times
+                macro_times = data.macro_times
+                reference_path.parent.mkdir(parents=True, exist_ok=True)
+                np.savez_compressed(
+                    reference_path,
+                    routing_channels, micro_times, macro_times
+                )
+            reference = np.load(reference_path)
             # routing channels
             self.assertEqual(
                 np.allclose(

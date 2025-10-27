@@ -172,7 +172,11 @@ def read_clsm_settings(tttr_data):
                 except (KeyError, ValueError, TypeError):
                     frame_raw = None
 
-                marker_frame = [2 ** (frame_raw - 1)] if frame_raw and frame_raw > 0 else [4]
+                marker_frame = []
+                if frame_raw is not None and frame_raw >= 0:
+                    marker_frame = [1 << frame_raw]
+                if not marker_frame:
+                    marker_frame = [4]
 
                 try:
                     pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
@@ -182,8 +186,8 @@ def read_clsm_settings(tttr_data):
                     pix_y = 0
 
                 settings.update({
-                    "marker_line_start": 2 ** line_start_raw,      # 2^0 = 1
-                    "marker_line_stop":  2 ** line_stop_raw,
+                    "marker_line_start": 1 << line_start_raw,      # 2^0 = 1
+                    "marker_line_stop":  1 << line_stop_raw,
                     "marker_frame_start": marker_frame,
                     "n_pixel_per_line":  pix_x,
                     "n_lines":           pix_y,
@@ -197,7 +201,9 @@ def read_clsm_settings(tttr_data):
                 except (KeyError, ValueError, TypeError):
                     frame_raw = None
 
-                marker_frame = [2 ** (frame_raw - 1)] if frame_raw and frame_raw > 0 else []
+                marker_frame = []
+                if frame_raw is not None and frame_raw > 0:
+                    marker_frame = [1 << frame_raw]
 
                 try:
                     pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
@@ -207,8 +213,8 @@ def read_clsm_settings(tttr_data):
                     pix_y = 0
 
                 settings.update({
-                    "marker_line_start": 2 ** (line_start_raw - 1),
-                    "marker_line_stop":  2 ** (line_stop_raw - 1),
+                    "marker_line_start": line_start_raw,
+                    "marker_line_stop":  line_stop_raw,
                     "marker_frame_start": marker_frame,
                     "n_pixel_per_line":  pix_x,
                     "n_lines":           pix_y,
