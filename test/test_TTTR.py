@@ -9,54 +9,8 @@ from pathlib import Path
 
 import tttrlib
 
-# Load settings
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-
-# Determine the repository root (two levels up from this file)
-repo_root = Path(__file__).resolve().parents[1]
-# Get data root from environment variable or use default from settings
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    # Use os.path.abspath to preserve drive letters (avoid UNC path conversion)
-    data_root = Path(os.path.abspath(env_root))
-else:
-    # Use the data_root from settings directly (already absolute path like V:\tttr-data)
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        # If already absolute, use it directly to preserve drive letters
-        data_root = Path(data_root_str)
-    else:
-        # If relative, resolve against repo root
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-# Determine if data directory exists
-DATA_AVAILABLE = data_root.is_dir()
-if not DATA_AVAILABLE:
-    print(f"WARNING: Data directory not found: {data_root}")
-
-# Helper function to get full path
-def get_data_path(rel_path):
-    # Use os.path.join and abspath to preserve drive letters
-    path_str = os.path.abspath(os.path.join(str(data_root), rel_path))
-    path = Path(path_str)
-    if not path.exists():
-        print(f"WARNING: File {path} does not exist")
-    return path_str
-
-# Initialize test data with full paths
-for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename", 
-           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
-    if key in settings:
-        settings[key] = get_data_path(settings[key])
-
-# Update test files with full paths
-if "test_files" in settings:
-    settings["test_files"] = [
-        [get_data_path(path), ftype] for path, ftype in settings["test_files"]
-    ]
-
-print(f"Using data root: {data_root}")
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE, get_data_path, DATA_ROOT  # type: ignore
 
 # Global data object - kept for backward compatibility but not used in tests
 # All tests now use self.data from setUp() for proper isolation

@@ -9,42 +9,8 @@ from pathlib import Path
 
 import tttrlib
 
-# Load settings
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-
-# Determine the repository root
-repo_root = Path(__file__).resolve().parents[1]
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(os.path.abspath(env_root))
-else:
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        data_root = Path(data_root_str)
-    else:
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-
-DATA_AVAILABLE = data_root.is_dir()
-
-def get_data_path(rel_path):
-    path_str = os.path.abspath(os.path.join(str(data_root), rel_path))
-    path = Path(path_str)
-    if not path.exists():
-        print(f"WARNING: File {path} does not exist")
-    return path_str
-
-# Initialize test data with full paths
-for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename", 
-           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
-    if key in settings:
-        settings[key] = get_data_path(settings[key])
-
-if "test_files" in settings:
-    settings["test_files"] = [
-        [get_data_path(path), ftype] for path, ftype in settings["test_files"]
-    ]
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE, get_data_path, DATA_ROOT  # type: ignore
 
 
 @unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping extended TTTR tests")

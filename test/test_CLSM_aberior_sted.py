@@ -13,55 +13,24 @@ import numpy as np
 import tttrlib
 from pathlib import Path
 
-# Load settings
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE, DATA_ROOT  # type: ignore
 
-# Determine the repository root (two levels up from this file)
-repo_root = Path(__file__).resolve().parents[1]
-# Get data root from environment variable or use default from settings
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    # Use os.path.abspath to preserve drive letters (avoid UNC path conversion)
-    data_root = Path(os.path.abspath(env_root))
-else:
-    # Use the data_root from settings directly (already absolute path like V:\tttr-data)
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        # If already absolute, use it directly to preserve drive letters
-        data_root = Path(data_root_str)
-    else:
-        # If relative, resolve against repo root
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-
-# Helper function to get full path
-def get_data_path(rel_path):
-    # Use os.path.join and abspath to preserve drive letters
-    path_str = os.path.abspath(os.path.join(str(data_root), rel_path))
-    path = Path(path_str)
-    if not path.exists():
-        print(f"WARNING: File {path} does not exist")
-    return path_str
-
-# Get STED file
-sted_file = get_data_path(settings.get("clsm_sted_filename", "imaging/aberior/pq-mfd-sted/DA_exc561nm15prozent_STED775_100prozent_01.ptu"))
-
-# Get STED reading parameters from settings (use auto-detection by default)
+# Get STED file and parameters from centralized settings
+sted_file = settings.get("clsm_sted_filename")
 aberior_mfd_sted_reading_parameters = settings.get("aberior_mfd_sted_reading_parameters", {})
 
 # Try to find multiple STED files in the aberior directory
-fn_pattern = os.path.join(str(data_root), "imaging/aberior/pq-mfd-sted/*.ptu")
+fn_pattern = os.path.join(str(DATA_ROOT), "imaging/aberior/pq-mfd-sted/*.ptu")
 fns = glob.glob(fn_pattern)[:5]
 
 # If no files found, use the single STED file
-if not fns:
+if not fns and sted_file:
     fns = [sted_file]
 
-# Determine if data directory exists
-DATA_AVAILABLE = data_root.is_dir() and len(fns) > 0 and os.path.exists(fns[0])
-if not DATA_AVAILABLE:
-    print(f"WARNING: STED data files not found in {data_root}")
+# Determine availability
+if not (len(fns) > 0 and os.path.exists(fns[0])):
+    print(f"WARNING: STED data files not found in {DATA_ROOT}")
 
 
 @unittest.skipIf(not DATA_AVAILABLE, "STED data files not found, skipping Aberior STED tests")
