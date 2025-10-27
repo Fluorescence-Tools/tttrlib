@@ -92,18 +92,31 @@ jobs:
           python test/download_test_data.py --output-dir ./tttr-data
       
       - name: Install wheel
+        shell: python
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          PYTHON_VERSION=${{ matrix.python-version }}
-          PYTHON_TAG="cp${PYTHON_VERSION//./}"
-          echo "Looking for wheels matching: $PYTHON_TAG"
-          WHEEL=$(ls wheelhouse/*${PYTHON_TAG}*.whl 2>/dev/null | head -1)
-          if [ -z "$WHEEL" ]; then
-            echo "No matching wheel found for Python $PYTHON_VERSION"
-            ls -la wheelhouse/
-            exit 1
-          fi
-          echo "Installing: $WHEEL"
-          pip install "$WHEEL"
+          import glob
+          import os
+          import subprocess
+          import sys
+
+          python_version = os.environ["PYTHON_VERSION"]
+          python_tag = "cp" + python_version.replace(".", "")
+          print(f"Looking for wheels matching: {python_tag}")
+
+          pattern = os.path.join("wheelhouse", f"*{python_tag}*.whl")
+          wheels = sorted(glob.glob(pattern))
+
+          if not wheels:
+            print(f"No matching wheel found for Python {python_version}")
+            for path in sorted(glob.glob(os.path.join("wheelhouse", "*.whl"))):
+              print(f" - {path}")
+            raise SystemExit(1)
+
+          wheel = wheels[0]
+          print(f"Installing: {wheel}")
+          subprocess.check_call([sys.executable, "-m", "pip", "install", wheel])
       
       - name: Run tests on installed wheel
         run: |
