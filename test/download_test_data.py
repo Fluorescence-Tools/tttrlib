@@ -101,7 +101,12 @@ def get_output_dir() -> Path:
     return Path(__file__).parent / data_root
 
 
-def download_file(url: str, output_path: Path, chunk_size: int = 8192) -> bool:
+def download_file(
+    url: str,
+    output_path: Path,
+    chunk_size: int = 8192,
+    show_progress: bool = False,
+) -> bool:
     """
     Download a single file with progress tracking
     
@@ -129,20 +134,28 @@ def download_file(url: str, output_path: Path, chunk_size: int = 8192) -> bool:
         
         total_size = int(response.headers.get('content-length', 0))
         downloaded = 0
-        
+        last_logged_percent = -5.0
+
         with open(output_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=chunk_size):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    
-                    if total_size > 0:
+
+                    if show_progress and total_size > 0:
                         percent = (downloaded / total_size) * 100
-                        print(f"    {percent:.1f}% ({downloaded / 1024 / 1024:.1f} MB)", end='\r')
-        
-        if total_size > 0:
+                        if percent - last_logged_percent >= 5 or downloaded == total_size:
+                            print(
+                                f"    {percent:5.1f}% ({downloaded / 1024 / 1024:.1f} MB)",
+                                end='\r',
+                                flush=True,
+                            )
+                            last_logged_percent = percent
+
+        if show_progress and total_size > 0:
+            # Ensure the final 100% line is flushed on its own line
             print(f"    100.0% ({downloaded / 1024 / 1024:.1f} MB)")
-        
+
         print(f"  [OK] Downloaded: {output_path.name}")
         return True
         
