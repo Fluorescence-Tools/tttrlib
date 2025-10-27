@@ -3,41 +3,18 @@ from __future__ import division
 
 import os
 import unittest
-import json
 import numpy as np
 from pathlib import Path
 import gc
 
 import tttrlib
 
-# Load settings
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
-repo_root = Path(__file__).resolve().parents[1]
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(os.path.abspath(env_root))
-else:
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        data_root = Path(data_root_str)
-    else:
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-
-DATA_AVAILABLE = data_root.is_dir()
-
-def get_data_path(rel_path):
-    return os.path.abspath(os.path.join(str(data_root), rel_path))
-
-# Load CLSM data path if available
-clsm_file = None
-if "ht3_clsm_filename" in settings:
-    clsm_file = get_data_path(settings["ht3_clsm_filename"])
-    CLSM_AVAILABLE = os.path.exists(clsm_file) if clsm_file else False
-else:
-    CLSM_AVAILABLE = False
+# Load CLSM data path if available (already absolute via test_settings)
+clsm_file = settings.get("ht3_clsm_filename")
+CLSM_AVAILABLE = os.path.exists(clsm_file) if clsm_file else False
 
 
 @unittest.skipIf(not (DATA_AVAILABLE and CLSM_AVAILABLE), "CLSM data not available")

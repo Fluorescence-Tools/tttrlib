@@ -1,38 +1,14 @@
 """CLSM memory checking unit tests"""
 from __future__ import division
 
-import os
 import unittest
-import json
-from pathlib import Path
 import gc
 
 import numpy as np
 import tttrlib
 
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-
-repo_root = Path(__file__).resolve().parents[1]
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(os.path.abspath(env_root))
-else:
-    data_root_str = settings.get("data_root", "./tttr-data")
-    if os.path.isabs(data_root_str):
-        data_root = Path(data_root_str)
-    else:
-        data_root = Path(os.path.abspath(str(repo_root / data_root_str)))
-
-DATA_AVAILABLE = data_root.is_dir()
-
-def get_data_path(rel_path):
-    return os.path.abspath(os.path.join(str(data_root), rel_path))
-
-for key in ["spc132_filename"]:
-    if key in settings:
-        settings[key] = get_data_path(settings[key])
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
 
 @unittest.skipIf(not DATA_AVAILABLE, "Data directory not found")

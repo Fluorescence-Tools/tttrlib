@@ -1,43 +1,14 @@
 from __future__ import division
 
 import unittest
-import json
 import numpy as np
 import scipy.spatial
-import os
-from pathlib import Path
 
 import tttrlib
 
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
-# Determine repository root (two levels up from this file)
-repo_root = Path(__file__).resolve().parents[1]
-# Load settings JSON
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-# Resolve data root
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(env_root)
-else:
-    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
-data_root = data_root.resolve()
-# Determine if data directory exists
-DATA_AVAILABLE = data_root.is_dir()
-if not DATA_AVAILABLE:
-    print(f"WARNING: Data directory not found: {data_root}")
-# Helper to get full path
-def get_data_path(rel_path):
-    p = (data_root / rel_path).resolve()
-    if not p.exists():
-        print(f"WARNING: File {p} does not exist")
-    return str(p)
-# Update settings file paths
-for key in ["spc132_filename", "spc630_filename", "photon_hdf_filename",
-           "ptu_hh_t2_filename", "ptu_hh_t3_filename", "ht3_clsm_filename", "sm_filename"]:
-    if key in settings:
-        settings[key] = get_data_path(settings[key])
 spc132_filename = settings["spc132_filename"]
 
 

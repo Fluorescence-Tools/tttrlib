@@ -10,38 +10,14 @@ from __future__ import division
 
 import unittest
 import os
-from pathlib import Path
-import json
 import tttrlib
 import numpy as np
 
-# Determine repository root (two levels up from this file)
-repo_root = Path(__file__).resolve().parents[1]
-# Load settings JSON
-settings_path = os.path.join(os.path.dirname(__file__), "settings.json")
-settings = json.load(open(settings_path))
-# Resolve data root
-env_root = os.getenv("TTTRLIB_DATA")
-if env_root:
-    env_root = env_root.strip().strip('\'"')
-    data_root = Path(env_root)
-else:
-    data_root = (repo_root / settings.get("data_root", "./tttr-data")).resolve()
-data_root = data_root.resolve()
-# Determine if data directory exists
-DATA_AVAILABLE = data_root.is_dir()
-if not DATA_AVAILABLE:
-    print(f"WARNING: Data directory not found: {data_root}")
-
-# Helper to get full path
-def get_data_path(rel_path):
-    p = (data_root / rel_path).resolve()
-    if not p.exists():
-        print(f"WARNING: File {p} does not exist")
-    return str(p)
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
 # Test files with multiple channels
-ht3_filename = get_data_path('imaging/pq/ht3/crn_clv_img.ht3')
+ht3_filename = settings.get('clsm_ht3_img_filename')
 
 ht3_reading_parameter = {
     "marker_frame_start": [4],
