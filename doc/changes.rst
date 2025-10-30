@@ -5,6 +5,7 @@
 Version 0.26
 ============
 * Improved support for Photon-HDF5 for better ALEX support
+* Transparent in-memory compression of TTTR and CLSMImage objects
 
 Version 0.25
 ------------
