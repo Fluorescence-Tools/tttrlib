@@ -1,7 +1,3 @@
-Here’s a **reduced-duplication version** of your README that keeps all information intact but removes redundant or repeated sections (notably multiple installation/build parts, repeated file format lists, and repeated explanations of usage). It’s also slightly reorganized for clarity and flow while preserving your original tone and details.
-
----
-
 # tttrlib
 
 [![Anaconda](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
@@ -11,7 +7,11 @@ Here’s a **reduced-duplication version** of your README that keeps all informa
 
 ---
 
-## Overview
+## General description
+tttrlib is a file format agnostic high performance library to
+read, process, and write time-tagged-time resolved (TTTR) data acquired by
+PicoQuant (PQ) and Becker & Hickl measurement devices/cards or TTTR
+files in the open Photon-HDF format.
 
 **tttrlib** is a high-performance, file-format-agnostic library to read, process, and write **time-tagged time-resolved (TTTR)** data from
 **PicoQuant**, **Becker & Hickl**, and **Photon-HDF5** files.
@@ -34,7 +34,6 @@ Written in **C++** with **Python bindings**, it provides a fast, vendor-independ
 `tttrlib` typically outperforms pure Python implementations by
 ~40× in decay histogramming and ~2–5× in burst selection.
 
----
 
 ## Installation
 
@@ -94,6 +93,9 @@ routing = data.routing_channels
 ### Inspect header
 
 ```python
+import tttrlib
+fn = 'photon_stream.ptu'
+data = tttrlib.TTTR(fn)
 print(data.header.json)
 print(data.header.to_csv())
 ```
@@ -101,26 +103,52 @@ print(data.header.to_csv())
 ### Cross-correlate photon streams
 
 ```python
-corr = tttrlib.Correlator(channels=([1], [2]), tttr=data)
-taus, g2 = corr.x_axis, corr.correlation
+import tttrlib
+fn = 'photon_stream.ptu'
+data = tttrlib.TTTR(fn)
+correlator = tttrlib.Correlator(
+    channels=([1], [2]),
+    tttr=data
+)
+taus = correlator.x_axis,
+correlation_amplitude = correlator.correlation
 ```
 
 ### Create intensity images (CLSM)
 
 ```python
-clsm = tttrlib.CLSMImage("image.ptu", fill=True)
-img = clsm.intensity
+import tttrlib
+fn = 'image.ptu'
+data = tttrlib.TTTR(fn)
+clsm = tttrlib.CLSMImage(data)
+channels = [0, 1]
+prompt_range = [0, 16000]
+clsm.fill(channels=channels, micro_time_ranges=[prompt_range])
+intensity_image = clsm.intensity
+
+# Alternatively
+clsm = tttrlib.CLSMImage(fn, fill=True)
+intensity_image = clsm.intensity
+
 ```
 
 ### Minimal burst search
 
 ```python
-L, m, T = 30, 10, 1e-3
-ranges = data.burst_search(L=L, m=m, T=T)
+import tttrlib
+import numpy as np
+
+fn = 'photon_stream.ptu'
+tttr = tttrlib.TTTR(fn)
+
+# Bust selection
+L, m, T = 30, 10, 1e-3  # min photons, window photons, window time [s]
+ranges = tttr.burst_search(L=L, m=m, T=T)  # flat [start, stop, start, stop, ...]
 bursts = list(zip(ranges[0::2], ranges[1::2]))
 ```
 
----
+For PIE/ALEX data, add micro-time gating before burst search; see the tutorial for donor/acceptor prompt examples.
+For details, parameters, and plotting examples, see the Burst Analysis tutorial.
 
 ## Verbose / Debug Output
 
@@ -146,7 +174,7 @@ Include verbose logs and a minimal reproduction when reporting issues.
 
 ## Contributing
 
-To add support for a new format:
+To add support for a new format / microscope:
 
 1. Open a GitHub issue describing the format and instrument.
 2. Share a small demo file (<100 MB) with expected results.
