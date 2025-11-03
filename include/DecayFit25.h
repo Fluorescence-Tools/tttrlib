@@ -1,12 +1,13 @@
 #ifndef TTTRLIB_DECAYFIT25_H
 #define TTTRLIB_DECAYFIT25_H
 
+#include <nlohmann/json.hpp>
 #include "DecayConvolution.h"
-
 #include "DecayStatistics.h"
 #include "DecayFit.h"
 #include "DecayFit23.h"
 
+using json = nlohmann::json;
 
 class DecayFit25 : DecayFit {
 
@@ -64,6 +65,15 @@ public:
      * @return
      */
     static double fit(double *x, short *fixed, MParam *p);
+
+    static std::string to_json(const double *x,
+                               const short *fixed,
+                               const MParam *p,
+                               double result);
+
+    static void from_json(const json &j,
+                         double *x,
+                         short *fixed);
 
 };
 

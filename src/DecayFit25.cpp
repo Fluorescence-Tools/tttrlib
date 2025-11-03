@@ -161,3 +161,71 @@ if (is_verbose()) {
     return tIstarbest;
 
 }
+
+
+std::string DecayFit25::to_json(const double *x,
+                               const short *fixed,
+                               const MParam *p,
+                               double result) {
+    json j;
+
+    if (x != nullptr) {
+        j["parameters"] = json::array();
+        for (int i = 0; i < 9; i++) {
+            j["parameters"].push_back(x[i]);
+        }
+    }
+
+    if (fixed != nullptr) {
+        j["fixed"] = json::array();
+        for (int i = 0; i < 5; i++) {
+            j["fixed"].push_back(static_cast<int>(fixed[i]));
+        }
+    }
+
+    j["result"] = result;
+
+    if (p != nullptr) {
+        json jp;
+        jp["dt"] = p->dt;
+        if (p->expdata && *(p->expdata)) {
+            jp["data_length"] = (*(p->expdata))->length;
+        }
+        if (p->corrections && *(p->corrections)) {
+            LVDoubleArray *corr = *(p->corrections);
+            json jcorr = json::array();
+            for (int i = 0; i < corr->length; ++i) {
+                jcorr.push_back(corr->data[i]);
+            }
+            jp["corrections"] = jcorr;
+        }
+        if (p->irf && *(p->irf)) {
+            jp["irf_length"] = (*(p->irf))->length;
+        }
+        if (p->bg && *(p->bg)) {
+            jp["background_length"] = (*(p->bg))->length;
+        }
+        j["mparam"] = jp;
+    }
+
+    return j.dump();
+}
+
+
+void DecayFit25::from_json(const json &j,
+                          double *x,
+                          short *fixed) {
+    if (j.contains("parameters") && j.at("parameters").is_array()) {
+        const auto &params = j.at("parameters");
+        for (int i = 0; i < std::min(9, static_cast<int>(params.size())); ++i) {
+            x[i] = params.at(i);
+        }
+    }
+
+    if (j.contains("fixed") && j.at("fixed").is_array()) {
+        const auto &fixed_arr = j.at("fixed");
+        for (int i = 0; i < std::min(5, static_cast<int>(fixed_arr.size())); ++i) {
+            fixed[i] = static_cast<short>(fixed_arr.at(i));
+        }
+    }
+}

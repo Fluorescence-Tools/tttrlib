@@ -274,3 +274,135 @@ if (is_verbose()) {
     return tIstar;
 }
 
+
+std::string DecayFit23::fit_to_json(const double *x,
+                                   const short *fixed,
+                                   const MParam *p,
+                                   double result) {
+    json j;
+
+    if (x != nullptr) {
+        j["parameters"] = json::array();
+        for (int i = 0; i < 8; i++) {
+            j["parameters"].push_back(x[i]);
+        }
+    }
+
+    if (fixed != nullptr) {
+        j["fixed"] = json::array();
+        for (int i = 0; i < 4; i++) {
+            j["fixed"].push_back(static_cast<int>(fixed[i]));
+        }
+    }
+
+    j["result"] = result;
+
+    if (p != nullptr) {
+        json jp;
+        jp["dt"] = p->dt;
+        if (p->expdata && *(p->expdata)) {
+            jp["data_length"] = (*(p->expdata))->length;
+        }
+        if (p->corrections && *(p->corrections)) {
+            LVDoubleArray *corr = *(p->corrections);
+            json jcorr = json::array();
+            for (int i = 0; i < corr->length; ++i) {
+                jcorr.push_back(corr->data[i]);
+            }
+            jp["corrections"] = jcorr;
+        }
+        if (p->irf && *(p->irf)) {
+            jp["irf_length"] = (*(p->irf))->length;
+        }
+        if (p->bg && *(p->bg)) {
+            jp["background_length"] = (*(p->bg))->length;
+        }
+        j["mparam"] = jp;
+    }
+
+    return j.dump();
+}
+
+
+std::string DecayFit23::to_json(const double *x,
+                               const short *fixed,
+                               const MParam *p,
+                               double result) {
+    return fit_to_json(x, fixed, p, result);
+}
+
+
+void DecayFit23::from_json(const json &j,
+                          double *x,
+                          short *fixed) {
+    if (j.contains("parameters") && j.at("parameters").is_array()) {
+        const auto &params = j.at("parameters");
+        for (int i = 0; i < std::min(8, static_cast<int>(params.size())); ++i) {
+            x[i] = params.at(i);
+        }
+    }
+
+    if (j.contains("fixed") && j.at("fixed").is_array()) {
+        const auto &fixed_arr = j.at("fixed");
+        for (int i = 0; i < std::min(4, static_cast<int>(fixed_arr.size())); ++i) {
+            fixed[i] = static_cast<short>(fixed_arr.at(i));
+        }
+    }
+}
+
+
+std::string DecayFit23::modelf_to_json(const double *param,
+                                      const double *irf,
+                                      const double *bg,
+                                      int Nchannels,
+                                      double dt,
+                                      const double *corrections,
+                                      const double *mfunction,
+                                      int result) {
+    json j;
+
+    if (param != nullptr) {
+        j["parameters"] = json::array();
+        for (int i = 0; i < 4; i++) {
+            j["parameters"].push_back(param[i]);
+        }
+    }
+
+    if (corrections != nullptr) {
+        j["corrections"] = json::array();
+        for (int i = 0; i < 5; i++) {
+            j["corrections"].push_back(corrections[i]);
+        }
+    }
+
+    j["Nchannels"] = Nchannels;
+    j["dt"] = dt;
+    j["result"] = result;
+
+    if (irf != nullptr) {
+        json jirf = json::array();
+        for (int i = 0; i < 2 * Nchannels; ++i) {
+            jirf.push_back(irf[i]);
+        }
+        j["irf"] = jirf;
+    }
+
+    if (bg != nullptr) {
+        json jbg = json::array();
+        for (int i = 0; i < 2 * Nchannels; ++i) {
+            jbg.push_back(bg[i]);
+        }
+        j["background"] = jbg;
+    }
+
+    if (mfunction != nullptr) {
+        json jm = json::array();
+        for (int i = 0; i < 2 * Nchannels; ++i) {
+            jm.push_back(mfunction[i]);
+        }
+        j["model"] = jm;
+    }
+
+    return j.dump();
+}
+
