@@ -7,6 +7,8 @@
 static int myErr = 0; // flag to save error state
 %}
 
+// Note: std_vector.i is already included in misc_types.i
+// Only define custom vector templates for CLSM-specific types
 %template(vector_CLSMFrame) std::vector<CLSMFrame*>;
 %template(vector_CLSMLine) std::vector<CLSMLine*>;
 %template(vector_CLSMPixel) std::vector<CLSMPixel*>;
@@ -45,7 +47,6 @@ static int myErr = 0; // flag to save error state
 %include "CLSMLine.h"
 %include "CLSMFrame.h"
 %include "CLSMImage.h"
-%include "std_vector.i"
 
 // https://stackoverflow.com/questions/8776328/swig-interfacing-c-library-to-python-creating-iterable-python-data-type-from
 %exception CLSMImage::__getitem__ {
