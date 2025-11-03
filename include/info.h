@@ -100,7 +100,8 @@ namespace cpu_features {
 #if defined(TTTRLIB_WITH_AVX)
         constexpr bool avx_compiled_in = (TTTRLIB_WITH_AVX != 0);
 #else
-        constexpr bool avx_compiled_in = true;
+        // If TTTRLIB_WITH_AVX is not defined, assume AVX was NOT compiled in (safe default)
+        constexpr bool avx_compiled_in = false;
 #endif
 
         if (!avx_compiled_in) {
