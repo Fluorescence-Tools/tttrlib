@@ -39,13 +39,13 @@ pytest test/
 
 #### Windows (PowerShell)
 ```powershell
-$env:TTTRLIB_DATA = "V:\tttr-data"
+$env:TTTRLIB_DATA = "Q:\tttr-data"
 pytest test/
 ```
 
 #### Windows (Command Prompt)
 ```cmd
-set TTTRLIB_DATA=V:\tttr-data
+set TTTRLIB_DATA=Q:\tttr-data
 pytest test/
 ```
 
