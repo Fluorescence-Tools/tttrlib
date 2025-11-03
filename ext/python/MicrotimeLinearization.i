@@ -1,18 +1,8 @@
-%module(package="tttrlib") MicrotimeLinearization
-
 %{
 #include "include/MicrotimeLinearization.h"
 %}
 
-%include <std_vector.i>
-%include <std_string.i>
-%include <std_map.i>
-
-namespace std {
-    %template(VectorFloat) vector<float>;
-    %template(VectorInt) vector<int>;
-    %template(MapIntVectorFloat) map<int, vector<float>>;
-    %template(MapIntInt) map<int, int>;
-}
+// Note: Vector and map templates are already defined in misc_types.i
+// Do not redefine them here to avoid SWIG duplicate symbol errors
 
 %include "include/MicrotimeLinearization.h"
