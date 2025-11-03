@@ -2313,3 +2313,88 @@ void TTTR::disable_macro_time_compression() {
 
     decompress_macro_times();
 }
+
+int TTTR::linearize_microtimes(
+    const MicrotimeLinearization& linearizer,
+    unsigned int seed
+) {
+    if (micro_times == nullptr || routing_channels == nullptr) {
+        return 0;
+    }
+    
+    if (n_valid_events == 0) {
+        return 1;
+    }
+    
+    if (!linearizer.is_valid()) {
+        if (is_verbose()) {
+            std::clog << "-- ERROR: Invalid MicrotimeLinearization object" << std::endl;
+        }
+        return 0;
+    }
+    
+    if (is_verbose()) {
+        std::clog << "-- Linearizing " << n_valid_events << " microtimes with channel mapping..." << std::endl;
+    }
+    
+    // Apply linearization using the MicrotimeLinearization object
+    // which handles channel-to-card mapping internally
+    int result = const_cast<MicrotimeLinearization&>(linearizer).linearize(
+        micro_times,
+        (const unsigned char*)routing_channels,
+        (int)n_valid_events,
+        seed
+    );
+    
+    if (result && is_verbose()) {
+        std::clog << "-- Microtime linearization complete." << std::endl;
+    }
+    
+    return result;
+}
+
+int TTTR::linearize_microtimes_with_random(
+    const MicrotimeLinearization& linearizer,
+    const float* random_numbers,
+    int n_random_numbers
+) {
+    if (micro_times == nullptr || routing_channels == nullptr) {
+        return 0;
+    }
+    
+    if (n_valid_events == 0) {
+        return 1;
+    }
+    
+    if (random_numbers == nullptr || n_random_numbers < (int)n_valid_events) {
+        if (is_verbose()) {
+            std::clog << "-- ERROR: Insufficient random numbers provided" << std::endl;
+        }
+        return 0;
+    }
+    
+    if (!linearizer.is_valid()) {
+        if (is_verbose()) {
+            std::clog << "-- ERROR: Invalid MicrotimeLinearization object" << std::endl;
+        }
+        return 0;
+    }
+    
+    if (is_verbose()) {
+        std::clog << "-- Linearizing " << n_valid_events << " microtimes with provided random numbers..." << std::endl;
+    }
+    
+    // Apply linearization with provided random numbers
+    int result = const_cast<MicrotimeLinearization&>(linearizer).linearize(
+        micro_times,
+        (const unsigned char*)routing_channels,
+        (int)n_valid_events,
+        random_numbers
+    );
+    
+    if (result && is_verbose()) {
+        std::clog << "-- Microtime linearization complete." << std::endl;
+    }
+    
+    return result;
+}

@@ -38,6 +38,7 @@
 #include "TTTRMask.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
+#include "MicrotimeLinearization.h"
 #include "info.h"
 
 
@@ -1572,6 +1573,52 @@ public:
                 this, tttr_indices,
                 microtime_resolution, minimum_number_of_photons);
     }
+
+    /*!
+     * \brief Linearize microtimes using MicrotimeLinearization with channel mapping
+     *
+     * Applies TAC linearization to all microtimes in the TTTR object using a 
+     * MicrotimeLinearization object that handles flexible channel-to-card mapping.
+     * This is the recommended approach for multi-card systems.
+     *
+     * This method modifies the microtime values in-place.
+     *
+     * \param linearizer MicrotimeLinearization object configured with linearization tables
+     *                   and channel-to-card mapping
+     * \param seed Random seed for dithering (default: 0 for time-based seed)
+     *
+     * \return 1 on success, 0 on failure
+     *
+     * \see MicrotimeLinearization
+     */
+    int linearize_microtimes(
+        const MicrotimeLinearization& linearizer,
+        unsigned int seed = 0
+    );
+    
+    /*!
+     * \brief Linearize microtimes with provided random numbers
+     *
+     * Applies TAC linearization to all microtimes in the TTTR object using a
+     * MicrotimeLinearization object with provided random numbers for dithering.
+     * This allows for reproducible linearization when the same random numbers are used.
+     *
+     * This method modifies the microtime values in-place.
+     *
+     * \param linearizer MicrotimeLinearization object configured with linearization tables
+     *                   and channel-to-card mapping
+     * \param random_numbers Array of random numbers in range [0, 1) for dithering
+     * \param n_random_numbers Size of random_numbers array (should be >= n_valid_events)
+     *
+     * \return 1 on success, 0 on failure
+     *
+     * \see linearize_microtimes
+     */
+    int linearize_microtimes_with_random(
+        const MicrotimeLinearization& linearizer,
+        const float* random_numbers,
+        int n_random_numbers
+    );
 
 };
 
