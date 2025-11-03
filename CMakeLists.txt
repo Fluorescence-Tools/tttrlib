@@ -16,7 +16,9 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
+# Default WITH_AVX to OFF for conda/pip builds (safer, wider compatibility)
+# Users can enable with: cmake -DWITH_AVX=ON
+OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics (default OFF for conda/pip builds)" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
@@ -89,9 +91,15 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       /Oi          # Enable intrinsic functions
       /Ot          # Favor fast code
       /GL          # Whole program optimization
-      /arch:AVX2   # Use AVX2 instructions (if available)
       /w           # Disable all warnings in Release builds
     )
+    # Add AVX2 flag only if explicitly enabled by user
+    IF(WITH_AVX)
+      ADD_COMPILE_OPTIONS(/arch:AVX2)
+      MESSAGE(STATUS "MSVC: AVX2 flag enabled via /arch:AVX2")
+    ELSE()
+      MESSAGE(STATUS "MSVC: AVX2 flag disabled (use -DWITH_AVX=ON to enable)")
+    ENDIF()
     # Suppress informational pragma messages from external libraries (HighFive)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")  # Disable deprecation warnings
