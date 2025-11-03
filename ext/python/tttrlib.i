@@ -39,6 +39,8 @@
 %include "TTTRSelection.i"
 %include "TTTR.i"
 %include "TTTRMask.i"
+%include "BurstFilter.i"
+%include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
 
@@ -58,6 +60,7 @@
 
 /* convolution */
 %include "DecayConvolution.i"
+
 
 /* DecayFit(s) */
 %include "DecayFit.i"
