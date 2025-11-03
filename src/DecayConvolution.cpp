@@ -1,5 +1,6 @@
 #include "DecayConvolution.h"
 #include "include/Verbose.h"
+#include "include/info.h"
 
 /* rescaling -- old version. sum(fit)->sum(decay) */
 void rescale(double *fit, double *decay, double *scale, int start, int stop) {
@@ -82,6 +83,11 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
 void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
 
     #ifdef __AVX__
+    // Add runtime detection with fallback
+    if (!tttrlib::cpu_features::get_avx_enabled()) {
+        fconv(fit, x, lamp, numexp, start, stop, dt);
+        return;
+    }
     
     int start1 = std::max(1, start);
 
@@ -115,10 +121,9 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
 #ifdef _WIN32
-        fit[0] += double(tmp.m256d_f64[0]);
-        fit[0] += double(tmp.m256d_f64[1]);
-        fit[0] += double(tmp.m256d_f64[2]);
-        fit[0] += double(tmp.m256d_f64[3]);
+        double tmp_vals[4];
+        _mm256_storeu_pd(tmp_vals, tmp);
+        fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
 #else
         fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -138,10 +143,9 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] += double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals2[4];
+            _mm256_storeu_pd(tmp_vals2, tmp);
+            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
 #else
             fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -206,6 +210,12 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
 void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                    int n_points, double period, double dt) {
 #ifdef __AVX__
+
+    // Add runtime detection with fallback
+    if (!tttrlib::cpu_features::get_avx_enabled()) {
+        fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
+        return;
+    }
 
 if (is_verbose()) {
     std::clog << "FCONV_PER_AVX" << std::endl;
@@ -274,10 +284,9 @@ if (is_verbose()) {
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
 #ifdef _WIN32
-        fit[0] += double(tmp.m256d_f64[0]);
-        fit[0] += double(tmp.m256d_f64[1]);
-        fit[0] += double(tmp.m256d_f64[2]);
-        fit[0] += double(tmp.m256d_f64[3]);
+        double tmp_vals[4];
+        _mm256_storeu_pd(tmp_vals, tmp);
+        fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
 #else
         fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -298,10 +307,9 @@ if (is_verbose()) {
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] += double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals2[4];
+            _mm256_storeu_pd(tmp_vals2, tmp);
+            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
 #else
             fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -316,10 +324,9 @@ if (is_verbose()) {
             tmp = _mm256_mul_pd(fitcurr, a);
             tmp = _mm256_mul_pd(tmp, t);
 #ifdef _WIN32
-            fit[i] += double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals3[4];
+            _mm256_storeu_pd(tmp_vals3, tmp);
+            fit[i] += tmp_vals3[0] + tmp_vals3[1] + tmp_vals3[2] + tmp_vals3[3];
 #else
             fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif

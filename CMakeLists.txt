@@ -89,6 +89,7 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       /Oi          # Enable intrinsic functions
       /Ot          # Favor fast code
       /GL          # Whole program optimization
+      /arch:AVX2   # Use AVX2 instructions (if available)
       /w           # Disable all warnings in Release builds
     )
     # Suppress informational pragma messages from external libraries (HighFive)

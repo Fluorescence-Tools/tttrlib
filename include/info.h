@@ -202,7 +202,7 @@ namespace env {
         if (env_val != nullptr) {
             return !cpu_features::is_false_value(env_val);
         }
-        return true;
+        return true;  // ENABLED BY DEFAULT - compression bugs fixed, safe to use
     }
 
     // Initialize auto_compress_on_read with logging
