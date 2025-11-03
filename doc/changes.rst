@@ -6,6 +6,9 @@ Version 0.26
 ============
 * Improved support for Photon-HDF5 for better ALEX support
 * Transparent in-memory compression of TTTR and CLSMImage objects
+* Added linearity correction for micro times
+* Added multimolecule correction in PDA
+* Improved DecayFit interface (JSON in/output)
 
 Version 0.25
 ------------
