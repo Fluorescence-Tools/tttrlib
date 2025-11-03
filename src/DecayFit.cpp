@@ -1,12 +1,10 @@
 #include "DecayFit.h"
-#include "include/Verbose.h"
 
 void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
     LVI32Array *expdata = *(p->expdata);
     LVDoubleArray *bg = *(p->bg);
     int Nchannels_exp = expdata->length / 2;
 
-    // total signal and background
     Sp = 0.; Ss = 0.;
     Bp = 0.; Bs = 0.;
 
@@ -20,42 +18,54 @@ void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
         Bs += bg->data[i];
     }
     B = std::max(1.0, Bp + Bs);
-    Bp *= (Sp + Ss) /std::max(1., B);
-    Bs *= (Sp + Ss) /std::max(1., B);
-    Bexpected = corrections->gamma * B;
-if (is_verbose()) {
-    std::cout << "COMPUTE_SIGNAL_AND_BACKGROUND" << std::endl;
-    std::cout << "-- Nchannels_exp:" << Nchannels_exp << std::endl;
-    std::cout << "-- Bp, Bs: " << Bp << ", " << Bs << std::endl;
-    std::cout << "-- Sp, Ss: " << Sp << ", " << Ss << std::endl;
-    std::cout << "-- Bexpected: " << Bexpected << std::endl;
-}
+    Bp *= (Sp + Ss) / std::max(1., B);
+    Bs *= (Sp + Ss) / std::max(1., B);
+    if (corrections != nullptr) {
+        Bexpected = corrections->gamma * B;
+    } else {
+        Bexpected = 0.0;
+    }
+
+    if (is_verbose()) {
+        std::cout << "COMPUTE_SIGNAL_AND_BACKGROUND" << std::endl;
+        std::cout << "-- Nchannels_exp:" << Nchannels_exp << std::endl;
+        std::cout << "-- Bp, Bs: " << Bp << ", " << Bs << std::endl;
+        std::cout << "-- Sp, Ss: " << Sp << ", " << Ss << std::endl;
+        std::cout << "-- Bexpected: " << Bexpected << std::endl;
+    }
 }
 
 
 void DecayFitIntegrateSignals::normM(double *M, int Nchannels) {
-    int i;
-    double s = 0., Sexp = Sp + Ss;
-    for (i = 0; i < 2 * Nchannels; i++) s += M[i];
-    for (i = 0; i < 2 * Nchannels; i++) M[i] *= Sexp / s;
+    double s = 0.;
+    double Sexp = Sp + Ss;
+    for (int i = 0; i < 2 * Nchannels; i++) s += M[i];
+    if (s <= 0.) {
+        return;
+    }
+    for (int i = 0; i < 2 * Nchannels; i++) M[i] *= Sexp / s;
 }
 
-// if already normalized to s:
 void DecayFitIntegrateSignals::normM(double *M, double s, int Nchannels) {
-    int i;
     double Sexp = Sp + Ss;
-    for (i = 0; i < 2 * Nchannels; i++) M[i] *= Sexp / s;
+    if (s <= 0.) {
+        return;
+    }
+    for (int i = 0; i < 2 * Nchannels; i++) M[i] *= Sexp / s;
 }
 
 void DecayFitIntegrateSignals::normM_p2s(double *M, int Nchannels) {
     double s = 0.;
 
-    int i;
-    for (i = 0; i < Nchannels; i++) s += M[i];
-    for (i = 0; i < Nchannels; i++) M[i] *= Sp / s;
+    for (int i = 0; i < Nchannels; i++) s += M[i];
+    if (s > 0.) {
+        for (int i = 0; i < Nchannels; i++) M[i] *= Sp / s;
+    }
 
     s = 0.;
-    for (i = Nchannels; i < 2 * Nchannels; i++) s += M[i];
-    for (i = Nchannels; i < 2 * Nchannels; i++) M[i] *= Ss / s;
+    for (int i = Nchannels; i < 2 * Nchannels; i++) s += M[i];
+    if (s > 0.) {
+        for (int i = Nchannels; i < 2 * Nchannels; i++) M[i] *= Ss / s;
+    }
 }
 

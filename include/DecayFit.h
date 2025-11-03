@@ -1,20 +1,27 @@
-#include "include/Verbose.h"
+// SPDX-License-Identifier: MIT
+
 #ifndef TTTRLIB_DECAYFIT_H
 #define TTTRLIB_DECAYFIT_H
 
-#include <iostream>
-#include <cmath>
+#include "include/Verbose.h"
+
 #include <algorithm>
+#include <cmath>
+#include <iostream>
 #include <string>
 #include <sstream>
+
+#include <nlohmann/json.hpp>
 
 #include "i_lbfgs.h"
 #include "LvArrays.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
 
+using json = nlohmann::json;
 
-struct DecayFitCorrections{
+
+struct DecayFitCorrections {
 
     double gamma = 0.0;
     double g = 1.0;
@@ -23,7 +30,7 @@ struct DecayFitCorrections{
     double period = 1000;
     int convolution_stop = 0;
 
-    void set_gamma(double v){
+    void set_gamma(double v) {
         if (v < 0.)
             gamma = 0.;        // 0 < gamma < 0.999
         else if (v > 0.999)
@@ -32,7 +39,7 @@ struct DecayFitCorrections{
             gamma = v;
     }
 
-    std::string str(){
+    std::string str() {
         auto s = std::stringstream();
         s << "-- Correction factors:\n";
         s << "-- g-factor: " << g << std::endl;
@@ -40,6 +47,27 @@ struct DecayFitCorrections{
         s << "-- period: " << period << std::endl;
         s << "-- convolution_stop: " << convolution_stop << std::endl;
         return s.str();
+    }
+
+    json to_json() const {
+        json j;
+        j["gamma"] = gamma;
+        j["g"] = g;
+        j["l1"] = l1;
+        j["l2"] = l2;
+        j["period"] = period;
+        j["convolution_stop"] = convolution_stop;
+        return j;
+    }
+
+    void from_json(const json &j) {
+        if (j.contains("gamma")) gamma = j.at("gamma");
+        if (j.contains("g")) g = j.at("g");
+        if (j.contains("l1")) l1 = j.at("l1");
+        if (j.contains("l2")) l2 = j.at("l2");
+        if (j.contains("period")) period = j.at("period");
+        if (j.contains("convolution_stop")) convolution_stop = j.at("convolution_stop");
+        set_gamma(gamma);
     }
 
     explicit DecayFitCorrections(
@@ -61,7 +89,7 @@ struct DecayFitCorrections{
 };
 
 
-struct DecayFitSettings{
+struct DecayFitSettings {
 
     int fixedrho = 0;
     int softbifl = 0;
@@ -69,7 +97,7 @@ struct DecayFitSettings{
     int firstcall = 1;
     double penalty = 0.0;
 
-    std::string str(){
+    std::string str() {
         auto s = std::stringstream();
         s << "DECAYFITSETTINGS: " << std::endl;
         s << "-- fixedrho: " << fixedrho << std::endl;
@@ -79,12 +107,30 @@ struct DecayFitSettings{
         s << "-- penalty: " << penalty << std::endl;
         return s.str();
     }
+
+    json to_json() const {
+        json j;
+        j["fixedrho"] = fixedrho;
+        j["softbifl"] = softbifl;
+        j["p2s_twoIstar"] = p2s_twoIstar;
+        j["firstcall"] = firstcall;
+        j["penalty"] = penalty;
+        return j;
+    }
+
+    void from_json(const json &j) {
+        if (j.contains("fixedrho")) fixedrho = j.at("fixedrho");
+        if (j.contains("softbifl")) softbifl = j.at("softbifl");
+        if (j.contains("p2s_twoIstar")) p2s_twoIstar = j.at("p2s_twoIstar");
+        if (j.contains("firstcall")) firstcall = j.at("firstcall");
+        if (j.contains("penalty")) penalty = j.at("penalty");
+    }
 };
 
 
-struct DecayFitIntegrateSignals{
+struct DecayFitIntegrateSignals {
 
-    DecayFitCorrections* corrections = nullptr;
+    DecayFitCorrections *corrections = nullptr;
 
     /// Total signal parallel
     double Sp = 0.0;
@@ -105,69 +151,69 @@ struct DecayFitIntegrateSignals{
     double Bexpected = 0.0;
 
 
-    double Fp(){
+    double Fp() {
         double g = 1.0;
-        if(corrections != nullptr){
+        if (corrections != nullptr) {
             g = corrections->gamma;
         }
-        if(g == 1.0){
+        if (g == 1.0) {
             return (Sp - Bp);
-        } else{
+        } else {
             return (Sp - g * Bp) / (1. - g);
         }
     }
 
-    double Fs(){
+    double Fs() {
         double g = 1.0, r;
-        if(corrections != nullptr){
+        if (corrections != nullptr) {
             g = corrections->gamma;
         }
-        if(g == 1.0){
+        if (g == 1.0) {
             r = (Ss - Bs);
-        } else{
+        } else {
             r = (Ss - g * Bs) / (1. - g);
         }
-if (is_verbose()) {
-        std::cout << "Fs()" << std::endl;
-        std::cout << "g:" << g << std::endl;
-        std::cout << "Ss:" << Ss << std::endl;
-        std::cout << "Bs:" << Bs << std::endl;
-        std::cout << "Fs:" << r << std::endl;
-}
+        if (is_verbose()) {
+            std::cout << "Fs()" << std::endl;
+            std::cout << "g:" << g << std::endl;
+            std::cout << "Ss:" << Ss << std::endl;
+            std::cout << "Bs:" << Bs << std::endl;
+            std::cout << "Fs:" << r << std::endl;
+        }
         return r;
     }
 
-    double r(){
+    double r() {
         double fp = Fp();
         double fs = Fs();
         double g = 1.0, l1 = 0.0, l2 = 0.0;
-        if(corrections != nullptr){
+        if (corrections != nullptr) {
             g = corrections->g;
             l1 = corrections->l1;
             l2 = corrections->l2;
         }
 
-if (is_verbose()) {
-        std::cout << "fp:" << fp << std::endl;
-        std::cout << "fs:" << fs << std::endl;
-        std::cout << "g:" << g << std::endl;
-        std::cout << "l1:" << l1 << std::endl;
-        std::cout << "l2:" << l2 << std::endl;
-}
+        if (is_verbose()) {
+            std::cout << "fp:" << fp << std::endl;
+            std::cout << "fs:" << fs << std::endl;
+            std::cout << "g:" << g << std::endl;
+            std::cout << "l1:" << l1 << std::endl;
+            std::cout << "l2:" << l2 << std::endl;
+        }
 
         double nom = (fp - g * fs);
         double denom = (fp * (1. - 3. * l2) + (2. - 3. * l1) * g * fs);
         return nom / denom;
     }
 
-    double rho(double tau, double r0){
-        double rh = tau / (r0 / r() - 1.);        // rho = tau/(r0/r-1)
+    double rho(double tau, double r0) {
+        double rh = tau / (r0 / r() - 1.);
         return std::max(rh, 1.e-4);
     }
 
-    double rs(){
+    double rs() {
         double g = 1.0, l1 = 0.0, l2 = 0.0;
-        if(corrections != nullptr){
+        if (corrections != nullptr) {
             g = corrections->g;
             l1 = corrections->l1;
             l2 = corrections->l2;
@@ -175,146 +221,146 @@ if (is_verbose()) {
         return (Sp - g * Ss) / (Sp * (1. - 3. * l2) + (2. - 3. * l1) * g * Ss);
     }
 
-    /*!
-     * Computes the total number of photons in the parallel and perpendicular
-     * detection channel for the background and the measured signal. The
-     * computed number of photons are stored in the static variables
-     * Sp, Ss, Bp, Bs.
-     *
-     * @param p[in] a pointer to a MParam object
-     */
     void compute_signal_and_background(MParam *p);
 
-    /*!
-     * Normalizes the number of photons in the entire model function to the
-     * number of experimental photons.
-     *
-     * Here, the Number of experimental photons is Sp + Ss (signal in parallel and
-     * perpendicular). Sp and Ss are global variables that can be computed by
-     * `compute_signal_and_background`.
-     *
-     * @param M[in,out] array containing the model function in Jordi format
-     * @param Nchannels[in] number of channels in the experiment(half length of
-     * M array)
-     */
     void normM(double *M, int Nchannels);
 
-    /*!
-     * Normalizes a model function (that is already normalized to a unit area) to
-     * the total number of photons in parallel and perpendicular,
-     *
-     * @param M[in,out] array containing the model function in Jordi format
-     * @param s[in] a scaling factor by which the model function is divided.
-     * @param Nchannels[in] the number of channels in the model function (half length of
-     * M array)
-     */
     void normM(double *M, double s, int Nchannels);
 
-
-    /*!
-     * Normalizes the number of photons in the model function for Ss and Sp
-     * individually to the number of experimental photons in Ss and Sp.
-     *
-     * Here, the number of experimental photons are global variables that can be
-     * computed by `compute_signal_and_background`.
-     *
-     * @param M array[in,out] containing the model function in Jordi format
-     * @param Nchannels[in] number of channels in the experiment (half length of
-     * M array)
-     */
     void normM_p2s(double *M, int Nchannels);
 
 
-    std::string str(){
+    std::string str() {
         auto s = std::stringstream();
         s << "-- Signals: " << std::endl;
         s << "-- Bp, Bs: " << Bp << ", " << Bs << std::endl;
         s << "-- Sp, Ss: " << Sp << ", " << Ss << std::endl;
-        s << "-- Fp, Fs: " << Fp() << ", " << Fs() << std::endl;
-        s << "-- r: " << r() << std::endl;
         return s.str();
     }
 
-    DecayFitIntegrateSignals(DecayFitCorrections *corrections = nullptr){
+    json to_json() const {
+        json j;
+        j["Sp"] = Sp;
+        j["Ss"] = Ss;
+        j["Bp"] = Bp;
+        j["Bs"] = Bs;
+        j["B"] = B;
+        j["Bexpected"] = Bexpected;
+        j["Fp"] = const_cast<DecayFitIntegrateSignals*>(this)->Fp();
+        j["Fs"] = const_cast<DecayFitIntegrateSignals*>(this)->Fs();
+        j["r"] = const_cast<DecayFitIntegrateSignals*>(this)->r();
+        j["rs"] = const_cast<DecayFitIntegrateSignals*>(this)->rs();
+        if (corrections != nullptr) {
+            j["corrections"] = corrections->to_json();
+        }
+        return j;
+    }
+
+    void from_json(const json &j) {
+        if (j.contains("Sp")) Sp = j.at("Sp");
+        if (j.contains("Ss")) Ss = j.at("Ss");
+        if (j.contains("Bp")) Bp = j.at("Bp");
+        if (j.contains("Bs")) Bs = j.at("Bs");
+        if (j.contains("B")) B = j.at("B");
+        if (j.contains("Bexpected")) Bexpected = j.at("Bexpected");
+    }
+
+    explicit DecayFitIntegrateSignals(DecayFitCorrections *corrections = nullptr) {
         this->corrections = corrections;
     }
 
 };
 
 
-class DecayFit{
+class DecayFit {
 
 
 public:
 
-    /*!
-     * @brief Function to compute a model fluorescence decay
-     *
-     * @param[in] param array containing the model parameters
-     * @param[in] irf instrument response function in Jordi format (parallel, perpendicular)
-     * @param bg[in] background pattern in Jordi format (parallel, perpendicular)
-     * @param Nchannels[in] number of channels (half the length of the Jordi arrays)
-     * @param dt[in] time difference between two consecutive counting channels
-     * @param corrections[in] array with corrections (details see implementations)
-     * @param mfunction[out] output array of the computed decay in Jordi format. The
-     * output array has to have twice the number of channels. It needs to be allocated
-     * by beforehand.
-     * @return integer For reporting failures (default 0)
-     */
     static int modelf(double *param,
-                       double *irf,
-                       double *bg,
-                       int Nchannels,
-                       double dt,
-                       double *corrections,
-                       double *mfunction
+                      double *irf,
+                      double *bg,
+                      int Nchannels,
+                      double dt,
+                      double *corrections,
+                      double *mfunction
     ) {
         return 0;
     };
 
-    /*!
-     * @brief Target function (to minimize)
-     *
-     * Computes the model function and returns a score that quantifies
-     * the discrepancy between the data and the model.
-     *
-     * @param x[in,out] a vector of length that that contains the model parameters
-     * @param pv[in] a pointer to a MParam structure that contains the data and
-     * a set of corrections.
-     * @return a normalized chi2
-     */
-    static double targetf(double *x, void *pv){
+    static double targetf(double *x, void *pv) {
         return 0.0;
     };
 
 
-    /*!
-     * Function that optimizes parameters of model23 to data.
-     *
-     * @param x[in,out] a vector of length that that contains the starting parameters
-     * @param fixed an array that specifies if a parameter is optimized. If a value is set to 1,
-     * the parameter is optimized.
-     * @param p an instance of MParam that contains all relevant information
-     * @return
-     */
-    static double fit(double* x, short* fixed, MParam* p){
+    static double fit(double *x, short *fixed, MParam *p) {
         return 0.0;
     };
 
 
-    /*!
-     * Correct input parameters and compute values
-     *
-     * @param x[in,out] input output array (see implementations of derived classes)
-     * @param xm[in,out] array that will contain the corrected parameters
-     * @param corrections[in] array with correction parameters
-     * @param return_r[in] if set to true (positive) computes the anisotropy and returns
-     * the scatter corrected and the signal (no scatter correction) anisotropy and
-     * writes the values to the input/output vector x.
-     */
-    static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r){};
+    static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r) {};
+
+    static std::string parameters_to_json(double *param, int n_param) {
+        json j;
+        j["parameters"] = json::array();
+        for (int i = 0; i < n_param; i++) {
+            j["parameters"].push_back(param[i]);
+        }
+        return j.dump();
+    }
+
+    static void parameters_from_json(const json &j, double *param, int n_param) {
+        if (!j.contains("parameters") || !j.at("parameters").is_array()) {
+            return;
+        }
+        const auto &values = j.at("parameters");
+        const auto copy_count = std::min<int>(n_param, static_cast<int>(values.size()));
+        for (int i = 0; i < copy_count; i++) {
+            param[i] = values.at(i);
+        }
+    }
+
+    static std::string data_to_json(int *data, int n_data) {
+        json j;
+        j["data"] = json::array();
+        for (int i = 0; i < n_data; i++) {
+            j["data"].push_back(data[i]);
+        }
+        return j.dump();
+    }
+
+    static void data_from_json(const json &j, int *data, int n_data) {
+        if (!j.contains("data") || !j.at("data").is_array()) {
+            return;
+        }
+        const auto &values = j.at("data");
+        const auto copy_count = std::min<int>(n_data, static_cast<int>(values.size()));
+        for (int i = 0; i < copy_count; i++) {
+            data[i] = values.at(i);
+        }
+    }
+
+    static std::string model_to_json(double *model, int n_model) {
+        json j;
+        j["model"] = json::array();
+        for (int i = 0; i < n_model; i++) {
+            j["model"].push_back(model[i]);
+        }
+        return j.dump();
+    }
+
+    static void model_from_json(const json &j, double *model, int n_model) {
+        if (!j.contains("model") || !j.at("model").is_array()) {
+            return;
+        }
+        const auto &values = j.at("model");
+        const auto copy_count = std::min<int>(n_model, static_cast<int>(values.size()));
+        for (int i = 0; i < copy_count; i++) {
+            model[i] = values.at(i);
+        }
+    }
 
 };
 
 
-#endif //TTTRLIB_DECAYFIT_H
+#endif // TTTRLIB_DECAYFIT_H
