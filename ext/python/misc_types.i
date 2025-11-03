@@ -25,6 +25,7 @@ import_array();
 // Vector templates
 %template(VectorBool) std::vector<bool>;
 %template(VectorDouble) std::vector<double>;
+%template(VectorFloat) std::vector<float>;
 %template(VectorInt16) std::vector<short>;
 %template(VectorInt32) std::vector<int>;
 %template(VectorInt64) std::vector<long long>;
@@ -35,6 +36,8 @@ import_array();
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
 %template(MapStringString) std::map<std::string, std::string>;
+%template(MapIntVectorFloat) std::map<int, std::vector<float>>;
+%template(MapIntInt) std::map<int, int>;
 %template(VectorString) std::vector<std::string>;
 
 %typemap(out) std::vector< double,std::allocator< double > > * {
