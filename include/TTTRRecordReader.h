@@ -144,7 +144,7 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT3v2> {
         rec.allbits = TTTRRecord;
         
         if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) {
-            overflow_counter += T3WRAPAROUND;
+            overflow_counter += T3WRAPAROUND * rec.bits.n_sync;
             return false;
         }
         
@@ -212,7 +212,12 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT2v2> {
         rec.allbits = TTTRRecord;
         
         if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) {
-            overflow_counter += T2WRAPAROUND_V2;
+            // Number of overflows stored in timetag (new firmware style)
+            if (rec.bits.timetag == 0) {
+                overflow_counter += T2WRAPAROUND_V2;  // Old style single overflow
+            } else {
+                overflow_counter += T2WRAPAROUND_V2 * rec.bits.timetag;  // New style multiple overflows
+            }
             return false;
         }
         
