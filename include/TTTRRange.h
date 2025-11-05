@@ -8,6 +8,8 @@
 #include <set>
 #include <vector>
 #include <cstdint>  /* uint16_t */
+#include <string>
+#include <nlohmann/json.hpp>
 
 #include "TTTR.h"
 
@@ -477,6 +479,18 @@ public:
         _tttr_indices->insert(_tttr_indices->end(), rhs._tttr_indices->begin(), rhs._tttr_indices->end());
         return *this;
     }
+    
+    /**
+     * @brief Serialize TTTRRange to JSON string
+     * @return JSON string containing TTTRRange data
+     */
+    std::string to_json() const;
+    
+    /**
+     * @brief Load TTTRRange from JSON string
+     * @param payload JSON string containing TTTRRange data
+     */
+    void from_json(const std::string& payload);
 
 
 };

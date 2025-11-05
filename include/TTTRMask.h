@@ -3,12 +3,18 @@
 
 #include "TTTR.h"
 #include <vector>
+#include <string>
 
 class TTTR;
+
+namespace tttrlib {
+    class BurstFilter;
+}
 
 class TTTRMask{
 
     friend class TTTR;
+    friend class tttrlib::BurstFilter;
 
 private:
 
@@ -121,6 +127,18 @@ public:
     std::vector<int> get_indices(bool selected=true);
 
     std::vector<int> get_selected_ranges();
+    
+    /**
+     * @brief Serialize TTTRMask to JSON string
+     * @return JSON string containing TTTRMask data
+     */
+    std::string to_json() const;
+    
+    /**
+     * @brief Load TTTRMask from JSON string
+     * @param payload JSON string containing TTTRMask data
+     */
+    void from_json(const std::string& payload);
 
 };
 

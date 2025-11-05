@@ -5,6 +5,8 @@
 #include <memory>       /* shared_ptr */
 #include <utility>
 #include <vector>
+#include <string>
+#include <nlohmann/json.hpp>
 
 #include "TTTRRange.h"
 
@@ -146,6 +148,18 @@ public:
     TTTRSelection(const TTTRSelection& p2) : TTTRRange(p2){
         _selection_mask.value = p2._selection_mask.value;
     }
+    
+    /**
+     * @brief Serialize TTTRSelection to JSON string
+     * @return JSON string containing TTTRSelection data
+     */
+    std::string to_json() const;
+    
+    /**
+     * @brief Load TTTRSelection from JSON string
+     * @param payload JSON string containing TTTRSelection data
+     */
+    void from_json(const std::string& payload);
 
 };
 
