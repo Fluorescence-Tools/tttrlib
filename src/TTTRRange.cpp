@@ -65,3 +65,21 @@ double TTTRRange::get_mean_lifetime(
     );
 }
 
+std::string TTTRRange::to_json() const {
+    nlohmann::json j;
+    j["start"] = get_start();
+    j["stop"] = get_stop();
+    std::vector<int> indices = get_tttr_indices();
+    j["indices"] = indices;
+    return j.dump();
+}
+
+void TTTRRange::from_json(const std::string& payload) {
+    nlohmann::json j = nlohmann::json::parse(payload);
+    clear();
+    std::vector<int> indices = j["indices"];
+    for (int idx : indices) {
+        insert(idx);
+    }
+}
+

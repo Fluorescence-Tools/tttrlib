@@ -213,3 +213,25 @@ void TTTRSelection::get_tttr_indices(int** output, int* n_output) const{
         if(*output) (*output)[0] = 0;
     }
 }
+
+std::string TTTRSelection::to_json() const {
+    nlohmann::json j;
+    j["start"] = get_start();
+    j["stop"] = get_stop();
+    j["dense"] = is_dense();
+    j["inverted"] = is_inverted();
+    j["channel_flip"] = has_channel_flip();
+    j["z_stack"] = is_z_stack_frame();
+    j["time_series"] = is_time_series_frame();
+    return j.dump();
+}
+
+void TTTRSelection::from_json(const std::string& payload) {
+    nlohmann::json j = nlohmann::json::parse(payload);
+    set_range(j["start"], j["stop"]);
+    set_dense(j["dense"]);
+    set_inverted(j["inverted"]);
+    set_channel_flip(j["channel_flip"]);
+    set_z_stack_frame(j["z_stack"]);
+    set_time_series_frame(j["time_series"]);
+}

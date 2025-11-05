@@ -1,5 +1,6 @@
 #include "TTTRMask.h"
 #include "info.h"
+#include <nlohmann/json.hpp>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -169,5 +170,26 @@ void TTTRMask::select_count_rate(TTTR* tttr, double time_window, int n_ph_max, b
         }
         masked[i] = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
         i = r;
+    }
+}
+
+std::string TTTRMask::to_json() const {
+    nlohmann::json j;
+    j["size"] = static_cast<int>(masked.size());
+    std::vector<int> mask_data;
+    for (const auto& m : masked) {
+        mask_data.push_back(m ? 1 : 0);
+    }
+    j["mask"] = mask_data;
+    return j.dump();
+}
+
+void TTTRMask::from_json(const std::string& payload) {
+    nlohmann::json j = nlohmann::json::parse(payload);
+    int size = j["size"];
+    std::vector<int> mask_data = j["mask"];
+    masked.resize(size);
+    for (int i = 0; i < size && i < static_cast<int>(mask_data.size()); ++i) {
+        masked[i] = mask_data[i] ? 1 : 0;
     }
 }
