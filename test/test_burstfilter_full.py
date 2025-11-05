@@ -34,14 +34,18 @@ def test_json_methods():
         }
     }
     
-    # Save to file
-    with open("test_burst_params.json", "w") as f:
+    # Save to file (use a unique temporary file to avoid Windows locking issues)
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
+    temp_path = tmp.name
+    tmp.close()
+    with open(temp_path, "w") as f:
         json.dump(test_params, f, indent=2)
     
     print("JSON test parameters saved successfully")
     
     # Load and verify
-    with open("test_burst_params.json", "r") as f:
+    with open(temp_path, "r") as f:
         loaded_params = json.load(f)
         
     assert loaded_params["burst_parameters"]["min_photons_per_burst"] == 30

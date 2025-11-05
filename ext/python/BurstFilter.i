@@ -129,15 +129,15 @@ using json = nlohmann::json;
     
     def reset_to_raw_bursts(self):
         """Reset to raw (unfiltered) bursts, undoing all filtering."""
-        self.reset_to_raw_bursts()
+        self._reset_to_raw_bursts()
     
     def reapply_filters(self):
         """Reapply all filters with current parameters to raw bursts."""
-        self.reapply_filters()
+        self._reapply_filters()
     
     def clear_filters(self):
         """Clear all applied filters and reset to raw bursts."""
-        self.clear_filters()
+        self._clear_filters()
     
     @property
     def has_raw_bursts(self):
@@ -220,5 +220,9 @@ using json = nlohmann::json;
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **duration_output, int *duration_n_output)};
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **background_output, int *background_n_output)};
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **merge_output, int *merge_n_output)};
+
+%rename(_reset_to_raw_bursts) tttrlib::BurstFilter::reset_to_raw_bursts;
+%rename(_reapply_filters) tttrlib::BurstFilter::reapply_filters;
+%rename(_clear_filters) tttrlib::BurstFilter::clear_filters;
 
 %include "BurstFilter.h"
