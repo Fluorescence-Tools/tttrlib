@@ -326,6 +326,11 @@ if (is_verbose()) {
         }
         np2=j;
     }
+    // Free allocated memory to prevent memory leaks
+    free(t1c);
+    free(t2c);
+    free(w1);
+    free(w2);
 }
 
 inline void ccf_wahl_correlate(
