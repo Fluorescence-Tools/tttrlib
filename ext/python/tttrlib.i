@@ -39,7 +39,9 @@
 %include "TTTRSelection.i"
 %include "TTTR.i"
 %include "TTTRMask.i"
+%include "Channel.i"
 %include "BurstFilter.i"
+%include "BurstFeatureExtractor.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"

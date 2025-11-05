@@ -46,6 +46,7 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 
 // Pair templates
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
+%template(VectorPairInt64) std::vector<std::pair<long long, long long>>;
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 
@@ -121,3 +122,7 @@ $result = swig::from(static_cast<std::vector< double,std::allocator< double > >>
 
 // Bool (output arrays)
 %apply(bool** ARGOUTVIEWM_ARRAY1, int* DIM1) {(bool **output, int *n_output)}
+
+
+// ---- Additional STL templates for maps (avoid duplicate int64_t pair specializations) ----
+%template(MapStringInt) std::map<std::string,int>;
