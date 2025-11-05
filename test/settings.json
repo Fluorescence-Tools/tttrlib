@@ -7,6 +7,7 @@
   "ptu_hh_t3_filename": "pq/ptu/pq_ptu_hh_t3.ptu",
   "ht3_clsm_filename": "imaging/pq/ht3/pq_ht3_clsm.ht3",
   "sm_filename": "sm/tl_sm.sm",
+  "sm_dna_filename": "bh/bh_spc132_sm_dna/m000.spc",
   "clsm_sp5_filename": "imaging/leica/sp5/LSM_1.ptu",
   "clsm_sp8_filename": "imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu",
   "clsm_ht3_sample1_filename": "imaging/pq/ht3/pq_ht3_clsm.ht3",
