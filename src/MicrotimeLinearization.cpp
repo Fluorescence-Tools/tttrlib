@@ -1,108 +1,267 @@
 #include "include/MicrotimeLinearization.h"
 #include <algorithm>
 #include <chrono>
+#include <random>
+#include <sstream>
 
-MicrotimeLinearization::MicrotimeLinearization(
-    const std::map<int, std::vector<float>>& linearization_tables,
-    const std::map<int, int>& channel_to_card_map,
-    const std::map<int, int>& tacstart_map,
-    const std::map<int, int>& tacshift_map
-) : _linearization_tables(linearization_tables),
-    _channel_to_card_map(channel_to_card_map),
-    _tacstart_map(tacstart_map),
-    _tacshift_map(tacshift_map) {
-    
-    // Set default values for missing tacstart and tacshift
-    for (const auto& pair : _linearization_tables) {
-        int card_id = pair.first;
-        if (_tacstart_map.find(card_id) == _tacstart_map.end()) {
-            _tacstart_map[card_id] = 0;
-        }
-        if (_tacshift_map.find(card_id) == _tacshift_map.end()) {
-            _tacshift_map[card_id] = 0;
-        }
-    }
+MicrotimeLinearization::MicrotimeLinearization() :
+    _channel_luts(TTTRLIB_MAX_ROUTING_CHANNELS),  // TTTRLIB_MAX_ROUTING_CHANNELS channels
+    _channel_shifts(TTTRLIB_MAX_ROUTING_CHANNELS, 0),  // Initialize all shifts to 0
+    _expected_lut_size(0)  // No expected size initially
+{
+}
+
+MicrotimeLinearization::MicrotimeLinearization(const MicrotimeLinearization& other) :
+    _channel_luts(other._channel_luts),  // Copy LUTs
+    _channel_shifts(other._channel_shifts),  // Copy shifts
+    _expected_lut_size(other._expected_lut_size)  // Copy expected LUT size
+{
 }
 
 MicrotimeLinearization::~MicrotimeLinearization() {
     // Vectors are automatically cleaned up
 }
 
-bool MicrotimeLinearization::is_valid() const {
-    return !_linearization_tables.empty();
-}
-
-void MicrotimeLinearization::add_card(int card_id, const std::vector<float>& linearization_table) {
-    _linearization_tables[card_id] = linearization_table;
-    // Set default TAC parameters if not already set
-    if (_tacstart_map.find(card_id) == _tacstart_map.end()) {
-        _tacstart_map[card_id] = 0;
+void MicrotimeLinearization::set_channel_lut(int routing_channel, const std::vector<float>& linearization_table) {
+    if (routing_channel >= 0 && routing_channel < TTTRLIB_MAX_ROUTING_CHANNELS) {
+        // Validate LUT size consistency
+        if (!linearization_table.empty()) {
+            if (_expected_lut_size == 0) {
+                // First LUT sets the expected size
+                _expected_lut_size = linearization_table.size();
+            } else if (linearization_table.size() != _expected_lut_size) {
+                // Size mismatch - this is an error
+                std::stringstream ss;
+                ss << "All LUT tables must have the same size. Expected size: " 
+                   << _expected_lut_size << ", got: " << linearization_table.size();
+                throw std::invalid_argument(ss.str());
+            }
+        }
+        _channel_luts[routing_channel] = linearization_table;
     }
-    if (_tacshift_map.find(card_id) == _tacshift_map.end()) {
-        _tacshift_map[card_id] = 0;
+}
+
+void MicrotimeLinearization::set_channel_shift(int routing_channel, int shift) {
+    if (routing_channel >= 0 && routing_channel < TTTRLIB_MAX_ROUTING_CHANNELS) {
+        _channel_shifts[routing_channel] = shift;
     }
 }
 
-std::vector<float> MicrotimeLinearization::get_linearization_table(int card_id) const {
-    auto it = _linearization_tables.find(card_id);
-    if (it != _linearization_tables.end()) {
-        return it->second;
+std::vector<float> MicrotimeLinearization::get_channel_lut(int routing_channel) const {
+    if (routing_channel >= 0 && routing_channel < TTTRLIB_MAX_ROUTING_CHANNELS) {
+        return _channel_luts[routing_channel];
     }
-    return std::vector<float>();  // Return empty vector
+    return std::vector<float>();
 }
 
-void MicrotimeLinearization::set_tacstart(int card_id, int tacstart) {
-    _tacstart_map[card_id] = tacstart;
-}
-
-int MicrotimeLinearization::get_tacstart(int card_id) const {
-    auto it = _tacstart_map.find(card_id);
-    if (it != _tacstart_map.end()) {
-        return it->second;
+int MicrotimeLinearization::get_channel_shift(int routing_channel) const {
+    if (routing_channel >= 0 && routing_channel < TTTRLIB_MAX_ROUTING_CHANNELS) {
+        return _channel_shifts[routing_channel];
     }
-    return 0;  // Default value
+    return 0;
 }
 
-void MicrotimeLinearization::set_tacshift(int card_id, int tacshift) {
-    _tacshift_map[card_id] = tacshift;
-}
-
-int MicrotimeLinearization::get_tacshift(int card_id) const {
-    auto it = _tacshift_map.find(card_id);
-    if (it != _tacshift_map.end()) {
-        return it->second;
-    }
-    return 0;  // Default value
-}
-
-std::vector<int> MicrotimeLinearization::get_card_ids() const {
-    std::vector<int> card_ids;
-    for (const auto& pair : _linearization_tables) {
-        card_ids.push_back(pair.first);
-    }
-    return card_ids;
-}
-
-void MicrotimeLinearization::set_card_for_channel(int routing_channel, int card_id) {
-    _channel_to_card_map[routing_channel] = card_id;
-}
-
-int MicrotimeLinearization::get_card_for_channel(int routing_channel) const {
-    auto it = _channel_to_card_map.find(routing_channel);
-    if (it != _channel_to_card_map.end()) {
-        return it->second;
-    }
-    return -1;  // Channel not mapped
-}
-
-std::vector<int> MicrotimeLinearization::get_channels_for_card(int card_id) const {
-    std::vector<int> channels;
-    for (const auto& pair : _channel_to_card_map) {
-        if (pair.second == card_id) {
-            channels.push_back(pair.first);
+bool MicrotimeLinearization::has_luts() const {
+    for (const auto& lut : _channel_luts) {
+        if (!lut.empty()) {
+            return true;
         }
     }
-    return channels;
+    return false;
+}
+
+void MicrotimeLinearization::set_channel_luts_from_array(const float* luts, int n_channels, int lut_size) {
+    // Validate input
+    if (luts == nullptr || n_channels <= 0 || lut_size <= 0) {
+        throw std::invalid_argument("Invalid input parameters for set_channel_luts_from_array");
+    }
+    if (n_channels > TTTRLIB_MAX_ROUTING_CHANNELS) {
+        throw std::invalid_argument("Too many channels (max TTTRLIB_MAX_ROUTING_CHANNELS)");
+    }
+
+    // Set expected LUT size
+    _expected_lut_size = lut_size;
+
+    // Copy LUTs from the 2D array (row-major order: channels x lut_size)
+    for (int ch = 0; ch < n_channels; ++ch) {
+        if (ch < TTTRLIB_MAX_ROUTING_CHANNELS) {
+            std::vector<float> lut(lut_size);
+            for (int i = 0; i < lut_size; ++i) {
+                lut[i] = luts[ch * lut_size + i];
+            }
+            _channel_luts[ch] = lut;
+        }
+    }
+}
+
+void MicrotimeLinearization::set_channel_shifts_from_array(const int* shifts, int n_channels) {
+    // Validate input
+    if (shifts == nullptr || n_channels <= 0) {
+        throw std::invalid_argument("Invalid input parameters for set_channel_shifts_from_array");
+    }
+    if (n_channels > TTTRLIB_MAX_ROUTING_CHANNELS) {
+        throw std::invalid_argument("Too many channels (max TTTRLIB_MAX_ROUTING_CHANNELS)");
+    }
+
+    // Copy shifts from the array
+    for (int ch = 0; ch < n_channels; ++ch) {
+        if (ch < TTTRLIB_MAX_ROUTING_CHANNELS) {
+            _channel_shifts[ch] = shifts[ch];
+        }
+    }
+}
+
+void MicrotimeLinearization::get_channel_luts_as_array(float** luts, int* n_channels, int* lut_size) {
+    if (luts == nullptr || n_channels == nullptr || lut_size == nullptr) {
+        throw std::invalid_argument("Output parameters cannot be null");
+    }
+
+    // Find the maximum channel that has LUTs
+    int max_channel = 0;
+    for (int ch = 0; ch < TTTRLIB_MAX_ROUTING_CHANNELS; ++ch) {
+        if (!_channel_luts[ch].empty()) {
+            max_channel = ch;
+        }
+    }
+
+    *n_channels = max_channel + 1;
+    *lut_size = _expected_lut_size;
+
+    // Allocate output array: [n_channels x lut_size]
+    size_t total_size = static_cast<size_t>(*n_channels) * static_cast<size_t>(*lut_size);
+    *luts = new float[total_size];
+
+    // Copy LUTs to the output array (row-major order)
+    for (int ch = 0; ch < *n_channels; ++ch) {
+        const auto& lut = _channel_luts[ch];
+        for (size_t i = 0; i < *lut_size; ++i) {
+            if (i < lut.size()) {
+                (*luts)[ch * (*lut_size) + i] = lut[i];
+            } else {
+                (*luts)[ch * (*lut_size) + i] = 0.0f; // Pad with zeros if LUT is shorter
+            }
+        }
+    }
+}
+
+void MicrotimeLinearization::get_channel_shifts_as_array(int** shifts, int* n_channels) {
+    if (shifts == nullptr || n_channels == nullptr) {
+        throw std::invalid_argument("Output parameters cannot be null");
+    }
+
+    // Find the maximum channel that has non-zero shifts
+    int max_channel = 0;
+    for (int ch = 0; ch < TTTRLIB_MAX_ROUTING_CHANNELS; ++ch) {
+        if (_channel_shifts[ch] != 0) {
+            max_channel = ch;
+        }
+    }
+
+    *n_channels = max_channel + 1;
+
+    // Allocate output array
+    *shifts = new int[*n_channels];
+
+    // Copy shifts to the output array
+    for (int ch = 0; ch < *n_channels; ++ch) {
+        (*shifts)[ch] = _channel_shifts[ch];
+    }
+}
+
+int MicrotimeLinearization::linearize(
+    unsigned short* microtimes,
+    const unsigned char* channels,
+    int n_photons,
+    unsigned int seed,
+    bool use_dithering
+) {
+    if (microtimes == nullptr || channels == nullptr) {
+        return 0;
+    }
+    
+    if (n_photons <= 0) {
+        return 1;
+    }
+    
+    // Generate random numbers for dithering only if needed
+    std::vector<float> random_numbers;
+    if (use_dithering) {
+        random_numbers = generate_random_numbers(n_photons, seed);
+    }
+    
+    // Create LUT size lookup array for efficiency
+    std::vector<size_t> lut_sizes(TTTRLIB_MAX_ROUTING_CHANNELS, 0);
+    for (int ch = 0; ch < TTTRLIB_MAX_ROUTING_CHANNELS; ++ch) {
+        if (ch < _channel_luts.size()) {
+            lut_sizes[ch] = _channel_luts[ch].size();
+        }
+    }
+    
+    // Apply linearization and shifts in one pass
+    for (int i = 0; i < n_photons; i++) {
+        unsigned char channel = channels[i];
+        
+        if (channel >= _channel_luts.size()) {
+            continue;  // Invalid channel
+        }
+        
+        const std::vector<float>& lut = _channel_luts[channel];
+        int shift = _channel_shifts[channel];
+        size_t lut_size = lut_sizes[channel];
+        unsigned short new_microtime = microtimes[i];  // Start with current value
+        
+        if (lut_size == 0) {
+            // No LUT for this channel, just apply shift without modulo wrapping
+            // since there's no defined LUT size
+            if (shift != 0) {
+                float result = microtimes[i] + shift;
+                // Ensure result is non-negative
+                if (result < 0) {
+                    result = 0;  // Clamp to 0 instead of wrapping
+                }
+                new_microtime = static_cast<unsigned short>(result);
+            }
+        } else {
+            // Apply linearization with optional dithering
+            unsigned short microtime = microtimes[i];
+            
+            // Check bounds - microtime must be < lut_size - 1 for interpolation
+            if (microtime >= lut_size - 1) {
+                // Out of bounds, just apply shift using expected LUT size
+                if (shift != 0 && _expected_lut_size > 0) {
+                    float result = microtime + shift;
+                    // Ensure result is non-negative before modulo
+                    if (result < 0) {
+                        result += _expected_lut_size;
+                    }
+                    new_microtime = static_cast<unsigned short>(result) % _expected_lut_size;
+                }
+            } else {
+                // Linear interpolation with optional dithering
+                float t;
+                if (use_dithering) {
+                    t = lut[microtime] * (1.0f - random_numbers[i]) + 
+                        lut[microtime + 1] * random_numbers[i];
+                } else {
+                    // No dithering - use nearest neighbor
+                    t = lut[microtime];
+                }
+                
+                // Convert back to unsigned short with rounding and apply shift
+                float result = std::floor(t + 0.5f) + shift;
+                // Ensure result is non-negative before modulo
+                if (result < 0) {
+                    result += _expected_lut_size;
+                }
+                new_microtime = static_cast<unsigned short>(result) % _expected_lut_size;
+            }
+        }
+        
+        // Write back the computed value (single array write per iteration)
+        microtimes[i] = new_microtime;
+    }
+    
+    return 1;
 }
 
 std::vector<float> MicrotimeLinearization::generate_random_numbers(int n_random, unsigned int seed) {
@@ -123,91 +282,4 @@ std::vector<float> MicrotimeLinearization::generate_random_numbers(int n_random,
     }
     
     return random_numbers;
-}
-
-int MicrotimeLinearization::linearize(
-    unsigned short* microtimes,
-    const unsigned char* channels,
-    int n_photons,
-    const float* random_numbers
-) {
-    return _linearize_internal(microtimes, channels, n_photons, random_numbers, true);
-}
-
-int MicrotimeLinearization::linearize(
-    unsigned short* microtimes,
-    const unsigned char* channels,
-    int n_photons,
-    unsigned int seed
-) {
-    // Generate random numbers internally
-    std::vector<float> random_numbers = generate_random_numbers(n_photons, seed);
-    return _linearize_internal(microtimes, channels, n_photons, random_numbers.data(), true);
-}
-
-int MicrotimeLinearization::_linearize_internal(
-    unsigned short* microtimes,
-    const unsigned char* channels,
-    int n_photons,
-    const float* random_numbers,
-    bool use_provided_random
-) {
-    if (!is_valid()) {
-        return 0;
-    }
-    
-    if (microtimes == nullptr || channels == nullptr) {
-        return 0;
-    }
-    
-    if (n_photons <= 0) {
-        return 1;
-    }
-    
-    // Ensure random_numbers is available
-    std::vector<float> generated_random;
-    if (!use_provided_random || random_numbers == nullptr) {
-        generated_random = generate_random_numbers(n_photons);
-        random_numbers = generated_random.data();
-    }
-    
-    // Linearization loop (based on Seidel Software taclin algorithm)
-    // Supports n cards with flexible channel-to-card mapping
-    double t;
-    int tn;
-    
-    for (int i = 0; i < n_photons; i++) {
-        unsigned char channel = channels[i];
-        
-        // Determine card ID from channel using the channel-to-card map
-        int card_id = get_card_for_channel(channel);
-        if (card_id < 0) {
-            continue;  // Channel not mapped to any card
-        }
-        
-        // Get linearization table for this card
-        const std::vector<float>& lt = get_linearization_table(card_id);
-        if (lt.empty()) {
-            continue;  // Skip if no linearization table for this card
-        }
-        
-        int tacstart = get_tacstart(card_id);
-        int tacshift = get_tacshift(card_id);
-        
-        tn = microtimes[i] - tacstart;
-        
-        // Check if TAC value is within valid range
-        if ((tn < 1) || (tn > (int)lt.size() - 1)) {
-            continue;
-        }
-        
-        // Linear interpolation with dithering
-        t = lt[tn - 1] * (1.0f - random_numbers[i]) + 
-            lt[tn] * random_numbers[i];
-        
-        // Convert back to unsigned short with rounding
-        microtimes[i] = (unsigned short)std::floor(t + 0.5) + tacstart + tacshift;
-    }
-    
-    return 1;
 }

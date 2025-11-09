@@ -7,17 +7,22 @@
 #include <random>
 #include <memory>
 #include <map>
+#include <stdexcept>
+
+#include "info.h"  // For TTTRLIB_MAX_ROUTING_CHANNELS
 
 /*!
- * \brief Microtime linearization for SPC Becker cards
+ * \brief Microtime linearization
  *
  * This module provides functionality to linearize microtimes (TAC values) from
- * Becker & Hickl SPC cards. The linearization corrects for non-linear response
- * of the Time-to-Amplitude Converter (TAC) using lookup tables.
+ * time-resolved fluorescence measurements. The linearization corrects for 
+ * non-linear response of Time-to-Amplitude Converters (TAC) using lookup tables.
  *
- * Supports any number of SPC cards with independent linearization tables and TAC parameters.
+ * Supports per-channel linearization tables and shift corrections for up to TTTRLIB_MAX_ROUTING_CHANNELS channels.
+ * Can be used with any time-resolved measurement system that requires microtime correction
+ * (e.g., Becker & Hickl SPC cards, etc.).
  *
- * Based on the Seidel Software taclin algorithm (version 2008-01-28).
+ * Based on the Seidel taclin algorithm (version 2008-01-28).
  *
  * \see TTTR
  */
@@ -25,20 +30,14 @@ class MicrotimeLinearization {
 public:
 
     /*!
-     * \brief Constructor for MicrotimeLinearization with n cards
-     *
-     * \param linearization_tables Map of card_id -> linearization table (float vector)
-     * \param channel_to_card_map Map of routing_channel -> card_id (defines which card handles each channel)
-     * \param tacstart_map Map of card_id -> first TAC channel (default: 0 for all)
-     * \param tacshift_map Map of card_id -> TAC shift (default: 0 for all)
+     * \brief Constructor
      */
-    MicrotimeLinearization(
-        const std::map<int, std::vector<float>>& linearization_tables,
-        const std::map<int, int>& channel_to_card_map,
-        const std::map<int, int>& tacstart_map = std::map<int, int>(),
-        const std::map<int, int>& tacshift_map = std::map<int, int>()
-    );
+    MicrotimeLinearization();
 
+    /*!
+     * \brief Copy constructor
+     */
+    MicrotimeLinearization(const MicrotimeLinearization& other);
 
     /*!
      * \brief Destructor
@@ -46,36 +45,17 @@ public:
     ~MicrotimeLinearization();
 
     /*!
-     * \brief Linearize microtimes using provided random numbers
+     * \brief Linearize microtimes using configured LUTs and shifts
      *
-     * Applies linearization to an array of microtimes using the stored linearization tables.
-     * The linearization uses linear interpolation between table values with dithering using
-     * random numbers to reduce quantization artifacts.
-     *
-     * \param microtimes Array of microtime values to linearize (modified in-place)
-     * \param channels Array of channel numbers mapped to cards via channel_to_card_map
-     * \param n_photons Number of photons to process
-     * \param random_numbers Array of random numbers in range [0, 1) for dithering
-     *
-     * \return 1 on success, 0 on failure
-     */
-    int linearize(
-        unsigned short* microtimes,
-        const unsigned char* channels,
-        int n_photons,
-        const float* random_numbers
-    );
-
-    /*!
-     * \brief Linearize microtimes with automatic random number generation
-     *
-     * Applies linearization to an array of microtimes. Random numbers are generated
-     * internally using a Mersenne Twister generator for dithering.
+     * Applies linearization lookup tables and channel-specific shifts to microtime data.
+     * Uses linear interpolation between LUT entries with optional random dithering to
+     * reduce quantization artifacts.
      *
      * \param microtimes Array of microtime values to linearize (modified in-place)
-     * \param channels Array of channel numbers mapped to cards via channel_to_card_map
+     * \param channels Array of channel numbers (0-TTTRLIB_MAX_ROUTING_CHANNELS)
      * \param n_photons Number of photons to process
      * \param seed Random seed (default: 0 for time-based seed)
+     * \param use_dithering Whether to apply random dithering (default: true)
      *
      * \return 1 on success, 0 on failure
      */
@@ -83,105 +63,99 @@ public:
         unsigned short* microtimes,
         const unsigned char* channels,
         int n_photons,
-        unsigned int seed = 0
+        unsigned int seed = 0,
+        bool use_dithering = true
     );
 
     /*!
-     * \brief Validate linearization tables
+     * \brief Set linearization LUT for a specific routing channel
      *
-     * Checks if the linearization tables are valid (non-empty, reasonable values).
-     *
-     * \return true if tables are valid, false otherwise
+     * \param routing_channel Routing channel number (0-TTTRLIB_MAX_ROUTING_CHANNELS)
+     * \param linearization_table Linearization table for this channel
      */
-    bool is_valid() const;
+    void set_channel_lut(int routing_channel, const std::vector<float>& linearization_table);
 
     /*!
-     * \brief Add or update a linearization table for a card
+     * \brief Set shift value for a specific routing channel
      *
-     * \param card_id Card ID (0-based)
-     * \param linearization_table Linearization table for this card
+     * \param routing_channel Routing channel number (0-TTTRLIB_MAX_ROUTING_CHANNELS)
+     * \param shift Shift value to add to linearized microtimes
      */
-    void add_card(int card_id, const std::vector<float>& linearization_table);
+    void set_channel_shift(int routing_channel, int shift);
 
     /*!
-     * \brief Get linearization table for a specific card as numpy-compatible vector
+     * \brief Get linearization LUT for a specific routing channel
      *
-     * \param card_id Card ID (0-based)
-     * \return Linearization table for the card as vector, or empty vector if not found
+     * \param routing_channel Routing channel number (0-TTTRLIB_MAX_ROUTING_CHANNELS)
+     * \return Linearization table for the channel, or empty vector if not set
      */
-    std::vector<float> get_linearization_table(int card_id) const;
+    std::vector<float> get_channel_lut(int routing_channel) const;
 
     /*!
-     * \brief Set TAC start value for a specific card
+     * \brief Get shift value for a specific routing channel
      *
-     * \param card_id Card ID (0-based)
-     * \param tacstart TAC start value
+     * \param routing_channel Routing channel number (0-TTTRLIB_MAX_ROUTING_CHANNELS)
+     * \return Shift value for the channel (default: 0 if not set)
      */
-    void set_tacstart(int card_id, int tacstart);
+    int get_channel_shift(int routing_channel) const;
 
     /*!
-     * \brief Get TAC start value for a specific card
+     * \brief Check if any channels have LUTs configured
      *
-     * \param card_id Card ID (0-based)
-     * \return TAC start value (default 0 if not set)
+     * \return true if at least one channel has a LUT, false otherwise
      */
-    int get_tacstart(int card_id) const;
+    bool has_luts() const;
 
     /*!
-     * \brief Set TAC shift for a specific card
+     * \brief Set all channel LUTs from a 2D array
      *
-     * \param card_id Card ID (0-based)
-     * \param tacshift TAC shift value
+     * \param luts 2D array of LUTs [n_channels x lut_size]
+     * \param n_channels Number of channels (first dimension)
+     * \param lut_size Size of each LUT (second dimension)
      */
-    void set_tacshift(int card_id, int tacshift);
+    void set_channel_luts_from_array(const float* luts, int n_channels, int lut_size);
 
     /*!
-     * \brief Get TAC shift for a specific card
+     * \brief Set all channel shifts from a 1D array
      *
-     * \param card_id Card ID (0-based)
-     * \return TAC shift value (default 0 if not set)
+     * \param shifts 1D array of shift values [n_channels]
+     * \param n_channels Number of channels
      */
-    int get_tacshift(int card_id) const;
+    void set_channel_shifts_from_array(const int* shifts, int n_channels);
 
     /*!
-     * \brief Get number of configured cards
+     * \brief Get all channel LUTs as a 2D array
      *
-     * \return Number of cards with linearization tables
+     * \param luts Output 2D array [n_channels x lut_size]
+     * \param n_channels Number of channels (output)
+     * \param lut_size Size of each LUT (output)
      */
-    int get_num_cards() const { return (int)_linearization_tables.size(); }
+    void get_channel_luts_as_array(float** luts, int* n_channels, int* lut_size);
 
     /*!
-     * \brief Get all card IDs
+     * \brief Get all channel shifts as a 1D array
      *
-     * \return Vector of card IDs
+     * \param shifts Output 1D array [n_channels]
+     * \param n_channels Number of channels (output)
      */
-    std::vector<int> get_card_ids() const;
+    void get_channel_shifts_as_array(int** shifts, int* n_channels);
+
+private:
+    /*!
+     * \brief LUTs indexed by routing channel (0-TTTRLIB_MAX_ROUTING_CHANNELS)
+     */
+    std::vector<std::vector<float>> _channel_luts;
 
     /*!
-     * \brief Set card ID for a specific routing channel
-     *
-     * \param routing_channel Routing channel number
-     * \param card_id Card ID to assign to this channel
+     * \brief Shift values indexed by routing channel (0-TTTRLIB_MAX_ROUTING_CHANNELS)
      */
-    void set_card_for_channel(int routing_channel, int card_id);
+    std::vector<int> _channel_shifts;
 
     /*!
-     * \brief Get card ID for a specific routing channel
-     *
-     * \param routing_channel Routing channel number
-     * \return Card ID for this channel, or -1 if not mapped
+     * \brief Expected size for all LUT tables (for validation)
      */
-    int get_card_for_channel(int routing_channel) const;
+    size_t _expected_lut_size;
 
-    /*!
-     * \brief Get all routing channels mapped to a specific card
-     *
-     * \param card_id Card ID
-     * \return Vector of routing channels for this card
-     */
-    std::vector<int> get_channels_for_card(int card_id) const;
-
-protected:
     /*!
      * \brief Generate random numbers for dithering
      *
@@ -192,38 +166,6 @@ protected:
      * \return Vector of random numbers
      */
     static std::vector<float> generate_random_numbers(int n_random, unsigned int seed = 0);
-
-private:
-    /*!
-     * \brief Map of card_id -> linearization table
-     */
-    std::map<int, std::vector<float>> _linearization_tables;
-
-    /*!
-     * \brief Map of routing_channel -> card_id (defines channel-to-card routing)
-     */
-    std::map<int, int> _channel_to_card_map;
-
-    /*!
-     * \brief Map of card_id -> TAC start value
-     */
-    std::map<int, int> _tacstart_map;
-
-    /*!
-     * \brief Map of card_id -> TAC shift value
-     */
-    std::map<int, int> _tacshift_map;
-
-    /*!
-     * \brief Internal linearization implementation
-     */
-    int _linearize_internal(
-        unsigned short* microtimes,
-        const unsigned char* channels,
-        int n_photons,
-        const float* random_numbers,
-        bool use_provided_random
-    );
 };
 
 #endif // TTTRLIB_MICROTIME_LINEARIZATION_H
