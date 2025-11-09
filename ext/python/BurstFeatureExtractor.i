@@ -98,7 +98,13 @@ using json = nlohmann::json;
         return {str(k): np.asarray(v, dtype=np.int64) for k, v in ch.items()} if ch else {}
 
     def channel_indices(self):
-        """Return ragged per-channel photon indices per burst as plain Python lists."""
-        return self.get_burst_channel_indices()
+        """Return a dict[str, list[list[int64]]] with per-channel photon indices per burst.
+        Indices are ragged lists of lists. Uses the JSON path to avoid SWIG map proxy differences.
+        """
+        import json as _json
+        obj = _json.loads(self.to_json_string())
+        ch = obj.get("channel_indices", {})
+        # Convert to plain Python lists (ragged structure)
+        return {str(k): [[int(idx) for idx in burst_indices] for burst_indices in v] for k, v in ch.items()} if ch else {}
     %}
 }
