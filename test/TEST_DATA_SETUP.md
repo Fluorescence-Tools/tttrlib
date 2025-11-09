@@ -39,13 +39,13 @@ pytest test/
 
 #### Windows (PowerShell)
 ```powershell
-$env:TTTRLIB_DATA = "Q:\tttr-data"
+$env:TTTRLIB_DATA = "Q:/tttr-data"
 pytest test/
 ```
 
 #### Windows (Command Prompt)
 ```cmd
-set TTTRLIB_DATA=Q:\tttr-data
+set TTTRLIB_DATA=Q:/tttr-data
 pytest test/
 ```
 
@@ -204,3 +204,28 @@ environment {
     TTTRLIB_DATA = '/path/to/test/data'
 }
 ```
+
+
+## Data-free quick tests
+
+If you only want to verify that the Python wrappers import correctly and the basic
+NumPy-facing API works (no test data required), run:
+
+```powershell
+# Ensure the extension from your in-tree build is on sys.path (handled by conftest.py)
+# Build as you normally do, then:
+pytest -q test/test_burstfilter_structured_props.py \
+         test/test_burstfeature_numpy_shapes.py \
+         test/test_burstfilter_helpers_empty.py \
+         test/test_burstfilter_matrix_empty.py \
+         test/test_burstfeature_legacy_matrix_empty.py \
+         test/test_burstfilter_sequence_empty.py \
+         test/test_burstfeature_json_empty.py
+```
+
+These tests instantiate empty TTTR/BurstFilter objects and validate:
+- Structured NumPy dtypes for burst properties
+- Integer counts where appropriate
+- Backward-compatible legacy matrix properties
+- JSON serialization scaffolding
+- Pythonic sequence protocol on BurstFilter
