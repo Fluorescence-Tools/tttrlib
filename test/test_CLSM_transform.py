@@ -36,9 +36,27 @@ ht3_reading_parameter = {
     "reading_routine": 'default',
     "skip_before_first_frame_marker": True
 }
-ht3_data = tttrlib.TTTR(ht3_filename)
 
-sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+# Lazy load global data objects to avoid constructor failures during import
+ht3_data = None
+sp5_data = None
+
+def _load_global_data():
+    global ht3_data, sp5_data
+    if ht3_data is None and os.path.exists(ht3_filename):
+        try:
+            ht3_data = tttrlib.TTTR(ht3_filename)
+        except Exception as e:
+            print(f"Warning: Failed to load ht3_data: {e}")
+            ht3_data = None
+    
+    if sp5_data is None and os.path.exists(sp5_filename):
+        try:
+            sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+        except Exception as e:
+            print(f"Warning: Failed to load sp5_data: {e}")
+            sp5_data = None
+
 sp5_reading_parameter = {
     "reading_routine": 'SP5'
 }
@@ -53,6 +71,7 @@ class TestCLSMTransform(unittest.TestCase):
 
     def test_crop(self):
         # Read contents of file into new CLSMImage
+        _load_global_data()
         settings = {
             "channels": [0, 1],
             "fill": True,
@@ -66,6 +85,7 @@ class TestCLSMTransform(unittest.TestCase):
         self.assertTupleEqual(image.intensity.shape, (15, 128, 96))
 
     def test_index_transform(self):
+        _load_global_data()
         settings = {
             "channels": [0, 1],
             "fill": True,
@@ -88,6 +108,7 @@ class TestCLSMTransform(unittest.TestCase):
         self.assertTupleEqual(image.to3D(image.to1D(*idx)), idx)
 
     def test_clsm_binning(self):
+        _load_global_data()
         reading_parameter = dict()
         reading_parameter.update(ht3_reading_parameter)
         reading_parameter.update(

@@ -32,9 +32,27 @@ ht3_reading_parameter = {
     "reading_routine": 'default',
     "skip_before_first_frame_marker": True
 }
-ht3_data = tttrlib.TTTR(ht3_filename)
 
-sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+# Lazy load global data objects to avoid constructor failures during import
+ht3_data = None
+sp5_data = None
+
+def _load_global_data():
+    global ht3_data, sp5_data
+    if ht3_data is None and os.path.exists(ht3_filename):
+        try:
+            ht3_data = tttrlib.TTTR(ht3_filename)
+        except Exception as e:
+            print(f"Warning: Failed to load ht3_data: {e}")
+            ht3_data = None
+    
+    if sp5_data is None and os.path.exists(sp5_filename):
+        try:
+            sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+        except Exception as e:
+            print(f"Warning: Failed to load sp5_data: {e}")
+            sp5_data = None
+
 sp5_reading_parameter = {
     "reading_routine": 'SP5'
 }
@@ -161,6 +179,7 @@ class TestCLSM(unittest.TestCase):
 
 
     def test_copy_constructor(self):
+        _load_global_data()
         reading_parameter = ht3_reading_parameter
         clsm_image_1 = tttrlib.CLSMImage(
             tttr_data=ht3_data,
