@@ -38,6 +38,7 @@ import_array();
 %template(MapStringString) std::map<std::string, std::string>;
 %template(MapIntVectorFloat) std::map<int, std::vector<float>>;
 %template(MapIntInt) std::map<int, int>;
+%template(MapSignedCharInt) std::map<signed char, int>;
 %template(VectorString) std::vector<std::string>;
 
 %typemap(out) std::vector< double,std::allocator< double > > * {
