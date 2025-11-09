@@ -14,7 +14,16 @@ from test_settings import settings, DATA_AVAILABLE, get_data_path, DATA_ROOT  # 
 
 # Global data object - kept for backward compatibility but not used in tests
 # All tests now use self.data from setUp() for proper isolation
-data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
+data = None
+
+def _load_global_data():
+    global data
+    if data is None:
+        try:
+            data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
+        except Exception as e:
+            print(f"Warning: Failed to load global data object: {e}")
+            data = None
 
 
 @unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping TTTR tests")
@@ -472,7 +481,7 @@ class Tests(unittest.TestCase):
         
 
     def test_mean_microtime(self):
-        self.assertAlmostEqual(data.get_mean_microtime(), 4.351471044638555e-09)
+        self.assertAlmostEqual(self.data.get_mean_microtime(), 4.351471044638555e-09)
 
     def test_open_non_existing_file(self):
         # make sure that opening a non-exisitng file does not crash

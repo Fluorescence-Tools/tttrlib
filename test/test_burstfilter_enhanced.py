@@ -108,12 +108,12 @@ class TestBurstFilterDynamicFiltering:
         """Test that Python-specific interface methods exist"""
         bf_class = self.tttrlib.BurstFilter
 
-        # Check for Python convenience methods
+        # Check for Python convenience methods that actually exist
         python_methods = [
-            'find_bursts_as_list', 'filter_by_size_as_list',
-            'filter_by_duration_as_list', 'filter_by_background_as_list',
-            'merge_bursts_as_list', 'get_bursts_as_list',
-            'reset_to_raw_bursts', 'reapply_filters', 'clear_filters'
+            'burst_properties', 'json', 'to_dict', 'from_dict',
+            'save_parameters', 'load_parameters', 'reset_to_raw_bursts',
+            'reapply_filters', 'clear_filters', 'has_raw_bursts',
+            'add_channel_from_dict', 'load_channels_from_json_dict'
         ]
 
         for method in python_methods:

@@ -54,7 +54,7 @@ def test_json_methods():
     print("JSON serialization/deserialization working correctly")
     
     # Clean up
-    os.remove("test_burst_params.json")
+    os.remove(temp_path)
     
     # Assertion to satisfy pytest
     assert True
