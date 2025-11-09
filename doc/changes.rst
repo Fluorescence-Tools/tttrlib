@@ -9,6 +9,7 @@ Version 0.26
 * Added linearity correction for micro times
 * Added multimolecule correction in PDA
 * Improved DecayFit interface (JSON in/output)
+* Add support for channel specific microtime LUTs (correct non-linearities in TAC) and shifts
 
 Version 0.25
 ------------
