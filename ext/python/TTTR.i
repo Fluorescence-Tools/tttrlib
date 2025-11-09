@@ -4,6 +4,20 @@
 // Use shared_prt for TTTR to pass TTTR around
 %shared_ptr(TTTR)
 
+// Numpy array type mappings (applied globally before any %include)
+%apply(float* IN_ARRAY2, int DIM1, int DIM2) {
+    (const float* luts, int n_channels, int lut_size)
+}
+%apply(int* IN_ARRAY1, int DIM1) {
+    (const int* shifts, int n_channels)
+}
+%apply(float** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {
+    (float** luts, int* n_channels, int* lut_size)
+}
+%apply(int** ARGOUTVIEWM_ARRAY1, int* DIM1) {
+    (int** shifts, int* n_channels)
+}
+
 // used in selection and ranges
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *time, int n_time)}
 %apply (int* IN_ARRAY1, int DIM1) {(int *selection, int n_selection)}

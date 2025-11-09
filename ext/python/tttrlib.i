@@ -33,7 +33,6 @@
 %include "info.h"
 %include "misc_types.i"
 %include "FileCheck.i"
-
 %include "TTTRHeader.i"
 %include "TTTRRange.i"
 %include "TTTRSelection.i"
