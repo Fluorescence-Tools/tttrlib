@@ -28,6 +28,7 @@ TTTR::TTTR() :
         n_keyframes(0),
         keyframe_interval(1000000),
         macro_time_compression_enabled(false),
+        mt_linearizer(new MicrotimeLinearization()),
         micro_times(nullptr),
         routing_channels(nullptr),
         event_types(nullptr),
@@ -137,6 +138,15 @@ void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     n_valid_events = p2.n_valid_events;
     fp_records_begin = p2.fp_records_begin;
     
+    // Copy new member variables for LUTs and shifts
+    if (mt_linearizer != nullptr) {
+        delete mt_linearizer;
+    }
+    if (p2.mt_linearizer != nullptr) {
+        mt_linearizer = new MicrotimeLinearization(*p2.mt_linearizer);
+    } else {
+        mt_linearizer = new MicrotimeLinearization();
+    }
     // Copy compression-related fields
     keyframe_interval = p2.keyframe_interval;
     macro_time_compression_enabled = p2.macro_time_compression_enabled;
@@ -157,17 +167,65 @@ TTTR::TTTR(const TTTR &p2){
     copy_from(p2, true);
 }
 
-TTTR::TTTR(const char *fn, int container_type, bool read_input) : TTTR(){
+TTTR::TTTR(const char *filename, int container_type, bool read_input) : TTTR(){
     if(container_type >= 0){
         tttr_container_type_str = container_names.right.at(container_type);
         tttr_container_type = container_type;
-        filename.assign(fn);
+        this->filename.assign(filename);
         if(read_input){
             if(read_file())
                 find_used_routing_channels();
         }
     } else{
-        std::cerr << "File " << fn << " not supported." << std::endl;
+        std::cerr << "File " << filename << " not supported." << std::endl;
+    }
+}
+
+TTTR::TTTR(const char *filename, int container_type, 
+           const std::map<int, std::vector<float>>& channel_luts,
+           const std::map<signed char, int>& channel_shifts,
+           bool read_input) : TTTR(){
+    if(container_type >= 0){
+        tttr_container_type_str = container_names.right.at(container_type);
+        tttr_container_type = container_type;
+        this->filename.assign(filename);
+        // Configure LUTs and shifts directly in MicrotimeLinearization
+        if (!channel_luts.empty() || !channel_shifts.empty()) {
+            apply_channel_luts(channel_luts, channel_shifts);
+        }
+        if(read_input){
+            if(read_file()){
+                find_used_routing_channels();
+                // Apply LUTs and shifts
+                apply_luts_and_shifts(-1, true);
+            }
+        }
+    } else{
+        std::cerr << "File " << filename << " not supported." << std::endl;
+    }
+}
+
+TTTR::TTTR(const char *fn, const char *container_type, bool read_input) : TTTR() {
+    try {
+        std::string container_type_str_lower(container_type);
+        std::transform(container_type_str_lower.begin(), container_type_str_lower.end(),
+                       container_type_str_lower.begin(), ::tolower);
+
+        if (container_type_str_lower == "auto") {
+            tttr_container_type = inferTTTRFileType(fn);
+            tttr_container_type_str = container_names.right.at(tttr_container_type);
+        } else {
+            tttr_container_type_str.assign(container_type);
+            tttr_container_type = container_names.left.at(std::string(container_type));
+        }
+
+        filename.assign(fn);
+        if (read_input && read_file())
+            find_used_routing_channels();
+    }
+    catch (...) {
+        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type, bool read_input): "
+                  << "Container type " << container_type << " not supported." << std::endl;
     }
 }
 
@@ -192,17 +250,6 @@ TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
     catch (...) {
         std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): "
                   << "Container type " << container_type << " not supported." << std::endl;
-    }
-}
-
-TTTR::TTTR(const char *fn, int container_type) : TTTR(fn, container_type, true) {
-    try {
-        tttr_container_type_str.assign(
-                container_names.right.at(container_type)
-        );
-    }
-    catch(...) {
-        std::cerr << "TTTR::TTTR(const char *fn, int container_type): Container type " << container_type << " not supported." << std::endl;
     }
 }
 
@@ -507,6 +554,10 @@ if (is_verbose()) {
 TTTR::~TTTR() {
     delete header;
     deallocate_memory_of_records();
+    if (mt_linearizer != nullptr) {
+        delete mt_linearizer;
+        mt_linearizer = nullptr;
+    }
 }
 
 std::string TTTR::get_filename() {
@@ -1110,6 +1161,13 @@ void TTTR::get_selection_by_channel(
     auto v = m->get_indices();
     get_array<int>(v.size(), v.data(), output, n_output);
     delete m;
+}
+
+TTTR TTTR::operator+(const TTTR* other) const {
+    TTTR re;
+    re.copy_from(*this, true);
+    re.append(other);
+    return re;
 }
 
 void TTTR::get_selection_by_count_rate(
@@ -1966,11 +2024,13 @@ void TTTR::append_events(
         bool shift_macro_time,
         long long macro_time_offset
 ){
+    
     if(
         (n_macrotimes == n_microtimes) &&
         (n_microtimes == n_routing_channels) &&
         (n_routing_channels == n_event_types)
     ){
+        
 if (is_verbose()) {
         std::cout << "-- Appending number of records: " << n_macrotimes << std::endl;
 }
@@ -1983,11 +2043,13 @@ if (is_verbose()) {
         // Use reallocate_memory_for_records with growth factor for better performance
         reallocate_memory_for_records(n_rec, false);
         
+        
         if(n_valid_events > 0){
             if(shift_macro_time){
                 macro_time_offset += get_macro_time_at(n_valid_events - 1);
             }
         }
+        
         for(int i_rec=0; i_rec < n_macrotimes; i_rec++){
             set_macro_time_at(i_rec + n_valid_events, macro_times[i_rec] + macro_time_offset);
             this->micro_times[i_rec + n_valid_events] = micro_times[i_rec];
@@ -2314,87 +2376,186 @@ void TTTR::disable_macro_time_compression() {
     decompress_macro_times();
 }
 
-int TTTR::linearize_microtimes(
-    const MicrotimeLinearization& linearizer,
-    unsigned int seed
-) {
-    if (micro_times == nullptr || routing_channels == nullptr) {
-        return 0;
-    }
+int TTTR::apply_luts_and_shifts(int seed, bool use_dithering) {
+    bool verbose = is_verbose();
     
-    if (n_valid_events == 0) {
-        return 1;
+    if (verbose) {
+        std::cout << "Applying LUTs and shifts with seed=" << seed << ", use_dithering=" << use_dithering << std::endl;
     }
-    
-    if (!linearizer.is_valid()) {
-        if (is_verbose()) {
-            std::clog << "-- ERROR: Invalid MicrotimeLinearization object" << std::endl;
+    if (micro_times == nullptr || routing_channels == nullptr || n_valid_events == 0) {
+        if (verbose) {
+            std::cerr << "No data to process or NULL pointers" << std::endl;
         }
         return 0;
     }
     
-    if (is_verbose()) {
-        std::clog << "-- Linearizing " << n_valid_events << " microtimes with channel mapping..." << std::endl;
+    // Apply LUTs and shifts using the class MicrotimeLinearization in one pass
+    if (mt_linearizer != nullptr && mt_linearizer->has_luts()) {
+        if (verbose) {
+            std::cout << "Using MicrotimeLinearization for LUT application" << std::endl;
+        }
+        
+        // Determine seed to use
+        unsigned int actual_seed = 0;
+        if (seed >= 0) {
+            actual_seed = static_cast<unsigned int>(seed);
+        } else {
+            // seed == -1, use environment variable
+            const char* seed_env = std::getenv("TTTR_RND_SEED");
+            if (seed_env) {
+                try {
+                    actual_seed = static_cast<unsigned int>(std::stoul(seed_env));
+                } catch (const std::exception&) {
+                    // Invalid seed value, use default
+                    actual_seed = 0;
+                }
+            }
+        }
+        
+        if (verbose) {
+            std::cout << "Applying linearization to " << n_valid_events << " events" << std::endl;
+        }
+        
+        // Apply linearization and shifts in one pass
+        int result = mt_linearizer->linearize(
+            micro_times,
+            (const unsigned char*)routing_channels,
+            (int)n_valid_events,
+            actual_seed,
+            use_dithering
+        );
+        
+        if (verbose) {
+            if (result == 0) {
+                std::clog << "WARNING: LUT/shift application failed" << std::endl;
+            } else {
+                std::clog << "LUTs and shifts applied successfully" << std::endl;
+            }
+        }
+        
+        return result;  // Return 1 on success, 0 on failure
+    } else {
+        if (verbose) {
+            std::cout << "Using manual shift application (no LUTs configured)" << std::endl;
+        }
+        
+        // No LUTs configured, just apply shifts manually
+        int modified_events = 0;
+        unsigned short n_micro_channels = get_number_of_micro_time_channels();
+        const size_t LOOKUP_SIZE = TTTRLIB_MAX_ROUTING_CHANNELS;
+        std::vector<int> channel_shift_lookup(LOOKUP_SIZE, 0);
+
+        // Populate shift lookups from MicrotimeLinearization
+        if (mt_linearizer != nullptr) {
+            for (size_t i = 0; i < LOOKUP_SIZE; ++i) {
+                channel_shift_lookup[i] = mt_linearizer->get_channel_shift(static_cast<int>(i));
+            }
+        }
+
+        for (size_t i = 0; i < n_valid_events; ++i) {
+            signed char channel = routing_channels[i];
+            unsigned short microtime = micro_times[i];
+            unsigned char channel_idx = static_cast<unsigned char>(channel);
+
+            // Apply shift
+            int shift = channel_shift_lookup[channel_idx];
+            if (shift != 0) {
+                unsigned short old_microtime = microtime;
+                // Apply shift with wraparound only when microtime channels are properly defined (> 1)
+                if (n_micro_channels > 1) {
+                    microtime = (microtime + shift) % n_micro_channels;
+                } else {
+                    // No defined microtime channels, apply shift without wrapping
+                    int new_value = static_cast<int>(microtime) + shift;
+                    if (new_value < 0) {
+                        new_value = 0;  // Clamp to 0
+                    }
+                    microtime = static_cast<unsigned short>(new_value);
+                }
+                if (old_microtime != microtime) {
+                    modified_events++;
+                }
+                micro_times[i] = microtime;
+            }
+        }
+
+        if (verbose) {
+            std::cout << "Applied shifts to " << modified_events << " out of " << n_valid_events << " events" << std::endl;
+        }
+
+        return modified_events;
     }
-    
-    // Apply linearization using the MicrotimeLinearization object
-    // which handles channel-to-card mapping internally
-    int result = const_cast<MicrotimeLinearization&>(linearizer).linearize(
-        micro_times,
-        (const unsigned char*)routing_channels,
-        (int)n_valid_events,
-        seed
-    );
-    
-    if (result && is_verbose()) {
-        std::clog << "-- Microtime linearization complete." << std::endl;
-    }
-    
-    return result;
 }
 
-int TTTR::linearize_microtimes_with_random(
-    const MicrotimeLinearization& linearizer,
-    const float* random_numbers,
-    int n_random_numbers
+int TTTR::apply_channel_luts(
+    const std::map<int, std::vector<float>>& channel_luts,
+    const std::map<signed char, int>& channel_shifts
 ) {
-    if (micro_times == nullptr || routing_channels == nullptr) {
-        return 0;
-    }
-    
-    if (n_valid_events == 0) {
-        return 1;
-    }
-    
-    if (random_numbers == nullptr || n_random_numbers < (int)n_valid_events) {
-        if (is_verbose()) {
-            std::clog << "-- ERROR: Insufficient random numbers provided" << std::endl;
-        }
-        return 0;
-    }
-    
-    if (!linearizer.is_valid()) {
-        if (is_verbose()) {
-            std::clog << "-- ERROR: Invalid MicrotimeLinearization object" << std::endl;
-        }
-        return 0;
-    }
-    
     if (is_verbose()) {
-        std::clog << "-- Linearizing " << n_valid_events << " microtimes with provided random numbers..." << std::endl;
+        std::clog << "Configuring channel LUTs and shifts..." << std::endl;
     }
-    
-    // Apply linearization with provided random numbers
-    int result = const_cast<MicrotimeLinearization&>(linearizer).linearize(
-        micro_times,
-        (const unsigned char*)routing_channels,
-        (int)n_valid_events,
-        random_numbers
-    );
-    
-    if (result && is_verbose()) {
-        std::clog << "-- Microtime linearization complete." << std::endl;
+
+    // Configure mt_linearizer with LUTs and shifts per channel
+    if (mt_linearizer != nullptr) {
+        // Set LUTs for each channel
+        for (const auto& lut_entry : channel_luts) {
+            int channel = lut_entry.first;
+            mt_linearizer->set_channel_lut(channel, lut_entry.second);
+        }
+        
+        // Set shifts for each channel
+        for (const auto& shift_entry : channel_shifts) {
+            signed char ch = shift_entry.first;
+            int channel = static_cast<unsigned char>(ch);  // Convert to 0-255 range
+            mt_linearizer->set_channel_shift(channel, shift_entry.second);
+        }
     }
-    
-    return result;
+
+    if (is_verbose()) {
+        std::clog << "Channel LUTs and shifts configured successfully." << std::endl;
+    }
+
+    return 1; // Success
+}
+
+MicrotimeLinearization* TTTR::get_mt_linearizer() {
+    return mt_linearizer;
+}
+
+void TTTR::set_mt_linearizer(MicrotimeLinearization* mt_linearizer) {
+    if (this->mt_linearizer != nullptr) {
+        delete this->mt_linearizer;
+    }
+    this->mt_linearizer = mt_linearizer;
+}
+
+void TTTR::set_channel_luts(const float* luts, int n_channels, int lut_size) {
+    if (mt_linearizer != nullptr) {
+        mt_linearizer->set_channel_luts_from_array(luts, n_channels, lut_size);
+    }
+}
+
+void TTTR::set_channel_shifts(const int* shifts, int n_channels) {
+    if (mt_linearizer != nullptr) {
+        mt_linearizer->set_channel_shifts_from_array(shifts, n_channels);
+    }
+}
+
+void TTTR::get_channel_luts(float** luts, int* n_channels, int* lut_size) {
+    if (mt_linearizer != nullptr) {
+        mt_linearizer->get_channel_luts_as_array(luts, n_channels, lut_size);
+    } else {
+        *luts = nullptr;
+        *n_channels = 0;
+        *lut_size = 0;
+    }
+}
+
+void TTTR::get_channel_shifts(int** shifts, int* n_channels) {
+    if (mt_linearizer != nullptr) {
+        mt_linearizer->get_channel_shifts_as_array(shifts, n_channels);
+    } else {
+        *shifts = nullptr;
+        *n_channels = 0;
+    }
 }

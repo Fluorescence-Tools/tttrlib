@@ -296,6 +296,9 @@ private:
     /// Static flag: automatically compress macro times when reading files (default: true)
     static bool auto_compress_on_read;
 
+    /// Microtime linearizer instance for the TTTR object
+    MicrotimeLinearization* mt_linearizer = nullptr;
+
     /// Micro time (PRIVATE - use get/set_micro_time_at)
     unsigned short *micro_times;
 
@@ -1033,8 +1036,6 @@ public:
      * \brief Copy constructor for the TTTR (Time-Tagged Time-Resolved) class.
      *
      * This constructor creates a new TTTR object by copying the information from another TTTR object.
-     *
-     * @param p2 The TTTR object from which the information is copied.
      */
     TTTR(const TTTR &p2);
 
@@ -1074,7 +1075,7 @@ public:
     TTTR(const char *filename);
 
     /*!
-     * Constructor for TTTR object that reads the content of the file.
+     * Constructor for TTTR object that reads the content of the file and applies LUTs/shifts.
      *
      * @param filename TTTR filename.
      * @param container_type Container type as int:
@@ -1085,8 +1086,14 @@ public:
      *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
      *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
      *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
+     * @param channel_luts Map of routing channel -> LUT vector for microtime linearization
+     * @param channel_shifts Map of routing channel -> microtime shift value (bins to add, modulo wraparound)
+     * @param read_input If true, reads the content of the file and applies LUTs/shifts (default: true).
      */
-    TTTR(const char *filename, int container_type);
+    TTTR(const char *filename, int container_type,
+         const std::map<int, std::vector<float>>& channel_luts = std::map<int, std::vector<float>>(),
+         const std::map<signed char, int>& channel_shifts = std::map<signed char, int>(),
+         bool read_input = true);
 
     /*!
      * Constructor for TTTR object.
@@ -1100,7 +1107,10 @@ public:
      *   - "SPC-600_4096": Becker & Hickl SPC-600 with 4096 channels Container
      *   - "PHOTON-HDF5": Photon-HDF5 Container
      *   - "CZ_CONFOCOR3_CONTAINER": Carl Zeiss ConfoCor3 Container
+     * @param read_input If true, reads the content of the file.
      */
+    TTTR(const char *filename, const char* container_type, bool read_input);
+
     TTTR(const char *filename, const char* container_type);
 
      /*!
@@ -1377,17 +1387,12 @@ public:
      void shift_macro_time(int shift);
 
     /*!
-      * @brief Adds the events of another TTTR object to the current TTTR object.
-      *
-      * @param other Pointer to the TTTR object whose events will be added.
-      * @return Pointer to a new TTTR object containing the combined events.
-      */
-    TTTR* operator+(const TTTR* other) const {
-        auto re = new TTTR();
-        re->copy_from(*this, true);
-        re->append(other);
-        return re;
-    }
+     * @brief Adds the events of another TTTR object to the current TTTR object.
+     *
+     * @param other Pointer to the TTTR object whose events will be added.
+     * @return TTTR object containing the combined events.
+     */
+    TTTR operator+(const TTTR* other) const;
 
 
     /*!
@@ -1575,50 +1580,91 @@ public:
     }
 
     /*!
-     * \brief Linearize microtimes using MicrotimeLinearization with channel mapping
+     * @brief Configure channel LUTs and shifts for existing TTTR data
      *
-     * Applies TAC linearization to all microtimes in the TTTR object using a 
-     * MicrotimeLinearization object that handles flexible channel-to-card mapping.
-     * This is the recommended approach for multi-card systems.
+     * Configures microtime correction LUTs and shifts for an already loaded TTTR object.
+     * The LUTs are stored in the class MicrotimeLinearization member for later application.
+     * Use apply_luts_and_shifts() to actually apply the configured corrections.
      *
-     * This method modifies the microtime values in-place.
+     * @param channel_luts Map of routing channel -> LUT vector for microtime linearization
+     * @param channel_shifts Map of routing channel -> microtime shift value (bins to add, modulo wraparound)
+     * @return 1 on success, 0 on failure
      *
-     * \param linearizer MicrotimeLinearization object configured with linearization tables
-     *                   and channel-to-card mapping
-     * \param seed Random seed for dithering (default: 0 for time-based seed)
-     *
-     * \return 1 on success, 0 on failure
-     *
-     * \see MicrotimeLinearization
+     * \note Actual application of LUTs and shifts is done by calling apply_luts_and_shifts()
      */
-    int linearize_microtimes(
-        const MicrotimeLinearization& linearizer,
-        unsigned int seed = 0
+    int apply_channel_luts(
+        const std::map<int, std::vector<float>>& channel_luts,
+        const std::map<signed char, int>& channel_shifts = std::map<signed char, int>()
     );
-    
+
     /*!
-     * \brief Linearize microtimes with provided random numbers
+     * \brief Apply LUTs and microtime shifts per routing channel to the loaded TTTR data.
      *
-     * Applies TAC linearization to all microtimes in the TTTR object using a
-     * MicrotimeLinearization object with provided random numbers for dithering.
-     * This allows for reproducible linearization when the same random numbers are used.
+     * This method applies the stored LUTs and shifts to the microtime data after loading.
+     * LUTs are applied per routing channel, and shifts are applied per channel.
      *
-     * This method modifies the microtime values in-place.
-     *
-     * \param linearizer MicrotimeLinearization object configured with linearization tables
-     *                   and channel-to-card mapping
-     * \param random_numbers Array of random numbers in range [0, 1) for dithering
-     * \param n_random_numbers Size of random_numbers array (should be >= n_valid_events)
-     *
-     * \return 1 on success, 0 on failure
-     *
-     * \see linearize_microtimes
+     * @param seed Random seed for dithering (-1 to use TTTR_RND_SEED environment variable)
+     * @param use_dithering Whether to apply random dithering (default: true)
      */
-    int linearize_microtimes_with_random(
-        const MicrotimeLinearization& linearizer,
-        const float* random_numbers,
-        int n_random_numbers
-    );
+    int apply_luts_and_shifts(int seed = -1, bool use_dithering = true);
+
+    /*!
+     * \brief Get the MicrotimeLinearization instance
+     *
+     * \return Pointer to the MicrotimeLinearization instance
+     */
+    MicrotimeLinearization* get_mt_linearizer();
+
+    /*!
+     * \brief Set the MicrotimeLinearization instance
+     *
+     * \param mt_linearizer Pointer to the MicrotimeLinearization instance to set
+     */
+    void set_mt_linearizer(MicrotimeLinearization* mt_linearizer);
+
+    /*!
+     * \brief Set channel LUTs from a 2D numpy array
+     *
+     * Convenience method that sets LUTs on the internal MicrotimeLinearization object.
+     *
+     * \param luts 2D numpy array [n_channels x lut_size]
+     * \param n_channels Number of channels
+     * \param lut_size Size of each LUT
+     */
+    void set_channel_luts(const float* luts, int n_channels, int lut_size);
+
+    /*!
+     * \brief Set channel shifts from a 1D numpy array
+     *
+     * Convenience method that sets shifts on the internal MicrotimeLinearization object.
+     *
+     * \param shifts 1D numpy array [n_channels]
+     * \param n_channels Number of channels
+     */
+    void set_channel_shifts(const int* shifts, int n_channels);
+
+    /*!
+     * \brief Get channel LUTs as a 2D numpy array
+     *
+     * Convenience method that gets LUTs from the internal MicrotimeLinearization object.
+     *
+     * \param luts Output 2D numpy array [n_channels x lut_size]
+     * \param n_channels Number of channels (output)
+     * \param lut_size Size of each LUT (output)
+     */
+    void get_channel_luts(float** luts, int* n_channels, int* lut_size);
+
+    /*!
+     * \brief Get channel shifts as a 1D numpy array
+     *
+     * Convenience method that gets shifts from the internal MicrotimeLinearization object.
+     *
+     * \param shifts Output 1D numpy array [n_channels]
+     * \param n_channels Number of channels (output)
+     */
+    void get_channel_shifts(int** shifts, int* n_channels);
+
+
 
 };
 
