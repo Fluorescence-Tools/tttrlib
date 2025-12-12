@@ -1,10 +1,9 @@
 """
-Microtime Linearization for SPC Becker Cards
-=============================================
+Microtime Linearization
+=======================
 
-This example demonstrates how to linearize microtimes (TAC values) from
-Becker & Hickl SPC cards using lookup tables. The linearization corrects
-for non-linear response of the Time-to-Amplitude Converter (TAC).
+This example demonstrates how to linearize microtimes using lookup tables.
+The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC).
 
 The linearization can be applied in two ways:
 1. **On-read linearization**: Apply linearization immediately after reading TTTR data
@@ -18,38 +17,38 @@ import tttrlib
 
 # %%
 # Generate Example Linearization Tables
-# ======================================
+# =====================================
 #
-# In practice, these tables come from calibration measurements of your SPC card.
+# In practice, these tables come from calibration measurements of your measurement system.
 # They represent the linearized TAC values at each channel.
 
 def create_example_linearization_table(n_channels=256):
     """
     Create an example linearization table.
-    
+
     In real use, these tables would come from calibration measurements.
     This example creates a slightly non-linear response to demonstrate the effect.
     """
     # Create a slightly non-linear response (quadratic distortion)
     channels = np.arange(n_channels, dtype=np.float32)
-    
+
     # Non-linear response: quadratic distortion
     a = 1.0
     b = 0.0001  # Small quadratic term
     linearized = a * channels + b * channels**2
-    
+
     return linearized.astype(np.float32)
 
-# Create linearization tables for two cards
-lt1 = create_example_linearization_table(256)  # Card 1: 256 channels
-lt2 = create_example_linearization_table(256)  # Card 2: 256 channels
+# Create linearization tables for different channels
+lt_ch0 = create_example_linearization_table(256)  # Channel 0: 256 channels
+lt_ch8 = create_example_linearization_table(256)  # Channel 8: 256 channels
 
-print(f"Linearization table 1 shape: {lt1.shape}")
-print(f"Linearization table 2 shape: {lt2.shape}")
+print(f"Linearization table for channel 0 shape: {lt_ch0.shape}")
+print(f"Linearization table for channel 8 shape: {lt_ch8.shape}")
 
 # %%
 # Example 1: Post-Read Linearization
-# ====================================
+# ===================================
 #
 # Apply linearization to already-loaded TTTR data.
 
@@ -68,9 +67,9 @@ print(f"  Routing channels: {np.unique(routing_channels)}")
 
 # Create TTTR object from the synthetic data
 tttr = tttrlib.TTTR(
-    macro_times, 
-    micro_times, 
-    routing_channels, 
+    macro_times,
+    micro_times,
+    routing_channels,
     event_types
 )
 
@@ -80,19 +79,44 @@ print(f"\nTTTR object created with {tttr.size()} events")
 hist_before, bins_before = tttr.get_microtime_histogram()
 print(f"Microtime histogram before linearization: {len(hist_before)} bins")
 
-# Apply linearization with automatic random number generation
-print("\nApplying linearization (post-read)...")
-result = tttr.linearize_microtimes(
-    lt1,                    # Linearization table for card 1
-    lt2,                    # Linearization table for card 2
-    tacstart1=0,            # First TAC channel for card 1
-    tacstart2=0,            # First TAC channel for card 2
-    tacshift1=0,            # TAC shift for card 1
-    tacshift2=0,            # TAC shift for card 2
-    seed=42                 # Random seed for reproducibility
-)
+# Configure linearization for specific channels
+print("\nConfiguring linearization...")
 
-if result:
+# Create linearizer
+linearizer = tttrlib.MicrotimeLinearization()
+
+# Set LUTs for specific channels
+lut_ch0 = tttrlib.VectorFloat()
+for val in lt_ch0:
+    lut_ch0.append(val)
+linearizer.set_channel_lut(0, lut_ch0)  # Channel 0
+
+lut_ch8 = tttrlib.VectorFloat()
+for val in lt_ch8:
+    lut_ch8.append(val)
+linearizer.set_channel_lut(8, lut_ch8)  # Channel 8
+
+# Set shifts for channels (optional)
+linearizer.set_channel_shift(0, 0)   # No shift for channel 0
+linearizer.set_channel_shift(8, 5)   # Shift channel 8 by 5
+
+# Configure the TTTR object with LUTs and shifts
+channel_luts = tttrlib.MapIntVectorFloat()
+channel_luts[0] = lut_ch0
+channel_luts[8] = lut_ch8
+
+channel_shifts = tttrlib.MapSignedCharInt()
+channel_shifts[0] = 0
+channel_shifts[8] = 5
+
+result_config = tttr.apply_channel_luts(channel_luts, channel_shifts)
+print(f"Configuration applied to {result_config} events")
+
+# Apply linearization with specified seed
+print("\nApplying linearization...")
+result = tttr.apply_luts_and_shifts(42)  # Random seed for reproducibility
+
+if result >= 0:
     print("Linearization successful!")
 else:
     print("Linearization failed!")
@@ -102,140 +126,147 @@ hist_after, bins_after = tttr.get_microtime_histogram()
 print(f"Microtime histogram after linearization: {len(hist_after)} bins")
 
 # %%
-# Example 2: Linearization with Provided Random Numbers
-# =======================================================
+# Example 2: Linearization with Environment Variable Seed
+# ========================================================
 #
-# For reproducible results, you can provide your own random numbers.
+# Use environment variable for reproducible results across sessions.
 
 # Create new TTTR object
 tttr2 = tttrlib.TTTR(
-    macro_times, 
+    macro_times,
     micro_times.copy(),  # Copy to avoid modifying original
-    routing_channels, 
+    routing_channels,
     event_types
 )
 
-# Generate random numbers externally
-random_numbers = np.random.RandomState(42).uniform(0, 1, n_photons).astype(np.float32)
+print(f"\nApplying linearization with environment variable seed...")
 
-print(f"\nApplying linearization with provided random numbers...")
-result = tttr2.linearize_microtimes_with_random(
-    lt1,                    # Linearization table for card 1
-    lt2,                    # Linearization table for card 2
-    random_numbers,         # Provided random numbers for dithering
-    tacstart1=0,
-    tacstart2=0,
-    tacshift1=0,
-    tacshift2=0
-)
+# Configure (same as above)
+tttr2.apply_channel_luts(channel_luts, channel_shifts)
+result = tttr2.apply_luts_and_shifts(-1)  # -1 means use TTTR_RND_SEED environment variable
 
-if result:
-    print("Linearization with provided random numbers successful!")
+if result >= 0:
+    print("Linearization with environment seed successful!")
 else:
     print("Linearization failed!")
 
 # %%
-# Example 3: Single Card Linearization
-# ======================================
+# Example 3: Shifts Only (No LUTs)
+# ================================
 #
-# If you only have one SPC card, pass None for the second table.
+# Apply only channel shifts without LUT-based linearization.
 
-# Create TTTR data with only channels 0-7 (single card)
-routing_channels_single = np.random.randint(0, 8, n_photons, dtype=np.int8)
-
+# Create TTTR data
 tttr3 = tttrlib.TTTR(
-    macro_times, 
-    micro_times.copy(), 
-    routing_channels_single, 
+    macro_times,
+    micro_times.copy(),
+    routing_channels,
     event_types
 )
 
-print(f"\nApplying linearization for single card...")
-result = tttr3.linearize_microtimes(
-    lt1,                    # Only linearization table for card 1
-    None,                   # No second card
-    tacstart1=0,
-    tacshift1=0,
-    seed=42
-)
+print(f"\nApplying shifts only (no LUTs)...")
 
-if result:
-    print("Single-card linearization successful!")
+# Only configure shifts, no LUTs
+shifts_only = tttrlib.MapSignedCharInt()
+shifts_only[0] = 10   # Shift channel 0 by 10
+shifts_only[8] = -3   # Shift channel 8 by -3
+
+empty_luts = tttrlib.MapIntVectorFloat()  # No LUTs
+
+tttr3.apply_channel_luts(empty_luts, shifts_only)
+result = tttr3.apply_luts_and_shifts(42)
+
+if result >= 0:
+    print("Shifts-only linearization successful!")
 else:
-    print("Single-card linearization failed!")
+    print("Shifts-only linearization failed!")
 
 # %%
-# Example 4: Linearization with TAC Shifts
-# ==========================================
+# Example 4: Multiple Channels with Different LUTs
+# =================================================
 #
-# Apply TAC shifts to correct for timing offsets between cards.
+# Configure different LUTs for multiple channels.
 
 tttr4 = tttrlib.TTTR(
-    macro_times, 
-    micro_times.copy(), 
-    routing_channels, 
+    macro_times,
+    micro_times.copy(),
+    routing_channels,
     event_types
 )
 
-print(f"\nApplying linearization with TAC shifts...")
-result = tttr4.linearize_microtimes(
-    lt1,
-    lt2,
-    tacstart1=0,
-    tacstart2=0,
-    tacshift1=5,            # Shift card 1 by 5 channels
-    tacshift2=-3,           # Shift card 2 by -3 channels
-    seed=42
-)
+print(f"\nConfiguring multiple channels with different LUTs...")
 
-if result:
-    print("Linearization with TAC shifts successful!")
+# Create linearizer with multiple channels
+linearizer4 = tttrlib.MicrotimeLinearization()
+
+# Set LUTs for channels 0-15
+multi_luts = tttrlib.MapIntVectorFloat()
+multi_shifts = tttrlib.MapSignedCharInt()
+
+for ch in range(16):
+    # Create channel-specific LUT (with slight variations)
+    lut = tttrlib.VectorFloat()
+    base_lut = create_example_linearization_table(256)
+    for i, val in enumerate(base_lut):
+        lut.append(val + ch * 0.01)  # Small variation per channel
+
+    linearizer4.set_channel_lut(ch, lut)
+    multi_luts[ch] = lut
+    multi_shifts[ch] = ch % 5  # Different shifts: 0, 1, 2, 3, 4, 0, 1, ...
+
+print(f"  Configured {len(multi_luts)} channels with individual LUTs")
+
+# Apply configuration and linearization
+tttr4.apply_channel_luts(multi_luts, multi_shifts)
+result = tttr4.apply_luts_and_shifts(123)
+
+if result >= 0:
+    print("Multi-channel linearization successful!")
 else:
-    print("Linearization failed!")
+    print("Multi-channel linearization failed!")
 
 # %%
-# Example 5: Multiple Card Linearization (n cards)
-# ==================================================
+# Example 5: Performance Comparison
+# ==================================
 #
-# Support for any number of SPC cards with independent linearization tables.
+# Compare performance of different linearization approaches.
 
-# Create linearization tables for 4 cards
-lt_cards = {}
-for card_id in range(4):
-    lt_cards[card_id] = create_example_linearization_table(256)
+import time
 
-# Create TTTR data with channels for 4 cards (0-31)
-routing_channels_multi = np.random.randint(0, 32, n_photons, dtype=np.int8)
-
-tttr5 = tttrlib.TTTR(
-    macro_times, 
-    micro_times.copy(), 
-    routing_channels_multi, 
+tttr_perf = tttrlib.TTTR(
+    macro_times,
+    micro_times.copy(),
+    routing_channels,
     event_types
 )
 
-print(f"\nApplying linearization for 4 cards...")
-print(f"  Card 0: channels 0-7")
-print(f"  Card 1: channels 8-15")
-print(f"  Card 2: channels 16-23")
-print(f"  Card 3: channels 24-31")
+print("\nPerformance test with 10k photons...")
 
-# Create linearization object with multiple cards
-# Note: This requires the n-card constructor
-result = tttr5.linearize_microtimes(
-    lt_cards[0],
-    lt_cards[1],
-    tacstart1=0,
-    tacstart2=0,
-    tacshift1=0,
-    tacshift2=0,
-    seed=42
-)
+# Setup for performance test
+perf_luts = tttrlib.MapIntVectorFloat()
+perf_shifts = tttrlib.MapSignedCharInt()
 
-if result:
-    print("Multi-card linearization successful!")
+for ch in range(16):
+    lut = tttrlib.VectorFloat()
+    for i in range(256):
+        lut.append(float(i))
+    perf_luts[ch] = lut
+    perf_shifts[ch] = 0
+
+tttr_perf.apply_channel_luts(perf_luts, perf_shifts)
+
+# Time the linearization
+start_time = time.time()
+result = tttr_perf.apply_luts_and_shifts(42)
+end_time = time.time()
+
+if result >= 0:
+    elapsed = end_time - start_time
+    photons_per_sec = n_photons / elapsed
+    print(f"  Processed {n_photons} photons in {elapsed:.2f} seconds")
+    print(f"  Performance: {photons_per_sec:.0f} photons/second")
 else:
-    print("Multi-card linearization failed!")
+    print("Performance test failed!")
 
 # %%
 # Summary
@@ -243,19 +274,18 @@ else:
 #
 # The microtime linearization functionality provides:
 #
-# 1. **Flexible linearization**: Support for single, dual, or n SPC cards
+# 1. **Per-channel configuration**: Direct LUT and shift assignment per routing channel
 # 2. **Dithering**: Random number-based dithering reduces quantization artifacts
 # 3. **Reproducibility**: Seed control for reproducible results
-# 4. **TAC shifts**: Correction for timing offsets between cards
-# 5. **Efficient processing**: Direct in-place modification of microtime arrays
-# 6. **Scalability**: Supports any number of cards with independent parameters
+# 4. **Flexibility**: Can apply LUTs, shifts, or both
+# 5. **Performance**: Optimized single-pass processing
+# 6. **Scalability**: Supports any number of channels with independent parameters
 #
-# Channel-to-card mapping (default):
-# - Channels 0-7 → Card 0
-# - Channels 8-15 → Card 1
-# - Channels 16-23 → Card 2
-# - Channels 24-31 → Card 3
-# - etc.
+# Channel configuration:
+# - Channels 0-255 supported
+# - Each channel can have its own LUT and shift
+# - LUTs must all have the same size (validated automatically)
+# - Shifts are applied modulo the LUT size or default range
 #
 # For more information about TAC linearization, see the Seidel Software
 # taclin algorithm documentation.
