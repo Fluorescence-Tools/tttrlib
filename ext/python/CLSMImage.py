@@ -304,8 +304,54 @@ def __init__(
         skip_after_last_frame_marker=False,
         split_by_channel=False,
         filename=None,
+        channel_luts=None,
+        channel_shifts=None,
+        settings_file=None,
+        settings=None,
         **kwargs
 ):
+    """
+    Initialize a CLSMImage object.
+    
+    Parameters:
+    - tttr_data: TTTR object or path to TTTR file
+    - marker_frame_start, marker_line_start, etc.: CLSM marker parameters
+    - filename: Alternative way to specify TTTR file path
+    - channel_luts, channel_shifts: TTTR correction parameters
+    - settings_file: Path to JSON file with TTTR corrections and CLSM settings
+    - settings: Dict with TTTR corrections and CLSM settings
+    """
+    import pathlib
+    import json
+    import tttrlib
+    
+    # Handle JSON settings first (they can override other parameters)
+    json_settings = {}
+    if settings_file is not None or settings is not None:
+        if settings_file is not None:
+            # Load settings from file
+            settings_path = pathlib.Path(settings_file)
+            if not settings_path.exists():
+                raise FileNotFoundError(f"Settings file not found: {settings_file}")
+            with open(settings_path, 'r') as f:
+                json_settings = json.load(f)
+        else:
+            json_settings = settings
+        
+        # Extract TTTR corrections
+        if 'channel_luts' in json_settings:
+            if channel_luts is None:
+                channel_luts = {}
+            for ch_str, lut_list in json_settings['channel_luts'].items():
+                ch = int(ch_str)
+                channel_luts[ch] = lut_list
+        if 'channel_shifts' in json_settings:
+            if channel_shifts is None:
+                channel_shifts = {}
+            for ch_str, shift_val in json_settings['channel_shifts'].items():
+                ch = int(ch_str)
+                channel_shifts[ch] = shift_val
+    
     import pathlib
     import tttrlib
     
@@ -316,12 +362,18 @@ def __init__(
     if tttr_data is not None:
         if isinstance(tttr_data, (str, pathlib.Path)):
             # Convert filename to TTTR object
-            tttr_data = tttrlib.TTTR(tttr_data)
+            if channel_luts is not None or channel_shifts is not None:
+                tttr_data = tttrlib.TTTR(tttr_data, channel_luts=channel_luts, channel_shifts=channel_shifts)
+            else:
+                tttr_data = tttrlib.TTTR(tttr_data)
         # else: assume it's already a TTTR object, use as-is
     elif filename is not None:
         # filename parameter provided as keyword argument
         if isinstance(filename, (str, pathlib.Path)):
-            tttr_data = tttrlib.TTTR(filename)
+            if channel_luts is not None or channel_shifts is not None:
+                tttr_data = tttrlib.TTTR(filename, channel_luts=channel_luts, channel_shifts=channel_shifts)
+            else:
+                tttr_data = tttrlib.TTTR(filename)
         else:
             raise TypeError("filename must be a string or Path object")
     
@@ -345,6 +397,27 @@ def __init__(
         "bidirectional_scan":            False,   # <-- new default
         "split_by_channel":              bool(split_by_channel),
     }
+    
+    # Override CLSM settings from JSON if provided
+    if json_settings:
+        # CLSM-specific settings that can be overridden from JSON
+        clsm_keys = [
+            'marker_line_start', 'marker_line_stop', 'marker_frame_start', 
+            'marker_event_type', 'n_pixel_per_line', 'n_lines',
+            'skip_before_first_frame_marker', 'skip_after_last_frame_marker',
+            'bidirectional_scan', 'split_by_channel', 'reading_routine'
+        ]
+        for key in clsm_keys:
+            if key in json_settings:
+                if key == 'reading_routine':
+                    settings_kwargs[key] = rt.get(json_settings[key], rt['default'])
+                elif key == 'marker_frame_start':
+                    if isinstance(json_settings[key], list):
+                        settings_kwargs[key] = json_settings[key]
+                    else:
+                        settings_kwargs[key] = [json_settings[key]]
+                else:
+                    settings_kwargs[key] = json_settings[key]
 
     if not isinstance(source, CLSMImage):
         # If the user provided TTTR data, try reading any header‐derived settings
@@ -374,6 +447,10 @@ def __init__(
             settings_kwargs['marker_event_type'] = marker_event_type
         if isinstance(n_pixel_per_line, int):
             settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
+
+        # Consume our special parameters before passing to C++ constructor
+        kwargs.pop('settings_file', None)
+        kwargs.pop('settings', None)
 
         kwargs['tttr_data'] = tttr_data
 
