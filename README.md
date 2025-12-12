@@ -150,20 +150,6 @@ bursts = list(zip(ranges[0::2], ranges[1::2]))
 For PIE/ALEX data, add micro-time gating before burst search; see the tutorial for donor/acceptor prompt examples.
 For details, parameters, and plotting examples, see the Burst Analysis tutorial.
 
-## Verbose / Debug Output
-
-Set the environment variable `TTTRLIB_VERBOSE=1` (or any truthy value) to enable detailed logs.
-
-| Platform               | Command                      |
-| ---------------------- | ---------------------------- |
-| **Linux/macOS (bash)** | `export TTTRLIB_VERBOSE=1`   |
-| **Windows CMD**        | `set TTTRLIB_VERBOSE=1`      |
-| **Windows PowerShell** | `$env:TTTRLIB_VERBOSE = "1"` |
-
-Include verbose logs and a minimal reproduction when reporting issues.
-
----
-
 ## Supported File Formats
 
 * **PicoQuant:** PicoHarp/TimeHarp/HydraHarp (`ptu`, `ht3`, T2/T3)
