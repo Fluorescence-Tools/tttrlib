@@ -8,7 +8,7 @@ tmp/
 .venv
 .vs
 .ipynb_checkpoints
-cmake-build-*/
+#cmake-build-*/
 temp/
 *.egg-info/
 __pycache__
@@ -17,6 +17,7 @@ tttr-data
 .idea/
 leftovers/
 .boost_env
+playground
 
 # Documentation and tools
 doc/_*
