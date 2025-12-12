@@ -2425,6 +2425,11 @@ int TTTR::apply_luts_and_shifts(int seed, bool use_dithering) {
             use_dithering
         );
         
+        // Update microtime resolution if LUTs were applied
+        if (result != 0) {
+            update_microtime_resolution_after_lut();
+        }
+        
         if (verbose) {
             if (result == 0) {
                 std::clog << "WARNING: LUT/shift application failed" << std::endl;
@@ -2557,5 +2562,81 @@ void TTTR::get_channel_shifts(int** shifts, int* n_channels) {
     } else {
         *shifts = nullptr;
         *n_channels = 0;
+    }
+}
+
+void TTTR::update_microtime_resolution_after_lut() {
+    if (mt_linearizer == nullptr || !mt_linearizer->has_luts()) {
+        return;  // No LUTs applied, no resolution change
+    }
+
+    // Find which channels are actually used in the data
+    std::unordered_set<unsigned char> used_channels;
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        used_channels.insert(static_cast<unsigned char>(routing_channels[i]));
+    }
+
+    // Calculate average range transformation factor
+    double total_factor = 0.0;
+    int channel_count = 0;
+    std::vector<double> factors;
+
+    for (unsigned char channel : used_channels) {
+        const std::vector<float>& lut = mt_linearizer->get_channel_lut(channel);
+        if (!lut.empty()) {
+            // Calculate range transformation: original_range / new_range
+            // Original range is the LUT size (number of input bins)
+            size_t original_range = lut.size();
+            
+            // New range is the span of LUT output values
+            float min_val = *std::min_element(lut.begin(), lut.end());
+            float max_val = *std::max_element(lut.begin(), lut.end());
+            float new_range = max_val - min_val;
+            
+            if (new_range > 0) {
+                double factor = static_cast<double>(original_range) / new_range;
+                factors.push_back(factor);
+                total_factor += factor;
+                channel_count++;
+                
+                if (is_verbose()) {
+                    std::clog << "Channel " << static_cast<int>(channel) 
+                              << " LUT range transformation factor: " << factor 
+                              << " (original: " << original_range << ", new: " << new_range << ")" << std::endl;
+                }
+            }
+        }
+    }
+
+    if (channel_count > 0) {
+        double avg_factor = total_factor / channel_count;
+        
+        // Check for significant variation in transformation factors
+        if (channel_count > 1) {
+            double variance = 0.0;
+            for (double factor : factors) {
+                double diff = factor - avg_factor;
+                variance += diff * diff;
+            }
+            variance /= channel_count;
+            double std_dev = std::sqrt(variance);
+            
+            // Warn if standard deviation is more than 10% of the average factor
+            if (std_dev > 0.1 * avg_factor) {
+                std::clog << "WARNING: LUT transformation factors vary significantly across channels "
+                          << "(std_dev: " << std_dev << ", avg_factor: " << avg_factor << "). "
+                          << "Microtime resolution update uses average factor." << std::endl;
+            }
+        }
+        
+        double old_resolution = header->get_micro_time_resolution();
+        double new_resolution = old_resolution * avg_factor;
+        
+        header->set_micro_time_resolution(new_resolution);
+        
+        if (is_verbose()) {
+            std::clog << "Updated microtime resolution: " << old_resolution 
+                      << " ns -> " << new_resolution << " ns (factor: " << avg_factor << ")" << std::endl;
+        }
     }
 }

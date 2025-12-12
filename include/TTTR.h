@@ -1664,6 +1664,13 @@ public:
      */
     void get_channel_shifts(int** shifts, int* n_channels);
 
+    /*!
+     * \brief Update microtime resolution after LUT application
+     *
+     * Calculates the effective resolution change based on LUT range transformations
+     * and updates the microtime resolution in the header accordingly.
+     */
+    void update_microtime_resolution_after_lut();
 
 
 };

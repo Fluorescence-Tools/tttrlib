@@ -229,6 +229,11 @@ public:
         return get_tag(json_data, TTTRTagRes)["value"];
     }
 
+    /// Set the microtime resolution in nanoseconds
+    void set_micro_time_resolution(double resolution){
+        TTTRHeader::add_tag(json_data, TTTRTagRes, resolution, tyFloat8, -1);
+    }
+
     /// Duration of a pixel in LSM in units of macro time clock
     int get_pixel_duration(){
         double pixel_duration_d = TTTRHeader::get_tag(
