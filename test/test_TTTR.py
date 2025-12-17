@@ -67,10 +67,21 @@ class Tests(unittest.TestCase):
         d2 = json.loads(h2.get_json())
         self.assertDictEqual(d1, d2)
 
+    def test_constructor_accepts_pathlib(self):
+        fn = Path(settings["ptu_hh_t3_filename"])
+        data = tttrlib.TTTR(fn)
+        self.assertGreater(len(data.macro_times), 0)
+
+        if os.name == 'nt':
+            fn_str = os.fspath(fn)
+            if len(fn_str) > 1 and fn_str[1] == ':':
+                stored = data.get_filename()
+                self.assertFalse(stored.startswith('\\\\'))
+
     def test_write_ptu_header(self):
         filename = settings["ptu_hh_t3_filename"]
         file = tempfile.NamedTemporaryFile()
-        test_fn = file.name + '.ptu'
+        test_fn = Path(file.name + '.ptu')
         data = tttrlib.TTTR(filename)
         header_original = data.header
         mode = 'wb'  # default is wb

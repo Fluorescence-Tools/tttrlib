@@ -195,6 +195,7 @@ def __init__(self, *args, **kwargs):
     """
     import pathlib
     import json
+    import os
     
     # Extract our special parameters
     channel_luts = kwargs.pop('channel_luts', None)
@@ -226,8 +227,10 @@ def __init__(self, *args, **kwargs):
     
     if len(args) > 0:
         # Case 1: First argument is a filename (string or Path)
-        if isinstance(args[0], (str, pathlib.Path)):
-            filename = str(pathlib.Path(args[0]).absolute().as_posix())
+        if isinstance(args[0], (str, os.PathLike)):
+            filename = os.fspath(args[0])
+            if not isinstance(filename, str):
+                raise TypeError("filename must be a str/pathlike returning str")
             if len(args) > 1:
                 container_type = args[1]
             else:

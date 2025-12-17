@@ -121,9 +121,35 @@ def to_csv(self, filename=None):
     return csv_string
 
 def __init__(self, *args, **kwargs):
+    import os
+
+    if len(args) > 0 and isinstance(args[0], os.PathLike):
+        args = (os.fspath(args[0]),) + tuple(args[1:])
+
     this = _tttrlib.new_TTTRHeader(*args, **kwargs)
     try:
         self.this.append(this)
     except:
         self.this = this
+
+@staticmethod
+def write_ptu_header(fn, header, modes="wb"):
+    import os
+    if isinstance(fn, os.PathLike):
+        fn = os.fspath(fn)
+    return _tttrlib.TTTRHeader_write_ptu_header(fn, header, modes)
+
+@staticmethod
+def write_ht3_header(fn, header, modes="wb"):
+    import os
+    if isinstance(fn, os.PathLike):
+        fn = os.fspath(fn)
+    return _tttrlib.TTTRHeader_write_ht3_header(fn, header, modes)
+
+@staticmethod
+def write_spc132_header(fn, header, modes="wb"):
+    import os
+    if isinstance(fn, os.PathLike):
+        fn = os.fspath(fn)
+    return _tttrlib.TTTRHeader_write_spc132_header(fn, header, modes)
 

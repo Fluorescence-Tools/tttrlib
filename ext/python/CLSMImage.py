@@ -322,6 +322,7 @@ def __init__(
     - settings: Dict with TTTR corrections and CLSM settings
     """
     import pathlib
+    import os
     import json
     import tttrlib
     
@@ -360,7 +361,7 @@ def __init__(
     # - If string or Path: create TTTR object from filename
     # - If None: check filename parameter
     if tttr_data is not None:
-        if isinstance(tttr_data, (str, pathlib.Path)):
+        if isinstance(tttr_data, (str, os.PathLike)):
             # Convert filename to TTTR object
             if channel_luts is not None or channel_shifts is not None:
                 tttr_data = tttrlib.TTTR(tttr_data, channel_luts=channel_luts, channel_shifts=channel_shifts)
@@ -369,7 +370,7 @@ def __init__(
         # else: assume it's already a TTTR object, use as-is
     elif filename is not None:
         # filename parameter provided as keyword argument
-        if isinstance(filename, (str, pathlib.Path)):
+        if isinstance(filename, (str, os.PathLike)):
             if channel_luts is not None or channel_shifts is not None:
                 tttr_data = tttrlib.TTTR(filename, channel_luts=channel_luts, channel_shifts=channel_shifts)
             else:
