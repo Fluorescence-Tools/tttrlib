@@ -383,7 +383,8 @@ CLSMImage::CLSMImage(
             }
             
             // Set BH-specific marker conventions if not explicitly overridden
-            if (this->settings.marker_frame_start.empty()) {
+            if (this->settings.marker_frame_start.size() == 1 && 
+                this->settings.marker_frame_start[0] == 1) {
                 this->settings.marker_frame_start = {4};  // BH frame marker channel
             }
             if (this->settings.marker_line_start == 3) {  // Check if still at CLSMSettings default
@@ -392,9 +393,7 @@ CLSMImage::CLSMImage(
             if (this->settings.marker_line_stop == 2) {  // Check if still at CLSMSettings default
                 this->settings.marker_line_stop = -1;  // BH has no stop marker, uses duration
             }
-            if (this->settings.marker_event_type == 1) {  // Confirm BH marker event type
-                // Already correct for BH
-            }
+            this->settings.marker_event_type = 1; // BH marker event type is 1 (standard)
             
             // Skip incomplete data at start/end
             this->settings.skip_before_first_frame_marker = true;
@@ -406,8 +405,8 @@ CLSMImage::CLSMImage(
                 try {
                     auto json = nlohmann::json::parse(header->get_json());
                     
-                    // Read n_pixel_per_line from header if not explicitly set
-                    if (this->settings.n_pixel_per_line <= 0) {
+                    // Read n_pixel_per_line from header if not explicitly binned by user
+                    if (this->settings.n_pixel_per_line <= 1) {
                         auto pixX_tag = TTTRHeader::get_tag(json, "ImgHdr_PixX");
                         if (!pixX_tag.is_null() && pixX_tag.contains("value")) {
                             this->settings.n_pixel_per_line = pixX_tag["value"].get<int>();
