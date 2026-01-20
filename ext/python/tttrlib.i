@@ -66,3 +66,6 @@
 /* DecayFit(s) */
 %include "DecayFit.i"
 // %include "DecayFitMLEWrapper.i"  // Not ready yet
+
+/* BH SPC specific helpers */
+%pythoncode "./ext/python/bh_helpers.py"
