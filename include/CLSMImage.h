@@ -23,9 +23,10 @@
 
 /// Different types of distances between two accessible volumes
 typedef enum{
-    CLSM_DEFAULT,         /// Default reading compute_icsroutine
+    CLSM_DEFAULT,         /// Default reading routine
     CLSM_SP5,             /// Leica SP5
-    CLSM_SP8              /// Leica SP5
+    CLSM_SP8,             /// Leica SP8
+    CLSM_BH_SPC130        /// Becker & Hickl SPC-130
 } ReadingRoutine;
 
 
