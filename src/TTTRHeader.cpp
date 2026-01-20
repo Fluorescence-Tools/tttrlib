@@ -150,6 +150,64 @@ if (is_verbose()) {
 }
 
 
+bool TTTRHeader::read_bh_set_file(const std::string& filename) {
+    std::ifstream f(filename);
+    if (!f.is_open()) {
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(f, line)) {
+        // Remove leading/trailing whitespace
+        size_t start = line.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) continue;
+        size_t end = line.find_last_not_of(" \t\r\n");
+        line = line.substr(start, end - start + 1);
+
+        if (line.empty() || line[0] == '*') {
+            continue;
+        }
+
+        size_t sep_pos = line.find('=');
+        if (sep_pos != std::string::npos) {
+            std::string key = line.substr(0, sep_pos);
+            std::string val = line.substr(sep_pos + 1);
+
+            // Trim key and value
+            size_t k_start = key.find_first_not_of(" \t\r\n");
+            if (k_start != std::string::npos) {
+                size_t k_end = key.find_last_not_of(" \t\r\n");
+                key = key.substr(k_start, k_end - k_start + 1);
+            } else {
+                key = "";
+            }
+
+            size_t v_start = val.find_first_not_of(" \t\r\n");
+            if (v_start != std::string::npos) {
+                size_t v_end = val.find_last_not_of(" \t\r\n");
+                val = val.substr(v_start, v_end - v_start + 1);
+            } else {
+                val = "";
+            }
+
+            try {
+                if (key == "SP_IMG_X") {
+                    add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
+                } else if (key == "SP_IMG_Y") {
+                    add_tag(json_data, "ImgHdr_PixY", std::stoi(val), tyInt8);
+                } else if (key == "SP_PIX_CLK") {
+                    int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
+                    add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+                }
+            } catch (...) {
+                // Ignore lines with invalid integer values
+            }
+        }
+    }
+    return true;
+}
+
+
 size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
 
     add_tag(j, TTTRRecordType, (int) SM_RECORD_TYPE, tyInt8);
