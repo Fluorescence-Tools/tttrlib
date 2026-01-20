@@ -1125,6 +1125,25 @@ public:
         int reading_routine = CLSM_SP8
     );
 
+    /*!
+     * \brief Detect if BH SPC-130 Frame 1 has an extra initialization line.
+     *
+     * For BH SPC data, Frame 1 often has an extra partial line at the start
+     * that should be skipped. This compares line marker counts between Frame 1 and Frame 2.
+     *
+     * @param tttr Pointer to TTTR data
+     * @param frame_marker Frame marker routing channel (default 4)
+     * @param line_marker Line marker routing channel (default 2)
+     * @param marker_event_type Marker event type (default 1)
+     * @return true if Frame 1 has one extra line marker compared to Frame 2
+     */
+    static bool detect_bh_frame1_extra_line(
+        TTTR* tttr,
+        int frame_marker = 4,
+        int line_marker = 2,
+        int marker_event_type = 1
+    );
+
 
     /*!
      * \brief Obtains the duration of a line (in milliseconds) for a specified frame and line.

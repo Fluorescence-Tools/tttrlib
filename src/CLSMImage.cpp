@@ -451,6 +451,74 @@ CLSMImage::CLSMImage(
                     }
                 }
             }
+
+            // Task 5: Fallback for dimension inference if still not set
+            if (this->settings.n_pixel_per_line <= 1 || this->settings.n_lines <= 0) {
+                if (is_verbose()) {
+                    std::clog << "-- BH: Inferring dimensions from markers" << std::endl;
+                }
+                
+                auto frame_edges = get_frame_edges(tttr_data.get(), 0, -1, 
+                    this->settings.marker_frame_start, this->settings.marker_event_type, 
+                    this->settings.reading_routine, true, true);
+                
+                if (frame_edges.size() >= 2) {
+                    // 1. Count line markers in first frame
+                    if (this->settings.n_lines <= 0) {
+                        int line_count = 0;
+                        for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
+                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                                tttr_data->get_routing_channel_at(i) == this->settings.marker_line_start) {
+                                line_count++;
+                            }
+                        }
+                        if (line_count > 1) {
+                            this->settings.n_lines = line_count - 1;
+                            if (is_verbose()) {
+                                std::clog << "-- BH: Inferred n_lines: " << this->settings.n_lines << std::endl;
+                            }
+                        }
+                    }
+                    
+                    // 2. Count pixel markers in first line
+                    if (this->settings.n_pixel_per_line <= 1) {
+                        // Find first two line markers to identify a complete line
+                        int first_line_start = -1;
+                        int second_line_start = -1;
+                        for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
+                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                                tttr_data->get_routing_channel_at(i) == this->settings.marker_line_start) {
+                                if (first_line_start == -1) {
+                                    first_line_start = i;
+                                } else {
+                                    second_line_start = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (first_line_start != -1 && second_line_start != -1) {
+                            int pixel_count = 0;
+                            int pixel_marker = 1; // BH default pixel channel
+                            for (int i = first_line_start; i < second_line_start; ++i) {
+                                if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                                    tttr_data->get_routing_channel_at(i) == pixel_marker) {
+                                    pixel_count++;
+                                }
+                            }
+                            if (pixel_count > 1) {
+                                this->settings.n_pixel_per_line = pixel_count - 1;
+                                this->settings.use_pixel_markers = true;
+                                this->settings.marker_pixel = pixel_marker;
+                                if (is_verbose()) {
+                                    std::clog << "-- BH: Inferred n_pixel_per_line: " << this->settings.n_pixel_per_line << std::endl;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Update n_pixel if it was updated in settings
             this->n_pixel = this->settings.n_pixel_per_line;
         }
@@ -670,6 +738,22 @@ std::vector<int> CLSMImage::get_frame_edges(
             }
         }
     }
+
+    // Task 7: BH SPC-130 Frame 1 adjustment
+    if (reading_routine == CLSM_BH_SPC130 && frame_edges.size() >= 2) {
+        int frame_m = marker_frame.empty() ? 4 : marker_frame[0];
+        int line_m = 2; // BH default line marker
+        if (detect_bh_frame1_extra_line(tttr, frame_m, line_m, marker_event_type)) {
+            // Find first line marker after first frame marker and skip it
+            for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
+                if (event_types[i] == marker_event_type && routing_channels[i] == line_m) {
+                    frame_edges[0] = i + 1;
+                    break;
+                }
+            }
+        }
+    }
+
     if (!skip_after_last_frame_marker) {
         frame_edges.emplace_back(n_events);
     }
@@ -787,6 +871,53 @@ std::vector<int> CLSMImage::get_line_edges(
     }
 
     return line_edges;
+}
+
+
+bool CLSMImage::detect_bh_frame1_extra_line(
+    TTTR* tttr,
+    int frame_marker,
+    int line_marker,
+    int marker_event_type
+) {
+    if (tttr == nullptr) return false;
+
+    // We only need to check the first 3 frame markers to compare two complete frames
+    std::vector<int> frame_marker_positions;
+    
+    const signed char* event_types = tttr->event_types;
+    const signed char* routing_channels = tttr->routing_channels;
+    size_t n_events = tttr->get_n_events();
+
+    for (size_t i = 0; i < n_events; ++i) {
+        if (event_types[i] == marker_event_type) {
+            if (routing_channels[i] == frame_marker) {
+                frame_marker_positions.push_back(static_cast<int>(i));
+                if (frame_marker_positions.size() >= 3) break;
+            }
+        }
+    }
+
+    if (frame_marker_positions.size() < 3) return false;
+
+    // Count line markers in Frame 1 (between 1st and 2nd frame marker)
+    int n_lines_f1 = 0;
+    for (int i = frame_marker_positions[0]; i < frame_marker_positions[1]; ++i) {
+        if (event_types[i] == marker_event_type && routing_channels[i] == line_marker) {
+            n_lines_f1++;
+        }
+    }
+
+    // Count line markers in Frame 2 (between 2nd and 3rd frame marker)
+    int n_lines_f2 = 0;
+    for (int i = frame_marker_positions[1]; i < frame_marker_positions[2]; ++i) {
+        if (event_types[i] == marker_event_type && routing_channels[i] == line_marker) {
+            n_lines_f2++;
+        }
+    }
+
+    // Frame 1 anomaly: one extra initialization line marker
+    return (n_lines_f1 == n_lines_f2 + 1);
 }
 
 
