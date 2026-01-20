@@ -383,7 +383,8 @@ def __init__(
     rt = {
         'SP8': CLSM_SP8,
         'SP5': CLSM_SP5,
-        'default': CLSM_DEFAULT
+        'BH_SPC130': CLSM_BH_SPC130,
+        'default': CLSM_DEFAULT,
     }
 
     # Always include bidirectional_scan=False by default
@@ -484,7 +485,18 @@ def __init__(
                     settings_kwargs["bidirectional_scan"] = (bd != 0)
                 except:
                     pass
+        elif reading_routine == 'BH_SPC130':
+            # BH SPC-130 specific defaults
+            # These mirror the C++ defaults in CLSMImage.cpp:380-396
+            settings_kwargs["marker_event_type"] = 1
+            settings_kwargs["marker_frame_start"] = [4]  # BH frame marker channel
+            settings_kwargs["marker_line_start"] = 2     # BH line marker channel
+            settings_kwargs["marker_line_stop"] = 255    # BH uses start-only marker pairing
+            settings_kwargs["skip_before_first_frame_marker"] = True
+            settings_kwargs["skip_after_last_frame_marker"] = True   
 
+        # Remove None values so CLSMSettings uses its C++ defaults
+        settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
 
         clsm_settings = CLSMSettings(**settings_kwargs)
 

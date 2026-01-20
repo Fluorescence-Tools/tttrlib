@@ -382,23 +382,6 @@ CLSMImage::CLSMImage(
                 std::clog << "-- Applying BH SPC-130 defaults" << std::endl;
             }
 
-            // Set BH-specific marker conventions if not explicitly overridden
-            if (this->settings.marker_frame_start.size() == 1 &&
-                this->settings.marker_frame_start[0] == 1) {
-                this->settings.marker_frame_start = {4};  // BH frame marker channel
-            }
-            if (this->settings.marker_line_start == 3) {  // Check if still at CLSMSettings default
-                this->settings.marker_line_start = 2;  // BH line marker channel
-            }
-            if (this->settings.marker_line_stop == 2) {  // Check if still at CLSMSettings default
-                this->settings.marker_line_stop = -1;  // BH has no stop marker, uses duration
-            }
-            this->settings.marker_event_type = 1; // BH marker event type is 1 (standard)
-
-            // Skip incomplete data at start/end
-            this->settings.skip_before_first_frame_marker = true;
-            this->settings.skip_after_last_frame_marker = true;
-
             // Read image dimensions from header metadata (set by read_bh_set_file)
             auto header = tttr_data->get_header();
             if (header != nullptr) {
