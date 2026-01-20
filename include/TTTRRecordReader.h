@@ -43,12 +43,12 @@ struct RecordProcessor<PQ_RECORD_TYPE_PHT3> {
         const int T3WRAPAROUND = 65536;
         pq_ph_t3_record_t rec;
         rec.allbits = TTTRRecord;
-
+        
         if ((rec.bits.channel == 0xF) && (rec.bits.dtime == 0)) {
             overflow_counter += T3WRAPAROUND;
             return false;
         }
-
+        
         if (rec.bits.dtime == 0) {
             record_type = RECORD_MARKER;
         } else {
@@ -87,7 +87,7 @@ struct RecordProcessor<PQ_RECORD_TYPE_PHT2> {
             record_type = RECORD_MARKER;
             return true;
         }
-
+        
         true_nsync = overflow_counter + rec.bits.time;
         channel = static_cast<int16_t>(rec.bits.channel);
         record_type = RECORD_PHOTON;
@@ -115,7 +115,7 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT3v1> {
             overflow_counter += T3WRAPAROUND;
             return false;
         }
-
+        
         if (rec.bits.special == 1) {
             record_type = RECORD_MARKER;
         } else {
@@ -250,7 +250,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
     ) {
         bh_spc130_record_t rec;
         rec.allbits = TTTRRecord;
-
+        
         // Case 1: Valid photon record (INVALID=0)
         if (!rec.bits.invalid) {
             overflow_counter += rec.bits.mtov;
@@ -260,7 +260,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             record_type = RECORD_PHOTON;
             return true;
         }
-
+        
         // Case 2: Marker record (INVALID=1, MARK=1)
         // Routing bits encode marker type:
         //   rout bit 0 (value 1) = Pixel marker
@@ -274,7 +274,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             record_type = RECORD_MARKER;
             return true;
         }
-
+        
         // Case 3: Overflow record (INVALID=1, MARK=0, MTOV=1)
         if (rec.bits.mtov) {
             bh_overflow_t overflow_record;
@@ -282,7 +282,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             overflow_counter += overflow_record.bits.cnt;
             return false;
         }
-
+        
         // Case 4: Invalid record (INVALID=1, MARK=0, MTOV=0) - skip
         return false;
     }

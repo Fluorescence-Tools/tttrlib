@@ -12,7 +12,7 @@ def intensity(self):
     """
     # Get the raw intensity array from C++ (shape: n_frames, n_lines, n_pixel)
     raw_intensity = self.get_intensity()
-
+    
     n_ch = int(self.n_channels)
     if n_ch > 1:
         # Multi-channel mode: reshape to (n_channels, frames_per_channel, n_lines, n_pixel)
@@ -25,7 +25,7 @@ def intensity(self):
             # Extract frames for this channel
             channel_data = raw_intensity[offset:offset+count]
             channel_arrays.append(channel_data)
-
+        
         # Stack along new first dimension (channels)
         return np.array(channel_arrays)
     else:
@@ -92,7 +92,7 @@ class _ChannelSlice(object):
         if i < 0 or i >= n:
             raise IndexError("frame index out of range in channel slice")
         return self._img.get_frame_for_channel(self._ch, int(i))
-
+    
     @property
     def intensity(self):
         """Get intensity array for this channel only."""
@@ -101,12 +101,12 @@ class _ChannelSlice(object):
         offset = sum(int(self._img.get_channel_frame_count(i)) for i in range(self._ch))
         count = int(self._img.get_channel_frame_count(self._ch))
         return full_intensity[offset:offset+count]
-
+    
     @property
     def shape(self):
         """Shape of this channel: (n_frames, n_lines, n_pixel)."""
         return (len(self), self._img.n_lines, self._img.n_pixel)
-
+    
     def __repr__(self):
         return f'_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})'
 
@@ -245,6 +245,7 @@ def read_clsm_settings(tttr_data):
 
     return settings
 
+
 @staticmethod
 def get_metadata(tttr_data):
     """
@@ -266,7 +267,7 @@ def get_metadata(tttr_data):
         'ImgHdr_PixResol', 'ImgHdr_X0', 'ImgHdr_Y0', 'ImgHdr_Z0',
         'ImgHdr_BiDirect', 'ImgHdr_Dimensions', 'ImgHdr_Ident'
     ]
-
+    
     for tag_name in img_tags:
         try:
             tag_value = header.tag(tag_name)["value"]
@@ -280,7 +281,7 @@ def get_metadata(tttr_data):
         'TTResult_SyncRate', 'MeasDesc_GlobalResolution',
         'MeasDesc_Resolution', 'MeasDesc_NumberMicrotimes'
     ]
-
+    
     for tag_name in acq_tags:
         try:
             tag_value = header.tag(tag_name)["value"]
@@ -325,7 +326,7 @@ def __init__(
     import pathlib
     import json
     import tttrlib
-
+    
     # Handle JSON settings first (they can override other parameters)
     json_settings = {}
     if settings_file is not None or settings is not None:
@@ -484,6 +485,7 @@ def __init__(
                 except:
                     pass
 
+
         clsm_settings = CLSMSettings(**settings_kwargs)
 
     else:
@@ -522,7 +524,7 @@ def get_image_info(self):
     
     if not self.metadata:
         return info
-
+    
     # Image dimensions
     width = self.metadata.get('ImgHdr_PixX')
     height = self.metadata.get('ImgHdr_PixY')
@@ -574,7 +576,7 @@ def __repr_with_metadata__(self):
     info = self.get_image_info()
     dims = info.get('dimensions', (self.n_pixel, self.n_lines))
     repr_str = f'tttrlib.CLSMImage({self.n_frames}, {self.n_lines}, {self.n_pixel})'
-
+    
     if info:
         repr_str += f'\n  Dimensions: {dims[0]}x{dims[1]} pixels'
         if 'pixel_time_ms' in info:
@@ -583,7 +585,7 @@ def __repr_with_metadata__(self):
             repr_str += f'\n  Bidirectional: {info["bidirectional"]}'
         if 'num_photons' in info:
             repr_str += f'\n  Photons: {info["num_photons"]}'
-
+    
     return repr_str
 
 @staticmethod
