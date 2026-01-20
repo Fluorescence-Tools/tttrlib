@@ -168,39 +168,35 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
             continue;
         }
 
-        size_t sep_pos = line.find('=');
-        if (sep_pos != std::string::npos) {
-            std::string key = line.substr(0, sep_pos);
-            std::string val = line.substr(sep_pos + 1);
-
-            // Trim key and value
-            size_t k_start = key.find_first_not_of(" \t\r\n");
-            if (k_start != std::string::npos) {
-                size_t k_end = key.find_last_not_of(" \t\r\n");
-                key = key.substr(k_start, k_end - k_start + 1);
-            } else {
-                key = "";
-            }
-
-            size_t v_start = val.find_first_not_of(" \t\r\n");
-            if (v_start != std::string::npos) {
-                size_t v_end = val.find_last_not_of(" \t\r\n");
-                val = val.substr(v_start, v_end - v_start + 1);
-            } else {
-                val = "";
-            }
-
-            try {
-                if (key == "SP_IMG_X") {
-                    add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
-                } else if (key == "SP_IMG_Y") {
-                    add_tag(json_data, "ImgHdr_PixY", std::stoi(val), tyInt8);
-                } else if (key == "SP_PIX_CLK") {
-                    int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
-                    add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+        // Parse BH .set file format: "#SP [KEY,TYPE,VALUE]"
+        // Example: "#SP [SP_IMG_X,I,512]"
+        if (line.rfind("#SP [", 0) == 0) {
+            size_t bracket_start = line.find('[');
+            size_t bracket_end = line.find(']');
+            if (bracket_start != std::string::npos && bracket_end != std::string::npos && bracket_end > bracket_start) {
+                std::string content = line.substr(bracket_start + 1, bracket_end - bracket_start - 1);
+                
+                // Split by commas: "SP_IMG_X,I,512" -> key, type, value
+                size_t first_comma = content.find(',');
+                size_t last_comma = content.rfind(',');
+                
+                if (first_comma != std::string::npos && last_comma != std::string::npos && last_comma > first_comma) {
+                    std::string key = content.substr(0, first_comma);
+                    std::string val = content.substr(last_comma + 1);
+                    
+                    try {
+                        if (key == "SP_IMG_X") {
+                            add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
+                        } else if (key == "SP_IMG_Y") {
+                            add_tag(json_data, "ImgHdr_PixY", std::stoi(val), tyInt8);
+                        } else if (key == "SP_PIX_CLK") {
+                            int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
+                            add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+                        }
+                    } catch (...) {
+                        // Ignore lines with invalid integer values
+                    }
                 }
-            } catch (...) {
-                // Ignore lines with invalid integer values
             }
         }
     }
