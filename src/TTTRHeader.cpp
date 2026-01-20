@@ -175,15 +175,15 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
             size_t bracket_end = line.find(']');
             if (bracket_start != std::string::npos && bracket_end != std::string::npos && bracket_end > bracket_start) {
                 std::string content = line.substr(bracket_start + 1, bracket_end - bracket_start - 1);
-                
+
                 // Split by commas: "SP_IMG_X,I,512" -> key, type, value
                 size_t first_comma = content.find(',');
                 size_t last_comma = content.rfind(',');
-                
+
                 if (first_comma != std::string::npos && last_comma != std::string::npos && last_comma > first_comma) {
                     std::string key = content.substr(0, first_comma);
                     std::string val = content.substr(last_comma + 1);
-                    
+
                     try {
                         if (key == "SP_IMG_X") {
                             add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
@@ -1096,4 +1096,3 @@ std::string TTTRHeader::get_json(std::string tag_name, int idx, int indent){
     }
     return s;
 }
-

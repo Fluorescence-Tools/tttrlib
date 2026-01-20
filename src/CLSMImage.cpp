@@ -381,9 +381,9 @@ CLSMImage::CLSMImage(
             if (is_verbose()) {
                 std::clog << "-- Applying BH SPC-130 defaults" << std::endl;
             }
-            
+
             // Set BH-specific marker conventions if not explicitly overridden
-            if (this->settings.marker_frame_start.size() == 1 && 
+            if (this->settings.marker_frame_start.size() == 1 &&
                 this->settings.marker_frame_start[0] == 1) {
                 this->settings.marker_frame_start = {4};  // BH frame marker channel
             }
@@ -394,52 +394,52 @@ CLSMImage::CLSMImage(
                 this->settings.marker_line_stop = -1;  // BH has no stop marker, uses duration
             }
             this->settings.marker_event_type = 1; // BH marker event type is 1 (standard)
-            
+
             // Skip incomplete data at start/end
             this->settings.skip_before_first_frame_marker = true;
             this->settings.skip_after_last_frame_marker = true;
-            
+
             // Read image dimensions from header metadata (set by read_bh_set_file)
             auto header = tttr_data->get_header();
             if (header != nullptr) {
                 try {
                     auto json = nlohmann::json::parse(header->get_json());
-                    
+
                     // Read n_pixel_per_line from header if not explicitly binned by user
                     if (this->settings.n_pixel_per_line <= 1) {
                         auto pixX_tag = TTTRHeader::get_tag(json, "ImgHdr_PixX");
                         if (!pixX_tag.is_null() && pixX_tag.contains("value")) {
                             this->settings.n_pixel_per_line = pixX_tag["value"].get<int>();
                             if (is_verbose()) {
-                                std::clog << "-- BH: n_pixel_per_line from header: " 
+                                std::clog << "-- BH: n_pixel_per_line from header: "
                                           << this->settings.n_pixel_per_line << std::endl;
                             }
                         }
                     }
-                    
+
                     // Read n_lines from header if not explicitly set
                     if (this->settings.n_lines <= 0) {
                         auto pixY_tag = TTTRHeader::get_tag(json, "ImgHdr_PixY");
                         if (!pixY_tag.is_null() && pixY_tag.contains("value")) {
                             this->settings.n_lines = pixY_tag["value"].get<int>();
                             if (is_verbose()) {
-                                std::clog << "-- BH: n_lines from header: " 
+                                std::clog << "-- BH: n_lines from header: "
                                           << this->settings.n_lines << std::endl;
                             }
                         }
                     }
-                    
+
                     // Read pixel clock setting from header
                     auto pixClk_tag = TTTRHeader::get_tag(json, "BH_UsePixelClock");
                     if (!pixClk_tag.is_null() && pixClk_tag.contains("value")) {
                         int use_pix_clk = pixClk_tag["value"].get<int>();
                         this->settings.use_pixel_markers = (use_pix_clk == 1);
                         if (is_verbose()) {
-                            std::clog << "-- BH: use_pixel_markers from header: " 
+                            std::clog << "-- BH: use_pixel_markers from header: "
                                       << this->settings.use_pixel_markers << std::endl;
                         }
                     }
-                    
+
                     // Set pixel marker channel if using pixel markers
                     if (this->settings.use_pixel_markers) {
                         this->settings.marker_pixel = 1;  // BH pixel clock channel
@@ -457,17 +457,17 @@ CLSMImage::CLSMImage(
                 if (is_verbose()) {
                     std::clog << "-- BH: Inferring dimensions from markers" << std::endl;
                 }
-                
-                auto frame_edges = get_frame_edges(tttr_data.get(), 0, -1, 
-                    this->settings.marker_frame_start, this->settings.marker_event_type, 
+
+                auto frame_edges = get_frame_edges(tttr_data.get(), 0, -1,
+                    this->settings.marker_frame_start, this->settings.marker_event_type,
                     this->settings.reading_routine, true, true);
-                
+
                 if (frame_edges.size() >= 2) {
                     // 1. Count line markers in first frame
                     if (this->settings.n_lines <= 0) {
                         int line_count = 0;
                         for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
-                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type &&
                                 tttr_data->get_routing_channel_at(i) == this->settings.marker_line_start) {
                                 line_count++;
                             }
@@ -479,14 +479,14 @@ CLSMImage::CLSMImage(
                             }
                         }
                     }
-                    
+
                     // 2. Count pixel markers in first line
                     if (this->settings.n_pixel_per_line <= 1) {
                         // Find first two line markers to identify a complete line
                         int first_line_start = -1;
                         int second_line_start = -1;
                         for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
-                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                            if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type &&
                                 tttr_data->get_routing_channel_at(i) == this->settings.marker_line_start) {
                                 if (first_line_start == -1) {
                                     first_line_start = i;
@@ -496,12 +496,12 @@ CLSMImage::CLSMImage(
                                 }
                             }
                         }
-                        
+
                         if (first_line_start != -1 && second_line_start != -1) {
                             int pixel_count = 0;
                             int pixel_marker = 1; // BH default pixel channel
                             for (int i = first_line_start; i < second_line_start; ++i) {
-                                if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type && 
+                                if (tttr_data->get_event_type_at(i) == this->settings.marker_event_type &&
                                     tttr_data->get_routing_channel_at(i) == pixel_marker) {
                                     pixel_count++;
                                 }
@@ -841,7 +841,7 @@ std::vector<int> CLSMImage::get_line_edges(
         // If we have N line markers but they're all starts (no stops found),
         // we need to convert them to (start, stop) pairs where each line
         // runs from one start to the next
-        
+
         // Count how many are starts vs stops
         size_t start_count = 0;
         size_t stop_count = 0;
@@ -850,14 +850,14 @@ std::vector<int> CLSMImage::get_line_edges(
         signed char marker_event_sc = static_cast<signed char>(marker_event_type);
         const signed char* routing_channels = tttr->routing_channels;
         const signed char* event_types = tttr->event_types;
-        
+
         for (int idx : line_edges) {
             if (event_types[idx] == marker_event_sc) {
                 if (routing_channels[idx] == marker_start_sc) start_count++;
                 else if (routing_channels[idx] == marker_stop_sc) stop_count++;
             }
         }
-        
+
         // If all markers are starts (no stops found), convert to pairs
         if (stop_count == 0 && start_count > 1) {
             std::vector<int> paired_edges;
@@ -884,7 +884,7 @@ bool CLSMImage::detect_bh_frame1_extra_line(
 
     // We only need to check the first 3 frame markers to compare two complete frames
     std::vector<int> frame_marker_positions;
-    
+
     const signed char* event_types = tttr->event_types;
     const signed char* routing_channels = tttr->routing_channels;
     size_t n_events = tttr->get_n_events();
@@ -2543,5 +2543,3 @@ void CLSMImage::get_memory_usage_detailed(
         }
     }
 }
-
-

@@ -72,7 +72,6 @@ class _ChannelSlice(object):
     
     Provides access to frames and properties (like intensity) for a single channel.
     """
-
     def __init__(self, parent, ch):
         self._img = parent
         # normalize negative channel index
@@ -109,9 +108,7 @@ class _ChannelSlice(object):
         return (len(self), self._img.n_lines, self._img.n_pixel)
 
     def __repr__(self):
-        return (
-            f'_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})'
-        )
+        return f'_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})'
 
 # Override __getitem__ to support CLSMImage[ch][frame][line][pixel] for multi-channel images
 # Falls back to old behavior (frames-first) if only a single channel exists
@@ -227,24 +224,14 @@ def read_clsm_settings(tttr_data):
         # Read HT3‐style tags
         elif tttr_data.get_tttr_container_type() == 'HT3':
             try:
-                settings.update(
-                    {
-                        "marker_line_start": int(
-                            header.tag('ImgHdr_LineStart').get("value", 0)
-                        ),
-                        "marker_line_stop": int(
-                            header.tag('ImgHdr_LineStop').get("value", 0)
-                        ),
-                        "n_pixel_per_line": int(
-                            header.tag('ImgHdr_PixX').get("value", 0)
-                        ),
-                        "n_lines": int(header.tag('ImgHdr_PixY').get("value", 0)),
-                        "marker_frame_start": [
-                            int(header.tag('ImgHdr_Frame').get("value", 0))
-                        ],
-                        "marker_event_type": 1,
-                    }
-                )
+                settings.update({
+                    "marker_line_start":   int(header.tag('ImgHdr_LineStart').get("value", 0)),
+                    "marker_line_stop":    int(header.tag('ImgHdr_LineStop').get("value", 0)),
+                    "n_pixel_per_line":    int(header.tag('ImgHdr_PixX').get("value", 0)),
+                    "n_lines":             int(header.tag('ImgHdr_PixY').get("value", 0)),
+                    "marker_frame_start":  [int(header.tag('ImgHdr_Frame').get("value", 0))],
+                    "marker_event_type":   1
+                })
             except (KeyError, ValueError, TypeError):
                 pass
 
@@ -377,9 +364,7 @@ def __init__(
         if isinstance(tttr_data, (str, pathlib.Path)):
             # Convert filename to TTTR object
             if channel_luts is not None or channel_shifts is not None:
-                tttr_data = tttrlib.TTTR(
-                    tttr_data, channel_luts=channel_luts, channel_shifts=channel_shifts
-                )
+                tttr_data = tttrlib.TTTR(tttr_data, channel_luts=channel_luts, channel_shifts=channel_shifts)
             else:
                 tttr_data = tttrlib.TTTR(tttr_data)
         # else: assume it's already a TTTR object, use as-is
@@ -387,9 +372,7 @@ def __init__(
         # filename parameter provided as keyword argument
         if isinstance(filename, (str, pathlib.Path)):
             if channel_luts is not None or channel_shifts is not None:
-                tttr_data = tttrlib.TTTR(
-                    filename, channel_luts=channel_luts, channel_shifts=channel_shifts
-                )
+                tttr_data = tttrlib.TTTR(filename, channel_luts=channel_luts, channel_shifts=channel_shifts)
             else:
                 tttr_data = tttrlib.TTTR(filename)
         else:
@@ -481,23 +464,19 @@ def __init__(
 
         # Pre‐set routines override everything else
         if reading_routine == 'SP5':
-            settings_kwargs['marker_event_type'] = 1
-            settings_kwargs['marker_frame_start'] = [4, 6]
-            settings_kwargs['marker_line_start'] = 1
-            settings_kwargs['marker_line_stop'] = 2
+            settings_kwargs["marker_event_type"] = 1
+            settings_kwargs["marker_frame_start"] = [4, 6]
+            settings_kwargs["marker_line_start"] = 1
+            settings_kwargs["marker_line_stop"] = 2
         elif reading_routine == 'SP8':
-            settings_kwargs['marker_event_type'] = 15
-            settings_kwargs['marker_frame_start'] = [4, 6]
-            settings_kwargs['marker_line_start'] = 1
-            settings_kwargs['marker_line_stop'] = 2
+            settings_kwargs["marker_event_type"] = 15
+            settings_kwargs["marker_frame_start"] = [4, 6]
+            settings_kwargs["marker_line_start"] = 1
+            settings_kwargs["marker_line_stop"] = 2
             if tttr_data is not None:
                 header = tttr_data.header
-                settings_kwargs['marker_line_start'] = int(
-                    header.tag('ImgHdr_LineStart')["value"]
-                )
-                settings_kwargs['marker_line_stop'] = int(
-                    header.tag('ImgHdr_LineStop')["value"]
-                )
+                settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
+                settings_kwargs["marker_line_stop"]  = int(header.tag('ImgHdr_LineStop')["value"])
                 # If ImgHdr_BiDirect exists, preserve it:
                 try:
                     bd = int(header.tag('ImgHdr_BiDirect')["value"])
@@ -594,16 +573,16 @@ def __repr_with_metadata__(self):
     """Extended representation including metadata."""
     info = self.get_image_info()
     dims = info.get('dimensions', (self.n_pixel, self.n_lines))
-    repr_str = f"tttrlib.CLSMImage({self.n_frames}, {self.n_lines}, {self.n_pixel})"
+    repr_str = f'tttrlib.CLSMImage({self.n_frames}, {self.n_lines}, {self.n_pixel})'
 
     if info:
-        repr_str += f"\n  Dimensions: {dims[0]}x{dims[1]} pixels"
+        repr_str += f'\n  Dimensions: {dims[0]}x{dims[1]} pixels'
         if 'pixel_time_ms' in info:
-            repr_str += f"\n  Pixel time: {info['pixel_time_ms']} ms"
+            repr_str += f'\n  Pixel time: {info["pixel_time_ms"]} ms'
         if 'bidirectional' in info:
-            repr_str += f"\n  Bidirectional: {info['bidirectional']}"
+            repr_str += f'\n  Bidirectional: {info["bidirectional"]}'
         if 'num_photons' in info:
-            repr_str += f"\n  Photons: {info['num_photons']}"
+            repr_str += f'\n  Photons: {info["num_photons"]}'
 
     return repr_str
 

@@ -43,12 +43,12 @@ struct RecordProcessor<PQ_RECORD_TYPE_PHT3> {
         const int T3WRAPAROUND = 65536;
         pq_ph_t3_record_t rec;
         rec.allbits = TTTRRecord;
-        
+
         if ((rec.bits.channel == 0xF) && (rec.bits.dtime == 0)) {
             overflow_counter += T3WRAPAROUND;
             return false;
         }
-        
+
         if (rec.bits.dtime == 0) {
             record_type = RECORD_MARKER;
         } else {
@@ -87,7 +87,7 @@ struct RecordProcessor<PQ_RECORD_TYPE_PHT2> {
             record_type = RECORD_MARKER;
             return true;
         }
-        
+
         true_nsync = overflow_counter + rec.bits.time;
         channel = static_cast<int16_t>(rec.bits.channel);
         record_type = RECORD_PHOTON;
@@ -115,7 +115,7 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT3v1> {
             overflow_counter += T3WRAPAROUND;
             return false;
         }
-        
+
         if (rec.bits.special == 1) {
             record_type = RECORD_MARKER;
         } else {
