@@ -1124,6 +1124,13 @@ void CLSMImage::fill(
     #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         CLSMFrame* frame = frames[f_idx];
+
+        // Hoist marker-times vector to frame loop to reduce heap allocations
+        std::vector<unsigned long long> pixel_marker_times;
+        if (settings.use_pixel_markers) {
+            pixel_marker_times.reserve(n_pixel + 16);
+        }
+
         // We need the line index to decide if a line is "reversed"
         for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
             CLSMLine *line = frame->lines[l_idx];
@@ -1192,8 +1199,8 @@ void CLSMImage::fill(
             }
 
             // Collect pixel marker times if marker-based binning is enabled
-            std::vector<unsigned long long> pixel_marker_times;
             if (settings.use_pixel_markers) {
+                pixel_marker_times.clear();
                 for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
                     if (event_types[event_i] == RECORD_MARKER && routing_channels_ptr[event_i] == settings.marker_pixel) {
                         pixel_marker_times.push_back(tttr_data->get_macro_time_at(event_i));
@@ -1236,13 +1243,19 @@ void CLSMImage::fill(
                 // Compute the "raw" pixel index
                 int raw_pixel = -1;
                 if (settings.use_pixel_markers) {
-                    if (pixel_marker_times.size() < 2) continue;
+                    if (pixel_marker_times.empty()) continue;
                     unsigned long long photon_time = tttr_data->get_macro_time_at(event_i);
                     auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
-                    if (it == pixel_marker_times.begin() || it == pixel_marker_times.end()) {
-                        continue;
+
+                    if (it == pixel_marker_times.begin()) {
+                        continue; // Before first marker
+                    } else if (it == pixel_marker_times.end()) {
+                        // After last marker: belongs to the last pixel segment
+                        raw_pixel = static_cast<int>(pixel_marker_times.size()) - 1;
+                    } else {
+                        // Between markers
+                        raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
                     }
-                    raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
                 } else {
                     // Compute using reciprocal multiplication (faster than division)
                     // Use accessor to handle both compressed and uncompressed macro times
