@@ -1,11 +1,10 @@
 import numpy as np
 
-
 @property
 def intensity(self):
     """
     Get the intensity array of the CLSM image.
-
+    
     Returns:
         numpy.ndarray: Intensity array with shape:
             - If split_by_channel is False or n_channels == 1: (n_frames, n_lines, n_pixel)
@@ -24,7 +23,7 @@ def intensity(self):
             offset = sum(int(self.get_channel_frame_count(i)) for i in range(ch))
             count = int(self.get_channel_frame_count(ch))
             # Extract frames for this channel
-            channel_data = raw_intensity[offset : offset + count]
+            channel_data = raw_intensity[offset:offset+count]
             channel_arrays.append(channel_data)
 
         # Stack along new first dimension (channels)
@@ -33,12 +32,11 @@ def intensity(self):
         # Single-channel mode: return as-is (n_frames, n_lines, n_pixel)
         return raw_intensity
 
-
 @property
 def shape(self):
     """
     Return the shape of the CLSM image.
-
+    
     - If split_by_channel is False or n_channels == 1: (n_frames, n_lines, n_pixel)
     - If split_by_channel is True with multiple channels: (n_channels, frames_per_channel, n_lines, n_pixel)
     """
@@ -51,29 +49,27 @@ def shape(self):
         # Single-channel mode: return (n_frames, n_lines, n_pixel)
         return self.n_frames, self.n_lines, self.n_pixel
 
-
 def __repr__(self):
     """String representation showing the shape of the CLSM image."""
     n_ch = int(self.n_channels)
     if n_ch > 1:
         frames_per_channel = int(self.get_channel_frame_count(0))
-        return "tttrlib.CLSMImage(%s, %s, %s, %s)" % (
+        return 'tttrlib.CLSMImage(%s, %s, %s, %s)' % (
             n_ch,
             frames_per_channel,
             self.n_lines,
-            self.n_pixel,
+            self.n_pixel
         )
     else:
-        return "tttrlib.CLSMImage(%s, %s, %s)" % (
+        return 'tttrlib.CLSMImage(%s, %s, %s)' % (
             self.n_frames,
             self.n_lines,
-            self.n_pixel,
+            self.n_pixel
         )
-
 
 class _ChannelSlice(object):
     """Slice of a CLSMImage for a specific channel.
-
+    
     Provides access to frames and properties (like intensity) for a single channel.
     """
 
@@ -105,7 +101,7 @@ class _ChannelSlice(object):
         # Calculate offset by summing frame counts of previous channels
         offset = sum(int(self._img.get_channel_frame_count(i)) for i in range(self._ch))
         count = int(self._img.get_channel_frame_count(self._ch))
-        return full_intensity[offset : offset + count]
+        return full_intensity[offset:offset+count]
 
     @property
     def shape(self):
@@ -114,9 +110,8 @@ class _ChannelSlice(object):
 
     def __repr__(self):
         return (
-            f"_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})"
+            f'_ChannelSlice(channel={self._ch}, frames={len(self)}, shape={self.shape})'
         )
-
 
 # Override __getitem__ to support CLSMImage[ch][frame][line][pixel] for multi-channel images
 # Falls back to old behavior (frames-first) if only a single channel exists
@@ -125,7 +120,6 @@ def __getitem__(self, idx):
         return self._ChannelSlice(self, idx)
     # Fallback to flat frame access
     return self.frame_at(int(idx))
-
 
 def __getattr__(self, item):
     """
@@ -143,7 +137,6 @@ def __getattr__(self, item):
     else:
         raise AttributeError
 
-
 @staticmethod
 def read_clsm_settings(tttr_data):
     """
@@ -159,10 +152,10 @@ def read_clsm_settings(tttr_data):
         header = tttr_data.header
 
         # Read PTU‐style tags
-        if tttr_data.get_tttr_container_type() == "PTU":
+        if tttr_data.get_tttr_container_type() == 'PTU':
             try:
-                line_start_tag = header.tag("ImgHdr_LineStart")
-                line_stop_tag = header.tag("ImgHdr_LineStop")
+                line_start_tag = header.tag('ImgHdr_LineStart')
+                line_stop_tag = header.tag('ImgHdr_LineStop')
                 line_start_val = line_start_tag.get("value", None)
                 line_stop_val = line_stop_tag.get("value", None)
                 if line_start_val is None or line_stop_val is None:
@@ -176,7 +169,7 @@ def read_clsm_settings(tttr_data):
             if line_start_raw == 0:
                 # Unusual file: ImgHdr_LineStart=0 means use 2^index encoding
                 try:
-                    frame_tag = header.tag("ImgHdr_Frame")
+                    frame_tag = header.tag('ImgHdr_Frame')
                     frame_val = frame_tag.get("value", None)
                     frame_raw = int(frame_val) if frame_val is not None else None
                 except (KeyError, ValueError, TypeError):
@@ -189,32 +182,30 @@ def read_clsm_settings(tttr_data):
                     marker_frame = [4]
 
                 try:
-                    pix_x = int(header.tag("ImgHdr_PixX").get("value", 0))
-                    pix_y = int(header.tag("ImgHdr_PixY").get("value", 0))
+                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
+                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
                 except (KeyError, ValueError, TypeError):
                     pix_x = 0
                     pix_y = 0
 
-                settings.update(
-                    {
-                        "marker_line_start": 1 << line_start_raw,  # 2^0 = 1
-                        "marker_line_stop": 1 << line_stop_raw,
-                        "marker_frame_start": marker_frame,
-                        "n_pixel_per_line": pix_x,
-                        "n_lines": pix_y,
-                        "marker_event_type": 1,
-                    }
-                )
+                settings.update({
+                    "marker_line_start": 1 << line_start_raw,      # 2^0 = 1
+                    "marker_line_stop":  1 << line_stop_raw,
+                    "marker_frame_start": marker_frame,
+                    "n_pixel_per_line":  pix_x,
+                    "n_lines":           pix_y,
+                    "marker_event_type": 1
+                })
             else:
                 try:
-                    pix_x = int(header.tag("ImgHdr_PixX").get("value", 0))
-                    pix_y = int(header.tag("ImgHdr_PixY").get("value", 0))
+                    pix_x = int(header.tag('ImgHdr_PixX').get("value", 0))
+                    pix_y = int(header.tag('ImgHdr_PixY').get("value", 0))
                 except (KeyError, ValueError, TypeError):
                     pix_x = 0
                     pix_y = 0
 
                 try:
-                    frame_tag = header.tag("ImgHdr_Frame")
+                    frame_tag = header.tag('ImgHdr_Frame')
                     frame_val = frame_tag.get("value", None)
                     frame_raw = int(frame_val) if frame_val is not None else None
                 except (KeyError, ValueError, TypeError):
@@ -224,34 +215,32 @@ def read_clsm_settings(tttr_data):
                 if frame_raw is not None and frame_raw > 0:
                     marker_frame = [1 << (frame_raw - 1)]
 
-                settings.update(
-                    {
-                        "marker_line_start": 1 << (line_start_raw - 1),  # 2^0 = 1
-                        "marker_line_stop": 1 << (line_stop_raw - 1),
-                        "marker_frame_start": marker_frame,
-                        "n_pixel_per_line": pix_x,
-                        "n_lines": pix_y,
-                        "marker_event_type": 1,
-                    }
-                )
+                settings.update({
+                    "marker_line_start": 1 << (line_start_raw - 1),      # 2^0 = 1
+                    "marker_line_stop":  1 << (line_stop_raw - 1),
+                    "marker_frame_start": marker_frame,
+                    "n_pixel_per_line":  pix_x,
+                    "n_lines":           pix_y,
+                    "marker_event_type": 1
+                })
 
         # Read HT3‐style tags
-        elif tttr_data.get_tttr_container_type() == "HT3":
+        elif tttr_data.get_tttr_container_type() == 'HT3':
             try:
                 settings.update(
                     {
                         "marker_line_start": int(
-                            header.tag("ImgHdr_LineStart").get("value", 0)
+                            header.tag('ImgHdr_LineStart').get("value", 0)
                         ),
                         "marker_line_stop": int(
-                            header.tag("ImgHdr_LineStop").get("value", 0)
+                            header.tag('ImgHdr_LineStop').get("value", 0)
                         ),
                         "n_pixel_per_line": int(
-                            header.tag("ImgHdr_PixX").get("value", 0)
+                            header.tag('ImgHdr_PixX').get("value", 0)
                         ),
-                        "n_lines": int(header.tag("ImgHdr_PixY").get("value", 0)),
+                        "n_lines": int(header.tag('ImgHdr_PixY').get("value", 0)),
                         "marker_frame_start": [
-                            int(header.tag("ImgHdr_Frame").get("value", 0))
+                            int(header.tag('ImgHdr_Frame').get("value", 0))
                         ],
                         "marker_event_type": 1,
                     }
@@ -261,44 +250,34 @@ def read_clsm_settings(tttr_data):
 
         # --- NEW: read bidirectional‐scan flag ---
         try:
-            bd_tag = header.tag("ImgHdr_BiDirect")
+            bd_tag = header.tag('ImgHdr_BiDirect')
             bd = int(bd_tag.get("value", 0))
-            settings["bidirectional_scan"] = bd != 0
+            settings["bidirectional_scan"] = (bd != 0)
         except:
             settings["bidirectional_scan"] = False
 
     return settings
 
-
 @staticmethod
 def get_metadata(tttr_data):
     """
     Extract all image-related metadata from TTTR header.
-
+    
     Returns a dictionary with all ImgHdr_* tags and other imaging metadata.
     Handles missing tags gracefully by returning None for unavailable values.
     """
     metadata = {}
     if tttr_data is None:
         return metadata
-
+    
     header = tttr_data.header
-
+    
     # List of common image metadata tags
     img_tags = [
-        "ImgHdr_Frame",
-        "ImgHdr_LineStart",
-        "ImgHdr_LineStop",
-        "ImgHdr_PixX",
-        "ImgHdr_PixY",
-        "ImgHdr_TimePerPixel",
-        "ImgHdr_PixResol",
-        "ImgHdr_X0",
-        "ImgHdr_Y0",
-        "ImgHdr_Z0",
-        "ImgHdr_BiDirect",
-        "ImgHdr_Dimensions",
-        "ImgHdr_Ident",
+        'ImgHdr_Frame', 'ImgHdr_LineStart', 'ImgHdr_LineStop',
+        'ImgHdr_PixX', 'ImgHdr_PixY', 'ImgHdr_TimePerPixel',
+        'ImgHdr_PixResol', 'ImgHdr_X0', 'ImgHdr_Y0', 'ImgHdr_Z0',
+        'ImgHdr_BiDirect', 'ImgHdr_Dimensions', 'ImgHdr_Ident'
     ]
 
     for tag_name in img_tags:
@@ -307,15 +286,12 @@ def get_metadata(tttr_data):
             metadata[tag_name] = tag_value
         except:
             metadata[tag_name] = None
-
+    
     # Add acquisition metadata
     acq_tags = [
-        "MeasDesc_AcquisitionTime",
-        "TTResult_NumberOfRecords",
-        "TTResult_SyncRate",
-        "MeasDesc_GlobalResolution",
-        "MeasDesc_Resolution",
-        "MeasDesc_NumberMicrotimes",
+        'MeasDesc_AcquisitionTime', 'TTResult_NumberOfRecords',
+        'TTResult_SyncRate', 'MeasDesc_GlobalResolution',
+        'MeasDesc_Resolution', 'MeasDesc_NumberMicrotimes'
     ]
 
     for tag_name in acq_tags:
@@ -324,34 +300,33 @@ def get_metadata(tttr_data):
             metadata[tag_name] = tag_value
         except:
             metadata[tag_name] = None
-
+    
     return metadata
 
-
 def __init__(
-    self,
-    tttr_data=None,
-    marker_frame_start=None,
-    marker_line_start=None,
-    marker_line_stop=None,
-    marker_event_type=1,
-    n_pixel_per_line=None,
-    reading_routine="default",
-    skip_before_first_frame_marker=False,
-    skip_after_last_frame_marker=False,
-    split_by_channel=False,
-    use_pixel_markers=False,
-    marker_pixel=1,
-    filename=None,
-    channel_luts=None,
-    channel_shifts=None,
-    settings_file=None,
-    settings=None,
-    **kwargs,
+        self,
+        tttr_data=None,
+        marker_frame_start=None,
+        marker_line_start=None,
+        marker_line_stop=None,
+        marker_event_type=1,
+        n_pixel_per_line=None,
+        reading_routine='default',
+        skip_before_first_frame_marker=False,
+        skip_after_last_frame_marker=False,
+        split_by_channel=False,
+        use_pixel_markers=False,
+        marker_pixel=1,
+        filename=None,
+        channel_luts=None,
+        channel_shifts=None,
+        settings_file=None,
+        settings=None,
+        **kwargs
 ):
     """
     Initialize a CLSMImage object.
-
+    
     Parameters:
     - tttr_data: TTTR object or path to TTTR file
     - marker_frame_start, marker_line_start, etc.: CLSM marker parameters
@@ -372,28 +347,28 @@ def __init__(
             settings_path = pathlib.Path(settings_file)
             if not settings_path.exists():
                 raise FileNotFoundError(f"Settings file not found: {settings_file}")
-            with open(settings_path, "r") as f:
+            with open(settings_path, 'r') as f:
                 json_settings = json.load(f)
         else:
             json_settings = settings
-
+        
         # Extract TTTR corrections
-        if "channel_luts" in json_settings:
+        if 'channel_luts' in json_settings:
             if channel_luts is None:
                 channel_luts = {}
-            for ch_str, lut_list in json_settings["channel_luts"].items():
+            for ch_str, lut_list in json_settings['channel_luts'].items():
                 ch = int(ch_str)
                 channel_luts[ch] = lut_list
-        if "channel_shifts" in json_settings:
+        if 'channel_shifts' in json_settings:
             if channel_shifts is None:
                 channel_shifts = {}
-            for ch_str, shift_val in json_settings["channel_shifts"].items():
+            for ch_str, shift_val in json_settings['channel_shifts'].items():
                 ch = int(ch_str)
                 channel_shifts[ch] = shift_val
-
+    
     import pathlib
     import tttrlib
-
+    
     # Handle first argument: can be TTTR object, string, or Path
     # - If TTTR object: use as-is
     # - If string or Path: create TTTR object from filename
@@ -419,49 +394,45 @@ def __init__(
                 tttr_data = tttrlib.TTTR(filename)
         else:
             raise TypeError("filename must be a string or Path object")
-
-    source = kwargs.get("source", None)
-    rt = {"SP8": CLSM_SP8, "SP5": CLSM_SP5, "default": CLSM_DEFAULT}
+    
+    source = kwargs.get('source', None)
+    rt = {
+        'SP8': CLSM_SP8,
+        'SP5': CLSM_SP5,
+        'default': CLSM_DEFAULT
+    }
 
     # Always include bidirectional_scan=False by default
     settings_kwargs = {
         "skip_before_first_frame_marker": skip_before_first_frame_marker,
-        "skip_after_last_frame_marker": skip_after_last_frame_marker,
-        "reading_routine": rt[reading_routine],
-        "marker_line_start": marker_line_start,
-        "marker_line_stop": marker_line_stop,
-        "marker_frame_start": marker_frame_start,
-        "marker_event_type": marker_event_type,
-        "n_pixel_per_line": n_pixel_per_line,
-        "bidirectional_scan": False,  # <-- new default
-        "split_by_channel": bool(split_by_channel),
-        "use_pixel_markers": bool(use_pixel_markers),
-        "marker_pixel": int(marker_pixel),
+        "skip_after_last_frame_marker":  skip_after_last_frame_marker,
+        "reading_routine":               rt[reading_routine],
+        "marker_line_start":             marker_line_start,
+        "marker_line_stop":              marker_line_stop,
+        "marker_frame_start":            marker_frame_start,
+        "marker_event_type":             marker_event_type,
+        "n_pixel_per_line":              n_pixel_per_line,
+        "bidirectional_scan":            False,   # <-- new default
+        "split_by_channel":              bool(split_by_channel),
+        "use_pixel_markers":             bool(use_pixel_markers),
+        "marker_pixel":                  int(marker_pixel),
     }
-
+    
     # Override CLSM settings from JSON if provided
     if json_settings:
         # CLSM-specific settings that can be overridden from JSON
         clsm_keys = [
-            "marker_line_start",
-            "marker_line_stop",
-            "marker_frame_start",
-            "marker_event_type",
-            "n_pixel_per_line",
-            "n_lines",
-            "skip_before_first_frame_marker",
-            "skip_after_last_frame_marker",
-            "bidirectional_scan",
-            "split_by_channel",
-            "reading_routine",
-            "use_pixel_markers",
-            "marker_pixel",
+            'marker_line_start', 'marker_line_stop', 'marker_frame_start', 
+            'marker_event_type', 'n_pixel_per_line', 'n_lines',
+            'skip_before_first_frame_marker', 'skip_after_last_frame_marker',
+            'bidirectional_scan', 'split_by_channel', 'reading_routine',
+            'use_pixel_markers', 'marker_pixel'
         ]
         for key in clsm_keys:
             if key in json_settings:
-                if key == "reading_routine":
-                    settings_kwargs[key] = rt.get(json_settings[key], rt["default"])
-                elif key == "marker_frame_start":
+                if key == 'reading_routine':
+                    settings_kwargs[key] = rt.get(json_settings[key], rt['default'])
+                elif key == 'marker_frame_start':
                     if isinstance(json_settings[key], list):
                         settings_kwargs[key] = json_settings[key]
                     else:
@@ -485,52 +456,52 @@ def __init__(
 
         # Override with user‐provided arguments (if not None/type‐correct)
         if isinstance(marker_frame_start, int):
-            settings_kwargs["marker_frame_start"] = [marker_frame_start]
+            settings_kwargs['marker_frame_start'] = [marker_frame_start]
         elif isinstance(marker_frame_start, list):
-            settings_kwargs["marker_frame_start"] = marker_frame_start
+            settings_kwargs['marker_frame_start'] = marker_frame_start
 
         if isinstance(marker_line_start, int):
-            settings_kwargs["marker_line_start"] = marker_line_start
+            settings_kwargs['marker_line_start'] = marker_line_start
         if isinstance(marker_line_stop, int):
-            settings_kwargs["marker_line_stop"] = marker_line_stop
+            settings_kwargs['marker_line_stop'] = marker_line_stop
         if isinstance(marker_event_type, int):
-            settings_kwargs["marker_event_type"] = marker_event_type
+            settings_kwargs['marker_event_type'] = marker_event_type
         if isinstance(n_pixel_per_line, int):
-            settings_kwargs["n_pixel_per_line"] = n_pixel_per_line
+            settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
         if isinstance(use_pixel_markers, bool):
-            settings_kwargs["use_pixel_markers"] = use_pixel_markers
+            settings_kwargs['use_pixel_markers'] = use_pixel_markers
         if isinstance(marker_pixel, int):
-            settings_kwargs["marker_pixel"] = marker_pixel
+            settings_kwargs['marker_pixel'] = marker_pixel
 
         # Consume our special parameters before passing to C++ constructor
-        kwargs.pop("settings_file", None)
-        kwargs.pop("settings", None)
+        kwargs.pop('settings_file', None)
+        kwargs.pop('settings', None)
 
-        kwargs["tttr_data"] = tttr_data
+        kwargs['tttr_data'] = tttr_data
 
         # Pre‐set routines override everything else
-        if reading_routine == "SP5":
-            settings_kwargs["marker_event_type"] = 1
-            settings_kwargs["marker_frame_start"] = [4, 6]
-            settings_kwargs["marker_line_start"] = 1
-            settings_kwargs["marker_line_stop"] = 2
-        elif reading_routine == "SP8":
-            settings_kwargs["marker_event_type"] = 15
-            settings_kwargs["marker_frame_start"] = [4, 6]
-            settings_kwargs["marker_line_start"] = 1
-            settings_kwargs["marker_line_stop"] = 2
+        if reading_routine == 'SP5':
+            settings_kwargs['marker_event_type'] = 1
+            settings_kwargs['marker_frame_start'] = [4, 6]
+            settings_kwargs['marker_line_start'] = 1
+            settings_kwargs['marker_line_stop'] = 2
+        elif reading_routine == 'SP8':
+            settings_kwargs['marker_event_type'] = 15
+            settings_kwargs['marker_frame_start'] = [4, 6]
+            settings_kwargs['marker_line_start'] = 1
+            settings_kwargs['marker_line_stop'] = 2
             if tttr_data is not None:
                 header = tttr_data.header
-                settings_kwargs["marker_line_start"] = int(
-                    header.tag("ImgHdr_LineStart")["value"]
+                settings_kwargs['marker_line_start'] = int(
+                    header.tag('ImgHdr_LineStart')["value"]
                 )
-                settings_kwargs["marker_line_stop"] = int(
-                    header.tag("ImgHdr_LineStop")["value"]
+                settings_kwargs['marker_line_stop'] = int(
+                    header.tag('ImgHdr_LineStop')["value"]
                 )
                 # If ImgHdr_BiDirect exists, preserve it:
                 try:
-                    bd = int(header.tag("ImgHdr_BiDirect")["value"])
-                    settings_kwargs["bidirectional_scan"] = bd != 0
+                    bd = int(header.tag('ImgHdr_BiDirect')["value"])
+                    settings_kwargs["bidirectional_scan"] = (bd != 0)
                 except:
                     pass
 
@@ -540,25 +511,24 @@ def __init__(
         # Copy settings from the source CLSMImage
         clsm_settings = source.get_settings()
 
-    kwargs["settings"] = clsm_settings
+    kwargs['settings'] = clsm_settings
     this = _tttrlib.new_CLSMImage(**kwargs)
 
     try:
         self.this.append(this)
     except:
         self.this = this
-
+    
     # Store TTTR object as an attribute for easy access
     self.tttr_data = tttr_data
-
+    
     # Store metadata for easy access
     self.metadata = self.get_metadata(tttr_data) if tttr_data is not None else {}
-
 
 def get_image_info(self):
     """
     Get formatted image information from metadata.
-
+    
     Returns a dictionary with human-readable image parameters:
     - dimensions: (width, height) in pixels
     - pixel_size: time per pixel in seconds
@@ -570,82 +540,80 @@ def get_image_info(self):
     - acquisition_time: acquisition time in ms
     """
     info = {}
-
+    
     if not self.metadata:
         return info
 
     # Image dimensions
-    width = self.metadata.get("ImgHdr_PixX")
-    height = self.metadata.get("ImgHdr_PixY")
+    width = self.metadata.get('ImgHdr_PixX')
+    height = self.metadata.get('ImgHdr_PixY')
     if width is not None and height is not None:
-        info["dimensions"] = (int(width), int(height))
-
+        info['dimensions'] = (int(width), int(height))
+    
     # Pixel timing
-    time_per_pixel = self.metadata.get("ImgHdr_TimePerPixel")
+    time_per_pixel = self.metadata.get('ImgHdr_TimePerPixel')
     if time_per_pixel is not None:
-        info["pixel_time_ms"] = float(time_per_pixel)
-
+        info['pixel_time_ms'] = float(time_per_pixel)
+    
     # Bidirectional scanning
-    bidirect = self.metadata.get("ImgHdr_BiDirect")
+    bidirect = self.metadata.get('ImgHdr_BiDirect')
     if bidirect is not None:
-        info["bidirectional"] = bool(bidirect)
-
+        info['bidirectional'] = bool(bidirect)
+    
     # Markers
-    frame_marker = self.metadata.get("ImgHdr_Frame")
+    frame_marker = self.metadata.get('ImgHdr_Frame')
     if frame_marker is not None:
-        info["frame_marker"] = int(frame_marker)
-
-    line_start = self.metadata.get("ImgHdr_LineStart")
-    line_stop = self.metadata.get("ImgHdr_LineStop")
+        info['frame_marker'] = int(frame_marker)
+    
+    line_start = self.metadata.get('ImgHdr_LineStart')
+    line_stop = self.metadata.get('ImgHdr_LineStop')
     if line_start is not None and line_stop is not None:
-        info["line_markers"] = (int(line_start), int(line_stop))
-
+        info['line_markers'] = (int(line_start), int(line_stop))
+    
     # Acquisition parameters
-    num_records = self.metadata.get("TTResult_NumberOfRecords")
+    num_records = self.metadata.get('TTResult_NumberOfRecords')
     if num_records is not None:
-        info["num_photons"] = int(num_records)
-
-    sync_rate = self.metadata.get("TTResult_SyncRate")
+        info['num_photons'] = int(num_records)
+    
+    sync_rate = self.metadata.get('TTResult_SyncRate')
     if sync_rate is not None:
-        info["sync_rate_hz"] = int(sync_rate)
-
-    acq_time = self.metadata.get("MeasDesc_AcquisitionTime")
+        info['sync_rate_hz'] = int(sync_rate)
+    
+    acq_time = self.metadata.get('MeasDesc_AcquisitionTime')
     if acq_time is not None:
-        info["acquisition_time_ms"] = int(acq_time)
-
+        info['acquisition_time_ms'] = int(acq_time)
+    
     # Resolution
-    global_res = self.metadata.get("MeasDesc_GlobalResolution")
+    global_res = self.metadata.get('MeasDesc_GlobalResolution')
     if global_res is not None:
-        info["global_resolution_s"] = float(global_res)
-
+        info['global_resolution_s'] = float(global_res)
+    
     return info
-
 
 def __repr_with_metadata__(self):
     """Extended representation including metadata."""
     info = self.get_image_info()
-    dims = info.get("dimensions", (self.n_pixel, self.n_lines))
+    dims = info.get('dimensions', (self.n_pixel, self.n_lines))
     repr_str = f"tttrlib.CLSMImage({self.n_frames}, {self.n_lines}, {self.n_pixel})"
 
     if info:
         repr_str += f"\n  Dimensions: {dims[0]}x{dims[1]} pixels"
-        if "pixel_time_ms" in info:
+        if 'pixel_time_ms' in info:
             repr_str += f"\n  Pixel time: {info['pixel_time_ms']} ms"
-        if "bidirectional" in info:
+        if 'bidirectional' in info:
             repr_str += f"\n  Bidirectional: {info['bidirectional']}"
-        if "num_photons" in info:
+        if 'num_photons' in info:
             repr_str += f"\n  Photons: {info['num_photons']}"
 
     return repr_str
 
-
 @staticmethod
 def compute_frc(
-    image_1,
-    image_2,
-    bin_width=2.0,
-    apply_hann=True,
-    eps=1e-12,
+        image_1,
+        image_2,
+        bin_width=2.0,
+        apply_hann=True,
+        eps=1e-12,
 ):
     """Compute the Fourier Ring Correlation (FRC) between two 2-D images."""
 
@@ -691,9 +659,7 @@ def compute_frc(
     bin_edges = np.arange(max_bin + 2, dtype=np.float64) * float(bin_width)
 
     flat_index = bin_index.ravel()
-    cross_sum = np.bincount(
-        flat_index, weights=cross_power.ravel(), minlength=max_bin + 1
-    )
+    cross_sum = np.bincount(flat_index, weights=cross_power.ravel(), minlength=max_bin + 1)
     auto1_sum = np.bincount(flat_index, weights=auto_1.ravel(), minlength=max_bin + 1)
     auto2_sum = np.bincount(flat_index, weights=auto_2.ravel(), minlength=max_bin + 1)
 
@@ -708,11 +674,11 @@ def compute_frc(
 
 
 def get_frc(
-    self,
-    other=None,
-    bin_width=2.0,
-    attribute="intensity",
-    apply_hann=True,
+        self,
+        other=None,
+        bin_width=2.0,
+        attribute="intensity",
+        apply_hann=True,
 ):
     img1 = getattr(self, attribute)
     if other is None:
