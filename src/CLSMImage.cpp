@@ -376,6 +376,86 @@ CLSMImage::CLSMImage(
         this->n_pixel = settings.n_pixel_per_line;
         tttr = tttr_data;
 
+        // Apply BH SPC-130 specific defaults
+        if (this->settings.reading_routine == CLSM_BH_SPC130 && tttr_data != nullptr) {
+            if (is_verbose()) {
+                std::clog << "-- Applying BH SPC-130 defaults" << std::endl;
+            }
+            
+            // Set BH-specific marker conventions if not explicitly overridden
+            if (this->settings.marker_frame_start.empty()) {
+                this->settings.marker_frame_start = {4};  // BH frame marker channel
+            }
+            if (this->settings.marker_line_start == 3) {  // Check if still at CLSMSettings default
+                this->settings.marker_line_start = 2;  // BH line marker channel
+            }
+            if (this->settings.marker_line_stop == 2) {  // Check if still at CLSMSettings default
+                this->settings.marker_line_stop = -1;  // BH has no stop marker, uses duration
+            }
+            if (this->settings.marker_event_type == 1) {  // Confirm BH marker event type
+                // Already correct for BH
+            }
+            
+            // Skip incomplete data at start/end
+            this->settings.skip_before_first_frame_marker = true;
+            this->settings.skip_after_last_frame_marker = true;
+            
+            // Read image dimensions from header metadata (set by read_bh_set_file)
+            auto header = tttr_data->get_header();
+            if (header != nullptr) {
+                try {
+                    auto json = nlohmann::json::parse(header->get_json());
+                    
+                    // Read n_pixel_per_line from header if not explicitly set
+                    if (this->settings.n_pixel_per_line <= 0) {
+                        auto pixX_tag = TTTRHeader::get_tag(json, "ImgHdr_PixX");
+                        if (!pixX_tag.is_null() && pixX_tag.contains("value")) {
+                            this->settings.n_pixel_per_line = pixX_tag["value"].get<int>();
+                            if (is_verbose()) {
+                                std::clog << "-- BH: n_pixel_per_line from header: " 
+                                          << this->settings.n_pixel_per_line << std::endl;
+                            }
+                        }
+                    }
+                    
+                    // Read n_lines from header if not explicitly set
+                    if (this->settings.n_lines <= 0) {
+                        auto pixY_tag = TTTRHeader::get_tag(json, "ImgHdr_PixY");
+                        if (!pixY_tag.is_null() && pixY_tag.contains("value")) {
+                            this->settings.n_lines = pixY_tag["value"].get<int>();
+                            if (is_verbose()) {
+                                std::clog << "-- BH: n_lines from header: " 
+                                          << this->settings.n_lines << std::endl;
+                            }
+                        }
+                    }
+                    
+                    // Read pixel clock setting from header
+                    auto pixClk_tag = TTTRHeader::get_tag(json, "BH_UsePixelClock");
+                    if (!pixClk_tag.is_null() && pixClk_tag.contains("value")) {
+                        int use_pix_clk = pixClk_tag["value"].get<int>();
+                        this->settings.use_pixel_markers = (use_pix_clk == 1);
+                        if (is_verbose()) {
+                            std::clog << "-- BH: use_pixel_markers from header: " 
+                                      << this->settings.use_pixel_markers << std::endl;
+                        }
+                    }
+                    
+                    // Set pixel marker channel if using pixel markers
+                    if (this->settings.use_pixel_markers) {
+                        this->settings.marker_pixel = 1;  // BH pixel clock channel
+                    }
+                } catch (...) {
+                    // Header parsing failed, continue with settings as-is
+                    if (is_verbose()) {
+                        std::clog << "-- BH: Could not read header metadata" << std::endl;
+                    }
+                }
+            }
+            // Update n_pixel if it was updated in settings
+            this->n_pixel = this->settings.n_pixel_per_line;
+        }
+
         // Early exit if TTTR pointer missing or no records
         if (tttr.get() == nullptr) {
             std::clog << "WARNING: No TTTR object provided" << std::endl;
