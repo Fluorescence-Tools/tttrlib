@@ -250,7 +250,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
     ) {
         bh_spc130_record_t rec;
         rec.allbits = TTTRRecord;
-        
+
         // Case 1: Valid photon record (INVALID=0)
         if (!rec.bits.invalid) {
             overflow_counter += rec.bits.mtov;
@@ -260,7 +260,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             record_type = RECORD_PHOTON;
             return true;
         }
-        
+
         // Case 2: Marker record (INVALID=1, MARK=1)
         // Routing bits encode marker type:
         //   rout bit 0 (value 1) = Pixel marker
@@ -274,7 +274,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             record_type = RECORD_MARKER;
             return true;
         }
-        
+
         // Case 3: Overflow record (INVALID=1, MARK=0, MTOV=1)
         if (rec.bits.mtov) {
             bh_overflow_t overflow_record;
@@ -282,7 +282,7 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
             overflow_counter += overflow_record.bits.cnt;
             return false;
         }
-        
+
         // Case 4: Invalid record (INVALID=1, MARK=0, MTOV=0) - skip
         return false;
     }
