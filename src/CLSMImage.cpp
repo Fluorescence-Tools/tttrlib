@@ -671,6 +671,42 @@ std::vector<int> CLSMImage::get_line_edges(
         }
     }
 
+    // Handle single-marker mode (only start markers, no stop markers)
+    // This is common for B&H SPC files where line markers indicate line starts only
+    if (marker_line_start != marker_line_stop && !line_edges.empty()) {
+        // Check if we only have start markers by verifying count
+        // If we have N line markers but they're all starts (no stops found),
+        // we need to convert them to (start, stop) pairs where each line
+        // runs from one start to the next
+        
+        // Count how many are starts vs stops
+        size_t start_count = 0;
+        size_t stop_count = 0;
+        signed char marker_start_sc = static_cast<signed char>(marker_line_start);
+        signed char marker_stop_sc = static_cast<signed char>(marker_line_stop);
+        signed char marker_event_sc = static_cast<signed char>(marker_event_type);
+        const signed char* routing_channels = tttr->routing_channels;
+        const signed char* event_types = tttr->event_types;
+        
+        for (int idx : line_edges) {
+            if (event_types[idx] == marker_event_sc) {
+                if (routing_channels[idx] == marker_start_sc) start_count++;
+                else if (routing_channels[idx] == marker_stop_sc) stop_count++;
+            }
+        }
+        
+        // If all markers are starts (no stops found), convert to pairs
+        if (stop_count == 0 && start_count > 1) {
+            std::vector<int> paired_edges;
+            paired_edges.reserve((start_count - 1) * 2);
+            for (size_t i = 0; i < line_edges.size() - 1; i++) {
+                paired_edges.emplace_back(line_edges[i]);      // line start
+                paired_edges.emplace_back(line_edges[i + 1]);  // line stop = next start
+            }
+            return paired_edges;
+        }
+    }
+
     return line_edges;
 }
 
@@ -820,7 +856,7 @@ void CLSMImage::create_lines() {
     }
     
     int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
-    
+
     // Configure OpenMP for parallel line finding
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
     bool use_openmp = (num_threads > 1);
@@ -891,7 +927,19 @@ void CLSMImage::remove_incomplete_frames() {
     n_frames = frames.size();
     size_t i_frame = 0;
     for (auto frame: frames) {
-        if (frame->lines.size() == n_lines) {
+        if (frame->lines.size() >= n_lines) {
+            // Truncate to n_lines if there are extra lines
+            if (frame->lines.size() > n_lines) {
+                if (is_verbose()) {
+                    std::clog << "-- Frame " << i_frame + 1 << " has " << frame->lines.size() 
+                              << " lines, truncating to " << n_lines << std::endl;
+                }
+                // Delete extra lines from the first line
+                while (frame->lines.size() > n_lines) {
+                    delete frame->lines.front();
+                    frame->lines.erase(frame->lines.begin());
+                }
+            }
             complete_frames.push_back(frame);
         } else {
             if (is_verbose()) {
@@ -1143,6 +1191,16 @@ void CLSMImage::fill(
                 }
             }
 
+            // Collect pixel marker times if marker-based binning is enabled
+            std::vector<unsigned long long> pixel_marker_times;
+            if (settings.use_pixel_markers) {
+                for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
+                    if (event_types[event_i] == RECORD_MARKER && routing_channels_ptr[event_i] == settings.marker_pixel) {
+                        pixel_marker_times.push_back(tttr_data->get_macro_time_at(event_i));
+                    }
+                }
+            }
+
             // Walk through each TTTR event that falls within this line's event indices
             for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
                 // Prefetch next iteration's data for better cache utilization
@@ -1175,11 +1233,23 @@ void CLSMImage::fill(
                     }
                 }
 
-                // Compute the "raw" pixel index using reciprocal multiplication (faster than division)
-                // Use accessor to handle both compressed and uncompressed macro times
-                unsigned long long time_offset = tttr_data->get_macro_time_at(event_i) - line_start_time;
-                double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
-                int raw_pixel = static_cast<int>(pixel_idx_float);
+                // Compute the "raw" pixel index
+                int raw_pixel = -1;
+                if (settings.use_pixel_markers) {
+                    if (pixel_marker_times.size() < 2) continue;
+                    unsigned long long photon_time = tttr_data->get_macro_time_at(event_i);
+                    auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
+                    if (it == pixel_marker_times.begin() || it == pixel_marker_times.end()) {
+                        continue;
+                    }
+                    raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
+                } else {
+                    // Compute using reciprocal multiplication (faster than division)
+                    // Use accessor to handle both compressed and uncompressed macro times
+                    unsigned long long time_offset = tttr_data->get_macro_time_at(event_i) - line_start_time;
+                    double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
+                    raw_pixel = static_cast<int>(pixel_idx_float);
+                }
                 
                 // If the computed raw index falls outside the line, skip (single comparison)
                 if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) {

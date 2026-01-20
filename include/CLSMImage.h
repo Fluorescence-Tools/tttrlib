@@ -83,7 +83,7 @@ static std::pair<int, int> find_clsm_start_stop(
 class CLSMSettings {
     friend class CLSMImage;
 
-protected:
+public:
     /// Skip events before the first frame marker?
     bool skip_before_first_frame_marker = false;
 
@@ -121,6 +121,12 @@ protected:
     /// When false (default), keep a flat single-channel view regardless of flips.
     bool split_by_channel = false;
 
+    /// If true, use markers to determine pixel edges (Becker & Hickl mode).
+    bool use_pixel_markers = false;
+
+    /// The routing channel of the pixel markers (Becker & Hickl mode).
+    int marker_pixel = 1;
+
 public:
     /*!
      * \brief CLSMSettings Constructor.
@@ -143,6 +149,8 @@ public:
      * @param n_lines                       Number of lines per frame. If -1, auto‐detect from the first frame (default: -1).
      * @param bidirectional_scan            If true, every odd line was scanned in reverse direction (default: false).
      * @param split_by_channel              If true, split frames into multiple channels using channel-flip markers (default: false).
+     * @param use_pixel_markers             If true, use markers to determine pixel edges (default: false).
+     * @param marker_pixel                  Routing channel of pixel markers (default: 1).
      */
     explicit CLSMSettings(
             bool skip_before_first_frame_marker = false,
@@ -155,7 +163,9 @@ public:
             int n_pixel_per_line               = 1,
             int n_lines                        = -1,
             bool bidirectional_scan            = false,
-            bool split_by_channel              = false
+            bool split_by_channel              = false,
+            bool use_pixel_markers             = false,
+            int marker_pixel                   = 1
     ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
@@ -168,6 +178,8 @@ public:
         this->n_lines                        = n_lines;
         this->bidirectional_scan             = bidirectional_scan;
         this->split_by_channel               = split_by_channel;
+        this->use_pixel_markers              = use_pixel_markers;
+        this->marker_pixel                   = marker_pixel;
     }
 };
 
