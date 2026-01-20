@@ -1043,6 +1043,12 @@ void CLSMImage::create_frames(bool clear_first) {
         std::clog << "-- CREATE_FRAMES" << std::endl;
         std::cout << "-- Creating " << frame_edges.size() << " frames: " << std::flush;
     }
+    if (frame_edges.size() < 2) {
+        if (is_verbose()) {
+            std::clog << "-- Not enough frame edges to create frames: " << frame_edges.size() << std::endl;
+        }
+        return;
+    }
     for (size_t i = 0; i < frame_edges.size() - 1; i++) {
         auto frame = new CLSMFrame(
             frame_edges[i], frame_edges[i + 1], tttr);
@@ -1137,19 +1143,7 @@ void CLSMImage::remove_incomplete_frames() {
     n_frames = frames.size();
     size_t i_frame = 0;
     for (auto frame: frames) {
-        if (frame->lines.size() >= n_lines) {
-            // Truncate to n_lines if there are extra lines
-            if (frame->lines.size() > n_lines) {
-                if (is_verbose()) {
-                    std::clog << "-- Frame " << i_frame + 1 << " has " << frame->lines.size() 
-                              << " lines, truncating to " << n_lines << std::endl;
-                }
-                // Delete extra lines from the first line
-                while (frame->lines.size() > n_lines) {
-                    delete frame->lines.front();
-                    frame->lines.erase(frame->lines.begin());
-                }
-            }
+        if (frame->lines.size() == n_lines) {
             complete_frames.push_back(frame);
         } else {
             if (is_verbose()) {
