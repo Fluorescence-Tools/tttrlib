@@ -381,7 +381,7 @@ CLSMImage::CLSMImage(
             std::clog << "WARNING: No TTTR object provided" << std::endl;
             return;
         }
-        if (tttr_data->n_records_read == 0) {
+        if (tttr_data->get_n_events() == 0) {
             std::clog << "WARNING: No records in TTTR object" << std::endl;
             return;
         }
