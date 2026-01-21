@@ -21,6 +21,11 @@
 #include "Correlator.h"
 
 
+/// Sentinel value indicating no stop marker (BH SPC-130 start-only mode)
+/// When marker_line_stop equals this value, lines are paired start-to-start
+constexpr int CLSM_MARKER_NO_STOP = 255;
+
+
 /// Different types of distances between two accessible volumes
 typedef enum{
     CLSM_DEFAULT,         /// Default reading routine

@@ -487,11 +487,11 @@ def __init__(
                     pass
         elif reading_routine == 'BH_SPC130':
             # BH SPC-130 specific defaults
-            # These mirror the C++ defaults in CLSMImage.cpp:380-396
+            # These mirror the BH SPC-130 defaults implemented in CLSMImage.cpp
             settings_kwargs["marker_event_type"] = 1
             settings_kwargs["marker_frame_start"] = [4]  # BH frame marker channel
             settings_kwargs["marker_line_start"] = 2     # BH line marker channel
-            settings_kwargs["marker_line_stop"] = 255    # BH uses start-only marker pairing
+            settings_kwargs["marker_line_stop"] = 255    # CLSM_MARKER_NO_STOP: BH uses start-only marker pairing
             settings_kwargs["skip_before_first_frame_marker"] = True
             settings_kwargs["skip_after_last_frame_marker"] = False   
 

@@ -1148,7 +1148,7 @@ void CLSMImage::create_lines() {
         size_t current_line_count = line_edges.size() / 2;
         bool is_bh_spc130 = (settings.reading_routine == CLSM_BH_SPC130);
         bool is_last_frame = (f_idx == static_cast<int>(frames.size()) - 1);
-        bool is_start_only_markers = (settings.marker_line_stop == 255 ||
+        bool is_start_only_markers = (settings.marker_line_stop == CLSM_MARKER_NO_STOP ||
                                       settings.marker_line_stop == settings.marker_line_start);
         size_t expected_lines = (settings.n_lines > 0) ? static_cast<size_t>(settings.n_lines) : 0;
         bool missing_exactly_one = (expected_lines > 0 && current_line_count + 1 == expected_lines);
