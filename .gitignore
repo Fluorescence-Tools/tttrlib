@@ -23,6 +23,7 @@ tttr-data
 leftovers/
 .boost_env
 playground
+junk/
 
 # Documentation and tools
 doc/_*
