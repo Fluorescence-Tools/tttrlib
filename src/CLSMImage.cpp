@@ -1310,7 +1310,7 @@ void CLSMImage::get_fluorescence_decay(
     #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4 && !stack_frames)
     for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
         auto frame = frames[i_frame];
-        for (size_t i_line = 0; i_line < n_lines; i_line++) {
+        for (size_t i_line = 0; i_line < frame->lines.size(); i_line++) {
             auto line = frame->lines[i_line];
             for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
                 auto& pixel = line->pixels[i_pixel];
