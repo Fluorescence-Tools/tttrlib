@@ -15,7 +15,7 @@ cmake -S .. -B . \
   -DBUILD_LIBRARY=OFF \
   -DWITH_AVX=OFF \
   -DPython_ROOT_DIR="${PREFIX}/bin" \
-  -DBUILD_PYTHON_DOCS=ON \
+  -DBUILD_PYTHON_DOCS=OFF \
   -G Ninja \
   ${CONFIG_ARGS}
 
