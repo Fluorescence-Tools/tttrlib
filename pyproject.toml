@@ -1,11 +1,11 @@
 [project]
-version = "0.26.0"
+version = "0.26.1"
 name = "tttrlib"
 requires-python = ">=3.9"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
 readme = "README.md"
 authors = [{ name = "Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com" }]
-license = { text = "BSD-3-Clause" }
+license = "BSD-3-Clause"
 
 keywords = [
     "fluorescence",
@@ -33,6 +33,7 @@ classifiers = [
 
 dependencies = [
     "numpy",
+    "h5py",
 ]
 
 [project.optional-dependencies]
@@ -51,25 +52,36 @@ repository = "https://github.com/fluorescence-tools/tttrlib.git"
 
 [build-system]
 requires = [
-    "wheel",
-    "setuptools>=64",
-    "setuptools_scm>=8",
-    "cmake-build-extension",
-    "numpy",
+    "scikit-build-core>=0.10",
+    "cmake",
+    "ninja",
+    # Build against NumPy 2.x headers so wheels are compatible with both
+    # NumPy 1.x and 2.x at runtime.
+    "numpy>=2.0",
+    # Provide SWIG binary via PyPI wheels.
     "swig<4.2",
-    "ninja"
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
-[tool.setuptools_scm]
-# Fallback version when not in a git repo or when version is explicitly set
-fallback_version = "0.26.0"
+[tool.scikit-build]
+# Install the compiled extension + generated wrapper into the package dir.
+wheel.install-dir = "tttrlib"
+# Include the pure-Python package sources from src/.
+wheel.packages = ["src/tttrlib"]
+
+[tool.scikit-build.cmake.define]
+BUILD_PYTHON_INTERFACE = "ON"
+BUILD_PYTHON_DOCS = "OFF"
+BUILD_LIBRARY = "OFF"
+BUILD_R_INTERFACE = "OFF"
+BUILD_PHOTON_HDF = "ON"
+WITH_AVX = "OFF"
+TTTRLIB_WHEEL_BUILD = "ON"
 
 [tool.cibuildwheel]
 build-verbosity = 2
-# Skip: PyPy, 32-bit, musllinux, Python 3.13+
-# For dev branches, also skip Python 3.11 to reduce build time
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp313-*", "cp314-*", "cp314t-*"]
+# Skip: PyPy, 32-bit, musllinux, Python 3.14+
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp314-*", "cp314t-*"]
 test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
 [tool.cibuildwheel.macos]
