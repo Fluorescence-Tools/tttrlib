@@ -308,14 +308,6 @@ private:
     /// The event type (PRIVATE - use get/set_event_type_at)
     signed char *event_types;
 
-    /**
-     * @brief Append a synthetic marker event at end of data.
-     * 
-     * @param channel The routing channel for the marker.
-     * @param macro_time The macro time for the marker event.
-     */
-    void append_marker(int channel, unsigned long long macro_time);
-
     // Friend declarations for functions that need direct array access for performance
     template<int RecordType>
     friend void process_records_batch(
@@ -743,22 +735,6 @@ public:
      * @param shift_value   Number of micro‐time bins to add (can be larger than the number of bins).
      */
     void shift_micro_time_by_channel(signed char channel, unsigned short shift_value);
-
-    /**
-     * @brief Fix missing markers in BH SPC-130 data.
-     * 
-     * Detects orphan data (≥99% of expected pixels) after the last frame/line 
-     * marker and appends synthetic markers to capture this data.
-     * 
-     * This is useful when BH SPC-130 recordings are truncated and the final
-     * frame or line marker is missing. The method analyzes the existing data
-     * to determine expected counts and appends synthetic frame/line markers
-     * if orphan data is detected.
-     * 
-     * Called automatically from CLSMImage constructor when using BH_SPC130 
-     * reading routine, or can be called explicitly after loading BH SPC-130 data.
-     */
-    void bh_fix_missing_markers();
 
     /*!
       * \brief Returns the number of valid events in the TTTR data.
