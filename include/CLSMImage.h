@@ -1063,7 +1063,9 @@ public:
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8,
             bool skip_before_first_frame_marker = false,
-            bool skip_after_last_frame_marker = false
+            bool skip_after_last_frame_marker = false,
+            int marker_line_start = 0,
+            int expected_n_lines = 0
     );
 
     /*!
@@ -1141,7 +1143,8 @@ public:
         TTTR* tttr,
         int frame_marker = 4,
         int line_marker = 2,
-        int marker_event_type = 1
+        int marker_event_type = 1,
+        int expected_n_lines = 0
     );
 
 

@@ -389,7 +389,7 @@ CLSMImage::CLSMImage(
                     auto json = nlohmann::json::parse(header->get_json());
 
                     // Read n_pixel_per_line from header if not explicitly binned by user
-                    if (this->settings.n_pixel_per_line <= 1) {
+                    if (this->settings.n_pixel_per_line == 0) {
                         auto pixX_tag = TTTRHeader::get_tag(json, "ImgHdr_PixX");
                         if (!pixX_tag.is_null() && pixX_tag.contains("value")) {
                             this->settings.n_pixel_per_line = pixX_tag["value"].get<int>();
@@ -436,14 +436,15 @@ CLSMImage::CLSMImage(
             }
 
             // Task 5: Fallback for dimension inference if still not set
-            if (this->settings.n_pixel_per_line <= 1 || this->settings.n_lines <= 0) {
+            if (this->settings.n_pixel_per_line == 0 || this->settings.n_lines <= 0) {
                 if (is_verbose()) {
                     std::clog << "-- BH: Inferring dimensions from markers" << std::endl;
                 }
 
                 auto frame_edges = get_frame_edges(tttr_data.get(), 0, -1,
                     this->settings.marker_frame_start, this->settings.marker_event_type,
-                    this->settings.reading_routine, true, true);
+                    this->settings.reading_routine, true, true,
+                    this->settings.marker_line_start, this->settings.n_lines);
 
                 if (frame_edges.size() >= 2) {
                     // 1. Count line markers in first frame
@@ -464,7 +465,7 @@ CLSMImage::CLSMImage(
                     }
 
                     // 2. Count pixel markers in first line
-                    if (this->settings.n_pixel_per_line <= 1) {
+                    if (this->settings.n_pixel_per_line == 0) {
                         // Find first two line markers to identify a complete line
                         int first_line_start = -1;
                         int second_line_start = -1;
@@ -651,7 +652,9 @@ std::vector<int> CLSMImage::get_frame_edges(
     int marker_event_type,
     int reading_routine,
     bool skip_before_first_frame_marker,
-    bool skip_after_last_frame_marker) {
+    bool skip_after_last_frame_marker,
+    int marker_line_start,
+    int expected_n_lines) {
     int n_events = static_cast<int>(tttr->get_n_valid_events());
     std::vector<int> frame_edges;
     
@@ -725,8 +728,8 @@ std::vector<int> CLSMImage::get_frame_edges(
     // Task 7: BH SPC-130 Frame 1 adjustment
     if (reading_routine == CLSM_BH_SPC130 && frame_edges.size() >= 2) {
         int frame_m = marker_frame.empty() ? 4 : marker_frame[0];
-        int line_m = 2; // BH default line marker
-        if (detect_bh_frame1_extra_line(tttr, frame_m, line_m, marker_event_type)) {
+        int line_m = (marker_line_start > 0) ? marker_line_start : 2;  // Use configured value, fallback to BH default
+        if (detect_bh_frame1_extra_line(tttr, frame_m, line_m, marker_event_type, expected_n_lines)) {
             // Find first line marker after first frame marker and skip it
             for (int i = frame_edges[0]; i < frame_edges[1]; ++i) {
                 if (event_types[i] == marker_event_type && routing_channels[i] == line_m) {
@@ -858,15 +861,48 @@ std::vector<int> CLSMImage::get_line_edges(
 }
 
 
+/**
+ * @brief Count line markers in a range of events
+ * @param event_types Array of event types
+ * @param routing_channels Array of routing channels
+ * @param start_idx Start index (inclusive)
+ * @param end_idx End index (exclusive)
+ * @param marker_event_type Event type for markers
+ * @param line_marker Routing channel for line markers
+ * @return Number of line markers found
+ */
+static int count_line_markers_in_range(
+    const signed char* event_types,
+    const signed char* routing_channels,
+    int start_idx,
+    int end_idx,
+    int marker_event_type,
+    int line_marker
+) {
+    int count = 0;
+    signed char event_sc = static_cast<signed char>(marker_event_type);
+    signed char line_sc = static_cast<signed char>(line_marker);
+    
+    for (int i = start_idx; i < end_idx; ++i) {
+        if (event_types[i] == event_sc && routing_channels[i] == line_sc) {
+            count++;
+        }
+    }
+    return count;
+}
+
+
 bool CLSMImage::detect_bh_frame1_extra_line(
     TTTR* tttr,
     int frame_marker,
     int line_marker,
-    int marker_event_type
+    int marker_event_type,
+    int expected_n_lines
 ) {
     if (tttr == nullptr) return false;
 
-    // We only need to check the first 3 frame markers to compare two complete frames
+    // We only need to check the first 4 frame markers to compare three complete frames
+    // (F1, F2, F3) to establish a baseline.
     std::vector<int> frame_marker_positions;
 
     const signed char* event_types = tttr->event_types;
@@ -877,31 +913,40 @@ bool CLSMImage::detect_bh_frame1_extra_line(
         if (event_types[i] == marker_event_type) {
             if (routing_channels[i] == frame_marker) {
                 frame_marker_positions.push_back(static_cast<int>(i));
-                if (frame_marker_positions.size() >= 3) break;
+                if (frame_marker_positions.size() >= 4) break;
             }
         }
     }
 
-    if (frame_marker_positions.size() < 3) return false;
+    // PRIMARY CONDITION: Compare F1 vs F2 vs F3
+    if (frame_marker_positions.size() >= 4) {
+        int n_lines_f1 = count_line_markers_in_range(event_types, routing_channels, 
+            frame_marker_positions[0], frame_marker_positions[1], marker_event_type, line_marker);
+        int n_lines_f2 = count_line_markers_in_range(event_types, routing_channels, 
+            frame_marker_positions[1], frame_marker_positions[2], marker_event_type, line_marker);
+        int n_lines_f3 = count_line_markers_in_range(event_types, routing_channels, 
+            frame_marker_positions[2], frame_marker_positions[3], marker_event_type, line_marker);
 
-    // Count line markers in Frame 1 (between 1st and 2nd frame marker)
-    int n_lines_f1 = 0;
-    for (int i = frame_marker_positions[0]; i < frame_marker_positions[1]; ++i) {
-        if (event_types[i] == marker_event_type && routing_channels[i] == line_marker) {
-            n_lines_f1++;
+        // If F2 and F3 have same number of lines, they are the baseline.
+        // If F1 has exactly one more, it has the BH extra initialization marker.
+        if (n_lines_f2 == n_lines_f3 && n_lines_f1 == n_lines_f2 + 1) {
+            return true;
         }
     }
 
-    // Count line markers in Frame 2 (between 2nd and 3rd frame marker)
-    int n_lines_f2 = 0;
-    for (int i = frame_marker_positions[1]; i < frame_marker_positions[2]; ++i) {
-        if (event_types[i] == marker_event_type && routing_channels[i] == line_marker) {
-            n_lines_f2++;
+    // FALLBACK CONDITION: Compare F1 to expected_n_lines
+    // (Used when we don't have enough frames for 3-way comparison, but know expected count)
+    if (frame_marker_positions.size() >= 2 && expected_n_lines > 0) {
+        int n_lines_f1 = count_line_markers_in_range(event_types, routing_channels, 
+            frame_marker_positions[0], frame_marker_positions[1], marker_event_type, line_marker);
+        
+        // BH uses N+1 markers for N lines. If we see N+2, it's the extra marker.
+        if (n_lines_f1 == expected_n_lines + 2) {
+            return true;
         }
     }
 
-    // Frame 1 anomaly: one extra initialization line marker
-    return (n_lines_f1 == n_lines_f2 + 1);
+    return false;
 }
 
 
@@ -1021,13 +1066,15 @@ void CLSMImage::create_frames(bool clear_first) {
         settings.marker_event_type,
         settings.reading_routine,
         settings.skip_before_first_frame_marker,
-        settings.skip_after_last_frame_marker
+        settings.skip_after_last_frame_marker,
+        settings.marker_line_start,
+        settings.n_lines
     );
     if (is_verbose()) {
         std::clog << "-- CREATE_FRAMES" << std::endl;
         std::cout << "-- Creating " << frame_edges.size() << " frames: " << std::flush;
     }
-    if (frame_edges.size() < 2) {
+    if (frame_edges.size() <= 1) {
         if (is_verbose()) {
             std::clog << "-- Not enough frame edges to create frames: " << frame_edges.size() << std::endl;
         }
