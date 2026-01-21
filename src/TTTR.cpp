@@ -518,8 +518,11 @@ if (is_verbose()) {
                 std::string set_filename;
                 if (filename.size() >= 4) {
                     std::string ext = filename.substr(filename.size() - 4);
-                    // Case-insensitive check for .spc extension
-                    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                    // Safe ASCII-only lowercase transformation (avoids UB with signed char)
+                    auto to_lower_ascii = [](unsigned char c) -> char {
+                        return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : static_cast<char>(c);
+                    };
+                    std::transform(ext.begin(), ext.end(), ext.begin(), to_lower_ascii);
                     if (ext == ".spc") {
                         set_filename = filename.substr(0, filename.size() - 4) + ".set";
                     }

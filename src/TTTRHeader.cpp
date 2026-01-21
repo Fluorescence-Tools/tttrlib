@@ -193,8 +193,15 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
                             int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
                             add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
                         }
+                    } catch (const std::exception& e) {
+                        #ifdef VERBOSE_TTTRLIB
+                        std::clog << "-- BH .set parse warning: skipping line with invalid value: " 
+                                  << e.what() << std::endl;
+                        #endif
                     } catch (...) {
-                        // Ignore lines with invalid integer values
+                        #ifdef VERBOSE_TTTRLIB
+                        std::clog << "-- BH .set parse warning: skipping line with unknown error" << std::endl;
+                        #endif
                     }
                 }
             }
