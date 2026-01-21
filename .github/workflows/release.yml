@@ -1,13 +1,8 @@
 
-name: Build and Upload Packages
+name: Legacy release workflow (disabled)
 
 on:
   workflow_dispatch:
-#  push:
-#    branches:
-#      - develop
-  release:
-    types: ['released', 'prereleased']
 
 jobs:
   build:
