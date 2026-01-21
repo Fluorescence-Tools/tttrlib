@@ -842,6 +842,7 @@ std::vector<int> CLSMImage::get_line_edges(
         }
 
         // If all markers are starts (no stops found), convert to pairs
+        // N start markers define N-1 lines (each line runs from marker[i] to marker[i+1])
         if (stop_count == 0 && start_count > 1) {
             std::vector<int> paired_edges;
             paired_edges.reserve((start_count - 1) * 2);
@@ -1091,6 +1092,38 @@ void CLSMImage::create_lines() {
                 settings.marker_event_type,
                 settings.reading_routine
             );
+        }
+
+        // BH SPC-130 specific truncated recording recovery:
+        // For the last frame, if exactly one line is missing, add an extra line
+        // pairing the last line marker with the frame end.
+        // This recovers the final line when the recording was truncated.
+        size_t current_line_count = line_edges.size() / 2;
+        bool is_bh_spc130 = (settings.reading_routine == CLSM_BH_SPC130);
+        bool is_last_frame = (f_idx == static_cast<int>(frames.size()) - 1);
+        bool is_start_only_markers = (settings.marker_line_stop == 255 ||
+                                      settings.marker_line_stop == settings.marker_line_start);
+        size_t expected_lines = (settings.n_lines > 0) ? static_cast<size_t>(settings.n_lines) : 0;
+        bool missing_exactly_one = (expected_lines > 0 && current_line_count + 1 == expected_lines);
+        
+        if (is_bh_spc130 && is_last_frame && is_start_only_markers && 
+            missing_exactly_one && !line_edges.empty()) {
+            // Add extra line: from last line stop to frame end
+            int last_line_stop = line_edges.back();  // Current last edge
+            int frame_end = frame->get_stop();
+            line_edges.push_back(last_line_stop);  // New line start
+            line_edges.push_back(frame_end);       // New line stop
+            
+            if (is_verbose()) {
+                #ifdef _OPENMP
+                #pragma omp critical
+                #endif
+                {
+                    std::clog << "-- BH SPC-130: Recovered truncated last line in frame " 
+                              << f_idx << " (events " << last_line_stop << "-" << frame_end << ")" 
+                              << std::endl;
+                }
+            }
         }
 
         // Pre-allocate lines vector for better performance

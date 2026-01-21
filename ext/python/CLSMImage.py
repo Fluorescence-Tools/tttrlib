@@ -493,7 +493,7 @@ def __init__(
             settings_kwargs["marker_line_start"] = 2     # BH line marker channel
             settings_kwargs["marker_line_stop"] = 255    # BH uses start-only marker pairing
             settings_kwargs["skip_before_first_frame_marker"] = True
-            settings_kwargs["skip_after_last_frame_marker"] = True   
+            settings_kwargs["skip_after_last_frame_marker"] = False   
 
         # Remove None values so CLSMSettings uses its C++ defaults
         settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}

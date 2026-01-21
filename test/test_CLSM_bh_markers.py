@@ -155,5 +155,145 @@ class TestBHPixelMarkerBinning(unittest.TestCase):
         self.assertEqual(intensity[0, 0, 1], 2)  # 350 and 450
 
 
+class TestBHTruncatedRecordingRecovery(unittest.TestCase):
+    """Tests for recovering truncated BH SPC-130 recordings."""
+
+    def create_truncated_tttr(self):
+        """
+        Creates a TTTR object simulating a truncated BH recording.
+
+        Structure:
+        - Frame marker at time 0
+        - Line 1: start at 100, photons at 150, 200
+        - Line 2: start at 300, photons at 350, 400
+        - Line 3: start at 500, photons at 550, 600
+        - NO closing frame marker (simulates truncation)
+        - NO line start after line 3 (last line has no following marker)
+        """
+        # BH marker channels: Frame=4, Line=2, Pixel=1
+        # Event types: 1=Marker, 0=Photon
+
+        macro_times = np.array(
+            [
+                0,  # Frame marker
+                100,  # Line 1 start
+                150,  # Photon
+                200,  # Photon
+                300,  # Line 2 start
+                350,  # Photon
+                400,  # Photon
+                500,  # Line 3 start
+                550,  # Photon
+                600,  # Photon
+                800,  # Extra event to ensure last line is captured
+            ],
+            dtype=np.uint64,
+        )
+
+        micro_times = np.zeros(len(macro_times), dtype=np.uint16)
+
+        routing_channels = np.array(
+            [
+                4,  # Frame marker (channel 4)
+                2,  # Line marker (channel 2)
+                0,  # Photon (channel 0)
+                0,  # Photon
+                2,  # Line marker
+                0,  # Photon
+                0,  # Photon
+                2,  # Line marker
+                0,  # Photon
+                0,  # Photon
+                127,  # Extra marker
+            ],
+            dtype=np.int8,
+        )
+
+        event_types = np.array(
+            [
+                1,  # Marker
+                1,  # Marker
+                0,  # Photon
+                0,  # Photon
+                1,  # Marker
+                0,  # Photon
+                0,  # Photon
+                1,  # Marker
+                0,  # Photon
+                0,  # Photon
+                1,  # Extra marker
+            ],
+            dtype=np.int8,
+        )
+
+        data = tttrlib.TTTR(macro_times, micro_times, routing_channels, event_types)
+        return data
+
+    def test_truncated_recording_recovers_last_line(self):
+        """Verify that photons in the last line are recovered even without closing markers."""
+        tttr = self.create_truncated_tttr()
+
+        # Use BH SPC-130 reading routine with explicit settings
+        # The truncated line recovery only triggers for BH_SPC130 reading routine
+        clsm = tttrlib.CLSMImage(
+            tttr_data=tttr,
+            reading_routine="BH_SPC130",
+            marker_frame_start=[4],
+            marker_line_start=2,
+            marker_line_stop=255,  # No stop marker (BH style)
+            marker_event_type=1,
+            n_pixel_per_line=2,
+            settings={"n_lines": 3},
+            skip_before_first_frame_marker=True,
+            skip_after_last_frame_marker=False,  # Key: include data after last frame marker
+        )
+        clsm.fill()
+
+        intensity = clsm.intensity
+
+        # Should have 1 frame
+        self.assertEqual(intensity.shape[0], 1, "Should have exactly 1 frame")
+
+        # Should have 3 lines (including the last one without following marker)
+        self.assertEqual(
+            intensity.shape[1], 3, "Should have 3 lines (last line recovered)"
+        )
+
+        # Should have 2 pixels per line
+        self.assertEqual(intensity.shape[2], 2, "Should have 2 pixels per line")
+
+        # Each line should have 2 photons total
+        self.assertEqual(np.sum(intensity[0, 0, :]), 2, "Line 0 should have 2 photons")
+        self.assertEqual(np.sum(intensity[0, 1, :]), 2, "Line 1 should have 2 photons")
+        self.assertEqual(
+            np.sum(intensity[0, 2, :]), 2, "Line 2 should have 2 photons (recovered)"
+        )
+
+        # Total photons should be 6
+        self.assertEqual(np.sum(intensity), 6, "Total should be 6 photons")
+
+    def test_truncated_with_reading_routine_bh_spc130(self):
+        """Verify that reading_routine='BH_SPC130' automatically handles truncation."""
+        tttr = self.create_truncated_tttr()
+
+        # Use the high-level reading_routine parameter
+        clsm = tttrlib.CLSMImage(
+            tttr_data=tttr,
+            reading_routine="BH_SPC130",
+            n_pixel_per_line=2,
+            settings={"n_lines": 3},
+        )
+        clsm.fill()
+
+        intensity = clsm.intensity
+
+        # Should recover all 3 lines with 2 photons each
+        self.assertEqual(intensity.shape[0], 1, "Should have 1 frame")
+        self.assertEqual(intensity.shape[1], 3, "Should have 3 lines")
+        self.assertEqual(
+            np.sum(intensity[0, :, :]), 6, "Should have 6 total photons in the image"
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
