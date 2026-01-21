@@ -504,6 +504,10 @@ CLSMImage::CLSMImage(
 
             // Update n_pixel if it was updated in settings
             this->n_pixel = this->settings.n_pixel_per_line;
+
+            // BH SPC-130: Fix any missing markers due to truncated recording
+            // This must be called before frame creation
+            tttr_data->bh_fix_missing_markers();
         }
 
         // Early exit if TTTR pointer missing or no records
