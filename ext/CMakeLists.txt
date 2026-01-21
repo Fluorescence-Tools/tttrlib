@@ -62,9 +62,9 @@ IF(BUILD_PYTHON_INTERFACE)
     LINK_LIBRARIES(Python3::Module Python3::NumPy)
 
     # Handle where to install the resulting Python package
-    if(CALL_FROM_SETUP_PY)
-        # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
-        # of the resulting wheel archive
+    if(TTTRLIB_WHEEL_BUILD)
+        # When building a wheel (scikit-build-core/cibuildwheel), the CMake
+        # install prefix points into the wheel staging area.
         SET(MODULE_NAME ${PROJECT_NAME})
         set(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
     else()
@@ -100,11 +100,19 @@ IF(BUILD_PYTHON_INTERFACE)
             LANGUAGE python
             SOURCES python/tttrlib.i ${SRC_files}
     )
-    TARGET_LINK_LIBRARIES(
+    target_link_libraries(
             ${MODULE_NAME}
+            PRIVATE
             Python3::Module
             ${CMAKE_THREAD_LIBS_INIT}
     )
+
+    # Ensure HDF5 is linked into the Python extension when Photon-HDF5 support
+    # is enabled. On Windows, we may provide a manual HDF5 import library target
+    # (tttrlib_hdf5) from the top-level CMakeLists.txt.
+    if(BUILD_PHOTON_HDF AND TARGET tttrlib_hdf5)
+        target_link_libraries(${MODULE_NAME} PRIVATE tttrlib_hdf5)
+    endif()
     # On macOS, use dynamic lookup for Python symbols
     IF (APPLE)
         SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")

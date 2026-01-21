@@ -25,7 +25,8 @@ OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
-OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
+
+
 
 ## System specific compiler flags
 ################################
@@ -69,7 +70,6 @@ ENDIF()
 
 # Build type specific optimizations
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  SET(VERBOSE_TTTRLIB ON)
   MESSAGE(STATUS "Debug build: Enabling all warnings")
   if(MSVC)
     ADD_COMPILE_OPTIONS(/Wall)
@@ -163,13 +163,9 @@ IF(BUILD_PHOTON_HDF)
   ADD_COMPILE_DEFINITIONS(BUILD_PHOTON_HDF)
 ENDIF(BUILD_PHOTON_HDF)
 
-IF(VERBOSE_TTTRLIB)
-    ADD_COMPILE_DEFINITIONS(VERBOSE_TTTRLIB)
-ENDIF(VERBOSE_TTTRLIB)
-
 # Targets
 #############################
-FILE(GLOB_RECURSE SRC_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+FILE(GLOB_RECURSE SRC_files CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -190,8 +186,60 @@ LIST(APPEND SRC_files ${ALGLIB})
 # HighFive HDF5 reader
 IF(BUILD_PHOTON_HDF)
   IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")
+    # On Windows (MSVC + multi-config generators), CMake's FindHDF5 module can
+    # fail when only release import libraries are available (common on conda-forge
+    # and some local setups). HighFive is header-only, so we can disable its
+    # internal HDF5 discovery and link HDF5 ourselves.
+    if(WIN32)
+      set(HIGHFIVE_FIND_HDF5 OFF CACHE BOOL "Disable HighFive's HDF5 find_package on Windows" FORCE)
+    endif()
     ADD_SUBDIRECTORY(thirdparty/HighFive)
     LINK_LIBRARIES(HighFive::HighFive)
+
+    if(WIN32)
+      # Prefer a proper CMake package (vcpkg), otherwise fall back to a minimal
+      # lookup (conda-forge often ships only release import libs, which can trip
+      # up CMake's FindHDF5 in multi-config generators).
+      set(TTTRLIB_HDF5_TARGET "")
+      find_package(HDF5 CONFIG QUIET)
+      if(TARGET hdf5::hdf5)
+        set(TTTRLIB_HDF5_TARGET hdf5::hdf5)
+      elseif(TARGET hdf5::hdf5-shared)
+        set(TTTRLIB_HDF5_TARGET hdf5::hdf5-shared)
+      endif()
+
+      if(NOT TTTRLIB_HDF5_TARGET)
+        find_path(TTTRLIB_HDF5_INCLUDE_DIR
+          NAMES hdf5.h
+          HINTS "${HDF5_ROOT}" "${CMAKE_PREFIX_PATH}"
+          PATH_SUFFIXES include Library/include
+        )
+        find_library(TTTRLIB_HDF5_LIBRARY
+          NAMES hdf5
+          HINTS "${HDF5_ROOT}" "${CMAKE_PREFIX_PATH}"
+          PATH_SUFFIXES lib Library/lib
+        )
+        if(NOT TTTRLIB_HDF5_INCLUDE_DIR OR NOT TTTRLIB_HDF5_LIBRARY)
+          message(FATAL_ERROR "HDF5 not found on Windows. Set HDF5_ROOT or CMAKE_PREFIX_PATH to a prefix containing include/hdf5.h and lib/hdf5.lib")
+        endif()
+      endif()
+
+      add_library(tttrlib_hdf5 INTERFACE)
+      if(TTTRLIB_HDF5_TARGET)
+        target_link_libraries(tttrlib_hdf5 INTERFACE ${TTTRLIB_HDF5_TARGET})
+        message(STATUS "HDF5 (Windows): using CMake target '${TTTRLIB_HDF5_TARGET}'")
+      else()
+        target_include_directories(tttrlib_hdf5 INTERFACE "${TTTRLIB_HDF5_INCLUDE_DIR}")
+        target_link_libraries(tttrlib_hdf5 INTERFACE "${TTTRLIB_HDF5_LIBRARY}")
+        message(STATUS "HDF5 (Windows): include='${TTTRLIB_HDF5_INCLUDE_DIR}', lib='${TTTRLIB_HDF5_LIBRARY}'")
+      endif()
+
+      # When linking against the shared HDF5 build on Windows, the headers only
+      # use __declspec(dllimport) if H5_BUILT_AS_DYNAMIC_LIB is defined.
+      if(NOT HDF5_USE_STATIC_LIBRARIES)
+        target_compile_definitions(tttrlib_hdf5 INTERFACE H5_BUILT_AS_DYNAMIC_LIB)
+      endif()
+    endif()
   ELSE()
     MESSAGE(WARNING "HighFive third-party sources are missing; disabling photon HDF support")
     SET(BUILD_PHOTON_HDF OFF CACHE BOOL "Build photon hdf5 reader" FORCE)
@@ -259,5 +307,4 @@ IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "LINK_DIRECTORIES='${dir}'")
   endforeach()
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
 

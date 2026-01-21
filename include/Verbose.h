@@ -41,9 +41,8 @@ inline const char* get_tttrlib_verbose_env() {
 #endif
 }
 
-inline bool is_verbose() {
-    const char* env = get_tttrlib_verbose_env();
-    return is_env_truthy(env);
-}
+// Read TTTRLIB_VERBOSE once and cache the result for the process.
+// Environment changes at runtime are intentionally ignored.
+bool is_verbose();
 
 
