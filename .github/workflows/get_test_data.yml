@@ -2,9 +2,9 @@ name: Download Test Data
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, development ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, master, development ]
   workflow_dispatch:
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
       
       - name: Cache test data
         if: always()
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: ./tttr-data
           key: tttr-test-data-${{ hashFiles('test/settings.json') }}
