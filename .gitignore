@@ -1,6 +1,11 @@
 build/
 bld-dir/
 dist/
+*.whl
+wheelhouse/
+wheelhouse_*/
+build_log.txt
+debug_*.py
 doc/auto_examples
 tmp/
 .vscode
