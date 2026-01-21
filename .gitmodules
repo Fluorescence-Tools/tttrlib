@@ -4,6 +4,3 @@
 [submodule "thirdparty/nlohmann_json"]
 	path = thirdparty/nlohmann_json
 	url = https://github.com/nlohmann/json.git
-[submodule "thirdparty/libfst"]
-	path = thirdparty/libfst
-	url = https://github.com/gtkwave/libfst
