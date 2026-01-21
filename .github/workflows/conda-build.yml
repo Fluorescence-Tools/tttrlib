@@ -2,10 +2,9 @@ name: Conda Build
 
 on:
   push:
+    branches: [ main, master, development ]
   pull_request:
-  workflow_run:
-    workflows: ["Download Test Data"]
-    types: [completed]
+    branches: [ main, master, development ]
   workflow_dispatch:
   release:
     types: [ released, prereleased ]
@@ -24,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10" ]
+        os: ${{ fromJSON((github.actor == 'nektos/act') && '["ubuntu-latest"]' || '["ubuntu-latest", "macos-latest", "windows-latest"]') }}
+        python-version: ${{ fromJSON((((github.event_name == 'push' && github.ref == 'refs/heads/development') || github.event_name == 'pull_request') && '["3.13"]') || '["3.9", "3.10", "3.11", "3.12", "3.13"]') }}
 
     env:
       OUT_DIR: conda-bld
@@ -85,13 +84,21 @@ jobs:
 
       - name: Upload to Anaconda.org (skip if no token)
         shell: bash -l {0}
+        if: github.event_name == 'release'
         run: |
           if [[ -n "${ANACONDA_TOKEN}" ]]; then
             echo "Uploading packages to anaconda.org/${ANACONDA_USER} (label=${UPLOAD_LABEL})"
+            shopt -s globstar nullglob
+            files=("${OUT_DIR}"/**/*.tar.bz2)
+            if (( ${#files[@]} == 0 )); then
+              echo "No conda packages found under: ${OUT_DIR}"
+              find "${OUT_DIR}" -maxdepth 3 -type f || true
+              exit 1
+            fi
             micromamba run -n build anaconda -t "${ANACONDA_TOKEN}" upload \
               -u "${ANACONDA_USER}" \
               --label "${UPLOAD_LABEL}" \
-              --force ${OUT_DIR}/**/*.tar.bz2
+              --force "${files[@]}"
           else
             echo "ANACONDA_TOKEN is empty; skipping upload."
           fi
@@ -109,8 +116,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10" ]
+        os: ${{ fromJSON((github.actor == 'nektos/act') && '["ubuntu-latest"]' || '["ubuntu-latest", "macos-latest", "windows-latest"]') }}
+        python-version: ${{ fromJSON((((github.event_name == 'push' && github.ref == 'refs/heads/development') || github.event_name == 'pull_request') && '["3.13"]') || '["3.9", "3.10", "3.11", "3.12", "3.13"]') }}
     env:
       # Use absolute path for TTTRLIB_DATA to avoid CWD-related confusion on all OSes
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
@@ -148,7 +155,7 @@ jobs:
       
       - name: Restore test data from cache
         id: cache-test-data
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ./tttr-data
           key: tttr-test-data-${{ hashFiles('test/settings.json') }}
@@ -183,4 +190,4 @@ jobs:
       - name: Run tests on installed conda package
         shell: bash -l {0}
         run: |
-          pytest test/ -v --tb=short
+          micromamba run -n test pytest test/ -v --tb=short
