@@ -166,7 +166,7 @@ public:
             int marker_line_stop               = 2,
             std::vector<int> marker_frame_start = std::vector<int>({1}),
             int marker_event_type              = 1,
-            int n_pixel_per_line               = 1,
+            int n_pixel_per_line               = 0,
             int n_lines                        = -1,
             bool bidirectional_scan            = false,
             bool split_by_channel              = false,
