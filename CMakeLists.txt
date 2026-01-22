@@ -21,10 +21,7 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics (default OFF for conda/pip builds)" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
-OPTION(BUILD_LOGIC_ANALYZER "Build logic analyzer file support" ON)
-OPTION(BUILD_LOGIC_ANALYZER_SALEAE "Build Saleae Logic 2 binary format support" ON)
-OPTION(BUILD_LOGIC_ANALYZER_VCD "Build VCD (Value Change Dump) format support" ON)
-OPTION(BUILD_LOGIC_ANALYZER_FST "Build FST (Fast Signal Trace) format support" ON)
+
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
@@ -33,11 +30,7 @@ OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
 ## System-specific adjustments
 ################################
-# FST is not supported on Windows (libfst requires MinGW, not MSVC)
-IF(BUILD_LOGIC_ANALYZER_FST AND WIN32)
-  MESSAGE(WARNING "FST support disabled on Windows (libfst requires MinGW, not MSVC)")
-  SET(BUILD_LOGIC_ANALYZER_FST OFF CACHE BOOL "Build FST (Fast Signal Trace) format support" FORCE)
-ENDIF()
+
 
 ## System specific compiler flags
 ################################
@@ -365,20 +358,7 @@ endif()
 
 # HDF5 is now handled above with dual source approach
 
-## Logic Analyzer
-###########################
-IF(BUILD_LOGIC_ANALYZER)
-  ADD_COMPILE_DEFINITIONS(BUILD_LOGIC_ANALYZER)
-  IF(BUILD_LOGIC_ANALYZER_SALEAE)
-    ADD_COMPILE_DEFINITIONS(BUILD_LOGIC_ANALYZER_SALEAE)
-  ENDIF()
-  IF(BUILD_LOGIC_ANALYZER_VCD)
-    ADD_COMPILE_DEFINITIONS(BUILD_LOGIC_ANALYZER_VCD)
-  ENDIF()
-  IF(BUILD_LOGIC_ANALYZER_FST)
-    ADD_COMPILE_DEFINITIONS(BUILD_LOGIC_ANALYZER_FST)
-  ENDIF()
-ENDIF(BUILD_LOGIC_ANALYZER)
+
 
 IF(VERBOSE_TTTRLIB)
     ADD_COMPILE_DEFINITIONS(VERBOSE_TTTRLIB)
