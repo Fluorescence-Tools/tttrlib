@@ -1,5 +1,10 @@
 #include "TTTR.h"
+#include "TTTRHeader.h"
+#include "TTTRHeaderTypes.h"
 #include "Verbose.h"
+
+#include <cstdlib>
+#include <algorithm>
 
 // Static member definition outside the class
 tttrlib::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
@@ -504,11 +509,22 @@ if (is_verbose()) {
         this->filename = p.u8string();
 
         fn = this->filename.c_str();
+        
+        // Auto-detect container type if not specified
+        if (container_type < 0) {
+            // Default to trying to read as a standard TTTR file
+            // The header will determine the actual container type
+            if (is_verbose()) {
+                std::clog << "-- Using standard TTTR file detection" << std::endl;
+            }
+        }
+        
         if (container_type == PHOTON_HDF_CONTAINER) {
             read_hdf_file(fn);
         } else if (container_type == SM_CONTAINER) {
             read_sm_file(fn);
-        } else {
+
+        } else {  
             fp = open_file(this->filename, "rb");
             header = new TTTRHeader(fp, container_type);
             fp_records_begin = header->end();
@@ -1456,42 +1472,44 @@ void selection_by_count_rate(
 
 
 
-std::vector<long long> TTTR::burst_search(int L, int m, double T)
+std::vector<long long> TTTR::burst_search(
+    int L, int m, double T, 
+    const std::string& mode,
+    double alpha, 
+    double beta
+) {
+    if (mode == "cusum_sprt") {
+        return burst_search_cusum_sprt(L, m, T, alpha, beta);
+    } else {
+        return burst_search_sliding_window(L, m, T);
+    }
+}
+
+std::vector<long long> TTTR::burst_search_sliding_window(int L, int m, double T)
 {
-    // If there aren't enough events for a window of size m, return empty.
     if (static_cast<int64_t>(size()) < m) {
         return {};
     }
 
     bool in_burst = false;
     int64_t i_start = 0, i_stop = 0;
-
-    // Convert time T to “macro-time” units
     const long long Ti = static_cast<long long>(T / header->get_macro_time_resolution());
 
     std::vector<long long> bursts;
     bursts.reserve(1000);
 
-    // Loop over all valid starting positions
-    // i + m - 1 <= size() - 1  ==>  i <= size() - m
     int64_t n_events = static_cast<int64_t>(size());
     for (int64_t i = 0; i <= n_events - m; ++i) {
-
-        // Check the time span of the window [i, i + m - 1]
         if (get_macro_time_at(i + m - 1) - get_macro_time_at(i) <= static_cast<unsigned long long>(Ti)) {
-            // We have a valid burst window
             if (!in_burst) {
                 in_burst = true;
                 i_start = i;
             }
         }
         else {
-            // The window fails the time condition
             if (in_burst) {
-                // We just ended a burst
                 in_burst = false;
-                i_stop = i + m - 2; // last index in the valid window
-                // Check if it meets the length requirement
+                i_stop = i + m - 2;
                 if (i_stop - i_start + 1 >= L) {
                     bursts.push_back(i_start);
                     bursts.push_back(i_stop);
@@ -1500,15 +1518,175 @@ std::vector<long long> TTTR::burst_search(int L, int m, double T)
         }
     }
 
-    // If we exit the loop but are still in a burst, it extends to the last event
     if (in_burst) {
-        i_stop = static_cast<int64_t>(size()) - 1;  // last valid index
+        i_stop = static_cast<int64_t>(size()) - 1;
         if (i_stop - i_start + 1 >= L) {
             bursts.push_back(i_start);
             bursts.push_back(i_stop);
         }
     }
 
+    return bursts;
+}
+
+std::vector<long long> TTTR::burst_search_cusum_sprt(
+    int min_photons, 
+    double background_cps, 
+    double signal_to_background_ratio,
+    double alpha, 
+    double beta
+) {
+    size_t N = size();
+    if (N == 0) {
+        return {};
+    }
+
+    double IB, I0, I1;
+    double macro_res_ms = header->get_macro_time_resolution() * 1000.0;
+    
+    // Auto-estimate background if not provided (m=0)
+    if (background_cps <= 0) {
+        // Estimate background from data using binning
+        const int BIN_SIZE = 100;
+        std::vector<double> rates;
+        double bin_t = 0.0;
+        int bin_count = 0;
+        
+        for (size_t i = 1; i < N; ++i) {
+            double dt = (get_macro_time_at(i) - get_macro_time_at(i-1)) * macro_res_ms;
+            bin_t += dt;
+            bin_count++;
+            
+            if (bin_count >= BIN_SIZE) {
+                if (bin_t > 0) {
+                    rates.push_back(bin_count / bin_t);  // counts per ms
+                }
+                bin_t = 0.0;
+                bin_count = 0;
+            }
+        }
+        
+        // Use median as background estimate (robust to bursts)
+        if (!rates.empty()) {
+            std::sort(rates.begin(), rates.end());
+            IB = rates[rates.size() / 2];
+            background_cps = IB * 1000.0;  // Convert back to cps
+        } else {
+            IB = 0.001;  // Fallback: 1 count/s
+            background_cps = 1.0;
+        }
+    } else {
+        IB = background_cps / 1000.0;
+    }
+    
+    // Auto-estimate S/B ratio if not provided (T=0)
+    if (signal_to_background_ratio <= 0) {
+        const int BIN_SIZE = 30;
+        I0 = 0.0;
+        double bin_t = 0.0;
+        
+        for (size_t i = 1; i <= N; ++i) {
+            if (i > 1) {
+                double dt = (get_macro_time_at(i) - get_macro_time_at(i-1)) * macro_res_ms;
+                bin_t += dt;
+            }
+            if (i % BIN_SIZE == 0) {
+                double tmp = BIN_SIZE / bin_t;
+                if (tmp > I0) I0 = tmp;
+                bin_t = 0.0;
+            }
+        }
+        I1 = I0 / exp(2.0) + IB;
+        signal_to_background_ratio = (I0 + IB) / IB;
+    } else {
+        I0 = (signal_to_background_ratio - 1.0) * IB;
+        I1 = I0 / exp(2.0) + IB;
+    }
+    
+    double KL_disc = (IB - I1) / I1 + log(I1 / IB);
+    double A = (1.0 - beta) / alpha;
+    double B = beta / (1.0 - alpha);
+    double hA = log(A) / (I1 - IB);
+    double hB = log(B) / (I1 - IB);
+    double hC = log(I1 / IB) / (I1 - IB);
+    
+    double tmp = alpha / 3.0 / (KL_disc + 1.0) / (KL_disc + 1.0) * log(1.0 / alpha);
+    double h = -log(tmp);
+    double Sa = log(I1 / IB);
+    double Sb = (I1 - IB);
+    size_t nd = static_cast<size_t>(std::round(log(1.0 / alpha) / KL_disc));
+    
+    std::vector<double> dt(N);
+    dt[0] = 0.0;
+    for (size_t i = 1; i < N; ++i) {
+        dt[i] = (get_macro_time_at(i) - get_macro_time_at(i-1)) * macro_res_ms;
+    }
+    
+    auto cusum = [&](size_t i, size_t f) -> size_t {
+        int dj = (i < f) ? 1 : -1;
+        size_t j = i;
+        size_t k = f;
+        double Sn = 0.0;
+        
+        while (j != f) {
+            Sn += Sa - dt[j] * Sb;
+            if (Sn < 0) {
+                Sn = 0.0;
+            } else if (Sn >= h) {
+                k = j;
+                break;
+            }
+            j += dj;
+        }
+        return k;
+    };
+    
+    auto sprt = [&](size_t i, size_t N_max) -> size_t {
+        size_t j = i;
+        size_t f = N_max;
+        size_t n = 0;
+        double Sn = 0.0;
+        
+        while (j < N_max) {
+            Sn += dt[j];
+            n++;
+            if (Sn <= (static_cast<double>(n) * hC - hA)) {
+                Sn = 0.0;
+                n = 0;
+            } else if (Sn > (static_cast<double>(n) * hC - hB)) {
+                f = j;
+                break;
+            }
+            j++;
+        }
+        return f;
+    };
+    
+    std::vector<long long> bursts;
+    bursts.reserve(1000);
+    
+    size_t kl = cusum(1, N);
+    
+    while (kl < N) {
+        size_t krp = sprt(kl, N);
+        if (krp >= N) break;
+        
+        size_t kl1 = cusum(krp, N);
+        if (kl1 >= N) break;
+        
+        size_t kr = (kl1 > nd) ? cusum(kl1 - nd, kl) : cusum(0, kl);
+        
+        if (kr >= kl) {
+            int64_t burst_size = static_cast<int64_t>(kr - kl + 1);
+            if (burst_size >= min_photons) {
+                bursts.push_back(static_cast<long long>(kl));
+                bursts.push_back(static_cast<long long>(kr));
+            }
+        }
+        
+        kl = kl1;
+    }
+    
     return bursts;
 }
 
@@ -2638,5 +2816,139 @@ void TTTR::update_microtime_resolution_after_lut() {
             std::clog << "Updated microtime resolution: " << old_resolution 
                       << " ns -> " << new_resolution << " ns (factor: " << avg_factor << ")" << std::endl;
         }
+    }
+}
+
+void TTTR::merge(const TTTR& other, uint64_t offset_macro_time, int32_t channel_offset, int strategy) {
+    if (is_verbose()) {
+        std::clog << "Merging TTTR data: " << other.n_valid_events 
+                  << " events into " << n_valid_events << " existing events"
+                  << " (strategy: " << (strategy == 0 ? "stack" : "interleave") << ")" << std::endl;
+    }
+    
+    // For now, disable compression during merge
+    bool was_compressed = macro_time_compression_enabled && macro_times_compressed;
+    if (was_compressed) {
+        decompress_macro_times();
+    }
+    
+    // Calculate new total size
+    size_t new_total_events = n_valid_events + other.n_valid_events;
+    
+    // Allocate new arrays
+    unsigned long long* new_macro_times = nullptr;
+    unsigned short* new_micro_times = nullptr;
+    signed char* new_routing_channels = nullptr;
+    signed char* new_event_types = nullptr;
+    
+    // Allocate memory for new arrays
+    new_macro_times = (unsigned long long*) malloc(new_total_events * sizeof(unsigned long long));
+    new_micro_times = (unsigned short*) malloc(new_total_events * sizeof(unsigned short));
+    new_routing_channels = (signed char*) malloc(new_total_events * sizeof(signed char));
+    new_event_types = (signed char*) malloc(new_total_events * sizeof(signed char));
+    
+    if (!new_macro_times || !new_micro_times || !new_routing_channels || !new_event_types) {
+        std::cerr << "Error: Failed to allocate memory for merge operation" << std::endl;
+        if (new_macro_times) free(new_macro_times);
+        if (new_micro_times) free(new_micro_times);
+        if (new_routing_channels) free(new_routing_channels);
+        if (new_event_types) free(new_event_types);
+        return;
+    }
+    
+    if (strategy == 0) {
+        // Stack merge: append events from other to this
+        size_t idx = 0;
+        
+        // Copy existing events
+        for (size_t i = 0; i < n_valid_events; i++) {
+            new_macro_times[i] = macro_times[i];
+            new_micro_times[i] = micro_times[i];
+            new_routing_channels[i] = routing_channels[i];
+            new_event_types[i] = event_types[i];
+            idx++;
+        }
+        
+        // Copy events from other TTTR with offsets
+        for (size_t i = 0; i < other.n_valid_events; i++) {
+            new_macro_times[idx] = other.macro_times[i] + offset_macro_time;
+            new_micro_times[idx] = other.micro_times[i];
+            
+            // Apply channel offset with bounds checking
+            int32_t new_channel = static_cast<int32_t>(other.routing_channels[i]) + channel_offset;
+            if (new_channel < -128) new_channel = -128;
+            if (new_channel > 127) new_channel = 127;
+            new_routing_channels[idx] = static_cast<signed char>(new_channel);
+            
+            new_event_types[idx] = other.event_types[i];
+            idx++;
+        }
+        
+    } else if (strategy == 1) {
+        // Interleave merge: merge by time, maintaining chronological order
+        std::vector<std::pair<uint64_t, std::tuple<size_t, bool>>> merge_indices;
+        
+        // Add indices from this TTTR
+        for (size_t i = 0; i < n_valid_events; i++) {
+            merge_indices.emplace_back(macro_times[i], std::make_tuple(i, false));
+        }
+        
+        // Add indices from other TTTR with offset
+        for (size_t i = 0; i < other.n_valid_events; i++) {
+            uint64_t offset_time = other.macro_times[i] + offset_macro_time;
+            merge_indices.emplace_back(offset_time, std::make_tuple(i, true));
+        }
+        
+        // Sort by macro time
+        std::sort(merge_indices.begin(), merge_indices.end(),
+                 [](const auto& a, const auto& b) { return a.first < b.first; });
+        
+        // Copy merged data
+        for (size_t i = 0; i < merge_indices.size(); i++) {
+            const auto& item = merge_indices[i];
+            const auto& index_info = item.second;
+            size_t original_idx = std::get<0>(index_info);
+            bool from_other = std::get<1>(index_info);
+            
+            if (from_other) {
+                // Copy from other TTTR
+                new_macro_times[i] = other.macro_times[original_idx] + offset_macro_time;
+                new_micro_times[i] = other.micro_times[original_idx];
+                
+                // Apply channel offset with bounds checking
+                int32_t new_channel = static_cast<int32_t>(other.routing_channels[original_idx]) + channel_offset;
+                if (new_channel < -128) new_channel = -128;
+                if (new_channel > 127) new_channel = 127;
+                new_routing_channels[i] = static_cast<signed char>(new_channel);
+                
+                new_event_types[i] = other.event_types[original_idx];
+            } else {
+                // Copy from this TTTR
+                new_macro_times[i] = macro_times[original_idx];
+                new_micro_times[i] = micro_times[original_idx];
+                new_routing_channels[i] = routing_channels[original_idx];
+                new_event_types[i] = event_types[original_idx];
+            }
+        }
+    }
+    
+    // Free old arrays
+    if (macro_times) free(macro_times);
+    if (micro_times) free(micro_times);
+    if (routing_channels) free(routing_channels);
+    if (event_types) free(event_types);
+    
+    // Update pointers
+    macro_times = new_macro_times;
+    micro_times = new_micro_times;
+    routing_channels = new_routing_channels;
+    event_types = new_event_types;
+    
+    // Update counts
+    n_valid_events = new_total_events;
+    n_records_in_file = new_total_events;
+    
+    if (is_verbose()) {
+        std::clog << "Merge completed: " << n_valid_events << " total events" << std::endl;
     }
 }
