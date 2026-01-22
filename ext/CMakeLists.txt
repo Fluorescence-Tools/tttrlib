@@ -62,9 +62,9 @@ IF(BUILD_PYTHON_INTERFACE)
     LINK_LIBRARIES(Python3::Module Python3::NumPy)
 
     # Handle where to install the resulting Python package
-    if(TTTRLIB_WHEEL_BUILD)
-        # When building a wheel (scikit-build-core/cibuildwheel), the CMake
-        # install prefix points into the wheel staging area.
+    if(CALL_FROM_SETUP_PY)
+        # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
+        # of the resulting wheel archive
         SET(MODULE_NAME ${PROJECT_NAME})
         set(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
     else()
@@ -100,19 +100,12 @@ IF(BUILD_PYTHON_INTERFACE)
             LANGUAGE python
             SOURCES python/tttrlib.i ${SRC_files}
     )
-    target_link_libraries(
+
+    TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
-            PRIVATE
             Python3::Module
             ${CMAKE_THREAD_LIBS_INIT}
     )
-
-    # Ensure HDF5 is linked into the Python extension when Photon-HDF5 support
-    # is enabled. On Windows, we may provide a manual HDF5 import library target
-    # (tttrlib_hdf5) from the top-level CMakeLists.txt.
-    if(BUILD_PHOTON_HDF AND TARGET tttrlib_hdf5)
-        target_link_libraries(${MODULE_NAME} PRIVATE tttrlib_hdf5)
-    endif()
     # On macOS, use dynamic lookup for Python symbols
     IF (APPLE)
         SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
@@ -149,6 +142,33 @@ IF(BUILD_PYTHON_INTERFACE)
             ARCHIVE DESTINATION ${MY_INSTALL_PREFIX}
             RUNTIME DESTINATION ${MY_INSTALL_PREFIX}
     )
+
+    # Configure HDF5 DLL bundling for Windows wheels (when using h5py)
+    if(BUILD_PHOTON_HDF AND HDF5_IS_FROM_H5PY AND WIN32)
+        message(STATUS "Configuring HDF5 DLL bundling for Windows wheel")
+
+        # Find the Python extension target
+        if(TARGET ${MODULE_NAME})
+            # Get the Python extension's install directory
+            # For scikit-build-core, the extension is installed to ${MY_INSTALL_PREFIX}
+            # which should be the same directory as the Python module
+
+            message(STATUS "Python extension install dir: ${MY_INSTALL_PREFIX}")
+
+            # Install HDF5 DLLs to same directory as Python extension (for Windows)
+            foreach(dll_path ${HDF5_DLL_PATHS})
+                install(FILES ${dll_path}
+                        DESTINATION "${MY_INSTALL_PREFIX}"
+                        COMPONENT bindings
+                )
+                message(STATUS "Bundling HDF5 DLL: ${dll_path}")
+            endforeach()
+        else()
+            message(WARNING "Python extension target '${MODULE_NAME}' not found - DLL bundling skipped")
+        endif()
+    else()
+        message(STATUS "HDF5 DLL bundling not needed (Linux/macOS or traditional build)")
+    endif()
 
 ENDIF(BUILD_PYTHON_INTERFACE)
 

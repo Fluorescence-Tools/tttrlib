@@ -1,11 +1,11 @@
 [project]
-version = "0.26.1"
+version = "0.26.0"
 name = "tttrlib"
 requires-python = ">=3.9"
 description = "Read, write & process time-tagged time-resolved (TTTR) data."
 readme = "README.md"
 authors = [{ name = "Thomas-Otavio Peulen", email = "thomas.otavio.peulen@gmail.com" }]
-license = "BSD-3-Clause"
+license = { text = "BSD-3-Clause" }
 
 keywords = [
     "fluorescence",
@@ -33,7 +33,6 @@ classifiers = [
 
 dependencies = [
     "numpy",
-    "h5py",
 ]
 
 [project.optional-dependencies]
@@ -53,73 +52,83 @@ repository = "https://github.com/fluorescence-tools/tttrlib.git"
 [build-system]
 requires = [
     "scikit-build-core>=0.10",
-    "cmake",
-    "ninja",
-    # Build against NumPy 2.x headers so wheels are compatible with both
-    # NumPy 1.x and 2.x at runtime.
-    "numpy>=2.0",
-    # Provide SWIG binary via PyPI wheels.
+    "numpy",
     "swig<4.2",
+    "h5py>=3.10",  # Required for HDF5 DLLs and headers during build
 ]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
-# Install the compiled extension + generated wrapper into the package dir.
-wheel.install-dir = "tttrlib"
-# Include the pure-Python package sources from src/.
-wheel.packages = ["src/tttrlib"]
+cmake.version = ">=3.13"
+cmake.args = [
+    "-DCALL_FROM_SETUP_PY:BOOL=ON",
+    "-DBUILD_PYTHON_DOCS:BOOL=OFF",
+    "-DBUILD_PYTHON_INTERFACE:BOOL=ON",
+    "-DWITH_AVX:BOOL=OFF",
+    "-DBUILD_R_INTERFACE:BOOL=OFF",
+    "-DBUILD_LOGIC_ANALYZER:BOOL=OFF",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DBUILD_PHOTON_HDF:BOOL=ON",
+    "-DBUILD_LIBRARY:BOOL=OFF",
+    "-DCMAKE_C_VISIBILITY_PRESET=hidden",
+    "-DCMAKE_CXX_VISIBILITY_PRESET=hidden",
+    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+    "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
+]
+wheel.packages = ["tttrlib"]
+wheel.py-api = "py3"
+wheel.expand-macos-universal-tags = true
+build-dir = "build/{wheel_tag}"
+install.strip = true
+install.components = ["bindings"]
 
-[tool.scikit-build.cmake.define]
-BUILD_PYTHON_INTERFACE = "ON"
-BUILD_PYTHON_DOCS = "OFF"
-BUILD_LIBRARY = "OFF"
-BUILD_R_INTERFACE = "OFF"
-BUILD_PHOTON_HDF = "ON"
-WITH_AVX = "OFF"
-TTTRLIB_WHEEL_BUILD = "ON"
+[tool.scikit-build.metadata]
+version.provider = "scikit_build_core.metadata.setuptools_scm"
+version.write-to = "tttrlib/_version.py"
 
 [tool.cibuildwheel]
 build-verbosity = 2
-# Skip: PyPy, 32-bit, musllinux, Python 3.14+
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp314-*", "cp314t-*"]
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp313-*", "cp314-*", "cp314t-*"]
 test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
 [tool.cibuildwheel.macos]
-# Build only for x86_64 (native arch on macos-13 runner)
-# arm64 cross-compilation requires additional setup
 archs = ["x86_64"]
 before-all = [
     "brew install cmake hdf5",
 ]
 before-build = "pip install delocate"
-# delocate automatically bundles HDF5 libraries
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "13.0"
 CMAKE_PREFIX_PATH = "/usr/local"
+CMAKE_OSX_ARCHITECTURES = "x86_64"
+CMAKE_INSTALL_RPATH = "@loader_path"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
 before-all = [
-    "dnf install -y cmake hdf5-devel"
+    "dnf install -y cmake hdf5-devel",
 ]
 repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"
 
+[tool.cibuildwheel.linux.environment]
+CMAKE_INSTALL_RPATH = "$ORIGIN"
+CMAKE_PREFIX_PATH = "/usr"
+
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
-before-all = "vcpkg install hdf5:x64-windows"
-before-build = "pip install delvewheel"
-repair-wheel-command = "python -m delvewheel repair --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"
+before-build = "vcpkg install hdf5:x64-windows && pip install delvewheel"
+# delvewheel will automatically bundle HDF5 DLLs from h5py
+repair-wheel-command = "python -m delvewheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
-# Use Visual Studio generator instead of Ninja
 CMAKE_GENERATOR = "Visual Studio 17 2022"
-
-# Help CMake find Python in the cibuildwheel environment
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
-
-# Help CMake find HDF5
-CMAKE_PREFIX_PATH = "C:/vcpkg/installed/x64-windows"
+CMAKE_PREFIX_PATH = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows"
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
+# Set HDF5 source to use h5py for DLLs but vcpkg for headers
+TTTRLIB_HDF5_SOURCE = "H5PY_VCPKG_HEADERS"
+TTTRLIB_HDF5_HEADERS_DIR = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/include"
