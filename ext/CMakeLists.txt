@@ -25,7 +25,7 @@ IF(BUILD_PYTHON_INTERFACE)
         #This will be the main output of our command
         execute_process(COMMAND ${DOXYGEN_EXECUTABLE} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doc OUTPUT_QUIET)
         execute_process(
-                COMMAND python ${CMAKE_SOURCE_DIR}/tools/doxy2swig.py ${CMAKE_SOURCE_DIR}/doc/_build/xml/index.xml ${CMAKE_SOURCE_DIR}/ext/documentation.i
+                COMMAND python ${CMAKE_SOURCE_DIR}/tools/doxy2swig.py ${CMAKE_SOURCE_DIR}/doc/_doxygen_build/xml/index.xml ${CMAKE_SOURCE_DIR}/ext/documentation.i
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     ENDIF()
 
