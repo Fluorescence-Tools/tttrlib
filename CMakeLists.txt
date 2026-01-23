@@ -73,7 +73,12 @@ ELSE()
 ENDIF()
 
 ################################################################################
-# HDF5 Support (Mandatory) - Dual Source Approach
+# HDF5 Support (Mandatory)
+################################################################################
+FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
+
+################################################################################
+# Build type specific optimizations
 ################################################################################
 
 IF(BUILD_PHOTON_HDF)
@@ -184,7 +189,7 @@ print(h5py.version.hdf5_version if hasattr(h5py.version, 'hdf5_version') else 'N
         message(STATUS "Found HDF5 library: ${HDF5_LIB_PATH}")
 
         # Find HDF5 headers from system/vcpkg (required for both H5PY and H5PY_VCPKG_HEADERS)
-        find_package(HDF5 COMPONENTS C HL)
+        find_package(HDF5 COMPONENTS C)
 
         if(NOT HDF5_FOUND)
             message(WARNING "HDF5 headers not found from system/vcpkg. For testing, falling back to traditional HDF5 search.")
@@ -195,18 +200,20 @@ print(h5py.version.hdf5_version if hasattr(h5py.version, 'hdf5_version') else 'N
 
             # Fall back to traditional HDF5 search for testing
             set(HDF5_IS_FROM_H5PY FALSE)
-            find_package(HDF5 REQUIRED COMPONENTS C HL)
+            find_package(HDF5 REQUIRED COMPONENTS C)
             set(HDF5_IS_FROM_H5PY TRUE)  # Reset for our logic
         endif()
 
         message(STATUS "Using HDF5 headers from system/vcpkg: ${HDF5_INCLUDE_DIRS}")
 
         # Create HDF5::HDF5 imported target (link against h5py DLLs but use system headers)
-        add_library(HDF5::HDF5 SHARED IMPORTED)
-        set_property(TARGET HDF5::HDF5 PROPERTY IMPORTED_LOCATION "${HDF5_LIB_PATH}")
-        set_target_properties(HDF5::HDF5 PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}"
-        )
+        if(NOT TARGET HDF5::HDF5)
+            add_library(HDF5::HDF5 SHARED IMPORTED)
+            set_property(TARGET HDF5::HDF5 PROPERTY IMPORTED_LOCATION "${HDF5_LIB_PATH}")
+            set_target_properties(HDF5::HDF5 PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}"
+            )
+        endif()
 
         # Store paths for DLL bundling during install
         set(HDF5_DLL_PATHS "${HDF5_LIB_PATH}")
@@ -241,7 +248,7 @@ print(h5py.version.hdf5_version if hasattr(h5py.version, 'hdf5_version') else 'N
         set(HDF5_IS_FROM_H5PY FALSE)
 
         # Use standard FindHDF5 module
-        find_package(HDF5 REQUIRED COMPONENTS C HL)
+        find_package(HDF5 REQUIRED COMPONENTS C)
 
         if(NOT HDF5_FOUND)
             message(FATAL_ERROR "HDF5 not found from traditional sources. Please install:")
