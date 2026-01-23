@@ -36,6 +36,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+test = [
+    "pytest",
+    "scipy"
+]
 examples = [
     "matplotlib",
     "scikit-image",
