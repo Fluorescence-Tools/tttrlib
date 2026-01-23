@@ -749,24 +749,49 @@ public:
      }
 
     /**
-    * Sliding window burst search.
-    *
-    * Finds bursts in the macro time array. A burst starts when the photon rate
-    * is above a minimum threshold, and ends when the rate falls below the same
-    * threshold. The rate-threshold is defined by the ratio `m`/`T` (`m` photons
-    * in a time interval `T`). A burst is discarded if it has less than `L`
-    * photons.
-    *
-    * Arguments:
-    *     L (int): minimum number of photons in a burst. Bursts with size
-    *         (or counts) < L are discarded.
-    *     m (int): number of consecutive photons used to compute the rate.
-    *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
-    *
-    * Returns:
-    *     vector<int64_t>: A vector of interleaved start and stop indices.
-    */
-    std::vector<long long> burst_search(int L, int m, double T);
+     * Sliding window burst search.
+     *
+     * Finds bursts in the macro time array. A burst starts when the photon rate
+     * is above a minimum threshold, and ends when the rate falls below the same
+     * threshold. The rate-threshold is defined by the ratio `m`/`T` (`m` photons
+     * in a time interval `T`). A burst is discarded if it has less than `L`
+     * photons.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst. Bursts with size
+     *         (or counts) < L are discarded.
+     *     m (int): number of consecutive photons used to compute the rate.
+     *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
+     *     mode (string): "sliding_window" or "cusum_sprt" (default: "sliding_window")
+     *     alpha (double): SPRT alpha parameter (default: 0.05)
+     *     beta (double): SPRT beta parameter (default: 0.05)
+     *
+     * Returns:
+     *     vector<int64_t>: A vector of interleaved start and stop indices.
+     */
+    std::vector<long long> burst_search(
+        int L, int m, double T, 
+        const std::string& mode = "sliding_window",
+        double alpha = 0.05,
+        double beta = 0.05
+    );
+
+    std::vector<long long> burst_search_sliding_window(int L, int m, double T);
+
+    std::vector<long long> burst_search_cusum_sprt(
+        int min_photons,
+        double background_cps,
+        double signal_to_background_ratio,
+        double alpha = 0.05,
+        double beta = 0.05
+    );
+
+    void merge(
+        const TTTR& other, 
+        uint64_t offset_macro_time, 
+        int32_t channel_offset, 
+        int strategy = 0
+    );
 
     /*!
      * \brief Retrieves the used routing channel numbers from the TTTR data.
