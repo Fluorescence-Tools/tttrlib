@@ -183,7 +183,7 @@ public:
      * 
      * \param combine_func Custom function for combining TTTR data
      */
-    void set_custom_combine_function(std::function<void(const std::vector<LayerNode*>&, LayerNode*)> combine_func);
+    void set_custom_combine_function(const std::function<void(const std::vector<LayerNode*>&, LayerNode*)>& combine_func);
 
     /*!
      * \brief Execute combine operation from multiple parents to single child.
