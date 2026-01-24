@@ -99,11 +99,12 @@ void LayerNode::set_combine_strategy(uint32_t strategy, const std::map<std::stri
     invalidate_tttr_data();
 }
 
-void LayerNode::set_custom_combine_function(std::function<void(const std::vector<LayerNode*>&, LayerNode*)> combine_func) {
+void LayerNode::set_custom_combine_function(const std::function<void(const std::vector<LayerNode*>&, LayerNode*)>& combine_func) {
     custom_combine_func_ = combine_func;
     properties_.combine_strategy = COMBINE_CUSTOM;
     invalidate_tttr_data();
 }
+
 
 void LayerNode::execute_combine(const std::vector<LayerNode*>& parent_nodes) {
     if (parent_nodes.empty()) {
