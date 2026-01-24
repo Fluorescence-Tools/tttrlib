@@ -788,8 +788,8 @@ public:
 
     void merge(
         const TTTR& other, 
-        uint64_t offset_macro_time, 
-        int32_t channel_offset, 
+        unsigned long long offset_macro_time, 
+        int channel_offset, 
         int strategy = 0
     );
 

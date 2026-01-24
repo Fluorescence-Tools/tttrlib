@@ -2819,7 +2819,7 @@ void TTTR::update_microtime_resolution_after_lut() {
     }
 }
 
-void TTTR::merge(const TTTR& other, uint64_t offset_macro_time, int32_t channel_offset, int strategy) {
+void TTTR::merge(const TTTR& other, unsigned long long offset_macro_time, int channel_offset, int strategy) {
     if (is_verbose()) {
         std::clog << "Merging TTTR data: " << other.n_valid_events 
                   << " events into " << n_valid_events << " existing events"
@@ -2841,11 +2841,23 @@ void TTTR::merge(const TTTR& other, uint64_t offset_macro_time, int32_t channel_
     signed char* new_routing_channels = nullptr;
     signed char* new_event_types = nullptr;
     
-    // Allocate memory for new arrays
-    new_macro_times = (unsigned long long*) malloc(new_total_events * sizeof(unsigned long long));
-    new_micro_times = (unsigned short*) malloc(new_total_events * sizeof(unsigned short));
-    new_routing_channels = (signed char*) malloc(new_total_events * sizeof(signed char));
-    new_event_types = (signed char*) malloc(new_total_events * sizeof(signed char));
+    // Allocate memory for new arrays using appropriate allocator
+    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
+        new_macro_times = (unsigned long long*) malloc(new_total_events * sizeof(unsigned long long));
+        new_micro_times = (unsigned short*) malloc(new_total_events * sizeof(unsigned short));
+        new_routing_channels = (signed char*) malloc(new_total_events * sizeof(signed char));
+        new_event_types = (signed char*) malloc(new_total_events * sizeof(signed char));
+    } else {
+        #ifdef BUILD_PHOTON_HDF
+        new_macro_times = (unsigned long long*) H5allocate_memory(new_total_events * sizeof(unsigned long long), false);
+        new_micro_times = (unsigned short*) H5allocate_memory(new_total_events * sizeof(unsigned short), false);
+        new_routing_channels = (signed char*) H5allocate_memory(new_total_events * sizeof(signed char), false);
+        new_event_types = (signed char*) H5allocate_memory(new_total_events * sizeof(signed char), false);
+        #else
+        std::cerr << "Error: PHOTON_HDF_CONTAINER set but HDF5 support not built" << std::endl;
+        return;
+        #endif
+    }
     
     if (!new_macro_times || !new_micro_times || !new_routing_channels || !new_event_types) {
         std::cerr << "Error: Failed to allocate memory for merge operation" << std::endl;
@@ -2932,11 +2944,8 @@ void TTTR::merge(const TTTR& other, uint64_t offset_macro_time, int32_t channel_
         }
     }
     
-    // Free old arrays
-    if (macro_times) free(macro_times);
-    if (micro_times) free(micro_times);
-    if (routing_channels) free(routing_channels);
-    if (event_types) free(event_types);
+    // Free old arrays using the proper deallocator
+    deallocate_memory_of_records();
     
     // Update pointers
     macro_times = new_macro_times;
@@ -2947,6 +2956,7 @@ void TTTR::merge(const TTTR& other, uint64_t offset_macro_time, int32_t channel_
     // Update counts
     n_valid_events = new_total_events;
     n_records_in_file = new_total_events;
+    capacity = new_total_events;
     
     if (is_verbose()) {
         std::clog << "Merge completed: " << n_valid_events << " total events" << std::endl;
