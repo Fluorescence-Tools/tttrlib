@@ -103,23 +103,48 @@ void CorrelatorPhotonStream::set_weights(
         std::vector<unsigned int> micro_times,
         std::vector<signed char> routing_channels
 ){
+    const std::vector<unsigned int>* p_micro_times = &micro_times;
+    const std::vector<signed char>* p_routing_channels = &routing_channels;
+    
+    // Local storage in case we need to copy from TTTR
+    std::vector<unsigned int> local_micro_times;
+    std::vector<signed char> local_routing_channels;
+
     // use the tttr
     if(tttr != nullptr){
         int n = static_cast<int>(tttr->size());
-        if(routing_channels.empty()){
-            routing_channels.assign(tttr->routing_channels, tttr->routing_channels + n);
+        if(p_routing_channels->empty()){
+            local_routing_channels.assign(tttr->routing_channels, tttr->routing_channels + n);
+            p_routing_channels = &local_routing_channels;
         }
-        if(micro_times.empty()){
-            micro_times.assign(tttr->micro_times, tttr->micro_times + n);
+        if(p_micro_times->empty()){
+            local_micro_times.assign(tttr->micro_times, tttr->micro_times + n);
+            p_micro_times = &local_micro_times;
         }
     }
     // make sure that the weights are of the right size
-    resize(micro_times.size());
+    resize(p_micro_times->size());
+    
+    // Build fast lookup table for routing channels
+    // Valid routing channels are [-128, 127], mapped to [0, 255] via (unsigned char) cast
+    const std::vector<double>* fast_lookup[256] = {nullptr};
+    for(const auto& kv : filter) {
+        fast_lookup[static_cast<unsigned char>(kv.first)] = &kv.second;
+    }
+
     // lookup the weights ch
     size_t idx = 0;
-    for(auto r: routing_channels){
-        auto m = micro_times[idx];
-        weights[idx] = filter.at(r)[m];
+    for(auto r: *p_routing_channels){
+        unsigned int m = (*p_micro_times)[idx];
+        
+        // Use fast lookup if possible
+        const std::vector<double>* vec = fast_lookup[static_cast<unsigned char>(r)];
+        if (vec != nullptr) {
+            weights[idx] = (*vec)[m];
+        } else {
+            // Fallback to map.at() to preserve exception behavior for missing keys
+            weights[idx] = filter.at(r)[m];
+        }
         idx++;
     }
 }
