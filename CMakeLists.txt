@@ -77,7 +77,7 @@ ENDIF()
 ################################################################################
 IF(BUILD_PHOTON_HDF)
     ADD_COMPILE_DEFINITIONS(BUILD_PHOTON_HDF)
-    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C HL)
+    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
 ENDIF()
 
 # Build type specific optimizations
