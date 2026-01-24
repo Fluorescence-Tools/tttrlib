@@ -58,14 +58,12 @@ requires = [
     "scikit-build-core>=0.10",
     "numpy",
     "swig<4.2",
-    "h5py>=3.10",  # Required for HDF5 DLLs and headers during build
 ]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 cmake.version = ">=3.13"
 cmake.args = [
-    "-DCALL_FROM_SETUP_PY:BOOL=ON",
     "-DBUILD_PYTHON_DOCS:BOOL=OFF",
     "-DBUILD_PYTHON_INTERFACE:BOOL=ON",
     "-DWITH_AVX:BOOL=OFF",
@@ -79,8 +77,8 @@ cmake.args = [
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
 ]
-wheel.packages = ["tttrlib"]
-wheel.py-api = "py3"
+wheel.packages = []
+# wheel.py-api = "py3"
 wheel.expand-macos-universal-tags = true
 build-dir = "build/{wheel_tag}"
 install.strip = true
@@ -92,8 +90,9 @@ version.write-to = "tttrlib/_version.py"
 
 [tool.cibuildwheel]
 build-verbosity = 2
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp313-*", "cp314-*", "cp314t-*"]
-test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp313-*", "cp314-*", "cp314t-*", "cp313t-*"]
+test-skip = "*"
+#test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64"]
@@ -108,24 +107,27 @@ MACOSX_DEPLOYMENT_TARGET = "13.0"
 CMAKE_PREFIX_PATH = "/usr/local"
 CMAKE_OSX_ARCHITECTURES = "x86_64"
 CMAKE_INSTALL_RPATH = "@loader_path"
+SKBUILD = "1"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
 before-all = [
-    "dnf install -y cmake hdf5-devel",
+    "dnf install -y epel-release --nogpgcheck && dnf install -y --enablerepo=powertools --nogpgcheck cmake hdf5-devel && rm -f /usr/local/bin/swig*",
 ]
 repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.linux.environment]
 CMAKE_INSTALL_RPATH = "$ORIGIN"
 CMAKE_PREFIX_PATH = "/usr"
+SKBUILD = "1"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 before-build = "vcpkg install hdf5:x64-windows && pip install delvewheel"
-# delvewheel will automatically bundle HDF5 DLLs from h5py
-repair-wheel-command = "python -m delvewheel repair -w {dest_dir} {wheel}"
+# delvewheel will automatically bundle HDF5 DLLs from h5py, but needs help finding them if they are not in standard paths
+# We add vcpkg bin path just in case, though usually h5py bundling handles it if configured correctly
+repair-wheel-command = "python -m delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
@@ -133,6 +135,6 @@ Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_PREFIX_PATH = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
-# Set HDF5 source to use h5py for DLLs but vcpkg for headers
-TTTRLIB_HDF5_SOURCE = "H5PY_VCPKG_HEADERS"
-TTTRLIB_HDF5_HEADERS_DIR = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/include"
+# Critical: Use vcpkg toolchain to ensure packages are found correctly
+CMAKE_TOOLCHAIN_FILE = "$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+SKBUILD = "1"

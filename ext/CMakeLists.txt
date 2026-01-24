@@ -62,11 +62,11 @@ IF(BUILD_PYTHON_INTERFACE)
     LINK_LIBRARIES(Python3::Module Python3::NumPy)
 
     # Handle where to install the resulting Python package
-    if(CALL_FROM_SETUP_PY)
+    if(DEFINED ENV{SKBUILD})
         # The CMakeExtension will set CMAKE_INSTALL_PREFIX to the root
         # of the resulting wheel archive
         SET(MODULE_NAME ${PROJECT_NAME})
-        set(MY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+        set(MY_INSTALL_PREFIX ".")
     else()
         # The Python package is installed directly in the folder of the
         # detected interpreter (system, user, or virtualenv)
@@ -100,6 +100,19 @@ IF(BUILD_PYTHON_INTERFACE)
             LANGUAGE python
             SOURCES python/tttrlib.i ${SRC_files}
     )
+
+    # Force correct Python extension suffix for auditwheel compatibility
+    if(Python3_EXECUTABLE)
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO') or '.so')"
+            OUTPUT_VARIABLE PYTHON_EXT_SUFFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(PYTHON_EXT_SUFFIX)
+            MESSAGE(STATUS "Setting Python extension suffix to: ${PYTHON_EXT_SUFFIX}")
+            set_target_properties(${MODULE_NAME} PROPERTIES SUFFIX "${PYTHON_EXT_SUFFIX}")
+        endif()
+    endif()
 
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
@@ -157,11 +170,12 @@ IF(BUILD_PYTHON_INTERFACE)
 
             # Install HDF5 DLLs to same directory as Python extension (for Windows)
             foreach(dll_path ${HDF5_DLL_PATHS})
-                install(FILES ${dll_path}
+                file(TO_CMAKE_PATH "${dll_path}" dll_path_cmake)
+                install(FILES "${dll_path_cmake}"
                         DESTINATION "${MY_INSTALL_PREFIX}"
                         COMPONENT bindings
                 )
-                message(STATUS "Bundling HDF5 DLL: ${dll_path}")
+                message(STATUS "Bundling HDF5 DLL: ${dll_path_cmake}")
             endforeach()
         else()
             message(WARNING "Python extension target '${MODULE_NAME}' not found - DLL bundling skipped")
