@@ -1,5 +1,3 @@
-# Update submodules
-git submodule update --recursive --init --remote
 
 if [[ "${target_platform}" == osx-* ]]; then
   # See https://conda-forge.org/docs/maintainer/knowledge_base.html#newer-c-features-with-old-sdk
