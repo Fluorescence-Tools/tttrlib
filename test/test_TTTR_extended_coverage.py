@@ -326,7 +326,8 @@ class TestTTTREdgeCases(unittest.TestCase):
         self.assertIn('TTTR', repr_str)
         # Handle both Windows backslashes and POSIX forward slashes
         filename_normalized = settings["spc132_filename"].replace('\\', '/')
-        self.assertIn(filename_normalized, repr_str)
+        repr_str_normalized = repr_str.replace('\\', '/')
+        self.assertIn(filename_normalized, repr_str_normalized)
 
     def test_size_method(self):
         """Test size() method"""

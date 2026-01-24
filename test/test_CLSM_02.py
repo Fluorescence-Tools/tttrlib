@@ -89,7 +89,7 @@ class TestCLSM(unittest.TestCase):
             **reading_parameter
         )
         img = clsm_image.intensity.sum(axis=0)
-        fn = './test/data/reference/img_intensity_image_sp5.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_intensity_image_sp5.npy')
         if make_reference:
             np.save(fn, img)
         self.assertEqual(np.allclose(np.load(fn), img), True)
@@ -131,7 +131,7 @@ class TestCLSM(unittest.TestCase):
         dt = header.micro_time_resolution
         x_axis = np.arange(counts.shape[0]) * dt
         decay = np.vstack([x_axis, counts]).T
-        fn = './test/data/reference/img_decay_histogram.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_histogram.npy')
         if make_reference:
             np.save(fn, decay)
         self.assertEqual(np.allclose(np.load(fn), decay), True)
@@ -149,7 +149,7 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
 
-        fn = './test/data/reference/img_ref_intensity.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_intensity.npy')
         img = clsm_image_1.get_intensity().sum(axis=0)
         if make_reference:
             np.save(fn, img)
@@ -167,7 +167,7 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[0]
         )
-        fn = './test/data/reference/img_ref_mean_tac.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_mean_tac.npy')
         img = clsm_image_1.get_mean_micro_time(tttr_data=data, minimum_number_of_photons=1)
         img = np.clip(img, 0, np.inf).sum(axis=0)
         if make_reference:
@@ -179,7 +179,7 @@ class TestCLSM(unittest.TestCase):
             micro_time_coarsening=tac_coarsening,
             stack_frames=True
         ).sum(axis=0)
-        fn = './test/data/reference/img_ref_decay_image.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_decay_image.npy')
         if make_reference:
             np.save(fn, img)
         np.testing.assert_array_almost_equal(img, np.load(fn))
@@ -201,7 +201,7 @@ class TestCLSM(unittest.TestCase):
             minimum_number_of_photons=4,
             stack_frames=True
         )
-        fn = './test/data/reference/img_decay_mean_tau.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_mean_tau.npy')
         if make_reference:
             np.save(fn, img)
         ref = np.load(fn)
@@ -224,7 +224,7 @@ class TestCLSM(unittest.TestCase):
             minimum_number_of_photons=4,
             stack_frames=False
         )
-        fn = './test/data/reference/img_decay_mean_tau_2.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_mean_tau_2.npy')
         if make_reference:
             np.save(fn, img)
         ref = np.load(fn)

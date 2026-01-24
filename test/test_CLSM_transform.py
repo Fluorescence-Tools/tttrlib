@@ -135,7 +135,7 @@ class TestCLSMTransform(unittest.TestCase):
         print(img_transformed)
 
         # compare to reference images
-        fn = './test/data/reference/img_ref_clsm_binning.tif'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_clsm_binning.tif')
         if self.make_reference:
             skimage.io.imsave(fn, img_transformed, check_contrast=False, imagej=True)
         np.testing.assert_array_almost_equal(skimage.io.imread(fn), img_transformed)
