@@ -89,21 +89,21 @@ void TTTRMask::select_microtime_ranges(
     
     bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
     
-#ifdef _OPENMP
+    #ifdef _OPENMP
     if (use_openmp && n > 100000) {
         #pragma omp parallel for schedule(static)
         for(int i = 0; i < n; i++){
-            unsigned short micro_time = micro_times[i];
-            // Mask photons that are OUTSIDE valid ranges (out_of_bounds = !valid)
-            masked[i] = masked[i] || !micro_time_valid[micro_time];
+            if (!micro_time_valid[micro_times[i]]) {
+                masked[i] = 1;
+            }
         }
     } else
 #endif
     {
         for(int i = 0; i < n; i++){
-            unsigned short micro_time = micro_times[i];
-            // Mask photons that are OUTSIDE valid ranges (out_of_bounds = !valid)
-            masked[i] = masked[i] || !micro_time_valid[micro_time];
+            if (!micro_time_valid[micro_times[i]]) {
+                masked[i] = 1;
+            }
         }
     }
 }
