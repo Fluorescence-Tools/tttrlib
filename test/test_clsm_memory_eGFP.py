@@ -8,6 +8,7 @@ from __future__ import division
 
 import os
 import unittest
+from typing import Optional
 from pathlib import Path
 import gc
 
@@ -17,7 +18,7 @@ import tttrlib
 from test_settings import settings, DATA_AVAILABLE, DATA_ROOT  # type: ignore
 
 
-def _find_egfp_file() -> str | None:
+def _find_egfp_file() -> Optional[str]:
     """Try to find an eGFP/Zeiss PTU file for this test.
 
     Priority:
