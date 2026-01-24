@@ -24,6 +24,7 @@ leftovers/
 .boost_env
 playground
 junk/
+venv
 
 # Documentation and tools
 doc/_*
