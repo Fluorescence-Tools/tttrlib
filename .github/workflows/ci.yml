@@ -1,0 +1,228 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+env:
+  DEFAULT_PYTHON: "3.10"
+  CIBW_VERSION: "2.22.0"
+  # Space separated list of python versions for main build
+  MAIN_PY_VERSIONS: "3.9 3.10 3.11 3.12 3.13"
+
+jobs:
+  setup:
+    name: Setup Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      pip_matrix: ${{ steps.set-matrix.outputs.pip_matrix }}
+      conda_matrix: ${{ steps.set-matrix.outputs.conda_matrix }}
+      test_matrix: ${{ steps.set-matrix.outputs.test_matrix }}
+      is_main: ${{ steps.check-main.outputs.is_main }}
+    steps:
+      - id: check-main
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "is_main=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_main=false" >> $GITHUB_OUTPUT
+          fi
+
+      - id: set-matrix
+        run: |
+          IS_MAIN="${{ github.ref == 'refs/heads/main' }}"
+          if [[ "$IS_MAIN" == "true" ]]; then
+            # Full build for main: Linux, macOS, Windows
+            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":[\"self-hosted\",\"Linux\"],\"artifact_os\":\"ubuntu-latest\"},{\"runner\":[\"self-hosted\",\"macOS\"],\"artifact_os\":\"macos-latest\"},{\"runner\":[\"self-hosted\",\"Windows\"],\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
+          else
+            # Cheap build for non-main: Linux only
+            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":[\"self-hosted\",\"Linux\"],\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
+          fi
+
+  build_pip:
+    name: Pip Build ${{ matrix.os }}
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.setup.outputs.pip_matrix)}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }}
+
+      - name: Set CIBW environment
+        shell: bash
+        run: |
+          echo "CIBW_SKIP=pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-*" >> $GITHUB_ENV
+          if [[ "${{ needs.setup.outputs.is_main }}" == "true" ]]; then
+            # Convert "3.9 3.10" to "cp39-* cp310-*"
+            BUILD_SPEC=$(echo "${{ env.MAIN_PY_VERSIONS }}" | sed 's/\([0-9]\)\.\([0-9]*\)/cp\1\2-*/g')
+            echo "CIBW_BUILD=$BUILD_SPEC" >> $GITHUB_ENV
+          else
+            PY_VER_SHORT=$(echo "${{ env.DEFAULT_PYTHON }}" | sed 's/\.//')
+            echo "CIBW_BUILD=cp${PY_VER_SHORT}-*" >> $GITHUB_ENV
+          fi
+
+      - name: Install HDF5 (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          vcpkg install hdf5:x64-windows
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  test_pip:
+    name: Pip Test ${{ matrix.runner[1] }}
+    needs: [setup, build_pip]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.setup.outputs.test_matrix)}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pip-wheels-${{ matrix.artifact_os }}
+          path: wheelhouse
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Cache test data
+        id: cache-test-data
+        uses: actions/cache@v4
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+
+      - name: Download Test Data
+        if: steps.cache-test-data.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install requests
+          python test/download_test_data.py --output-dir ./tttr-data
+          python test/download_verify_test_data.py --output-dir ./tttr-data
+
+      - name: Install and Test
+        shell: bash
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python -m pip install --upgrade pip
+          PY_VER_SHORT=$(echo "${{ env.DEFAULT_PYTHON }}" | sed 's/\.//')
+          python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
+          python -m pip install pytest scipy
+          pytest
+
+  build_conda:
+    name: Conda Build ${{ matrix.os }}
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.setup.outputs.conda_matrix)}}
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          activate-environment: build_env
+          miniforge-version: latest
+          channels: conda-forge
+          channel-priority: strict
+          
+      - name: Install conda-build
+        run: |
+          conda install -y conda-build conda-verify anaconda-client boa
+
+      - name: Build Conda packages
+        run: |
+          if [[ "${{ needs.setup.outputs.is_main }}" == "true" ]]; then
+            PY_VERSIONS="${{ env.MAIN_PY_VERSIONS }}"
+          else
+            PY_VERSIONS="${{ env.DEFAULT_PYTHON }}"
+          fi
+          for VER in $PY_VERSIONS; do
+            echo "Building for Python $VER on ${{ matrix.os }}"
+            conda build conda-recipe --python $VER --output-folder ./conda-bld -c conda-forge --override-channels
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-${{ matrix.os }}
+          path: ./conda-bld
+
+  test_conda:
+    name: Conda Test ${{ matrix.runner[1] }}
+    needs: [setup, build_conda]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.setup.outputs.test_matrix)}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages-${{ matrix.artifact_os }}
+          path: conda-bld
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          activate-environment: test_env
+          miniforge-version: latest
+          channels: conda-forge
+          channel-priority: strict
+      - name: Cache test data
+        id: cache-test-data
+        uses: actions/cache@v4
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+      - name: Download Test Data
+        if: steps.cache-test-data.outputs.cache-hit != 'true'
+        shell: bash -l {0}
+        run: |
+          python -m pip install requests
+          python test/download_test_data.py --output-dir ./tttr-data
+          python test/download_verify_test_data.py --output-dir ./tttr-data
+      - name: Install and Test
+        shell: bash -l {0}
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          conda install -y -c ./conda-bld/ tttrlib
+          conda install -y pytest scipy
+          pytest
