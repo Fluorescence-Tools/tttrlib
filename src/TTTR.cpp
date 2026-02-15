@@ -1224,8 +1224,12 @@ void TTTR::get_time_window_ranges(
         double macro_time_calibration,
         bool invert
         ){
-    if(macro_time_calibration < 0){
-        macro_time_calibration = header->get_macro_time_resolution();
+    if(macro_time_calibration < 0.0){
+        if(header != nullptr){
+            macro_time_calibration = header->get_macro_time_resolution();
+        } else {
+            macro_time_calibration = 1.0;
+        }
     }
     // If using compression, extract macro times first
     if (macro_time_compression_enabled) {
@@ -2911,8 +2915,8 @@ void TTTR::merge(const TTTR& other, unsigned long long offset_macro_time, int ch
             merge_indices.emplace_back(offset_time, std::make_tuple(i, true));
         }
         
-        // Sort by macro time
-        std::sort(merge_indices.begin(), merge_indices.end(),
+        // Sort by macro time stably to preserve relative order of simultaneous events
+        std::stable_sort(merge_indices.begin(), merge_indices.end(),
                  [](const auto& a, const auto& b) { return a.first < b.first; });
         
         // Copy merged data
