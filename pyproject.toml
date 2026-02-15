@@ -124,17 +124,12 @@ SKBUILD = "1"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
-before-build = "vcpkg install hdf5:x64-windows && pip install delvewheel"
-# delvewheel will automatically bundle HDF5 DLLs from h5py, but needs help finding them if they are not in standard paths
-# We add vcpkg bin path just in case, though usually h5py bundling handles it if configured correctly
-repair-wheel-command = "python -m delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin -w {dest_dir} {wheel}"
+# Run in cmd shell to expand environment variables
+before-build = "cmd /c \"set PATH=%VCPKG_ROOT%;%PATH% && vcpkg install hdf5:x64-windows && pip install delvewheel\""
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
-CMAKE_PREFIX_PATH = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
-# Critical: Use vcpkg toolchain to ensure packages are found correctly
-CMAKE_TOOLCHAIN_FILE = "$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 SKBUILD = "1"
