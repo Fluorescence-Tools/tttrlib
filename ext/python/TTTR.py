@@ -20,6 +20,10 @@ def micro_times(self):
 def macro_times(self):
     return self.get_macro_times()
 
+def __len__(self):
+    """Return the number of events in the TTTR data."""
+    return len(self.macro_times)
+
 def apply_channel_luts(self, channel_luts, channel_shifts=None):
     """
     Apply channel LUTs and shifts to this TTTR object.
