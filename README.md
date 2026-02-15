@@ -2,7 +2,9 @@
 
 [![Anaconda](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![PyPI](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
+![Documentation](https://github.com/fluorescence-tools/tttrlib/actions/workflows/docs.yml/badge.svg)
 ![Conda Build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
+
 ![Build Wheels](https://github.com/fluorescence-tools/tttrlib/actions/workflows/build-wheels.yml/badge.svg)
 
 ---
@@ -78,6 +80,8 @@ Legacy 32-bit and Python 2.7 are not supported.
 
 See [**docs.peulen.xyz/tttrlib**](https://docs.peulen.xyz/tttrlib) for the full API and tutorials.
 Below are minimal examples.
+
+Detailed build instructions for developers are available in [BUILDING.md](BUILDING.md).
 
 ### Read TTTR data
 
