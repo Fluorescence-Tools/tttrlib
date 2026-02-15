@@ -33,7 +33,7 @@ clsm = {
     },
     'seidel_ht3_sample_2': {
         'filename': settings['clsm_ht3_img_filename'],
-        'irf': settings['clsm_ht3_irf_filename'],
+        'irf': settings['clsm_ht3_mirror_filename'],  # Correct IRF for crn_clv_img.ht3
         'reading_parameter': {
             "marker_frame_start": [4],
             "marker_line_start": 1,
