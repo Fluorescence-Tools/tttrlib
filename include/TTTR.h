@@ -1230,9 +1230,14 @@ public:
             double macro_time_calibration = -1,
             bool invert=false
     ){
-        if(macro_time_calibration < 0){
-            macro_time_calibration = header->get_macro_time_resolution();
+        if(macro_time_calibration < 0.0){
+            if(header != nullptr){
+                macro_time_calibration = header->get_macro_time_resolution();
+            } else {
+                macro_time_calibration = 1.0;
+            }
         }
+
         ranges_by_time_window(
                 output, n_output,
                 macro_times, static_cast<int>(n_valid_events),
