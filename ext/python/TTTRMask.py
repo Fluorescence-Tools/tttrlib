@@ -1,19 +1,21 @@
 
 def __getattr__(self, item):
     """
-    If an attribute `attribute` is accesses that does not exist
-    the corresponding getter by calling 'get_attribute' is called
-
-    :param self:
-    :param item:
-    :return:
+    If an attribute `attribute` is accessed that does not exist,
+    the corresponding getter method ('get_attribute') is called.
     """
-    item = "get_" + str(item)
-    if hasattr(self.__class__, item):
-        call = getattr(self, item)
+    # Robustness: don't double-prepend get_
+    if str(item).startswith("get_"):
+        lookup = str(item)
+    else:
+        lookup = "get_" + str(item)
+
+    if hasattr(self, lookup):
+        call = getattr(self, lookup)
         return call()
     else:
-        raise AttributeError
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
+
 
 def __len__(self):
     return len(self.get_indices())
