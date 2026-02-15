@@ -297,7 +297,7 @@ def __init__(
         marker_frame_start=None,
         marker_line_start=None,
         marker_line_stop=None,
-        marker_event_type=1,
+        marker_event_type=None,
         n_pixel_per_line=None,
         reading_routine='default',
         skip_before_first_frame_marker=False,
@@ -340,21 +340,19 @@ def __init__(
             json_settings = settings
         
         # Extract TTTR corrections
-        if 'channel_luts' in json_settings:
-            if channel_luts is None:
-                channel_luts = {}
-            for ch_str, lut_list in json_settings['channel_luts'].items():
-                ch = int(ch_str)
-                channel_luts[ch] = lut_list
-        if 'channel_shifts' in json_settings:
-            if channel_shifts is None:
-                channel_shifts = {}
-            for ch_str, shift_val in json_settings['channel_shifts'].items():
-                ch = int(ch_str)
-                channel_shifts[ch] = shift_val
-    
-    import pathlib
-    import tttrlib
+        if json_settings is not None:
+            if 'channel_luts' in json_settings:
+                if channel_luts is None:
+                    channel_luts = {}
+                for ch_str, lut_list in json_settings['channel_luts'].items():
+                    ch = int(ch_str)
+                    channel_luts[ch] = lut_list
+            if 'channel_shifts' in json_settings:
+                if channel_shifts is None:
+                    channel_shifts = {}
+                for ch_str, shift_val in json_settings['channel_shifts'].items():
+                    ch = int(ch_str)
+                    channel_shifts[ch] = shift_val
     
     # Handle first argument: can be TTTR object, string, or Path
     # - If TTTR object: use as-is
@@ -380,46 +378,20 @@ def __init__(
     
     source = kwargs.get('source', None)
     rt = {
-        'SP8': CLSM_SP8,
-        'SP5': CLSM_SP5,
-        'default': CLSM_DEFAULT
+        'SP8': getattr(tttrlib, 'CLSM_SP8', 2),
+        'SP5': getattr(tttrlib, 'CLSM_SP5', 1),
+        'default': getattr(tttrlib, 'CLSM_DEFAULT', 0)
     }
 
     # Always include bidirectional_scan=False by default
     settings_kwargs = {
-        "skip_before_first_frame_marker": skip_before_first_frame_marker,
-        "skip_after_last_frame_marker":  skip_after_last_frame_marker,
-        "reading_routine":               rt[reading_routine],
-        "marker_line_start":             marker_line_start,
-        "marker_line_stop":              marker_line_stop,
-        "marker_frame_start":            marker_frame_start,
-        "marker_event_type":             marker_event_type,
-        "n_pixel_per_line":              n_pixel_per_line,
-        "bidirectional_scan":            False,   # <-- new default
+        "skip_before_first_frame_marker": bool(skip_before_first_frame_marker),
+        "skip_after_last_frame_marker":  bool(skip_after_last_frame_marker),
+        "reading_routine":               rt.get(reading_routine, rt['default']),
+        "bidirectional_scan":            False,
         "split_by_channel":              bool(split_by_channel),
     }
     
-    # Override CLSM settings from JSON if provided
-    if json_settings:
-        # CLSM-specific settings that can be overridden from JSON
-        clsm_keys = [
-            'marker_line_start', 'marker_line_stop', 'marker_frame_start', 
-            'marker_event_type', 'n_pixel_per_line', 'n_lines',
-            'skip_before_first_frame_marker', 'skip_after_last_frame_marker',
-            'bidirectional_scan', 'split_by_channel', 'reading_routine'
-        ]
-        for key in clsm_keys:
-            if key in json_settings:
-                if key == 'reading_routine':
-                    settings_kwargs[key] = rt.get(json_settings[key], rt['default'])
-                elif key == 'marker_frame_start':
-                    if isinstance(json_settings[key], list):
-                        settings_kwargs[key] = json_settings[key]
-                    else:
-                        settings_kwargs[key] = [json_settings[key]]
-                else:
-                    settings_kwargs[key] = json_settings[key]
-
     if not isinstance(source, CLSMImage):
         # If the user provided TTTR data, try reading any header‐derived settings
         if tttr_data is not None:
@@ -427,33 +399,41 @@ def __init__(
             self.header = header
             try:
                 auto_settings = self.read_clsm_settings(tttr_data)
-                # Merge in any auto‐read values (including bidirectional_scan, if present)
-                # Only update if auto_settings is not empty (i.e., valid CLSM settings were found)
                 if auto_settings:
                     settings_kwargs.update(auto_settings)
             except:
                 print("Error reading TTTR CLSM header")
 
+        # Set default markers if not provided, to avoid passing None to SWIG
+        if marker_line_start is None: marker_line_start = settings_kwargs.get("marker_line_start", 3)
+        if marker_line_stop is None: marker_line_stop = settings_kwargs.get("marker_line_stop", 2)
+        if marker_frame_start is None: marker_frame_start = settings_kwargs.get("marker_frame_start", [1])
+        if marker_event_type is None: marker_event_type = settings_kwargs.get("marker_event_type", 1)
+        if n_pixel_per_line is None: n_pixel_per_line = settings_kwargs.get("n_pixel_per_line", 0)
+
         # Override with user‐provided arguments (if not None/type‐correct)
-        if isinstance(marker_frame_start, int):
-            settings_kwargs['marker_frame_start'] = [marker_frame_start]
-        elif isinstance(marker_frame_start, list):
-            settings_kwargs['marker_frame_start'] = marker_frame_start
+        if isinstance(marker_frame_start, (int, float)):
+            settings_kwargs['marker_frame_start'] = [int(marker_frame_start)]
+        else:
+            settings_kwargs['marker_frame_start'] = [int(x) for x in marker_frame_start]
 
-        if isinstance(marker_line_start, int):
-            settings_kwargs['marker_line_start'] = marker_line_start
-        if isinstance(marker_line_stop, int):
-            settings_kwargs['marker_line_stop'] = marker_line_stop
-        if isinstance(marker_event_type, int):
-            settings_kwargs['marker_event_type'] = marker_event_type
-        if isinstance(n_pixel_per_line, int):
-            settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
+        settings_kwargs['marker_line_start'] = int(marker_line_start)
+        settings_kwargs['marker_line_stop'] = int(marker_line_stop)
+        settings_kwargs['marker_event_type'] = int(marker_event_type)
+        settings_kwargs['n_pixel_per_line'] = int(n_pixel_per_line)
 
-        # Consume our special parameters before passing to C++ constructor
-        kwargs.pop('settings_file', None)
-        kwargs.pop('settings', None)
-
-        kwargs['tttr_data'] = tttr_data
+        # Override CLSM settings from JSON if provided (but only if not explicitly set)
+        if json_settings:
+            clsm_keys = [
+                'marker_line_start', 'marker_line_stop', 'marker_frame_start', 
+                'marker_event_type', 'n_pixel_per_line', 'n_lines',
+                'skip_before_first_frame_marker', 'skip_after_last_frame_marker',
+                'bidirectional_scan', 'split_by_channel', 'reading_routine'
+            ]
+            for key in clsm_keys:
+                if key in json_settings and settings_kwargs.get(key) is None:
+                    # Only use JSON value if not explicitly set by user
+                    settings_kwargs[key] = json_settings[key]
 
         # Pre‐set routines override everything else
         if reading_routine == 'SP5':
@@ -468,15 +448,13 @@ def __init__(
             settings_kwargs["marker_line_stop"] = 2
             if tttr_data is not None:
                 header = tttr_data.header
-                settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
-                settings_kwargs["marker_line_stop"]  = int(header.tag('ImgHdr_LineStop')["value"])
-                # If ImgHdr_BiDirect exists, preserve it:
                 try:
+                    settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
+                    settings_kwargs["marker_line_stop"]  = int(header.tag('ImgHdr_LineStop')["value"])
                     bd = int(header.tag('ImgHdr_BiDirect')["value"])
                     settings_kwargs["bidirectional_scan"] = (bd != 0)
                 except:
                     pass
-
 
         clsm_settings = CLSMSettings(**settings_kwargs)
 
@@ -484,7 +462,12 @@ def __init__(
         # Copy settings from the source CLSMImage
         clsm_settings = source.get_settings()
 
+    # Clean up kwargs for C++ constructor
+    kwargs.pop('settings_file', None)
+    kwargs.pop('settings', None)
+    kwargs['tttr_data'] = tttr_data
     kwargs['settings'] = clsm_settings
+    
     this = _tttrlib.new_CLSMImage(**kwargs)
 
     try:
