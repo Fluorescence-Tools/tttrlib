@@ -1,0 +1,21 @@
+Version 0.26.0
+==============
+
+We are happy to announce the release of tttrlib 0.26.0.
+
+Highlights
+----------
+
+* **Bioinformatics Publication**: tttrlib is now published in *Bioinformatics* (2025). Please cite the paper if you use the software.
+* **Modernized Documentation**: New documentation layout with card-based navigation and improved tutorials.
+* **CI/CD Automation**: Fully automated documentation builds and deployment via GitHub Actions.
+* **Improved Robustness**: Better handling of invalid TTTR files and edge cases in CLSM image construction.
+* **Enhanced Python API**: Improved constructor for CLSMImage with better metadata integration.
+* **Becker & Hickl SPCM Support**: New support for BH SPC-130/140/150 detectors with pixel-marker binning, automatic `.set` file parsing, dimension inference, and Frame 1 adjustment. Integrated truncated recording recovery.
+* **CLSM Bug Fixes**: Fixed `get_fluorescence_decay` stack_frames bug where only the last frame was processed. Fixed `get_phasor` precision loss by using float instead of int calculation.
+
+Contributors
+------------
+The following people contributed to this release:
+* Thomas-Otavio Peulen
+* Chen Qian (@cqian89)
