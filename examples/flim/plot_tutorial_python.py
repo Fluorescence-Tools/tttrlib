@@ -124,7 +124,10 @@ def make_image(
     return image
 
 
-events = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 1)
+from examples._example_data import get_data_path
+
+events = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')), 1)
+
 e = events.get_event_type()
 c = events.get_routing_channel()
 t = events.get_macro_times()

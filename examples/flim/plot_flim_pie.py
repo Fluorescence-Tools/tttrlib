@@ -54,10 +54,11 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 # First, we read the TTTR data, create CLSM image container, and define used channels.
 # We create a CLSM container for the green photons and the red photons. Moreover, we create
 # containers for red photons in the prompt and the delay time window.
-# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
-filename_data = str(DATA_ROOT / 'imaging/pq/ht3/mGBP_DA.ht3')
-tttr_data = tttrlib.TTTR(filename_data)
+from examples._example_data import get_data_path
+
+filename_data = get_data_path('imaging/pq/ht3/mGBP_DA.ht3')
+tttr_data = tttrlib.TTTR(str(filename_data))
+
 
 clsm_green = tttrlib.CLSMImage(tttr_data)
 clsm_red = tttrlib.CLSMImage(tttr_data)
@@ -74,9 +75,9 @@ sum_all = green_ch + red_ch
 # In PIE two light sources excite the sample. Here, we load the instrument response function (IRF) and inspect
 # the IRFs of the two separate the fluorescence of the first (prompt) and the second (delay) excitation pulse.
 # The two excitation pulses define two micro time detection windows for the prompt and the delay pulse.
-filename_irf = '../../tttr-data/imaging/pq/ht3/mGBP_IRF.ht3'
+filename_irf = get_data_path('imaging/pq/ht3/mGBP_IRF.ht3')
+irf = tttrlib.TTTR(str(filename_irf))
 
-irf = tttrlib.TTTR(filename_irf)
 tttr_irf_green = irf.get_tttr_by_channel(green_ch)
 tttr_irf_red = irf.get_tttr_by_channel(red_ch)
 

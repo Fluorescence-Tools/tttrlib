@@ -11,7 +11,10 @@ from matplotlib.pyplot import imread
 import tttrlib
 import numpy as np
 
-tttr_data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
+from examples._example_data import get_data_path
+
+tttr_data = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')), 'HT3')
+
 channels = (0, 1)
 reading_parameter = {
     "tttr_data": tttr_data,
@@ -29,7 +32,8 @@ clsm_image = tttrlib.CLSMImage(**reading_parameter)
 
 #%%
 n_frames, n_lines, n_pixel = clsm_image.shape
-mask_template = imread("../../tttr-data/imaging/misc/clsm_mask.png").astype(np.uint8).T
+mask_template = imread(str(get_data_path("imaging/misc/clsm_mask.png"))).astype(np.uint8).T
+
 mask = np.empty((n_frames, n_lines, n_pixel), dtype=np.uint8)
 for i in range(n_frames):
     mask[i] = mask_template

@@ -138,7 +138,9 @@ def chi2(
     return chi2_s
 
 
-img = ski.io.imread('../../tttr-data/imaging/ics/RICS_EGFPGFP.tif')
+from examples._example_data import get_data_path
+img = ski.io.imread(str(get_data_path('imaging/ics/RICS_EGFPGFP.tif')))
+
 x_range = [100, 200]
 y_range = [100, 200]
 

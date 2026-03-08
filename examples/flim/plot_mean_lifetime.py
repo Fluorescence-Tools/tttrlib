@@ -11,11 +11,14 @@ import numpy as np
 import pylab as plt
 
 #%%
-filename = '../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu'
-filename_irf = '../../tttr-data/imaging/zeiss/eGFP_bad_background/IRF.ptu'
+from examples._example_data import get_data_path
 
-data = tttrlib.TTTR(filename)
-irf = tttrlib.TTTR(filename_irf)
+filename = get_data_path('imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
+filename_irf = get_data_path('imaging/zeiss/eGFP_bad_background/IRF.ptu')
+
+data = tttrlib.TTTR(str(filename))
+irf = tttrlib.TTTR(str(filename_irf))
+
 
 channels_green = [0, 2]
 channels_red = [1, 3]

@@ -65,9 +65,12 @@ plt.imshow(clsm_image.intensity.sum(axis=0))
 plt.show()
 
 #%%
+from examples._example_data import get_data_path
+
 # In cases there are issues with the meta data (there are no official standards),
 # the frame and line markers can be explicitly specified.
-tttr_data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3', 'HT3')
+tttr_data = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')), 'HT3')
+
 reading_parameter = {
     "tttr_data": tttr_data,
     "marker_frame_start": [4],

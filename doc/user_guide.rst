@@ -28,6 +28,16 @@ Previous releases are available through the read-the-docs `page <https://tttrlib
    api.rst
    zreferences
 
+Example Gallery
+===============
+
+Hands-on, executable examples demonstrating tttrlib capabilities:
+
+.. toctree::
+   :maxdepth: 2
+
+   auto_examples/index
+
 
 Indices and tables
 ==================

@@ -25,9 +25,12 @@ def objective_function(
     chi2 = (((irf[x_min:x_max] - x[0])/w)**2).sum(axis=0)
     return chi2
 
+from examples._example_data import get_data_path
+
 # Read TTTR
-spc132_filename = '../../tttr-data/bh/bh_spc132_sm_dna/m000.spc'
-data = tttrlib.TTTR(spc132_filename, 'SPC-130')
+spc132_filename = get_data_path('bh/bh_spc132.spc')
+data = tttrlib.TTTR(str(spc132_filename), 'SPC-130')
+
 data_green = data[data.get_selection_by_channel([0, 8])]
 # the macro time clock in ms
 macro_time_resolution = data.header.macro_time_resolution

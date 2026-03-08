@@ -30,7 +30,10 @@ from importlib import import_module
 # ---------------------------------------------------------------------------
 HERE = Path(__file__).parent.resolve()
 PROJECT_ROOT = HERE.parent
+
+# Add project root and examples to path
 sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "examples"))
 
 # Ensure static dir exists
 (HERE / "_static").mkdir(exist_ok=True)
@@ -232,6 +235,7 @@ if BUILD_TIER >= 4:
             "remove_config_comments": True,
             "run_stale_examples": False,
             "abort_on_example_error": False,
+
         }
         exclude_patterns += ["auto_examples/**/*.py", "auto_examples/*.ipynb"]
 
