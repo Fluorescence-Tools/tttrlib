@@ -41,8 +41,14 @@ import_array();
 %template(MapSignedCharInt) std::map<signed char, int>;
 %template(VectorString) std::vector<std::string>;
 
-%typemap(out) std::vector< double,std::allocator< double > > * {
-$result = swig::from(static_cast<std::vector< double,std::allocator< double > >>(*($1)));
+
+
+%typemap(out) std::vector< long long,std::allocator< long long > > * {
+$result = swig::from(static_cast<std::vector< long long,std::allocator< long long > > >(*($1)));
+}
+
+%typemap(out) std::vector< long long > {
+$result = swig::from($1);
 }
 
 // Pair templates

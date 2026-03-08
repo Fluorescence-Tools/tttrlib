@@ -85,7 +85,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   SET(VERBOSE_TTTRLIB ON)
   MESSAGE(STATUS "Debug build: Enabling all warnings")
   if(MSVC)
-    ADD_COMPILE_OPTIONS(/Wall)
+    ADD_COMPILE_OPTIONS(/Wall /bigobj)
   ELSE(MSVC)
       ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
   ENDIF(MSVC)
@@ -225,11 +225,12 @@ IF(BUILD_LIBRARY)
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 
   # By default the output name is the target. To not have different names, i.e.,
-  # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
+  # ProjectNameShared.dll and ProjectNameStatic.lib the output names are set manually.
+  # Use different names to avoid "multiple rules generate" ninja error
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}_static")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_static")
 
   # Add install target
   #######################
