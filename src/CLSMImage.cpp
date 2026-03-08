@@ -1308,13 +1308,15 @@ void CLSMImage::get_fluorescence_decay(
     bool use_openmp = (num_threads > 1);
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4 && !stack_frames)
-    for (int i_frame = 0; i_frame < static_cast<int>(stack_frames ? 1 : n_frames); i_frame++) {
-        auto frame = frames[stack_frames ? 0 : i_frame];
+    for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
+        auto frame = frames[i_frame];
         for (size_t i_line = 0; i_line < frame->lines.size(); i_line++) {
             auto line = frame->lines[i_line];
             for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
-                auto pixel = line->pixels[i_pixel];
-                size_t pixel_nbr = i_frame * (n_lines * n_pixel * n_tac) +
+                auto& pixel = line->pixels[i_pixel];
+                // When stacking, all photons go into frame 0 of output
+                size_t target_frame = stack_frames ? 0 : i_frame;
+                size_t pixel_nbr = target_frame * (n_lines * n_pixel * n_tac) +
                                    i_line * (n_pixel * n_tac) +
                                    i_pixel * (n_tac);
                 const auto& indices = pixel.get_tttr_indices();
@@ -1593,8 +1595,8 @@ void CLSMImage::get_phasor(
                         g_irf, s_irf,
                         &indices
                     );
-                    t[pixel_nbr + 0] = static_cast<int>(r[0]);
-                    t[pixel_nbr + 1] = static_cast<int>(r[1]);
+                    t[pixel_nbr + 0] = static_cast<float>(r[0]);
+                    t[pixel_nbr + 1] = static_cast<float>(r[1]);
                 }
             }
         }
