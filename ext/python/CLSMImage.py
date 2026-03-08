@@ -303,6 +303,8 @@ def __init__(
         skip_before_first_frame_marker=False,
         skip_after_last_frame_marker=False,
         split_by_channel=False,
+        use_pixel_markers=False,
+        marker_pixel=1,
         filename=None,
         channel_luts=None,
         channel_shifts=None,
@@ -380,6 +382,7 @@ def __init__(
     rt = {
         'SP8': getattr(tttrlib, 'CLSM_SP8', 2),
         'SP5': getattr(tttrlib, 'CLSM_SP5', 1),
+        'BH_SPC130': getattr(tttrlib, 'CLSM_BH_SPC130', 3),
         'default': getattr(tttrlib, 'CLSM_DEFAULT', 0)
     }
 
@@ -390,8 +393,32 @@ def __init__(
         "reading_routine":               rt.get(reading_routine, rt['default']),
         "bidirectional_scan":            False,
         "split_by_channel":              bool(split_by_channel),
+        "use_pixel_markers":             bool(use_pixel_markers),
+        "marker_pixel":                  int(marker_pixel),
     }
     
+    # Override CLSM settings from JSON if provided
+    if json_settings:
+        # CLSM-specific settings that can be overridden from JSON
+        clsm_keys = [
+            'marker_line_start', 'marker_line_stop', 'marker_frame_start', 
+            'marker_event_type', 'n_pixel_per_line', 'n_lines',
+            'skip_before_first_frame_marker', 'skip_after_last_frame_marker',
+            'bidirectional_scan', 'split_by_channel', 'reading_routine',
+            'use_pixel_markers', 'marker_pixel'
+        ]
+        for key in clsm_keys:
+            if key in json_settings:
+                if key == 'reading_routine':
+                    settings_kwargs[key] = rt.get(json_settings[key], rt['default'])
+                elif key == 'marker_frame_start':
+                    if isinstance(json_settings[key], list):
+                        settings_kwargs[key] = json_settings[key]
+                    else:
+                        settings_kwargs[key] = [json_settings[key]]
+                else:
+                    settings_kwargs[key] = json_settings[key]
+
     if not isinstance(source, CLSMImage):
         # If the user provided TTTR data, try reading any header‐derived settings
         if tttr_data is not None:
@@ -417,10 +444,18 @@ def __init__(
         else:
             settings_kwargs['marker_frame_start'] = [int(x) for x in marker_frame_start]
 
-        settings_kwargs['marker_line_start'] = int(marker_line_start)
-        settings_kwargs['marker_line_stop'] = int(marker_line_stop)
-        settings_kwargs['marker_event_type'] = int(marker_event_type)
-        settings_kwargs['n_pixel_per_line'] = int(n_pixel_per_line)
+        if isinstance(marker_line_start, int):
+            settings_kwargs['marker_line_start'] = marker_line_start
+        if isinstance(marker_line_stop, int):
+            settings_kwargs['marker_line_stop'] = marker_line_stop
+        if isinstance(marker_event_type, int):
+            settings_kwargs['marker_event_type'] = marker_event_type
+        if isinstance(n_pixel_per_line, int):
+            settings_kwargs['n_pixel_per_line'] = n_pixel_per_line
+        if isinstance(use_pixel_markers, bool):
+            settings_kwargs['use_pixel_markers'] = use_pixel_markers
+        if isinstance(marker_pixel, int):
+            settings_kwargs['marker_pixel'] = marker_pixel
 
         # Override CLSM settings from JSON if provided (but only if not explicitly set)
         if json_settings:
@@ -432,7 +467,6 @@ def __init__(
             ]
             for key in clsm_keys:
                 if key in json_settings and settings_kwargs.get(key) is None:
-                    # Only use JSON value if not explicitly set by user
                     settings_kwargs[key] = json_settings[key]
 
         # Pre‐set routines override everything else
@@ -455,6 +489,16 @@ def __init__(
                     settings_kwargs["bidirectional_scan"] = (bd != 0)
                 except:
                     pass
+        elif reading_routine == 'BH_SPC130':
+            settings_kwargs["marker_event_type"] = 1
+            settings_kwargs["marker_frame_start"] = [4]
+            settings_kwargs["marker_line_start"] = 2
+            settings_kwargs["marker_line_stop"] = 255
+            settings_kwargs["skip_before_first_frame_marker"] = True
+            settings_kwargs["skip_after_last_frame_marker"] = False
+
+        # Remove None values so CLSMSettings uses its C++ defaults
+        settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
 
         clsm_settings = CLSMSettings(**settings_kwargs)
 

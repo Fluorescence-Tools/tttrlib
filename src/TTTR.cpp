@@ -527,6 +527,39 @@ if (is_verbose()) {
         } else {  
             fp = open_file(this->filename, "rb");
             header = new TTTRHeader(fp, container_type);
+
+            // After header is read for BH_SPC130_CONTAINER, try to find and parse .set file
+            if (container_type == BH_SPC130_CONTAINER) {
+                // Try to find .set file with same base name
+                std::string set_filename;
+                if (filename.size() >= 4) {
+                    std::string ext = filename.substr(filename.size() - 4);
+                    // Safe ASCII-only lowercase transformation (avoids UB with signed char)
+                    auto to_lower_ascii = [](unsigned char c) -> char {
+                        return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : static_cast<char>(c);
+                    };
+                    std::transform(ext.begin(), ext.end(), ext.begin(), to_lower_ascii);
+                    if (ext == ".spc") {
+                        set_filename = filename.substr(0, filename.size() - 4) + ".set";
+                    }
+                }
+
+                if (!set_filename.empty()) {
+                    // Use filesystem to check if file exists (UTF-8 safe)
+                    std::filesystem::path set_path = std::filesystem::u8path(set_filename);
+                    if (std::filesystem::exists(set_path)) {
+                        if (header->read_bh_set_file(set_filename)) {
+                            if (is_verbose()) {
+                                std::clog << "-- Parsed BH .set file: " << set_filename << std::endl;
+                            }
+                        }
+                    } else {
+                        if (is_verbose()) {
+                            std::clog << "-- BH .set file not found: " << set_filename << std::endl;
+                        }
+                    }
+                }
+            }
             fp_records_begin = header->end();
             tttr_record_type = header->get_tttr_record_type();
 if (is_verbose()) {

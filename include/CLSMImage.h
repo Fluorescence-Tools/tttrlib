@@ -21,11 +21,17 @@
 #include "Correlator.h"
 
 
+/// Sentinel value indicating no stop marker (BH SPC-130 start-only mode)
+/// When marker_line_stop equals this value, lines are paired start-to-start
+constexpr int CLSM_MARKER_NO_STOP = 255;
+
+
 /// Different types of distances between two accessible volumes
 typedef enum{
-    CLSM_DEFAULT,         /// Default reading compute_icsroutine
+    CLSM_DEFAULT,         /// Default reading routine
     CLSM_SP5,             /// Leica SP5
-    CLSM_SP8              /// Leica SP5
+    CLSM_SP8,             /// Leica SP8
+    CLSM_BH_SPC130        /// Becker & Hickl SPC-130
 } ReadingRoutine;
 
 
@@ -83,7 +89,7 @@ static std::pair<int, int> find_clsm_start_stop(
 class CLSMSettings {
     friend class CLSMImage;
 
-protected:
+public:
     /// Skip events before the first frame marker?
     bool skip_before_first_frame_marker = false;
 
@@ -121,6 +127,12 @@ protected:
     /// When false (default), keep a flat single-channel view regardless of flips.
     bool split_by_channel = false;
 
+    /// If true, use markers to determine pixel edges (Becker & Hickl mode).
+    bool use_pixel_markers = false;
+
+    /// The routing channel of the pixel markers (Becker & Hickl mode).
+    int marker_pixel = 1;
+
 public:
     /*!
      * \brief CLSMSettings Constructor.
@@ -143,6 +155,8 @@ public:
      * @param n_lines                       Number of lines per frame. If -1, auto‐detect from the first frame (default: -1).
      * @param bidirectional_scan            If true, every odd line was scanned in reverse direction (default: false).
      * @param split_by_channel              If true, split frames into multiple channels using channel-flip markers (default: false).
+     * @param use_pixel_markers             If true, use markers to determine pixel edges (default: false).
+     * @param marker_pixel                  Routing channel of pixel markers (default: 1).
      */
     explicit CLSMSettings(
             bool skip_before_first_frame_marker = false,
@@ -152,10 +166,12 @@ public:
             int marker_line_stop               = 2,
             std::vector<int> marker_frame_start = std::vector<int>({1}),
             int marker_event_type              = 1,
-            int n_pixel_per_line               = 1,
+            int n_pixel_per_line               = 0,
             int n_lines                        = -1,
             bool bidirectional_scan            = false,
-            bool split_by_channel              = false
+            bool split_by_channel              = false,
+            bool use_pixel_markers             = false,
+            int marker_pixel                   = 1
     ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
@@ -168,6 +184,8 @@ public:
         this->n_lines                        = n_lines;
         this->bidirectional_scan             = bidirectional_scan;
         this->split_by_channel               = split_by_channel;
+        this->use_pixel_markers              = use_pixel_markers;
+        this->marker_pixel                   = marker_pixel;
     }
 };
 
@@ -1050,7 +1068,9 @@ public:
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8,
             bool skip_before_first_frame_marker = false,
-            bool skip_after_last_frame_marker = false
+            bool skip_after_last_frame_marker = false,
+            int marker_line_start = 0,
+            int expected_n_lines = 0
     );
 
     /*!
@@ -1110,6 +1130,26 @@ public:
         int line_duration = 2,
         int marker_event_type = 15,
         int reading_routine = CLSM_SP8
+    );
+
+    /*!
+     * \brief Detect if BH SPC-130 Frame 1 has an extra initialization line.
+     *
+     * For BH SPC data, Frame 1 often has an extra partial line at the start
+     * that should be skipped. This compares line marker counts between Frame 1 and Frame 2.
+     *
+     * @param tttr Pointer to TTTR data
+     * @param frame_marker Frame marker routing channel (default 4)
+     * @param line_marker Line marker routing channel (default 2)
+     * @param marker_event_type Marker event type (default 1)
+     * @return true if Frame 1 has one extra line marker compared to Frame 2
+     */
+    static bool detect_bh_frame1_extra_line(
+        TTTR* tttr,
+        int frame_marker = 4,
+        int line_marker = 2,
+        int marker_event_type = 1,
+        int expected_n_lines = 0
     );
 
 

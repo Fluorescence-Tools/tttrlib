@@ -359,6 +359,21 @@ public:
     );
 
     /*!
+     * @brief Reads a Becker & Hickl .set file and extracts imaging parameters.
+     *
+     * Parses the BH .set file to extract SP_IMG_X (pixels per line),
+     * SP_IMG_Y (lines per frame), and SP_PIX_CLK (pixel clock mode).
+     * These values are stored in json_data under tags:
+     *   - ImgHdr_PixX
+     *   - ImgHdr_PixY
+     *   - BH_UsePixelClock
+     *
+     * @param filename Path to the .set file
+     * @return true if parsing succeeded, false otherwise
+     */
+    bool read_bh_set_file(const std::string& filename);
+
+    /*!
      * @brief Reads the header of a Carl Zeiss (CZ) Confocor3 file and sets the reading routing.
      *
      * @param fpin File pointer to the Confocor3 file.
