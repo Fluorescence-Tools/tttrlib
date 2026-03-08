@@ -2,13 +2,13 @@
 """
 Verify presence of required tttrlib test data files.
 
-- Determines required files from test/settings.json (same logic as download_test_data.py)
+- Determines required files from test/settings.json
 - Resolves data root using TTTRLIB_DATA env var or settings.json:data_root
 - Prints a short summary and missing files, returns non‑zero if anything is missing
 
 Usage:
     python -m test.verify_test_data
-    python test/verify_test_data.py [--list-only]
+    python test/download_verify_test_data.py [--list-only]
 
 Exit codes:
     0 = all required files are present
@@ -21,17 +21,13 @@ import sys
 from pathlib import Path
 from typing import List
 
-# Allow running both as a module and as a script
 HERE = Path(__file__).parent
 
-# Reuse logic from download_test_data.py to avoid divergence
 try:
-    # When run as a script from repository root
-    from test.download_test_data import get_required_files, get_output_dir  # type: ignore
+    from test.download_test_data import get_required_files, get_output_dir, load_settings
 except Exception:
-    # Fallback for direct execution in some environments
     sys.path.insert(0, str(HERE))
-    from download_test_data import get_required_files, get_output_dir  # type: ignore
+    from download_test_data import get_required_files, get_output_dir, load_settings
 
 
 def list_existing_files(root: Path, max_lines: int = 200) -> List[Path]:
@@ -48,11 +44,11 @@ def list_existing_files(root: Path, max_lines: int = 200) -> List[Path]:
 
 
 def main(argv: List[str]) -> int:
-    # flags (keep minimal; --list-only mainly for debugging in CI)
     list_only = '--list-only' in argv
 
-    data_root = get_output_dir()
-    required_rel_paths = list(get_required_files())
+    settings = load_settings()
+    data_root = get_output_dir(settings)
+    required_rel_paths = list(get_required_files(settings))
 
     print(f"TTTRLIB_DATA resolved to: {data_root}")
     print("Listing tttr-data top-level (if exists):")

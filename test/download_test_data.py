@@ -4,10 +4,9 @@ Download required test data files from https://www.peulen.xyz/downloads/tttr-dat
 
 This script:
 1. Reads settings.json to determine required files
-2. Lists all required files
-3. Downloads only the files needed for testing
-4. Supports resuming interrupted downloads
-5. Verifies file integrity
+2. Uses pooch for downloading with caching, progress bars, and hash verification
+3. Supports resuming interrupted downloads
+4. Verifies file integrity if hashes are provided
 
 Usage:
     python download_test_data.py [--list-only] [--output-dir /path/to/tttr-data]
@@ -21,22 +20,10 @@ import sys
 import json
 import argparse
 from pathlib import Path
-from urllib.parse import urljoin
-from typing import List, Set
+from typing import List, Dict, Any
 
-# Force UTF-8 encoding for stdout on Windows
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+import pooch
 
-try:
-    import requests
-except ImportError:
-    print("ERROR: requests library not found. Install with: pip install requests")
-    sys.exit(1)
-
-
-BASE_URL = "https://www.peulen.xyz/downloads/tttr-data/"
 SETTINGS_FILE = Path(__file__).parent / "settings.json"
 
 
@@ -50,12 +37,20 @@ def load_settings() -> dict:
         return json.load(f)
 
 
-def get_required_files() -> Set[str]:
+def get_base_url(settings: dict) -> str:
+    """Get base URL from settings"""
+    return settings.get("base_url", "https://www.peulen.xyz/downloads/tttr-data/")
+
+
+def get_file_hashes(settings: dict) -> Dict[str, str]:
+    """Get file hashes from settings"""
+    return settings.get("file_hashes", {})
+
+
+def get_required_files(settings: dict) -> List[str]:
     """Extract all required test data files from settings.json"""
-    settings = load_settings()
     required_files = set()
     
-    # Add files from individual settings
     file_keys = [
         "spc132_filename",
         "spc630_filename", 
@@ -67,18 +62,16 @@ def get_required_files() -> Set[str]:
         "clsm_confocal_filename",
         "clsm_sted_filename"
     ]
-    
+
     for key in file_keys:
         if key in settings:
             required_files.add(settings[key])
     
-    # Add files from test_files list
     if "test_files" in settings:
         for test_file in settings["test_files"]:
             if isinstance(test_file, list) and len(test_file) > 0:
                 required_files.add(test_file[0])
 
-    # Add explicitly required files list (e.g., CLSM datasets)
     for extra in settings.get("required_files", []):
         if extra:
             required_files.add(extra)
@@ -86,13 +79,12 @@ def get_required_files() -> Set[str]:
     return sorted(required_files)
 
 
-def get_output_dir() -> Path:
-    """Get output directory from env var or default"""
+def get_output_dir(settings: dict) -> Path:
+    """Get output directory from env var or settings"""
     env_dir = os.getenv("TTTRLIB_DATA")
     if env_dir:
         return Path(env_dir)
     
-    settings = load_settings()
     data_root = settings.get("data_root", "tttr-data")
     
     if os.path.isabs(data_root):
@@ -101,104 +93,96 @@ def get_output_dir() -> Path:
     return Path(__file__).parent / data_root
 
 
-def download_file(
-    url: str,
-    output_path: Path,
-    chunk_size: int = 8192,
-    show_progress: bool = False,
-) -> bool:
+def create_pooch_client(output_dir: Path, settings: dict) -> pooch.Pooch:
+    """Create a pooch client with registry from settings"""
+    base_url = get_base_url(settings)
+    file_hashes = get_file_hashes(settings)
+    required_files = get_required_files(settings)
+    
+    registry = {}
+    for f in required_files:
+        if f in file_hashes:
+            registry[f] = file_hashes[f]
+        else:
+            registry[f] = None
+    
+    return pooch.create(
+        path=output_dir,
+        base_url=base_url,
+        registry=registry,
+    )
+
+
+def download_file(pup: pooch.Pooch, file_path: str, show_progress: bool = False) -> bool:
     """
-    Download a single file with progress tracking
+    Download a single file using pooch
     
     Args:
-        url: URL to download from
-        output_path: Local path to save to
-        chunk_size: Download chunk size in bytes
+        pup: Pooch instance
+        file_path: Relative path to download
+        show_progress: Show progress bar
         
     Returns:
         True if successful, False otherwise
     """
     try:
-        # Create parent directories
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path = pup.path / file_path
         
-        # Check if file already exists
         if output_path.exists():
-            print(f"  [OK] Already exists: {output_path.name}")
+            print(f"  [OK] Already exists: {file_path}")
             return True
         
-        print(f"  [DL] Downloading: {output_path.name}")
+        print(f"  [DL] Downloading: {file_path}")
         
-        response = requests.get(url, stream=True, timeout=30)
-        response.raise_for_status()
+        downloaded_path = pup.fetch(
+            fname=file_path,
+            progressbar=show_progress,
+        )
         
-        total_size = int(response.headers.get('content-length', 0))
-        downloaded = 0
-        last_logged_percent = -5.0
-
-        with open(output_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-
-                    if show_progress and total_size > 0:
-                        percent = (downloaded / total_size) * 100
-                        if percent - last_logged_percent >= 5 or downloaded == total_size:
-                            print(
-                                f"    {percent:5.1f}% ({downloaded / 1024 / 1024:.1f} MB)",
-                                end='\r',
-                                flush=True,
-                            )
-                            last_logged_percent = percent
-
-        if show_progress and total_size > 0:
-            # Ensure the final 100% line is flushed on its own line
-            print(f"    100.0% ({downloaded / 1024 / 1024:.1f} MB)")
-
-        print(f"  [OK] Downloaded: {output_path.name}")
+        print(f"  [OK] Downloaded: {file_path}")
         return True
         
-    except requests.RequestException as e:
-        print(f"  [FAIL] Failed to download {output_path.name}: {e}")
-        return False
     except Exception as e:
-        print(f"  [FAIL] Error downloading {output_path.name}: {e}")
+        print(f"  [FAIL] Failed to download {file_path}: {e}")
         return False
 
 
-def list_required_files(verbose: bool = True) -> List[str]:
+def list_required_files(settings: dict, verbose: bool = True) -> List[str]:
     """List all required test data files"""
-    files = get_required_files()
+    files = get_required_files(settings)
+    file_hashes = get_file_hashes(settings)
     
     if verbose:
         print("\nRequired test data files:")
         print("-" * 60)
         for f in files:
-            print(f"  {f}")
+            hash_info = " [hashed]" if f in file_hashes else ""
+            print(f"  {f}{hash_info}")
         print("-" * 60)
-        print(f"Total: {len(files)} files\n")
+        print(f"Total: {len(files)} files")
+        print(f"Hashed: {sum(1 for f in files if f in file_hashes)} files\n")
     
     return list(files)
 
 
-def download_all(output_dir: Path, verbose: bool = True) -> bool:
+def download_all(settings: dict, output_dir: Path, verbose: bool = True) -> bool:
     """Download all required test data files"""
-    files = get_required_files()
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    pup = create_pooch_client(output_dir, settings)
+    files = get_required_files(settings)
     
     if verbose:
         print(f"\nDownloading test data to: {output_dir}")
+        print(f"Base URL: {get_base_url(settings)}")
         print("-" * 60)
     
     success_count = 0
     fail_count = 0
     
     for file_path in files:
-        url = urljoin(BASE_URL, file_path)
-        output_path = output_dir / file_path
-        
-        if download_file(url, output_path):
+        if download_file(pup, file_path, show_progress=verbose):
             success_count += 1
         else:
             fail_count += 1
@@ -210,6 +194,50 @@ def download_all(output_dir: Path, verbose: bool = True) -> bool:
     print(f"  Total: {len(files)}\n")
     
     return fail_count == 0
+
+
+def compute_hashes(output_dir: Path, settings: dict, verbose: bool = True) -> Dict[str, str]:
+    """
+    Download all files and compute SHA256 hashes.
+    Returns dict of filename -> hash.
+    """
+    import hashlib
+    
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    pup = create_pooch_client(output_dir, settings)
+    files = get_required_files(settings)
+    
+    hashes = {}
+    
+    if verbose:
+        print(f"\nComputing hashes for: {len(files)} files")
+        print("-" * 60)
+    
+    for i, file_path in enumerate(files):
+        try:
+            downloaded_path = pup.fetch(fname=file_path, progressbar=False)
+            
+            sha256_hash = hashlib.sha256()
+            with open(downloaded_path, "rb") as f:
+                for chunk in iter(lambda: f.read(8192), b""):
+                    sha256_hash.update(chunk)
+            
+            hashes[file_path] = f"sha256:{sha256_hash.hexdigest()}"
+            
+            if verbose:
+                print(f"  [{i+1}/{len(files)}] {file_path}")
+                
+        except Exception as e:
+            if verbose:
+                print(f"  [FAIL] {file_path}: {e}")
+    
+    if verbose:
+        print("-" * 60)
+        print(f"Computed {len(hashes)} hashes\n")
+    
+    return hashes
 
 
 def main():
@@ -231,16 +259,27 @@ def main():
         action="store_true",
         help="Suppress verbose output"
     )
+    parser.add_argument(
+        "--compute-hashes",
+        action="store_true",
+        help="Download all files and compute SHA256 hashes, then print JSON to stdout"
+    )
     
     args = parser.parse_args()
     
-    if args.list_only:
-        list_required_files(verbose=not args.quiet)
+    settings = load_settings()
+    output_dir = Path(args.output_dir) if args.output_dir else get_output_dir(settings)
+    
+    if args.compute_hashes:
+        hashes = compute_hashes(output_dir, settings, verbose=not args.quiet)
+        print(json.dumps(hashes, indent=2))
         return 0
     
-    output_dir = Path(args.output_dir) if args.output_dir else get_output_dir()
+    if args.list_only:
+        list_required_files(settings, verbose=not args.quiet)
+        return 0
     
-    success = download_all(output_dir, verbose=not args.quiet)
+    success = download_all(settings, output_dir, verbose=not args.quiet)
     return 0 if success else 1
 
 

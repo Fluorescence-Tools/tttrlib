@@ -38,7 +38,8 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest",
-    "scipy"
+    "scipy",
+    "pooch>=1.8.0",
 ]
 examples = [
     "matplotlib",
