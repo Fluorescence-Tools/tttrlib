@@ -237,6 +237,84 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT2v2> {
     }
 };
 
+// Specialization for MultiHarp 150 / PicoHarp 330 T3 (Generic T3)
+// Bit layout: [special:1][channel:6][dtime:15][n_sync:10]
+// Identical to HHT3v2 but identified as a distinct record type
+template<>
+struct RecordProcessor<PQ_RECORD_TYPE_GENERIC_T3> {
+    static inline bool process(
+        uint32_t& TTTRRecord,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time_or_marker,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        const int64_t T3WRAPAROUND = 1024;
+        pq_hh_t3_record_t rec;
+        rec.allbits = TTTRRecord;
+        
+        if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) {
+            // n_sync holds overflow count; 0 means legacy single overflow
+            overflow_counter += T3WRAPAROUND * (rec.bits.n_sync == 0 ? 1 : rec.bits.n_sync);
+            return false;
+        }
+        
+        if (rec.bits.special == 1) {
+            record_type = RECORD_MARKER;
+        } else {
+            record_type = RECORD_PHOTON;
+        }
+        channel = static_cast<int16_t>(rec.bits.channel);
+        true_nsync = overflow_counter + rec.bits.n_sync;
+        micro_time_or_marker = rec.bits.dtime;
+        return true;
+    }
+};
+
+// Specialization for MultiHarp 150 / PicoHarp 330 T2 (Generic T2)
+// Bit layout: [special:1][channel:6][timetag:25]
+// Identical to HHT2v2 but identified as a distinct record type
+template<>
+struct RecordProcessor<PQ_RECORD_TYPE_GENERIC_T2> {
+    static inline bool process(
+        uint32_t& TTTRRecord,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        const int64_t T2WRAPAROUND_V2 = 33554432;
+        pq_hh_t2_record_t rec;
+        rec.allbits = TTTRRecord;
+        
+        if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) {
+            // Number of overflows stored in timetag (new firmware style)
+            if (rec.bits.timetag == 0) {
+                overflow_counter += T2WRAPAROUND_V2;  // Old style single overflow
+            } else {
+                overflow_counter += T2WRAPAROUND_V2 * rec.bits.timetag;  // New style multiple overflows
+            }
+            return false;
+        }
+        
+        if (rec.bits.special == 1) {
+            record_type = RECORD_MARKER;
+            channel = static_cast<int16_t>(rec.bits.channel);
+            true_nsync = overflow_counter + rec.bits.timetag;
+            micro_time = 0;
+            return true;
+        }
+        
+        record_type = RECORD_PHOTON;
+        channel = static_cast<int16_t>(rec.bits.channel);
+        true_nsync = overflow_counter + rec.bits.timetag;
+        micro_time = 0;
+        return true;
+    }
+};
+
 // Specialization for Becker & Hickl SPC-130
 template<>
 struct RecordProcessor<BH_RECORD_TYPE_SPC130> {

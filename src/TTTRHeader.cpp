@@ -59,17 +59,21 @@ if (is_verbose()) {
             case rtHydraHarpT3:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
                 break;
-            case rtMultiHarpT2:
             case rtHydraHarp2T2:
             case rtTimeHarp260NT2:
             case rtTimeHarp260PT2:
                 tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
                 break;
-            case rtMultiHarpT3:
+            case rtMultiHarpT2:
+                tttr_record_type = PQ_RECORD_TYPE_GENERIC_T2;
+                break;
             case rtHydraHarp2T3:
             case rtTimeHarp260NT3:
             case rtTimeHarp260PT3:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+                break;
+            case rtMultiHarpT3:
+                tttr_record_type = PQ_RECORD_TYPE_GENERIC_T3;
                 break;
             default:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
@@ -288,7 +292,7 @@ size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
     add_tag(j, TTTRTagGlobRes, (double) header.col2_resolution, tyFloat8);
 
     // Return the current file position, which is the cursor
-    return ftell(file);
+    return ftell64(file);
 }
 
 
@@ -339,7 +343,7 @@ if (is_verbose()) {
     std::clog << "-- repetition_number: " << repetition_number << std::endl;
     std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
 }
-    return (size_t) ftell(fpin);
+    return static_cast<size_t>(ftell64(fpin));
 }
 
 
@@ -451,7 +455,7 @@ if (is_verbose()) {
     // TODO: divide by binning factor
     add_tag(data, TTTRNMicroTimes, (int) 32768 / std::max(1, ht3_header_begin.Binning), tyInt8);
     //return 880; // guessed by inspecting several ht3 files
-    return (size_t) ftell(fpin);
+    return static_cast<size_t>(ftell64(fpin));
 }
 
 #ifdef BUILD_PHOTON_HDF
@@ -704,16 +708,19 @@ if (is_verbose()) {
         tttr_record_type = PQ_RECORD_TYPE_PHT3;
     } else if (file_type == rtHydraHarpT2) {
         tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
+    } else if (file_type == rtMultiHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T2;
     } else if (
-            file_type == rtMultiHarpT2 ||
             file_type == rtHydraHarp2T2 ||
             file_type == rtTimeHarp260NT2 ||
             file_type == rtTimeHarp260PT2
     ) {
         tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
+    } else if (file_type == rtHydraHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
+    } else if (file_type == rtMultiHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T3;
     } else if (
-            file_type == rtHydraHarpT3 ||
-            file_type == rtMultiHarpT3 ||
             file_type == rtHydraHarp2T3 ||
             file_type == rtTimeHarp260NT3 ||
             file_type == rtTimeHarp260PT3
@@ -730,8 +737,8 @@ if (is_verbose()) {
         add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true);
     } catch (...) {
         std::cerr << "ERROR: MeasDesc_BinningFactor not found." << std::endl;
-    }
-    return (size_t) ftell(fpin);
+}
+    return static_cast<size_t>(ftell64(fpin));
 }
 
 void TTTRHeader::write_spc132_header(

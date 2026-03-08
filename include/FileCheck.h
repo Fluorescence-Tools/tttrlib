@@ -17,6 +17,19 @@
 
 #include "TTTRHeader.h"
 
+// ============================================================================
+// Portable 64-bit file I/O macros
+// On Windows, long is 32-bit even in 64-bit builds, so we need _fseeki64/_ftelli64
+// On Unix, we use fseeko/ftello which use off_t (typically 64-bit)
+// ============================================================================
+#ifdef _WIN32
+  #define fseek64(fp, off, whence) _fseeki64(fp, static_cast<__int64>(off), whence)
+  #define ftell64(fp)              _ftelli64(fp)
+#else
+  #define fseek64(fp, off, whence) fseeko(fp, static_cast<off_t>(off), whence)
+  #define ftell64(fp)              ftello(fp)
+#endif
+
 /**
  * @brief Converts a UTF-8 encoded string to the system's native encoding for file operations.
  * 

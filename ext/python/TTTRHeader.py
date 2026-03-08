@@ -12,6 +12,32 @@ def tags(self):
     import json
     return json.loads(self.json)["tags"]
 
+@property
+def data(self):
+    """Backwards-compatible property returning tags as a dict keyed by tag name.
+    
+    This provides compatibility with older tttrlib versions where header.data
+    returned a dict of tag names to tag values.
+    
+    Returns
+    -------
+    dict
+        Dictionary mapping tag names to lists of tag values.
+        For example: {"File_CreatingTime": [1234567890.0], "TagName": [value], ...}
+    
+    Examples
+    --------
+    >>> header = tttrlib.TTTR("file.ptu").header
+    >>> header.data["File_CreatingTime"][0]  # Get first value of a tag
+    """
+    import json
+    d = {}
+    for tag in self.tags:
+        name = tag.get('name')
+        if name:
+            d.setdefault(name, []).append(tag.get('value'))
+    return d
+
 def tag(self, name, idx=-1):
     import json
     js = self.get_json(name, idx, 0)

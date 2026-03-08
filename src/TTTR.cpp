@@ -1,6 +1,7 @@
 #include "TTTR.h"
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
+#include "FileCheck.h"
 #include "Verbose.h"
 
 #include <cstdlib>
@@ -409,11 +410,12 @@ int TTTR::read_sm_file(const char *filename){
     }
 
     // Determine file size to calculate remaining data size
-    fseek(fp, 0, SEEK_END);
-    long fileSize = ftell(fp);
-    fseek(fp, static_cast<long>(HEADER_SIZE), SEEK_SET); // Return to start of data after header
+    // Use 64-bit file I/O to support files > 2GB on Windows
+    fseek64(fp, 0, SEEK_END);
+    int64_t fileSize = ftell64(fp);
+    fseek64(fp, static_cast<int64_t>(HEADER_SIZE), SEEK_SET); // Return to start of data after header
 
-    if (fileSize < HEADER_SIZE + 26) {
+    if (fileSize < 0 || static_cast<size_t>(fileSize) < HEADER_SIZE + 26) {
         std::cerr << "Error: File is too short to contain expected data and trailing bytes." << std::endl;
         fclose(fp);
         return 1;
@@ -882,6 +884,16 @@ void TTTR::read_records(
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
                     temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
                 break;
+            case PQ_RECORD_TYPE_GENERIC_T3:
+                process_records_batch<PQ_RECORD_TYPE_GENERIC_T3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_GENERIC_T2:
+                process_records_batch<PQ_RECORD_TYPE_GENERIC_T2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
             case BH_RECORD_TYPE_SPC130:
                 process_records_batch<BH_RECORD_TYPE_SPC130>(
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
@@ -975,6 +987,16 @@ void TTTR::read_records(
                 break;
             case PQ_RECORD_TYPE_HHT2v2:
                 process_records_batch<PQ_RECORD_TYPE_HHT2v2>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_GENERIC_T3:
+                process_records_batch<PQ_RECORD_TYPE_GENERIC_T3>(
+                    tmp, number_of_objects, bytes_per_record, overflow_counter,
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
+                break;
+            case PQ_RECORD_TYPE_GENERIC_T2:
+                process_records_batch<PQ_RECORD_TYPE_GENERIC_T2>(
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
                     macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
                 break;
@@ -1299,16 +1321,32 @@ std::shared_ptr<TTTR> TTTR::select(int *selection, int n_selection) {
 
 size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, size_t bytes_per_record){
     size_t n_records_in_file;
-    // use the file size and the header to calculate the number of records
+    // Use 64-bit file I/O to support files > 2GB on Windows
     // the position of the first record in the file
-    auto current_position = (size_t) ftell(fp);
-    fseek(fp, 0L, SEEK_END);
-    auto fileSize = (size_t) ftell(fp);
+    int64_t current_position = ftell64(fp);
+    if (current_position < 0) {
+        if (is_verbose()) {
+            std::clog << "-- Error: ftell64 failed to get current position" << std::endl;
+        }
+        return 0;
+    }
+    fseek64(fp, 0, SEEK_END);
+    int64_t fileSize = ftell64(fp);
+    if (fileSize < 0) {
+        if (is_verbose()) {
+            std::clog << "-- Error: ftell64 failed to get file size" << std::endl;
+        }
+        return 0;
+    }
     // calculate the number of records based on the size of the file
     // and the bytes per record
-    n_records_in_file = (fileSize - offset) / bytes_per_record;
+    if (fileSize < static_cast<int64_t>(offset)) {
+        n_records_in_file = 0;
+    } else {
+        n_records_in_file = static_cast<size_t>(fileSize - static_cast<int64_t>(offset)) / bytes_per_record;
+    }
     // move back to the original position
-    fseek(fp, (long) current_position, SEEK_SET);
+    fseek64(fp, current_position, SEEK_SET);
 if (is_verbose()) {
     std::clog << "-- Number of records by file size: " << n_records_in_file << std::endl;
 }
@@ -1952,6 +1990,8 @@ bool valid_container_record_pair(int container_type, int record_type){
             case PQ_RECORD_TYPE_HHT3v1:
             case PQ_RECORD_TYPE_PHT2:
             case PQ_RECORD_TYPE_PHT3:
+            case PQ_RECORD_TYPE_GENERIC_T3:
+            case PQ_RECORD_TYPE_GENERIC_T2:
                 return true;
             default:
                 return false;
