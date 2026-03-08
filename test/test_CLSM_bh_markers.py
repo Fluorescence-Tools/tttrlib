@@ -5,13 +5,25 @@ Tests verify that:
 1. Pixel marker mode correctly bins photons by marker time intervals
 2. Default time-based binning still works when pixel markers disabled
 3. Edge cases (photons before/after markers, flyback region) are handled
+4. Real BH SPC data files can be loaded and processed
 """
 
 from __future__ import division
 
+import os
 import unittest
 import numpy as np
-import tttrlib
+
+try:
+    import tttrlib
+except ImportError:
+    tttrlib = None
+
+try:
+    from test_settings import settings, DATA_AVAILABLE
+except ImportError:
+    settings = None
+    DATA_AVAILABLE = False
 
 
 class TestBHPixelMarkerBinning(unittest.TestCase):
@@ -297,3 +309,94 @@ class TestBHTruncatedRecordingRecovery(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipIf(settings is None, "settings module not available")
+class TestBHRealData(unittest.TestCase):
+    """Tests for loading and processing real BH SPC data files."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Load the real BH SPC data files."""
+        data_root = os.environ.get("TTTRLIB_DATA", "tttr-data")
+        
+        spc_m1_path = os.path.join(data_root, "imaging", "bh", "spcm", "FocalCheck_A1_20x_8xzoom_750nm_m1.spc")
+        set_m1_path = os.path.join(data_root, "imaging", "bh", "spcm", "FocalCheck_A1_20x_8xzoom_750nm_m1.set")
+        
+        if not os.path.exists(spc_m1_path) or not os.path.exists(set_m1_path):
+            raise unittest.SkipTest(f"Real BH SPC test data not found at {data_root}")
+        
+        cls.spc_m1_path = spc_m1_path
+        cls.set_m1_path = set_m1_path
+        
+        cls.tttr = tttrlib.TTTR(spc_m1_path)
+        cls.header = cls.tttr.header
+
+    def test_load_bh_spc_file(self):
+        """Verify BH SPC file can be loaded."""
+        self.assertIsNotNone(self.tttr)
+        self.assertGreater(len(self.tttr.macro_times), 0)
+
+    def test_bh_spc_header_parsing(self):
+        """Verify BH .set file header is parsed and contains expected tags."""
+        header = self.tttr.header
+        
+        json_str = header.get_json()
+        
+        self.assertIsInstance(json_str, str, "Header JSON should be a string")
+        self.assertIn('ImgHdr', json_str, "Header should contain ImgHdr tags")
+        self.assertIn('PixX', json_str, "Header should contain pixel width info")
+        self.assertIn('PixY', json_str, "Header should contain pixel height info")
+
+    def test_bh_spc_reading_routine(self):
+        """Verify CLSMImage works with BH_SPC130 reading routine."""
+        clsm = tttrlib.CLSMImage(
+            tttr_data=self.tttr,
+            reading_routine="BH_SPC130",
+            n_pixel_per_line=256,
+        )
+        clsm.fill()
+        
+        intensity = clsm.intensity
+        
+        self.assertGreater(intensity.shape[0], 0, "Should have at least one frame")
+        self.assertGreater(intensity.shape[1], 0, "Should have lines")
+        self.assertGreater(intensity.shape[2], 0, "Should have pixels")
+        
+        total_photons = np.sum(intensity)
+        self.assertGreater(total_photons, 0, "Should have photons in the image")
+
+    def test_bh_spc_auto_settings(self):
+        """Verify CLSMImage auto-detects settings from BH .set file."""
+        clsm = tttrlib.CLSMImage(
+            tttr_data=self.tttr,
+            reading_routine="BH_SPC130",
+        )
+        
+        n_pixel = int(clsm.n_pixel)
+        self.assertGreater(n_pixel, 0, "Should auto-detect pixels per line")
+
+
+@unittest.skipIf(settings is None, "settings module not available")
+class TestBHSettingsFromJSON(unittest.TestCase):
+    """Tests for BH settings loaded from JSON configuration."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Check if JSON settings for BH are available."""
+        if settings is None:
+            raise unittest.SkipTest("settings module not available")
+        
+        cls.has_bh_settings = hasattr(settings, 'bh_spcm_clsm_m1_filename')
+
+    def test_bh_json_settings_exist(self):
+        """Verify BH settings are defined in settings.json."""
+        if not self.has_bh_settings:
+            self.skipTest("BH SPC settings not in settings.json")
+        
+        data_root = os.environ.get("TTTRLIB_DATA", "tttr-data")
+        
+        spc_file = getattr(settings, 'bh_spcm_clsm_m1_filename', None)
+        if spc_file:
+            spc_path = os.path.join(data_root, spc_file)
+            self.assertTrue(os.path.exists(spc_path), f"BH SPC file should exist: {spc_path}")
