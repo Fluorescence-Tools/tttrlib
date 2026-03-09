@@ -237,7 +237,6 @@ if BUILD_TIER >= 4:
             "abort_on_example_error": False,
 
         }
-        exclude_patterns += ["auto_examples/**/*.py", "auto_examples/*.ipynb"]
 
 # ---------------------------------------------------------------------------
 # MathJax v3 (CDN)

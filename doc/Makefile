@@ -4,6 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD  ?= sphinx-build
+BUILD_TIER   ?= 0
 
 PAPER         =
 BUILDDIR      = _build
@@ -14,7 +15,7 @@ endif
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -T -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS)\
+ALLSPHINXOPTS   = -T -d $(BUILDDIR)/doctrees -D build_tier=$(BUILD_TIER) $(PAPEROPT_$(PAPER)) $(SPHINXOPTS)\
     $(EXAMPLES_PATTERN_OPTS) .
 
 
@@ -49,8 +50,8 @@ html:
 	# Use Doxygen to build API html documentation files
 	doxygen
 
-
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
+	# Pass BUILD_TIER to sphinx via environment
+	env BUILD_TIER=$(BUILD_TIER) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
 	rm -rf $(BUILDDIR)/html/stable/api
 	cp -r _build/api $(BUILDDIR)/html/stable/
 
