@@ -166,10 +166,10 @@ if BUILD_TIER >= 3:
     nbsphinx_execute = "never"
     nbsphinx_allow_errors = True
     # Avoid duplicate example filenames if you later add a gallery:
-    exclude_patterns += [
-        "auto_examples/*.ipynb",
-        "auto_examples/**/*.ipynb",
-    ]
+    # exclude_patterns += [
+    #     "auto_examples/*.ipynb",
+    #     "auto_examples/**/*.ipynb",
+    # ]
 print("[conf] exclude_patterns:", exclude_patterns)
 print("[conf] extensions", extensions)
 

@@ -78,7 +78,7 @@ cmake.args = [
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
 ]
-wheel.packages = []
+wheel.packages = ["tttrlib"]
 # wheel.py-api = "py3"
 wheel.expand-macos-universal-tags = true
 build-dir = "build/{wheel_tag}"
@@ -91,7 +91,7 @@ version.write-to = "tttrlib/_version.py"
 
 [tool.cibuildwheel]
 build-verbosity = 2
-skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp313-*", "cp314-*", "cp314t-*", "cp313t-*"]
+skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*", "cp314-*", "cp314t-*", "cp313t-*"]
 test-skip = "*"
 #test-command = "python -c \"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)\""
 

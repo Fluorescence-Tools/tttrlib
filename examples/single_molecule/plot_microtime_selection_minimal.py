@@ -21,8 +21,10 @@ def select_photons_by_microtime(tttr_data, ranges):
     
     return selected_indices
 
+from examples._example_data import get_data_path
+
 # Load data
-data = tttrlib.TTTR("Q:/tttr-data/bh/bh_spc132_sm_dna/m000.spc", "SPC-130")
+data = tttrlib.TTTR(str(get_data_path("bh/bh_spc132.spc")), "SPC-130")
 print(f"Total events: {len(data)}")
 
 # Analyze microtime distribution

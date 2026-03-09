@@ -17,9 +17,11 @@ import tttrlib
 The experimental data is saved in separate files. The files are joined and the
 resulting TTTR object is processed.
 """
+from examples._example_data import get_data_root
 # open a set of files and stack them in a single TTTR object
-files = glob.glob('../../tttr-data/bh/bh_spc132_sm_dna/*.spc')
+files = sorted([str(p) for p in (get_data_root() / 'bh').glob('bh_spc132.spc')])
 data = tttrlib.TTTR(files[0], 'SPC-130')
+
 for d in files[1:]:
     data.append(tttrlib.TTTR(d, 'SPC-130'))
 

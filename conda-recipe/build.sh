@@ -19,6 +19,4 @@ cmake -S .. -B . \
 
 ninja install -j ${CPU_COUNT}
 
-# Copy programs to bin
-chmod 0755 $SRC_DIR/bin/*
-cp -f $SRC_DIR/bin/* $PREFIX/bin
+# No executables to copy (tttrlib is a library only)

@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt
 # ---------
 # For this example, we'll use a sample file
 # Replace with your actual file path
-data = tttrlib.TTTR("Q:/tttr-data/bh/bh_spc132_sm_dna/m000.spc", "SPC-130")
+from examples._example_data import get_data_path
+data = tttrlib.TTTR(str(get_data_path("bh/bh_spc132.spc")), "SPC-130")
 print(f"Total events: {len(data)}")
 
 # %%
