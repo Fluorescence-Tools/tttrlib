@@ -62,8 +62,13 @@ jobs:
       - name: Build Documentation
         run: |
           cd doc
-          echo "BUILD_TIER=$BUILD_TIER"
-          BUILD_TIER=$BUILD_TIER make html
+          echo "=== BUILD_TIER=$BUILD_TIER ==="
+          ls -la ..
+          ls -la
+          BUILD_TIER=$BUILD_TIER make html 2>&1 | tee build.log
+          echo "=== Build output size ==="
+          du -sh _build/html/stable
+          ls -la _build/html/stable/ | head -20
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
