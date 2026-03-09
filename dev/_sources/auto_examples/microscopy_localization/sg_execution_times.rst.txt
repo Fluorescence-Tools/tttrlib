@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.285** total execution time for 5 files **from auto_examples/microscopy_localization**:
+**00:00.270** total execution time for 5 files **from auto_examples/microscopy_localization**:
 
 .. container::
 
@@ -32,17 +32,17 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_enhanced_image_localizer.py` (``plot_enhanced_image_localizer.py``)
-     - 00:00.063
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_improved_image_localizer.py` (``plot_improved_image_localizer.py``)
-     - 00:00.060
+     - 00:00.057
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_enhanced_image_localizer.py` (``plot_enhanced_image_localizer.py``)
+     - 00:00.056
      - 0.0
    * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_basic_localization_test.py` (``plot_basic_localization_test.py``)
-     - 00:00.055
+     - 00:00.053
      - 0.0
    * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_numpy_localization_wrapper.py` (``plot_numpy_localization_wrapper.py``)
-     - 00:00.055
+     - 00:00.052
      - 0.0
    * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_synthetic_bead_localization.py` (``plot_synthetic_bead_localization.py``)
      - 00:00.052
