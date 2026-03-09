@@ -19,8 +19,6 @@
 #include <assert.h>
 %}
 
-%pythonbegin "./ext/python/tttrlib.py"
-
 // Keep SWIG output quiet by default (runtime verbosity is controlled via TTTRLIB_VERBOSE).
 // Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
 // Warning 389: operator[] ignored (consider using %extend)
@@ -28,6 +26,8 @@
 // Warning 453: Can't apply (double *IN_ARRAY2,int DIM1,DIM2). No typemaps are defined.
 // Warning 511: Ignore overloaded functions
 #pragma SWIG nowarn= 302, 389, 401, 453, 501, 505, 511
+
+%pythonbegin "./ext/python/tttrlib.py"
 
 %include "info.h"
 %include "misc_types.i"
