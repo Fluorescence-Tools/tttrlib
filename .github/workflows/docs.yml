@@ -62,7 +62,11 @@ jobs:
       - name: Build Documentation
         run: |
           cd doc
-          make html
+          mkdir -p _build/api
+          doxygen
+          BUILD_TIER=4 sphinx-build -b html -T -d _build/doctrees . _build/html/stable
+          rm -rf _build/html/stable/api
+          cp -r _build/api _build/html/stable/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

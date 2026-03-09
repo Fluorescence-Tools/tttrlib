@@ -121,8 +121,8 @@ jobs:
       - name: Download Test Data
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         run: |
-          python -m pip install pooch
-          python test/download_test_data.py --output-dir ./tttr-data
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
           python test/download_verify_test_data.py --output-dir ./tttr-data
 
       - name: Install and Test
@@ -222,8 +222,8 @@ jobs:
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         shell: bash -l {0}
         run: |
-          python -m pip install pooch
-          python test/download_test_data.py --output-dir ./tttr-data
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
           python test/download_verify_test_data.py --output-dir ./tttr-data
       - name: Install and Test
         shell: bash -l {0}
