@@ -28,6 +28,7 @@
 #pragma SWIG nowarn= 302, 389, 401, 453, 501, 505, 511
 
 %pythoncode %{
+from __future__ import annotations
 import sys
 
 if sys.version_info[0] < 3:
