@@ -39,12 +39,12 @@ jobs:
             # Full build for main: Linux, macOS, Windows
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-latest\",\"artifact_os\":\"ubuntu-latest\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
           else
             # Cheap build for non-main: Linux only
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-latest\",\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
           fi
 
   build_pip:
