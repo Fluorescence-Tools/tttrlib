@@ -105,7 +105,6 @@ Example Categories
    auto_examples/fluorescence_decay/index
    auto_examples/image_correlation/index
    auto_examples/microscopy_flim/index
-   auto_examples/microscopy_localization/index
    auto_examples/miscellaneous/index
    auto_examples/release_highlights/index
    auto_examples/single_molecule/index
