@@ -140,6 +140,7 @@ jobs:
     name: Conda Build ${{ matrix.os }}
     needs: setup
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup.outputs.conda_matrix)}}
@@ -162,9 +163,9 @@ jobs:
           channels: conda-forge
           channel-priority: strict
           
-      - name: Install conda-build
+      - name: Install rattler-build
         run: |
-          conda install -y conda-build conda-verify anaconda-client boa
+          conda install -y rattler-build -c conda-forge
 
       - name: Build Conda packages
         run: |
@@ -173,9 +174,15 @@ jobs:
           else
             PY_VERSIONS="${{ env.DEFAULT_PYTHON }}"
           fi
+          # Extract version from pyproject.toml for recipe.yaml context
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          echo "Building tttrlib $PKG_VERSION"
           for VER in $PY_VERSIONS; do
             echo "Building for Python $VER on ${{ matrix.os }}"
-            conda build conda-recipe --python $VER --output-folder ./conda-bld -c conda-forge --override-channels
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --output-dir ./conda-bld \
+              -c conda-forge
           done
 
       - uses: actions/upload-artifact@v4
