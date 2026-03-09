@@ -16,6 +16,7 @@ Exit codes:
 """
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -44,10 +45,19 @@ def list_existing_files(root: Path, max_lines: int = 200) -> List[Path]:
 
 
 def main(argv: List[str]) -> int:
-    list_only = '--list-only' in argv
-
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--list-only', action='store_true')
+    parser.add_argument('--output-dir', type=str, default=None)
+    args = parser.parse_args(argv)
+    
     settings = load_settings()
-    data_root = get_output_dir(settings)
+    
+    if args.output_dir:
+        data_root = Path(args.output_dir)
+    else:
+        data_root = get_output_dir(settings)
+    
     required_rel_paths = list(get_required_files(settings))
 
     print(f"TTTRLIB_DATA resolved to: {data_root}")
@@ -68,7 +78,7 @@ def main(argv: List[str]) -> int:
         except Exception:
             print("  ", p)
 
-    if list_only:
+    if args.list_only:
         print("--list-only specified; not checking for required files.")
         return 0
 
