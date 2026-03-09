@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.437** total execution time for 7 files **from auto_examples/correlation**:
+**00:00.430** total execution time for 7 files **from auto_examples/correlation**:
 
 .. container::
 
@@ -33,21 +33,21 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_correlation_plot_estimate_noise.py` (``plot_estimate_noise.py``)
-     - 00:00.122
+     - 00:00.113
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_correlation_plot_confocor3_two_ch_correlation.py` (``plot_confocor3_two_ch_correlation.py``)
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py` (``plot_full_correlation.py``)
      - 00:00.054
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_sliced_correlation.py` (``plot_sliced_correlation.py``)
+     - 00:00.053
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py` (``plot_gated_correlation.py``)
+     - 00:00.053
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_normal_correlation.py` (``plot_normal_correlation.py``)
      - 00:00.053
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_correlation_plot_sliced_correlation.py` (``plot_sliced_correlation.py``)
-     - 00:00.052
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py` (``plot_gated_correlation.py``)
-     - 00:00.052
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py` (``plot_full_correlation.py``)
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_confocor3_two_ch_correlation.py` (``plot_confocor3_two_ch_correlation.py``)
      - 00:00.052
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_correlation_cr_filter.py` (``plot_correlation_cr_filter.py``)

@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.166** total execution time for 3 files **from auto_examples/miscellaneous**:
+**00:00.159** total execution time for 3 files **from auto_examples/miscellaneous**:
 
 .. container::
 
@@ -32,12 +32,12 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)
-     - 00:00.057
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``plot_histogram_benchmark.py``)
-     - 00:00.056
+     - 00:00.054
      - 0.0
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py` (``plot_histogram_2D.py``)
      - 00:00.053
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)
+     - 00:00.052
      - 0.0
