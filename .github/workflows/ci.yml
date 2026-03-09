@@ -39,12 +39,12 @@ jobs:
             # Full build for main: Linux, macOS, Windows
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":[\"self-hosted\",\"Linux\"],\"artifact_os\":\"ubuntu-latest\"},{\"runner\":[\"self-hosted\",\"macOS\"],\"artifact_os\":\"macos-latest\"},{\"runner\":[\"self-hosted\",\"Windows\"],\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-latest\",\"artifact_os\":\"ubuntu-latest\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
           else
             # Cheap build for non-main: Linux only
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":[\"self-hosted\",\"Linux\"],\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-latest\",\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
           fi
 
   build_pip:
@@ -95,7 +95,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   test_pip:
-    name: Pip Test ${{ matrix.runner[1] }}
+    name: Pip Test ${{ matrix.runner }}
     needs: [setup, build_pip]
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -191,7 +191,7 @@ jobs:
           path: ./conda-bld
 
   test_conda:
-    name: Conda Test ${{ matrix.runner[1] }}
+    name: Conda Test ${{ matrix.runner }}
     needs: [setup, build_conda]
     runs-on: ${{ matrix.runner }}
     strategy:
