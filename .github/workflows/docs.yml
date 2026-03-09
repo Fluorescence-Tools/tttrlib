@@ -88,6 +88,15 @@ jobs:
           keep_files: true
           destination_dir: stable
 
+      - name: Deploy Root Redirect (main)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/static_root
+          keep_files: true
+          destination_dir: .
+
       - name: Deploy to GitHub Pages (development/dev)
         if: github.ref == 'refs/heads/development'
         uses: peaceiris/actions-gh-pages@v3
@@ -96,3 +105,12 @@ jobs:
           publish_dir: ./doc/_build/html/stable
           keep_files: true
           destination_dir: dev
+
+      - name: Deploy Root Redirect (development)
+        if: github.ref == 'refs/heads/development'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/static_root
+          keep_files: true
+          destination_dir: .
