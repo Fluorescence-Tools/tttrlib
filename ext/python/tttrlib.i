@@ -27,7 +27,19 @@
 // Warning 511: Ignore overloaded functions
 #pragma SWIG nowarn= 302, 389, 401, 453, 501, 505, 511
 
-%pythonbegin "./ext/python/tttrlib.py"
+%pythoncode %{
+import sys
+
+if sys.version_info[0] < 3:
+    from importlib_metadata import version
+else:
+    from importlib.metadata import version
+
+try:
+    __version__ = version(__package__ or __name__)
+except Exception:
+    __version__ = "0.0.0"
+%}
 
 %include "info.h"
 %include "misc_types.i"
