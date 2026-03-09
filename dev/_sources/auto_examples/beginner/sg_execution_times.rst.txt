@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.244** total execution time for 6 files **from auto_examples/beginner**:
+**00:00.360** total execution time for 6 files **from auto_examples/beginner**:
 
 .. container::
 
@@ -32,21 +32,21 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_00_tttr_files.py` (``plot_00_tttr_files.py``)
-     - 00:00.049
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_03_selections.py` (``plot_03_selections.py``)
-     - 00:00.040
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_04_writing_files.py` (``plot_04_writing_files.py``)
-     - 00:00.040
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_02_basic_operations.py` (``plot_02_basic_operations.py``)
-     - 00:00.039
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_beginner_plot_05_microscopy.py` (``plot_05_microscopy.py``)
-     - 00:00.038
+     - 00:00.063
      - 0.0
    * - :ref:`sphx_glr_auto_examples_beginner_plot_01_reading_files.py` (``plot_01_reading_files.py``)
-     - 00:00.038
+     - 00:00.063
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_00_tttr_files.py` (``plot_00_tttr_files.py``)
+     - 00:00.062
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_04_writing_files.py` (``plot_04_writing_files.py``)
+     - 00:00.062
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_03_selections.py` (``plot_03_selections.py``)
+     - 00:00.057
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_02_basic_operations.py` (``plot_02_basic_operations.py``)
+     - 00:00.053
      - 0.0

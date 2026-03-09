@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.154** total execution time for 4 files **from auto_examples/image_correlation**:
+**00:00.220** total execution time for 4 files **from auto_examples/image_correlation**:
 
 .. container::
 
@@ -33,14 +33,14 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_benchmark.py` (``plot_imaging_ics_benchmark.py``)
-     - 00:00.039
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_fit.py` (``plot_imaging_ics_fit.py``)
-     - 00:00.039
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_numpy.py` (``plot_imaging_ics_numpy.py``)
-     - 00:00.038
+     - 00:00.055
      - 0.0
    * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_tttrlib.py` (``plot_imaging_ics_tttrlib.py``)
-     - 00:00.038
+     - 00:00.055
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_fit.py` (``plot_imaging_ics_fit.py``)
+     - 00:00.055
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_numpy.py` (``plot_imaging_ics_numpy.py``)
+     - 00:00.054
      - 0.0
