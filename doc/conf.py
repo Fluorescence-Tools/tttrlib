@@ -58,6 +58,7 @@ except Exception:
 # Core Sphinx config
 # ---------------------------------------------------------------------------
 root_doc = "index"
+master_doc = "index"
 
 # Accept both .rst and .ipynb as source files
 # --- Make sure notebooks are parsed as notebooks ---
