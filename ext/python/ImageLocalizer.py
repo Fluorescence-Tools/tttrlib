@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Mapping, MutableSequence, Optional, Sequence, Tuple, TYPE_CHECKING
+from typing import Mapping, MutableSequence, Optional, Sequence, Tuple, TYPE_CHECKING, Union
 import weakref
 import atexit
 
@@ -84,7 +82,7 @@ atexit.register(_cleanup_all_localizations)
 
 
 def _normalise_roi(
-    roi: Optional[Tuple[Optional[slice | Tuple[int, int] | int], Optional[slice | Tuple[int, int] | int]]],
+    roi: Optional[Tuple[Optional[Union[slice, Tuple[int, int], int]], Optional[Union[slice, Tuple[int, int], int]]]],
     shape: Tuple[int, int],
 ) -> Tuple[Tuple[slice, slice], Tuple[int, int]]:
     """Normalise ROI specifications to slices and return the offset."""
@@ -139,7 +137,7 @@ def _normalise_roi(
 
 
 def _ensure_array(
-    image: np.ndarray | "CLSMImage",
+    image: Union[np.ndarray, "CLSMImage"],
     *,
     frame: Optional[int] = None,
 ) -> np.ndarray:
@@ -181,7 +179,7 @@ def _prepare_parameters(
     fit_background: bool,
     allow_elliptical: bool,
     model: int,
-    overrides: Optional[Mapping[str, float | Tuple[float, float]]] = None,
+    overrides: Optional[Mapping[str, Union[float, Tuple[float, float]]]] = None,
 ) -> np.ndarray:
     """Create a full 18 parameter vector for the Gaussian fit."""
 
@@ -327,17 +325,17 @@ class ImageLocalizer:
 
     def fit(
         self,
-        image: np.ndarray | "CLSMImage",
-        initial: Optional[Sequence[float] | MutableSequence[float]] = None,
+    image: Union[np.ndarray, "CLSMImage"],
+        initial: Optional[Union[Sequence[float], MutableSequence[float]]] = None,
         *,
         frame: Optional[int] = None,
         roi: Optional[
             Tuple[
-                Optional[slice | Tuple[int, int] | int],
-                Optional[slice | Tuple[int, int] | int],
+                Optional[Union[slice, Tuple[int, int], int]],
+                Optional[Union[slice, Tuple[int, int], int]],
             ]
         ] = None,
-        guess: Optional[Mapping[str, float | Tuple[float, float]]] = None,
+        guess: Optional[Mapping[str, Union[float, Tuple[float, float]]]] = None,
         return_model: bool = False,
     ) -> GaussianFitResult:
         """Fit a two-dimensional Gaussian to the provided image data.
@@ -430,8 +428,8 @@ class ImageLocalizer:
         *,
         roi: Optional[
             Tuple[
-                Optional[slice | Tuple[int, int] | int],
-                Optional[slice | Tuple[int, int] | int],
+                Optional[Union[slice, Tuple[int, int], int]],
+                Optional[Union[slice, Tuple[int, int], int]],
             ]
         ] = None,
         return_model: bool = False,
