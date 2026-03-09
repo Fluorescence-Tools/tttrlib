@@ -1,0 +1,180 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# TTTR Image representations\nTTTR images are mappings from pixels to groups of photons. The photons\nrelate to a set of pulsed light sources that illuminate the sample. The\nphotons are detected by a set of detectors and the time between the light\npulse and the detection is registered along with a detector identifier\nusing time-resolved detection. To visualize features of photon groups that\nrelate to the pixel a dimensionality reduction is applied.\n\nHere, few examples visualize typical mappings from photon groups to representations\nthat can be visualized in an image. In this example data of a pulsed interleaved (PIE)\nmultiparameter fluorescence detection (MFD) F\u00f6rster Resonance Energy Transfer\n(FRET) experiment is processed. The FRET sample contained a donor, D, and\nan acceptor, A, fluorophore. Using the data contained in the TTTR file, we:\n\n    1. create intensity images\n    2. selection of channels\n    3. stripping of photons from CLSMImage\n    4. image of the mean micro times\n    5. a fluorescence intensity decay of the micro times\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "#%\nfrom __future__ import print_function\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pylab as p\nimport tttrlib\n\n\ndef plot_images(images, titles, cmaps=None, **kwargs):\n    if cmaps is None:\n        cmaps = ['viridis'] * len(images)\n    if titles is None:\n        titles = [''] * len(images)\n    fig, ax = plt.subplots(**kwargs)\n    ax = ax.flatten()\n    for i, img in enumerate(images):\n        im = ax[i].imshow(img, cmap=cmaps[i])\n        ax[i].set_title(titles[i])\n        fig.colorbar(im, ax=ax[i], fraction=0.046, pad=0.04)\n    return fig, ax"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\n\n# The FLIM dataset consists of a measurement of the sample\n# and an instrument response function (IRF).\n# We inspect the used routing channels to make sure which\n# detectors have been used in the measurement.\ndata = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/mGBP_DA.ht3')))\nirf = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/mGBP_IRF.ht3')))\n\nprint(\"Used routing channels: \", data.used_routing_channels)\n\n#%\n# Next, we define lists over routing channel numbers that we\n# will use later to refer to different detectors. Here, we\n# are going to inspect the routing channel number 0, and 1,\n# that correspond for the dataset of the experiment to the\n# parallel (P) and perpendicular detector (S). We plan to make\n# FLIM images for P, S, and P+S combined.\ndetection_channels = {\n    \"Gps\": {  # Green total\n        \"channels\": [0, 1]\n    },\n    \"Gp\": {  # Green parallel\n        \"channels\": [0]\n    },\n    \"Gs\": {  # Green perpendicular\n        \"channels\": [1]\n    },\n    \"Rps\": {  # Green total\n        \"channels\": [4, 5]\n    },\n    \"Rp\": {  # Green parallel\n        \"channels\": [4]\n    },\n    \"Rs\": {  # Green perpendicular\n        \"channels\": [5]\n    }\n}"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The FLIM dataset is a Pulsed-Interleaved-Excitation (PIE)\ndataset. In PIE experiments, the sample is sequentially\nexcited by light sources of different wavelength. In our\ndataset the sample is first excited by a laser that\npredominantly excites the donor. Here we define a range\nof micro time channels that we are using to define a\n\"Prompt\" and a \"Delay\". The prompt microtime range\ncaptures the fluorescence, F, of the green, F(G|G), and red,\nF(R|G), detectors, given the green excitation light source, G.\nThe delay microtime channels capture the fluorescence given\nan excitation by the red, R, light source (F(R|R), F(G|R)). In\nthe data acquired in an MFIS (Multiparameter Fluorescence Image\nspectroscopy) the green and red fluorescence is moreover\nsplit into P and S. Here, we will only inspect data in F(G|G)\nand F(R|G).\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "excitation_windows = {\n    \"G\": {  # Green excitation\n        \"micro_time_ranges\": [(0, 12000)]\n    },\n    \"R\": {  # Red excitation\n        \"micro_time_ranges\": [(12000, 32000)]\n    }\n}\n\n#%\n# Here we create all combinations of excitation and detection\n# channels. For the example: G|G, G|R, R|G, R|R\nfill_settings = {}\nfor ex in excitation_windows:\n    d = dict()\n    for ch in detection_channels:\n        d[ch] = {}\n        d[ch].update(detection_channels[ch])\n        d[ch].update(excitation_windows[ex])\n    fill_settings[ex] = d\n\n#%\n# Create a dictionary that contains the IRF photons\n# for the respective Det|Exc pairs\nirfs = dict()\nfor ex in excitation_windows:\n    irfs[ex] = dict()\n    for ch in detection_channels:\n        microtime_range = fill_settings[ex][ch]['micro_time_ranges']\n        chs = fill_settings[ex][ch]['channels']\n        irf_mt_idx = np.where(\n            (irf.micro_times > microtime_range[0][0]) &\n            (irf.micro_times < microtime_range[0][1])\n        )[0]\n        irf_ch_idx = irf.get_selection_by_channel(chs)\n        irf_idx = np.intersect1d(irf_mt_idx, irf_ch_idx)\n        irf_sel = irf[irf_idx]\n        irfs[ex][ch] = irf_sel"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Next, we plot the IRFs for the different combinations of\nexcitation pulses and detectors.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "for ex in irfs:\n    name_ex = \"%s\" % ex\n    for det in irfs[ex]:\n        name_det = \"%s\" % det\n        name = name_det + \"|\" + name_ex\n        irf_x = irfs[ex][det]\n        plt.semilogy(\n            *irf_x.get_microtime_histogram(micro_time_coarsening=16)[::-1],\n            label=name\n        )\nplt.legend()\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Create image\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "image = tttrlib.CLSMImage(data)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "In case an automated processing of header does not wor\nreads header but does not always work, frame marker, line marker, etc.\nmore details (in case it does not work without providing markers)\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_settings = {\n    \"marker_frame_start\": [4],\n    \"marker_line_start\": 1,\n    \"marker_line_stop\": 2,\n    \"marker_event_type\": 1,\n    \"n_pixel_per_line\": 256,\n    \"reading_routine\": 'default',\n    \"skip_before_first_frame_marker\": True\n}\n\nimage = tttrlib.CLSMImage(data, **clsm_settings)\n\n#%\n# Here, we only look at the green photons (simplicity)\nimage.fill(**fill_settings[\"G\"][\"Gps\"])\nprint(\"Fill settings:%s\" % fill_settings[\"G\"][\"Gps\"])\n\n#%\n# Intensity images\n# ----------------\n# Frames, lines, pixel\nimage_intensity_green = image.intensity\n# this is equivalent to \nimage_intensity_green = image.get_intensity()\nimage_intensity_green_sum = image_intensity_green.sum(axis=0)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Plot images\nIntensity images\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "plot_images(\n    images=[\n        image_intensity_green[30],\n        image_intensity_green.sum(axis=0)\n    ],\n    titles=[\n        'Intensity of a single frame ch:%s' % detection_channels['Gps'],\n        'Intensity of integrated frames ch:%s' % detection_channels['Gps']\n    ],\n    ncols=2, nrows=1\n)\n\n\n#%\n# Micro time  images\n# ------------------\n# 1. Mean micro time\n# 2. Mean lifetime\n# 3. Histogram over micro times\n#\nminimum_number_of_photons = 10\n\nimage_mean_micro_time_green = image.get_mean_micro_time(\n    data,\n    minimum_number_of_photons=minimum_number_of_photons,\n    stack_frames=True\n)\nimage_mean_lifetime = image.get_mean_lifetime(\n    tttr_data=data,\n    minimum_number_of_photons=minimum_number_of_photons,\n    tttr_irf=irfs[\"G\"][\"Gps\"],\n    stack_frames=True\n)\n\nplot_images(\n    images=[\n        image_mean_micro_time_green[0],\n        image_mean_lifetime[0]\n    ],\n    titles=[\n        'Mean average time of single frame (ns), ch:%s' % detection_channels['Gps'],\n        'Mean lifetime (ns), ch:%s' % detection_channels['Gps']\n    ],\n    ncols=2, nrows=1\n)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Frames, lines, pixel, micro time channel\nCoarsening micro time resolution / 256\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "image_decay_green = image.get_fluorescence_decay(data, 256)\nimage_decay_green_sum = image_decay_green.sum(axis=0)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Anisotropy image\nShow how to use intensity images and lifetimes\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "image = tttrlib.CLSMImage(data, **clsm_settings)\nimage.fill(**fill_settings['G']['Gps'])\nint_t = image.intensity\nint_t_s = image.intensity.sum(axis=0)\n\n#%\n# illustrate how to strip photons\n# Filled image with Gps remove Gs to get Gp\ntttr_indices_s = data.get_selection_by_channel(detection_channels['Gs'][\"channels\"])\n\nimage.strip(tttr_indices=tttr_indices_s)\nint_p = image.intensity\n\n#%\n# By default the photons are cleared when an image is\n# filled\nimage.fill(**fill_settings['G']['Gs'])\nint_s = image.intensity\n\nint_p_s = int_p.sum(axis=0)\nint_s_s = int_s.sum(axis=0)\n\n#%\n# Define anisotropy image\ng = 1.0  # g factor\nimage_r = (int_p_s - g * int_s_s) / (int_p_s + 2 * g * int_s_s)\n\n#%\n# Mask by number of photons\nr_min, r_max, nr_bins = -0.2, 0.6, 61\nmask = int_t_s < minimum_number_of_photons\nimage_r = np.ma.array(image_r, mask=mask)\nplt.imshow(image_r, vmin=r_min, vmax=r_max)\nplt.show()\n\nr_bins = np.linspace(r_min, r_max, nr_bins)\n\nr_s = image_r.flatten()\nplt.hist(r_s, bins=r_bins)\nplt.show()\n\ntau_mean = image_mean_lifetime.flatten()\ntau_min, tau_max, nr_bins = 0.1, 5.0, 61\ntau_bins = np.linspace(tau_min, tau_max, nr_bins)\nplt.hist(tau_mean, bins=tau_bins)\nplt.show()\nplt.hexbin(tau_mean, r_s, extent=(tau_min, tau_max, r_min, r_max))\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

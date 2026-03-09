@@ -1,0 +1,1240 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Imaging" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="modules/imaging.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Mean lifetime: Formats: Content unclear =&gt; ask Suren pg4 file: Parameters from data?: Y pixel: row index X pixel: column index Green Count Rate (KHz): Number of green photons divided by pixel du..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_modules_imaging_aa2692ce.png" />
+<meta property="og:image:alt" content="Mean lifetime: Formats: Content unclear =&gt; ask Suren pg4 file: Parameters from data?: Y pixel: row index X pixel: column index Green Count Rate (KHz): Number of green photons divided by pixel du..." />
+<meta name="description" content="Mean lifetime: Formats: Content unclear =&gt; ask Suren pg4 file: Parameters from data?: Y pixel: row index X pixel: column index Green Count Rate (KHz): Number of green photons divided by pixel du..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Imaging &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/imaging';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/imaging.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Imaging</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Imaging">
+<h1>Imaging<a class="headerlink" href="#Imaging" title="Link to this heading">#</a></h1>
+</section>
+<section id="Mean-lifetime">
+<h1>Mean lifetime<a class="headerlink" href="#Mean-lifetime" title="Link to this heading">#</a></h1>
+</section>
+<section id="Formats">
+<h1>Formats<a class="headerlink" href="#Formats" title="Link to this heading">#</a></h1>
+<p>Content unclear =&gt; ask Suren</p>
+</section>
+<section id="pg4-file">
+<h1>pg4 file<a class="headerlink" href="#pg4-file" title="Link to this heading">#</a></h1>
+<section id="Parameters-from-data?">
+<h2>Parameters from data?<a class="headerlink" href="#Parameters-from-data?" title="Link to this heading">#</a></h2>
+<p>Y pixel: row index X pixel: column index Green Count Rate (KHz): Number of green photons divided by pixel duration Number of Photons (green): Number of green photons Pixel Number: (Y Pixel) * (Number of Y Pixels) + X Pixel Parameters from fit? ——————– Number of Photons (fit window) (green) tau (green) gamma (green) r0 (green) rho (green) BIFL scatter fit? (green) 2I<em>: P+2S? (green) rS (green) rE (green) 2I</em> (green) Ng-p-all Number (green) of photon in parallel channel Ng-s-all
+Number (green) of photon in perpendicular channel Ng-all Number of (green) photons</p>
+</section>
+</section>
+<section id="pr4-file">
+<h1>pr4 file<a class="headerlink" href="#pr4-file" title="Link to this heading">#</a></h1>
+<section id="parameters-from-data-1">
+<span id="id1"></span><h2>Parameters from data?<a class="headerlink" href="#parameters-from-data-1" title="Link to this heading">#</a></h2>
+<p>Y pixel: row index X pixel: column index Red Count Rate (KHz): Number of red photons divided by pixel duration Number of Photons (red): Number of green photons Pixel Number: (Y Pixel) * (Number of Y Pixels) + X Pixel Parameters from fit? ——————– Number of Photons (fit window) (red) tau gesamt (red) gamma (red) Chi2 (red) rS (red) rE (red) rC (red) Nr-p-all Number of (red) photons in parallel channel Nr-s-all Number of (red) photons in perpendicular (senkrecht) channel Nr-all Number
+of (red) photons</p>
+</section>
+</section>
+<section id="Overview">
+<h1>Overview<a class="headerlink" href="#Overview" title="Link to this heading">#</a></h1>
+<p>In confocal laser scanning microscopy (CLSM) the sample is scanned by a laser beam either by moving the sample over a parked (fixed) laser beam (stage scanning) or by deflecting the laser and moving the position of the exciting on a fixed sample (laser scanning). In both cases, the position of the detection volume within the sample needs to be saved in the recorded TTTR event stream. In the section <code class="docutils literal notranslate"><span class="pre">Theory</span></code> the basics of CLSM data are described. In the section <code class="docutils literal notranslate"><span class="pre">Image</span> <span class="pre">construction</span></code> basic
+python functions are used to create an CLSM image using <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects. In the section <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> it is explained how to use <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>’s C++ interface to efficiently create CLSM images and different <code class="docutils literal notranslate"><span class="pre">CLSM</span> <span class="pre">representations</span></code>, e.g., intensity images, mean micro time images are presented with a brief application and example source-code. Moreover, for an CLSM image the resolution is :ref:<code class="docutils literal notranslate"><span class="pre">estimated&lt;frc-image&gt;</span></code>) by Fourier Ring Correlation and it is described how CLSM markers can be analyzed
+only given the photon stream using data from an Leica SP8 a :ref:<code class="docutils literal notranslate"><span class="pre">example&lt;LeicaSp8Marker&gt;</span></code>.</p>
+</section>
+<section id="Applications">
+<h1>Applications<a class="headerlink" href="#Applications" title="Link to this heading">#</a></h1>
+<section id="Representations">
+<h2>Representations<a class="headerlink" href="#Representations" title="Link to this heading">#</a></h2>
+<p>The are several ways how the data contain in CLSM images can be represented and analyzed. For instance, images can be computed where every pixel contains an average fluorescence lifetime or an intensity. A few representations for CLSM data and scripts how to generate these representations are outlined here.</p>
+<p>#.. plot:: ../examples/imaging/imaging_representations.py</p>
+<p>The figure displayed above corresponds to a live-cell FLIM measurement of eGFP. The fluorescent label eGFP is often used as an donor fluorophore in FRET experiments. In the image shown above, eGFP was measured in the absence of FRET. The intensity image shows a non uniform intensity in the cell. However, an image of the mean arrival time reveals as expected a uniform distribution. Inspecting the fluorescence decay curve of the corresponding image reveals a fluorescence decay that is not curved
+and hence likely single exponential.</p>
+<p>Below a few applications are presented.</p>
+</section>
+<section id="Intensity">
+<h2>Intensity<a class="headerlink" href="#Intensity" title="Link to this heading">#</a></h2>
+<p>An intensity image of a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> instance that has been filled with photons can be created by counting the number of photons in each pixel. This can either be accomplished by iterating over the frames, lines, and pixels or by using the method <code class="docutils literal notranslate"><span class="pre">fill_pixels</span></code> of a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> instance.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>import tttrlib
+tttr_data = tttrlib.TTTR(&#39;./data/pq/ht3/PQ_HT3_CLSM.ht3&#39;, &#39;HT3&#39;)
+channels = (0, 1)
+reading_parameter = {
+    &quot;tttr_data&quot;: tttr_data,
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;,
+    &quot;fill&quot;: True,
+    &quot;channels&quot;: channels
+}
+clsm_image = tttrlib.CLSMImage(**reading_parameter)
+
+# option 1
+n_frames = clsm_image.n_frames
+n_lines = clsm_image.n_lines
+n_pixel = clsm_image.n_pixel
+intensity_image = np.zeros((n_frames, n_lines, n_pixel))
+for frame_idx, frame in enumerate(clsm_image):
+    for line_idx, line in enumerate(frame):
+        for pixel_idx, pixel in enumerate(line):
+            n_photons = len(pixel.tttr_indices)
+            intensity_image[frame_idx, line_idx, pixel_idx] = n_photons
+
+# option 2 - using the C++ method
+intensity_image = clsm_image.fill_pixels(tttr_data, channels)
+</pre></div>
+</div>
+<p>Iterating large images and multiple pixels in python generates a large overhead. Hence, the recommended procedure that is equivalent to the code above to generate intensity images is the second option.</p>
+</section>
+<section id="Mean-micro-time">
+<h2>Mean micro time<a class="headerlink" href="#Mean-micro-time" title="Link to this heading">#</a></h2>
+<p>To create an image of the mean micro times in a pixel the method <code class="docutils literal notranslate"><span class="pre">get_mean_micro_time_image</span></code> of a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> instance has to be provided with a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object the method uses the tttr indices of the photons stored in the <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> objects to look-up the micro times of the respective photons. The micro times of every pixel are average to yield an average arrival time of the photons in a pixel.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>tttr_data = tttrlib.TTTR(&#39;./data/pq/ht3/PQ_HT3_CLSM.ht3&#39;, &#39;HT3&#39;)
+channels = (0, 1)
+reading_parameter = {
+    &quot;tttr_data&quot;: tttr_data,
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;,
+    &quot;fill&quot;: True,
+    &quot;channels&quot;: channels
+}
+clsm_image = tttrlib.CLSMImage(**reading_parameter)
+
+minimum_number_of_photons = 3
+image_mean_micro_time = clsm_image.get_mean_micro_time_image(
+    tttr_data,
+    minimum_number_of_photons=minimum_number_of_photons
+)
+n_frames, n_lines, n_pixel = image_mean_micro_time.shape
+n_frames == 40 # True
+n_lines == 256 # True
+n_pixel == 256 # True
+</pre></div>
+</div>
+<p>The pixel-wise average arrival time over the frames in a CLSMImage object is computed by the method <code class="docutils literal notranslate"><span class="pre">get_mean_micro_time_image</span></code> when the optional parameter <code class="docutils literal notranslate"><span class="pre">stack_frames</span></code> is set to True.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>image_mean_micro_time_stack = clsm_image.get_mean_micro_time_image(
+    tttr_data,
+    minimum_number_of_photons=minimum_number_of_photons,
+    stack_frames=True
+)
+n_frames, n_lines, n_pixel = image_mean_micro_time_stack.shape
+n_frames == 1  # True
+avg_2 = image_mean_micro_time.mean(axis=0) # do not use such average
+np.allclose(image_mean_micro_time_stack, avg_2) # False
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The average over a stack of average arrival times and the stacked and averaged arrival times differ. If the average arrival time is computed for every frame and then the arrival times are averaged, the number of photons that resulted in the average is not considered. Thus, the two averages in the code-block displayed above differ.</p>
+</div>
+</section>
+<section id="Average-fluorescence-lifetime">
+<h2>Average fluorescence lifetime<a class="headerlink" href="#Average-fluorescence-lifetime" title="Link to this heading">#</a></h2>
+<p>The moments of the fluorescence intensity decay can be directly computed also considering the instrument response function (IRF) :cite:<code class="docutils literal notranslate"><span class="pre">isenberg_studies_1973</span></code>.</p>
+<p>#.. plot:: ../examples/imaging/imaging_mean_tau.py</p>
+<p>The shown example computes for every pixel a mean fluorescence lifetime considering the IRF that is provided as a <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR</span></code> object.</p>
+</section>
+<section id="Phasor">
+<h2>Phasor<a class="headerlink" href="#Phasor" title="Link to this heading">#</a></h2>
+<p>The phasor method’s is a model free analysis that has certain advantages over conventional nonlinear curve fitting, which is computationally-intensive and can be sensitive to potential inaccuracies due to correlations between computed terms. The phasor analysis provides a robust approach to investigate variations in fluorescence lifetime measurements .</p>
+<p>#.. plot:: ../examples/imaging/imaging_phasor.py</p>
+<p>Top phasor without instrument response function (IRF) correction. Bottom phasor with IRF correction.</p>
+</section>
+<section id="Fluorescence-decay-histograms">
+<h2>Fluorescence decay histograms<a class="headerlink" href="#Fluorescence-decay-histograms" title="Link to this heading">#</a></h2>
+<p>The micro times of the photons in every pixel can be binned to yield a fluorescence decay histogram for every pixel in the CLSM image. This is implemented in the method <code class="docutils literal notranslate"><span class="pre">get_fluorescence_decay_image</span></code> of <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> objects.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>image_decay = clsm_image.get_fluorescence_decay_image(
+    tttr_data,
+    stack_frames=False
+)
+n_frames, n_lines, n_pixel, n_micro_time_bins = image_decay.shape
+n_frames == 40  # True
+n_micro_time_bins == 32768
+image_decay = clsm_image.get_fluorescence_decay_image(
+    tttr_data,
+    stack_frames=True,
+    micro_time_coarsening=256
+)
+n_frames, n_lines, n_pixel, n_micro_time_bins_2 = image_decay.shape
+n_micro_time_bins_2 == n_micro_time_bins // 256
+n_frames == 1  # True
+</pre></div>
+</div>
+<p>When the optional parameter <code class="docutils literal notranslate"><span class="pre">stack_frames</span></code> is set to True (the default value is False). The optional parameter <code class="docutils literal notranslate"><span class="pre">micro_time_coarsening</span></code> is used to decrease the resolution of the fluorescence decay histogram. The default value of <code class="docutils literal notranslate"><span class="pre">micro_time_coarsening</span></code> is 1 and the micro time resolution is used as is. A value of 2 decreases the micro time resolution by a factor of 2.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A four dimensional array may consume a considerable amount of memory. Thus, use appropriate values for the parameters of <code class="docutils literal notranslate"><span class="pre">get_fluorescence_decay_image</span></code> to reduce the memory consumption.</p>
+</div>
+</section>
+<section id="Pixel-averaged-decays">
+<h2>Pixel averaged decays<a class="headerlink" href="#Pixel-averaged-decays" title="Link to this heading">#</a></h2>
+<p>Using selection masks the signal to noise of the fluorescence decays can be greatly improved to allow for a detailed analyis. Here it is briefly outlined, how pixels are selected and fluorescence decays of these pixel sub-populations can be created.</p>
+<p>#.. plot:: ../examples/imaging/imaging_pixel_masks.py</p>
+<p>Pixels are selected by a pixel mask, i.e., arrays of the same size as a CLSM image. The micro times of the photons associated to the selected pixels can be binned into fluorescence decay histograms. This way, fluorescence decays of regions of interest (ROIs) can be created. ROIs can be defined by normal bitmap images. A different ROI can be used for each frame in an CLSM image.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>from matplotlib.pyplot import imread
+import tttrlib
+import numpy as np
+
+tttr_data = tttrlib.TTTR(&#39;./data/pq/ht3/PQ_HT3_CLSM.ht3&#39;, &#39;HT3&#39;)
+channels = (0, 1)
+reading_parameter = {
+    &quot;tttr_data&quot;: tttr_data,
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;,
+    &quot;fill&quot;: True,
+    &quot;channels&quot;: channels
+}
+clsm_image = tttrlib.CLSMImage(**reading_parameter)
+mask = imread(&quot;./data/aux/PQ_HT3_CLSM_MASK.png&quot;).astype(np.uint8)
+selection = np.ascontiguousarray(
+    np.broadcast_to(
+        mask,
+        (clsm_image.n_frames, clsm_image.n_lines, clsm_image.n_pixel)
+    )
+)
+kw = {
+    &quot;tttr_data&quot;: tttr_data,
+    &quot;selection&quot;: selection,
+    &quot;selection&quot;: selection,
+    &quot;tac_coarsening&quot;: 16,
+    &quot;stack_frames&quot;: True
+}
+decay = clsm_image.get_average_decay_of_pixels(**kw)
+decay.shape == (1, 2048)
+kw[&quot;stack_frames&quot;] = False
+decay_2 = clsm_image.get_average_decay_of_pixels(**kw)
+decay_2.shape == (40, 2048)
+</pre></div>
+</div>
+<p>The decays of the different frames can be stacked by setting the parameter <code class="docutils literal notranslate"><span class="pre">stack_frames</span></code> to True.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To keep the memory consumption low, we use only 8 bit per element in the selection mask.</p>
+</div>
+</section>
+<section id="Correlation-function">
+<h2>Correlation function<a class="headerlink" href="#Correlation-function" title="Link to this heading">#</a></h2>
+<p>Every pixel is defined by a list of TTTR indices. To these indices a macro time and micro time are associtate. Hence, correlation functions can be computed.</p>
+</section>
+<section id="Image-correlation-spectroscopy">
+<h2>Image correlation spectroscopy<a class="headerlink" href="#Image-correlation-spectroscopy" title="Link to this heading">#</a></h2>
+<p>Fluorescence fluctuation spectroscopy can be combined with fluorescence imaging. Image correlation spectroscopy (ICS) allows to extracted molecular properties from microscopy images :cite:<code class="docutils literal notranslate"><span class="pre">petersen_quantitation_1993</span></code>. There are many flavours of ICS. For conventional CLSM imaging the most relevant is raster image correlation spectroscopy (RICS) that can be used to study the molecular translational diffusion constant (D), absolute concentration (c), and intermolecular binding constants of
+diffusive molecules :cite:<code class="docutils literal notranslate"><span class="pre">digman_measuring_2005</span></code> :cite:<code class="docutils literal notranslate"><span class="pre">digman_fluctuation_2005</span></code> :cite:<code class="docutils literal notranslate"><span class="pre">digman_detecting_2009</span></code>. The static method <code class="docutils literal notranslate"><span class="pre">CLSMImage.compute_ics</span></code> allows to correlate <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> objects and stacks of images for ICS analysis.</p>
+<p>#.. plot:: ../examples/imaging/imaging_ics_tttrlib.py</p>
+<p>The figure above displays an image and the corresponding image correlation for a region of interest (ROI) that is highlighted by a red square. <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> supports squared ROIs that can be background corrected. However, in general ICS can be applied to arbitrarily shaped ROIs is :cite:<code class="docutils literal notranslate"><span class="pre">hendrix_arbitrary-region_2016</span></code>.</p>
+<p>With a few lines of python code the computed correlations can be analyzed and fitted to yield diffusion coefficients and concentrations.</p>
+<p>#.. plot:: ../examples/imaging/imaging_ics_fit.py</p>
+<p>The figure above displays an image, the corresponding ICS, and the weighted residuals of the model and the analysis results.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For RICS the line durations (line time) and the pixel duration (pixel time) need to be known. These parameters can be setup. Moreover, some setup configurations use “photons” event types to record special events. Different microscopes may use different markers. For common microscopes such as the Leica SP5 and Leica SP8 ready-to-use image processing routines are provided.</p>
+</div>
+<p>Autocorrelations</p>
+<p>Spatiotemporal ICS (STICS)</p>
+<p>Cross-correlations (</p>
+</section>
+</section>
+<section id="Image-markers">
+<h1>Image markers<a class="headerlink" href="#Image-markers" title="Link to this heading">#</a></h1>
+<section id="General">
+<h2>General<a class="headerlink" href="#General" title="Link to this heading">#</a></h2>
+<p>The position of the laser in the TTTR event stream is encoded by injecting markers into the event stream the report on the laser position. Some manufactures present these markers as special “”events”” that are distinguished from normal photon events. Some manufacturers use the same routing channel numbers for markers and for photon detection channels. To distinguish photons from markers,<code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects present for every event an additional event type specifier (see :doc:<code class="docutils literal notranslate"><span class="pre">tttr_objects</span></code>).</p>
+<p>The position of the laser on the sample is mostly defined by the following markers</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. A frame marker
+2. A line start marker
+3. A line stop marker
+</pre></div>
+</div>
+<p>The line start and the line stop marker define a <em>valid</em> region of the image. In confocal laser scanning microscopy (CLSM) the laser beam is usually repositioned between the line stop and the line start marker. The detectors are usually switched on in this period and register how the laser is fast repositioned on the sample. The TTTR stream can be also processed outside of this valid region. However, then the pixel sizes may not be uniform.</p>
+<p>The assignment of the markers to channels depends on the configuration of the microscope. Below it is briefly outlined how these markers can be assigned to channels.</p>
+<p>Below a typical traces of channel numbers for special events are shown.</p>
+<p>#.. plot:: ../examples/imaging/imaging_special_markers.py</p>
+<p>To the top a longer trace of special events channel numbers is shown. As can be seen by inspecting the traces of special events, channel number 4 is followed by an interleaved sequence of channel number 1 and channel number 2. This identifies channel 4 as frame number and channel 1 and 2 as, line start and line stop, respectively. As is shown for the end of the special event channel trace, the last frame marker is followed by an incomplete frame. This is not uncommon. Hence, the photons
+registered following the last frame number should be rejected, as they would result in an incomplete image.</p>
+<p>The markers markers and the photons between the markers need to be analyzed to form an image.</p>
+</section>
+</section>
+<section id="CLSMImage">
+<h1>CLSMImage<a class="headerlink" href="#CLSMImage" title="Link to this heading">#</a></h1>
+<section id="Data-structure">
+<h2>Data structure<a class="headerlink" href="#Data-structure" title="Link to this heading">#</a></h2>
+<p>CLSM recordings are not imaging data in a classical sense. There is no strict definition of a pixel and in pulsed time-resolved (tr) experiments that can have multiple lasers (Pulsed Interleaved Excitation, PIE) and multiple detectors that resolve the polarization and the spectral ranges of the photons (Multiparameter Fluorescence Detection, MFD). Hence, a standard imaging data structure is not a very handy format to operate on time-resolved PIE-MFD CLSM data. Moreover, CLSM data can encode
+multiple frames, either from time-series or 3D stacks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> handles CLSM images by the <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> class. The <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> class implements a data structure for CLSM images that can be used to query photons of pixels in frames, lines, and pixels of CLSM data. For that, <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> processes <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects. The photons contained in the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object are grouped based on the specified markers. After reading the TTTR data into a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object, the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object is used to create a new <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object.</p>
+</section>
+<section id="Use-Python-and-C/C++">
+<h2>Use Python and C/C++<a class="headerlink" href="#Use-Python-and-C/C++" title="Link to this heading">#</a></h2>
+<p>As was pointed out above based on a few lines of Python source code (see :ref:<code class="docutils literal notranslate"><span class="pre">Image</span> <span class="pre">scanning:Confocal</span> <span class="pre">laser</span> <span class="pre">scanning:Theory</span></code>) to construct an image</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. the frame marker
+2. the line start marker
+3. the line stop marker
+4. the detector channel numbers
+5. the number of pixels per scanning line
+</pre></div>
+</div>
+<p>need to be specified. Based on these parameters, the indices of the photons in the TTTR data stream are assigned to frames, lines, and pixels. When creating a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object with a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object that contains the photon stream a set of <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code>, and <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> objects are create.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>from __future__ import print_function
+import tttrlib
+import numpy as np
+import pylab as p
+
+data = tttrlib.TTTR(&#39;./examples/pq/ht3/PQ_HT3_CLSM.ht3&#39;, 1)
+
+frame_marker = 4
+line_start_marker = 1
+line_stop_marker = 2
+event_type_marker = 1
+pixel_per_line = 256
+image = tttrlib.CLSMImage(
+    data,
+    frame_marker,
+    line_start_marker,
+    line_stop_marker,
+    event_type_marker,
+    pixel_per_line,
+    reading_routine=&#39;default&#39;
+)
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the example above the reading routine is specified to the default (=0). If no reading routine is specified the <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> class uses the channel number of an event to identify line start/stops and frame marker. In Leica SP8 PTU files the micro time of an photon events encodes the type of the event. Here, a different reading routine needs to be specified.</p>
+</div>
+<p>The last parameter (here 0) specifies the reading routine (parameter = <code class="docutils literal notranslate"><span class="pre">reading_routine</span></code>) for the line and frame markers. The supported marker types are shown in the table below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>+--------------------------+--------+----------------+
+| Line, Framer marker type | Option                  |
++==========================+========+================+
+|Default (routing channel) |default                  |
++--------------------------+-------------------------+
+|Leica SP8 (micro time)    |SP8                      |
++--------------------------+-------------------------+
+|Leica SP5 (micro time)    |SP5                      |
++--------------------------+-------------------------+
+</pre></div>
+</div>
+<p>As illustrated by the code shown below, every <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object may contain multiple <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code> objects , every <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code> contain a set of <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code> objects, and every <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code> object contains multiple <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> objects. The number of <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> objects per line is specified upon instantiation if the <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object (see code example above). The <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code>, and the <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> classes derive from the <code class="docutils literal notranslate"><span class="pre">TTTRRange</span></code> class and provide access to the
+associated TTTR indices that mark the beginning and the end of the respective object via the function <code class="docutils literal notranslate"><span class="pre">get_start_stop</span></code> (see example below).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>frames = image.get_frames()
+frame = frames[0]
+
+print(&quot;Frame&quot;)
+print(&quot;-----&quot;)
+print(&quot;start, stop: &quot;, frame.get_start_stop())
+print(&quot;start time, stop time: &quot;, frame.get_start_stop_time())
+print(&quot;duration: &quot;, frame.get_duration())
+
+lines = frame.get_lines()
+line = lines[0]
+print(&quot;Line&quot;)
+print(&quot;-----&quot;)
+print(&quot;start, stop: &quot;, line.start_stop
+print(&quot;start time, stop time: &quot;, line.get_start_stop_time())
+print(&quot;duration: &quot;, line.get_duration())
+
+pixels = line.get_pixels()
+pixel = pixels[100]
+print(&quot;Pixel&quot;)
+print(&quot;-----&quot;)
+print(&quot;start, stop: &quot;, pixel.get_start_stop())
+print(&quot;start time, stop time: &quot;, pixel.get_start_stop_time())
+print(&quot;duration: &quot;, pixel.get_duration())
+</pre></div>
+</div>
+<p>Object of the <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> class store the frame, line, and pixel location of the TTTR data stream that was used to create the <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object. Next, to determine images, the detection channels of interest need to be specified using the method <code class="docutils literal notranslate"><span class="pre">fill_pixels</span></code>. The method <code class="docutils literal notranslate"><span class="pre">fill_pixels</span></code> populates the</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pixels are not filled with start and stop indices and associated start and stop times, as the channels of the image have not been defined.</p>
+</div>
+<p>To fill the pixels, it has to be defined, which detection channels are used. Next, the pixels can be filled. When filling the pixels, to every pixel a start and stop time in the TTTR data stream is associated.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>channels = (0, 1)
+image.fill_pixels(data, (0, 1))
+
+print(&quot;Pixel&quot;)
+print(&quot;-----&quot;)
+print(&quot;start, stop: &quot;, pixel.get_start_stop())
+print(&quot;start time, stop time: &quot;, pixel.get_start_stop_time())
+print(&quot;duration: &quot;, pixel.get_start_stop_time())
+
+image_intensity = image.intensity
+image_decay = image.get_fluorescence_decay_image(data, 32)
+
+p.imshow(image_intensity.sum(axis=0))
+p.show()
+
+p.semilogy(image_decay.sum(axis=(0,1,2)))
+p.show()
+</pre></div>
+</div>
+<p>To yield the mean time between excitation and detection of fluorescence the method <code class="docutils literal notranslate"><span class="pre">get_mean_micro_time_image</span></code> can be used. The example shown below shows the counts per pixel for all frames (top, left), the counts per pixel for frame number 30 (top, right), and the mean time between excitation and detection of fluorescence (bottom, left). The function <code class="docutils literal notranslate"><span class="pre">get_mean_micro_time_image</span></code> takes in addition to the TTTR data an argument that discriminates pixels with less than a certain amount of
+photons (below 3 photons). As can be seen by this analysis, the mean time between excitation and detection of fluorescence is fairly constant over the cell, while the intensity varies in this particular sample.</p>
+<p>For more detailed analysis the fluorescence decays contained in the 4D image (frame, x, y, fluorescence decay) returned by <code class="docutils literal notranslate"><span class="pre">get_fluorescence_decay_image</span></code> can be used, e.g., by analyzing fluorescence decay histograms. A full example that generates a fluorescence decay containing all photons of the 30 frames is shown below.</p>
+</section>
+<section id="Creating-CLSM-images">
+<h2>Creating CLSM images<a class="headerlink" href="#Creating-CLSM-images" title="Link to this heading">#</a></h2>
+<p>General reading framework ^^^^^^^^^^^^^^^^^^^^^^^^^ When a new <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object is created, the markers are processed. If the number of lines is set to zero the number of pixels per line is set to the number of lines. To create CLSM image the TTTR object needs to be provided in addition to the markers. The markers can be manually specified.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>filename = &#39;./test/data/imaging/pq/ht3/pq_ht3_clsm.ht3&#39;
+data = tttrlib.TTTR(filename, &#39;HT3&#39;)
+reading_parameter = {
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;
+}
+clsm_image = tttrlib.CLSMImage(
+    tttr_data=data,
+    **reading_parameter
+)
+</pre></div>
+</div>
+<p>The frames in a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object are <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code> objects. Lines in frame are <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code> objects and pixels in lines are <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> objects. The <code class="docutils literal notranslate"><span class="pre">CLSMFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">CLSMLine</span></code>, and the <code class="docutils literal notranslate"><span class="pre">CLSMPixel</span></code> class inherent from the <code class="docutils literal notranslate"><span class="pre">TTTRRange</span></code> class (see :ref:<code class="docutils literal notranslate"><span class="pre">TTTR-Objects:TTTR</span> <span class="pre">ranges</span></code>). Briefly, TTTRRange objects keep track of the photon indices in a given range.</p>
+<p>After a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object is created without specifying the channels, it is an container that keeps track of the beginning and end of the frames, lines. The pixels in the lines are empty and do not refer to photon indices. The frames, lines, and pixels of a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object can be accessed by their index.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>clsm_image = tttrlib.CLSMImage(
+    tttr_data=data,
+    **reading_parameter
+)
+frame = clsm_image[0]
+line = frame[100]
+pixel = line[100]
+len(pixel.tttr_indices) == 0 # True
+</pre></div>
+</div>
+<p>The indices of the photons in a pixel can be accessed by the attribute <code class="docutils literal notranslate"><span class="pre">tttr_indices</span></code>. To fill the pixels, the channel of interest needs to be specified by its channel number.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>clsm_image.fill_pixels(
+    tttr_data=data,
+    channels=[0]
+)
+len(pixel.tttr_indices) == 0 # False
+</pre></div>
+</div>
+<p>When filling the pixels with photons that are identified via their channel number in the tttr data, multiple channels can be specified.</p>
+<p>Alternatively, the channels can be specified when a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object is created.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>filename = &#39;./test/data/imaging/pq/ht3/pq_ht3_clsm.ht3&#39;
+reading_parameter = {
+    &quot;tttr_data&quot;: tttrlib.TTTR(filename, &#39;HT3&#39;)
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;,
+    &quot;fill&quot;: True,
+    &quot;channels&quot;: [0, 2]
+}
+clsm_image = tttrlib.CLSMImage(**reading_parameter)
+len(pixel.tttr_indices) != 0 # True
+</pre></div>
+</div>
+<p>Here, the optional parameter “channels” in combination with the optional parameter “fill” instruct the constructor of <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> to fill the pixels with events that are identified by the routing channel numbers 0 and 2.</p>
+<p>After filling the pixels with tttr indices (photon indices) the CLSM container can be used to create different representations of the data. A representation of the data is for instance an intensity image that counts the photons in each pixel, a mean micro time image, a 3D map that contains a fluorescence decay histogram at every pixel, or an 3D map that contains a correlation function that is computed over the photons in each pixel.</p>
+<p>Reading PTU files ^^^^^^^^^^^^^^^^^ <code class="docutils literal notranslate"><span class="pre">PicoQuant</span> <span class="pre">&lt;https://www.picoquant.com/&gt;</span></code>_ PTU files can contain additional image information in the file file header that inform the frame marker, the line marker. This data can be accessed by <code class="docutils literal notranslate"><span class="pre">data</span></code> attribute of the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>’s object header. Thus, for <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> instances of PTU files can be created by</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>tttr_data = tttrlib.TTTR(&#39;./data/imaging/pq/Microtime200_HH400/beads.ptu&#39;, &#39;PTU&#39;)
+clsm = tttrlib.CLSMImage(tttr_data)
+</pre></div>
+</div>
+<p>The PTU files of the Leica SP5 and the Leica SP8 use a non-standard way of encoding line markers. Thus the reading routing needs to be specified. For other CLSM PTU data <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> instances can be directly created</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>tttr_data = tttrlib.TTTR(&#39;./data/imaging/leica/sp5/LSM_1.ptu&#39;, &#39;PTU&#39;)
+clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = &#39;SP5&#39;)
+</pre></div>
+</div>
+<p>PTU files can also be opened by manually providing the marker parameters as described above.</p>
+</section>
+<section id="Copying-CLSMImage-instances">
+<h2>Copying CLSMImage instances<a class="headerlink" href="#Copying-CLSMImage-instances" title="Link to this heading">#</a></h2>
+<p>A new <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object can be created using an existing <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object as a template.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>tttr_data = tttrlib.TTTR(&#39;./test/data/imaging/pq/ht3/pq_ht3_clsm.ht3&#39;, &#39;HT3&#39;)
+reading_parameter = {
+    &quot;tttr_data&quot;: tttr_data,
+    &quot;marker_frame_start&quot;: [4],
+    &quot;marker_line_start&quot;: 1,
+    &quot;marker_line_stop&quot;: 2,
+    &quot;marker_event_type&quot;: 1,
+    &quot;n_pixel_per_line&quot;: 256, # if zero n_pixel_per_line = n_lines
+    &quot;reading_routine&quot;: &#39;default&#39;,
+    &quot;fill&quot;: True,
+    &quot;channels&quot;: [0, 2]
+}
+clsm_image_1 = tttrlib.CLSMImage(**reading_parameter)
+clsm_image_2 = tttrlib.CLSMImage(source=clsm_image_1, fill=True)
+</pre></div>
+</div>
+<p>When creating a <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object using another <code class="docutils literal notranslate"><span class="pre">CLSMImage</span></code> object as a source the frames, lines, and pixels are copied. When the optional parameter <code class="docutils literal notranslate"><span class="pre">fill</span></code> is set the tttr indices of the photons are copied as well.</p>
+</section>
+<section id="Exporting-as-TIFF">
+<h2>Exporting as TIFF<a class="headerlink" href="#Exporting-as-TIFF" title="Link to this heading">#</a></h2>
+<p>All representations of the FLIM data are <code class="docutils literal notranslate"><span class="pre">numpy</span> <span class="pre">&lt;https://numpy.org/&gt;</span></code>_ arrays that can be written of standard image data formats for instance using the input/output functionality of <code class="docutils literal notranslate"><span class="pre">OpenCV</span> <span class="pre">&lt;https://opencv.org/&gt;</span></code>_ or the library <code class="docutils literal notranslate"><span class="pre">tiffile</span> <span class="pre">&lt;https://pypi.org/project/tifffile/&gt;</span></code>_</p>
+<p>The sample code below opens a PTU dataset from a Leica SP5 and writes an intensity image to a TIFF image stack.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>import tifffile
+tttr_data = tttrlib.TTTR(&#39;./data/imaging/leica/sp5/LSM_1.ptu&#39;, &#39;PTU&#39;)
+clsm_image = tttrlib.CLSMImage(tttr_data, reading_routine = &#39;SP5&#39;)
+output_file = &#39;intensity_image.tif&#39;
+img_stack = clsm.intensity
+img_stack = np.array([i.T for i in img_stack])
+img_stack *= (2 ** 16 - 1) // np.max(img_stack)
+img_stack = img_stack.astype(dtype=np.uint16)
+with tifffile.TiffWriter(output_file, imagej=True) as tif:
+    tif.save(img_stack)
+</pre></div>
+</div>
+<p>Other representations can be saved accordingly as TIFF images.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Many representations use float, doubles, or long integers (64bit) that are
+often not fully supported by standard image formats. Thus, make sure that the
+images are properly scaled and quantized before saving.
+</pre></div>
+</div>
+<p>============================== Image correlation spectroscopy ==============================</p>
+</section>
+</section>
+<section id="Decay-moments">
+<h1>Decay moments<a class="headerlink" href="#Decay-moments" title="Link to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_green_prompt</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+tttrlib.TTTR(&#34;/home/tpeulen/dev/tttrlib/doc/modules/../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu&#34;, &#34;PTU&#34;)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Nbr. Photons:  31005074.0
+background_fraction: 0.18311995481771795
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/tljh/user/lib/python3.9/site-packages/numpy/core/getlimits.py:500: UserWarning: The value of the smallest subnormal for &lt;class &#39;numpy.float64&#39;&gt; type is zero.
+  setattr(self, word, getattr(machar, word).flat[0])
+/opt/tljh/user/lib/python3.9/site-packages/numpy/core/getlimits.py:89: UserWarning: The value of the smallest subnormal for &lt;class &#39;numpy.float64&#39;&gt; type is zero.
+  return self._float_to_str(self.smallest_subnormal)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/modules_imaging_9_2.png" src="../_images/modules_imaging_9_2.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;matplotlib.lines.Line2D at 0x7f2eca8ef430&gt;]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/modules_imaging_10_1.png" src="../_images/modules_imaging_10_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/tmp/ipykernel_1631539/3861523619.py:31: RuntimeWarning: divide by zero encountered in log
+  lg_sg_sr = np.log(masked_green / masked_red)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/modules_imaging_11_1.png" src="../_images/modules_imaging_11_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_tau_green</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[[-60.60314757, -69.968409  , -65.06852312, ...,   0.        ,
+           0.        ,   0.        ],
+        [-63.70403184, -61.16748977, -60.42777429, ...,   0.        ,
+           0.        ,   0.        ],
+        [-55.41072919, -71.2040123 , -64.28373794, ...,   0.        ,
+           0.        ,   0.        ],
+        ...,
+        [-67.58461232, -62.73440897, -76.13942094, ...,   0.        ,
+           0.        ,   0.        ],
+        [-57.63085458, -70.08157044, -84.12412907, ...,   0.        ,
+           0.        ,   0.        ],
+        [-71.81180947, -64.24788885, -69.64703284, ...,   0.        ,
+           0.        ,   0.        ]]])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mean_tau_green</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb7ddbd3fd0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/modules_imaging_13_1.png" src="../_images/modules_imaging_13_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">mean_tau_green</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+nan
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Imaging</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Mean-lifetime">Mean lifetime</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Formats">Formats</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pg4-file">pg4 file</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Parameters-from-data?">Parameters from data?</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pr4-file">pr4 file</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-from-data-1">Parameters from data?</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Applications">Applications</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Representations">Representations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Intensity">Intensity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Mean-micro-time">Mean micro time</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Average-fluorescence-lifetime">Average fluorescence lifetime</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Phasor">Phasor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Fluorescence-decay-histograms">Fluorescence decay histograms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Pixel-averaged-decays">Pixel averaged decays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Correlation-function">Correlation function</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Image-correlation-spectroscopy">Image correlation spectroscopy</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Image-markers">Image markers</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#General">General</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#CLSMImage">CLSMImage</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Data-structure">Data structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Use-Python-and-C/C++">Use Python and C/C++</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Creating-CLSM-images">Creating CLSM images</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Copying-CLSMImage-instances">Copying CLSMImage instances</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Exporting-as-TIFF">Exporting as TIFF</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Decay-moments">Decay moments</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/imaging.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,876 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Microtime Linearization" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/single_molecule/plot_microtime_linearization.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC). The linearization can be applied..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_microtime_linearization_88e4695c.png" />
+<meta property="og:image:alt" content="This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC). The linearization can be applied..." />
+<meta name="description" content="This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC). The linearization can be applied..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Microtime Linearization &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_microtime_linearization';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Microtime Range Selection Example" href="plot_microtime_selection_example.html" />
+    <link rel="prev" title="FRET Burst Analysis with BurstFilter Class" href="plot_fret_burst_analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">1. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">2. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/decay.html">2.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/fcs.html">2.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">2.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">3. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">3.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">4. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">5. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">6. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_microtime_linearization.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Single-molecule</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Microtime Linearization</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Microtime-Linearization">
+<h1>Microtime Linearization<a class="headerlink" href="#Microtime-Linearization" title="Link to this heading">#</a></h1>
+<p>This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC).</p>
+<p>The linearization can be applied in two ways:</p>
+<ol class="arabic simple">
+<li><p><strong>On-read linearization</strong>: Apply linearization immediately after reading TTTR data</p></li>
+<li><p><strong>Post-read linearization</strong>: Apply linearization to already-loaded TTTR data</p></li>
+</ol>
+<p>Based on the Seidel Software taclin algorithm (version 2008-01-28).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Generate-Example-Linearization-Tables">
+<h1>Generate Example Linearization Tables<a class="headerlink" href="#Generate-Example-Linearization-Tables" title="Link to this heading">#</a></h1>
+<p>In practice, these tables come from calibration measurements of your measurement system. They represent the linearized TAC values at each channel.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_example_linearization_table</span><span class="p">(</span><span class="n">n_channels</span><span class="o">=</span><span class="mi">256</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an example linearization table.</span>
+
+<span class="sd">    In real use, these tables would come from calibration measurements.</span>
+<span class="sd">    This example creates a slightly non-linear response to demonstrate the effect.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create a slightly non-linear response (quadratic distortion)</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Non-linear response: quadratic distortion</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mf">0.0001</span>  <span class="c1"># Small quadratic term</span>
+    <span class="n">linearized</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">channels</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">channels</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">linearized</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># Create linearization tables for different channels</span>
+<span class="n">lt_ch0</span> <span class="o">=</span> <span class="n">create_example_linearization_table</span><span class="p">(</span><span class="mi">256</span><span class="p">)</span>  <span class="c1"># Channel 0: 256 channels</span>
+<span class="n">lt_ch8</span> <span class="o">=</span> <span class="n">create_example_linearization_table</span><span class="p">(</span><span class="mi">256</span><span class="p">)</span>  <span class="c1"># Channel 8: 256 channels</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linearization table for channel 0 shape: </span><span class="si">{</span><span class="n">lt_ch0</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linearization table for channel 8 shape: </span><span class="si">{</span><span class="n">lt_ch8</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Example-1:-Post-Read-Linearization">
+<h1>Example 1: Post-Read Linearization<a class="headerlink" href="#Example-1:-Post-Read-Linearization" title="Link to this heading">#</a></h1>
+<p>Apply linearization to already-loaded TTTR data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create synthetic TTTR data for demonstration</span>
+<span class="n">n_photons</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">macro_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_photons</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># 100 time units apart</span>
+<span class="n">micro_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
+<span class="n">routing_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+<span class="n">event_types</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_photons</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Created synthetic TTTR data:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Photons: </span><span class="si">{</span><span class="n">n_photons</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Macro time range: </span><span class="si">{</span><span class="n">macro_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">macro_times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Micro time range: </span><span class="si">{</span><span class="n">micro_times</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">micro_times</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Routing channels: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">routing_channels</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create TTTR object from the synthetic data</span>
+<span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="n">macro_times</span><span class="p">,</span>
+    <span class="n">micro_times</span><span class="p">,</span>
+    <span class="n">routing_channels</span><span class="p">,</span>
+    <span class="n">event_types</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">TTTR object created with </span><span class="si">{</span><span class="n">tttr</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get microtime histogram before linearization</span>
+<span class="n">hist_before</span><span class="p">,</span> <span class="n">bins_before</span> <span class="o">=</span> <span class="n">tttr</span><span class="o">.</span><span class="n">get_microtime_histogram</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Microtime histogram before linearization: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hist_before</span><span class="p">)</span><span class="si">}</span><span class="s2"> bins&quot;</span><span class="p">)</span>
+
+<span class="c1"># Configure linearization for specific channels</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Configuring linearization...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create linearizer</span>
+<span class="n">linearizer</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MicrotimeLinearization</span><span class="p">()</span>
+
+<span class="c1"># Set LUTs for specific channels</span>
+<span class="n">lut_ch0</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorFloat</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">lt_ch0</span><span class="p">:</span>
+    <span class="n">lut_ch0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="n">linearizer</span><span class="o">.</span><span class="n">set_channel_lut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lut_ch0</span><span class="p">)</span>  <span class="c1"># Channel 0</span>
+
+<span class="n">lut_ch8</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorFloat</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">lt_ch8</span><span class="p">:</span>
+    <span class="n">lut_ch8</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="n">linearizer</span><span class="o">.</span><span class="n">set_channel_lut</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">lut_ch8</span><span class="p">)</span>  <span class="c1"># Channel 8</span>
+
+<span class="c1"># Set shifts for channels (optional)</span>
+<span class="n">linearizer</span><span class="o">.</span><span class="n">set_channel_shift</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>   <span class="c1"># No shift for channel 0</span>
+<span class="n">linearizer</span><span class="o">.</span><span class="n">set_channel_shift</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>   <span class="c1"># Shift channel 8 by 5</span>
+
+<span class="c1"># Configure the TTTR object with LUTs and shifts</span>
+<span class="n">channel_luts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapIntVectorFloat</span><span class="p">()</span>
+<span class="n">channel_luts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_ch0</span>
+<span class="n">channel_luts</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_ch8</span>
+
+<span class="n">channel_shifts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapSignedCharInt</span><span class="p">()</span>
+<span class="n">channel_shifts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">channel_shifts</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="n">result_config</span> <span class="o">=</span> <span class="n">tttr</span><span class="o">.</span><span class="n">apply_channel_luts</span><span class="p">(</span><span class="n">channel_luts</span><span class="p">,</span> <span class="n">channel_shifts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Configuration applied to </span><span class="si">{</span><span class="n">result_config</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+
+<span class="c1"># Apply linearization with specified seed</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Applying linearization...&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tttr</span><span class="o">.</span><span class="n">apply_luts_and_shifts</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>  <span class="c1"># Random seed for reproducibility</span>
+
+<span class="k">if</span> <span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Linearization successful!&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Linearization failed!&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get microtime histogram after linearization</span>
+<span class="n">hist_after</span><span class="p">,</span> <span class="n">bins_after</span> <span class="o">=</span> <span class="n">tttr</span><span class="o">.</span><span class="n">get_microtime_histogram</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Microtime histogram after linearization: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hist_after</span><span class="p">)</span><span class="si">}</span><span class="s2"> bins&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Example-2:-Linearization-with-Environment-Variable-Seed">
+<h1>Example 2: Linearization with Environment Variable Seed<a class="headerlink" href="#Example-2:-Linearization-with-Environment-Variable-Seed" title="Link to this heading">#</a></h1>
+<p>Use environment variable for reproducible results across sessions.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create new TTTR object</span>
+<span class="n">tttr2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="n">macro_times</span><span class="p">,</span>
+    <span class="n">micro_times</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>  <span class="c1"># Copy to avoid modifying original</span>
+    <span class="n">routing_channels</span><span class="p">,</span>
+    <span class="n">event_types</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Applying linearization with environment variable seed...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Configure (same as above)</span>
+<span class="n">tttr2</span><span class="o">.</span><span class="n">apply_channel_luts</span><span class="p">(</span><span class="n">channel_luts</span><span class="p">,</span> <span class="n">channel_shifts</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tttr2</span><span class="o">.</span><span class="n">apply_luts_and_shifts</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># -1 means use TTTR_RND_SEED environment variable</span>
+
+<span class="k">if</span> <span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Linearization with environment seed successful!&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Linearization failed!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Example-3:-Shifts-Only-(No-LUTs)">
+<h1>Example 3: Shifts Only (No LUTs)<a class="headerlink" href="#Example-3:-Shifts-Only-(No-LUTs)" title="Link to this heading">#</a></h1>
+<p>Apply only channel shifts without LUT-based linearization.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create TTTR data</span>
+<span class="n">tttr3</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="n">macro_times</span><span class="p">,</span>
+    <span class="n">micro_times</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+    <span class="n">routing_channels</span><span class="p">,</span>
+    <span class="n">event_types</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Applying shifts only (no LUTs)...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Only configure shifts, no LUTs</span>
+<span class="n">shifts_only</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapSignedCharInt</span><span class="p">()</span>
+<span class="n">shifts_only</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>   <span class="c1"># Shift channel 0 by 10</span>
+<span class="n">shifts_only</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span>   <span class="c1"># Shift channel 8 by -3</span>
+
+<span class="n">empty_luts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapIntVectorFloat</span><span class="p">()</span>  <span class="c1"># No LUTs</span>
+
+<span class="n">tttr3</span><span class="o">.</span><span class="n">apply_channel_luts</span><span class="p">(</span><span class="n">empty_luts</span><span class="p">,</span> <span class="n">shifts_only</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tttr3</span><span class="o">.</span><span class="n">apply_luts_and_shifts</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shifts-only linearization successful!&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shifts-only linearization failed!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Example-4:-Multiple-Channels-with-Different-LUTs">
+<h1>Example 4: Multiple Channels with Different LUTs<a class="headerlink" href="#Example-4:-Multiple-Channels-with-Different-LUTs" title="Link to this heading">#</a></h1>
+<p>Configure different LUTs for multiple channels.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttr4</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="n">macro_times</span><span class="p">,</span>
+    <span class="n">micro_times</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+    <span class="n">routing_channels</span><span class="p">,</span>
+    <span class="n">event_types</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Configuring multiple channels with different LUTs...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create linearizer with multiple channels</span>
+<span class="n">linearizer4</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MicrotimeLinearization</span><span class="p">()</span>
+
+<span class="c1"># Set LUTs for channels 0-15</span>
+<span class="n">multi_luts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapIntVectorFloat</span><span class="p">()</span>
+<span class="n">multi_shifts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapSignedCharInt</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+    <span class="c1"># Create channel-specific LUT (with slight variations)</span>
+    <span class="n">lut</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorFloat</span><span class="p">()</span>
+    <span class="n">base_lut</span> <span class="o">=</span> <span class="n">create_example_linearization_table</span><span class="p">(</span><span class="mi">256</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">base_lut</span><span class="p">):</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span> <span class="o">+</span> <span class="n">ch</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>  <span class="c1"># Small variation per channel</span>
+
+    <span class="n">linearizer4</span><span class="o">.</span><span class="n">set_channel_lut</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">lut</span><span class="p">)</span>
+    <span class="n">multi_luts</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut</span>
+    <span class="n">multi_shifts</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">%</span> <span class="mi">5</span>  <span class="c1"># Different shifts: 0, 1, 2, 3, 4, 0, 1, ...</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Configured </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">multi_luts</span><span class="p">)</span><span class="si">}</span><span class="s2"> channels with individual LUTs&quot;</span><span class="p">)</span>
+
+<span class="c1"># Apply configuration and linearization</span>
+<span class="n">tttr4</span><span class="o">.</span><span class="n">apply_channel_luts</span><span class="p">(</span><span class="n">multi_luts</span><span class="p">,</span> <span class="n">multi_shifts</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tttr4</span><span class="o">.</span><span class="n">apply_luts_and_shifts</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multi-channel linearization successful!&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multi-channel linearization failed!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Example-5:-Performance-Comparison">
+<h1>Example 5: Performance Comparison<a class="headerlink" href="#Example-5:-Performance-Comparison" title="Link to this heading">#</a></h1>
+<p>Compare performance of different linearization approaches.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="n">tttr_perf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="n">macro_times</span><span class="p">,</span>
+    <span class="n">micro_times</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+    <span class="n">routing_channels</span><span class="p">,</span>
+    <span class="n">event_types</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Performance test with 10k photons...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Setup for performance test</span>
+<span class="n">perf_luts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapIntVectorFloat</span><span class="p">()</span>
+<span class="n">perf_shifts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">MapSignedCharInt</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+    <span class="n">lut</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorFloat</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">):</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="n">perf_luts</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut</span>
+    <span class="n">perf_shifts</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">tttr_perf</span><span class="o">.</span><span class="n">apply_channel_luts</span><span class="p">(</span><span class="n">perf_luts</span><span class="p">,</span> <span class="n">perf_shifts</span><span class="p">)</span>
+
+<span class="c1"># Time the linearization</span>
+<span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tttr_perf</span><span class="o">.</span><span class="n">apply_luts_and_shifts</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">photons_per_sec</span> <span class="o">=</span> <span class="n">n_photons</span> <span class="o">/</span> <span class="n">elapsed</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Processed </span><span class="si">{</span><span class="n">n_photons</span><span class="si">}</span><span class="s2"> photons in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Performance: </span><span class="si">{</span><span class="n">photons_per_sec</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> photons/second&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Performance test failed!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Summary">
+<h1>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h1>
+<p>The microtime linearization functionality provides:</p>
+<ol class="arabic simple">
+<li><p><strong>Per-channel configuration</strong>: Direct LUT and shift assignment per routing channel</p></li>
+<li><p><strong>Dithering</strong>: Random number-based dithering reduces quantization artifacts</p></li>
+<li><p><strong>Reproducibility</strong>: Seed control for reproducible results</p></li>
+<li><p><strong>Flexibility</strong>: Can apply LUTs, shifts, or both</p></li>
+<li><p><strong>Performance</strong>: Optimized single-pass processing</p></li>
+<li><p><strong>Scalability</strong>: Supports any number of channels with independent parameters</p></li>
+</ol>
+<p>Channel configuration:</p>
+<ul class="simple">
+<li><p>Channels 0-255 supported</p></li>
+<li><p>Each channel can have its own LUT and shift</p></li>
+<li><p>LUTs must all have the same size (validated automatically)</p></li>
+<li><p>Shifts are applied modulo the LUT size or default range</p></li>
+</ul>
+<p>For more information about TAC linearization, see the Seidel Software taclin algorithm documentation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Example complete!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_fret_burst_analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">FRET Burst Analysis with BurstFilter Class</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_microtime_selection_example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Microtime Range Selection Example</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Microtime Linearization</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Generate-Example-Linearization-Tables">Generate Example Linearization Tables</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-1:-Post-Read-Linearization">Example 1: Post-Read Linearization</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-2:-Linearization-with-Environment-Variable-Seed">Example 2: Linearization with Environment Variable Seed</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-3:-Shifts-Only-(No-LUTs)">Example 3: Shifts Only (No LUTs)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-4:-Multiple-Channels-with-Different-LUTs">Example 4: Multiple Channels with Different LUTs</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-5:-Performance-Comparison">Example 5: Performance Comparison</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_microtime_linearization.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

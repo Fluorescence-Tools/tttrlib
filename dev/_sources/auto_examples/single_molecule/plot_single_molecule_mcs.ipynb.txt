@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Intensity traces\nThe function ``tttrlib.intensity_trace`` can be applied to a sequences of event\ntimes traces to calculate the time-dependent counts for a given time window size.\nIn single-molecule FRET experiments such traces are particularly useful to illustrate\nsingle-molecule bursts. The function takes an array of macro times as an input\nthe macro times are binned and the counts per bin are returned.\n\n#.. plot:: ../examples/single_molecule/single_molecule_mcs.py\n\nAbove, for a donor and acceptor detection channel a histogram trace for is shown\nin green and red.\n\nThere are two options to compute intensity traces. Intensity traces can either be\ncomputed using the function ``tttrlib.compute_intensity_trace`` or using the method\n``intensity_trace`` of a ``TTTR`` object.\n\n```python\ntttr_object = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')\n# option 1\ntttr_object = tttrlib.compute_intensity_trace(\n    data.macro_times,\n    time_window_length=1.0, # this is one millisecond\n    macro_time_resolution=data.get_header().macro_time_resolution / 1e6\n)\n# option 2\ntttr_object = data.intensity_trace(\n    time_window_length=1.0, # this is one millisecond\n)\n```\nWhen the first option is used, a calibration for the macro time array needs to be\nprovided. If the second option is used, the macro time calibration of the header\ninformation that was processes from the tttr file when the ``TTTR`` object was\ncreated is already considered. The time window length are in units of milli seconds.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import matplotlib.pylab as p\nimport numpy as np\n\nimport tttrlib\n\ndata = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')\nmt = data.get_macro_times()\n\ngreen_indeces = data.get_selection_by_channel([0, 8])\nred_indeces = data.get_selection_by_channel([1, 9])\n\nfig, ax = p.subplots(3, 1, sharex=True, sharey=False)\n\np.setp(ax[0].get_xticklabels(), visible=False)\ngreen_trace = tttrlib.compute_intensity_trace(\n    mt[green_indeces],\n    time_window_length=1.0e-3, # this is one millisecond\n    macro_time_resolution=data.get_header().macro_time_resolution\n)\nred_trace = data[red_indeces].get_intensity_trace(\n    time_window_length=1.0e-3\n)\nm = min(len(green_trace), len(red_trace))\nSgSr_ratio = (green_trace[:m] / red_trace[:m])\nSgSr_ratio[np.where((green_trace[:m] + red_trace[:m]) < 2)] *= 0\n\nax[0].plot(green_trace, 'g', label='Green signal, Sg')\nax[1].plot(red_trace, 'r', label='Red signal, Sr')\nax[1].invert_yaxis()\nax[0].legend()\nax[1].legend()\nax[2].plot(SgSr_ratio, 'b', label='Sg/Sr')\nax[2].legend()\np.subplots_adjust(\n    left=None,\n    bottom=None,\n    right=None,\n    top=None,\n    wspace=None, hspace=0\n)\np.show()\n#"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

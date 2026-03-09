@@ -1,0 +1,156 @@
+
+
+.. _sphx_glr_auto_examples_tttr:
+
+.. _tttr_examples:
+
+Working with TTTR objects
+-------------------------
+
+Examples for reading/writing/transcoding TTTR files, inspecting headers,
+microtime histograms, and I/O performance benchmarking.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Save the content of a PTU file in an SPC file">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_transcode_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_transcode`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Transcode</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_microtime_histogram`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the option for arbitrary meta data. Other TTTR formats have defined / fixed headers. Some of the information that can be found in a TTTR file is listed in Header tags sheet.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_header_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_header`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR-Header</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of an existing CLSM experiment is read, masked, and the masked data is written to  a file that can be processed by any other software processing the original TTTR data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_write_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_write`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_read_benchmark_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_read_benchmark`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR reading benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="To open TTTR files import the tttrlib library.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_files_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_files`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Working with TTTR files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This script demonstrates the delta encoding compression feature for TTTR data, showing how to reduce memory usage for large photon event datasets.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_compression_example_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/compression_example`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR Compression Examples</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tttr/plot_tttr_transcode
+   /auto_examples/tttr/plot_tttr_microtime_histogram
+   /auto_examples/tttr/plot_tttr_header
+   /auto_examples/tttr/plot_tttr_write
+   /auto_examples/tttr/plot_tttr_read_benchmark
+   /auto_examples/tttr/plot_tttr_files
+   /auto_examples/tttr/compression_example
+

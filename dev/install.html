@@ -1,0 +1,1142 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Installation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="install.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Platform Support: Pre-built wheels are available for the following platforms and architectures:,,,,, Platform, Architecture, AVX Support, Python Versions, Notes,,, Linux, x86_64, ✅ Yes, 3.8 - 3.13,..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_install_70b0e8c5.png" />
+<meta property="og:image:alt" content="Platform Support: Pre-built wheels are available for the following platforms and architectures:,,,,, Platform, Architecture, AVX Support, Python Versions, Notes,,, Linux, x86_64, ✅ Yes, 3.8 - 3.13,..." />
+<meta name="description" content="Platform Support: Pre-built wheels are available for the following platforms and architectures:,,,,, Platform, Architecture, AVX Support, Python Versions, Notes,,, Linux, x86_64, ✅ Yes, 3.8 - 3.13,..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Installation &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=7026087e"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'install';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Welcome to tttrlib" href="preface.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About us</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="whats_new.html">Release History</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="whats_new/v0.26.0.html">Version 0.26.0 (Current)</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/install.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="preface.html" class="nav-link">Welcome to tttrlib</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Installation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Installation">
+<h1>Installation<a class="headerlink" href="#Installation" title="Link to this heading">#</a></h1>
+<section id="Platform-Support">
+<h2>Platform Support<a class="headerlink" href="#Platform-Support" title="Link to this heading">#</a></h2>
+<p>Pre-built wheels are available for the following platforms and architectures:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Platform</p></th>
+<th class="head"><p>Architecture</p></th>
+<th class="head"><p>AVX Support</p></th>
+<th class="head"><p>Python Versions</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Linux</strong></p></td>
+<td><p>x86_64</p></td>
+<td><p>✅ Yes</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>Intel/AMD 64-bit</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Linux</strong></p></td>
+<td><p>aarch64</p></td>
+<td><p>❌ No</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>ARM64 (Raspberry Pi, AWS Graviton)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>macOS</strong></p></td>
+<td><p>x86_64</p></td>
+<td><p>✅ Yes</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>Intel Macs</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>macOS</strong></p></td>
+<td><p>arm64</p></td>
+<td><p>❌ No</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>Apple Silicon (M1/M2/M3/M4)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Windows</strong></p></td>
+<td><p>AMD64</p></td>
+<td><p>✅ Yes</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>Intel/AMD 64-bit</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Windows</strong></p></td>
+<td><p>ARM64</p></td>
+<td><p>❌ No</p></td>
+<td><p>3.8 - 3.13</p></td>
+<td><p>Windows on ARM (Surface Pro X, etc.)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Notes:</strong></p>
+<ul class="simple">
+<li><p>AVX (Advanced Vector Extensions) provides optimized SIMD operations for faster computation on x86_64 processors</p></li>
+<li><p>ARM architectures use standard optimizations but do not support AVX instructions</p></li>
+<li><p>All platforms use manylinux_2_28 (Linux), macOS 10.14+, or Windows 10+ as minimum requirements</p></li>
+<li><p>32-bit platforms are not supported</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can either be installed from prebuilt binaries or from the source code. For most users it is recommended to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> using the prebuilt binaries. Below the installation using prebuilt binaries and the prerequisites to compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> are briefly outlined.</p>
+</section>
+<section id="Prebuilt-binaries">
+<h2>Prebuilt binaries<a class="headerlink" href="#Prebuilt-binaries" title="Link to this heading">#</a></h2>
+<p>It is recommended to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> for Python environments via <code class="docutils literal notranslate"><span class="pre">conda</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>tpeulen<span class="w"> </span>tttrlib
+</pre></div>
+</div>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tttrlib
+</pre></div>
+</div>
+<p><strong>Note:</strong> pip will automatically select the appropriate wheel for your platform and architecture.</p>
+</section>
+<section id="Building-Wheels-with-cibuildwheel">
+<h2>Building Wheels with cibuildwheel<a class="headerlink" href="#Building-Wheels-with-cibuildwheel" title="Link to this heading">#</a></h2>
+<p>The project uses <a class="reference external" href="https://cibuildwheel.readthedocs.io/">cibuildwheel</a> to build wheels for multiple Python versions and platforms. Configuration is in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
+<section id="Prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#Prerequisites" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Python 3.8 or later</p></li>
+<li><p><a class="reference external" href="https://cibuildwheel.readthedocs.io/">cibuildwheel</a>: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cibuildwheel</span></code></p></li>
+<li><p>Git with submodules initialized: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">--recursive</span></code></p></li>
+<li><p><strong>For Linux builds:</strong> Docker Desktop (with WSL 2 backend on Windows)</p></li>
+<li><p><strong>For cross-architecture builds:</strong> QEMU emulation (see below)</p></li>
+</ul>
+</section>
+<section id="Local-Development-Build">
+<h3>Local Development Build<a class="headerlink" href="#Local-Development-Build" title="Link to this heading">#</a></h3>
+<p>To build and install the package locally for development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/fluorescence-tools/tttrlib.git
+<span class="nb">cd</span><span class="w"> </span>tttrlib
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<p>This creates an editable installation that reflects code changes without reinstalling.</p>
+</section>
+<section id="Quick-Start:-Build-All-Platforms">
+<h3>Quick Start: Build All Platforms<a class="headerlink" href="#Quick-Start:-Build-All-Platforms" title="Link to this heading">#</a></h3>
+<p>Build wheels for all configured platforms and architectures:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>cibuildwheel
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p>This builds for all Python versions (3.8-3.13) on all platforms (Linux x86_64/aarch64, Windows AMD64/ARM64, macOS x86_64/arm64).</p>
+</section>
+<section id="Build-for-Specific-Platform">
+<h3>Build for Specific Platform<a class="headerlink" href="#Build-for-Specific-Platform" title="Link to this heading">#</a></h3>
+<p>Build all architectures for a single platform:</p>
+<p><strong>Linux (x86_64 and aarch64):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--platform<span class="w"> </span>linux<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Windows (AMD64 and ARM64):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--platform<span class="w"> </span>windows<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>macOS (x86_64 and arm64):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--platform<span class="w"> </span>macos<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+</section>
+<section id="Build-for-Specific-Architecture">
+<h3>Build for Specific Architecture<a class="headerlink" href="#Build-for-Specific-Architecture" title="Link to this heading">#</a></h3>
+<p>For more control, use environment variables to target specific architectures.</p>
+<section id="Prerequisites-for-Cross-Architecture-Builds">
+<h4>Prerequisites for Cross-Architecture Builds<a class="headerlink" href="#Prerequisites-for-Cross-Architecture-Builds" title="Link to this heading">#</a></h4>
+<p><strong>Windows (building Linux ARM64):</strong></p>
+<ul class="simple">
+<li><p>Docker Desktop installed and running (with WSL 2 backend)</p></li>
+<li><p>Ensure <code class="docutils literal notranslate"><span class="pre">python</span></code>, <code class="docutils literal notranslate"><span class="pre">pip</span></code>, and <code class="docutils literal notranslate"><span class="pre">docker</span></code> all work in <code class="docutils literal notranslate"><span class="pre">cmd.exe</span></code></p></li>
+</ul>
+<p><strong>Linux/macOS:</strong></p>
+<ul class="simple">
+<li><p>Docker installed and running</p></li>
+<li><p>QEMU for ARM emulation (handled automatically by cibuildwheel)</p></li>
+</ul>
+</section>
+<section id="Step-1:-Enable-QEMU-Emulation-(Required-for-ARM64-on-x86_64)">
+<h4>Step 1: Enable QEMU Emulation (Required for ARM64 on x86_64)<a class="headerlink" href="#Step-1:-Enable-QEMU-Emulation-(Required-for-ARM64-on-x86_64)" title="Link to this heading">#</a></h4>
+<p><strong>On Windows (one-time per reboot):</strong></p>
+<p>Before building ARM64 wheels, enable QEMU emulation in Docker:</p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+</pre></div>
+</div>
+<p><strong>On Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--privileged<span class="w"> </span>multiarch/qemu-user-static<span class="w"> </span>--reset<span class="w"> </span>-p<span class="w"> </span>yes
+</pre></div>
+</div>
+<p><strong>On macOS:</strong></p>
+<p>QEMU is handled automatically by Docker Desktop.</p>
+</section>
+<section id="Step-2:-Build-for-Target-Architecture">
+<h4>Step 2: Build for Target Architecture<a class="headerlink" href="#Step-2:-Build-for-Target-Architecture" title="Link to this heading">#</a></h4>
+<p>Use environment variables to specify the target platform and architecture:</p>
+<p><strong>Linux ARM64 (aarch64):</strong></p>
+<p>Windows (cmd.exe):</p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>set CIBW_PLATFORM=linux
+set CIBW_ARCHS_LINUX=aarch64
+set CIBW_BUILD_VERBOSITY=1
+python -m cibuildwheel --output-dir wheelhouse
+</pre></div>
+</div>
+<p>Windows (PowerShell):</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:CIBW_PLATFORM</span><span class="p">=</span><span class="s2">&quot;linux&quot;</span>
+<span class="nv">$env:CIBW_ARCHS_LINUX</span><span class="p">=</span><span class="s2">&quot;aarch64&quot;</span>
+<span class="nv">$env:CIBW_BUILD_VERBOSITY</span><span class="p">=</span><span class="s2">&quot;1&quot;</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">cibuildwheel</span> <span class="p">-</span><span class="n">-output-dir</span> <span class="n">wheelhouse</span>
+</pre></div>
+</div>
+<p>Linux/macOS (bash):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span>aarch64
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD_VERBOSITY</span><span class="o">=</span><span class="m">1</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Linux x86_64:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span>x86_64
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Windows ARM64:</strong></p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>set CIBW_PLATFORM=windows
+set CIBW_ARCHS_WINDOWS=ARM64
+python -m cibuildwheel --output-dir wheelhouse
+</pre></div>
+</div>
+<p><em>Requires Visual Studio 2022 with ARM64 build tools installed.</em></p>
+<p><strong>Windows AMD64:</strong></p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>set CIBW_PLATFORM=windows
+set CIBW_ARCHS_WINDOWS=AMD64
+python -m cibuildwheel --output-dir wheelhouse
+</pre></div>
+</div>
+<p><strong>macOS ARM64 (Apple Silicon):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>macos
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_MACOS</span><span class="o">=</span>arm64
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><em>Best results on Apple Silicon hardware. Cross-compilation from x86_64 is possible but slower.</em></p>
+<p><strong>macOS x86_64 (Intel):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>macos
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_MACOS</span><span class="o">=</span>x86_64
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+</section>
+</section>
+<section id="Building-Multiple-Architectures">
+<h3>Building Multiple Architectures<a class="headerlink" href="#Building-Multiple-Architectures" title="Link to this heading">#</a></h3>
+<p>Build multiple architectures in one command by separating them with spaces:</p>
+<p><strong>Linux (both x86_64 and aarch64):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span><span class="s2">&quot;x86_64 aarch64&quot;</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Windows (both AMD64 and ARM64):</strong></p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>set CIBW_PLATFORM=windows
+set CIBW_ARCHS_WINDOWS=AMD64 ARM64
+python -m cibuildwheel --output-dir wheelhouse
+</pre></div>
+</div>
+<p><strong>macOS (both x86_64 and arm64):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>macos
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_MACOS</span><span class="o">=</span><span class="s2">&quot;x86_64 arm64&quot;</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+</section>
+<section id="Building-Specific-Python-Versions">
+<h3>Building Specific Python Versions<a class="headerlink" href="#Building-Specific-Python-Versions" title="Link to this heading">#</a></h3>
+<p>Limit builds to specific Python versions using <code class="docutils literal notranslate"><span class="pre">CIBW_BUILD</span></code>:</p>
+<p><strong>Python 3.11 and 3.12 only:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">&quot;cp311-* cp312-*&quot;</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Single Python version (3.12) on Linux ARM64:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span>aarch64
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">&quot;cp312-*&quot;</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+<p><strong>Exclude specific versions:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_SKIP</span><span class="o">=</span><span class="s2">&quot;cp38-* cp39-*&quot;</span><span class="w">  </span><span class="c1"># Skip Python 3.8 and 3.9</span>
+python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
+</pre></div>
+</div>
+</section>
+<section id="Building-a-Single-Wheel-(Current-Python-Only)">
+<h3>Building a Single Wheel (Current Python Only)<a class="headerlink" href="#Building-a-Single-Wheel-(Current-Python-Only)" title="Link to this heading">#</a></h3>
+<p>To build a wheel for your current Python version only (not using cibuildwheel):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>build
+python<span class="w"> </span>-m<span class="w"> </span>build<span class="w"> </span>--wheel
+</pre></div>
+</div>
+<p>The wheel will be created in the <code class="docutils literal notranslate"><span class="pre">dist/</span></code> directory.</p>
+</section>
+<section id="Verifying-Built-Wheels">
+<h3>Verifying Built Wheels<a class="headerlink" href="#Verifying-Built-Wheels" title="Link to this heading">#</a></h3>
+<p>After building, check the wheel filenames to verify the correct architecture:</p>
+<p><strong>Linux/macOS:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>wheelhouse/
+</pre></div>
+</div>
+<p><strong>Windows:</strong></p>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>dir wheelhouse\
+</pre></div>
+</div>
+<p>Expected filename patterns:</p>
+<ul class="simple">
+<li><p>Linux x86_64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-manylinux_2_28_x86_64.whl</span></code></p></li>
+<li><p>Linux ARM64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-manylinux_2_28_aarch64.whl</span></code></p></li>
+<li><p>Windows AMD64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-win_amd64.whl</span></code></p></li>
+<li><p>Windows ARM64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-win_arm64.whl</span></code></p></li>
+<li><p>macOS x86_64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-macosx_*_x86_64.whl</span></code></p></li>
+<li><p>macOS ARM64: <code class="docutils literal notranslate"><span class="pre">tttrlib-*-macosx_*_arm64.whl</span></code></p></li>
+</ul>
+</section>
+<section id="Testing-Built-Wheels">
+<h3>Testing Built Wheels<a class="headerlink" href="#Testing-Built-Wheels" title="Link to this heading">#</a></h3>
+<p>After building, test the wheel before uploading:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>wheelhouse/tttrlib-*.whl
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)&quot;</span>
+</pre></div>
+</div>
+<p>Expected output: <code class="docutils literal notranslate"><span class="pre">TTTR</span></code></p>
+</section>
+<section id="Troubleshooting-cibuildwheel">
+<h3>Troubleshooting cibuildwheel<a class="headerlink" href="#Troubleshooting-cibuildwheel" title="Link to this heading">#</a></h3>
+<p><strong>QEMU not registered (Linux ARM64 builds):</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Error: exec user process caused: exec format error
+</pre></div>
+</div>
+<p>Solution: Run the QEMU registration command: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">--rm</span> <span class="pre">--privileged</span> <span class="pre">multiarch/qemu-user-static</span> <span class="pre">--reset</span> <span class="pre">-p</span> <span class="pre">yes</span></code></p>
+<p><strong>Docker not running:</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Error: Cannot connect to the Docker daemon
+</pre></div>
+</div>
+<p>Solution: Start Docker Desktop and ensure it’s fully running.</p>
+<p><strong>Slow ARM64 builds:</strong> ARM64 builds on x86_64 use QEMU emulation and are significantly slower (5-10x) than native builds. This is expected. To speed up:</p>
+<ul class="simple">
+<li><p>Build only necessary Python versions: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CIBW_BUILD=&quot;cp312-*&quot;</span></code></p></li>
+<li><p>Use GitHub Actions with native ARM64 runners</p></li>
+<li><p>Build on actual ARM64 hardware</p></li>
+</ul>
+<p><strong>Windows ARM64 build tools missing:</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Error: MSVC for ARM64 not found
+</pre></div>
+</div>
+<p>Solution: Install Visual Studio 2022 with:</p>
+<ul class="simple">
+<li><p>“Desktop development with C++” workload</p></li>
+<li><p>“MSVC v143 - VS 2022 C++ ARM64 build tools” component</p></li>
+</ul>
+<p><strong>Out of disk space:</strong> Building for all platforms/architectures requires significant disk space (~10-20 GB). Clean up old builds:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span>-rf<span class="w"> </span>build/<span class="w"> </span>dist/<span class="w"> </span>wheelhouse/<span class="w"> </span>*.egg-info
+</pre></div>
+</div>
+</section>
+<section id="Uploading-to-PyPI">
+<h3>Uploading to PyPI<a class="headerlink" href="#Uploading-to-PyPI" title="Link to this heading">#</a></h3>
+<p><strong>Test PyPI (recommended first):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>twine
+twine<span class="w"> </span>upload<span class="w"> </span>--repository<span class="w"> </span>testpypi<span class="w"> </span>wheelhouse/*
+</pre></div>
+</div>
+<p><strong>Production PyPI:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twine<span class="w"> </span>upload<span class="w"> </span>wheelhouse/*
+</pre></div>
+</div>
+</section>
+</section>
+<section id="Platform-Specific-Build-Requirements">
+<h2>Platform-Specific Build Requirements<a class="headerlink" href="#Platform-Specific-Build-Requirements" title="Link to this heading">#</a></h2>
+<section id="Linux">
+<h3>Linux<a class="headerlink" href="#Linux" title="Link to this heading">#</a></h3>
+<p><strong>Requirements:</strong></p>
+<ul class="simple">
+<li><p>Docker must be running (cibuildwheel uses manylinux containers)</p></li>
+<li><p>Boost, CMake, and HDF5 are installed automatically via DNF in the manylinux_2_28 image</p></li>
+</ul>
+<p><strong>Build Configuration:</strong></p>
+<ul class="simple">
+<li><p>Image: <code class="docutils literal notranslate"><span class="pre">manylinux_2_28</span></code> (based on AlmaLinux 8)</p></li>
+<li><p>Architectures: x86_64, aarch64</p></li>
+<li><p>Boost version: System-provided (1.66+)</p></li>
+<li><p>Package manager: DNF</p></li>
+</ul>
+<p><strong>Dependencies installed automatically:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dnf<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>boost-devel<span class="w"> </span>cmake<span class="w"> </span>hdf5-devel
+</pre></div>
+</div>
+<p><strong>Wheel repair:</strong></p>
+<ul class="simple">
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">auditwheel</span></code> to bundle Boost and HDF5 shared libraries into the wheel</p></li>
+<li><p>Ensures compatibility across different Linux distributions</p></li>
+</ul>
+<p><strong>ARM64 Builds:</strong></p>
+<ul class="simple">
+<li><p>Built using QEMU emulation on x86_64 hosts</p></li>
+<li><p>AVX optimizations are automatically disabled on ARM architectures</p></li>
+</ul>
+</section>
+<section id="Windows">
+<h3>Windows<a class="headerlink" href="#Windows" title="Link to this heading">#</a></h3>
+<p><strong>Requirements:</strong></p>
+<ul class="simple">
+<li><p>Visual Studio 2017 or later with C++ build tools</p></li>
+<li><p>PowerShell (for running build scripts)</p></li>
+<li><p>For ARM64: Visual Studio 2022 with ARM64 build tools</p></li>
+</ul>
+<p><strong>Build Configuration:</strong></p>
+<ul class="simple">
+<li><p>Boost version: 1.86.0 (built from source)</p></li>
+<li><p>Architectures: AMD64, ARM64</p></li>
+<li><p>Python versions: 3.8-3.13</p></li>
+</ul>
+<p><strong>Boost Build Process:</strong> The Windows build automatically:</p>
+<ol class="arabic simple">
+<li><p>Downloads Boost 1.86.0 from multiple mirrors (GitHub, SourceForge, JFrog, archives.boost.io)</p></li>
+<li><p>Extracts and caches the archive</p></li>
+<li><p>Detects target architecture (AMD64 or ARM64) from environment</p></li>
+<li><p>Builds only the <code class="docutils literal notranslate"><span class="pre">locale</span></code> component with:</p>
+<ul class="simple">
+<li><p>Toolset: MSVC</p></li>
+<li><p>Address model: 64-bit</p></li>
+<li><p>Architecture: x86 (AMD64) or arm (ARM64)</p></li>
+<li><p>Variant: Release</p></li>
+<li><p>Link type: Shared (DLLs)</p></li>
+<li><p>Runtime link: Shared (/MD)</p></li>
+</ul>
+</li>
+<li><p>Installs to <code class="docutils literal notranslate"><span class="pre">{project}/dist/boost-install-{arch}</span></code> (architecture-specific)</p></li>
+</ol>
+<p><strong>Environment Variables Set:</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:BOOST_ROOT</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}&quot;</span>
+<span class="nv">$env:BOOST_INCLUDEDIR</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}/include&quot;</span>
+<span class="nv">$env:BOOST_LIBRARYDIR</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}/lib&quot;</span>
+<span class="nv">$env:CMAKE_PREFIX_PATH</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}&quot;</span>
+<span class="nv">$env:BOOST_ALL_NO_LIB</span> <span class="p">=</span> <span class="s2">&quot;1&quot;</span>
+</pre></div>
+</div>
+<p><strong>Wheel repair:</strong></p>
+<ul class="simple">
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">delvewheel</span></code> to bundle Boost DLLs into the wheel</p></li>
+<li><p>Command: <code class="docutils literal notranslate"><span class="pre">delvewheel</span> <span class="pre">repair</span> <span class="pre">--add-path</span> <span class="pre">&quot;{project}\\dist\\boost-install-{arch}\\lib&quot;</span> <span class="pre">-w</span> <span class="pre">{dest_dir}</span> <span class="pre">{wheel}</span></code></p></li>
+</ul>
+<p><strong>Build Script:</strong> The PowerShell script <code class="docutils literal notranslate"><span class="pre">.github/ci/build_boost_windows.ps1</span></code> handles:</p>
+<ul class="simple">
+<li><p>Architecture detection (AMD64 vs ARM64)</p></li>
+<li><p>Checking for existing Boost installation</p></li>
+<li><p>Downloading from multiple mirrors with retry logic</p></li>
+<li><p>Extracting with 7-Zip, tar, or Expand-Archive</p></li>
+<li><p>Caching extracted files for faster subsequent builds</p></li>
+<li><p>Building with b2 (Boost.Build) for the target architecture</p></li>
+<li><p>Installing headers and libraries</p></li>
+</ul>
+</section>
+<section id="macOS">
+<h3>macOS<a class="headerlink" href="#macOS" title="Link to this heading">#</a></h3>
+<p><strong>Requirements:</strong></p>
+<ul class="simple">
+<li><p>Xcode command line tools</p></li>
+<li><p>Boost (can be installed via Homebrew)</p></li>
+</ul>
+<p><strong>Build Configuration:</strong></p>
+<ul class="simple">
+<li><p>Deployment target: macOS 10.14+</p></li>
+<li><p>Architectures: x86_64, arm64 (Apple Silicon)</p></li>
+<li><p>Python versions: 3.8-3.13</p></li>
+</ul>
+<p><strong>Install Boost:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>boost
+</pre></div>
+</div>
+<p><strong>Environment Variables:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&quot;-g -Wall&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CXXFLAGS</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CXXFLAGS</span><span class="si">}</span><span class="s2"> -D_LIBCPP_DISABLE_AVAILABILITY=1&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MACOSX_DEPLOYMENT_TARGET</span><span class="o">=</span><span class="s2">&quot;10.14&quot;</span>
+</pre></div>
+</div>
+<p><strong>Wheel repair:</strong></p>
+<ul class="simple">
+<li><p>Uses <code class="docutils literal notranslate"><span class="pre">delocate</span></code> to bundle shared libraries</p></li>
+<li><p>Ensures compatibility across macOS versions</p></li>
+</ul>
+<p><strong>Architecture-Specific Notes:</strong></p>
+<ul class="simple">
+<li><p>x86_64 builds include AVX optimizations</p></li>
+<li><p>arm64 builds use standard ARM optimizations (no AVX)</p></li>
+<li><p>Universal2 wheels are not currently built (separate wheels for each architecture)</p></li>
+</ul>
+</section>
+</section>
+<section id="Compilation-from-Source">
+<h2>Compilation from Source<a class="headerlink" href="#Compilation-from-Source" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be compiled and installed using the source code provided in the git repository. The continuous integration pipeline can be used as a reference to setup a compilation machine.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/fluorescence-tools/tttrlib.git
+<span class="nb">cd</span><span class="w"> </span>tttrlib
+python<span class="w"> </span>setup.py<span class="w"> </span>install
+</pre></div>
+</div>
+<section id="prerequisites-1">
+<span id="id1"></span><h3>Prerequisites<a class="headerlink" href="#prerequisites-1" title="Link to this heading">#</a></h3>
+<p>To compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> the following prerequisites need to be fulfilled:</p>
+<ol class="arabic simple">
+<li><p>An installed C++ compiler (GCC, Clang, or MSVC)</p></li>
+<li><p>The <a class="reference external" href="https://www.hdfgroup.org/">HDF5</a> library with C/C++ include files</p></li>
+<li><p>A recent 64-bit <a class="reference external" href="https://www.python.org/">Python</a> installation (3.8+) with include files</p></li>
+<li><p><a class="reference external" href="https://cmake.org/">CMake</a> (3.13 or later)</p></li>
+<li><p><a class="reference external" href="http://www.swig.org/">SWIG</a> (for generating Python bindings)</p></li>
+<li><p><a class="reference external" href="https://www.boost.org/">Boost</a> (1.36 or later, locale component required)</p></li>
+</ol>
+</section>
+<section id="Debug-Build">
+<h3>Debug Build<a class="headerlink" href="#Debug-Build" title="Link to this heading">#</a></h3>
+<p>To debug and analyze the output of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> in more detail, build the library in Debug mode that outputs additional information to the standard logging stream:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>setup.py<span class="w"> </span>build_ext<span class="w"> </span>--debug
+</pre></div>
+</div>
+</section>
+<section id="Conda-Build">
+<h3>Conda Build<a class="headerlink" href="#Conda-Build" title="Link to this heading">#</a></h3>
+<p>A conda recipe is provided in the folder ‘conda-recipe’ to build the tttrlib library with the <a class="reference external" href="https://docs.conda.io/projects/conda-build/en/latest/">conda build</a> environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>conda-build
+conda<span class="w"> </span>build<span class="w"> </span>build-tools/conda-recipe
+</pre></div>
+</div>
+</section>
+</section>
+<section id="Continuous-Integration">
+<h2>Continuous Integration<a class="headerlink" href="#Continuous-Integration" title="Link to this heading">#</a></h2>
+<p>The project uses GitHub Actions to automatically build wheels for all platforms and architectures. See <code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code> for CI configuration. Wheels are built on:</p>
+<ul class="simple">
+<li><p><strong>Linux</strong>: manylinux_2_28 (x86_64, aarch64)</p></li>
+<li><p><strong>Windows</strong>: Python 3.8-3.13 (AMD64, ARM64)</p></li>
+<li><p><strong>macOS</strong>: Python 3.8-3.13 (x86_64, arm64)</p></li>
+</ul>
+<p>The CI pipeline:</p>
+<ol class="arabic simple">
+<li><p>Checks out code with submodules</p></li>
+<li><p>Sets up platform-specific build environment</p></li>
+<li><p>Builds wheels using cibuildwheel for all architectures</p></li>
+<li><p>Tests wheels with basic import and functionality checks</p></li>
+<li><p>Uploads artifacts for distribution</p></li>
+</ol>
+<p><strong>Cross-compilation:</strong></p>
+<ul class="simple">
+<li><p>Linux ARM64: Uses QEMU emulation in Docker</p></li>
+<li><p>Windows ARM64: Uses Visual Studio cross-compilation tools</p></li>
+<li><p>macOS ARM64: Native builds on Apple Silicon runners or cross-compilation</p></li>
+</ul>
+</section>
+<section id="Troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#Troubleshooting" title="Link to this heading">#</a></h2>
+<section id="Boost-locale-not-found">
+<h3>Boost locale not found<a class="headerlink" href="#Boost-locale-not-found" title="Link to this heading">#</a></h3>
+<p>If CMake cannot find the Boost locale component:</p>
+<p><strong>Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>boost-devel<span class="w">  </span><span class="c1"># RHEL/CentOS/Fedora</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libboost-locale-dev<span class="w">  </span><span class="c1"># Debian/Ubuntu</span>
+</pre></div>
+</div>
+<p><strong>macOS:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>boost
+</pre></div>
+</div>
+<p><strong>Windows:</strong> The build script should handle this automatically. If it fails, check:</p>
+<ul class="simple">
+<li><p>Internet connectivity for downloading Boost</p></li>
+<li><p>Disk space in <code class="docutils literal notranslate"><span class="pre">dist/</span></code> directory</p></li>
+<li><p>Visual Studio installation (including ARM64 tools for ARM64 builds)</p></li>
+</ul>
+</section>
+<section id="CMake-version-too-old">
+<h3>CMake version too old<a class="headerlink" href="#CMake-version-too-old" title="Link to this heading">#</a></h3>
+<p>tttrlib requires CMake 3.13 or later. Update CMake:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>cmake
+</pre></div>
+</div>
+</section>
+<section id="SWIG-not-found">
+<h3>SWIG not found<a class="headerlink" href="#SWIG-not-found" title="Link to this heading">#</a></h3>
+<p>Install SWIG:</p>
+<p><strong>Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>swig<span class="w">  </span><span class="c1"># RHEL/CentOS/Fedora</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>swig<span class="w">  </span><span class="c1"># Debian/Ubuntu</span>
+</pre></div>
+</div>
+<p><strong>macOS:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>swig
+</pre></div>
+</div>
+<p><strong>Windows:</strong> Download from <a class="reference external" href="http://www.swig.org/download.html">swig.org</a> and add to PATH.</p>
+</section>
+<section id="Architecture-Mismatch">
+<h3>Architecture Mismatch<a class="headerlink" href="#Architecture-Mismatch" title="Link to this heading">#</a></h3>
+<p>If you encounter errors about architecture mismatches:</p>
+<p><strong>Check your Python architecture:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">())</span>  <span class="c1"># Should show AMD64, ARM64, x86_64, aarch64, etc.</span>
+</pre></div>
+</div>
+<p><strong>Ensure you’re using the correct wheel:</strong></p>
+<ul class="simple">
+<li><p>pip should automatically select the right wheel for your architecture</p></li>
+<li><p>If building from source, the build system detects architecture automatically</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="preface.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Welcome to tttrlib</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="faq.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Frequently Asked Questions</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Platform-Support">Platform Support</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Prebuilt-binaries">Prebuilt binaries</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Building-Wheels-with-cibuildwheel">Building Wheels with cibuildwheel</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Prerequisites">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Local-Development-Build">Local Development Build</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Quick-Start:-Build-All-Platforms">Quick Start: Build All Platforms</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Build-for-Specific-Platform">Build for Specific Platform</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Build-for-Specific-Architecture">Build for Specific Architecture</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#Prerequisites-for-Cross-Architecture-Builds">Prerequisites for Cross-Architecture Builds</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#Step-1:-Enable-QEMU-Emulation-(Required-for-ARM64-on-x86_64)">Step 1: Enable QEMU Emulation (Required for ARM64 on x86_64)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#Step-2:-Build-for-Target-Architecture">Step 2: Build for Target Architecture</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Building-Multiple-Architectures">Building Multiple Architectures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Building-Specific-Python-Versions">Building Specific Python Versions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Building-a-Single-Wheel-(Current-Python-Only)">Building a Single Wheel (Current Python Only)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Verifying-Built-Wheels">Verifying Built Wheels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Testing-Built-Wheels">Testing Built Wheels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Troubleshooting-cibuildwheel">Troubleshooting cibuildwheel</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Uploading-to-PyPI">Uploading to PyPI</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Platform-Specific-Build-Requirements">Platform-Specific Build Requirements</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Linux">Linux</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Windows">Windows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#macOS">macOS</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Compilation-from-Source">Compilation from Source</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites-1">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Debug-Build">Debug Build</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Conda-Build">Conda Build</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Continuous-Integration">Continuous Integration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Troubleshooting">Troubleshooting</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Boost-locale-not-found">Boost locale not found</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#CMake-version-too-old">CMake version too old</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#SWIG-not-found">SWIG not found</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Architecture-Mismatch">Architecture Mismatch</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/install.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

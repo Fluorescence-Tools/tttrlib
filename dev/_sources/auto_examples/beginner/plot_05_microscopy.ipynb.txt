@@ -1,0 +1,104 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Basic Example 5: Zeiss LSM 980 CLSM walkthrough\nThis gallery example mirrors the CLSM image construction steps exercised in the\nunit tests (see ``test/test_CLSM_02.py``) and demonstrates how to\n\n1. Load the Zeiss LSM 980 confocal TTTR file used in the tests.\n2. Build a ``tttrlib.CLSMImage`` object with matching parameters.\n3. Visualise a frame projection and the corresponding mean micro-time map.\n\n# Notes\n- The demo data ships with the tttrlib repository. Set ``TTTRLIB_DATA`` as\n  explained in ``test/test_settings.py`` so the example can locate the files.\n- Figures are rendered with a non-interactive backend during documentation\n  builds. The script never calls :func:`matplotlib.pyplot.show`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from __future__ import annotations\n\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport tttrlib\n\nfrom examples._example_data import get_data_path"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Load the Zeiss LSM 980 demo data --------------------------------------------\n``get_data_path`` resolves the same file locations used by the unit tests. When\nthe data bundle is not installed an informative error is raised.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "try:\n    zeiss_path = get_data_path(\n        \"imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu\"\n    )\nexcept FileNotFoundError as exc:\n    raise SystemExit(\n        \"Demo CLSM data not found. Set TTTRLIB_DATA to the directory containing \"\n        \"the reference data bundle (see test/test_settings.py).\"\n    ) from exc\n\nprint(f\"Using Zeiss file: {zeiss_path}\")\nzeiss_tttr = tttrlib.TTTR(str(zeiss_path))\nprint(f\"Total TTTR events: {len(zeiss_tttr):,}\")\n\n# The Zeiss dataset relies on the library defaults, so no extra kwargs are\n# required beyond the detector selection used in the tests.\nchannels = [0]\n\nclsm_image = tttrlib.CLSMImage(\n    tttr_data=zeiss_tttr,\n    channels=channels,\n)\n\n# ``fill`` populates the CLSM hierarchy (frames \u2192 lines \u2192 pixels) with photon\n# indices for the requested detector channels.\nclsm_image.fill(tttr_data=zeiss_tttr, channels=channels)\n\nintensity = clsm_image.intensity\nprint(f\"Intensity volume shape (frames, lines, pixels): {intensity.shape}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Frame projection (sum over time) --------------------------------------------\nProject the 3-D intensity stack along the frame axis to approximate a\nwide-field view of the acquisition. ``np.log1p`` improves the contrast when the\ndynamic range is high.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "projection = intensity.sum(axis=0)\nprojection_log = np.log1p(projection)\n\nfig_proj, ax_proj = plt.subplots(figsize=(4.8, 4.0))\nim = ax_proj.imshow(projection_log, cmap=\"magma\", origin=\"lower\")\nfig_proj.colorbar(im, ax=ax_proj, shrink=0.8, label=\"log(1 + counts)\")\nax_proj.set_title(\"Zeiss LSM 980 CLSM \u2014 sum over frames (channel 0)\")\nax_proj.set_xlabel(\"Pixel index\")\nax_proj.set_ylabel(\"Line index\")\nfig_proj.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Mean micro-time map for the first frame -------------------------------------\nThe unit tests validate ``get_mean_micro_time`` by comparing it to reference\narrays. Here we reuse the same helper to derive a pseudo-lifetime image. The\nresult is provided in seconds; multiply by ``1e9`` to obtain nanoseconds. Only\npixels with at least three photons contribute to the estimate.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "mean_micro = clsm_image.get_mean_micro_time(\n    tttr_data=zeiss_tttr,\n    minimum_number_of_photons=3,\n)\n\nif mean_micro.size == 0:\n    raise SystemExit(\"Mean micro-time image is empty; check that the data file contains CLSM frames.\")\n\nframe0_micro = mean_micro[0]\nframe0_micro = np.clip(frame0_micro, 0.0, None)\nframe0_micro_ns = np.where(frame0_micro > 0.0, frame0_micro * 1e9, np.nan)\n\nfig_micro, ax_micro = plt.subplots(figsize=(4.8, 4.0))\nim2 = ax_micro.imshow(frame0_micro_ns, cmap=\"viridis\", origin=\"lower\")\nfig_micro.colorbar(im2, ax=ax_micro, shrink=0.8, label=\"Mean micro time (ns)\")\nax_micro.set_title(\"Zeiss LSM 980 CLSM \u2014 frame 0 mean micro time\")\nax_micro.set_xlabel(\"Pixel index\")\nax_micro.set_ylabel(\"Line index\")\nfig_micro.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Summary ---------------------------------------------------------------------\n- The Zeiss LSM 980 TTTR file is converted into a CLSM image using the same\n  parameters as the unit tests (default reader).\n- The intensity volume can be projected to obtain a quick overview of the\n  recorded structure.\n- ``get_mean_micro_time`` yields a pseudo-lifetime map which highlights regions\n  with different fluorescence decay characteristics.\n\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

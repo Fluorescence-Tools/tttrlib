@@ -1,0 +1,176 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# TTTR-Header\n\n## Introduction\nTTTR files can contain additional meta-data. In tttrlib the meta data can be\naccessed and edited via the TTTRHeader class. Some TTTR file formats such as the\nPTU format provide the option for arbitrary meta data. Other TTTR formats have\ndefined / fixed headers. Some of the information that can be found in a TTTR file\nis listed in [Header tags sheet](https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL).\n\nNote, the list of Header tags is by any means not comprehensive. If you have information\non the used header tags. Please contact the authors of tttrlib to contribute\nto the list.\n\n\n## Accessing header data\nMost TTTR container contain meta-data that can be accessed through ``tttrlib``.\nFor that, a ``TTTR`` object provides a header attribute. The header attribute is\nof the type :class:`.Header`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport tttrlib\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n# the header can be accesses by the method get_header or as an property\nheader = data.header"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The most important attributes of the header are the :py:attr:`micro_time_resolution`\nand :py:attr:`macro_time_resolution`. Becker&Hickl Spc132 files files contain\nonly a limited amount of information in the first record (32 bit).\n\nPicoQuant PTU and HT3 files provide more extensive information in their header\nthat can be accessed via the :py:attr:`json` attribute of a header object. The\n:py:attr:`json` attribute of a header object is a JSON string. Setting the :py:attr:`json`\nattribute modifies the header / meta data of a TTTR object.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import json\ndata = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu'), 'PTU')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "the header can be accesses by the method get_header or as a property\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = data.header\nheader_json = header.json\nheader_dict = json.loads(header_json)\nprint(header_dict)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Time calibration data\nEssential for the analysis of TTTR data is the time calibration (time resolution)\nof the macro and the micro times in addition to the number of possible micro time\nchannels. In many functions the micro and macro time calibration are transparently\nhandled, meaning there is no need to worry. The ``macro_time`` and the\n``micro_time`` TTTR attributes correspond the to raw uncalibrated data.\n\nThe macro and micro time resolution is accessed as follows.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "macro_time_resolution = data.header.macro_time_resolution\nmicro_time_resolution = data.header.micro_time_resolution"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The number of micro time channels can be accessed as displayed below.\nThe header can be accesses by the method get_header or as an property.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = data.get_header()\nmacro_time_resolution = data.header.macro_time_resolution\n# macro_time_resolution = 12.5 ns\nmicro_time_resolution = data.header.micro_time_resolution\n# micro_time_resolution = 4 ps\ndata.header.number_of_micro_time_channels\n# will return 8129\ndata.get_number_of_micro_time_channels()\n# will return 3125"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Note, the effective number of micro time channels, i.e., the number of micro time\nchannels can be smaller than the actual number of micro time channels. For\ninstance at a micro time channel resolution of 4 ps and macro time resolution\nof 12.5 ns effectively only 3125 micro time channels will be filled with\nphotons.\n\n## Creating and writing TTTRHeader\nEach TTTR object has an attribute that is an instance of the TTTRHeader class.\n    This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader\nobjects can also be created independently of TTTR object.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = tttrlib.TTTRHeader()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Modifying meta-data\nThe data containted in a TTTRHeader instance can be accesses as JSON string. The\n[JSON](https://www.json.org) string.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = tttrlib.TTTRHeader()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The JSON string must contain a `tags` list. The `tags` list is a list of dictionarys\nin which each dictionary corresponds to a meta-data field in the header. For instance,\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "print(header.json) # '{\\n \"tags\": []\\n}'"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Different meta data fields are listed in\n[Header tags sheet](https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL).\n\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

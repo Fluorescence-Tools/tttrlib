@@ -1,0 +1,158 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Burst Analysis Example with BurstFilter\n\nThis example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers:\n- Loading TTTR data\n- Selecting donor and acceptor channels\n- Optional PIE/ALEX micro-time gating\n- Performing burst search using BurstFilter\n- Filtering bursts by size, duration, and background\n- Merging short gaps between bursts\n- Computing FRET efficiency\n- Visualizing burst size and FRET distributions\n\n<div class=\"alert alert-info\"><h4>Note</h4><p>This example requires a TTTR file. We use a sample file for demonstration.</p></div>\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Import required libraries\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport matplotlib.pyplot as plt"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Load data\nUse TTTRLIB_DATA\\\\bh\\\\bh_spc132_sm_dna\\\\*.spc explicitly (no complicated lookup).\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\n\ndata_root = os.environ.get('TTTRLIB_DATA')\nif not data_root:\n    print(\"TTTRLIB_DATA is not set. Please set it to your tttr-data root.\")\n    raise SystemExit(0)\n\nsm_folder = Path(data_root) / 'bh' / 'bh_spc132_sm_dna'\nspc_files = sorted(sm_folder.glob('*.spc'))\nif not spc_files:\n    print(f\"No SPC files found in {sm_folder}\")\n    raise SystemExit(0)\n\ntest_file = str(spc_files[0])\nfmt = 'SPC-130'\nprint(f\"Loading file: {Path(test_file).name}\")\n\ndata = tttrlib.TTTR(test_file, fmt)\nprint(f\"Total events: {len(data)}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Define donor and acceptor channels\nDefine channels with routing channels and microtime ranges\nAdjust these values based on your instrument configuration\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "channels_dict = [\n    {\n        'name': 'donor',\n        'components': [\n            {'routing_channel': 0, 'microtime_range': (0, 4096)}  # Donor excitation window\n        ]\n    },\n    {\n        'name': 'acceptor',\n        'components': [\n            {'routing_channel': 1, 'microtime_range': (0, 4096)}  # Acceptor excitation window\n        ]\n    }\n]\n\n# Channel system is now the primary approach for channel selection"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Burst search using BurstFilter with channels\nCreate BurstFilter instance\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "burst_filter = tttrlib.BurstFilter(data.Get())\n\n# Load channel definitions\nburst_filter.load_channels_from_json_dict(channels_dict)\nprint(f\"Loaded {burst_filter.get_channel_count()} channels: {burst_filter.get_channel_names()}\")\n\n# Set burst search parameters via JSON (JSON-first path)\n# L: Minimum photons per burst (reduced from 30 to 15)\n# m: Window size (photons)\n# T: Window duration in seconds (increased from 0.5ms to 1ms)\nimport json\nL = 15      # Minimum photons per burst (reduced from 30)\nm = 10      # Window size (photons) - kept the same\nT = 1e-3    # Window duration in seconds (increased from 0.5ms)\nconfig = {\n    \"burst_parameters\": {\n        \"min_photons_per_burst\": int(L),\n        \"window_photons\": int(m),\n        \"window_time\": float(T)\n    },\n    \"background_parameters\": {\n        \"background_time_window\": 10.0,\n        \"background_threshold\": 0.0\n    }\n}\nconfig_json = json.dumps(config)\nprint(f\"Burst search parameters (JSON): {config_json}\")\n# Apply parameters using JSON string API\nburst_filter.from_json_string(config_json)\n\n# Run burst search using NumPy-friendly API to avoid SWIG STL proxies\nbursts_np = burst_filter.find_bursts()  # ndarray (n,2) int64\nprint(f\"Found {len(bursts_np)} bursts\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Filter and merge bursts\nPrint burst statistics before filtering\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "print(\"\\nBurst statistics before filtering:\")\nnum_bursts = len(burst_filter)\nprint(f\"  Number of bursts: {num_bursts}\")\n\n# Get burst sizes via JSON path (using BurstFeatureExtractor JSON)\nif num_bursts > 0:\n    bfe = tttrlib.BurstFeatureExtractor(burst_filter)\n    _bfe_obj = json.loads(bfe.to_json_string())\n    _props = _bfe_obj.get(\"burst_properties\", [])\n    if _props:\n        _props_arr = np.asarray(_props, dtype=float).reshape((-1, 5))\n        sizes = _props_arr[:, 2]\n        print(f\"  Min size: {np.min(sizes):.1f} photons\")\n        print(f\"  Max size: {np.max(sizes):.1f} photons\")\n        print(f\"  Mean size: {np.mean(sizes):.1f} photons\")\n\n# Filter bursts by size (20-5000 photons)\nprint(\"\\nFiltering bursts...\")\nfiltered_bursts_np = burst_filter.filter_by_size(min_size=20, max_size=5000)\nprint(f\"Bursts after size filtering: {len(filtered_bursts_np)}\")\n\n# Merge bursts with short gaps (5 photons)\nprint(\"Merging bursts with short gaps...\")\nmerged_bursts_np = burst_filter.merge_bursts(max_gap=5)\nprint(f\"Merged to {len(merged_bursts_np)} bursts after merging\")\n\n# Print final burst statistics (via JSON)\nnum_bursts = len(burst_filter)\nif num_bursts > 0:\n    bfe_final = tttrlib.BurstFeatureExtractor(burst_filter)\n    _bfe_final = json.loads(bfe_final.to_json_string())\n    _props_final = _bfe_final.get(\"burst_properties\", [])\n    if _props_final:\n        _arr = np.asarray(_props_final, dtype=float).reshape((-1, 5))\n        sizes = _arr[:, 2]\n        print(\"\\nFinal burst statistics:\")\n        print(f\"  Number of bursts: {num_bursts}\")\n        print(f\"  Min size: {np.min(sizes):.1f} photons\")\n        print(f\"  Max size: {np.max(sizes):.1f} photons\")\n        print(f\"  Mean size: {np.mean(sizes):.1f} photons\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Compute FRET efficiency using JSON data only\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "E_values = []\nburst_sizes = []\ndonor_counts = []\nacceptor_counts = []\ndonor_count_rates = []\nacceptor_count_rates = []\n\n# Use BurstFeatureExtractor JSON for all per-burst values (JSON-first path)\nbfe_all = tttrlib.BurstFeatureExtractor(burst_filter)\n_bfe_all = json.loads(bfe_all.to_json_string())\n_props = _bfe_all.get(\"burst_properties\", [])\n_ch_ph = _bfe_all.get(\"channel_photons\", {})  # dict: name -> list per burst\n\nif _props:\n    arr = np.asarray(_props, dtype=float).reshape((-1, 5))\n    sizes_all = arr[:, 2]\n    rates_all = arr[:, 4]\n    # Extract donor/acceptor per-burst counts from JSON dict (defaults to zeros)\n    donor_list = _ch_ph.get(\"donor\", [0] * len(sizes_all))\n    acceptor_list = _ch_ph.get(\"acceptor\", [0] * len(sizes_all))\n    donor_arr = np.asarray(donor_list, dtype=np.int64)\n    acceptor_arr = np.asarray(acceptor_list, dtype=np.int64)\n\n    for i in range(len(sizes_all)):\n        n_d = int(donor_arr[i])\n        n_a = int(acceptor_arr[i])\n        total = n_d + n_a\n        count_rate = float(rates_all[i])\n        if total > 0:\n            donor_rate = (n_d / total) * count_rate\n            acceptor_rate = (n_a / total) * count_rate\n            E = acceptor_rate / (donor_rate + acceptor_rate) if (donor_rate + acceptor_rate) > 0 else 0.0\n            E_values.append(E)\n            burst_sizes.append(int(sizes_all[i]))\n            donor_counts.append(n_d)\n            acceptor_counts.append(n_a)\n            donor_count_rates.append(donor_rate)\n            acceptor_count_rates.append(acceptor_rate)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Plotting\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "if len(burst_sizes) > 0:\n    fig, ax = plt.subplots(1, 2, figsize=(12, 4))\n\n    # Burst size distribution\n    ax[0].hist(burst_sizes, bins=30, alpha=0.7, color='blue')\n    ax[0].set_xlabel('Photons per burst')\n    ax[0].set_ylabel('Count')\n    ax[0].set_title('Burst size distribution')\n\n    # FRET efficiency histogram\n    ax[1].hist(E_values, bins=30, range=(0, 1), alpha=0.7, color='red')\n    ax[1].set_xlabel('FRET Efficiency')\n    ax[1].set_ylabel('Count')\n    ax[1].set_title('FRET efficiency distribution')\n\n    plt.tight_layout()\n    plt.show()\n    \n    print(f\"\\nBurst Analysis Summary:\")\n    print(f\"  Total bursts: {len(burst_sizes)}\")\n    if len(burst_sizes) > 0:\n        print(f\"  Mean burst size: {np.mean(burst_sizes):.1f} photons\")\n        print(f\"  Mean donor photons: {np.mean(donor_counts):.1f}\")\n        print(f\"  Mean acceptor photons: {np.mean(acceptor_counts):.1f}\")\n        print(f\"  Mean donor count rate: {np.mean(donor_count_rates):.0f} photons/s\")\n        print(f\"  Mean acceptor count rate: {np.mean(acceptor_count_rates):.0f} photons/s\")\n        print(f\"  Mean FRET efficiency (from count rates): {np.mean(E_values):.3f}\")\n        print(f\"  FRET efficiency range: {np.min(E_values):.3f} - {np.max(E_values):.3f}\")\n    else:\n        print(\"  No bursts found with the current settings.\")\n        print(\"  Try adjusting the burst search parameters or check your channel definitions.\")\nelse:\n    print(\"No bursts found after filtering\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Fluorescence decay analysis - 3\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import pylab as p\nimport scipy.optimize\nimport scipy.stats\nimport numpy as np\nimport tttrlib\n\n\ndef objective_function(\n        x: np.ndarray,\n        x_min: int,\n        x_max: int,\n        irf: np.array,\n        max_irf_fraction: float = 0.05\n):\n    max_irf = np.max(irf) * max_irf_fraction\n    w = np.copy(irf[x_min:x_max])\n    w[w < 1] = 1\n    w[np.where(irf > max_irf)[0]] = 1\n    chi2 = (((irf[x_min:x_max] - x[0])/w)**2).sum(axis=0)\n    return chi2\n\nfrom examples._example_data import get_data_path\n\n# Read TTTR\nspc132_filename = get_data_path('bh/bh_spc132.spc')\ndata = tttrlib.TTTR(str(spc132_filename), 'SPC-130')\n\ndata_green = data[data.get_selection_by_channel([0, 8])]\n# the macro time clock in ms\nmacro_time_resolution = data.header.macro_time_resolution\n\n# Make histograms\nn_bins = 512  # number of bins in histogram\nx_min, x_max = 1, 512  # fit range\ndt = data.header.micro_time_resolution * 4096 / n_bins  # time resolution\ntime_axis = np.arange(0, n_bins) * dt\n\n# IRF\n# select background / scatter, maximum 7 photons in 6 ms\ntime_window_irf = 6.e-3\nn_ph_max_irf = 7\nirf, _ = np.histogram(\n    data_green[\n        data_green.get_selection_by_count_rate(\n            time_window=time_window_irf,\n            n_ph_max=n_ph_max_irf\n        )\n    ].micro_times, bins=n_bins\n)\n\nx0 = np.array([4])\nfit = scipy.optimize.minimize(\n    objective_function, x0,\n    args=(x_min, x_max, irf),\n    method='BFGS'\n)\nirf_bg = fit.x\n\n\nfig, ax = p.subplots(nrows=2, ncols=1, sharex=True, sharey=False)\nax[1].semilogy(time_axis, irf, label=\"IRF\")\nax[1].semilogy(\n    time_axis[x_min:x_max],\n    np.ones_like(time_axis)[x_min:x_max] * irf_bg, label=\"IRF Bg\"\n)\nax[1].legend()\np.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

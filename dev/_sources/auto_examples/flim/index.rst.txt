@@ -1,0 +1,320 @@
+
+
+.. _sphx_glr_auto_examples_flim:
+
+.. _flim_examples:
+
+Fluorescence lifetime imaging
+-----------------------------
+
+Examples showing lifetime image generation, phasor analysis, moment analysis,
+segmentation-driven decays, and common image operations.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Intensity image">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_intensity_image_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_intensity_image`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity image</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image cropping">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_crop_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_crop`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image cropping</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image rebinning">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_rebin_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_rebin`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image rebinning</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Marker in Scanning microscopy">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_marker_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_marker`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Marker in Scanning microscopy</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_lifetime_moments`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a transformed images  cannot be used for advanced data analyis such as image correlation. Try to plan your experiment optimally  and aquire the data as needed (pixel dwell times, laser power, etc.). ">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_transform_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_transform`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image transform</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mean_lifetime_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_mean_lifetime`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_pixel_masks_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_pixel_masks`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Using Pixel masks</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_lifetime_moments_bg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see auto_examples/flim/plot_marker.py). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_read_clsm_data_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_read_clsm_data`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mle_lifetime_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_mle_lifetime`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime analysis</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Changing the data representation from the classical time delay histogram to the phasor representation provides a global view of the fluorescence decay at each pixel of an image. In the phasor representation we can easily recognize the presence of different molecular species in a pixel or the occurrence of fluorescence resonance energy transfer. The analysis of the fluorescence lifetime imaging microscopy (FLIM) data in the phasor space is done observing clustering of pixels values in specific regions of the phasor plot rather than by fitting the fluorescence decay using exponentials. The analysis is instantaneous since is not based on calculations or nonlinear fitting. The phasor approach has the potential to simplify the way data are analyzed in FLIM, paving the way for the analysis of large data sets and, in general, making the FLIM technique accessible to the nonexpert in spectroscopy and data analysis DIGMAN2008L14.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_phasor_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_phasor`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Phasor analysis of images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_tutorial_python_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_tutorial_python`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Tutorial: Image construction</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview -------- Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_flim_pie_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_flim_pie`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">FLIM-PIE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, few examples visualize typical mappings from photon groups to representations that can be visualized in an image. In this example data of a pulsed interleaved (PIE) multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer (FRET) experiment is processed. The FRET sample contained a donor, D, and an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_imaging_representations_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_imaging_representations`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR Image representations</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. Data Loading     2. Create CLSM image container     3. Pulsed interleaved excitation     4. Intensity imaging     5. Micro time imaging     6. Define pixel classes by image segmentation     7. Apply pixel classes for analysis">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_segmentation_based_decays_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_segmentation_based_decays`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image-based segmentation of FLIM data</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/flim/plot_intensity_image
+   /auto_examples/flim/plot_crop
+   /auto_examples/flim/plot_rebin
+   /auto_examples/flim/plot_marker
+   /auto_examples/flim/plot_lifetime_moments
+   /auto_examples/flim/plot_transform
+   /auto_examples/flim/plot_mean_lifetime
+   /auto_examples/flim/plot_pixel_masks
+   /auto_examples/flim/plot_lifetime_moments_bg
+   /auto_examples/flim/plot_read_clsm_data
+   /auto_examples/flim/plot_mle_lifetime
+   /auto_examples/flim/plot_phasor
+   /auto_examples/flim/plot_tutorial_python
+   /auto_examples/flim/plot_flim_pie
+   /auto_examples/flim/plot_imaging_representations
+   /auto_examples/flim/plot_segmentation_based_decays
+

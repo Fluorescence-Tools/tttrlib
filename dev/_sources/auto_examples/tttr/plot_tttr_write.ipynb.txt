@@ -1,0 +1,61 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# TTTR writing / Modify CLSM files\n\nHere it is illustrated how TTTR data of CLSM experiments can be created and written. \nData of an existing CLSM experiment is read, masked, and the masked data is written to \na file that can be processed by any other software processing the original TTTR data.\n\nIn this example:\n\n1. TTTR data set of a CLSM measurement is read\n2. a CLSM image for the TTTR data is created\n3. photon in pixels within the CLSM container are selected\n4. a new TTTR container is created using the original header as template\n5. data is copied into the new TTTR container (masking photons)\n6. a new TTTR file is created using the TTTR container\n7. the newly create TTTR file is read and a CLSM image is create for the filered data\n\n\nThe source code of this example can be used to build analysis pipelines to mix and match\ndifferent software.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport json\nimport tttrlib\nimport numpy as np\nimport pylab as plt"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Use TTTRLIB_DATA if set, otherwise fall back to repository layout\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "DATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\nfilename_tttr = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')\ntttr = tttrlib.TTTR(filename_tttr)\n\nclsm = tttrlib.CLSMImage(tttr, fill=True, channels=tttr.used_routing_channels)\n\n# simple filter that selects indices in pixels by the number of photons\ndef pixel_with_less_photons(clsm: tttrlib.CLSMImage, n_min: int = 3):\n    idx_del = list()\n    for frame in clsm:\n        for line in frame:\n            for pixel in line:\n                if pixel.size() < n_min:\n                    idx_del += pixel.tttr_indices\n    return idx_del\n\n\n# Create a new empty TTTR container\nd2 = tttrlib.TTTR()\n\n# Load header from original TTTR. \n# At this stage the header content can be edited\nheader_dict = json.loads(tttr.header.json)\n\n# Set the header information of the empty TTTR container\nd2.header.set_json(json.dumps(header_dict))\n\n# Assign events to the empty / new TTTR container\n# only selecting pixels with more than 10 photons.\n# This selection only serves as an example. Any other selection\n# will also work.\nn_ph_min = 10\nidx_del = pixel_with_less_photons(clsm, n_ph_min)\nevents = {\n    \"macro_times\":  np.delete(tttr.macro_times, idx_del),\n    \"micro_times\": np.delete(tttr.micro_times, idx_del),\n    \"routing_channels\": np.delete(tttr.routing_channels, idx_del),\n    \"event_types\": np.delete(tttr.event_types, idx_del)\n}\nd2.append_events(**events)\n\n# Write the new TTTR container to a file\nfn_stripped = \"o4.ptu\"\nd2.write(fn_stripped)\n\n# Read the file (to make sure everything worked)\nd3 = tttrlib.TTTR(fn_stripped)\nclsm_stripped = tttrlib.CLSMImage(d3, fill=True, channels=tttr.used_routing_channels)\n\n# The image can be constructed\nplt.imshow(clsm_stripped.intensity[0])\nplt.show()\n\n# The slection worked.\nplt.hist(clsm_stripped.intensity.flatten(), bins=20, range=(1, 20))\nplt.hist(clsm.intensity.flatten(), bins=20, range=(1, 20))\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

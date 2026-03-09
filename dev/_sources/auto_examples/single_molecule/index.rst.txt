@@ -1,0 +1,321 @@
+
+
+.. _sphx_glr_auto_examples_single_molecule:
+
+.. _single_molecule_examples:
+
+Single-molecule
+--------------
+
+Application of ``tttrlib`` to single-molecule data.
+
+.. toctree::
+   :maxdepth: 1
+
+   plot_01_burst_analysis
+   plot_burst_analysis_json
+   plot_burst_analysis_with_filter
+   plot_burstfilter_dynamic_enhanced
+   plot_burstfilter_with_selection
+   plot_burst_selection_advanced
+   plot_complete_burst_analysis_pipeline
+   plot_fret_burst_analysis
+   plot_microtime_linearization
+   plot_microtime_selection_example
+   plot_microtime_selection_example_fixed
+   plot_microtime_selection_minimal
+   plot_single_molecule_burst_selection
+   plot_single_molecule_mcs
+   plot_single_molecule_pda_1
+   plot_single_molecule_pda_2
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_mcs_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_single_molecule_mcs`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates microtime range selection for burst analysis without plotting.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_minimal_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_minimal`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Minimal Microtime Range Selection Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. The minimum window length minimum_window_length     2. The minimum number of photons in a time window minimum_number_of_photons_in_time_window">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_burst_selection_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_single_molecule_burst_selection`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst selection routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_fixed_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example_fixed`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example (Fixed Version)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use TTTRSelection with BurstFilter for advanced photon selection and burst analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burstfilter_with_selection_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burstfilter_with_selection`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">BurstFilter with TTTRSelection Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_1_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_single_molecule_pda_1`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 1</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_analysis_json_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_analysis_json`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst Analysis with JSON Parameter Support</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates FRET burst analysis using the new BurstFilter class in tttrlib. The BurstFilter class provides a cleaner interface for burst analysis similar to FRETBursts, with support for multi-channel FRET analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_fret_burst_analysis_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_fret_burst_analysis`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">FRET Burst Analysis with BurstFilter Class</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts &quot;reappear&quot;.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burstfilter_dynamic_enhanced_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Enhanced BurstFilter: Dynamic Parameter Changes Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with photon masking. Photon masking allows you to pre-filter photons by channel, microtime, or other criteria before performing burst analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_analysis_with_filter_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_analysis_with_filter`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst Analysis with BurstFilter Class and Photon Masking</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC).">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_linearization_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_linearization`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microtime Linearization</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: - Loading TTTR data - Selecting donor and acceptor channels - Optional PIE/ALEX micro-time gating - Performing burst search using BurstFilter - Filtering bursts by size, duration, and background - Merging short gaps between bursts - Computing FRET efficiency - Visualizing burst size and FRET distributions">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_01_burst_analysis_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_01_burst_analysis`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst Analysis Example with BurstFilter</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis as described in https://pubs.acs.org/doi/abs/10.1021/jp057257">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_2_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_single_molecule_pda_2`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 2</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a complete end-to-end burst analysis pipeline using the  BurstFilter class with JSON parameter serialization support. It covers:">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_complete_burst_analysis_pipeline_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_complete_burst_analysis_pipeline`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Complete Burst Analysis Pipeline</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_mcs
+   /auto_examples/single_molecule/plot_microtime_selection_minimal
+   /auto_examples/single_molecule/plot_single_molecule_burst_selection
+   /auto_examples/single_molecule/plot_microtime_selection_example_fixed
+   /auto_examples/single_molecule/plot_burstfilter_with_selection
+   /auto_examples/single_molecule/plot_single_molecule_pda_1
+   /auto_examples/single_molecule/plot_burst_analysis_json
+   /auto_examples/single_molecule/plot_fret_burst_analysis
+   /auto_examples/single_molecule/plot_microtime_selection_example
+   /auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced
+   /auto_examples/single_molecule/plot_burst_analysis_with_filter
+   /auto_examples/single_molecule/plot_microtime_linearization
+   /auto_examples/single_molecule/plot_01_burst_analysis
+   /auto_examples/single_molecule/plot_single_molecule_pda_2
+   /auto_examples/single_molecule/plot_complete_burst_analysis_pipeline
+

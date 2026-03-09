@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# MLE fit23: Usage example 2\n\n1) Compute model function\n2) Simulate data for computed model function\n3) Fit simulated data with model function\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport scipy.stats\nimport pylab as p\n\n\ndef model_irf(\n        n_channels: int = 256,\n        period: float = 32,\n        irf_position_p: float = 2.0,\n        irf_position_s: float = 18.0,\n        irf_width: float = 0.25\n):\n    time_axis = np.linspace(0, period, n_channels * 2)\n    irf_np = scipy.stats.norm.pdf(time_axis, loc=irf_position_p, scale=irf_width) + \\\n             scipy.stats.norm.pdf(time_axis, loc=irf_position_s, scale=irf_width)\n    return irf_np, time_axis\n\n\n# setup some parameters\nn_channels = 128\nn_corrections = 5\nn_photons = 120\nirf_position_p = 2.0\nirf_position_s = 18.0\nirf_width = 0.25\nperiod, g, l1, l2, conv_stop = 32, 1.0, 0.1, 0.1, n_channels // 2 - 1\ntau, gamma, r0, rho = 2.0, 0.01, 0.38, 1.2\nnp.random.seed(0)\n\nirf_np, time_axis = model_irf(\n    n_channels=n_channels,\n    period=period,\n    irf_position_p=irf_position_p,\n    irf_position_s=irf_position_s,\n    irf_width=irf_width\n)\ndt = time_axis[1] - time_axis[0]\nconv_stop = min(len(time_axis), conv_stop)\nparam = np.array([tau, gamma, r0, rho])\ncorrections = np.array([period, g, l1, l2, conv_stop])\n\n# compute a model function that is later used as \"data\"\nmodel = np.zeros_like(time_axis)\nbg = np.zeros_like(time_axis)\ntttrlib.DecayFit23.modelf(param, irf_np, bg, dt, corrections, model)\n# add poisson noise to model and use as data\ndata = np.random.poisson(model * n_photons)\n\n# create MParam structure that contains all parameters for fitting\nm_param = tttrlib.CreateMParam(\n    irf=irf_np,\n    background=bg,\n    data=data.astype(np.int32),\n    corrections=corrections,\n    dt=dt\n)\n\ntau, gamma, r0, rho = 4., 0.01, 0.38, 1.5\nbifl_scatter = -1\np_2s = 0\nx = np.zeros(8, dtype=np.float64)\nx[:6] = [tau, gamma, r0, rho, bifl_scatter, p_2s]\n\n# test fitting\nfixed = np.array([0, 1, 1, 1], dtype=np.int16)\nchi2 = tttrlib.DecayFit23.fit(x, fixed, m_param)\n\nm = np.array([m for m in m_param.get_model()])\np.plot(m)\np.plot(data)\np.plot(irf_np / max(irf_np) * max(data))\np.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

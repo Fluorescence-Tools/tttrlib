@@ -1,0 +1,83 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Mean lifetime images\nCompute the mean lifetime in a pixel using the method of moments\n(Irvin Isenberg, 1973, Biophysical journal).\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport pylab as plt"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\n\nfilename = get_data_path('imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')\nfilename_irf = get_data_path('imaging/zeiss/eGFP_bad_background/IRF.ptu')\n\ndata = tttrlib.TTTR(str(filename))\nirf = tttrlib.TTTR(str(filename_irf))\n\n\nchannels_green = [0, 2]\nchannels_red = [1, 3]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Create a new CLSM Image. This image will be used as a template for the green and red image.\nThis avoids passing through the TTTR screen multiple times. The frame line, and pixel locations\nwill be copied for the green and red image from this template.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_template = tttrlib.CLSMImage(data)\nclsm_green = tttrlib.CLSMImage(\n    source=clsm_template,\n    channels=channels_green\n)\nclsm_red = tttrlib.CLSMImage(\n    source=clsm_template,\n    channels=channels_red\n)\n\nmean_tau_green = clsm_green.get_mean_lifetime(\n    tttr_irf=irf[irf.get_selection_by_channel(channels_green)],\n    tttr_data=data,\n    minimum_number_of_photons=20,\n    background_fraction=0.04,\n    stack_frames=True\n)\n\ngreen = clsm_green.intensity.sum(axis=0)\nred = clsm_red.intensity.sum(axis=0)\n\nmask = (green < 20) + (red < 20)\nmasked_green = np.ma.masked_where(mask, green)\nmasked_red = np.ma.masked_where(mask, red)\nmasked_tau = np.ma.masked_where(mask, mean_tau_green.mean(axis=0))\nlg_sg_sr = np.log(masked_green / masked_red)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "fig, ax = plt.subplots(nrows=2, ncols=2)\nax[0, 0].set_title('Green intensity')\nax[0, 1].set_title('Red intensity')\nax[1, 0].set_title('Mean green fl. lifetime')\nax[1, 1].set_title('Pixel histogram')\nax[1, 1].set_xlabel('tauG / ns')\nax[1, 1].set_ylabel('log(Sg/Sr')\nax[0, 0].imshow(green, cmap='cividis')\nax[0, 1].imshow(red, cmap='inferno')\nax[1, 0].imshow(mean_tau_green.mean(axis=0), cmap='Spectral')\nax[1, 1].hist2d(\n    x=masked_tau.flatten(),\n    y=lg_sg_sr.flatten(),\n    range=((0.001, 4), (-2, 0.9)),\n    bins=41\n)\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Normal multi-tau correlation\n\nAn alternative approach is to calculate the FCS curve by software\non the basis of the directly recorded asynchronous photon count data.\nThe straightforward approach would be to generate a continuous file of\nfluorescence intensity values in consecutive time bins of fixed bin\nwidth, and to use this file for a conventional autocorrelation calculation.\nBut then again, one encounters the same unreasonably large amount of data\nas when directly recording fluorescence intensity values in a synchronous\ndata acquisition mode.\n\n\nWhen applying the algorithm only at the increasingly spaced lag\ntimes as given by Eq. (2), it will completely miss, e.g., the strong\nautocorrelation of any periodic signal with a repetition time not\nincluded within the vector of used lag times. To avoid that, one usually\napplies an averaging procedure by coarsening the time resolution of the photon\ndetection times tj when coming to the calculation of the autocorrelation\nfunction at increasingly larger lag time. This is equivalent to the multiple-tau\nand multiple-sampling time correlation method employed in hardware\ncorrelators [12].\n\n:cite:`Wahl2003`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport matplotlib.pylab as plt\nimport tttrlib\nimport numpy as np\n\n\nfig, ax = plt.subplots(sharex='col', sharey='row')\n\n#  Read the data data\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n\n# Correlator settings, if the same settings are used repeatedly it is useful to define them once\nsettings = {\n    \"n_bins\": 7,  # n_bins and n_casc defines the settings of the multi-tau\n    \"n_casc\": 27,  # correlation algorithm\n    \"make_fine\": False  # Do not use the microtime information\n}\n\n# Create correlator\n# Caution: x-axis in units of macro time counter\n# tttrlib.Correlator is unaware of the calibration in the TTTR object\ncorrelator = tttrlib.Correlator(**settings)\n\n# Select the green channels (channel number 0 and 8)\nch1_indices = data.get_selection_by_channel([0])\nch2_indices = data.get_selection_by_channel([8])\n\n# Select macro times for Ch1 and Ch2 and create array of weights\n# Note: the weights are set to 1, i.e. no weighting is used\nt = data.macro_times\nt1 = t[ch1_indices]\nw1 = np.ones_like(t1, dtype=np.float64)\nt2 = t[ch2_indices]\nw2 = np.ones_like(t2, dtype=np.float64)\ncorrelator.set_events(t1, w1, t2, w2)\n\n# scale the x-axis to have units in milliseconds (common unit in FCS)\nx = correlator.x * data.header.macro_time_resolution\ny = correlator.y\n\nplt.semilogx(x, y, label=\"Gp/Gs\")\n\n# green-red cross correlation (red channels 1 and 9)\n# TODO: verify \"if the correlator is generated using the architecture below,\n# the macro time units are known and no rescaling of the y-axis needs to be performed\"\ncorrelator = tttrlib.Correlator(\n    tttr=(\n        tttrlib.TTTR(data, data.get_selection_by_channel([0, 8])),\n        tttrlib.TTTR(data, data.get_selection_by_channel([1, 9]))\n    ),\n    **settings\n)\n\n# no need to scale axis - correlator aware of macro time units\nplt.semilogx(\n    correlator.x,\n    correlator.y,\n    label=\"Gp,Gs/Rp,Rs\"\n)\n\n# red channel correlation\ncorrelator = tttrlib.Correlator(\n    channels=([9], [1]),\n    tttr=data,\n    **settings\n)\n\nplt.semilogx(\n    correlator.x,\n    correlator.y,\n    label=\"pR,sR\"\n)\n\n# Reverse cross-correlation: red-green\ncorrelator = tttrlib.Correlator(\n    channels=([9, 1], [0, 8]),\n    tttr=data,\n    **settings\n)\n\nplt.semilogx(\n    correlator.x,\n    correlator.y,\n    label=\"pRsR,pGsG\"\n)\n\n# Show results\nplt.xlabel('corr. time / sec')\nplt.ylabel('Correlation Amplitude')\nplt.legend()\n\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

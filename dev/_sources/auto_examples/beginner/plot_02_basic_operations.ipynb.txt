@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Basic Example 2: Basic operations on TTTR objects (focused illustration)\nThis example uses only a small slice (first ~300 events) so that the effect of\njoining/appending is visible in the plots.\n\nMake sure the demo PTU file is available (see ``test/test_settings.py``).\nSet the environment variable ``TTTRLIB_DATA`` so that the file\n``pq/ptu/pq_ptu_hh_t3.ptu`` can be found.\n\nWhat this example covers:\n1) Inspect a few header fields\n2) Slice, join, and append a small subset\n3) Visualize macro times **before** and **after** appending on a tiny window\n4) Plot a micro-time histogram using the built-in helper\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\nimport matplotlib.pyplot as plt\nimport tttrlib\nfrom examples._example_data import get_data_path\n\n# ------------------------------------------------------------\n# Load the demo TTTR file\n# ------------------------------------------------------------\nptu_path = get_data_path(\"pq/ptu/pq_ptu_hh_t3.ptu\")\ntttr = tttrlib.TTTR(str(ptu_path), \"PTU\")\n\nn = len(tttr)\nprint(\"Number of events:\", n)\nif n == 0:\n    raise SystemExit(\"The selected TTTR file contains no events.\")\n\n# ------------------------------------------------------------\n# Header peek (keep it short)\n# ------------------------------------------------------------\nheader = tttr.header\nprint(\"Header info:\")\nprint(\"  Macro-time resolution (s):\", header.macro_time_resolution)\nprint(\"  Micro-time resolution (s):\", header.micro_time_resolution)\n\n# ------------------------------------------------------------\n# Work on a tiny subset so differences are visible\n# ------------------------------------------------------------\nbase = tttr[:300]          # small \"main\" segment\nfirst_100 = base[:100]     # small piece we will append/join\n\nprint(\"Base length:\", len(base))\nprint(\"First_100 length:\", len(first_100))\n\n# Convenience arrays\nmacro_base = np.asarray(base.macro_times, dtype=np.int64)\n\n# 1) Join with \"+\" (library handles details internally)\njoined_plus = base + first_100\nmacro_joined_plus = np.asarray(joined_plus.macro_times, dtype=np.int64)\nprint(\"Joined with '+':\", len(joined_plus))\n\n# 2) Append with explicit control over macro-time shifting\n#    a) SHIFTED (continuous timeline)\njoined_shifted = tttrlib.TTTR(base)  # copy\njoined_shifted.append(first_100, shift_macro_time=True)\nmacro_joined_shifted = np.asarray(joined_shifted.macro_times, dtype=np.int64)\nprint(\"Appended (shift=True):\", len(joined_shifted))\n\n#    b) UN-SHIFTED (shows a clear \"jump/reset\" at the join)\njoined_unshifted = tttrlib.TTTR(base)  # copy\njoined_unshifted.append(first_100, shift_macro_time=False)\nmacro_joined_unshifted = np.asarray(joined_unshifted.macro_times, dtype=np.int64)\nprint(\"Appended (shift=False):\", len(joined_unshifted))\n\n# ------------------------------------------------------------\n# Plot A: Macro times on small sequences so effects are obvious\n# ------------------------------------------------------------\n# Entire small sequences for direct comparison\nfigA, axA = plt.subplots(figsize=(4, 2.8))\naxA.plot(np.arange(len(macro_base)), macro_base, label=\"base (300)\")\naxA.plot(np.arange(len(macro_joined_shifted)), macro_joined_shifted, label=\"appended (shift=True)\")\naxA.plot(np.arange(len(macro_joined_unshifted)), macro_joined_unshifted, label=\"appended (shift=False)\")\naxA.set_xlabel(\"Event index\")\naxA.set_ylabel(\"Macro time (periods)\")\naxA.set_title(\"Macro times on small slices (visible differences)\")\naxA.legend()\nfigA.tight_layout()\n\n# ------------------------------------------------------------\n# Plot B: Zoom around the join index (base end vs appended tail)\n# ------------------------------------------------------------\n# The join happens at index len(base). We visualize a narrow window around it.\njoin_idx = len(base)\nwindow = 40  # show +/- 40 events\n\n# Build x/y for each series within the window if available\ndef window_slice(x, start, end):\n    start = max(start, 0)\n    end = min(end, len(x))\n    return np.arange(start, end), x[start:end]\n\nx_b, y_b = window_slice(macro_base, join_idx - window, join_idx)\nx_s, y_s = window_slice(macro_joined_shifted, join_idx - window, join_idx + window)\nx_u, y_u = window_slice(macro_joined_unshifted, join_idx - window, join_idx + window)\n\nfigB, axB = plt.subplots(figsize=(4, 2.8))\naxB.plot(x_b, y_b, label=\"base (end)\")\naxB.plot(x_s, y_s, label=\"appended shift=True (around join)\")\naxB.plot(x_u, y_u, label=\"appended shift=False (around join)\")\naxB.axvline(join_idx, ls=\"--\", lw=1.0)\naxB.set_xlabel(\"Event index\")\naxB.set_ylabel(\"Macro time (periods)\")\naxB.set_title(\"Zoom near join index (shift vs no shift)\")\naxB.legend()\nfigB.tight_layout()\n\n# ------------------------------------------------------------\n# Plot C: Library micro-time histogram (small data still fine)\n# ------------------------------------------------------------\ncounts, times_s = base.get_microtime_histogram(64)  # on the small \"base\" slice\ntimes_ns = times_s * 1e9\n\nfigC, axC = plt.subplots(figsize=(4, 2.6))\naxC.step(times_ns, counts, where=\"mid\")\naxC.set_xlabel(\"Micro time (ns)\")\naxC.set_ylabel(\"Counts\")\naxC.set_title(\"Micro-time distribution (on base slice)\")\nfigC.tight_layout()\n\n# Notes:\n# - Using tiny slices makes the effect of appending immediately visible.\n# - shift=True continues the macro-time timeline; shift=False shows a discontinuity.\n# - Example 1 covers routing/per-channel plots; we avoid repeating them here."
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

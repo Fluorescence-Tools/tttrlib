@@ -1,0 +1,176 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# FLIM-PIE\n\n## Overview\nDemonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).\n\n## Prerequisites\n- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if\n  not set.\n\nIn Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The\nexciting light source is usually a pulsed laser. When analyzing the detected fluorescence the\ninterleaved excitation needs to be taken into account. For that, when two excitation sources are used,\nthe micro time detection windows is separted into two ranges, a prompt range (a blue laser excites the\ndonor in a FRET experiment) and the delay range (a red laser excites the acceptor in a FRET experiment).\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Import all required libraries\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport skimage as ski\nimport skimage.filters\nimport skimage.morphology\nimport skimage.util\nimport scipy\nimport scipy.ndimage\nimport os\nfrom pathlib import Path\n\ndef plot_images(images, titles, cmaps=None, **kwargs):\n    if cmaps is None:\n        cmaps = ['viridis'] * len(images)\n    if titles is None:\n        titles = [''] * len(images)\n    fig, ax = plt.subplots(**kwargs)\n    ax = ax.flatten()\n    for i, img in enumerate(images):\n        im = ax[i].imshow(img, cmap=cmaps[i])\n        ax[i].set_title(titles[i])\n        fig.colorbar(im, ax=ax[i], fraction=0.046, pad=0.04)\n    return fig, ax"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Loading data\nFirst, we read the TTTR data, create CLSM image container, and define used channels.\nWe create a CLSM container for the green photons and the red photons. Moreover, we create\ncontainers for red photons in the prompt and the delay time window.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\n\nfilename_data = get_data_path('imaging/pq/ht3/mGBP_DA.ht3')\ntttr_data = tttrlib.TTTR(str(filename_data))\n\n\nclsm_green = tttrlib.CLSMImage(tttr_data)\nclsm_red = tttrlib.CLSMImage(tttr_data)\nclsm_red_prompt = tttrlib.CLSMImage(tttr_data)\nclsm_red_delay = tttrlib.CLSMImage(tttr_data)\n\ngreen_ch = [0, 1]\nred_ch = [4, 5]\nsum_all = green_ch + red_ch"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Define PIE windows\nIn PIE two light sources excite the sample. Here, we load the instrument response function (IRF) and inspect\nthe IRFs of the two separate the fluorescence of the first (prompt) and the second (delay) excitation pulse.\nThe two excitation pulses define two micro time detection windows for the prompt and the delay pulse.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "filename_irf = get_data_path('imaging/pq/ht3/mGBP_IRF.ht3')\nirf = tttrlib.TTTR(str(filename_irf))\n\ntttr_irf_green = irf.get_tttr_by_channel(green_ch)\ntttr_irf_red = irf.get_tttr_by_channel(red_ch)\n\ntttr_green = tttr_data.get_tttr_by_channel(green_ch)\ntttr_red = tttr_data.get_tttr_by_channel(red_ch)\nmicrotime_hist_green = tttr_green.microtime_histogram\nmicrotime_hist_red = tttr_red.microtime_histogram\n\nn_micro = tttr_data.header.number_of_micro_time_channels\nprompt_range = 0, 11000\ndelay_range = 11000, 25000\nfig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)\nfig.tight_layout()\nax[0].semilogy(tttr_irf_green.microtime_histogram[0], label=\"ExGreen: %s\" % green_ch, color=\"blue\")\nax[0].axvspan(*prompt_range, color='blue', alpha=0.2, label=\"Prompt\")\nax[1].semilogy(tttr_irf_red.microtime_histogram[0], label=\"ExRed: %s\" % red_ch, color=\"orange\")\nax[1].axvspan(*delay_range, color='orange', alpha=0.2, label=\"Delay\")\nax[0].semilogy(microtime_hist_green[0], color=\"green\", label=\"DetGreen: %s\" % green_ch)\nax[1].semilogy(microtime_hist_red[0], color=\"red\", label=\"DetRed: %s\" % red_ch)\nax[0].set(xlabel='TCSPC bin', ylabel='Counts', title='Green detection')\nax[1].set(xlabel='TCSPC bin', ylabel='Counts', title='Red detection')\nax[0].legend()\nax[1].legend()\nax[0].set_xlim(0, 25000)\nax[1].set_xlim(0, 25000)\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Create a mask to select photons in certain channel and in micro time range to\nsplit the photons in prompt and delay.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "mask_irf_green_prompt = tttrlib.TTTRMask()\nmask_irf_green_prompt.select_channels(irf, green_ch)\nmask_irf_green_prompt.select_microtime_ranges(irf, [prompt_range])\ntttr_irf_green_prompt = irf[mask_irf_green_prompt.indices]\n\nmask_irf_red_prompt = tttrlib.TTTRMask()\nmask_irf_red_prompt.select_channels(irf, red_ch)\nmask_irf_red_prompt.select_microtime_ranges(irf, [prompt_range])\ntttr_irf_red_prompt = irf[mask_irf_red_prompt.indices]\n\nmask_irf_red_delay = tttrlib.TTTRMask()\nmask_irf_red_delay.select_channels(irf, red_ch)\nmask_irf_red_delay.select_microtime_ranges(irf, [delay_range])\ntttr_irf_red_delay = irf[mask_irf_red_delay.indices]\n\nfig, ax = plt.subplots(nrows=1, ncols=3, sharex=True, sharey=True)\nfig.tight_layout()\nax[0].semilogy(*tttr_irf_green_prompt.microtime_histogram[::-1], color='blue')\nax[1].semilogy(*tttr_irf_red_prompt.microtime_histogram[::-1], color='orange')\nax[2].semilogy(*tttr_irf_red_delay.microtime_histogram[::-1], color='red')\nfig.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Intensity imaging\nFills the CLSM image container with intensities. The green CLSM container gets filled\nwith all photons (independent of the excitation pulse), as the red laser does not excite\nthe sample.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_green.fill(tttr_data, channels=green_ch)  # green channels"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "If not specified the red channel includes the photons in the prompt and the delay.\nRed intensity is total intensity, ie, prompt + delayed excitation\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_red.fill(tttr_data, channels=red_ch)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "To separate the photons by the micro time specify the micro time range.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_red_prompt.fill(channels=red_ch, micro_time_ranges=[prompt_range])\nclsm_red_delay.fill(channels=red_ch, micro_time_ranges=[delay_range])\n\n# An intensity image the number of counts in a pixel corresponds to the number of photons\nfig, _ = plot_images(\n    [\n        clsm_green.intensity.sum(axis=0),\n        clsm_red.intensity.sum(axis=0),\n        clsm_red_prompt.intensity.sum(axis=0),\n        clsm_red_delay.intensity.sum(axis=0)\n    ],\n    titles=[\n        'Integrated intensity (green)',\n        'Integrated intensity (red)',\n        'Integrated intensity (red, prompt)',\n        'Integrated intensity (red, delay)'\n    ],\n    cmaps=['inferno', 'inferno', 'inferno', 'inferno'],\n    nrows=2, ncols=2, sharex=True, sharey=True\n)\nfig.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Intensity imaging\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "settings_lt = {\n    \"tttr_data\": tttr_data,\n    \"minimum_number_of_photons\": 30,\n    \"stack_frames\": True\n}\nmean_tau_green = clsm_green.get_mean_lifetime(\n    tttr_irf=tttr_irf_green_prompt, **settings_lt\n)\n\nmean_tau_red_prompt = clsm_red_prompt.get_mean_lifetime(\n    tttr_irf=tttr_irf_red_prompt, **settings_lt\n)\n\nmean_tau_red_delay = clsm_red_delay.get_mean_lifetime(\n    tttr_irf=tttr_irf_red_delay, **settings_lt\n)\n\nfig, _ = plot_images(\n    [\n        mean_tau_green.sum(axis=0),\n        mean_tau_red_prompt.sum(axis=0),\n        mean_tau_red_delay.sum(axis=0)\n    ],\n    titles=[\n        'tau (green)',\n        'tau (red, prompt)',\n        'tau (red, delay)'\n    ],\n    cmaps=['inferno', 'inferno', 'inferno'],\n    nrows=1, ncols=3, sharex=True, sharey=True\n)\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

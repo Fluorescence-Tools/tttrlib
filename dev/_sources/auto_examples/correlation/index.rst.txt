@@ -1,0 +1,157 @@
+
+
+.. _sphx_glr_auto_examples_correlation:
+
+
+.. _fcs_examples:
+
+Fluorescence correlation
+ 
+Examples for computing auto-/cross-correlation functions from TTTR data,
+including gated, sliced, and normalized correlation variants.
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_estimate_noise_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_estimate_noise`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Estimating the noise of the correlation curves</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Fluorescence Correlation Spectroscopy (FCS) in cells often suffers from artifacts caused by bright aggregates or vesicles, depletion of fluorophores or bleaching of a fluorescent background. A common practice is to record multiple FCS curves and reject manually FCS curves. When recording TTTR data that is later correlated the processing of the data, i.e., the computation of FCS curves and the sorting based on certain criteria Ries2010 can be automated to greatly simplify and accelerate the data analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_sliced_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_sliced_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Correlation of sliced TTTR objects</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The background in the fluorescence intensity traces affects the computed fluorescence correlation functions. In single-molecule spectroscopy the background is mainly caused by scattered light. Thus, by discriminating photons with small micro times a large fraction of the background can be eliminated.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_gated_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_gated_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time gated correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_full_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Full correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_confocor3_two_ch_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_confocor3_two_ch_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="An alternative approach is to calculate the FCS curve by software on the basis of the directly recorded asynchronous photon count data. The straightforward approach would be to generate a continuous file of fluorescence intensity values in consecutive time bins of fixed bin width, and to use this file for a conventional autocorrelation calculation. But then again, one encounters the same unreasonably large amount of data as when directly recording fluorescence intensity values in a synchronous data acquisition mode.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_normal_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_normal_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Normal multi-tau correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview -------- The background in the fluorescence intensity affects the computed fluorescence correlation curves. To mitigate the effect of the background on the correlation curves, low count rate regions in a photon stream can be discriminated before correlation.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_correlation_cr_filter_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_correlation_cr_filter`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Count rate filtered correlation</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_estimate_noise
+   /auto_examples/correlation/plot_sliced_correlation
+   /auto_examples/correlation/plot_gated_correlation
+   /auto_examples/correlation/plot_full_correlation
+   /auto_examples/correlation/plot_confocor3_two_ch_correlation
+   /auto_examples/correlation/plot_normal_correlation
+   /auto_examples/correlation/plot_correlation_cr_filter
+

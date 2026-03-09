@@ -1,0 +1,79 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Working with TTTR files\n\nTo open TTTR files import the ``tttrlib`` library.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport tttrlib\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## TTTR attributes\nFor convenience, tttrlib provides a unified way of accessing the TTTR data\nindependently of the vendor data format via the class :class:`TTTR`. In memory\nthe TTTR data are handled by tttrlib in :class:`TTTR` objects as follows:\n\n    1. Macro time - 64 bit unsigned integer\n    2. Micro time - 16 bit unsigned integer\n    3. Channel number - 8 bit signed integer\n    4. Event type - 8 bit signed integer\n    5. TTTR Header data - dedicated class\n\nTTTR files are handled by creating :class:`TTTR` objects that contain the TTTR\ndata of the files. The data contained in the files can be accessed by the methods\nprovided by the TTTR class. Opening and accessing the information contained in\nTTTR files is demonstrated by the Python code examples shown below. A TTTR object\nprovides getter methods to access the data contained in the associated file.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "macro_time = data.get_macro_times()\nmicro_time = data.get_micro_times()\nchannel = data.get_routing_channel()\nevent_type = data.get_event_type()\nheader = data.get_header()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "In Python, the getter methods for the macro time, micro time, the channel, and the\nevent type return [NumPy](http://www.numpy.org/) arrays. The returned header is\nof the type :class:`TTTRHeader`.\n\nAlternatively, the data can be accesses by corresponding the (write-only) attributes.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "macro_time = data.macro_times\nmicro_time = data.micro_times\nchannel = data.routing_channels\nevent_type = data.event_types\nheader = data.header\n\n\"\"\"\nFor a more detailed description on the meaning of these attributes see :ref:`_tttr-attributes`.\nA detailed description on the meta data in :class:`TTTRHeader`is given in :ref:`_TTTR-Header`.\n\n.. _tttr-attributes:\n.. table:: Description of the most important TTTR object attributes\n    :widths: auto\n\n    +----------------+----------------------------------------------------------------------------------+\n    | Name           | Description                                                                      |\n    +================+========+=========================================================================+\n    |Macro time      | Number of macro time clock cycles since the start of the recording               |\n    +----------------+----------------------------------------------------------------------------------+\n    |Micro time      | Number of micro time channels since last macro time (unused in PicoQuant T2 mode)|\n    +----------------+----------------------------------------------------------------------------------+\n    |Channel number  | Channel number (an identifier) of the event                                      |\n    +----------------+----------------------------------------------------------------------------------+\n    |Event type      | Type of the event                                                                |\n    +----------------+----------------------------------------------------------------------------------+\n    |Header          | Contains meta data of TTTR objects                                               |\n    +----------------+----------------------------------------------------------------------------------+\n\nSome manufactures inject special markers that relate to \"\"events\"\" into the TTTR\nstream. Some manufacturers use the same routing channel numbers for markers and\nfor photon detection channels. To distinguish photons from markers, ``TTTR``\nobjects present for every event an additional event type specifier. The event\ntypes stored in TTTR objects help to distinguish such events from normal photon\nevents. Currently the following events are considered.\n\n.. _event-types:\n.. table:: Table of event type identifiers\n    :widths: auto\n\n    +--------------------------+--------+----------------+\n    | Event type               | Event type number       |\n    +==========================+========+================+\n    |Photon event              |0                        |\n    +--------------------------+-------------------------+\n    |Special event             |1                        |\n    +--------------------------+-------------------------+\n\nOverflow events that are used in some file formats are implicitly considered\nwhen reading the files. The precise type of a special event depends often on\nchannel number associated to the event. A use case for the decoding of imaging\ndata is presented in the :ref:`Imaging:Confocal laser scanning` section.\n\n.. note::\n    The units of the macro time and the micro time *depend* on the specific\n    instrument settings.\n\n\nIn some TTTR containers certain record types contain no photon information but\ncount for instance the number of overflows since the last TTTR record, the total\nnumber macro time, micro time, routing channel numbers is usually smaller than\nthe number of TTTR records in a file. This can be inspected on the command line\nfor a ``tttrlib`` build *debug* mode :ref:`Installation:Compliation` when\nopening the BH-SPC132 file provided in the test folder.\n\n.. code-block:: none\n\n    READING TTTR FILE\n    -- Filename: ./data/bh/bh_spc132.spc\n    -- Container type: 2\n    -- TTTR record type: 7\n    -- Number of records: 299999\n    -- Allocating memory for 299999 TTTR records.\n    -- Resulting number of TTTR entries: 152312\n    -- Used routing channels: 9, 8, 0, 1,\n\nIn the example file contains 299999 entries whereas overall only 152312 TTTR\nentries are stored. The example file corresponds to a single-molecule measurement\nwhere a large fraction of the entries are overflow records.\n\n\"\"\""
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

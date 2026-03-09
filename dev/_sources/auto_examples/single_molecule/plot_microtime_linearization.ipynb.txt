@@ -1,0 +1,169 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Microtime Linearization\n\nThis example demonstrates how to linearize microtimes using lookup tables.\nThe linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC).\n\nThe linearization can be applied in two ways:\n1. **On-read linearization**: Apply linearization immediately after reading TTTR data\n2. **Post-read linearization**: Apply linearization to already-loaded TTTR data\n\nBased on the Seidel Software taclin algorithm (version 2008-01-28).\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\nimport tttrlib"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Generate Example Linearization Tables\n\nIn practice, these tables come from calibration measurements of your measurement system.\nThey represent the linearized TAC values at each channel.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "def create_example_linearization_table(n_channels=256):\n    \"\"\"\n    Create an example linearization table.\n\n    In real use, these tables would come from calibration measurements.\n    This example creates a slightly non-linear response to demonstrate the effect.\n    \"\"\"\n    # Create a slightly non-linear response (quadratic distortion)\n    channels = np.arange(n_channels, dtype=np.float32)\n\n    # Non-linear response: quadratic distortion\n    a = 1.0\n    b = 0.0001  # Small quadratic term\n    linearized = a * channels + b * channels**2\n\n    return linearized.astype(np.float32)\n\n# Create linearization tables for different channels\nlt_ch0 = create_example_linearization_table(256)  # Channel 0: 256 channels\nlt_ch8 = create_example_linearization_table(256)  # Channel 8: 256 channels\n\nprint(f\"Linearization table for channel 0 shape: {lt_ch0.shape}\")\nprint(f\"Linearization table for channel 8 shape: {lt_ch8.shape}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Example 1: Post-Read Linearization\n\nApply linearization to already-loaded TTTR data.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# Create synthetic TTTR data for demonstration\nn_photons = 10000\nmacro_times = np.arange(n_photons, dtype=np.uint64) * 100  # 100 time units apart\nmicro_times = np.random.randint(0, 256, n_photons, dtype=np.uint16)\nrouting_channels = np.random.randint(0, 16, n_photons, dtype=np.int8)\nevent_types = np.zeros(n_photons, dtype=np.int8)\n\nprint(f\"\\nCreated synthetic TTTR data:\")\nprint(f\"  Photons: {n_photons}\")\nprint(f\"  Macro time range: {macro_times[0]} - {macro_times[-1]}\")\nprint(f\"  Micro time range: {micro_times.min()} - {micro_times.max()}\")\nprint(f\"  Routing channels: {np.unique(routing_channels)}\")\n\n# Create TTTR object from the synthetic data\ntttr = tttrlib.TTTR(\n    macro_times,\n    micro_times,\n    routing_channels,\n    event_types\n)\n\nprint(f\"\\nTTTR object created with {tttr.size()} events\")\n\n# Get microtime histogram before linearization\nhist_before, bins_before = tttr.get_microtime_histogram()\nprint(f\"Microtime histogram before linearization: {len(hist_before)} bins\")\n\n# Configure linearization for specific channels\nprint(\"\\nConfiguring linearization...\")\n\n# Create linearizer\nlinearizer = tttrlib.MicrotimeLinearization()\n\n# Set LUTs for specific channels\nlut_ch0 = tttrlib.VectorFloat()\nfor val in lt_ch0:\n    lut_ch0.append(val)\nlinearizer.set_channel_lut(0, lut_ch0)  # Channel 0\n\nlut_ch8 = tttrlib.VectorFloat()\nfor val in lt_ch8:\n    lut_ch8.append(val)\nlinearizer.set_channel_lut(8, lut_ch8)  # Channel 8\n\n# Set shifts for channels (optional)\nlinearizer.set_channel_shift(0, 0)   # No shift for channel 0\nlinearizer.set_channel_shift(8, 5)   # Shift channel 8 by 5\n\n# Configure the TTTR object with LUTs and shifts\nchannel_luts = tttrlib.MapIntVectorFloat()\nchannel_luts[0] = lut_ch0\nchannel_luts[8] = lut_ch8\n\nchannel_shifts = tttrlib.MapSignedCharInt()\nchannel_shifts[0] = 0\nchannel_shifts[8] = 5\n\nresult_config = tttr.apply_channel_luts(channel_luts, channel_shifts)\nprint(f\"Configuration applied to {result_config} events\")\n\n# Apply linearization with specified seed\nprint(\"\\nApplying linearization...\")\nresult = tttr.apply_luts_and_shifts(42)  # Random seed for reproducibility\n\nif result >= 0:\n    print(\"Linearization successful!\")\nelse:\n    print(\"Linearization failed!\")\n\n# Get microtime histogram after linearization\nhist_after, bins_after = tttr.get_microtime_histogram()\nprint(f\"Microtime histogram after linearization: {len(hist_after)} bins\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Example 2: Linearization with Environment Variable Seed\n\nUse environment variable for reproducible results across sessions.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# Create new TTTR object\ntttr2 = tttrlib.TTTR(\n    macro_times,\n    micro_times.copy(),  # Copy to avoid modifying original\n    routing_channels,\n    event_types\n)\n\nprint(f\"\\nApplying linearization with environment variable seed...\")\n\n# Configure (same as above)\ntttr2.apply_channel_luts(channel_luts, channel_shifts)\nresult = tttr2.apply_luts_and_shifts(-1)  # -1 means use TTTR_RND_SEED environment variable\n\nif result >= 0:\n    print(\"Linearization with environment seed successful!\")\nelse:\n    print(\"Linearization failed!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Example 3: Shifts Only (No LUTs)\n\nApply only channel shifts without LUT-based linearization.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# Create TTTR data\ntttr3 = tttrlib.TTTR(\n    macro_times,\n    micro_times.copy(),\n    routing_channels,\n    event_types\n)\n\nprint(f\"\\nApplying shifts only (no LUTs)...\")\n\n# Only configure shifts, no LUTs\nshifts_only = tttrlib.MapSignedCharInt()\nshifts_only[0] = 10   # Shift channel 0 by 10\nshifts_only[8] = -3   # Shift channel 8 by -3\n\nempty_luts = tttrlib.MapIntVectorFloat()  # No LUTs\n\ntttr3.apply_channel_luts(empty_luts, shifts_only)\nresult = tttr3.apply_luts_and_shifts(42)\n\nif result >= 0:\n    print(\"Shifts-only linearization successful!\")\nelse:\n    print(\"Shifts-only linearization failed!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Example 4: Multiple Channels with Different LUTs\n\nConfigure different LUTs for multiple channels.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "tttr4 = tttrlib.TTTR(\n    macro_times,\n    micro_times.copy(),\n    routing_channels,\n    event_types\n)\n\nprint(f\"\\nConfiguring multiple channels with different LUTs...\")\n\n# Create linearizer with multiple channels\nlinearizer4 = tttrlib.MicrotimeLinearization()\n\n# Set LUTs for channels 0-15\nmulti_luts = tttrlib.MapIntVectorFloat()\nmulti_shifts = tttrlib.MapSignedCharInt()\n\nfor ch in range(16):\n    # Create channel-specific LUT (with slight variations)\n    lut = tttrlib.VectorFloat()\n    base_lut = create_example_linearization_table(256)\n    for i, val in enumerate(base_lut):\n        lut.append(val + ch * 0.01)  # Small variation per channel\n\n    linearizer4.set_channel_lut(ch, lut)\n    multi_luts[ch] = lut\n    multi_shifts[ch] = ch % 5  # Different shifts: 0, 1, 2, 3, 4, 0, 1, ...\n\nprint(f\"  Configured {len(multi_luts)} channels with individual LUTs\")\n\n# Apply configuration and linearization\ntttr4.apply_channel_luts(multi_luts, multi_shifts)\nresult = tttr4.apply_luts_and_shifts(123)\n\nif result >= 0:\n    print(\"Multi-channel linearization successful!\")\nelse:\n    print(\"Multi-channel linearization failed!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Example 5: Performance Comparison\n\nCompare performance of different linearization approaches.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import time\n\ntttr_perf = tttrlib.TTTR(\n    macro_times,\n    micro_times.copy(),\n    routing_channels,\n    event_types\n)\n\nprint(\"\\nPerformance test with 10k photons...\")\n\n# Setup for performance test\nperf_luts = tttrlib.MapIntVectorFloat()\nperf_shifts = tttrlib.MapSignedCharInt()\n\nfor ch in range(16):\n    lut = tttrlib.VectorFloat()\n    for i in range(256):\n        lut.append(float(i))\n    perf_luts[ch] = lut\n    perf_shifts[ch] = 0\n\ntttr_perf.apply_channel_luts(perf_luts, perf_shifts)\n\n# Time the linearization\nstart_time = time.time()\nresult = tttr_perf.apply_luts_and_shifts(42)\nend_time = time.time()\n\nif result >= 0:\n    elapsed = end_time - start_time\n    photons_per_sec = n_photons / elapsed\n    print(f\"  Processed {n_photons} photons in {elapsed:.2f} seconds\")\n    print(f\"  Performance: {photons_per_sec:.0f} photons/second\")\nelse:\n    print(\"Performance test failed!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Summary\n\nThe microtime linearization functionality provides:\n\n1. **Per-channel configuration**: Direct LUT and shift assignment per routing channel\n2. **Dithering**: Random number-based dithering reduces quantization artifacts\n3. **Reproducibility**: Seed control for reproducible results\n4. **Flexibility**: Can apply LUTs, shifts, or both\n5. **Performance**: Optimized single-pass processing\n6. **Scalability**: Supports any number of channels with independent parameters\n\nChannel configuration:\n- Channels 0-255 supported\n- Each channel can have its own LUT and shift\n- LUTs must all have the same size (validated automatically)\n- Shifts are applied modulo the LUT size or default range\n\nFor more information about TAC linearization, see the Seidel Software\ntaclin algorithm documentation.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "print(\"\\nExample complete!\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

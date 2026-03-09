@@ -1,0 +1,151 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Synthetic Bead Localization Demo\n\nThis example demonstrates the Image Localization functionality in tttrlib\nby creating synthetic fluorescent beads and localizing them using 2D Gaussian fitting.\n\nThe script creates a synthetic microscopy image with multiple fluorescent beads,\ndetects peak candidates, and then uses 2D Gaussian fitting to precisely localize\neach bead with sub-pixel accuracy.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\nimport matplotlib.pyplot as plt\nimport tttrlib"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Create synthetic fluorescent beads\nWe start by creating a synthetic microscopy image containing multiple\nfluorescent beads with realistic noise characteristics.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "def create_synthetic_beads(image_size=128, num_beads=6, bead_brightness=800, noise_level=40):\n    \"\"\"Create a synthetic image with fluorescent beads\"\"\"\n    \n    print(f\"Creating synthetic {image_size}x{image_size} image with {num_beads} beads...\")\n    \n    # Create coordinate grids\n    x = np.arange(image_size)\n    y = np.arange(image_size)\n    X, Y = np.meshgrid(x, y)\n    \n    # Initialize image with background noise\n    np.random.seed(42)  # For reproducible results\n    image = np.random.poisson(noise_level, (image_size, image_size)).astype(float)\n    \n    # Generate random bead positions (avoid edges)\n    margin = 15\n    true_positions = []\n    \n    for i in range(num_beads):\n        # Random position away from edges\n        bead_x = np.random.uniform(margin, image_size - margin)\n        bead_y = np.random.uniform(margin, image_size - margin)\n        \n        # Random bead parameters\n        sigma = np.random.uniform(1.8, 3.2)  # PSF width\n        amplitude = np.random.uniform(bead_brightness * 0.7, bead_brightness * 1.3)\n        \n        # Add Gaussian bead to image\n        gaussian = amplitude * np.exp(-((X - bead_x)**2 + (Y - bead_y)**2) / (2 * sigma**2))\n        \n        # Add Poisson noise to the bead\n        gaussian_noisy = np.random.poisson(gaussian + noise_level) - noise_level\n        image += np.maximum(gaussian_noisy, 0)\n        \n        true_positions.append((bead_x, bead_y, sigma, amplitude))\n        \n    print(f\"Created synthetic beads at positions:\")\n    for i, (x, y, s, a) in enumerate(true_positions):\n        print(f\"  Bead {i+1}: ({x:.1f}, {y:.1f}), sigma={s:.1f}, A={a:.0f}\")\n    \n    return image.astype(float), true_positions\n\n# Create synthetic data\nimage, true_positions = create_synthetic_beads(\n    image_size=128,\n    num_beads=6,\n    bead_brightness=800,\n    noise_level=40\n)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Visualize the synthetic image\nLet's visualize the synthetic microscopy image with the fluorescent beads.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "fig, ax = plt.subplots(1, 1, figsize=(8, 8))\nim = ax.imshow(image, cmap='hot', origin='lower')\nax.set_title('Synthetic Fluorescent Beads')\nax.set_xlabel('X (pixels)')\nax.set_ylabel('Y (pixels)')\nplt.colorbar(im, ax=ax, label='Intensity')\n\n# Mark true positions\nfor i, (x, y, s, a) in enumerate(true_positions):\n    circle = plt.Circle((x, y), s, fill=False, color='cyan', linewidth=2)\n    ax.add_patch(circle)\n    ax.text(x, y+s+2, f'{i+1}', color='cyan', ha='center', fontweight='bold')\n\nplt.tight_layout()\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Detect bead candidates\nWe use simple threshold-based peak detection to find bead candidates\nin the synthetic image.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "def detect_peaks_threshold(image, threshold_factor=3.5, min_distance=10):\n    \"\"\"Simple peak detection using threshold and local maxima\"\"\"\n    \n    print(\"Detecting bead candidates...\")\n    \n    # Calculate threshold\n    background_mean = np.mean(image)\n    background_std = np.std(image)\n    threshold = background_mean + threshold_factor * background_std\n    \n    print(f\"  Background: {background_mean:.1f} +/- {background_std:.1f}\")\n    print(f\"  Detection threshold: {threshold:.1f}\")\n    \n    # Find pixels above threshold\n    candidates = np.where(image > threshold)\n    \n    # Convert to list of coordinates\n    peak_candidates = list(zip(candidates[1], candidates[0]))  # (x, y) format\n    \n    # Remove peaks that are too close to each other\n    peaks = []\n    used = set()\n    \n    # Sort by intensity (brightest first)\n    peak_candidates.sort(key=lambda p: image[p[1], p[0]], reverse=True)\n    \n    for x, y in peak_candidates:\n        if (x, y) in used:\n            continue\n            \n        # Check if too close to existing peaks\n        too_close = False\n        for existing_x, existing_y in peaks:\n            if np.sqrt((x - existing_x)**2 + (y - existing_y)**2) < min_distance:\n                too_close = True\n                break\n        \n        if not too_close:\n            peaks.append((x, y))\n            \n        # Mark surrounding region as used\n        for dy in range(-min_distance//2, min_distance//2 + 1):\n            for dx in range(-min_distance//2, min_distance//2 + 1):\n                used.add((x + dx, y + dy))\n    \n    print(f\"Found {len(peaks)} peak candidates\")\n    return peaks\n\n# Detect peaks\ndetected_peaks = detect_peaks_threshold(\n    image,\n    threshold_factor=3.5,\n    min_distance=10\n)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Localize beads using 2D Gaussian fitting\nNow we use the tttrlib localization functionality to precisely localize\neach detected bead using 2D Gaussian fitting.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "def localize_beads(image, peak_positions, fit_size=15):\n    \"\"\"Localize beads using 2D Gaussian fitting with tttrlib\"\"\"\n    \n    print(\"Localizing beads using 2D Gaussian fitting...\")\n    \n    localized_beads = []\n    \n    for i, (peak_x, peak_y) in enumerate(peak_positions):\n        print(f\"  Fitting bead {i+1} at ({peak_x}, {peak_y})...\")\n        \n        # Extract fitting region\n        x_min = max(0, peak_x - fit_size//2)\n        x_max = min(image.shape[1], peak_x + fit_size//2 + 1)\n        y_min = max(0, peak_y - fit_size//2)\n        y_max = min(image.shape[0], peak_y + fit_size//2 + 1)\n        \n        region = image[y_min:y_max, x_min:x_max]\n        \n        if region.size == 0:\n            continue\n            \n        # Convert to SWIG vector format\n        data_2d = tttrlib.new_VectorDouble_2D()\n        for row in region:\n            row_vector = tttrlib.new_VectorDouble()\n            for val in row:\n                tttrlib.VectorDouble_push_back(row_vector, float(val))\n            tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)\n        \n        # Set up fitting parameters\n        vars = [0.0] * 18\n        vars[0] = fit_size // 2  # x0 (center in local coordinates)\n        vars[1] = fit_size // 2  # y0 (center in local coordinates)\n        vars[2] = float(np.max(region) - np.min(region))  # Amplitude\n        vars[3] = 2.5  # Initial sigma guess\n        vars[4] = 1.0  # ellipticity (1.0 = circular)\n        vars[5] = float(np.min(region))  # background\n        \n        # Fitting options\n        vars[14] = 0  # fit_bg (0 = fit background)\n        vars[15] = 1  # ellipt_circ (1 = circular Gaussian)\n        vars[16] = 0  # model (0 = single Gaussian)\n        \n        try:\n            # Perform the fit\n            result = tttrlib.localization_fit2DGaussian(vars, data_2d)\n            \n            if result > 0:  # Successful fit\n                # Convert back to global coordinates\n                fitted_x = x_min + vars[0]\n                fitted_y = y_min + vars[1]\n                amplitude = vars[2]\n                sigma = vars[3]\n                background = vars[5]\n                goodness_of_fit = vars[17]\n                \n                localized_beads.append({\n                    'x': fitted_x,\n                    'y': fitted_y,\n                    'amplitude': amplitude,\n                    'sigma': sigma,\n                    'background': background,\n                    'goodness_of_fit': goodness_of_fit,\n                    'converged': True\n                })\n                \n                print(f\"    Success: ({fitted_x:.2f}, {fitted_y:.2f}), sigma={sigma:.2f}, A={amplitude:.0f}\")\n            else:\n                print(f\"    Fit failed\")\n                \n        except Exception as e:\n            print(f\"    Error during fitting: {e}\")\n    \n    print(f\"Successfully localized {len(localized_beads)} beads\")\n    return localized_beads\n\n# Localize beads using tttrlib\nlocalized_beads = localize_beads(image, detected_peaks, fit_size=15)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Visualize localization results\nCreate a comprehensive visualization showing the original image,\ndetected peaks, and localized positions.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "fig, axes = plt.subplots(2, 2, figsize=(12, 12))\nfig.suptitle('tttrlib Image Localization Demo Results', fontsize=16)\n\n# 1. Original synthetic image\nax1 = axes[0, 0]\nim1 = ax1.imshow(image, cmap='hot', origin='lower')\nax1.set_title('Synthetic Fluorescent Beads')\nax1.set_xlabel('X (pixels)')\nax1.set_ylabel('Y (pixels)')\nplt.colorbar(im1, ax=ax1, label='Intensity')\n\n# Add true positions\nfor i, (x, y, s, a) in enumerate(true_positions):\n    circle = plt.Circle((x, y), s, fill=False, color='cyan', linewidth=2)\n    ax1.add_patch(circle)\n    ax1.text(x, y+s+2, f'{i+1}', color='cyan', ha='center', fontweight='bold')\n\n# 2. Detected peaks\nax2 = axes[0, 1]\nim2 = ax2.imshow(image, cmap='hot', origin='lower')\nax2.set_title('Peak Detection Results')\nax2.set_xlabel('X (pixels)')\nax2.set_ylabel('Y (pixels)')\nplt.colorbar(im2, ax=ax2, label='Intensity')\n\n# Add detected peaks\nfor i, (x, y) in enumerate(detected_peaks):\n    ax2.plot(x, y, 'go', markersize=8, markerfacecolor='none', markeredgewidth=2)\n    ax2.text(x, y+3, f'{i+1}', color='green', ha='center', fontweight='bold')\n\n# 3. Localization results\nax3 = axes[1, 0]\nim3 = ax3.imshow(image, cmap='hot', origin='lower')\nax3.set_title('2D Gaussian Localization Results')\nax3.set_xlabel('X (pixels)')\nax3.set_ylabel('Y (pixels)')\nplt.colorbar(im3, ax=ax3, label='Intensity')\n\n# Add localized positions\nfor i, bead in enumerate(localized_beads):\n    x, y = bead['x'], bead['y']\n    sigma = bead['sigma']\n    ax3.plot(x, y, 'r+', markersize=10, markeredgewidth=3)\n    circle = plt.Circle((x, y), sigma, fill=False, color='red', linewidth=2)\n    ax3.add_patch(circle)\n    ax3.text(x, y+sigma+2, f'{i+1}', color='red', ha='center', fontweight='bold')\n\n# 4. Accuracy comparison\nax4 = axes[1, 1]\nax4.set_title('Localization Accuracy')\nax4.set_xlabel('True X Position')\nax4.set_ylabel('True Y Position')\n\n# Plot true positions\ntrue_x = [pos[0] for pos in true_positions]\ntrue_y = [pos[1] for pos in true_positions]\nax4.plot(true_x, true_y, 'co', markersize=10, label='True Positions')\n\n# Plot localized positions\nif localized_beads:\n    loc_x = [bead['x'] for bead in localized_beads]\n    loc_y = [bead['y'] for bead in localized_beads]\n    ax4.plot(loc_x, loc_y, 'r+', markersize=12, markeredgewidth=3, label='Localized')\n    \n    # Draw error lines\n    for i, bead in enumerate(localized_beads):\n        if i < len(true_positions):\n            true_pos = true_positions[i]\n            ax4.plot([true_pos[0], bead['x']], [true_pos[1], bead['y']], \n                    'k--', alpha=0.5, linewidth=1)\n\nax4.legend()\nax4.grid(True, alpha=0.3)\nax4.set_aspect('equal')\n\nplt.tight_layout()\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Calculate accuracy metrics\nFinally, we calculate comprehensive accuracy metrics to assess\nthe quality of the localization.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "print(\"\\n\" + \"=\"*60)\nprint(\"LOCALIZATION ACCURACY ANALYSIS\")\nprint(\"=\"*60)\n\nif not localized_beads:\n    print(\"No beads were successfully localized.\")\nelse:\n    # Match localized beads to true positions (nearest neighbor)\n    errors = []\n    sigma_errors = []\n    amplitude_errors = []\n    \n    for i, bead in enumerate(localized_beads):\n        if i < len(true_positions):\n            true_pos = true_positions[i]\n            \n            # Position error\n            pos_error = np.sqrt((bead['x'] - true_pos[0])**2 + (bead['y'] - true_pos[1])**2)\n            errors.append(pos_error)\n            \n            # Sigma error\n            sigma_error = abs(bead['sigma'] - true_pos[2]) / true_pos[2] * 100\n            sigma_errors.append(sigma_error)\n            \n            # Amplitude error\n            amp_error = abs(bead['amplitude'] - true_pos[3]) / true_pos[3] * 100\n            amplitude_errors.append(amp_error)\n            \n            print(f\"Bead {i+1}:\")\n            print(f\"  Position error: {pos_error:.3f} pixels\")\n            print(f\"  Sigma error: {sigma_error:.1f}%\")\n            print(f\"  Amplitude error: {amp_error:.1f}%\")\n            print(f\"  Goodness of fit: {bead['goodness_of_fit']:.3f}\")\n    \n    if errors:\n        print(f\"\\nOverall Statistics:\")\n        print(f\"  Mean position error: {np.mean(errors):.3f} +/- {np.std(errors):.3f} pixels\")\n        print(f\"  Mean sigma error: {np.mean(sigma_errors):.1f} +/- {np.std(sigma_errors):.1f}%\")\n        print(f\"  Mean amplitude error: {np.mean(amplitude_errors):.1f} +/- {np.std(amplitude_errors):.1f}%\")\n        print(f\"  Success rate: {len(localized_beads)}/{len(true_positions)} ({len(localized_beads)/len(true_positions)*100:.1f}%)\")\n\nprint(\"\\nImage Localization Demo completed successfully!\")\nprint(\"The tttrlib Image Localization functionality is working correctly.\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

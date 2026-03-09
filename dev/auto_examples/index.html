@@ -1,0 +1,924 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Example Gallery" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/index.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Welcome to the tttrlib example gallery! This is the best place to learn how to use the library through hands-on, executable examples. Each example is a complete, runnable Python script with explana..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_index_569cd1d4.png" />
+<meta property="og:image:alt" content="Welcome to the tttrlib example gallery! This is the best place to learn how to use the library through hands-on, executable examples. Each example is a complete, runnable Python script with explana..." />
+<meta name="description" content="Welcome to the tttrlib example gallery! This is the best place to learn how to use the library through hands-on, executable examples. Each example is a complete, runnable Python script with explana..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Example Gallery &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/index';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="clsm_memory_usage_example.html" />
+    <link rel="prev" title="6. References" href="../zreferences.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="#">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="#">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tttr.html">1. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../single_molecule.html">2. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/decay.html">2.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="../modules/fcs.html">2.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/pda.html">2.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../imaging.html">3. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/ics.html">3.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">4. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verbosity.html">5. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zreferences.html">6. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/auto_examples/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Example Gallery</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="example-gallery">
+<span id="examples"></span><h1>Example Gallery<a class="headerlink" href="#example-gallery" title="Link to this heading">#</a></h1>
+<p>Welcome to the <strong>tttrlib example gallery</strong>! This is the best place to learn how to use the library through hands-on, executable examples.</p>
+<p class="lead">Each example is a complete, runnable Python script with explanations and visualizations. Browse by category below.</p>
+<section id="quick-links">
+<h2>Quick Links<a class="headerlink" href="#quick-links" title="Link to this heading">#</a></h2>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-3 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 docutils">
+</div>
+</div>
+</section>
+<section id="how-to-use-these-examples">
+<h2>How to Use These Examples<a class="headerlink" href="#how-to-use-these-examples" title="Link to this heading">#</a></h2>
+<dl>
+<dt><strong>Option 1: Browse Online (Recommended)</strong></dt><dd><p>View the rendered examples with outputs, plots, and explanations right here.
+Click any category card above to explore.</p>
+</dd>
+<dt><strong>Option 2: Run Locally</strong></dt><dd><p>Download and run examples on your machine:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/fluorescence-tools/tttrlib.git
+<span class="nb">cd</span><span class="w"> </span>tttrlib/examples
+
+<span class="c1"># Run a specific example</span>
+python<span class="w"> </span>beginner/plot_01_reading_files.py
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some examples require sample data from <a class="reference external" href="https://peulen.xyz/downloads/tttr-data/">peulen.xyz/downloads/tttr-data/</a></p>
+</div>
+</dd>
+</dl>
+</section>
+<section id="example-categories">
+<h2>Example Categories<a class="headerlink" href="#example-categories" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>Getting Started:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="beginner/index.html#sphx-glr-auto-examples-beginner"><span class="std std-ref">Beginner Tutorials</span></a> - Start here if you’re new to tttrlib</p></li>
+<li><p><a class="reference internal" href="release_highlights/index.html#sphx-glr-auto-examples-release-highlights"><span class="std std-ref">Release Highlights</span></a> - What’s new in recent versions</p></li>
+</ul>
+<p><strong>Analysis Workflows:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="fluorescence_decay/index.html#sphx-glr-auto-examples-fluorescence-decay"><span class="std std-ref">Lifetime Analysis</span></a> - TCSPC decay fitting and analysis</p></li>
+<li><p><a class="reference internal" href="correlation/index.html#sphx-glr-auto-examples-correlation"><span class="std std-ref">Correlation</span></a> - FCS and FCCS calculations</p></li>
+<li><p><span class="xref std std-ref">Single Molecule</span> - Burst detection and FRET</p></li>
+</ul>
+<p><strong>Imaging:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="flim/index.html#sphx-glr-auto-examples-flim"><span class="std std-ref">FLIM</span></a> - Fluorescence lifetime imaging</p></li>
+<li><p><span class="xref std std-ref">CLSM</span> - Confocal microscopy workflows</p></li>
+<li><p><span class="xref std std-ref">ISM</span> - Image scanning microscopy</p></li>
+<li><p><a class="reference internal" href="image_correlation/index.html#sphx-glr-auto-examples-image-correlation"><span class="std std-ref">Image Correlation</span></a> - Spatial correlation analysis</p></li>
+</ul>
+<p><strong>Utilities:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="miscellaneous/index.html#sphx-glr-auto-examples-miscellaneous"><span class="std std-ref">Miscellaneous</span></a> - Additional helper scripts</p></li>
+</ul>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use the memory usage reporting methods to analyze and optimize memory consumption in CLSM images."><img alt="" src="../_images/sphx_glr_clsm_memory_usage_example_thumb.png" />
+<p><a class="reference internal" href="clsm_memory_usage_example.html"><span class="doc">&lt;no title&gt;</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Example: CLSM Image Memory Usage Reporting</div>
+</div></div><div class="toctree-wrapper compound">
+</div>
+<p># Beginner Examples for tttrlib</p>
+<p>This directory contains small, runnable examples that mirror the tested core features of <code class="xref any docutils literal notranslate"><span class="pre">tttrlib</span></code>.
+They are safe to copy-paste into your own analysis.</p>
+<p>Make sure the demo data bundle is available (see <code class="xref any docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>) and set <code class="xref any docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> accordingly.</p>
+<p>## Examples</p>
+<ul class="simple">
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">plot_01_read_tttr.py</span></code>
+Load a TTTR file (PTU), print basic info (macro/micro times, routing channels), and make first diagnostic plots.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">plot_02_slice_join_append.py</span></code>
+Take small slices, join/append photon streams, compare macro-time timelines (shifted vs unshifted), and get a micro-time histogram.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">plot_03_selections_bursts_traces.py</span></code>
+Do count-rate based LOW/HIGH selections, run burst search, build per-burst micro-time histograms (log scale), and plot 1 ms intensity traces (first 3 s) with burst regions shaded.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">plot_04_write_convert.py</span></code>
+Write subsets to a new file, make a full native copy, and convert between vendor formats by reusing a header template.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">plot_05_clsm_zeiss980.py</span></code>
+Reconstruct a confocal (CLSM) image from Zeiss LSM 980 TTTR data, show an intensity projection, and plot a per-pixel mean micro-time (pseudo-lifetime) map.</p></li>
+</ul>
+<p>## How to run</p>
+<p>From this directory:</p>
+<p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">python</span> <span class="pre">plot_01_read_tttr.py</span>
+<span class="pre">`</span></code></p>
+<p>Each script will either run and generate figures/output files, or exit with a clear message if the demo data cannot be found.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to perform basic operations with TTTR files."><img alt="" src="../_images/sphx_glr_plot_00_tttr_files_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_00_tttr_files.html"><span class="doc">Basic operations with TTTR files</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic operations with TTTR files</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="1. Load the Zeiss LSM 980 confocal TTTR file used in the tests. 2. Build a tttrlib.CLSMImage object with matching parameters. 3. Visualise a frame projection and the corresponding mean micro-time map."><img alt="" src="../_images/sphx_glr_plot_05_microscopy_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_05_microscopy.html"><span class="doc">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Notes ----- - This script is Sphinx-Gallery friendly: it does not call plt.show() and   will render figures with a non-interactive backend during doc builds. - If the demo file cannot be located, a clear error is raised with a helpful hint."><img alt="" src="../_images/sphx_glr_plot_01_reading_files_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_01_reading_files.html"><span class="doc">Basic Example 1: Reading TTTR data</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Example 1: Reading TTTR data</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="1. Writing a subset of events to a new PTU file. 2. Making a full copy of a TTTR dataset in its native format. 3. Re-using a header from another file to convert a dataset between    vendor formats (borrowed from the unit tests in    test/test_TTTR_transcode.py)."><img alt="" src="../_images/sphx_glr_plot_04_writing_files_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_04_writing_files.html"><span class="doc">Basic Example 4: Writing TTTR data and converting formats</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Example 4: Writing TTTR data and converting formats</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Make sure the demo PTU file is available (see test/test_settings.py). Set the environment variable TTTRLIB_DATA so that the file pq/ptu/pq_ptu_hh_t3.ptu can be found."><img alt="" src="../_images/sphx_glr_plot_02_basic_operations_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_02_basic_operations.html"><span class="doc">Basic Example 2: Basic operations on TTTR objects (focused illustration)</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Example 2: Basic operations on TTTR objects (focused illustration)</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="1) Using tttrlib&#x27;s built-in count-rate filter to get LOW/HIGH count-rate selections 2) Micro-time histograms at native tick resolution on a log y-axis 3) Sliding-window burst search and comparison of burst vs all micro-time histograms 4) Channel-resolved (green/red) 1 ms intensity traces for the FIRST 3 SECONDS,    with the area under the curves FILLED where bursts are present."><img alt="" src="../_images/sphx_glr_plot_03_selections_thumb.png" />
+<p><a class="reference internal" href="beginner/plot_03_selections.html"><span class="doc">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</div>
+</div></div><p>Fluorescence correlation</p>
+<p>Examples for computing auto-/cross-correlation functions from TTTR data,
+including gated, sliced, and normalized correlation variants.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Introduction ============"><img alt="" src="../_images/sphx_glr_plot_estimate_noise_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_estimate_noise.html"><span class="doc">Estimating the noise of the correlation curves</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Estimating the noise of the correlation curves</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Fluorescence Correlation Spectroscopy (FCS) in cells often suffers from artifacts caused by bright aggregates or vesicles, depletion of fluorophores or bleaching of a fluorescent background. A common practice is to record multiple FCS curves and reject manually FCS curves. When recording TTTR data that is later correlated the processing of the data, i.e., the computation of FCS curves and the sorting based on certain criteria Ries2010 can be automated to greatly simplify and accelerate the data analysis."><img alt="" src="../_images/sphx_glr_plot_sliced_correlation_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_sliced_correlation.html"><span class="doc">Correlation of sliced TTTR objects</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Correlation of sliced TTTR objects</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="The background in the fluorescence intensity traces affects the computed fluorescence correlation functions. In single-molecule spectroscopy the background is mainly caused by scattered light. Thus, by discriminating photons with small micro times a large fraction of the background can be eliminated."><img alt="" src="../_images/sphx_glr_plot_gated_correlation_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_gated_correlation.html"><span class="doc">Micro time gated correlation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Micro time gated correlation</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data."><img alt="" src="../_images/sphx_glr_plot_full_correlation_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_full_correlation.html"><span class="doc">Full correlation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Full correlation</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files."><img alt="" src="../_images/sphx_glr_plot_confocor3_two_ch_correlation_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_confocor3_two_ch_correlation.html"><span class="doc">Confocor3 two channel cross-correlation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="An alternative approach is to calculate the FCS curve by software on the basis of the directly recorded asynchronous photon count data. The straightforward approach would be to generate a continuous file of fluorescence intensity values in consecutive time bins of fixed bin width, and to use this file for a conventional autocorrelation calculation. But then again, one encounters the same unreasonably large amount of data as when directly recording fluorescence intensity values in a synchronous data acquisition mode."><img alt="" src="../_images/sphx_glr_plot_normal_correlation_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_normal_correlation.html"><span class="doc">Normal multi-tau correlation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Normal multi-tau correlation</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Overview -------- The background in the fluorescence intensity affects the computed fluorescence correlation curves. To mitigate the effect of the background on the correlation curves, low count rate regions in a photon stream can be discriminated before correlation."><img alt="" src="../_images/sphx_glr_plot_correlation_cr_filter_thumb.png" />
+<p><a class="reference internal" href="correlation/plot_correlation_cr_filter.html"><span class="doc">Count rate filtered correlation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Count rate filtered correlation</div>
+</div></div></section>
+<section id="fluorescence-lifetime-imaging">
+<h2>Fluorescence lifetime imaging<a class="headerlink" href="#fluorescence-lifetime-imaging" title="Link to this heading">#</a></h2>
+<p>Examples showing lifetime image generation, phasor analysis, moment analysis,
+segmentation-driven decays, and common image operations.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Intensity image"><img alt="" src="../_images/sphx_glr_plot_intensity_image_thumb.png" />
+<p><a class="reference internal" href="flim/plot_intensity_image.html"><span class="doc">Intensity image</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Intensity image</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Image cropping"><img alt="" src="../_images/sphx_glr_plot_crop_thumb.png" />
+<p><a class="reference internal" href="flim/plot_crop.html"><span class="doc">Image cropping</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image cropping</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Image rebinning"><img alt="" src="../_images/sphx_glr_plot_rebin_thumb.png" />
+<p><a class="reference internal" href="flim/plot_rebin.html"><span class="doc">Image rebinning</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image rebinning</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Marker in Scanning microscopy"><img alt="" src="../_images/sphx_glr_plot_marker_thumb.png" />
+<p><a class="reference internal" href="flim/plot_marker.html"><span class="doc">Marker in Scanning microscopy</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Marker in Scanning microscopy</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../_images/sphx_glr_plot_lifetime_moments_thumb.png" />
+<p><a class="reference internal" href="flim/plot_lifetime_moments.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a transformed images  cannot be used for advanced data analyis such as image correlation. Try to plan your experiment optimally  and aquire the data as needed (pixel dwell times, laser power, etc.). "><img alt="" src="../_images/sphx_glr_plot_transform_thumb.png" />
+<p><a class="reference internal" href="flim/plot_transform.html"><span class="doc">Image transform</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image transform</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../_images/sphx_glr_plot_mean_lifetime_thumb.png" />
+<p><a class="reference internal" href="flim/plot_mean_lifetime.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks"><img alt="" src="../_images/sphx_glr_plot_pixel_masks_thumb.png" />
+<p><a class="reference internal" href="flim/plot_pixel_masks.html"><span class="doc">Using Pixel masks</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Using Pixel masks</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../_images/sphx_glr_plot_lifetime_moments_bg_thumb.png" />
+<p><a class="reference internal" href="flim/plot_lifetime_moments_bg.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see auto_examples/flim/plot_marker.py). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read."><img alt="" src="../_images/sphx_glr_plot_read_clsm_data_thumb.png" />
+<p><a class="reference internal" href="flim/plot_read_clsm_data.html"><span class="doc">Reading of CLSM data</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis"><img alt="" src="../_images/sphx_glr_plot_mle_lifetime_thumb.png" />
+<p><a class="reference internal" href="flim/plot_mle_lifetime.html"><span class="doc">Lifetime analysis</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Lifetime analysis</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Changing the data representation from the classical time delay histogram to the phasor representation provides a global view of the fluorescence decay at each pixel of an image. In the phasor representation we can easily recognize the presence of different molecular species in a pixel or the occurrence of fluorescence resonance energy transfer. The analysis of the fluorescence lifetime imaging microscopy (FLIM) data in the phasor space is done observing clustering of pixels values in specific regions of the phasor plot rather than by fitting the fluorescence decay using exponentials. The analysis is instantaneous since is not based on calculations or nonlinear fitting. The phasor approach has the potential to simplify the way data are analyzed in FLIM, paving the way for the analysis of large data sets and, in general, making the FLIM technique accessible to the nonexpert in spectroscopy and data analysis DIGMAN2008L14."><img alt="" src="../_images/sphx_glr_plot_phasor_thumb.png" />
+<p><a class="reference internal" href="flim/plot_phasor.html"><span class="doc">Phasor analysis of images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Phasor analysis of images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions."><img alt="" src="../_images/sphx_glr_plot_tutorial_python_thumb.png" />
+<p><a class="reference internal" href="flim/plot_tutorial_python.html"><span class="doc">Tutorial: Image construction</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Tutorial: Image construction</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Overview -------- Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE)."><img alt="" src="../_images/sphx_glr_plot_flim_pie_thumb.png" />
+<p><a class="reference internal" href="flim/plot_flim_pie.html"><span class="doc">FLIM-PIE</span></a></p>
+  <div class="sphx-glr-thumbnail-title">FLIM-PIE</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Here, few examples visualize typical mappings from photon groups to representations that can be visualized in an image. In this example data of a pulsed interleaved (PIE) multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer (FRET) experiment is processed. The FRET sample contained a donor, D, and an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:"><img alt="" src="../_images/sphx_glr_plot_imaging_representations_thumb.png" />
+<p><a class="reference internal" href="flim/plot_imaging_representations.html"><span class="doc">TTTR Image representations</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR Image representations</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="    1. Data Loading     2. Create CLSM image container     3. Pulsed interleaved excitation     4. Intensity imaging     5. Micro time imaging     6. Define pixel classes by image segmentation     7. Apply pixel classes for analysis"><img alt="" src="../_images/sphx_glr_plot_segmentation_based_decays_thumb.png" />
+<p><a class="reference internal" href="flim/plot_segmentation_based_decays.html"><span class="doc">Image-based segmentation of FLIM data</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image-based segmentation of FLIM data</div>
+</div></div></section>
+<section id="fluorescence-decays">
+<h2>Fluorescence decays<a class="headerlink" href="#fluorescence-decays" title="Link to this heading">#</a></h2>
+<p>Examples for decay simulation and fitting, IRF/background handling, convolution
+routines, and demonstrations of different fit configurations and benchmarks.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data."><img alt="" src="../_images/sphx_glr_plot_fit25_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit25.html"><span class="doc">Lifetime selection</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}"><img alt="" src="../_images/sphx_glr_plot_fit26_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit26.html"><span class="doc">fit26</span></a></p>
+  <div class="sphx-glr-thumbnail-title">fit26</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="fit24 -----"><img alt="" src="../_images/sphx_glr_plot_fit24_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit24.html"><span class="doc">Bi-exponential model</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="fit23 -----"><img alt="" src="../_images/sphx_glr_plot_fit23_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit23.html"><span class="doc">Polarization resolved lifetime MLE</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Polarization resolved lifetime MLE</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3"><img alt="" src="../_images/sphx_glr_plot_decay_fit_irf_bg_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_decay_fit_irf_bg.html"><span class="doc">Fluorescence decay analysis - 3</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Fluorescence decay analysis - 3</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="1) Compute model function 2) Simulate data for computed model function 3) Fit simulated data with model function"><img alt="" src="../_images/sphx_glr_plot_fit23_usage_2_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit23_usage_2.html"><span class="doc">MLE fit23: Usage example 2</span></a></p>
+  <div class="sphx-glr-thumbnail-title">MLE fit23: Usage example 2</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Pile-up"><img alt="" src="../_images/sphx_glr_plot_pile_up_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_pile_up.html"><span class="doc">Pile-up</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Pile-up</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Overview ========"><img alt="" src="../_images/sphx_glr_plot_convolution_routines_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_convolution_routines.html"><span class="doc">Convolution routines</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Convolution routines</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared."><img alt="" src="../_images/sphx_glr_plot_fit23_benchmark_1_thumb.png" />
+<p><a class="reference internal" href="fluorescence_decay/plot_fit23_benchmark_1.html"><span class="doc">MLE fit23: Benchmark</span></a></p>
+  <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+</div></div></section>
+<section id="image-correlation-spectroscopy">
+<h2>Image correlation spectroscopy<a class="headerlink" href="#image-correlation-spectroscopy" title="Link to this heading">#</a></h2>
+<p>Examples for spatial/temporal image correlation analysis, benchmarking, and
+comparison between NumPy-based and tttrlib-based implementations.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation use CLSMImage as an input"><img alt="" src="../_images/sphx_glr_plot_imaging_ics_tttrlib_thumb.png" />
+<p><a class="reference internal" href="image_correlation/plot_imaging_ics_tttrlib.html"><span class="doc">Computing ICS data by tttrlib</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Computing ICS data by tttrlib</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input."><img alt="" src="../_images/sphx_glr_plot_imaging_ics_numpy_thumb.png" />
+<p><a class="reference internal" href="image_correlation/plot_imaging_ics_numpy.html"><span class="doc">Computing ICS data by numpy</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Computing ICS data by numpy</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Image correlation spectroscopy - benchmark"><img alt="" src="../_images/sphx_glr_plot_imaging_ics_benchmark_thumb.png" />
+<p><a class="reference internal" href="image_correlation/plot_imaging_ics_benchmark.html"><span class="doc">Image correlation spectroscopy - benchmark</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image correlation spectroscopy - benchmark</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Fitting ICS data by a RICS model"><img alt="" src="../_images/sphx_glr_plot_imaging_ics_fit_thumb.png" />
+<p><a class="reference internal" href="image_correlation/plot_imaging_ics_fit.html"><span class="doc">Fitting ICS data by a RICS model</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Fitting ICS data by a RICS model</div>
+</div></div></section>
+</section>
+<section id="image-localization-examples">
+<h1>Image Localization Examples<a class="headerlink" href="#image-localization-examples" title="Link to this heading">#</a></h1>
+<p>Examples demonstrating single molecule localization using 2D Gaussian fitting.</p>
+<p>These examples show how to use the ImageLocalizer class to precisely localize
+fluorescent point sources (e.g., fluorescent beads or single molecules) with
+sub-pixel accuracy using 2D Gaussian curve fitting.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the basic functionality of the Image Localization features in tttrlib by fitting a synthetic 2D Gaussian."><img alt="" src="../_images/sphx_glr_plot_basic_localization_test_thumb.png" />
+<p><a class="reference internal" href="microscopy_localization/plot_basic_localization_test.html"><span class="doc">Basic Image Localization Test</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Basic Image Localization Test</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a NumPy-friendly wrapper for the tttrlib Image Localization functionality, making it easy to use NumPy arrays directly without manual conversion to SWIG vector types."><img alt="" src="../_images/sphx_glr_plot_numpy_localization_wrapper_thumb.png" />
+<p><a class="reference internal" href="microscopy_localization/plot_numpy_localization_wrapper.html"><span class="doc">NumPy-friendly Localization Wrapper</span></a></p>
+  <div class="sphx-glr-thumbnail-title">NumPy-friendly Localization Wrapper</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the Image Localization functionality in tttrlib by creating synthetic fluorescent beads and localizing them using 2D Gaussian fitting."><img alt="" src="../_images/sphx_glr_plot_synthetic_bead_localization_thumb.png" />
+<p><a class="reference internal" href="microscopy_localization/plot_synthetic_bead_localization.html"><span class="doc">Synthetic Bead Localization Demo</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Synthetic Bead Localization Demo</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the enhanced ImageLocalizer class with memory leak fixes, context manager support, and improved NumPy-friendly interface."><img alt="" src="../_images/sphx_glr_plot_enhanced_image_localizer_thumb.png" />
+<p><a class="reference internal" href="microscopy_localization/plot_enhanced_image_localizer.html"><span class="doc">Enhanced ImageLocalizer with Memory Leak Fixes</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Enhanced ImageLocalizer with Memory Leak Fixes</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates an improved ImageLocalizer class that provides better memory management and a NumPy-friendly interface while working with the existing SWIG interface correctly."><img alt="" src="../_images/sphx_glr_plot_improved_image_localizer_thumb.png" />
+<p><a class="reference internal" href="microscopy_localization/plot_improved_image_localizer.html"><span class="doc">Improved ImageLocalizer with Memory Leak Awareness</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Improved ImageLocalizer with Memory Leak Awareness</div>
+</div></div><section id="miscellaneous">
+<h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Link to this heading">#</a></h2>
+<p>Various utility examples such as 1D/2D histograms and performance benchmarks
+that support broader analysis workflows and development.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram"><img alt="" src="../_images/sphx_glr_plot_histogram_2D_thumb.png" />
+<p><a class="reference internal" href="miscellaneous/plot_histogram_2D.html"><span class="doc">Make a 2D Histogram</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Make a 2D Histogram</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttrlib to offer more performance in direct comparison to general purpose routines for analysis methods as Photon Distribution Analysis (PDA) that make heady use of repeated histogram calculations."><img alt="" src="../_images/sphx_glr_plot_histogram_1D_thumb.png" />
+<p><a class="reference internal" href="miscellaneous/plot_histogram_1D.html"><span class="doc">Make a 1D Histogram</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Make a 1D Histogram</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the tttrlib histogram routines outperform numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)"><img alt="" src="../_images/sphx_glr_plot_histogram_benchmark_thumb.png" />
+<p><a class="reference internal" href="miscellaneous/plot_histogram_benchmark.html"><span class="doc">Benchmark of histogram routines</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Benchmark of histogram routines</div>
+</div></div></section>
+<section id="release-highlights">
+<h2>Release Highlights<a class="headerlink" href="#release-highlights" title="Link to this heading">#</a></h2>
+<p>Short, visual examples that showcase new features and improvements introduced
+in recent tttrlib releases. Start here to see what’s new at a glance.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.24, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all the changes, please refer to the release notes &lt;changes_0_20&gt;."><img alt="" src="../_images/sphx_glr_plot_release_highlights_0_24_0_thumb.png" />
+<p><a class="reference internal" href="release_highlights/plot_release_highlights_0_24_0.html"><span class="doc">Release Highlights for tttrlib 0.24</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.24</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.20, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all the changes, please refer to the release notes &lt;changes_0_20&gt;."><img alt="" src="../_images/sphx_glr_plot_release_highlights_0_20_0_thumb.png" />
+<p><a class="reference internal" href="release_highlights/plot_release_highlights_0_20_0.html"><span class="doc">Release Highlights for tttrlib 0.23</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.23</div>
+</div></div></section>
+<section id="single-molecule">
+<h2>Single-molecule<a class="headerlink" href="#single-molecule" title="Link to this heading">#</a></h2>
+<p>Application of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> to single-molecule data.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py"><img alt="" src="../_images/sphx_glr_plot_single_molecule_mcs_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_single_molecule_mcs.html"><span class="doc">Intensity traces</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates microtime range selection for burst analysis without plotting."><img alt="" src="../_images/sphx_glr_plot_microtime_selection_minimal_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_microtime_selection_minimal.html"><span class="doc">Minimal Microtime Range Selection Example</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Minimal Microtime Range Selection Example</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="    1. The minimum window length minimum_window_length     2. The minimum number of photons in a time window minimum_number_of_photons_in_time_window"><img alt="" src="../_images/sphx_glr_plot_single_molecule_burst_selection_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_single_molecule_burst_selection.html"><span class="doc">Burst selection routines</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Burst selection routines</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data."><img alt="" src="../_images/sphx_glr_plot_microtime_selection_example_fixed_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_microtime_selection_example_fixed.html"><span class="doc">Microtime Range Selection Example (Fixed Version)</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example (Fixed Version)</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to use TTTRSelection with BurstFilter for advanced photon selection and burst analysis."><img alt="" src="../_images/sphx_glr_plot_burstfilter_with_selection_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_burstfilter_with_selection.html"><span class="doc">BurstFilter with TTTRSelection Example</span></a></p>
+  <div class="sphx-glr-thumbnail-title">BurstFilter with TTTRSelection Example</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================"><img alt="" src="../_images/sphx_glr_plot_single_molecule_pda_1_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_single_molecule_pda_1.html"><span class="doc">Photon distribution analysis - 1</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 1</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files."><img alt="" src="../_images/sphx_glr_plot_burst_analysis_json_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_burst_analysis_json.html"><span class="doc">Burst Analysis with JSON Parameter Support</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Burst Analysis with JSON Parameter Support</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates FRET burst analysis using the new BurstFilter class in tttrlib. The BurstFilter class provides a cleaner interface for burst analysis similar to FRETBursts, with support for multi-channel FRET analysis."><img alt="" src="../_images/sphx_glr_plot_fret_burst_analysis_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_fret_burst_analysis.html"><span class="doc">FRET Burst Analysis with BurstFilter Class</span></a></p>
+  <div class="sphx-glr-thumbnail-title">FRET Burst Analysis with BurstFilter Class</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data."><img alt="" src="../_images/sphx_glr_plot_microtime_selection_example_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_microtime_selection_example.html"><span class="doc">Microtime Range Selection Example</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts &quot;reappear&quot;."><img alt="" src="../_images/sphx_glr_plot_burstfilter_dynamic_enhanced_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_burstfilter_dynamic_enhanced.html"><span class="doc">Enhanced BurstFilter: Dynamic Parameter Changes Example</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Enhanced BurstFilter: Dynamic Parameter Changes Example</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with photon masking. Photon masking allows you to pre-filter photons by channel, microtime, or other criteria before performing burst analysis."><img alt="" src="../_images/sphx_glr_plot_burst_analysis_with_filter_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_burst_analysis_with_filter.html"><span class="doc">Burst Analysis with BurstFilter Class and Photon Masking</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Burst Analysis with BurstFilter Class and Photon Masking</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to linearize microtimes using lookup tables. The linearization corrects for non-linear response of Time-to-Amplitude Converters (TAC)."><img alt="" src="../_images/sphx_glr_plot_microtime_linearization_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_microtime_linearization.html"><span class="doc">Microtime Linearization</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Microtime Linearization</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: - Loading TTTR data - Selecting donor and acceptor channels - Optional PIE/ALEX micro-time gating - Performing burst search using BurstFilter - Filtering bursts by size, duration, and background - Merging short gaps between bursts - Computing FRET efficiency - Visualizing burst size and FRET distributions"><img alt="" src="../_images/sphx_glr_plot_01_burst_analysis_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_01_burst_analysis.html"><span class="doc">Burst Analysis Example with BurstFilter</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Burst Analysis Example with BurstFilter</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis as described in https://pubs.acs.org/doi/abs/10.1021/jp057257"><img alt="" src="../_images/sphx_glr_plot_single_molecule_pda_2_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_single_molecule_pda_2.html"><span class="doc">Photon distribution analysis - 2</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 2</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a complete end-to-end burst analysis pipeline using the  BurstFilter class with JSON parameter serialization support. It covers:"><img alt="" src="../_images/sphx_glr_plot_complete_burst_analysis_pipeline_thumb.png" />
+<p><a class="reference internal" href="single_molecule/plot_complete_burst_analysis_pipeline.html"><span class="doc">Complete Burst Analysis Pipeline</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Complete Burst Analysis Pipeline</div>
+</div></div></section>
+<section id="working-with-tttr-objects">
+<h2>Working with TTTR objects<a class="headerlink" href="#working-with-tttr-objects" title="Link to this heading">#</a></h2>
+<p>Examples for reading/writing/transcoding TTTR files, inspecting headers,
+microtime histograms, and I/O performance benchmarking.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Save the content of a PTU file in an SPC file"><img alt="" src="../_images/sphx_glr_plot_tttr_transcode_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_transcode.html"><span class="doc">TTTR writing / Transcode</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR writing / Transcode</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms"><img alt="" src="../_images/sphx_glr_plot_tttr_microtime_histogram_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_microtime_histogram.html"><span class="doc">Micro time histograms</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the option for arbitrary meta data. Other TTTR formats have defined / fixed headers. Some of the information that can be found in a TTTR file is listed in Header tags sheet."><img alt="" src="../_images/sphx_glr_plot_tttr_header_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_header.html"><span class="doc">TTTR-Header</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR-Header</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of an existing CLSM experiment is read, masked, and the masked data is written to  a file that can be processed by any other software processing the original TTTR data."><img alt="" src="../_images/sphx_glr_plot_tttr_write_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_write.html"><span class="doc">TTTR writing / Modify CLSM files</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark"><img alt="" src="../_images/sphx_glr_plot_tttr_read_benchmark_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_read_benchmark.html"><span class="doc">TTTR reading benchmark</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR reading benchmark</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="To open TTTR files import the tttrlib library."><img alt="" src="../_images/sphx_glr_plot_tttr_files_thumb.png" />
+<p><a class="reference internal" href="tttr/plot_tttr_files.html"><span class="doc">Working with TTTR files</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Working with TTTR files</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This script demonstrates the delta encoding compression feature for TTTR data, showing how to reduce memory usage for large photon event datasets."><img alt="" src="../_images/sphx_glr_compression_example_thumb.png" />
+<p><a class="reference internal" href="tttr/compression_example.html"><span class="doc">&lt;no title&gt;</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR Compression Examples</div>
+</div></div><div class="toctree-wrapper compound">
+</div>
+<div class="sphx-glr-footer sphx-glr-footer-gallery docutils container">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/07fcc19ba03226cd3d83d4e40ec44385/auto_examples_python.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">auto_examples_python.zip</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/6f1e7a639e0699d6164445b55e6c116d/auto_examples_jupyter.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">all</span> <span class="pre">examples</span> <span class="pre">in</span> <span class="pre">Jupyter</span> <span class="pre">notebooks:</span> <span class="pre">auto_examples_jupyter.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../zreferences.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">6. </span>References</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="clsm_memory_usage_example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">&lt;no title&gt;</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Example Gallery</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-links">Quick Links</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-these-examples">How to Use These Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-categories">Example Categories</a><ul class="visible nav section-nav flex-column">
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-lifetime-imaging">Fluorescence lifetime imaging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-decays">Fluorescence decays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-correlation-spectroscopy">Image correlation spectroscopy</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#image-localization-examples">Image Localization Examples</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#miscellaneous">Miscellaneous</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#release-highlights">Release Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-molecule">Single-molecule</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-tttr-objects">Working with TTTR objects</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/auto_examples/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

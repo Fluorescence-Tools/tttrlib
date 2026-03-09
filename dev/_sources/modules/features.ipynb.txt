@@ -1,0 +1,91 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "eaf63f29-2365-40d8-a1f7-4a2ada89832f",
+   "metadata": {},
+   "source": [
+    ".. _fluorescence_intensity_analysis:\n",
+    "\n",
+    "===============================\n",
+    "Fluorescence intensity analysis\n",
+    "===============================\n",
+    "Intensity-based approaches are the most intuitive and easiest way to measure :term:`FRET`.\n",
+    "Intensity based approaches record signal intensities. The most common intensity-based\n",
+    "FRET measurement approached record the signal intensity in detection channels for the\n",
+    "donor and acceptor fluorophore. Here, the donor is a \"green\" fluorophore that is\n",
+    "detected by \"green\" detection channels. The acceptor is a \"red\" fluorophore that is\n",
+    "detected by \"red\" detection channels. The donor is excited by a \"green\" light source.\n",
+    "The acceptor can be excited by a \"red\" light source.\n",
+    "\n",
+    "A measure of FRET that is commonly used is the :term:`FRET efficiency`, :math:`E`.\n",
+    "Computing a FRET efficiency requires corrected signals. As an indicator for FRET one can\n",
+    "calculate the proximity ratio :math:`PR` according using the uncorrected signal\n",
+    "detected by the green, :math:`S_G`, and red, :math:`S_R`, detection channels,\n",
+    "respectively.\n",
+    "\n",
+    ".. math::\n",
+    "\n",
+    "   PR = S_R / (S_R + S_G)\n",
+    "\n",
+    "For ideal fluorophores and detection systems :math:`PR` equals to the FRET\n",
+    "efficiency, :math:`E`. To obtain a FRET efficiency for non ideal detection\n",
+    "systems and fluorophores the fluorescence intensities need to be corrected for the\n",
+    "fluorescence quantum yield of the donor and acceptor.\n",
+    "\n",
+    ".. math::\n",
+    "\n",
+    "   E = \\left( 1+\\gamma` \\frac{F_{D|D}^{(D,0)}}{F_{A|D}^{(D,A)}} \\right )^{-1}\n",
+    "\n",
+    "where, :math:`\\gamma'=\\Phi_{F,A}^{(A,0)}/\\Phi_{F,D}^{(D,0)}` is the ratio\n",
+    "of the acceptor to donor fluorescence quantum yield, :math:`F_{D|D}^{(D,A)` is\n",
+    "the fluorescence intensity of the donor :math:`D|...` in a FRET sample\n",
+    ":math:`(D,A)` given the donor excitation :math:`...|D`, and :math:`F_{A|D}^{(D,A)}`\n",
+    "is the fluorescence intensity of the acceptor :math:`A|...` in a FRET sample\n",
+    ":math:`(D,A)` given the donor excitation :math:`...|D`.\n",
+    "\n",
+    ":math:`F_{D|D}^{(D,A)` and :math:`F_{A|D}^{(D,A)`, depend on the detection\n",
+    "efficiencies of green (gG) and red (gR) channels and corresponding background\n",
+    "signals, among other correction factors. For the common case where there is\n",
+    "negligible crosstalk from the acceptor to the donor detection channel\n",
+    "\n",
+    ".. math::\n",
+    "\n",
+    "   F_D = \\frac{S_G - \\langle B_G \\rangle}{g_G}\n",
+    "   F_{A}=\\frac{S_{R}-\\alpha F_{G}-\\langle B_{R} \\rangle}{g_{R}}\n",
+    "\n",
+    "where :math:`\\langle B_G \\rangle` and :math:`\\langle B_R \\rangle` are the background\n",
+    "signals in green and red channels, :math:`\\alpha` is the spectral cross-talk from the donor\n",
+    "fluorescence to the acceptor channel. Note that detection efficiencies are difficult to measure\n",
+    ":cite:`fries1998quantitative`, :cite:`sabanayagam2005using`, but the ratio of detection efficiencies\n",
+    "can be calibrated with a known sample (see section 2.5.1). Equation (5) is not corrected\n",
+    "for direct excitation of the acceptor, therefore care has to be taken to choose the\n",
+    "appropriate donor excitation wavelength. The latter is taken into account in\n",
+    "an alternative intensity-based approach developed by Clegg :cite:`clegg199218`.\n",
+    "Here, the acceptor intensity ratio from signal after direct and FRET mediated\n",
+    "excitation is calculated yielding transfer efficiencies being less prone\n",
+    "to experimental artifacts. As in all ensemble FRET experiments, a proper\n",
+    "knowledge of the degree of labeling is mandatory for a quantitative analysis.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d8cb1c29-275e-439a-b75f-b358f11ffde0",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "",
+   "name": ""
+  },
+  "language_info": {
+   "name": ""
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -1,0 +1,194 @@
+
+
+.. _sphx_glr_auto_examples_fluorescence_decay:
+
+.. _fluorescence_decay_examples:
+
+Fluorescence decays
+-------------------
+
+Examples for decay simulation and fitting, IRF/background handling, convolution
+routines, and demonstrations of different fit configurations and benchmarks.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit26_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit26`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">fit26</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit23 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit23`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Polarization resolved lifetime MLE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_decay_fit_irf_bg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_decay_fit_irf_bg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fluorescence decay analysis - 3</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1) Compute model function 2) Simulate data for computed model function 3) Fit simulated data with model function">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_usage_2_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit23_usage_2`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Usage example 2</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Pile-up">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_pile_up_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_pile_up`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Pile-up</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview ========">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_convolution_routines_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_convolution_routines`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Convolution routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_benchmark_1_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit23_benchmark_1`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/fluorescence_decay/plot_fit25
+   /auto_examples/fluorescence_decay/plot_fit26
+   /auto_examples/fluorescence_decay/plot_fit24
+   /auto_examples/fluorescence_decay/plot_fit23
+   /auto_examples/fluorescence_decay/plot_decay_fit_irf_bg
+   /auto_examples/fluorescence_decay/plot_fit23_usage_2
+   /auto_examples/fluorescence_decay/plot_pile_up
+   /auto_examples/fluorescence_decay/plot_convolution_routines
+   /auto_examples/fluorescence_decay/plot_fit23_benchmark_1
+

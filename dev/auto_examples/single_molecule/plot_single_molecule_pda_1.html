@@ -1,0 +1,983 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Photon distribution analysis - 1" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/single_molecule/plot_single_molecule_pda_1.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Photon distribution analysis: Theory: The library tttrlib provides the option to compute models for single molecule histograns using Photon Distribution Analysis (PDA) for scoring of realizations o..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_single_molecule_pda_1_ca36035d.png" />
+<meta property="og:image:alt" content="Photon distribution analysis: Theory: The library tttrlib provides the option to compute models for single molecule histograns using Photon Distribution Analysis (PDA) for scoring of realizations o..." />
+<meta name="description" content="Photon distribution analysis: Theory: The library tttrlib provides the option to compute models for single molecule histograns using Photon Distribution Analysis (PDA) for scoring of realizations o..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Photon distribution analysis - 1 &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_single_molecule_pda_1';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Photon distribution analysis - 2" href="plot_single_molecule_pda_2.html" />
+    <link rel="prev" title="Intensity traces" href="plot_single_molecule_mcs.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">1. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">2. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/decay.html">2.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/fcs.html">2.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">2.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">3. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">3.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">4. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">5. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">6. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_pda_1.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Single-molecule</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Photon distribution analysis - 1</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Photon-distribution-analysis---1">
+<h1>Photon distribution analysis - 1<a class="headerlink" href="#Photon-distribution-analysis---1" title="Link to this heading">#</a></h1>
+<section id="Photon-distribution-analysis">
+<h2>Photon distribution analysis<a class="headerlink" href="#Photon-distribution-analysis" title="Link to this heading">#</a></h2>
+<section id="Theory">
+<h3>Theory<a class="headerlink" href="#Theory" title="Link to this heading">#</a></h3>
+<p>The library tttrlib provides the option to compute models for single molecule histograns using Photon Distribution Analysis (PDA) for scoring of realizations of models by experimental single molecule histograms :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2007</span></code>.</p>
+<p>#.. plot:: ../examples/single_molecule/single_molecule_pda_1.py</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class implements the Pda algorithm as previously described :cite:<code class="docutils literal notranslate"><span class="pre">antonik2006</span></code>.</p>
+</section>
+<section id="tttrlib.Pda-objects">
+<h3>tttrlib.Pda objects<a class="headerlink" href="#tttrlib.Pda-objects" title="Link to this heading">#</a></h3>
+<p>To create a PDA model first create an instance of the <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class. The Pda class implements a Photon Distribution Analysis algorithm for photons that are registed in two detection channels (channel 1 and channel 2). These two channels can be any channel type. In a FRET experiment channel 1 (ch1) and channel 2 (ch2) are typically the green and red detection channel, respectively. In an anisotropy PDA experiment the two channels can be the parallel and perpendicular detection channel.
+Using the theoretical probability for detecting a photon in the first detection channel as an input (in the original manuscript this is called pG) the number of photons in the first and the second detection channel are computed. Hereby, the algorithm considers the background fluorescence in the two detection channels. The measured signal consists of fluorescence (F) and background (B) contributions (S=F+B).</p>
+<p>To compute a PDA histogram, first, create an instance of the <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class. When you create a new instance, you can specify a set of parameters that are of relevance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="n">n_photons</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">kw</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hist2d_nmax&quot;</span><span class="p">:</span> <span class="n">n_photons</span><span class="p">,</span>
+    <span class="s2">&quot;hist2d_nmin&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s2">&quot;background_ch1&quot;</span><span class="p">:</span> <span class="mf">2.3</span><span class="p">,</span>
+    <span class="s2">&quot;background_ch2&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">pda</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Pda</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Pda</span></code> class will compute a matrix here called <code class="docutils literal notranslate"><span class="pre">s1s2</span></code> that will contain the probabilities of detecting a photon in ch1 and ch2. The indices of the matrix correspond to the number of photons, the matrix values to the probability. The parameter <code class="docutils literal notranslate"><span class="pre">hist2d_nmax</span></code> specifies up to wich maximum number of photons this matrix is computed. The parameter <code class="docutils literal notranslate"><span class="pre">hist2d_nmin</span></code> specifies the minimum number of photons in this matrix which will be considered in later steps. The parameter <code class="docutils literal notranslate"><span class="pre">background_ch1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">background_ch2</span></code> specify the background count rate in the two channels.</p>
+<p>The parameters can also be changed after the Pda object is created.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pda</span><span class="o">.</span><span class="n">background_ch1</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">background_ch2</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">hist2d_nmin</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">hist2d_nmax</span> <span class="o">=</span> <span class="mi">60</span>
+</pre></div>
+</div>
+<p>To compute the PDA histogram intensity distribution of the fluorescence p(F), needs to be specified. The intensity distribution of the fluorescence, P(F), can be obtained from the total measured signal intensity distribution P(S) by deconvolution assuming that the background signals obey Poisson distributions. In this description we simply compute a Poisson distribution for p(F).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># expectation value for the number of photons</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">)</span>
+<span class="n">pF</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">setPF</span><span class="p">(</span><span class="n">pF</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last statement in the code above assigns the distribution p(F) to the Pda object.</p>
+<p>Next, a set of species with associated amplitudes with corresponding theoretical probabilities of detecting a photon in the first channel. This can be done by either assigning the amplitudes and the probabilities separately to the Pda object</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">amplitudes</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+<span class="n">probabilities_ch1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">set_amplitudes</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">set_probabilities_ch1</span><span class="p">(</span><span class="n">probabilities_ch1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or by assigning a spectrum that consists of interleaved amplitudes and probabilities</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">p_spectrum_ch1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">amplitudes</span><span class="p">,</span> <span class="n">probabilities_ch1</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">spectrum_ch1</span> <span class="o">=</span> <span class="n">p_spectrum_ch1</span>
+</pre></div>
+</div>
+<p>The spectrum is interleaved array [a1, p1, a2, p2, …] where ai refers to amplitudes and p1 refers to probabilities of registering a photon in the first channel. The probabilities <code class="docutils literal notranslate"><span class="pre">probabilities_ch1</span></code> are the theoretical probability of registering a photon in the first channel. In a FRET experiment the probability relates to the FRET efficiency by</p>
+<p><span class="math">\begin{align}p_G = \left( 1 + lpha +  rac{\gamma E}{(1-E)} ight)^{-1}      ext{ with } \gamma =  rac{g_R \Phi_A}{g_R \Phi_D}\end{align}</span></p>
+<p>where <span class="math notranslate nohighlight">\(g_G\)</span>, <span class="math notranslate nohighlight">\(g_R\)</span> are the detection efficiencies in the green and red detection channel, respectively. <span class="math notranslate nohighlight">\(\Phi_A\)</span>, <span class="math notranslate nohighlight">\(\Phi_D\)</span> are the fluorescence quantum yield of the acceptor and the donor, respectively. <span class="math notranslate nohighlight">\(lpha\)</span> is the cross-talk from the donor to the acceptor channel, and <span class="math notranslate nohighlight">\(E\)</span> is the FRET efficiency.</p>
+<p>The computed distribution of photons in ch1 and ch2 is accessed by the attribute <code class="docutils literal notranslate"><span class="pre">s1s2</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">s1s2</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">s1s2</span>
+</pre></div>
+</div>
+<p>The matrix <code class="docutils literal notranslate"><span class="pre">s1s2</span></code> is computed when the attributed is accessed. The matrix is only updated if a parameter of relevance is changed and the matrix is accessed.</p>
+<p>In a PDA 2D analysis this matrix is often reduced in dimensionality to represent the model and score against the data. For this dimensionality reduction <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> offers a method. However, first, it needs to be specified how the matrix is reduced in dimensionality. For that, a function needs to be specified and assigned to the object. Any python function with a least two arguments can be used for that. The first argument always corresponds to ch1, the second argument to ch2. For instance,
+a histogram of the proximity ration can be computed by first defining a corresponding function and then creating a histogram using the method <code class="docutils literal notranslate"><span class="pre">get_1dhistogram</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">s1s2</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">s1s2</span>
+<span class="c1"># A one dimensional representation of the s1s2 matrix if obtain</span>
+<span class="c1"># by a function that projects the pairs of photons. Any python function</span>
+<span class="c1"># accepting at least two arguments can be used</span>
+<span class="n">proximity_ratio</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">:</span> <span class="n">ch2</span> <span class="o">/</span> <span class="p">(</span><span class="n">ch1</span> <span class="o">+</span> <span class="n">ch2</span><span class="p">)</span>
+
+<span class="c1"># The python function is used to set the attribute `histogram_function`</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">proximity_ratio</span>
+
+<span class="c1"># The method get_1dhistogram of the Pda object returns a 1D histogram</span>
+<span class="c1"># of the s1s2 array for the specified function</span>
+<span class="n">x_pr</span><span class="p">,</span> <span class="n">y_pr</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">21</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The arguments of <code class="docutils literal notranslate"><span class="pre">get_1dhistogram</span></code> define the range and the resolution of the histogram.</p>
+<p>Functions, e.g., the FRET efficiency, that require additional parameters can be passed to the Pda object by defining a function with additional arguments. Note, potential division by zero need to be handled.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fret_efficiency</span><span class="p">(</span><span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">,</span> <span class="n">phiD</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">phiA</span><span class="o">=</span><span class="mf">0.32</span><span class="p">,</span> <span class="n">det_ratio</span><span class="o">=</span><span class="mf">0.32</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">phiD</span> <span class="o">/</span> <span class="n">phiA</span> <span class="o">*</span> <span class="n">det_ratio</span> <span class="o">*</span> <span class="n">ch2</span> <span class="o">/</span> <span class="n">ch1</span><span class="p">)</span>
+
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">fret_efficiency</span>
+<span class="n">x_eff</span><span class="p">,</span> <span class="n">y_eff</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">31</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Histograms with a logarithmic scale are computed by setting <code class="docutils literal notranslate"><span class="pre">log_x</span></code> to True. When the option <code class="docutils literal notranslate"><span class="pre">skip_zero_photon</span></code> is set to False the first column and row of the s1s2 matrix (zero photons in ch1 or ch2) is used. In this case potential division by zeros in the histogram function need to be handled. The default value for <code class="docutils literal notranslate"><span class="pre">skip_zero_photon</span></code> is True.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sg_sr</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">sg_sr</span>
+<span class="n">x_sgsr</span><span class="p">,</span> <span class="n">y_sgsr</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span>
+    <span class="n">skip_zero_photon</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the 2D counting histogram and the 1D representations can be plotted.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">s1s2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pr</span><span class="p">,</span> <span class="n">y_pr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Proximity ratio&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eff</span><span class="p">,</span> <span class="n">y_eff</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;FRET efficiency&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_sgsr</span><span class="p">,</span> <span class="n">y_sgsr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Sg/Sr&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<div class="admonition-title"><h4></div><p>Note</p>
+</h4><p><p>To score models against the data either the 2D histogram or the 1D representation can be used. The scoring is described elsewhere :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2007</span></code>.</p>
+</p></div>
+</section>
+<section id="Example-analysis-of-experimental-data">
+<h3>Example analysis of experimental data<a class="headerlink" href="#Example-analysis-of-experimental-data" title="Link to this heading">#</a></h3>
+<p>In this section a small single-molecule dataset will be loaded and analyzed with by optimizing a set of parameters to experimental histograms using the <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class and basic <a class="reference external" href="https://www.scipy.org/">SciPy</a> functions. The photons that correspond to the data selected for the PDA histograms are indexed. This way, fluorescence decay curves that correspond to the PDA histograms are computed.</p>
+<p>#.. plot:: ../examples/single_molecule/single_molecule_pda_2.py</p>
+<p>The first step when a dataset is analyzed by the <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class is to load and create a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object. In the example, the tttr data is split into multiple BH132 spc files. Hence, for simpler analysis, the data is first stacked into a single <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># open a set of files and stack them in a single TTTR object</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;./tttr-data/bh/bh_spc132_smDNA/*.spc&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Next, the photons registered in the different routing channels need to be selected and the photon trace is split into time windows (tws). Time windows with a specified minimum number of photons are discriminated to reduce the background contribution to the PDA histogram. The photons in the two detection channels are counted and a matrix S1S2 that contains a histogram of the photon counts is created. This photon count matrix is computed up to a maximum number of photons that is specified ahead.
+The larger the maximum number of photons in the S1S2 matrix, the slower the algorithm will be. This maximum number depends on the size of the tws. For large tws the maximum number should be increased. For setups with large foci a larger maximum number of photons should be used. Overall, the maximum number of photons should be adjusted to the experiment. By inspecting a S1S2 matrix this number can be adjusted. Moreover, The distribution of the signal intensity P(S) needs to be determined. The PDA
+algorithm requires the distribution of the fluorescence intensity P(F), which can be determined from P(S). In practice, at low background when tws with low photons counts are discriminated P(F) can be approximated by P(S). Moreover, for a consistent analysis over multiple representations of the experimental data, e.g., TCSPC or FCS, care must be taken that the tw selection did not introduce a selection bias or that the selections are at least consistent.</p>
+<p>To create a experimental P(S1,S2) histogram, that is stored in form of a matrix, the static method <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda.compute_experimental_histograms</span></code> is used. The method takes the channel selection, the tw size, and the minimum number of photons in a tw as an input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define what is PDA channel 1 and channel 2</span>
+<span class="n">channels_1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>  <span class="c1"># 0, 8 are green channels</span>
+<span class="n">channels_2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>  <span class="c1"># 1,9 are red channels</span>
+<span class="n">minimum_number_of_photons</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">maximum_number_of_photons</span> <span class="o">=</span> <span class="mi">150</span>
+<span class="n">minimum_time_window_length</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="n">s1s2_e</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">tttr_indices</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Pda</span><span class="o">.</span><span class="n">compute_experimental_histograms</span><span class="p">(</span>
+    <span class="n">tttr_data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">channels_1</span><span class="o">=</span><span class="n">channels_1</span><span class="p">,</span>
+    <span class="n">channels_2</span><span class="o">=</span><span class="n">channels_2</span><span class="p">,</span>
+    <span class="n">maximum_number_of_photons</span><span class="o">=</span><span class="n">maximum_number_of_photons</span><span class="p">,</span>
+    <span class="n">minimum_number_of_photons</span><span class="o">=</span><span class="n">minimum_number_of_photons</span><span class="p">,</span>
+    <span class="n">minimum_time_window_length</span><span class="o">=</span><span class="n">minimum_time_window_length</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The method <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda.compute_experimental_histograms</span></code> returns the experimental histogram that contains the counts in the first and second PDA channel, the histogram over the number of counts P(S), and the tttr indices as numpy arrays. These indices can be used in later steps to process the associated photons.</p>
+<p>Next, a new instance of the <code class="docutils literal notranslate"><span class="pre">tttrlib.Pda</span></code> class needs to be created and a function that converts P(S1,S2) into a 1 dimensional histogram needs to be specified.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define a Pda object</span>
+<span class="n">kw_pda</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hist2d_nmax&quot;</span><span class="p">:</span> <span class="n">maximum_number_of_photons</span><span class="p">,</span>
+    <span class="s2">&quot;hist2d_nmin&quot;</span><span class="p">:</span> <span class="n">minimum_number_of_photons</span><span class="p">,</span>
+    <span class="s2">&quot;pF&quot;</span><span class="p">:</span> <span class="n">ps</span>
+<span class="p">}</span>
+<span class="n">pda</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Pda</span><span class="p">(</span><span class="o">**</span><span class="n">kw_pda</span><span class="p">)</span>
+<span class="c1"># set a function to make a 1D histogram</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">:</span> <span class="n">ch1</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, the ratio of the first and the second channel is used. Above we defined the associated the first channel to the routing channel numbers [0, 8] and the second channel to the routing channel numbers [1, 9]. For the dataset in this example this corresponds to the “green” and “red” detection channel. Hence, the function used to create one dimensional representations of the P(S1,S2) matrix is the ratio of the green and red signals.</p>
+<p>Now, we can define a set of parameters that is optimized to the experimental data. Here we use a three species model. Moreover, we define an initial values for the green and red background signal. Using these values, we compute a one dimensional histogram weighted deviations of the model histogram for initial values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">initial_background_ch1</span> <span class="o">=</span> <span class="mf">1.7</span>
+<span class="n">initial_background_ch2</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">initial_amplitudes</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">]</span>
+<span class="n">initial_probabilities_ch1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">]</span>
+<span class="n">kw_hist</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;x_max&quot;</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>
+    <span class="s2">&quot;x_min&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="s2">&quot;log_x&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">81</span><span class="p">,</span>
+    <span class="s2">&quot;n_min&quot;</span><span class="p">:</span> <span class="mi">10</span>
+<span class="p">}</span>
+<span class="c1"># get a initial model histogram</span>
+<span class="n">x_model_initial</span><span class="p">,</span> <span class="n">y_model_initial</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">amplitudes</span><span class="o">=</span><span class="n">initial_amplitudes</span><span class="p">,</span>
+    <span class="n">probabilities_ch1</span><span class="o">=</span><span class="n">initial_probabilities_ch1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_hist</span>
+<span class="p">)</span>
+<span class="c1"># get the data histogram</span>
+<span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">s1s2</span><span class="o">=</span><span class="n">s1s2_e</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+    <span class="o">**</span><span class="n">kw_hist</span>
+<span class="p">)</span>
+<span class="n">initial_wres</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_data</span> <span class="o">-</span> <span class="n">y_model_initial</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The computation of the initial weighted residuals can be omited and is merely here for instructive purposed. Here, the deviations are weighted by the number of counts in each histogram bin.</p>
+<p>Next, an objective function, i.e., a function that with a minimum value for parameters that agree optimally with the data is defined. A simple objective function is the chi2 that measured the sum of the weighted squared deviations is used.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span>
+    <span class="n">x0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">pda_object</span><span class="p">:</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Pda</span><span class="p">,</span>
+    <span class="n">n_species</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">kw_hist</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">):</span>
+    <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[:</span><span class="n">n_species</span><span class="p">]</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="n">n_species</span><span class="p">:</span><span class="n">n_species</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">background_ch1</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="n">n_species</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">background_ch2</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="n">n_species</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">pda_object</span><span class="o">.</span><span class="n">background_ch1</span> <span class="o">=</span> <span class="n">background_ch1</span>
+    <span class="n">pda_object</span><span class="o">.</span><span class="n">background_ch2</span> <span class="o">=</span> <span class="n">background_ch2</span>
+    <span class="n">x_model</span><span class="p">,</span> <span class="n">y_model</span> <span class="o">=</span> <span class="n">pda_object</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+        <span class="n">amplitudes</span><span class="o">=</span><span class="n">amplitudes</span><span class="p">,</span>
+        <span class="n">probabilities_ch1</span><span class="o">=</span><span class="n">probabilities</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_hist</span>
+    <span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">10000000.0</span><span class="p">)</span>
+    <span class="n">wres</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_data</span> <span class="o">-</span> <span class="n">y_model</span><span class="p">)</span> <span class="o">/</span> <span class="n">weights</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wres</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The model parameters are optimized using the defined objective function <code class="docutils literal notranslate"><span class="pre">chi2</span></code> using <code class="docutils literal notranslate"><span class="pre">scipy</span></code> whereas the parameters are bounded to a reasonable range.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">n_species</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="n">initial_amplitudes</span> <span class="o">+</span>         <span class="n">initial_probabilities_ch1</span> <span class="o">+</span>         <span class="p">[</span><span class="n">initial_background_ch1</span><span class="p">,</span> <span class="n">initial_background_ch2</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_species</span><span class="p">)</span> <span class="o">+</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+<span class="n">fit</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+    <span class="n">fun</span><span class="o">=</span><span class="n">chi2</span><span class="p">,</span>
+    <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="c1">#(0, np.inf),</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">pda</span><span class="p">,</span> <span class="n">n_species</span><span class="p">,</span> <span class="n">kw_hist</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The model parameters are collected, the final set of weighted residuals computed, and the micro times of the tws collected to create fluorescence decay histograms that can be analyzed by other software packages (e.g. <a class="reference external" href="https://github.com/fluorescence-tools/chisurf/">ChiSurf</a>.).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fitted_amplitudes</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">x</span><span class="p">[:</span><span class="n">n_species</span><span class="p">]</span>
+<span class="n">fitted_probabilities_ch1</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">n_species</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">n_species</span><span class="p">]</span>
+<span class="n">fitted_background_ch1</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">n_species</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">fitted_background_ch2</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">n_species</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">background_ch1</span> <span class="o">=</span><span class="n">fitted_background_ch1</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">background_ch2</span> <span class="o">=</span><span class="n">fitted_background_ch2</span>
+<span class="n">x_model_fit</span><span class="p">,</span> <span class="n">y_model_fit</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">amplitudes</span><span class="o">=</span><span class="n">fitted_amplitudes</span><span class="p">,</span>
+    <span class="n">probabilities_ch1</span><span class="o">=</span><span class="n">fitted_probabilities_ch1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_hist</span>
+<span class="p">)</span>
+<span class="n">fit_wres</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_data</span> <span class="o">-</span> <span class="n">y_model_fit</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+<span class="c1"># Decay histogram</span>
+<span class="n">tttr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">tttr_indices</span><span class="p">]</span>
+<span class="n">tttr_08</span> <span class="o">=</span> <span class="n">tttr_selection</span><span class="p">[</span><span class="n">tttr_selection</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])]</span>
+<span class="n">tttr_19</span> <span class="o">=</span> <span class="n">tttr_selection</span><span class="p">[</span><span class="n">tttr_selection</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])]</span>
+<span class="n">decay_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">4096</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">decay_red</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">tttr_19</span><span class="o">.</span><span class="n">micro_times</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">decay_axis</span><span class="p">)</span>
+<span class="n">decay_green</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">tttr_08</span><span class="o">.</span><span class="n">micro_times</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">decay_axis</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the collected results are plotted for illustrative purposes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Experimental S1S2&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;1D Histograms&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Model S1S2&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Signal count distribution, P(S)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Fluorescence decays, f(t)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;time / ns&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Signal(red)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;w.res.&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Signal(green)/Signal(red)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Signal(green)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Signal(red)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Counts&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Number of photons&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;P(S)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">s1s2_e</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pda</span><span class="o">.</span><span class="n">s1s2</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+    <span class="n">decay_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span><span class="p">,</span>
+    <span class="n">decay_red</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+    <span class="n">decay_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span><span class="p">,</span>
+    <span class="n">decay_green</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">fit_wres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">fit_wres</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neginf</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">y_model_initial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">y_model_initial</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neginf</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">kw_hist</span><span class="p">[</span><span class="s1">&#39;log_x&#39;</span><span class="p">]:</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">initial_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">fit_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_model_initial</span><span class="p">,</span> <span class="n">y_model_initial</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_model_fit</span><span class="p">,</span> <span class="n">y_model_fit</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_model_initial</span><span class="p">,</span> <span class="n">y_model_initial</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Model&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_model_fit</span><span class="p">,</span> <span class="n">y_model_fit</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Experiment&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">initial_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">fit_wres</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Optimized&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The noise in the fluorescence decay histograms highlight that for a detailed analysis of the fluorescence decays more photons are needed in comparison to an intensity analysis by PDA.</p>
+<p>Overall, in this section it was illustrated how experimental data can be analyzed. The presented analysis serves only as example. For more detailed analysis the noise model, i.e. the weights, and the underlying assumption when a chi2 is minimized needs to be considered. For histograms with low counts maximizing the likelihood function is more appropriate. Moreover, for data with considerable background P(F) needs to be deconvolved from the experimental P(S) :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2007</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">n_photons</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">kw</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;hist2d_nmax&quot;</span><span class="p">:</span> <span class="n">n_photons</span><span class="p">,</span>
+    <span class="s2">&quot;hist2d_nmin&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s2">&quot;background_ch1&quot;</span><span class="p">:</span> <span class="mf">2.3</span><span class="p">,</span>
+    <span class="s2">&quot;background_ch2&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">pda</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Pda</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+<span class="c1"># The parameters can also be set as attributes</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">background_ch1</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">background_ch2</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+<span class="c1"># Here, we use scipy and a poisson distribution to compute an pF.</span>
+<span class="c1"># For a real analysis pF needs to be estimated from the experiment.</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># expectation value for the number of photons</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">)</span>
+<span class="n">pF</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">setPF</span><span class="p">(</span><span class="n">pF</span><span class="p">)</span>
+
+<span class="c1"># Now we define a set of species with associated amplitudes</span>
+<span class="n">amplitudes</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">]</span>
+
+<span class="c1"># probabilities_ch1 is the theoretical probability of detecting a photon</span>
+<span class="c1"># in the first channel. In the PDA manuscript this is also called pG</span>
+<span class="n">probabilities_ch1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]</span>
+
+<span class="n">pda</span><span class="o">.</span><span class="n">set_amplitudes</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">set_probabilities_ch1</span><span class="p">(</span><span class="n">probabilities_ch1</span><span class="p">)</span>
+
+<span class="c1"># Alternatively the spectrum of amplitudes and probabilities</span>
+<span class="c1"># can be set as an interleaved array [a1, p1, a2, p2, ...]</span>
+<span class="n">p_spectrum_ch1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">amplitudes</span><span class="p">,</span> <span class="n">probabilities_ch1</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">spectrum_ch1</span> <span class="o">=</span> <span class="n">p_spectrum_ch1</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+
+<span class="c1"># The computed distribution of photons in channel 1 and channel 2</span>
+<span class="c1"># is given by the attribute s1s2. This attribute is convolved with</span>
+<span class="c1"># the probability of detecting a photon pF and the specified background</span>
+<span class="n">s1s2</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">s1s2</span>
+
+<span class="c1"># A one dimensional representation of the s1s2 matrix if obtain</span>
+<span class="c1"># by a function that projects the pairs of photons. Any python function</span>
+<span class="c1"># accepting at least two arguments can be used</span>
+<span class="n">proximity_ratio</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">:</span> <span class="n">ch2</span> <span class="o">/</span> <span class="p">(</span><span class="n">ch1</span> <span class="o">+</span> <span class="n">ch2</span><span class="p">)</span>
+
+<span class="c1"># The python function is used to set the attribute `histogram_function`</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">proximity_ratio</span>
+
+<span class="c1"># The method get_1dhistogram of the Pda object returns a 1D histogram</span>
+<span class="c1"># of the s1s2 array for the specified function</span>
+<span class="n">x_pr</span><span class="p">,</span> <span class="n">y_pr</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">21</span>
+<span class="p">)</span>
+
+<span class="c1"># functions, e.g., the FRET efficiency, that require additional parameters</span>
+<span class="c1"># can be passed to the Pda object by defining a function with additional</span>
+<span class="c1"># arguments. Note, potential division by zero need to be handled. Above,</span>
+<span class="c1"># zero divisions were not handled as overall minimum number of photons was</span>
+<span class="c1"># set to 10 (hist2d_nmin) and the histogram starts be be computed from the</span>
+<span class="c1"># first channel.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fret_efficiency</span><span class="p">(</span><span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">,</span> <span class="n">phiD</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">phiA</span><span class="o">=</span><span class="mf">0.32</span><span class="p">,</span> <span class="n">det_ratio</span><span class="o">=</span><span class="mf">0.32</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">phiD</span> <span class="o">/</span> <span class="n">phiA</span> <span class="o">*</span> <span class="n">det_ratio</span> <span class="o">*</span> <span class="n">ch2</span> <span class="o">/</span> <span class="n">ch1</span><span class="p">)</span>
+
+
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">fret_efficiency</span>
+<span class="n">x_eff</span><span class="p">,</span> <span class="n">y_eff</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">31</span>
+<span class="p">)</span>
+
+<span class="c1"># Histograms with a logarithmic scale are computed by setting `log_x`</span>
+<span class="c1"># to True. When the option skip_zero_photon is set to False the first</span>
+<span class="c1"># column and row of the s1s2 matrix (zero photons in ch1 or ch2) is used</span>
+<span class="c1"># in this case potential division by zeros in the histogram function</span>
+<span class="c1"># need to be handled. The default value for skip_zero_photon is True.</span>
+<span class="n">sg_sr</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">)</span>
+<span class="n">pda</span><span class="o">.</span><span class="n">histogram_function</span> <span class="o">=</span> <span class="n">sg_sr</span>
+<span class="n">x_sgsr</span><span class="p">,</span> <span class="n">y_sgsr</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">get_1dhistogram</span><span class="p">(</span>
+    <span class="n">log_x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">x_min</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">x_max</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span>
+    <span class="n">skip_zero_photon</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">s1s2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_pr</span><span class="p">,</span> <span class="n">y_pr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Proximity ratio&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eff</span><span class="p">,</span> <span class="n">y_eff</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;FRET efficiency&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_sgsr</span><span class="p">,</span> <span class="n">y_sgsr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Sg/Sr&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_single_molecule_mcs.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Intensity traces</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_single_molecule_pda_2.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Photon distribution analysis - 2</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Photon-distribution-analysis">Photon distribution analysis</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Theory">Theory</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.Pda-objects">tttrlib.Pda objects</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Example-analysis-of-experimental-data">Example analysis of experimental data</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_pda_1.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

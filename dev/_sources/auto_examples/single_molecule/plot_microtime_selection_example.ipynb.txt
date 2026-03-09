@@ -1,0 +1,194 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Microtime Range Selection Example\n\nThis example demonstrates how to implement microtime range selection for burst analysis.\nWhile the BurstFilter class doesn't currently have built-in microtime selection,\nthis example shows how to achieve the same functionality by pre-filtering the TTTR data.\n\nThe approach uses the TTTR class's ability to select photons based on their microtime values\nand then performs burst analysis on the filtered data.\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Import required libraries\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport matplotlib.pyplot as plt"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Load data\nFor this example, we'll use a sample file\nReplace with your actual file path\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\ndata = tttrlib.TTTR(str(get_data_path(\"bh/bh_spc132.spc\")), \"SPC-130\")\nprint(f\"Total events: {len(data)}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Analyze microtime distribution\nFirst, let's look at the microtime distribution to understand the data\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "micro_times = data.get_micro_times()\n\n# Plot histogram of microtimes\nfig, ax = plt.subplots(1, 1, figsize=(10, 6))\nn, bins, patches = ax.hist(micro_times, bins=256, alpha=0.7, color='blue', edgecolor='black', linewidth=0.5)\nax.set_xlabel('Microtime channels')\nax.set_ylabel('Count')\nax.set_title('Microtime distribution')\nax.grid(True, alpha=0.3)\nplt.show()\n\nprint(f\"Microtime range: {micro_times.min()} - {micro_times.max()}\")\nprint(f\"Most common microtime: {np.argmax(n)} (count: {n.max()})\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Define microtime ranges for selection\nDefine ranges of interest (min, max) in microtime channels\nFor example, select photons within specific time windows\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "microtime_ranges = [\n    (0, 1000),      # Early photons\n    (2000, 3000),   # Middle photons  \n    (3500, 4095)    # Late photons\n]\n\nprint(\"\\nSelected microtime ranges:\")\nfor i, (min_mt, max_mt) in enumerate(microtime_ranges):\n    print(f\"  Range {i+1}: {min_mt} - {max_mt} channels\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Select photons within microtime ranges\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "def select_photons_by_microtime(tttr_data, ranges):\n    \"\"\"Select photons that fall within specified microtime ranges.\"\"\"\n    micro_times = tttr_data.get_micro_times()\n    selected_indices = []\n    \n    for i, micro_time in enumerate(micro_times):\n        # Check if microtime falls within any of the specified ranges\n        for min_mt, max_mt in ranges:\n            if min_mt <= micro_time <= max_mt:\n                selected_indices.append(i)\n                break  # Found a match, no need to check other ranges\n    \n    return selected_indices\n\n# Select photons within the specified ranges\nselected_indices = select_photons_by_microtime(data, microtime_ranges)\nprint(f\"\\nSelected {len(selected_indices)} photons ({len(selected_indices)/len(data)*100:.2f}% of total)\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Create filtered TTTR object\nCreate a new TTTR object containing only the selected photons\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "filtered_data = data.select(selected_indices)\nprint(f\"Filtered data contains {len(filtered_data)} events\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Perform burst analysis on filtered data\nCreate BurstFilter with filtered data\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "burst_filter = tttrlib.BurstFilter(filtered_data.Get())\n\n# Configure burst search parameters\nburst_filter.set_burst_parameters(\n    min_photons=20,      # L: minimum photons per burst\n    window_photons=10,   # m: window size (photons)\n    window_time_max=1.0e-3  # T: window duration in seconds (1.0ms)\n)\n\n# Set background estimation parameters\nburst_filter.set_background_parameters(\n    time_window=10.0,    # Background time window in seconds\n    threshold=0.0        # Background threshold\n)\n\n# Perform burst search\nbursts = burst_filter.find_bursts()\nprint(f\"\\nFound {len(bursts)} bursts in filtered data\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Compare with full data analysis\nFor comparison, let's also analyze the full data\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "burst_filter_full = tttrlib.BurstFilter(data.Get())\nburst_filter_full.set_burst_parameters(20, 10, 1.0e-3)\nburst_filter_full.set_background_parameters(10.0, 0.0)\nbursts_full = burst_filter_full.find_bursts()\nprint(f\"Found {len(bursts_full)} bursts in full data\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Visualize results\nCompare burst properties between filtered and full data\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "if len(bursts) > 0 and len(bursts_full) > 0:\n    # Get burst properties for filtered data\n    burst_properties_filtered = burst_filter.get_all_burst_properties()\n    properties_array_filtered = np.array(burst_properties_filtered)\n    burst_sizes_filtered = properties_array_filtered[:, 2]\n    burst_durations_filtered = properties_array_filtered[:, 3]\n    \n    # Get burst properties for full data\n    burst_properties_full = burst_filter_full.get_all_burst_properties()\n    properties_array_full = np.array(burst_properties_full)\n    burst_sizes_full = properties_array_full[:, 2]\n    burst_durations_full = properties_array_full[:, 3]\n    \n    # Plot comparison\n    fig, ax = plt.subplots(2, 2, figsize=(12, 10))\n    fig.suptitle('Burst Analysis Comparison: Full vs Filtered Data', fontsize=16)\n    \n    # Burst size distribution comparison\n    ax[0, 0].hist(burst_sizes_full, bins=30, alpha=0.7, label='Full data', color='blue')\n    ax[0, 0].hist(burst_sizes_filtered, bins=30, alpha=0.7, label='Filtered data', color='red')\n    ax[0, 0].set_xlabel('Photons per burst')\n    ax[0, 0].set_ylabel('Count')\n    ax[0, 0].set_title('Burst size distribution')\n    ax[0, 0].legend()\n    ax[0, 0].grid(True, alpha=0.3)\n    \n    # Burst duration distribution comparison\n    ax[0, 1].hist(burst_durations_full * 1e3, bins=30, alpha=0.7, label='Full data', color='blue')\n    ax[0, 1].hist(burst_durations_filtered * 1e3, bins=30, alpha=0.7, label='Filtered data', color='red')\n    ax[0, 1].set_xlabel('Burst duration (ms)')\n    ax[0, 1].set_ylabel('Count')\n    ax[0, 1].set_title('Burst duration distribution')\n    ax[0, 1].legend()\n    ax[0, 1].grid(True, alpha=0.3)\n    \n    # Scatter plot: size vs duration for filtered data\n    ax[1, 0].scatter(burst_durations_filtered * 1e3, burst_sizes_filtered, alpha=0.6, s=20, color='red')\n    ax[1, 0].set_xlabel('Burst duration (ms)')\n    ax[1, 0].set_ylabel('Photons per burst')\n    ax[1, 0].set_title('Filtered data: Burst size vs duration')\n    ax[1, 0].grid(True, alpha=0.3)\n    \n    # Scatter plot: size vs duration for full data\n    ax[1, 1].scatter(burst_durations_full * 1e3, burst_sizes_full, alpha=0.6, s=20, color='blue')\n    ax[1, 1].set_xlabel('Burst duration (ms)')\n    ax[1, 1].set_ylabel('Photons per burst')\n    ax[1, 1].set_title('Full data: Burst size vs duration')\n    ax[1, 1].grid(True, alpha=0.3)\n    \n    plt.tight_layout()\n    plt.show()\n    \n    # Print statistics\n    print(\"\\n=== Burst Analysis Statistics ===\")\n    print(f\"Full data: {len(bursts_full)} bursts, avg size: {burst_sizes_full.mean():.1f} photons\")\n    print(f\"Filtered data: {len(bursts)} bursts, avg size: {burst_sizes_filtered.mean():.1f} photons\")\n    print(f\"Size reduction: {len(bursts_full) - len(bursts)} bursts ({(1 - len(bursts)/len(bursts_full))*100:.1f}%)\")\n\nprint(\"\\nMicrotime selection example completed successfully!\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

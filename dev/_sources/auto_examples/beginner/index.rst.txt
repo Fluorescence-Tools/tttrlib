@@ -1,0 +1,167 @@
+
+
+.. _sphx_glr_auto_examples_beginner:
+
+.. _beginner_examples:
+
+# Beginner Examples for tttrlib
+
+This directory contains small, runnable examples that mirror the tested core features of `tttrlib`.
+They are safe to copy-paste into your own analysis.
+
+Make sure the demo data bundle is available (see `test/test_settings.py`) and set `TTTRLIB_DATA` accordingly.
+
+## Examples
+
+* `plot_01_read_tttr.py`
+  Load a TTTR file (PTU), print basic info (macro/micro times, routing channels), and make first diagnostic plots.
+
+* `plot_02_slice_join_append.py`
+  Take small slices, join/append photon streams, compare macro-time timelines (shifted vs unshifted), and get a micro-time histogram.
+
+* `plot_03_selections_bursts_traces.py`
+  Do count-rate based LOW/HIGH selections, run burst search, build per-burst micro-time histograms (log scale), and plot 1 ms intensity traces (first 3 s) with burst regions shaded.
+
+* `plot_04_write_convert.py`
+  Write subsets to a new file, make a full native copy, and convert between vendor formats by reusing a header template.
+
+* `plot_05_clsm_zeiss980.py`
+  Reconstruct a confocal (CLSM) image from Zeiss LSM 980 TTTR data, show an intensity projection, and plot a per-pixel mean micro-time (pseudo-lifetime) map.
+
+## How to run
+
+From this directory:
+
+```
+python plot_01_read_tttr.py
+```
+
+Each script will either run and generate figures/output files, or exit with a clear message if the demo data cannot be found.
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to perform basic operations with TTTR files.">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_00_tttr_files_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_00_tttr_files`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic operations with TTTR files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1. Load the Zeiss LSM 980 confocal TTTR file used in the tests. 2. Build a tttrlib.CLSMImage object with matching parameters. 3. Visualise a frame projection and the corresponding mean micro-time map.">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_05_microscopy_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_05_microscopy`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Notes ----- - This script is Sphinx-Gallery friendly: it does not call plt.show() and   will render figures with a non-interactive backend during doc builds. - If the demo file cannot be located, a clear error is raised with a helpful hint.">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_01_reading_files_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_01_reading_files`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Example 1: Reading TTTR data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1. Writing a subset of events to a new PTU file. 2. Making a full copy of a TTTR dataset in its native format. 3. Re-using a header from another file to convert a dataset between    vendor formats (borrowed from the unit tests in    test/test_TTTR_transcode.py).">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_04_writing_files_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_04_writing_files`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Example 4: Writing TTTR data and converting formats</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Make sure the demo PTU file is available (see test/test_settings.py). Set the environment variable TTTRLIB_DATA so that the file pq/ptu/pq_ptu_hh_t3.ptu can be found.">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_02_basic_operations_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_02_basic_operations`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Example 2: Basic operations on TTTR objects (focused illustration)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1) Using tttrlib&#x27;s built-in count-rate filter to get LOW/HIGH count-rate selections 2) Micro-time histograms at native tick resolution on a log y-axis 3) Sliding-window burst search and comparison of burst vs all micro-time histograms 4) Channel-resolved (green/red) 1 ms intensity traces for the FIRST 3 SECONDS,    with the area under the curves FILLED where bursts are present.">
+
+.. only:: html
+
+  .. image:: /auto_examples/beginner/images/thumb/sphx_glr_plot_03_selections_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/beginner/plot_03_selections`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/beginner/plot_00_tttr_files
+   /auto_examples/beginner/plot_05_microscopy
+   /auto_examples/beginner/plot_01_reading_files
+   /auto_examples/beginner/plot_04_writing_files
+   /auto_examples/beginner/plot_02_basic_operations
+   /auto_examples/beginner/plot_03_selections
+

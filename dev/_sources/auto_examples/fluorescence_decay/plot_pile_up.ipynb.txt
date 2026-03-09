@@ -1,0 +1,43 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Pile-up\nThis example illustrates the effect of pile up on the shape of fluorescence decay\ncurves and demonstrates how the shape of a model function can be modified to\naccount for pile up.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import pylab as p\nimport numpy as np\nimport scipy.stats\nimport tttrlib\n\n# Set seed to make results reproducible\nnp.random.seed(42)\n\n# Define number of channels and excitation period\nn_channels = 512\nperiod = 32\ntime_axis = np.linspace(0, period, n_channels)\nconv_stop = n_channels // 2\n\n# compute a irf\nirf_width = 0.25\nirf_position = 2.0\ndt = time_axis[1] - time_axis[0]\nirf_p = scipy.stats.norm.pdf(time_axis, loc=irf_position, scale=irf_width)\nirf_s = irf_p\n\n\"\"\"\nIn this example first an ideal fluorescence decay is computed for the parallel (p)\nand perpendicular (s) channel using fit23.\n\"\"\"\n\n# Compute model fo a single photon\nn_photons = 1\nperiod, g, l1, l2 = 32, 1.0, 0.1, 0.1\ntau, gamma, r0, rho = 2.0, 0.01, 0.38, 1.2\n\nmodel = np.zeros(n_channels * 2)  # For parallel and perpendicualr\nbg = np.zeros_like(model)\ntttrlib.DecayFit23.modelf(\n    np.array([tau, gamma, r0, rho]),\n    np.hstack([irf_p, irf_s]),\n    bg, dt,\n    np.array([period, g, l1, l2, conv_stop]),\n    model\n)\n\n\"\"\"\nThe number the model is scaled to a number of photons typically recorded in a eTCSPC \nexperiment. In an eTCSPC experiment usually 1e6 - 20e6 photons are recorded. \n\"\"\"\n\nn_photons = 5.5e5\nmodel *= n_photons\n\n# Add pileup to parallel (p) and perpendicular (s)\nmodel_p = model[:len(model) // 2]\nmodel_p_with_pileup = np.copy(model_p)\nmodel_s = model[len(model) // 2:]\nmodel_s_with_pileup = np.copy(model_s)\n\n\"\"\"\nThe pile up depends on the instrument dead time, the repetition rate used to excite\nthe sample and the total number of registered photons. Here, to highlight the effect\nof pile up an unrealistic combination of the measurement time and the number of photons \nis used. In modern counting electronics the dead time is often around 100 nano\nseconds.\n\nIn this example there is no data. Thus, the model without pile up is used as\n\"data\". In a real experiment use the experimental histogram in the data argument.\n\"\"\"\n\npile_up_parameter = {\n    'repetition_rate': 1./period * 1000,  # Repetition rate is in MHz\n    'instrument_dead_time': 120.,  # Instrument dead time nano seconds\n    'measurement_time': 0.05,  # Measurement time in seconds\n    'pile_up_model': \"coates\"\n}\n\ntttrlib.add_pile_up_to_model(\n    model=model_p_with_pileup,\n    decay=model_p,\n    **pile_up_parameter\n)\ntttrlib.add_pile_up_to_model(\n    model=model_s_with_pileup,\n    decay=model_s,\n    **pile_up_parameter\n)\n\nmodel_ps_pile_up = np.hstack([model_p_with_pileup, model_s_with_pileup])\np.semilogy(model_ps_pile_up, label='with pileup')\np.semilogy(model, label='no pileup')\np.legend()\np.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

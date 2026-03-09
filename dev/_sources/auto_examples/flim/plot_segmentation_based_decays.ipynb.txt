@@ -1,0 +1,259 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Image-based segmentation of FLIM data\nOverview\n--------\nIn live-cell imaging, the conformation or the oligomeric state of biomolecules can\ndepend on their cellular location. In this application example we combine\nimage segmentation with fluorescence-lifetime based analysis and generate fluorescence\nintensity decays of molecular sub-ensembles to resolve molecular states of the studied\nprotein of interest for different cellular compartments. We segment multi-parameter\nfluorescence image spectroscopy (MFIS) data into nucleus, cytoplasm and vesicles-like\nstructures.\n\n    1. Data Loading\n    2. Create CLSM image container\n    3. Pulsed interleaved excitation\n    4. Intensity imaging\n    5. Micro time imaging\n    6. Define pixel classes by image segmentation\n    7. Apply pixel classes for analysis\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import tttrlib\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport skimage as ski\nimport skimage.filters\nimport skimage.morphology\nimport skimage.util\nimport scipy\nimport scipy.ndimage\n\n\ndef plot_images(images, titles, cmaps=None, **kwargs):\n    # Define convenience function for plotting\n    if cmaps is None:\n        cmaps = ['viridis'] * len(images)\n    if titles is None:\n        titles = [''] * len(images)\n    fig, ax = plt.subplots(**kwargs)\n    if not isinstance(ax, list):\n        ax = np.array([ax])\n    ax = ax.flatten()\n    for i, img in enumerate(images):\n        im = ax[i].imshow(img, cmap=cmaps[i])\n        ax[i].set_title(titles[i])\n        fig.colorbar(im, ax=ax[i], fraction=0.046, pad=0.04)\n    return fig, ax"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\n\n# 1. Loading data and creating the intensity images\n#--------------------------------------------------\n# First, read the TTTR data.\n# Define used channels\nfilename_data = str(get_data_path('imaging/pq/ht3/mGBP_DA.ht3'))\ntttr_data = tttrlib.TTTR(filename_data)\n\nprint(\"Used routing channels:\", tttr_data.used_routing_channels)\ngreen_ch = [0, 1]\nred_ch = [4, 5]\nsum_all = green_ch + red_ch"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 3. Pulsed interleaved excitation\nSplit the data into prompt and delay.\nFor a more detailed description see plot_pie_flim.py\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "filename_irf = str(get_data_path('imaging/pq/ht3/mGBP_IRF.ht3'))\nirf = tttrlib.TTTR(filename_irf)\n\ntttr_irf_green = irf.get_tttr_by_channel(green_ch)\ntttr_irf_red = irf.get_tttr_by_channel(red_ch)\ntttr_green = tttr_data.get_tttr_by_channel(green_ch)\ntttr_red = tttr_data.get_tttr_by_channel(red_ch)\nprompt_range = 0, 11000\ndelay_range = 11000, 25000"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 2. Create CLSM image container\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# In the green channel we use all photons\nclsm_green = tttrlib.CLSMImage(tttr_data=tttr_data, channels=green_ch)\nclsm_red_prompt = tttrlib.CLSMImage(tttr_data=tttr_data, channels=red_ch, micro_time_ranges=[prompt_range])\nclsm_red_delay = tttrlib.CLSMImage(tttr_data=tttr_data, channels=red_ch, micro_time_ranges=[delay_range])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 3. Intensity imaging\nFills the CLSM image container with intensities\nAn intensity image the number of counts in a pixel corresponds to the number of photons\nRed intensity is toatal intenstiy, ie, prompt + delayed excitation\nFig. 4B Green, red prompt, red delay\nSum over all frames\nThe intensity images are a time-series (multiple frames). We sum over\nall frames to improve the counting statistics\nNote: image shape is in the order of t-y-x, thus summation of over axis=0\nresults in generating the t-projection\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "SUM_green = clsm_green.intensity.sum(axis=0)\nSUM_red_prompt = clsm_red_prompt.intensity.sum(axis=0)\nSUM_red_delay = clsm_red_delay.intensity.sum(axis=0)\n\nfig, _ = plot_images(\n    [SUM_green, SUM_red_prompt, SUM_red_delay],\n    ncols=3, nrows=1,\n    titles=[\n        'Integrated intensity (green)',\n        'Integrated intensity (red, prompt)',\n        'Integrated intensity (red, delay)',\n    ]\n)\nfig.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Lifetime analysis\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "mean_tau_green = clsm_green.get_mean_lifetime(\n    tttr_data,\n    minimum_number_of_photons=20,\n    stack_frames=True,\n    tttr_irf=tttr_irf_green\n)\nfig, _ = plot_images(\n    [mean_tau_green[0]],\n    ncols=1, nrows=1,\n    titles=[\n        'Mean donor lifetime'\n    ]\n)\nfig.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 7. Image segmentation\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# Next, we use the generated intensity image and use standard image segmentation\n# techniques like Median or Gaussian filtering, Li- or Otsu-based thresholding to \n# separate the three regions of interest: cytoplasm, vesicles and nucleus.\n# At the end these segmentations represent binary masks, which are filled with \"1/TRUE\" in\n# the region of interest and \"0/FALSE\" outside."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 7.1 Segmentation of the vesicles\nWe start with the segmentation of the vesicles.\nHere, first a Gaussian smoothing with a size of 1 sigma is applied, \nfollowed by thresholding using the method of Otsu.\nFinally, objects with a size smaller than 5 pixels are removed.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "sigma_vesicles = 1  # radius for Gaussian smoothing\nmin_vesicle_size = 5  # give minimal vesicle size in pixel\n# Calculate intensity sum over all detection channels\n# This facilitates the segmentation due to higher SNR\nint_all_channel = clsm_green.intensity + clsm_red_prompt.intensity + clsm_red_delay.intensity\nn_frames = int_all_channel.shape[0]\nfilled_frames = range(n_frames)\n\nbinary_img_vesicles = []\nfor image in filled_frames:\n    input_img = int_all_channel[image,:,:]\n    # A. Gaussian filtering\n    gaussian_img = ski.filters.gaussian(input_img, sigma=sigma_vesicles)\n    thresh_vesicles = ski.filters.threshold_otsu(gaussian_img)  # B. Determine Otsu threshold for each frame\n    binary_temp = gaussian_img >= thresh_vesicles  # C. Intensities larger than threshold = TRUE /1\n    # D. Remove small objects\n    cleaned_image = ski.morphology.remove_small_objects(binary_temp, min_vesicle_size)\n    binary_img_vesicles.append(cleaned_image)\n\nvesicle_mask = (np.array(binary_img_vesicles, dtype=np.ubyte))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 7.2 Segmentation of the cytoplasm\nNext, the cytoplasm is segmented.\nHere, first a median filtering with a disk size of 3 pixel is applied.\nThis is followed by thresholding using the method of Otsu.\nHowever, for later frames direct usage of the Otsu threshold selected too much of \nbackground, thus we slightly increase the threshold by multiplying with 1.03 (Otsu_scaling_factor)\nIn the final steps, first small holes inside the cytoplasm area are closed,\nfollowed by the removal of small detected areas outside the main cell.\nHere, a minimal size threshold of 10'000 pixel is applied.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "disk_size_cyto = 3  # smoothing radius in pixel for median filtering\notsu_scaling_factor = 1.03  # increase Otsu threshold by multiplication with this factor\nminimal_size = 10000  # give minimal cytoplasm size in pixel\n\nbinary_img_cytoplasm = []\nfor image in filled_frames:\n    input_img = int_all_channel[image,:,:]\n    # A. Median filtering\n    median_img = ski.filters.median(input_img, ski.morphology.disk(disk_size_cyto))\n    thresh_cyto = ski.filters.threshold_otsu(median_img)  # B. Determine Otsu threshold for each frame\n    binary_temp = median_img >= thresh_cyto*otsu_scaling_factor  # C. Intensities larger than threshold = TRUE /1\n    # D. Fill holes in the cytoplasm\n    bool_img = scipy.ndimage.binary_fill_holes(binary_temp)\n    segmentation_filled = np.copy(bool_img.astype(np.uint8))\n    # E. Remove small speckles outside the large cell\n    small_aggregates_removed = ski.morphology.area_closing(ski.util.invert(segmentation_filled), area_threshold=minimal_size)\n    final_segmentation = ski.util.invert(small_aggregates_removed)\n    binary_img_cytoplasm.append(final_segmentation)\ncytoplasm_mask = (np.array(binary_img_cytoplasm, dtype=np.ubyte))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 7.3 Segmentation of nucleus\nFinally, the nucleus is segmented.\nIn contrast to the cytoplasm and vesicles, here only the green intensity image\nis used as input as here the contrast between cytoplasm/vesicles region and nucleus \nseemed largest. Please note that the nucleus can be best seen as \"region in cytoplasm\nbut without vesicles\". The segmentation of the nucleus thus proves to be a challenge.\nWe first apply a Gaussian smoothing with a radius of 2 sigma, followed by thresholding \nusing the method of Li. The thresholded image is dilated, holes inside the nucleus filled \nand small areas outside removed. Next all left-overs outside the cytoplasmic (i.e. body\nof the cell) are removed by multiplying with the generated cytoplasm mask, followed by\nanother round of dilation to make the nucleus \"smoother\".\nFinally, as the nucleus is characterized by being outside the way of the diffusing \nvesicles, we average the such obtained nucleus and generate an average nucleus by\nsumming over all 400 frames and threshold this projection using the method of Otsu.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "sigma_nucleus = 2  # radius for Gaussian filtering\ndilation_radius = 2  # for dilation operation\nminimal_hole_size = 1000  # minimal area size (smaller areas will be removed)\nminimal_nucleus_size = 2000 # minimal nucleus size\n\nbinary_img_nucleus = []\nint_green = clsm_green.intensity\nfor image in filled_frames:\n    input_img = int_green[image,:,:]\n    input_img_cytoplasm = cytoplasm_mask[image,:,:]\n    # A. Gaussian img\n    gaussian_img_nucleus = ski.filters.gaussian(input_img, sigma=sigma_nucleus)\n    # B. Li-thresholding\n    li_threshold = ski.filters.threshold_li(gaussian_img_nucleus)\n    thresholded_image = gaussian_img_nucleus > li_threshold\n    # C. Dilation\n    dilated_segmentation = ski.morphology.dilation(thresholded_image, ski.morphology.disk(dilation_radius))\n    # D. Fill holes\n    bool_img = scipy.ndimage.binary_fill_holes(dilated_segmentation)\n    segmentation_filled = np.copy(bool_img.astype(np.uint8))\n    # E Remove small areas\n    small_areas_removed = ski.morphology.area_closing(ski.util.invert(segmentation_filled), area_threshold=minimal_nucleus_size)\n    # F. Combine with cytoplasm by multiplication of binary images\n    combination = np.zeros(small_areas_removed.shape, dtype=np.uint)\n    combination = input_img_cytoplasm * (small_areas_removed - 254)\n    # G. Remove small areas at the cytoplasm border\n    cleaned_combination = ski.morphology.area_closing(ski.util.invert(combination), area_threshold=minimal_nucleus_size)\n    # H. dilate Nucleus to make more \"smooth\"\n    dilated_combination = ski.morphology.dilation(ski.util.invert(cleaned_combination), ski.morphology.disk(dilation_radius))\n    binary_img_nucleus.append(dilated_combination)\n\n# I. Average over all frames to get a smoother nucleus\naveraged_img_nucleus = np.sum(binary_img_nucleus, axis=0).astype(dtype=np.int64)\nOtsu_thresh = ski.filters.threshold_otsu(averaged_img_nucleus)\nthresholded_img = averaged_img_nucleus > Otsu_thresh\n# J. Maybe required to removed smaller stuff\nnucleus_mask_avg = ski.morphology.remove_small_objects(thresholded_img, min_size=minimal_nucleus_size)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "In the next two steps, we clean up the cytoplasm and vesicles masks.\nFirst, we remove the nucleus and vesicles from the cytoplasm, and second\nwe remove the vesicles inside the nucleus region - if any- and the vesicles\nbeloging to the neighboring cell from the vesicles mask.\n\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 7.4 Remove nucleus and vesicles from cytoplasm\nWe invert the average nucleus mask and multiply with each frame, followed\nby inverting the vesicles mask and frame-wise multiplication.\nRemember that all masks are filled with 0 and 1, thus 0*0 or 0*1 = 0,\nonly those regions, where both, in the cytoplasm mask and the inverted mask,\nthe value 1 is given, stay 1.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "inv_nucleus = ski.util.invert(nucleus_mask_avg)  # Invert nucleus_mask\n\ncytoplasm_wo_nucleus_list = []  # Apply nucleus mask on cytoplasm\nfor image in filled_frames:\n    input_img = cytoplasm_mask[image,:,:]\n    temp_cyto = input_img * inv_nucleus\n    cytoplasm_wo_nucleus_list.append(temp_cyto)\n\ncytoplasm_wo_nucleus = (np.array(cytoplasm_wo_nucleus_list, dtype=np.ubyte))\n\ninv_vesicles = ski.util.invert(vesicle_mask) - 254  # Invert vesicle_mask\n\ncytoplasm_wo_nucleus_vesicles = []  # Apply vesicle mask on cytoplasm_wo_nucleus\nfor image in filled_frames:\n    input_img = cytoplasm_wo_nucleus[image,:,:]\n    input_img_inv_vesicle = inv_vesicles[image,:,:]\n    temp_cyto2 = input_img * input_img_inv_vesicle\n    cytoplasm_wo_nucleus_vesicles.append(temp_cyto2)\n\n# Final cytoplasm mask:\nmask_cytoplasm = (np.array(cytoplasm_wo_nucleus_vesicles, dtype=np.ubyte))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### 7.5 Remove vesicles in nucleus regions and outside cell of interest\nHere, the same strategy as for the cleaned up cytoplasm is used.\nFirst vesicles inside the nucleus are removed, followed by those outside the \nmain cell by multiplying with inverted masks.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "vesicles_wo_nucleus_list = []  # Apply nucleus mask\nfor image in filled_frames:\n    input_img = vesicle_mask[image,:,:]\n    temp_vesicle = input_img * inv_nucleus\n    vesicles_wo_nucleus_list.append(temp_vesicle)\n\nvesicles_wo_nucleus = (np.array(vesicles_wo_nucleus_list, dtype=np.ubyte))\n\nvesicles_in_cytoplasm = []  # Apply cytoplasm mask on nucleus-free vesicles\nfor image in filled_frames:\n    input_img_vesicle = vesicles_wo_nucleus[image,:,:]\n    input_img_cytoplasm = cytoplasm_wo_nucleus[image,:,:]\n    temp_vesicle_in_cyto = input_img_vesicle * input_img_cytoplasm\n    vesicles_in_cytoplasm.append(temp_vesicle_in_cyto)\n\n# Final vesicles mask:\nmask_vesicles = (np.array(vesicles_in_cytoplasm, dtype=np.ubyte))\n\nfig, ax = plt.subplots(1, 3, sharex=False, sharey=False)\nim = ax[0].imshow(mask_cytoplasm[0])\nax[0].set_title('Cytoplasm mask (frame 0)')\nim = ax[1].imshow(mask_vesicles[0])\nax[1].set_title('Vesicle mask (frame 0)')\nim = ax[2].imshow(nucleus_mask_avg)\nax[2].set_title('Nucleus mask (avg over all frames)')\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## 8. Apply pixel classes for analysis\nApply generated masks to reconstruct green intensity decays\nNow we used the generated masks for our three regions of interest and\ngroup the pixels belonging to each class. This procedure is applied to \nevery individual frame. Then, based on the micro time information \nin each pixel the photon arrival time histogram can be reconstructed.\nHowever, first we ignore our masks and generate the mean arrival time \nimage summed over all frames.\nNext, the summed decays for all pixel and the three pixel classes are\ngenerated.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# generate decays for unmasked pixel\nn_frames, n_lines, n_pixel = clsm_green.shape\npseudo_mask = np.ones((n_frames, n_lines, n_pixel), dtype=np.uint8)\nkw = {\n    \"tttr_data\": tttr_data,\n    \"mask\": pseudo_mask,  # Here a mask filled with all 1 is used\n    \"tac_coarsening\": 8,  # binning of the micro times\n    \"stack_frames\": True  # TRUE = all frames are summed up\n}\ndecay_all = clsm_green.get_decay_of_pixels(**kw)\nsum_decay_all = decay_all.sum(axis=0)\n\n# Generate decay from masked pixels for cytoplasm, nucleus and vesicles\n# Caution: for nucleus only single average image mask was generated\n# \"multiply\" 400x to have a mask for each frame\nfinal_cytoplasm = np.zeros((n_frames, n_lines, n_pixel), dtype=np.uint8)\nfor i in filled_frames:\n    final_cytoplasm[i] = mask_cytoplasm[i]\nkw_cytoplasm = {\n    \"tttr_data\": tttr_data,\n    \"mask\": final_cytoplasm,  # cyotplasm mask\n    \"tac_coarsening\": 8,\n    \"stack_frames\": True\n}\ndecay_cytoplasm = clsm_green.get_decay_of_pixels(**kw_cytoplasm)\nsum_decay_cytoplasm = decay_cytoplasm.sum(axis=0)\n\nfinal_vesicles = np.zeros((n_frames, n_lines, n_pixel), dtype=np.uint8)\nfor i in filled_frames:\n    final_vesicles[i] = mask_vesicles[i]\nkw_vesicles = {\n    \"tttr_data\": tttr_data,\n    \"mask\": final_vesicles,  # vesicles mask\n    \"tac_coarsening\": 8,\n    \"stack_frames\": True\n}\ndecay_vesicles = clsm_green.get_decay_of_pixels(**kw_vesicles)\nsum_decay_vesicles = decay_vesicles.sum(axis=0)\n\n# Caution: for nucleus only single average image mask was generated\n# \"multiply\" 400x to have a mask for each frame\nnucleus_mask = np.zeros((n_frames, n_lines, n_pixel), dtype=np.uint8)\nfor i in range(n_frames):\n    nucleus_mask[i] = nucleus_mask_avg\nkw_nucleus = {\n    \"tttr_data\": tttr_data,\n    \"mask\": nucleus_mask,  # nucleus mask\n    \"tac_coarsening\": 8,\n    \"stack_frames\": True\n}\ndecay_nucleus = clsm_green.get_decay_of_pixels(**kw_nucleus)\nsum_decay_nucleus = decay_nucleus.sum(axis=0)\n\nfig, ax = plt.subplots(1, 1, sharex=False, sharey=False)\nax.semilogy(sum_decay_all, label='all pixel')\nax.semilogy(sum_decay_nucleus, label='Nucleus')\nax.semilogy(sum_decay_cytoplasm, label='Cytoplasm')\nax.semilogy(sum_decay_vesicles, label='Vesicles')\nax.legend()\nax.set(xlabel='TCSPC bin', ylabel='Counts',\n             title='Donor fluorescence intensity decay')\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,49 @@
+
+:orphan:
+
+.. _sphx_glr_auto_examples_microscopy_localization_sg_execution_times:
+
+
+Computation times
+=================
+**00:00.285** total execution time for 5 files **from auto_examples/microscopy_localization**:
+
+.. container::
+
+  .. raw:: html
+
+    <style scoped>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script type="text/javascript" class="init">
+    $(document).ready( function () {
+        $('table.sg-datatable').DataTable({order: [[1, 'desc']]});
+    } );
+    </script>
+
+  .. list-table::
+   :header-rows: 1
+   :class: table table-striped sg-datatable
+
+   * - Example
+     - Time
+     - Mem (MB)
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_enhanced_image_localizer.py` (``plot_enhanced_image_localizer.py``)
+     - 00:00.063
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_improved_image_localizer.py` (``plot_improved_image_localizer.py``)
+     - 00:00.060
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_basic_localization_test.py` (``plot_basic_localization_test.py``)
+     - 00:00.055
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_numpy_localization_wrapper.py` (``plot_numpy_localization_wrapper.py``)
+     - 00:00.055
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_microscopy_localization_plot_synthetic_bead_localization.py` (``plot_synthetic_bead_localization.py``)
+     - 00:00.052
+     - 0.0

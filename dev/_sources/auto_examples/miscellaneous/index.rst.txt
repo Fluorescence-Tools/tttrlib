@@ -1,0 +1,85 @@
+
+
+.. _sphx_glr_auto_examples_miscellaneous:
+
+
+Miscellaneous
+-------------
+
+Various utility examples such as 1D/2D histograms and performance benchmarks
+that support broader analysis workflows and development.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_2D_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_histogram_2D`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 2D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttrlib to offer more performance in direct comparison to general purpose routines for analysis methods as Photon Distribution Analysis (PDA) that make heady use of repeated histogram calculations.">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_1D_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_histogram_1D`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 1D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the tttrlib histogram routines outperform numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_benchmark_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_histogram_benchmark`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Benchmark of histogram routines</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/miscellaneous/plot_histogram_2D
+   /auto_examples/miscellaneous/plot_histogram_1D
+   /auto_examples/miscellaneous/plot_histogram_benchmark
+

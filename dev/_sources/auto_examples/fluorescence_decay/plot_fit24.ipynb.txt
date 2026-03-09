@@ -1,0 +1,32 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Bi-exponential model\n\n## fit24\n\nFit24 optimizes is a bi-exponential model function with two fluorescence lifetimes\n$ au_1$, $  au_2$, and amplitude of the second lifetime $a_2$,\nthe fraction scattered light $\\gamma$, and a constant offset to experimental\ndata. Fit24 does not describe anisotropy. The decays passed to the fit in the\n:term:`Jordi` format. The two decays in the Jordi array are both treated by the\nsame model function and convoluted with the corresponding\n:term:`instrument response function<IRF>`. The model function is\n\n.. :math:\n\n    M_i =(1-a_2) \\exp(i\\Delta t/        au_1) + a_2 \\exp(i\\Delta t/     au_2)\n\nwhere $\\Delta t$ is the time per micro time channel, $i$ is the micro time\nchannel number, $a_2$ is the fraction of the second species. The model function\nis corrected for the fraction of background and a constant offset.\n\n.. :math:\n\n    g_i =(1 - \\gamma) \frac{M_i}{\\sum_i M_i} + \\gamma \frac{B_i}{\\sum_i B_i} + c\n\nWhere,  $c$ is a constant offset, $B$ the background pattern, $M$\nthe model function and $\\gamma$ the fraction of scattered light.\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,133 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Reading of CLSM data\nIn laser scanning microscopy (LSM) with time-tagged time resolved (TTTR)\ndetection, the LSM image is stored in a stream of events. Events are either\nphotons or special events that can for instance mark the beginning of a\nnew frame, a new  line in laser scanning, or the end of a line.\n``tttrlib`` uses a special LSM container that maps the photon events in a\nTTTR stream to pixels in an image. When a LSM container is constructed the\nTTTR stream is read and the beginning and the end of a frame, line, and pixel\nare identified.\n\nA CLSM image container contains a list of frames. Each frame contains a list of\nlines and each line contains a list of pixel. Frames, lines, and pixels refer to\na photon index ranges in the TTTR data stream. When a new CLSMImage container\nis created the markers for frames and lines contained in the data stream are read.\nThere are usually no pixel markers. Markers are identified in the\ndata stream by numbers. There are no default identifier for frames and lines\n(see `auto_examples/flim/plot_marker.py`). Nevertheless, if no identifier\nfor markers are provided, either the default values for a particular setup are used,\nor meta-data contained in the TTTR file is read.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport pylab as plt\nfrom matplotlib.pyplot import imread\nimport tttrlib\nimport numpy as np\n\n# Determine data root from environment or fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The first step, when constructing a LSM image from TTTR data is to\nread the data contained in a TTTR file into a TTTR container.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "tttr_data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3'), 'HT3')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Next, a LSM image container is constructed. There are multiple options to\nencode markers for frames and lines in TTTR files. The default reading routine\nsupports PicoQuant marker encodings and data recorded on Zeiss microscopes.\n\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Default reading routine\nPTU and HT3 files provide additional information that can be used to interpret\nthe data in a TTTR file, ie, definitions for line and frame markers. Thus,\nmany files can be opened without explicitly specifying details on frame and line\nmarkers. LSM images (which are mappings from pixel to ranges in the event stream)\ncan be filled with photons after construction.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "channels = (0, 1)\nclsm_image = tttrlib.CLSMImage(tttr_data)\nclsm_image.fill(tttr_data, channels)\nplt.imshow(clsm_image.intensity.sum(axis=0))\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Alternatively, the images are filled with photons in a single step.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "clsm_image = tttrlib.CLSMImage(tttr_data, fill=True, channels=channels)\nplt.imshow(clsm_image.intensity.sum(axis=0))\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_path\n\n# In cases there are issues with the meta data (there are no official standards),\n# the frame and line markers can be explicitly specified.\ntttr_data = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/pq_ht3_clsm.ht3')), 'HT3')\n\nreading_parameter = {\n    \"tttr_data\": tttr_data,\n    \"marker_frame_start\": [4],\n    \"marker_line_start\": 1,\n    \"marker_line_stop\": 2,\n    \"marker_event_type\": 1,\n    \"n_pixel_per_line\": 256, # if zero n_pixel_per_line = n_lines\n    \"reading_routine\": 'default',\n    \"fill\": True,\n    \"channels\": channels,\n    \"skip_before_first_frame_marker\": True\n}\nclsm_image = tttrlib.CLSMImage(**reading_parameter)\nplt.imshow(clsm_image.intensity.sum(axis=0))\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Leica instruments\nLeica instruments use a non-default marker encoding and different\nmarker reading routines.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "sp5_filename = str(DATA_ROOT / 'imaging/leica/sp5/LSM_1.ptu')\nsp5_data = tttrlib.TTTR(sp5_filename, 'PTU')\nclsm_image = tttrlib.CLSMImage(\n    tttr_data=sp5_data,\n    channels=[0],\n    fill=True,\n    reading_routine='SP5'\n)\n\nplt.imshow(clsm_image.intensity.sum(axis=0))\nplt.show()\n\nsp8_filename = str(DATA_ROOT / 'imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')\ndata = tttrlib.TTTR(sp8_filename, 'PTU')\nclsm_image = tttrlib.CLSMImage(\n    tttr_data=data,\n    channels=[1],\n    fill=True,\n    reading_routine='SP8'\n)\nplt.imshow(clsm_image.intensity.sum(axis=0))\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

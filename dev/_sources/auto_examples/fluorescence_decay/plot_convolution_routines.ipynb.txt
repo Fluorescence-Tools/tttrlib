@@ -1,0 +1,79 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Convolution routines\n\n## Overview\n\nIn ``tttrlib`` there are a set of different convolution routines that can be used to compute\nfluorescence decays. Most fluorescence decays are linear combinations of exponential\ndecays. Convolutions of such fluorescence decays with instrument response functions\ncan be computed using the routines (fconv, fconv_per, fconv_per_cs, etc.). Here,\nfconv stands for fast convolution.\n\nFor faster convolutions ``tttrlib`` provides routines that make use of\nSIMD (Single Instruction Multiple Data). The SIMD routines use of the AVX2 extension\n(Advanced Vector Extension). For instance, the routines ``fconv`` and ``fconv_per``\n(periodic convolution) have corresponding SIMD routines named ``fconv_avx``and\n``fconv_per_avx``. The SIMD routines compute in parallel the decay in cases\nthe decay is compose of more than a single fluorescence lifetime.\n\nThe SIMD AVX make use of AVX2 and FMA (Fused Multiply Add). AVX2 and FMA require\nCPUs with 'modern' instruction sets. Most x86 CPUs that were manufacture since\n2012 are supported.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from __future__ import annotations\nimport tttrlib\nimport scipy.stats\nimport time\nimport numpy as np\nimport pylab as p"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Illustrate the different convolution methods for a computed instrument response function (IRF).\nExcitation period, i.e., the time between two subsequent excitation pulses\nNumber of micro time channels (usually, linear spacing of micro time channels)\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "period = 16\nn_channels = 4505\nirf_position = 4.0\nirf_width = 0.25\ntime_axis = np.linspace(0, period, n_channels)\nirf = scipy.stats.norm.pdf(time_axis, loc=irf_position, scale=irf_width)\n\ndt = time_axis[1]-time_axis[0]\nlifetime_spectrum = np.array([1., 4, 1., 0.4] * 4)\nmodel = np.zeros_like(irf)\nstop = len(irf)\nstart = 0"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "+-----------------------------------------+-----------------+\n| Convolution method                      | function name   |\n+=========================================+=================+\n|Fast convolution                         |fconv            |\n+-----------------------------------------+-----------------+\n|Fast periodic convolution                |fconv_per        |\n+-----------------------------------------+-----------------+\n|Fast convolution (AVX)                   |fconv_avx        |\n+-----------------------------------------+-----------------+\n|Fast periodic convolution (AVX)          |fconv_per_avx    |\n+-----------------------------------------+-----------------+\n|Fast periodic convolution (with stop)    |fconv_per_cs     |\n+-----------------------------------------+-----------------+\n|Fast convolution with reference compound |fconv_ref        |\n+-----------------------------------------+-----------------+\n|Convolution of decay curve and IRF       |sconv            |\n+-----------------------------------------+-----------------+\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "n_runs = 50\ntimes = list()\ntimes_avx = list()\nnames = [\"fconv\", \"fconv_per\"]\nt_start = time.perf_counter()\nfor _ in range(n_runs):\n    tttrlib.fconv(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)\nex = time.perf_counter() - t_start\ntimes.append(ex)\n\nt_start = time.perf_counter()\nfor _ in range(n_runs):\n    tttrlib.fconv_avx(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)\nex = time.perf_counter() - t_start\ntimes_avx.append(ex)\n\nt_start = time.perf_counter()  # in seconds\nfor _ in range(n_runs):\n    tttrlib.fconv_per(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)\nex = time.perf_counter() - t_start\ntimes.append(ex)\n\nt_start = time.perf_counter()\nfor _ in range(n_runs):\n    tttrlib.fconv_per_avx(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)\nex = time.perf_counter() - t_start\ntimes_avx.append(ex)\n\ntimes = np.array(times) * 1000.0 / n_runs\ntimes_avx = np.array(times_avx) * 1000.0 / n_runs\n\n\n# make plots\n##################\nfig, ax = p.subplots(nrows=1, ncols=2, sharex=False)\n\nax[0].set_title('Convolution routines')\nax[0].set_ylabel('counts')\nax[0].set_xlabel('channels')\n\nmodel = np.zeros_like(irf)\ntttrlib.fconv(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)\nax[0].semilogy(model, label=\"fconv\")\n\nmodel_avx = np.zeros_like(irf)\ntttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)\nax[0].semilogy(model, label=\"fconv_avx\")\n\nmodel = np.zeros_like(irf)\ntttrlib.fconv_per(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)\nax[0].semilogy(model, label=\"fconv_per\")\n\nmodel = np.zeros_like(irf)\ntttrlib.fconv_per_avx(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)\nax[0].semilogy(model, label=\"fconv_per_avx\")\nax[0].legend()\n\n# Benchmark\nax[1].set_title('Benchmark')\nax[1].set_ylabel('ms / evaluation')\n\nind = np.arange(len(times))  # the x locations for the groups\nax[1].set_title('Time per call')\nax[1].set_xticks(ind)\nax[1].set_xticklabels(names)\n\nwidth = 0.35\nax[1].bar(ind, times_avx, width, color='y', label='AVX')\nax[1].bar(ind + width, times, width, color='r', label='default')\nax[1].legend()\n\np.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

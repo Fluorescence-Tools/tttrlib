@@ -1,0 +1,115 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Phasor analysis of images\n\n## Introduction\nChanging the data representation from the classical time delay\nhistogram to the phasor representation provides a global view\nof the fluorescence decay at each pixel of an image. In the phasor\nrepresentation we can easily recognize the presence of different\nmolecular species in a pixel or the occurrence of fluorescence\nresonance energy transfer. The analysis of the fluorescence lifetime\nimaging microscopy (FLIM) data in the phasor space is done observing\nclustering of pixels values in specific regions of the phasor plot rather\nthan by fitting the fluorescence decay using exponentials. The\nanalysis is instantaneous since is not based on calculations or nonlinear\nfitting. The phasor approach has the potential to simplify the way data\nare analyzed in FLIM, paving the way for the analysis of large data sets\nand, in general, making the FLIM technique accessible to the nonexpert\nin spectroscopy and data analysis :cite:`DIGMAN2008L14`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from __future__ import print_function\nimport tttrlib\n\nimport pylab as plt\nimport numpy as np"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Read data of the CLSM image\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')\n# Macro time in header missing\nht3_reading_parameter = {\n    \"marker_frame_start\": [4],\n    \"marker_line_start\": 1,\n    \"marker_line_stop\": 2,\n    \"marker_event_type\": 1,\n    \"n_pixel_per_line\": 256,\n    \"reading_routine\": 'default',\n    \"channels\": [0, 1],\n    \"fill\": True,\n    \"tttr_data\": data,\n    \"skip_before_first_frame_marker\": True\n}\nimage = tttrlib.CLSMImage(**ht3_reading_parameter)\n\nstack_frames = True\nminimum_number_of_photons = 60\n\n# No IRF correction\nphasor = image.get_phasor(\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "ssas\nIRF correction\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "data_mirror = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3')\ndata_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]\nphasor = image.get_phasor(\n    tttr_irf=data_irf,\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_2, phasor_y_1d_2 = phasor_1d.T[0], phasor_1d.T[1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Plot histogram of pixels phasors\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "hist_settings = {\n    'bins': 101,\n    'range': ((0, 1), (0, 0.6)),\n    'cmap': 'inferno'\n}\ncircle_settings = {\n    \"xy\": (0.5, 0),\n    \"radius\": 0.5,\n    \"linewidth\": 1.5,\n    \"fill\": False,\n    \"color\": 'w'\n}\n\nfig, ax = plt.subplots(nrows=2, ncols=3)\nax[0, 2].set(xlim=(0, 1), ylim=(0, 0.6))\nax[0, 2].hist2d(phasor_x_1d_1, phasor_y_1d_1, **hist_settings)\nax[0, 0].imshow(phasor_x[0, :, :])\nax[0, 1].imshow(phasor_y[0, :, :])\nax[1, 2].set(xlim=(0, 1), ylim=(0, 0.6))\nax[1, 2].hist2d(phasor_x_1d_2, phasor_y_1d_2, **hist_settings)\nax[1, 0].imshow(phasor_x[0, :, :])\nax[1, 1].imshow(phasor_y[0, :, :])\n\na_circle = plt.Circle(**circle_settings)\nax[1, 2].add_artist(a_circle)\na_circle = plt.Circle(**circle_settings)\nax[0, 2].add_artist(a_circle)\n\nax[0, 2].set_title('No IRF correction')\nax[1, 2].set_title('IRF correction')\n\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The both phasor values can be inspected by mapping them to\ncolors.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "phasor_clr = np.zeros((phasor.shape[1], phasor.shape[2], 3))\nphasor_xc = np.clip(phasor_x * 0.59, 0, 1)\nphasor_yc = np.clip(phasor_y * 1.45, 0, 1)\nphasor_clr[:, :, 0] = phasor_xc\nphasor_clr[:, :, 1] = phasor_yc\nplt.imshow(phasor_clr, vmin=0.6, vmax=0.8)\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

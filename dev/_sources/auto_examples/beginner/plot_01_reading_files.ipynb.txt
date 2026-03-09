@@ -1,0 +1,133 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Basic Example 1: Reading TTTR data\nThis example mirrors the unit-test data resolution logic and expects the\ndemo PTU files to be available. Set ``TTTRLIB_DATA`` to the directory containing\nthe reference data (see ``test/test_settings.py``) before building the docs. It\nshows how to open a TTTR object, inspect its contents, and visualize a few\nbasic properties.\n\n# Notes\n- This script is Sphinx-Gallery friendly: it does not call ``plt.show()`` and\n  will render figures with a non-interactive backend during doc builds.\n- If the demo file cannot be located, a clear error is raised with a helpful hint.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from __future__ import annotations\n\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport tttrlib\nfrom examples._example_data import get_data_path"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Open a TTTR data set ---------------------------------------------------------\nThe helper below returns the path to the demo PTU file. In real experiments\nyou would read a file instead, e.g. ``tttrlib.TTTR('measurement.ptu')``.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "try:\n    data_path = get_data_path(\"pq/ptu/pq_ptu_hh_t3.ptu\")\nexcept FileNotFoundError as e:\n    raise SystemExit(\n        \"Demo data not found. Set the environment variable TTTRLIB_DATA to the \"\n        \"directory with the reference data or adjust test/settings.json.\"\n    ) from e\n\ntttr = tttrlib.TTTR(str(data_path), \"PTU\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Inspect the TTTR data --------------------------------------------------------\nMacro times give the coarse arrival time (laser repetition periods).\nMicro times resolve the fine delay within the current laser period.\nRouting channels record which detector/input registered the event.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "num_events = len(tttr)\nmacro = np.asarray(tttr.macro_times, dtype=np.int64)   # shape: (N,)\nmicro = np.asarray(tttr.micro_times, dtype=np.int32)   # shape: (N,)\nrouting = np.asarray(tttr.routing_channels, dtype=np.int32)  # shape: (N,)\n\nprint(f\"Number of events: {num_events}\")\nprint(f\"First 10 macro times: {macro[:10]}\")\nprint(f\"First 10 channels: {routing[:10]}\")\n\nif num_events == 0:\n    raise SystemExit(\"The selected TTTR file contains no events.\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Routing-channel histogram ----------------------------------------------------\nEnsure the example produces plot output so Sphinx-Gallery keeps it.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "ch_min = int(routing.min())\nch_max = int(routing.max())\n# Centered integer bins: [..., k-0.5, k+0.5, ...]\nbin_edges = np.arange(ch_min - 0.5, ch_max + 1.5, 1.0)\n\nfig, ax = plt.subplots(figsize=(4, 2.6))\nax.hist(routing, bins=bin_edges)\nax.set_xlabel(\"Routing channel\")\nax.set_ylabel(\"Counts\")\nax.set_title(\"TTTR routing channels\")\nax.set_xticks(np.arange(ch_min, ch_max + 1))\nfig.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "First 100 micro-times (illustrative) -----------------------------------------\nThe macro time typically increases ~linearly with the event index. For readability,\nplot a short slice of the micro-time sequence.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "sample_size = min(100, micro.size)\nfig_sample, ax_sample = plt.subplots(figsize=(4, 2.6))\nax_sample.plot(np.arange(sample_size), micro[:sample_size], marker=\"o\", linestyle=\"-\")\nax_sample.set_xlabel(\"Event index\")\nax_sample.set_ylabel(\"Micro time (clock ticks)\")\nax_sample.set_title(f\"First {sample_size} micro times\")\nfig_sample.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Micro-time distributions per routing channel --------------------------------\nThis reveals fluorescence decay characteristics recorded by each detector channel.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "unique_channels = np.unique(routing)\nmt_min = int(micro.min())\nmt_max = int(micro.max())\n# Use fixed-width bins over the observed micro-time span (inclusive on the right)\nbins = np.linspace(mt_min, mt_max, 51) if mt_max > mt_min else np.array([mt_min - 0.5, mt_max + 0.5])\n\nfig2, axes = plt.subplots(\n    nrows=unique_channels.size,\n    ncols=1,\n    figsize=(4, 2.0 + 1.4 * max(unique_channels.size - 1, 0)),\n    sharex=True,\n)\naxes = np.atleast_1d(axes)\n\nfor ax_i, ch in zip(axes, unique_channels):\n    mask = (routing == ch)\n    ax_i.hist(micro[mask], bins=bins, alpha=0.85)\n    ax_i.set_ylabel(f\"ch {ch}\")\n\naxes[-1].set_xlabel(\"Micro time (clock ticks)\")\naxes[0].set_title(\"Micro-time distributions per channel\")\nfig2.tight_layout()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

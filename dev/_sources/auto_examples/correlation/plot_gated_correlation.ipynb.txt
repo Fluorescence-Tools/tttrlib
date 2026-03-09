@@ -1,0 +1,205 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Micro time gated correlation\n\nThe background in the fluorescence intensity traces affects the computed\nfluorescence correlation functions. In single-molecule spectroscopy the\nbackground is mainly caused by scattered light. Thus, by discriminating\nphotons with small micro times a large fraction of the background can be eliminated.\n\nNote, the example that used the micro times of the detected photons to gate\naway the scattered light fraction in a single-molecule experiment can be easily\nmodified to correlate the prompt and the delayed excitation in a pulsed\ninterleaved excitation experiment.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import matplotlib.pylab as plt\nimport tttrlib\nimport numpy as np"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "First, the TTTR data is read into a new container. The TTTR data\nin the example is a multiparameter fluorescence detection data\nwith two green and two red detectors for polarization resolved\nfluorescence detection.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Here, we compute the cross correlation function between the parallel (P)\nand the perpendicular (S) green detection channels. We first find\nthe indices of the respective channels. In the example the channel\nnumbers of the green parallel and perpendicular detection are 0 and 8.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "ch1_indices = data.get_selection_by_channel([0])\nch2_indices = data.get_selection_by_channel([8])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "For illustrating the scattered light, we create histogram of micro times\nand define a lower bound to mask photons.\nHere, ``n_lower`` is set based on the micro time histograms, i.e. only bins with\nsignificant amount of fluorescence photons are used.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "n_micro = data.header.number_of_micro_time_channels\nx_hist = np.arange(n_micro)\ny_hist_0 = np.bincount(data.micro_times[ch1_indices], minlength=n_micro)\ny_hist_8 = np.bincount(data.micro_times[ch2_indices], minlength=n_micro)\nn_lower = 1200  # n_lower will be used below in the actual correlation calculation"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Next, we create a new correlator and set the numbers of bin and correlation\ncascades of the multi-tau correlation algorithm. The parameters\n``B`` and ``n_casc`` are the number of correlation channels and the number\nof coarsening steps. For each coarsening step ``B`` correlation amplitudes are\ncomputed. Setting these parameters is optional. If they are not defined a\nset of default parameters is used.\n\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "correlator = tttrlib.Correlator()\nB = 9\nn_casc = 25\ncorrelator.n_bins = B\ncorrelator.n_casc = n_casc"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The correlator contains a correlation curve that is updated when the correlator\ncontent is marked as invalid, e.g., when the inputs are changed. The curve has\na settings (CorrelatorSettings class) attribute that stores the time\nresolution (used to calibrate the correlation curve). Here, we use a more \"manual\"\napproach to compute correlations. Hence, we provide the resolution by hand. In most\ncases, the resolution is read from the TTTR container.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "correlator.curve.settings.macro_time_duration = data.header.macro_time_resolution"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Next, we assign the macro times to the correlator with their respective\nweights. In a normal correlation all photons have equal weights.\nWe get the macrotimes and set the weights, the weights will = 1, i.e.\nno weighting will be used\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "t = data.macro_times\nt1 = t[ch1_indices]\nw1 = np.ones_like(t1, dtype=np.float64)\nt2 = t[ch2_indices]\nw2 = np.ones_like(t2, dtype=np.float64)\ncorrelator.set_events(t1, w1, t2, w2)\n\nx_raw = correlator.x_axis\ny_raw = correlator.correlation"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Now, we compute a correlation function where we want to discriminate\nphotons that have a small micro time. For that, we set the weight of\nphotons with a micro time is smaller than n_lower to zero.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "t = data.get_macro_times()\nmt = data.get_micro_times()\nt1 = t[ch1_indices]\nmt1 = mt[ch1_indices]\nw1 = np.ones_like(t1, dtype=np.float64)\nw1[np.where(mt1 < n_lower)] *= 0.0"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Mask also the data for ch2 using the microtime information. We mask values by\nsetting the weights where the micro time is smaller than 1500\nto zero and masks the photons, i.e. this corresponds to only taking\nthe green photon emitted in the \"delay\" tine window of the PIE experiment\ninto account for the correlation\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "t2 = t[ch2_indices]\nmt2 = mt[ch2_indices]\nw2 = np.ones_like(t2, dtype=np.float64)\nw2[np.where(mt2 < n_lower)] *= 0.0\n\ncorrelator.set_events(t1, w1, t2, w2)\nx_gated = correlator.x_axis\ny_gated = correlator.correlation"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The correlation amplitude of the correlation curve computed for all\nphotons is lower than the correlation amplitude computed for photons\nwith a larger micro time.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "fig, ax = plt.subplots(1, 2)\nax[0].set_title('Micro time histogram')\nax[0].axvspan(n_lower, n_micro, color='red', alpha=0.1)\nax[0].semilogy(x_hist, y_hist_0, label=\"Gs\", color=\"green\", alpha=0.5)\nax[0].semilogy(x_hist, y_hist_8, label=\"Gp\", color=\"yellow\", alpha=0.5)\nax[0].set_xlabel('micro time channel')\nax[0].set_ylabel('counts')\nax[0].legend()\nax[1].semilogx(x_raw * 1000, y_raw, label=\"Gp/Gs, raw\")\nax[1].set_title('RAW correlations')\nax[1].set_xlabel('corr. time (ms)')\nax[1].set_ylabel('Correlation Amplitude')\nax[1].semilogx(x_gated * 1000, y_gated, label=\"Gp/Gs, gated\", color='red')\nax[1].set_xlabel('corr. time (ms)')\nax[1].set_title('Correlation functions')\nax[1].legend()\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

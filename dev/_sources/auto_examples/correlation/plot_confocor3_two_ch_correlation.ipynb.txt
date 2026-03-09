@@ -1,0 +1,187 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Confocor3 two channel cross-correlation\n\nThe raw FCS data format of the Zeiss Confocor3 is relatively simple.\nZeiss Confocor3 raw files store time-difference between photons.\nA relatively small header is followed by a set of 32-bit integers that\ncontain the time difference to the previous registered photon. Photons\nregistered by different channels are stored in separate files.\n\nIn this example two raw files of a Confocor3 are read and merged into\na single photon stream. Next, the merged photon stream is used to compute\nthe cross-correlation between the two channels.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import pathlib\nimport numpy as np\n\nimport pylab as plt\nimport tttrlib"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Reading data\nThe photon data registered by different detectors are saved in separate files.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_root\n# Read the data of all channels that should be correlated into separate containers.\nfns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])\n\ntttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "We combine the data in different files into a single TTTR container using the header\nof first file as template.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = tttr_data[0].header\nchannels = [t.routing_channels[0] for t in tttr_data]\nprint(\"Used channels:\", channels)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "You can check the count rates of the channels using the macro time resolution contained\nin the header\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "macro_time_resolution = header.macro_time_resolution\ncount_rates = [len(t) / (t.macro_times[-1] * macro_time_resolution) for t in tttr_data]\nprint(\"Count rates:\", count_rates)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Now we merge the data of the two detectors in a single container. The\nmarco times need to be sorted first.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "macro_times = np.concatenate([t.macro_times for t in tttr_data])\nrouting_channels = np.concatenate([t.routing_channels for t in tttr_data])\nsorted_indices = np.argsort(macro_times, kind='stable')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Using the sorted macro times we sort the routing channel numbers\nand the macro times.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "routing_channels = routing_channels[sorted_indices]\nmacro_times = macro_times[sorted_indices]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Note: no micro time and no event type in the raw Confocor3 format.\nThus, we use ones for the micro time and the event type.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "micro_times = np.ones_like(macro_times, dtype=np.uint16)\nevent_types = np.ones_like(macro_times, dtype=np.int8)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Using the merged marcro times and channel numbers, we create a new\nTTTR container.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "tttr_merged = tttrlib.TTTR()\ntttr_merged.set_header(header)\ntttr_merged.append_events(\n    macro_times=macro_times,\n    micro_times=micro_times,\n    routing_channels=routing_channels,\n    event_types=event_types\n)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The container can be used for standard analysis, e.g., correlations.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "settings = {\n    \"n_bins\": 9,  # n_bins and n_casc defines the settings of the multi-tau\n    \"n_casc\": 19,  # correlation algorithm\n}\n\n# Create correlator\n# Caution: x-axis in units of macro time counter\n# tttrlib.Correlator is unaware of the calibration in the TTTR object\ncorrelator = tttrlib.Correlator(\n    channels=([1], [2]),\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=\"Corr(1,2)\"\n)\n\ncorrelator = tttrlib.Correlator(\n    channels=([1], [1]),\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=\"Corr(1,1)\"\n)\n\ncorrelator = tttrlib.Correlator(\n    channels=([2], [2]),\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=\"Corr(2,2)\"\n)\n\nplt.ylim(0.98, 1.30)\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

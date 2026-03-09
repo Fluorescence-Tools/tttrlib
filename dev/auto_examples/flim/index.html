@@ -1,0 +1,584 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Fluorescence lifetime imaging" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/flim/index.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Examples showing lifetime image generation, phasor analysis, moment analysis, segmentation-driven decays, and common image operations. Intensity image Image cropping Image rebinning Marker in Scann..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_flim_index_6c8d99f9.png" />
+<meta property="og:image:alt" content="Examples showing lifetime image generation, phasor analysis, moment analysis, segmentation-driven decays, and common image operations. Intensity image Image cropping Image rebinning Marker in Scann..." />
+<meta name="description" content="Examples showing lifetime image generation, phasor analysis, moment analysis, segmentation-driven decays, and common image operations. Intensity image Image cropping Image rebinning Marker in Scann..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Fluorescence lifetime imaging &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/flim/index';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Intensity image" href="plot_intensity_image.html" />
+    <link rel="prev" title="Count rate filtered correlation" href="../correlation/plot_correlation_cr_filter.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">1. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">2. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/decay.html">2.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/fcs.html">2.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">2.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">3. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">3.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">4. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">5. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">6. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/flim/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fluorescence lifetime imaging</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fluorescence-lifetime-imaging">
+<span id="flim-examples"></span><span id="sphx-glr-auto-examples-flim"></span><h1>Fluorescence lifetime imaging<a class="headerlink" href="#fluorescence-lifetime-imaging" title="Link to this heading">#</a></h1>
+<p>Examples showing lifetime image generation, phasor analysis, moment analysis,
+segmentation-driven decays, and common image operations.</p>
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Intensity image"><img alt="" src="../../_images/sphx_glr_plot_intensity_image_thumb.png" />
+<p><a class="reference internal" href="plot_intensity_image.html"><span class="doc">Intensity image</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Intensity image</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Image cropping"><img alt="" src="../../_images/sphx_glr_plot_crop_thumb.png" />
+<p><a class="reference internal" href="plot_crop.html"><span class="doc">Image cropping</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image cropping</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Image rebinning"><img alt="" src="../../_images/sphx_glr_plot_rebin_thumb.png" />
+<p><a class="reference internal" href="plot_rebin.html"><span class="doc">Image rebinning</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image rebinning</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Marker in Scanning microscopy"><img alt="" src="../../_images/sphx_glr_plot_marker_thumb.png" />
+<p><a class="reference internal" href="plot_marker.html"><span class="doc">Marker in Scanning microscopy</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Marker in Scanning microscopy</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../../_images/sphx_glr_plot_lifetime_moments_thumb.png" />
+<p><a class="reference internal" href="plot_lifetime_moments.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a transformed images  cannot be used for advanced data analyis such as image correlation. Try to plan your experiment optimally  and aquire the data as needed (pixel dwell times, laser power, etc.). "><img alt="" src="../../_images/sphx_glr_plot_transform_thumb.png" />
+<p><a class="reference internal" href="plot_transform.html"><span class="doc">Image transform</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image transform</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../../_images/sphx_glr_plot_mean_lifetime_thumb.png" />
+<p><a class="reference internal" href="plot_mean_lifetime.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks"><img alt="" src="../../_images/sphx_glr_plot_pixel_masks_thumb.png" />
+<p><a class="reference internal" href="plot_pixel_masks.html"><span class="doc">Using Pixel masks</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Using Pixel masks</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images"><img alt="" src="../../_images/sphx_glr_plot_lifetime_moments_bg_thumb.png" />
+<p><a class="reference internal" href="plot_lifetime_moments_bg.html"><span class="doc">Mean lifetime images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see auto_examples/flim/plot_marker.py). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read."><img alt="" src="../../_images/sphx_glr_plot_read_clsm_data_thumb.png" />
+<p><a class="reference internal" href="plot_read_clsm_data.html"><span class="doc">Reading of CLSM data</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis"><img alt="" src="../../_images/sphx_glr_plot_mle_lifetime_thumb.png" />
+<p><a class="reference internal" href="plot_mle_lifetime.html"><span class="doc">Lifetime analysis</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Lifetime analysis</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Changing the data representation from the classical time delay histogram to the phasor representation provides a global view of the fluorescence decay at each pixel of an image. In the phasor representation we can easily recognize the presence of different molecular species in a pixel or the occurrence of fluorescence resonance energy transfer. The analysis of the fluorescence lifetime imaging microscopy (FLIM) data in the phasor space is done observing clustering of pixels values in specific regions of the phasor plot rather than by fitting the fluorescence decay using exponentials. The analysis is instantaneous since is not based on calculations or nonlinear fitting. The phasor approach has the potential to simplify the way data are analyzed in FLIM, paving the way for the analysis of large data sets and, in general, making the FLIM technique accessible to the nonexpert in spectroscopy and data analysis DIGMAN2008L14."><img alt="" src="../../_images/sphx_glr_plot_phasor_thumb.png" />
+<p><a class="reference internal" href="plot_phasor.html"><span class="doc">Phasor analysis of images</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Phasor analysis of images</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions."><img alt="" src="../../_images/sphx_glr_plot_tutorial_python_thumb.png" />
+<p><a class="reference internal" href="plot_tutorial_python.html"><span class="doc">Tutorial: Image construction</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Tutorial: Image construction</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Overview -------- Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE)."><img alt="" src="../../_images/sphx_glr_plot_flim_pie_thumb.png" />
+<p><a class="reference internal" href="plot_flim_pie.html"><span class="doc">FLIM-PIE</span></a></p>
+  <div class="sphx-glr-thumbnail-title">FLIM-PIE</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Here, few examples visualize typical mappings from photon groups to representations that can be visualized in an image. In this example data of a pulsed interleaved (PIE) multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer (FRET) experiment is processed. The FRET sample contained a donor, D, and an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:"><img alt="" src="../../_images/sphx_glr_plot_imaging_representations_thumb.png" />
+<p><a class="reference internal" href="plot_imaging_representations.html"><span class="doc">TTTR Image representations</span></a></p>
+  <div class="sphx-glr-thumbnail-title">TTTR Image representations</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="    1. Data Loading     2. Create CLSM image container     3. Pulsed interleaved excitation     4. Intensity imaging     5. Micro time imaging     6. Define pixel classes by image segmentation     7. Apply pixel classes for analysis"><img alt="" src="../../_images/sphx_glr_plot_segmentation_based_decays_thumb.png" />
+<p><a class="reference internal" href="plot_segmentation_based_decays.html"><span class="doc">Image-based segmentation of FLIM data</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Image-based segmentation of FLIM data</div>
+</div></div><div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../correlation/plot_correlation_cr_filter.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Count rate filtered correlation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_intensity_image.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Intensity image</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/flim/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

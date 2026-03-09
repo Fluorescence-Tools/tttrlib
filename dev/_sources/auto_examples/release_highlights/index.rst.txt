@@ -1,0 +1,67 @@
+
+
+.. _sphx_glr_auto_examples_release_highlights:
+
+.. _release_highlights_examples:
+
+Release Highlights
+------------------
+
+Short, visual examples that showcase new features and improvements introduced
+in recent tttrlib releases. Start here to see what's new at a glance.
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.24, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all the changes, please refer to the release notes &lt;changes_0_20&gt;.">
+
+.. only:: html
+
+  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_24_0_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/release_highlights/plot_release_highlights_0_24_0`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.24</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.20, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all the changes, please refer to the release notes &lt;changes_0_20&gt;.">
+
+.. only:: html
+
+  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_20_0_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/release_highlights/plot_release_highlights_0_20_0`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.23</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/release_highlights/plot_release_highlights_0_24_0
+   /auto_examples/release_highlights/plot_release_highlights_0_20_0
+

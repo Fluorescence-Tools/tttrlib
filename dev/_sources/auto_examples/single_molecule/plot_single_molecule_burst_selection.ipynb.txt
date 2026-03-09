@@ -1,0 +1,115 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Burst selection routines\nThe function ``tttrlib.ranges_by_time_window`` can be used to define ranges in\na photon stream based on time windows and a minimum number of photons within\nthe time windows. The function has two main parameters that determine the\nselection of the ranges besides the stream of time events provided by the\nparameter ``time``:\n\n    1. The minimum window length ``minimum_window_length``\n    2. The minimum number of photons in a time window ``minimum_number_of_photons_in_time_window``\n\nAdditional parameters to discriminate bursts are:\n\n    3. The maximum allowed window length ``maximum_window_length``\n    4. The maximum number of events in a window ``maximum_number_of_photons_in_time_window``\n\nThe parameters of the C function and the function header are shown below\n\n.. code:: c\n\n    void ranges_by_time_window(\n            int **output, int *n_output,\n            unsigned long long *input, int n_input,\n            double minimum_window_length,\n            double maximum_window_length=-1,\n            int minimum_number_of_photons_in_time_window=-1,\n            int maximum_number_of_photons_in_time_window=-1,\n            double macro_time_calibration=1.0,\n            bool invert=false\n    )\n\nThe units of the macro time are defined by the parameter ``macro_time_calibration``.\n\nFor a given TTTR object the functionality is provided by the method\n``TTTR.get_time_window_ranges``. A typical use case of this function is\nto select single molecule events confocal single-molecule FRET experiments as\nshown below.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import os\nfrom pathlib import Path\nimport numpy as np\nimport tttrlib\nimport pylab as plt\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n\n\ndef save_burst_id(\n        fn: str,\n        start_stop: np.ndarray\n):\n    with open(fn, \"w\") as fp:\n        for start, stop in start_stop:\n            fp.write(\"%i\\t%i\\n\" % (start, stop))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "This selects ranges in the event stream with a length of at least 250 microseconds\nwith that with at least 20 events. This selection will select \"bright\" regions in\nthe event stream.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "minimum_window_length = 2e-3 # 2 millisecond\nmaximum_window_length = 30e-3 # 30 millisecond / optional parameter\ntw_ranges = data.get_time_window_ranges(\n    minimum_window_length=minimum_window_length,\n    maximum_window_length=maximum_window_length,\n    minimum_number_of_photons_in_time_window=40\n)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The method returns an array of indices that mark the start and the stop of the\ntime window in the TTTR events (start1, stop1, start2, stop2, ...).\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "start_stop = tw_ranges.reshape([len(tw_ranges) // 2, 2])\nsel = list()\nfor start, stop in start_stop:\n    sel += range(start, stop)\nsel = np.array(sel)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Select the \"green\" donor and the \"red\" acceptor events separately for plotting and\ncompute intensity traces The selection is plotted in blue.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "green_indices = data.get_selection_by_channel([0, 8])\nred_indices = data.get_selection_by_channel([1, 9])\n\nintensity_trace_green = data[green_indices].get_intensity_trace(maximum_window_length)\nintensity_trace_red = data[red_indices].get_intensity_trace(maximum_window_length)\nbursts_selected = data[sel].get_intensity_trace(maximum_window_length)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Save the traces to files\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "# folder = \"S:/Papers/00_in_preparation/tttrlib/Figures/Fig1_Introduction/\"\n# np.savetxt(folder + \"red_trace.txt\", intensity_trace_red)\n# np.savetxt(folder + \"green_trace.txt\", intensity_trace_green)\n# np.savetxt(folder + \"bursts_selected.txt\", bursts_selected)\n\nfig, ax = plt.subplots(3, sharex=True, sharey=False)\nplt.setp(ax[0].get_xticklabels(), visible=False)\n\nax[0].plot(intensity_trace_green, 'g')\nax[1].plot(intensity_trace_red, 'r')\nax[1].invert_yaxis()\n\nax[2].plot(intensity_trace_green, 'g')\nax[2].plot(intensity_trace_red, 'r')\nax[2].plot(bursts_selected, 'b')\n\nplt.subplots_adjust(\n    left=None, bottom=None, right=None, top=None,\n    wspace=None, hspace=0\n)\n\nplt.show()"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

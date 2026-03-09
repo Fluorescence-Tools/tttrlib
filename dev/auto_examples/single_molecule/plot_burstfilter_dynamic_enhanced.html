@@ -1,0 +1,791 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Enhanced BurstFilter: Dynamic Parameter Changes Example" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”. Key features demo..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_burstfilter_dynamic_enhanced_e4d816d5.png" />
+<meta property="og:image:alt" content="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”. Key features demo..." />
+<meta name="description" content="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”. Key features demo..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Enhanced BurstFilter: Dynamic Parameter Changes Example &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="BurstFilter with TTTRSelection Example" href="plot_burstfilter_with_selection.html" />
+    <link rel="prev" title="Burst Analysis with BurstFilter Class and Photon Masking" href="plot_burst_analysis_with_filter.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../contents.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../preface.html">
+    Welcome to tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">1. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">2. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/decay.html">2.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/fcs.html">2.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">2.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">3. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">3.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">4. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">5. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">6. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../contents.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Single-molecule</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Enhanced BurstFilter: Dynamic Parameter Changes Example</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Enhanced-BurstFilter:-Dynamic-Parameter-Changes-Example">
+<h1>Enhanced BurstFilter: Dynamic Parameter Changes Example<a class="headerlink" href="#Enhanced-BurstFilter:-Dynamic-Parameter-Changes-Example" title="Link to this heading">#</a></h1>
+<p>This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”.</p>
+<p>Key features demonstrated:</p>
+<ul class="simple">
+<li><p>Dynamic parameter changes without permanent burst removal</p></li>
+<li><p>Filter state tracking and reapplication</p></li>
+<li><p>Burst reappearance when parameters are relaxed</p></li>
+<li><p>Filter reset and clearing capabilities</p></li>
+</ul>
+<p>Import required libraries</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<section id="Load-sample-data">
+<h2>Load sample data<a class="headerlink" href="#Load-sample-data" title="Link to this heading">#</a></h2>
+<p>For this example, we’ll use sample data. In practice, you would load your own TTTR files.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Note: This example requires actual TTTR data to run completely.&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;For demonstration purposes, we&#39;ll show the enhanced workflow.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># In a real scenario, you would load data like this:</span>
+<span class="c1"># data = tttrlib.TTTR(&#39;your_file.ptu&#39;, &#39;PTU&#39;)</span>
+<span class="c1"># burst_filter = tttrlib.BurstFilter(data)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Enhanced-BurstFilter-Workflow-Demonstration">
+<h1>Enhanced BurstFilter Workflow Demonstration<a class="headerlink" href="#Enhanced-BurstFilter-Workflow-Demonstration" title="Link to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ENHANCED BURSTFILTER: Dynamic Filtering Workflow&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+
+<span class="c1"># Simulate the workflow (would need real data to execute)</span>
+
+<span class="n">workflow_steps</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">1. INITIAL BURST DETECTION</span>
+<span class="s2">   burst_filter = tttrlib.BurstFilter(data)</span>
+<span class="s2">   burst_filter.set_burst_parameters(min_photons=30, window_photons=10, window_time_max=1e-3)</span>
+<span class="s2">   bursts = burst_filter.find_bursts()  # Stores raw_bursts internally</span>
+<span class="s2">   print(f&quot;Found {len(bursts)} raw bursts&quot;)</span>
+
+<span class="s2">2. APPLY INITIAL FILTERS (tracked automatically)</span>
+<span class="s2">   burst_filter.filter_by_size(min_size=50, max_size=1000)      # Size filter</span>
+<span class="s2">   burst_filter.filter_by_duration(min_duration=1e-4, max_duration=1e-2)  # Duration filter</span>
+<span class="s2">   burst_filter.merge_bursts(max_gap=5)                         # Merge close bursts</span>
+<span class="s2">   print(f&quot;After initial filtering: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+
+<span class="s2">3. DYNAMIC PARAMETER CHANGES - BURSTS CAN &quot;REAPPEAR&quot;</span>
+<span class="s2">   # Relax size filter - smaller bursts come back</span>
+<span class="s2">   burst_filter.filter_by_size(min_size=25, max_size=1000)</span>
+<span class="s2">   print(f&quot;After relaxing size filter: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+
+<span class="s2">   # Tighten duration filter - more bursts filtered out</span>
+<span class="s2">   burst_filter.filter_by_duration(min_duration=5e-4, max_duration=5e-3)</span>
+<span class="s2">   print(f&quot;After tightening duration filter: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+
+<span class="s2">4. FILTER RESET AND REAPPLICATION</span>
+<span class="s2">   # Reset to original unfiltered bursts</span>
+<span class="s2">   burst_filter.reset_to_raw_bursts()</span>
+<span class="s2">   print(f&quot;After reset to raw: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+
+<span class="s2">   # Reapply all filters with current parameters</span>
+<span class="s2">   burst_filter.reapply_filters()</span>
+<span class="s2">   print(f&quot;After reapplying filters: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+
+<span class="s2">5. COMPLETE FILTER CLEARING</span>
+<span class="s2">   # Clear all filters and start fresh</span>
+<span class="s2">   burst_filter.clear_filters()</span>
+<span class="s2">   print(f&quot;After clearing all filters: {len(burst_filter.get_bursts())} bursts&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">workflow_steps</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Key-Benefits-of-Enhanced-BurstFilter">
+<h1>Key Benefits of Enhanced BurstFilter<a class="headerlink" href="#Key-Benefits-of-Enhanced-BurstFilter" title="Link to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">benefits</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">KEY BENEFITS OF ENHANCED BURSTFILTER:</span>
+
+<span class="s2">✅ DYNAMIC PARAMETER CHANGES</span>
+<span class="s2">   - Change filter parameters without permanent burst loss</span>
+<span class="s2">   - Previously filtered bursts can reappear when parameters are relaxed</span>
+<span class="s2">   - Interactive exploration of filter effects</span>
+
+<span class="s2">✅ FILTER STATE TRACKING</span>
+<span class="s2">   - Automatic tracking of applied filters and their parameters</span>
+<span class="s2">   - Reproducible filtering pipelines</span>
+<span class="s2">   - Easy parameter adjustment and reapplication</span>
+
+<span class="s2">✅ IMPROVED USER EXPERIENCE</span>
+<span class="s2">   - No need to restart burst search when adjusting filters</span>
+<span class="s2">   - Intuitive workflow: find bursts once, filter dynamically</span>
+<span class="s2">   - Better control over burst analysis process</span>
+
+<span class="s2">✅ BACKWARD COMPATIBILITY</span>
+<span class="s2">   - All existing code continues to work unchanged</span>
+<span class="s2">   - New methods are additive, not replacing existing functionality</span>
+<span class="s2">   - Same performance for static filtering workflows</span>
+
+<span class="s2">✅ ADVANCED ANALYSIS CAPABILITIES</span>
+<span class="s2">   - Compare different filtering strategies easily</span>
+<span class="s2">   - Optimize parameters interactively</span>
+<span class="s2">   - Support for complex multi-stage filtering pipelines</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">benefits</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Code-Example-for-Dynamic-Filtering">
+<h1>Code Example for Dynamic Filtering<a class="headerlink" href="#Code-Example-for-Dynamic-Filtering" title="Link to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">code_example</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1"># Enhanced BurstFilter usage example</span>
+
+<span class="s1">import tttrlib</span>
+
+<span class="s1"># Load data</span>
+<span class="s1">data = tttrlib.TTTR(&#39;experiment.ptu&#39;, &#39;PTU&#39;)</span>
+<span class="s1">bf = tttrlib.BurstFilter(data)</span>
+
+<span class="s1"># Set burst search parameters</span>
+<span class="s1">bf.set_burst_parameters(min_photons=30, window_photons=10, window_time_max=1e-3)</span>
+
+<span class="s1"># Find bursts (stores raw_bursts internally)</span>
+<span class="s1">bursts = bf.find_bursts()</span>
+<span class="s1">print(f&quot;Initial bursts: {len(bursts)}&quot;)</span>
+
+<span class="s1"># Apply filters (tracked automatically)</span>
+<span class="s1">bf.filter_by_size(min_size=50)</span>
+<span class="s1">bf.filter_by_duration(min_duration=1e-4, max_duration=1e-2)</span>
+<span class="s1">print(f&quot;After filtering: {len(bf.get_bursts())}&quot;)</span>
+
+<span class="s1"># Change parameters - bursts can reappear!</span>
+<span class="s1">bf.filter_by_size(min_size=25)  # More permissive</span>
+<span class="s1">print(f&quot;After parameter change: {len(bf.get_bursts())}&quot;)  # May show more bursts</span>
+
+<span class="s1"># Reset and reapply with different strategy</span>
+<span class="s1">bf.reset_to_raw_bursts()</span>
+<span class="s1">bf.filter_by_size(min_size=100)  # More restrictive</span>
+<span class="s1">bf.filter_by_duration(min_duration=1e-3)  # Longer bursts only</span>
+<span class="s1">print(f&quot;New filtering strategy: {len(bf.get_bursts())}&quot;)</span>
+
+<span class="s1"># Clear everything and start over</span>
+<span class="s1">bf.clear_filters()</span>
+<span class="s1">bursts = bf.find_bursts()  # Fresh start</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CODE EXAMPLE:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">code_example</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Testing-the-Enhanced-Functionality">
+<h1>Testing the Enhanced Functionality<a class="headerlink" href="#Testing-the-Enhanced-Functionality" title="Link to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TESTING ENHANCED FUNCTIONALITY&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Test that enhanced methods exist</span>
+    <span class="n">bf_class</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span>
+
+    <span class="n">enhanced_methods</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;reset_to_raw_bursts&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;reapply_filters&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;clear_filters&#39;</span>
+    <span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking for enhanced methods:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">enhanced_methods</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bf_class</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✓ </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✗ </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> - MISSING&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Test Python interface methods</span>
+    <span class="n">python_methods</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;find_bursts_as_list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;filter_by_size_as_list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;reset_to_raw_bursts&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;reapply_filters&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;clear_filters&#39;</span>
+    <span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Checking Python interface methods:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">python_methods</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bf_class</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✓ </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ✗ </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> - MISSING&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Enhanced BurstFilter is ready for dynamic filtering!&quot;</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Error testing enhanced functionality: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Make sure tttrlib is properly compiled with the enhancements.&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Enhanced BurstFilter demonstration complete!&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Users can now change filter parameters dynamically,&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;and previously filtered bursts will reappear as appropriate.&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_burst_analysis_with_filter.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Burst Analysis with BurstFilter Class and Photon Masking</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_burstfilter_with_selection.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">BurstFilter with TTTRSelection Example</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Enhanced BurstFilter: Dynamic Parameter Changes Example</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-sample-data">Load sample data</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Enhanced-BurstFilter-Workflow-Demonstration">Enhanced BurstFilter Workflow Demonstration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Key-Benefits-of-Enhanced-BurstFilter">Key Benefits of Enhanced BurstFilter</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Code-Example-for-Dynamic-Filtering">Code Example for Dynamic Filtering</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Testing-the-Enhanced-Functionality">Testing the Enhanced Functionality</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

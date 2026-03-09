@@ -1,0 +1,104 @@
+
+
+.. _sphx_glr_auto_examples_image_correlation:
+
+.. _ics_examples:
+
+Image correlation spectroscopy
+------------------------------
+
+Examples for spatial/temporal image correlation analysis, benchmarking, and
+comparison between NumPy-based and tttrlib-based implementations.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation use CLSMImage as an input">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_tttrlib_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/image_correlation/plot_imaging_ics_tttrlib`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Computing ICS data by tttrlib</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input.">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_numpy_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/image_correlation/plot_imaging_ics_numpy`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Computing ICS data by numpy</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image correlation spectroscopy - benchmark">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_benchmark_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/image_correlation/plot_imaging_ics_benchmark`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image correlation spectroscopy - benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fitting ICS data by a RICS model">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_fit_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/image_correlation/plot_imaging_ics_fit`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fitting ICS data by a RICS model</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/image_correlation/plot_imaging_ics_tttrlib
+   /auto_examples/image_correlation/plot_imaging_ics_numpy
+   /auto_examples/image_correlation/plot_imaging_ics_benchmark
+   /auto_examples/image_correlation/plot_imaging_ics_fit
+
