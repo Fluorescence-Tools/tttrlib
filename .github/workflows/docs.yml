@@ -64,7 +64,12 @@ jobs:
           cd doc
           mkdir -p _build/api
           doxygen
-          BUILD_TIER=4 sphinx-build -b html -T -d _build/doctrees . _build/html/stable
+          # Debug: show what conf.py sees
+          python -c "import os; os.environ['BUILD_TIER']='4'; exec(open('conf.py').read())" 2>&1 | head -50 || true
+          BUILD_TIER=4 sphinx-build -v -b html -T -d _build/doctrees . _build/html/stable 2>&1 | tee sphinx_build.log
+          # Show what was built
+          ls -la _build/html/stable/
+          ls -la _build/html/stable/auto_examples 2>/dev/null || echo "No auto_examples directory"
           rm -rf _build/html/stable/api
           cp -r _build/api _build/html/stable/
 
