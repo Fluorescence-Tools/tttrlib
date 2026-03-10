@@ -2,6 +2,7 @@
 build/
 bld-dir/
 dist/
+dist
 *.whl
 wheelhouse/
 wheelhouse_*/
@@ -41,6 +42,7 @@ __pycache__
 
 # Test data
 tttr-data
+test/tttr-data
 
 # Scratch and temporary
 leftovers/
