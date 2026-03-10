@@ -18,6 +18,8 @@ build:
 
 requirements:
   build:
+    - if: win
+      then: vs2017_win-64
     - ${{ compiler('c') }}
     - ${{ compiler('cxx') }}
     - if: not win
@@ -30,6 +32,10 @@ requirements:
   host:
     - swig <4.2
     - doxygen
+    - if: win
+      then:
+        - vc >=14.1,<15
+        - vc14_runtime >=14.16.27033
     - if: osx
       then: llvm-openmp
     - if: linux
@@ -40,6 +46,10 @@ requirements:
     - hdf5
   run:
     - python
+    - if: win
+      then:
+        - vc >=14.1,<15
+        - vc14_runtime >=14.16.27033
     - if: osx
       then: llvm-openmp
     - if: linux

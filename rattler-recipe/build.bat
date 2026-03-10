@@ -1,27 +1,27 @@
 :: Build script for Windows conda package (rattler-build)
 @echo on
 
+:: Ensure we are in the source directory
 cd /d %SRC_DIR%
+
 rmdir /s /q b2 2>nul
 mkdir b2
 cd b2
 
 :: Query site-packages from the host Python
 if "%PYTHON%" == "" set "PYTHON=%PREFIX%\python.exe"
-:: Use sysconfig which is more reliable across platforms
 %PYTHON% -c "import sysconfig; print(sysconfig.get_path('purelib'))" > sp_dir.txt
 set /p SP_DIR=<sp_dir.txt
-:: Ensure backslashes for Windows commands
 set "SP_DIR=%SP_DIR:/=\%"
 echo "SP_DIR detected as: %SP_DIR%"
 
-:: Convert paths to forward slashes for CMake to avoid backslash escape issues
+:: Convert paths to forward slashes for CMake
 set "PREFIX_W=%PREFIX:\=/%"
 set "SP_DIR_W=%SP_DIR:\=/%"
 
-:: Use NMake Makefiles as it is standard for conda-build on Windows
+:: Switch back to Ninja as it is confirmed to be in the build environment
 cmake -S .. -B . ^
-  -G "NMake Makefiles" ^
+  -G "Ninja" ^
   %CMAKE_ARGS% ^
   -DHDF5_USE_STATIC_LIBRARIES=OFF ^
   -DBUILD_PYTHON_INTERFACE=ON ^
@@ -33,7 +33,7 @@ cmake -S .. -B . ^
   -DWITH_AVX=OFF
 if errorlevel 1 exit 1
 
-nmake install
+ninja install
 if errorlevel 1 exit 1
 
 :: Assemble tttrlib Python package directory in site-packages
