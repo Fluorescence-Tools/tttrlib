@@ -130,7 +130,8 @@ SKBUILD = "1"
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 before-build = "pip install delvewheel"
-repair-wheel-command = "delvewheel repair --add-libcxx -w {dest_dir} {wheel}"
+# --add-libcxx is macOS only; Windows doesn't need it
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
