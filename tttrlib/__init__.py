@@ -4,10 +4,9 @@ from __future__ import annotations
 # Supports both: pip-wheel layout (tttrlib.libs/) and conda layout (Library/bin/)
 import os as _os
 import sys as _sys
-import sys as _platform_check
 
 # DLL directories are only needed on Windows
-if _platform_check.platform.startswith('win'):
+if _sys.platform.startswith('win'):
     # 1. pip/delvewheel layout: tttrlib.libs/ sibling of tttrlib/
     _libs_dir = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), _os.pardir, 'tttrlib.libs'))
     if _os.path.isdir(_libs_dir):
@@ -18,7 +17,7 @@ if _platform_check.platform.startswith('win'):
     if _os.path.isdir(_conda_bin):
         _os.add_dll_directory(_conda_bin)
 
-del _os, _sys, _libs_dir, _conda_bin, _platform_check
+del _os, _sys
 
 # Import the SWIG-generated module and re-export all public symbols (ignoring __all__)
 import tttrlib.tttrlib as _tttrlib_module
