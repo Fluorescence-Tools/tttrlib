@@ -36,7 +36,7 @@ import tttrlib
 # First, we do a normal correlation where all unfiltered data is correlated.
 # For that, we first read the data into a TTTR container.
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%

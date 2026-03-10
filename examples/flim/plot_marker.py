@@ -11,9 +11,13 @@ instrument is inspected.
 
 #%%
 from __future__ import print_function
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
+
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
 
 #%%
 # Read the TTTR Stream
@@ -21,8 +25,8 @@ import pylab as plt
 # First, the data corresponding to the image needs to be saved as TTTR-file. Leica
 # uses PicoQuant (PQ) PTU files that can be loaded in ``tttrlib``. The custom setup
 # saved the CLSM data to PQ HT3 files.
-fn_custom_lsm = '../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
-fn_leica_sp8 = '../../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+fn_custom_lsm = str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3')
+fn_leica_sp8 = str(DATA_ROOT / 'imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')
 
 # To decipher the data, we first read the TTTR streams.
 tttr_custom = tttrlib.TTTR(fn_custom_lsm, 1)

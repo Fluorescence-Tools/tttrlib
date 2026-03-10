@@ -15,9 +15,13 @@ This example illustrates a normal correlation and demonstrates two approaches
 how to compute full correlations with ``tttrlib``.
 
 """
+import os
+from pathlib import Path
 import tttrlib
 import matplotlib.pylab as plt
 import numpy as np
+
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
 
 #%%
 # First, we read a dataset into a TTTR container. In the example,
@@ -26,7 +30,7 @@ import numpy as np
 # We use a small dataset due to practical reasons to illustrate methods how to
 # correlate fluorescence data in ``tttrlib``. For productive analysis of
 # a real experiment usually more data would be processed.
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # After reading the data, we create two new TTTR containers for the two

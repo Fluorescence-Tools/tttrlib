@@ -29,10 +29,10 @@ except ImportError as exc:  # pragma: no cover
         "tttrlib is required. Please ensure the Python bindings are built and available."
     ) from exc
 
-# Default PTU file (from initial reference code)
-DEFAULT_PTU = (
-    r"V:\\tttr-data\\imaging\\pq\\Luminosa_SPAD_Array\\100x_ISM_no_PH_485nm_lin_pol_"
-    r"Silvio_6spec_no5_25us_1.ptu"
+# Default PTU file — set TTTRLIB_DATA env var to point to your data root
+_DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DEFAULT_PTU = str(
+    _DATA_ROOT / "imaging/pq/Luminosa_SPAD_Array/100x_ISM_no_PH_485nm_lin_pol_Silvio_6spec_no5_25us_1.ptu"
 )
 
 

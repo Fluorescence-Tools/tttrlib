@@ -1,0 +1,11 @@
+{
+  "total_events": 174438,
+  "bursts_found": 225,
+  "background_periods": 6,
+  "filtered_bursts": {
+    "by_size": 225,
+    "by_duration": 131,
+    "by_background": 47,
+    "merged": 46
+  }
+}

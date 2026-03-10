@@ -33,7 +33,7 @@ import pylab as p
 # 5 = Photon-HDF5
 
 # Determine data root from environment or fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 
 benchmark_files = [
     {

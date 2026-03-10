@@ -16,7 +16,7 @@ import pylab as plt
 
 #%%
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 filename_ptu = str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu')
 tttr_ptu = tttrlib.TTTR(filename_ptu)
 

@@ -5,12 +5,15 @@ Mean lifetime images
 Compute the mean lifetime in a pixel using the method of moments
 (Irvin Isenberg, 1973, Biophysical journal).
 """
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
 
-filename = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
-filename_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+filename = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3')
+filename_irf = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_mirror.ht3')
 channels_green = [0, 2]
 channels_red = [1, 3]
 

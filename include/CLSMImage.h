@@ -806,23 +806,7 @@ public:
      */
     void rebin(int bin_line, int bin_pixel);
 
-    /*!
-     * \brief Distribute the photons of a pixel_id to a set of pixel ids in a target image according to provided probabilities.
-     *
-     * This function distributes the photons of a specified pixel_id to a set of pixel_ids
-     * in a target CLSMImage based on the provided probabilities.
-     *
-     * @param pixel_id [in] The source pixel_id whose photons will be distributed.
-     * @param target [in] Pointer to the target CLSMImage.
-     * @param target_pixel_ids [in] Vector of target pixel_ids to which photons will be distributed.
-     * @param target_probabilities [in] Vector of probabilities corresponding to each target pixel_id.
-     */
-    void distribute(
-        unsigned int pixel_id,
-        CLSMImage* target,
-        std::vector<int>& target_pixel_ids,
-        std::vector<int>& target_probabilities
-    );
+
 
 
     /*!

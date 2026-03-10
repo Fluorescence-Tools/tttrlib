@@ -231,7 +231,9 @@ BH132 spc files. Hence, for simpler analysis, the data is first stacked into a s
 .. code-block:: python
 
     # open a set of files and stack them in a single TTTR object
-    files = glob.glob('./tttr-data/bh/bh_spc132_smDNA/*.spc')
+    import os; from pathlib import Path
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    files = glob.glob(str(DATA_ROOT / 'bh/bh_spc132_smDNA/*.spc'))
     data = tttrlib.TTTR(files[0], 'SPC-130')
     for d in files[1:]:
         data.append(tttrlib.TTTR(d, 'SPC-130'))

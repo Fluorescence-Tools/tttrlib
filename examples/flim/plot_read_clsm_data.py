@@ -32,7 +32,7 @@ import tttrlib
 import numpy as np
 
 # Determine data root from environment or fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 
 #%%
 # The first step, when constructing a LSM image from TTTR data is to

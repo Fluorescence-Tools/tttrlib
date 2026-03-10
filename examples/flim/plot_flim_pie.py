@@ -9,8 +9,7 @@ Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).
 
 Prerequisites
 -------------
-- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if
-  not set.
+- Set ``TTTRLIB_DATA`` to the dataset root.
 
 In Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The
 exciting light source is usually a pulsed laser. When analyzing the detected fluorescence the

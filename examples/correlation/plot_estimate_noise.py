@@ -28,11 +28,14 @@ noise for quantitative analysis of correlation curves.
 # We inspect the header information to find header tags that inform
 # on the macro time calibration.
 
+import os
+from pathlib import Path
 import pylab as plt
 import tttrlib
 import numpy as np
 
-data = tttrlib.TTTR('../../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu')
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))
 
 #%%
 # Here, we manually compute the calibration. This may not be

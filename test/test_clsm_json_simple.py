@@ -6,10 +6,7 @@ Quick test of CLSMImage JSON settings functionality
 import json
 import tempfile
 import os
-import sys
 
-# Add tttrlib to path
-sys.path.insert(0, r"E:\dev\tttrlib\cmake-build-release\ext")
 import tttrlib
 
 def test_clsm_json():

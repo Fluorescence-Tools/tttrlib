@@ -1,4 +1,15 @@
+import warnings
 import numpy as np
+
+
+class ExperimentalWarning(UserWarning):
+    """Warning emitted when an experimental tttrlib feature is used."""
+
+
+_CLSMISM_WARN = (
+    "CLSMISM is experimental and may change or be removed in a future "
+    "release. Use with caution."
+)
 
 
 # Attach Python-side convenience wrappers strictly under CLSMISM
@@ -67,10 +78,43 @@ try:  # pragma: no cover
             coords1d,
         )
 
-    # Bind as static methods and avoid exporting module-level functions
+    # Bind as static methods with experimental warnings, avoid exporting
+    # module-level functions.
     if cls is not None:
-        cls.apr_reconstruction = staticmethod(_apr_reconstruction)
-        cls.focus_reconstruction = staticmethod(_focus_reconstruction)
+        # --- warn on instantiation ---
+        _orig_init = cls.__init__
+
+        def _warned_init(self, *args, **kwargs):
+            warnings.warn(_CLSMISM_WARN, ExperimentalWarning, stacklevel=2)
+            _orig_init(self, *args, **kwargs)
+
+        try:
+            cls.__init__ = _warned_init
+        except (AttributeError, TypeError):
+            pass
+
+        # --- warn on static-method calls ---
+        def _warned_apr(*args, **kwargs):
+            warnings.warn(_CLSMISM_WARN, ExperimentalWarning, stacklevel=2)
+            return _apr_reconstruction(*args, **kwargs)
+
+        def _warned_focus(*args, **kwargs):
+            warnings.warn(_CLSMISM_WARN, ExperimentalWarning, stacklevel=2)
+            return _focus_reconstruction(*args, **kwargs)
+
+        cls.apr_reconstruction = staticmethod(_warned_apr)
+        cls.focus_reconstruction = staticmethod(_warned_focus)
+
+        # Mark class as experimental so callers can introspect
+        cls.__experimental__ = True
+
+        # Prepend experimental note to the docstring
+        _note = (
+            ".. warning::\n\n"
+            "   **Experimental** — this class is not yet stable API and may "
+            "change or be removed without notice.\n\n"
+        )
+        cls.__doc__ = _note + (cls.__doc__ or "")
 
     # Clean up temporary names
     del _apr_reconstruction

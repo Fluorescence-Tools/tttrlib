@@ -12,14 +12,18 @@ The script:
 4. Uses 2D Gaussian fitting to precisely localize the beads
 5. Visualizes the results with detected bead positions
 
-Data file: V:\tttr-data\imaging\pq\Microtime200_HH400 beads.ptu
+Set TTTRLIB_DATA environment variable to the root of the test data directory.
 """
 
+import os
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import tttrlib
 from tttrlib import ImageLocalizer
+
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
 
 def load_and_process_tttr_data(filename):
     """
@@ -258,7 +262,7 @@ def main():
     Main function to run the bead localization example
     """
     # Data file path
-    data_file = r"V:\tttr-data\imaging\pq\Microtime200_HH400 beads.ptu"
+    data_file = str(DATA_ROOT / "imaging/pq/Microtime200_HH400/beads.ptu")
     
     try:
         # Load and process TTTR data

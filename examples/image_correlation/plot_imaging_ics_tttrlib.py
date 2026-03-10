@@ -6,10 +6,14 @@ Computing ICS data by tttrlib
 Demonstrate the use of the tttrlib ICS features and compare to
 numpy ICS implementation use CLSMImage as an input
 """
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import matplotlib.pylab as plt
 import matplotlib.patches
+
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
 
 
 def numpy_fft_ics(
@@ -29,7 +33,7 @@ def numpy_fft_ics(
     return np.array(ics_list)
 
 
-data = tttrlib.TTTR('../../tttr-data/imaging/leica/sp5/LSM_1.ptu', 'PTU')
+data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/leica/sp5/LSM_1.ptu'), 'PTU')
 reading_parameter = {
     "tttr_data": data,
     "reading_routine": 'SP5',

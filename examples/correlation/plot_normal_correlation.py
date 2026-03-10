@@ -38,7 +38,7 @@ fig, ax = plt.subplots(sharex='col', sharey='row')
 
 #  Read the data data
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "../../tttr-data")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 # Correlator settings, if the same settings are used repeatedly it is useful to define them once

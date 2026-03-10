@@ -2389,15 +2389,6 @@ void CLSMImage::transform(unsigned int *input, int n_input) {
 }
 
 
-void CLSMImage::distribute(
-    unsigned int pixel_id,
-    CLSMImage *target,
-    std::vector<int> &target_pixel_ids,
-    std::vector<int> &target_probabilities
-) {
-    std::cout << "TODO" << std::endl;
-}
-
 
 void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
     if (is_verbose()) {

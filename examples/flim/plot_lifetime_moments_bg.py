@@ -5,12 +5,15 @@ Mean lifetime images
 Compute the mean lifetime in a pixel using the method of moments
 (Irvin Isenberg, 1973, Biophysical journal).
 """
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
 
-filename = '../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu'
-filename_irf = '../../tttr-data/imaging/zeiss/eGFP_bad_background/IRF.ptu'
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+filename = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
+filename_irf = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/IRF.ptu')
 
 data = tttrlib.TTTR(filename)
 irf = tttrlib.TTTR(filename_irf)

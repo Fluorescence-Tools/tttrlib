@@ -23,14 +23,18 @@ in spectroscopy and data analysis :cite:`DIGMAN2008L14`.
 
 #%%
 from __future__ import print_function
+import os
+from pathlib import Path
 import tttrlib
 
 import pylab as plt
 import numpy as np
 
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+
 #%%
 # Read data of the CLSM image
-data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')
+data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))
 # Macro time in header missing
 ht3_reading_parameter = {
     "marker_frame_start": [4],
@@ -64,7 +68,7 @@ phasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]
 #%%
 # ssas
 # IRF correction
-data_mirror = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3')
+data_mirror = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_mirror.ht3'))
 data_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]
 phasor = image.get_phasor(
     tttr_irf=data_irf,
