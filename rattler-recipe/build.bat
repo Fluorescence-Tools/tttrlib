@@ -1,5 +1,4 @@
 :: Build script for Windows conda package (rattler-build)
-:: Relies on rattler-build's automatic environment activation
 @echo on
 
 cd /d %SRC_DIR%
@@ -8,19 +7,20 @@ mkdir b2
 cd b2
 
 :: Query site-packages from the host Python
-:: Use a more robust way to call python and handle output
 if "%PYTHON%" == "" set "PYTHON=%PREFIX%\python.exe"
-for /f "usebackq delims=" %%i in (`%PYTHON% -c "import site; print(site.getsitepackages()[0])"`) do set "SP_DIR=%%i"
+:: On Windows, the last element of getsitepackages() is usually the site-packages dir
+%PYTHON% -c "import site; print(site.getsitepackages()[-1])" > sp_dir.txt
+set /p SP_DIR=<sp_dir.txt
 echo "SP_DIR detected as: %SP_DIR%"
 
 :: Convert paths to forward slashes for CMake to avoid backslash escape issues
 set "PREFIX_W=%PREFIX:\=/%"
 set "SP_DIR_W=%SP_DIR:\=/%"
 
+:: Use NMake Makefiles as it is standard for conda-build on Windows
 cmake -S .. -B . ^
-  -G Ninja ^
+  -G "NMake Makefiles" ^
   %CMAKE_ARGS% ^
-  -DCMAKE_FIND_DEBUG_MODE=ON ^
   -DHDF5_USE_STATIC_LIBRARIES=OFF ^
   -DBUILD_PYTHON_INTERFACE=ON ^
   -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR_W%" ^
@@ -31,7 +31,7 @@ cmake -S .. -B . ^
   -DWITH_AVX=OFF
 if errorlevel 1 exit 1
 
-ninja install -j %CPU_COUNT%
+nmake install
 if errorlevel 1 exit 1
 
 :: Assemble tttrlib Python package directory in site-packages
