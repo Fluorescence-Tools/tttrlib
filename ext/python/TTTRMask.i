@@ -28,6 +28,6 @@
 %rename(_get_indices) TTTRMask::get_indices;
 %rename(_get_selected_ranges) TTTRMask::get_selected_ranges;
 
-%extend TTTRMask{%pythoncode "TTTRMask.py"}
+%extend TTTRMask{%pythoncode "./ext/python/TTTRMask.py"}
 
 %include "TTTRMask.h"

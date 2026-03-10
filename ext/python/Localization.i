@@ -127,4 +127,4 @@ struct LocalizationAccess : localization {
 
 %include "ImageLocalization.h"
 
-%pythoncode "ImageLocalizer.py"
+%pythoncode "./ext/python/ImageLocalizer.py"

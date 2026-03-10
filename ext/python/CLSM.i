@@ -109,7 +109,7 @@ static int myErr = 0; // flag to save error state
             return self.get_tttr_indices()
     %}
 
-    %pythoncode "CLSMImage.py"
+    %pythoncode "./ext/python/CLSMImage.py"
 }
 
 %exception CLSMFrame::__getitem__ {
@@ -153,7 +153,7 @@ static int myErr = 0; // flag to save error state
             return self.get_tttr_indices()
     %}
 
-    %pythoncode "CLSMFrame.py"
+    %pythoncode "./ext/python/CLSMFrame.py"
 }
 
 %exception CLSMLine::__getitem__ {

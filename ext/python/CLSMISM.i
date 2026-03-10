@@ -18,4 +18,4 @@
 
 %include "CLSMISM.h"
 
-%pythoncode "CLSMISM.py"
+%pythoncode "./ext/python/CLSMISM.py"

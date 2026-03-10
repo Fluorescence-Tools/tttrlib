@@ -16,4 +16,4 @@
 
 %include "TTTRHeader.h"
 
-%extend TTTRHeader{%pythoncode "TTTRHeader.py"}
+%extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader.py"}
