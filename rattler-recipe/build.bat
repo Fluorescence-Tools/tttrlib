@@ -7,6 +7,12 @@ rmdir /s /q b2 2>nul
 mkdir b2
 cd b2
 
+:: Debug info
+where cmake
+cmake --version
+where ninja
+ninja --version
+
 :: Query site-packages from the host Python (mirrors build.sh approach)
 if "%PYTHON%" == "" set PYTHON=%PREFIX%\python.exe
 for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
