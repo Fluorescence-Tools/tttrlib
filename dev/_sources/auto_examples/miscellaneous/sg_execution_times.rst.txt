@@ -35,9 +35,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``plot_histogram_benchmark.py``)
      - 00:00.003
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py` (``plot_histogram_2D.py``)
      - 00:00.002
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py` (``plot_histogram_2D.py``)
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py` (``plot_histogram_1D.py``)
      - 00:00.002
      - 0.0

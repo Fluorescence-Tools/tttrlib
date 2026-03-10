@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.020** total execution time for 16 files **from auto_examples/flim**:
+**00:00.021** total execution time for 16 files **from auto_examples/flim**:
 
 .. container::
 
@@ -36,18 +36,18 @@ Computation times
      - 00:00.002
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_imaging_representations.py` (``plot_imaging_representations.py``)
-     - 00:00.001
+     - 00:00.002
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_flim_plot_tutorial_python.py` (``plot_tutorial_python.py``)
+     - 00:00.002
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_flim_pie.py` (``plot_flim_pie.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_tutorial_python.py` (``plot_tutorial_python.py``)
+   * - :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py` (``plot_pixel_masks.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments_bg.py` (``plot_lifetime_moments_bg.py``)
-     - 00:00.001
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py` (``plot_pixel_masks.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments.py` (``plot_lifetime_moments.py``)
@@ -56,27 +56,27 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_flim_plot_read_clsm_data.py` (``plot_read_clsm_data.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_intensity_image.py` (``plot_intensity_image.py``)
+   * - :ref:`sphx_glr_auto_examples_flim_plot_rebin.py` (``plot_rebin.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_transform.py` (``plot_transform.py``)
+   * - :ref:`sphx_glr_auto_examples_flim_plot_intensity_image.py` (``plot_intensity_image.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_marker.py` (``plot_marker.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_mle_lifetime.py` (``plot_mle_lifetime.py``)
-     - 00:00.001
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_crop.py` (``plot_crop.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_rebin.py` (``plot_rebin.py``)
+   * - :ref:`sphx_glr_auto_examples_flim_plot_transform.py` (``plot_transform.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_flim_plot_phasor.py` (``plot_phasor.py``)
+   * - :ref:`sphx_glr_auto_examples_flim_plot_mle_lifetime.py` (``plot_mle_lifetime.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_mean_lifetime.py` (``plot_mean_lifetime.py``)
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_flim_plot_phasor.py` (``plot_phasor.py``)
      - 00:00.001
      - 0.0
