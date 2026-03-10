@@ -37,9 +37,11 @@ jobs:
           BRANCH="${{ github.ref }}"
           # Full matrix for main and development branches: Linux, macOS, Windows
           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
-            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            # macos-13 is the last Intel (x86_64) runner; macos-latest is arm64 (M1)
+            # pip wheels are built for x86_64 so use macos-13; conda uses macos-latest (native arm64)
+            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-13\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-13\",\"artifact_os\":\"macos-13\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "is_main=true" >> $GITHUB_OUTPUT
           else
             # Linux only for other branches (cheaper CI)
@@ -142,9 +144,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup.outputs.conda_matrix)}}
-    defaults:
-      run:
-        shell: bash -l {0}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,12 +159,14 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
-          
+
       - name: Install rattler-build
+        shell: bash -l {0}
         run: |
           conda install -y rattler-build -c conda-forge
 
       - name: Build Conda packages
+        shell: bash -l {0}
         run: |
           if [[ "${{ needs.setup.outputs.is_main }}" == "true" ]]; then
             PY_VERSIONS="${{ env.MAIN_PY_VERSIONS }}"
