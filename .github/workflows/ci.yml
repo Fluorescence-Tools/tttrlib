@@ -187,10 +187,18 @@ jobs:
           # Extract version from pyproject.toml
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           echo "Building tttrlib $PKG_VERSION"
+          # On Windows, override the default MSVC compiler from vs2017 to vs2022.
+          # conda-forge defaults to vs2017 whose activation scripts require the
+          # v141 toolset (MSVC 14.16) which is not installed on GitHub Actions runners.
+          COMPILER_VARIANTS=""
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            COMPILER_VARIANTS='--variant "c_compiler=vs2022" --variant "cxx_compiler=vs2022"'
+          fi
           for VER in $PY_VERSIONS; do
             echo "Building for Python $VER on ${{ matrix.os }}"
-            rattler-build build --recipe rattler-recipe \
+            eval rattler-build build --recipe rattler-recipe \
               --variant "python=$VER" \
+              $COMPILER_VARIANTS \
               --output-dir ./conda-bld \
               -c conda-forge
           done

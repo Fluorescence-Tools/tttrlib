@@ -116,10 +116,27 @@ if not defined VSINSTALLDIR (
 
 echo Found Visual Studio at: !VSINSTALLDIR!
 
-if not exist "!VSINSTALLDIR!\VC\Auxiliary\Build\vcvarsall.bat" (
+set "VCVARSALL=!VSINSTALLDIR!\VC\Auxiliary\Build\vcvarsall.bat"
+if not exist "!VCVARSALL!" (
     echo ERROR: vcvarsall.bat not found
     exit /b 1
 )
 
-call "!VSINSTALLDIR!\VC\Auxiliary\Build\vcvarsall.bat" x64
+:: Clear any stale VsDevCmd state from a prior (failed) activation so that
+:: vcvarsall.bat does not detect a conflicting environment.
+set "__VSCMD_PREINIT_PATH="
+set "VSINSTALLDIR="
+set "VCINSTALLDIR="
+set "VCToolsVersion="
+set "VCToolsInstallDir="
+set "VCToolsRedistDir="
+set "VisualStudioVersion="
+set "VSCMD_VER="
+set "VSCMD_ARG_HOST_ARCH="
+set "VSCMD_ARG_TGT_ARCH="
+set "VSCMD_ARG_app_plat="
+set "DevEnvDir="
+set "CommandPromptType="
+
+call "!VCVARSALL!" x64
 exit /b %ERRORLEVEL%
