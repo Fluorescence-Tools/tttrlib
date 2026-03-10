@@ -72,13 +72,13 @@ IF(BUILD_PYTHON_INTERFACE)
         # detected interpreter (system, user, or virtualenv)
         set(MY_INSTALL_PREFIX ${Python3_SITELIB})
     endif()
-    SET_SOURCE_FILES_PROPERTIES(ext/python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
+    SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
 
     # Ensure SWIG reruns when any of the included interface or helper Python files change.
-    file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/ext/python/*.i")
-    list(REMOVE_ITEM SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/ext/python/tttrlib.i")
+    file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i")
+    list(REMOVE_ITEM SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/tttrlib.i")
     file(GLOB SWIG_PYTHON_HELPERS
-            "${CMAKE_CURRENT_SOURCE_DIR}/ext/python/*.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py"
     )
     # Exclude the generated wrapper (lives in the build directory, not the source tree)
     list(FILTER SWIG_PYTHON_HELPERS EXCLUDE REGEX ".*/tttrlib.py$")
@@ -86,7 +86,7 @@ IF(BUILD_PYTHON_INTERFACE)
     set(SWIG_DEPENDENCIES "${SWIG_INTERFACE_FILES};${SWIG_PYTHON_HELPERS}")
     if(SWIG_DEPENDENCIES)
         list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
-        set_property(SOURCE ext/python/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${SWIG_DEPENDENCIES}")
+        set_property(SOURCE python/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${SWIG_DEPENDENCIES}")
     endif()
 
     # Fix file path on Windows systems
@@ -98,7 +98,7 @@ IF(BUILD_PYTHON_INTERFACE)
             ${MODULE_NAME}
             TYPE MODULE
             LANGUAGE python
-            SOURCES ext/python/tttrlib.i ${SRC_files}
+            SOURCES python/tttrlib.i ${SRC_files}
     )
 
     # Force correct Python extension suffix for auditwheel compatibility
@@ -195,7 +195,7 @@ IF(BUILD_R_INTERFACE)
     SWIG_ADD_LIBRARY(
             ${MODULE_NAME}
             LANGUAGE r
-            SOURCES ext/python/tttrlib.i ${SRC_files}
+            SOURCES python/tttrlib.i ${SRC_files}
     )
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}

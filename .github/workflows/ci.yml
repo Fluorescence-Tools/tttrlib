@@ -167,10 +167,10 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
+          python-version: ${{ env.DEFAULT_PYTHON }}
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
-          init-shell: bash
 
       - name: Install rattler-build
         shell: bash -l {0}
@@ -222,7 +222,6 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
-          init-shell: bash
       - name: Cache test data
         id: cache-test-data
         uses: actions/cache@v4
