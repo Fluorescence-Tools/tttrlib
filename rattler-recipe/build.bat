@@ -1,13 +1,12 @@
 :: Build script for Windows conda package (rattler-build)
-:: Mirrors build.sh: cmake + ninja, then assemble tttrlib package directory
+:: Relies on rattler-build's automatic environment activation
 
 cd %SRC_DIR%
-
 rmdir /s /q b2 2>nul
 mkdir b2
 cd b2
 
-:: Query site-packages from the host Python (mirrors build.sh approach)
+:: Query site-packages from the host Python
 if "%PYTHON%" == "" set PYTHON=%PREFIX%\python.exe
 for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
 echo SP_DIR=%SP_DIR%
@@ -16,16 +15,13 @@ echo SP_DIR=%SP_DIR%
 set "PREFIX_W=%PREFIX:\=/%"
 set "SP_DIR_W=%SP_DIR:\=/%"
 
-set "HDF5_ROOT=%PREFIX%\Library"
-
 cmake -S .. -B . ^
   -G Ninja ^
-  -DCMAKE_INSTALL_PREFIX="%PREFIX_W%/Library" ^
+  %CMAKE_ARGS% ^
   -DCMAKE_PREFIX_PATH="%PREFIX_W%/Library;%PREFIX_W%" ^
   -DHDF5_ROOT="%PREFIX_W%/Library" ^
   -DHDF5_USE_STATIC_LIBRARIES=OFF ^
   -DBUILD_PYTHON_INTERFACE=ON ^
-  -DCMAKE_BUILD_TYPE=Release ^
   -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR_W%" ^
   -DCMAKE_SWIG_OUTDIR="%SP_DIR_W%" ^
   -DPython_ROOT_DIR="%PREFIX_W%" ^
