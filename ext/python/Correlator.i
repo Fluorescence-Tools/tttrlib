@@ -28,8 +28,8 @@
 %include "Correlator.h"
 
 %extend Correlator{
-    %pythoncode "../ext/python/Correlator.py"
+    %pythoncode "Correlator.py"
 }
 %extend CorrelatorCurve{
-    %pythoncode "../ext/python/CorrelatorCurve.py"
+    %pythoncode "CorrelatorCurve.py"
 }

@@ -42,6 +42,6 @@
 
 %include "TTTR.h" 
 
-%extend TTTR{%pythoncode "./ext/python/TTTR.py"}
+%extend TTTR{%pythoncode "TTTR.py"}
 
 

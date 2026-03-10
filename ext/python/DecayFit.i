@@ -52,7 +52,7 @@ using json = nlohmann::json;
 %include "DecayFit.h"
 
 /* Python-side helper (pure Python) */
-%pythoncode "../ext/python/Fit2x.py"
+%pythoncode "Fit2x.py"
 
 /* Individual fit implementations */
 %include "DecayFit23.i"

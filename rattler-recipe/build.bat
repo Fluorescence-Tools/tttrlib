@@ -1,36 +1,43 @@
-:: Submodules should already be checked out by GitHub Actions checkout step
+:: Build script for Windows conda package (rattler-build)
+:: Mirrors build.sh: cmake + ninja, then assemble tttrlib package directory
+
 cd %SRC_DIR%
 
-rmdir b2 /s /q
+rmdir /s /q b2 2>nul
 mkdir b2
 cd b2
 
-cmake .. -G "NMake Makefiles" ^
- -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%" ^
- -DCMAKE_PREFIX_PATH="%PREFIX%" ^
- -DBUILD_PYTHON_INTERFACE=ON ^
- -DCMAKE_BUILD_TYPE=Release ^
- -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
- -DCMAKE_SWIG_OUTDIR="%SP_DIR%" ^
- -DPython_ROOT_DIR="%PREFIX%\bin" ^
- -DBUILD_LIBRARY=OFF ^
- -DBUILD_PYTHON_DOCS=OFF ^
- -DBUILD_LOGIC_ANALYZER=OFF ^
- -DWITH_AVX=OFF
+:: Query site-packages from the host Python (mirrors build.sh approach)
+for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
+echo SP_DIR=%SP_DIR%
 
-nmake install
+cmake -S .. -B . ^
+  -G Ninja ^
+  -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%" ^
+  -DCMAKE_PREFIX_PATH="%PREFIX%" ^
+  -DBUILD_PYTHON_INTERFACE=ON ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
+  -DCMAKE_SWIG_OUTDIR="%SP_DIR%" ^
+  -DPython_ROOT_DIR="%PREFIX%" ^
+  -DBUILD_LIBRARY=OFF ^
+  -DBUILD_PYTHON_DOCS=OFF ^
+  -DBUILD_LOGIC_ANALYZER=OFF ^
+  -DWITH_AVX=OFF
+if errorlevel 1 exit 1
 
-:: Convert SWIG output to a package
-:: SWIG generates files directly to %SP_DIR% (site-packages)
-:: Create tttrlib package directory if it doesn't exist
+ninja install -j %CPU_COUNT%
+if errorlevel 1 exit 1
+
+:: Assemble tttrlib Python package directory in site-packages
 if not exist "%SP_DIR%\tttrlib" mkdir "%SP_DIR%\tttrlib"
 
-:: Move the compiled extension (_tttrlib*.pyd) from site-packages root to tttrlib package dir
-for %%f in ("%SP_DIR%"\_tttrlib*.pyd) do (
+:: Move compiled extension (_tttrlib*.pyd) into package dir
+for %%f in ("%SP_DIR%\_tttrlib*.pyd") do (
     if exist "%%f" move "%%f" "%SP_DIR%\tttrlib\"
 )
 
-:: Move the Python wrapper (tttrlib.py) to __init__.py in package dir
+:: Move SWIG-generated wrapper (tttrlib.py) to __init__.py
 if exist "%SP_DIR%\tttrlib.py" (
     move "%SP_DIR%\tttrlib.py" "%SP_DIR%\tttrlib\__init__.py"
 )
