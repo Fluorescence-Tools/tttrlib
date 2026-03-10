@@ -70,7 +70,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }}
+        run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
 
       - name: Install HDF5 (Windows)
         if: runner.os == 'Windows'
@@ -102,6 +102,9 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: 2
+          # Use uv instead of virtualenv to avoid downloading virtualenv.pyz
+          # from GitHub (which hits HTTP 429 rate-limit errors)
+          CIBW_BUILD_FRONTEND: "build[uv]"
 
       - uses: actions/upload-artifact@v4
         with:
