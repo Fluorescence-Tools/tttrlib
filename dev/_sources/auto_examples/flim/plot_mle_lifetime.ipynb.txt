@@ -22,7 +22,7 @@
       },
       "outputs": [],
       "source": [
-        "import tttrlib\nimport numpy as np\nimport pylab as plt"
+        "import os\nfrom pathlib import Path\nimport tttrlib\nimport numpy as np\nimport pylab as plt\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -40,7 +40,7 @@
       },
       "outputs": [],
       "source": [
-        "ch_p = [0]\nch_s = [1]\nbinning_factor = 64\nminimum_n_photons = 30\n\nfn_clsm = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'\ndata = tttrlib.TTTR(fn_clsm)"
+        "ch_p = [0]\nch_s = [1]\nbinning_factor = 64\nminimum_n_photons = 30\n\nfn_clsm = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3')\ndata = tttrlib.TTTR(fn_clsm)"
       ]
     },
     {
@@ -76,7 +76,7 @@
       },
       "outputs": [],
       "source": [
-        "fn_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'\nirf_tttr = tttrlib.TTTR(fn_irf)\nirf_data_p: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_p)]\nirf_data_s: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_s)]"
+        "fn_irf = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_mirror.ht3')\nirf_tttr = tttrlib.TTTR(fn_irf)\nirf_data_p: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_p)]\nirf_data_s: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_s)]"
       ]
     },
     {

@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import os\nfrom pathlib import Path\nimport tttrlib\nimport pylab as p\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=32\n)\np.semilogy(t, h, label=\"micro_time_coarsening=32\")\n\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=8\n)\np.semilogy(t, h, label=\"micro_time_coarsening=16\")\n\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=4\n)\np.semilogy(t, h, label=\"micro_time_coarsening=8\")\np.legend()\np.show()"
+        "import os\nfrom pathlib import Path\nimport tttrlib\nimport pylab as p\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=32\n)\np.semilogy(t, h, label=\"micro_time_coarsening=32\")\n\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=8\n)\np.semilogy(t, h, label=\"micro_time_coarsening=16\")\n\nh, t = data.get_microtime_histogram(\n    micro_time_coarsening=4\n)\np.semilogy(t, h, label=\"micro_time_coarsening=8\")\np.legend()\np.show()"
       ]
     }
   ],

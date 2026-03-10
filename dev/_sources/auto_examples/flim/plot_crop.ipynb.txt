@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "from __future__ import print_function\nimport tttrlib\nimport numpy as np\nimport pylab as plt"
+        "from __future__ import print_function\nimport os\nfrom pathlib import Path\nimport tttrlib\nimport numpy as np\nimport pylab as plt\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')\n\nsettings = {\n    \"channels\": [0, 1],\n    \"fill\": True,\n}\nimage = tttrlib.CLSMImage(data, **settings)"
+        "data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))\n\nsettings = {\n    \"channels\": [0, 1],\n    \"fill\": True,\n}\nimage = tttrlib.CLSMImage(data, **settings)"
       ]
     },
     {

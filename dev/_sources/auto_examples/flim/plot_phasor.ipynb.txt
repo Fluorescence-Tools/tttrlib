@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "from __future__ import print_function\nimport tttrlib\n\nimport pylab as plt\nimport numpy as np"
+        "from __future__ import print_function\nimport os\nfrom pathlib import Path\nimport tttrlib\n\nimport pylab as plt\nimport numpy as np\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')\n# Macro time in header missing\nht3_reading_parameter = {\n    \"marker_frame_start\": [4],\n    \"marker_line_start\": 1,\n    \"marker_line_stop\": 2,\n    \"marker_event_type\": 1,\n    \"n_pixel_per_line\": 256,\n    \"reading_routine\": 'default',\n    \"channels\": [0, 1],\n    \"fill\": True,\n    \"tttr_data\": data,\n    \"skip_before_first_frame_marker\": True\n}\nimage = tttrlib.CLSMImage(**ht3_reading_parameter)\n\nstack_frames = True\nminimum_number_of_photons = 60\n\n# No IRF correction\nphasor = image.get_phasor(\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]"
+        "data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))\n# Macro time in header missing\nht3_reading_parameter = {\n    \"marker_frame_start\": [4],\n    \"marker_line_start\": 1,\n    \"marker_line_stop\": 2,\n    \"marker_event_type\": 1,\n    \"n_pixel_per_line\": 256,\n    \"reading_routine\": 'default',\n    \"channels\": [0, 1],\n    \"fill\": True,\n    \"tttr_data\": data,\n    \"skip_before_first_frame_marker\": True\n}\nimage = tttrlib.CLSMImage(**ht3_reading_parameter)\n\nstack_frames = True\nminimum_number_of_photons = 60\n\n# No IRF correction\nphasor = image.get_phasor(\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]"
       ]
     },
     {
@@ -51,7 +51,7 @@
       },
       "outputs": [],
       "source": [
-        "data_mirror = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3')\ndata_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]\nphasor = image.get_phasor(\n    tttr_irf=data_irf,\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_2, phasor_y_1d_2 = phasor_1d.T[0], phasor_1d.T[1]"
+        "data_mirror = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_mirror.ht3'))\ndata_irf = data_mirror[data_mirror.get_selection_by_channel([0, 1])]\nphasor = image.get_phasor(\n    tttr_irf=data_irf,\n    tttr_data=data,\n    stack_frames=stack_frames,\n    minimum_number_of_photons=minimum_number_of_photons\n)\n\nn_frames = 1 if stack_frames else image.n_frames\nphasor_1d = phasor.reshape((n_frames * image.n_lines * image.n_pixel, 2))\nphasor_x, phasor_y = phasor[:, :, :, 0], phasor[:, :, :, 1]\nphasor_x_1d_2, phasor_y_1d_2 = phasor_1d.T[0], phasor_1d.T[1]"
       ]
     },
     {

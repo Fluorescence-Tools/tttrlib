@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "DATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\nfilename_ptu = str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu')\ntttr_ptu = tttrlib.TTTR(filename_ptu)\n\n# Note: SPC has limited header support.\nfilename_spc_1 = \"conv1.spc\"\ntttr_ptu.write(filename_spc_1)"
+        "DATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()\nfilename_ptu = str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu')\ntttr_ptu = tttrlib.TTTR(filename_ptu)\n\n# Note: SPC has limited header support.\nfilename_spc_1 = \"conv1.spc\"\ntttr_ptu.write(filename_spc_1)"
       ]
     }
   ],

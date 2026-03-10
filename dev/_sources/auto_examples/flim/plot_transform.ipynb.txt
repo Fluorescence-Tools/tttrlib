@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "from __future__ import print_function\nimport tttrlib\nimport numpy as np\nimport pylab as plt"
+        "from __future__ import print_function\nimport os\nfrom pathlib import Path\nimport tttrlib\nimport numpy as np\nimport pylab as plt\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')\n\n# Read contents of file into new CLSMImage\nsettings = {\n    \"channels\": [0, 1],\n    \"fill\": True,\n}\nimage = tttrlib.CLSMImage(data, **settings)\n\nimg_original = image.intensity.sum(axis=0)\n\n# Transform\n# do a 4x4 binning\nbin_line = 4\nbin_pixel = 4\nn_frames, n_lines, n_pixel = image.shape\nn_px = n_frames * n_lines * n_pixel\n\n# interleaved 1D array of origin and target indices.\nmapping = np.empty(n_px * 2, dtype=np.uint32)\ni = 0\nfor f in range(0, n_frames):\n    for l in range(0, n_lines):\n        for p in range(0, n_pixel):\n            source_idx = image.to1D(f, l, p)\n            # In this example the lines and pixels are binned by a factor of 4\n            target_idx = image.to1D(f, l // bin_line, p // bin_pixel)\n            mapping[i + 0] = source_idx\n            mapping[i + 1] = target_idx\n            i += 2\n\n# Any other arbitrary mapping cloud be used\nplt.plot(mapping)\nplt.show()\n\nimage.transform(mapping)\nimg_transformed = image.intensity.sum(axis=0)\n\n# Plot the results\nfig, axs = plt.subplots(1, 2)\naxs[0].imshow(img_original)\naxs[1].imshow(img_transformed)\nplt.show()\n\n# After transforming the image can be cropped\nimage.crop(0, n_frames, 0, n_lines // bin_line, 0, n_pixel // bin_pixel)\nimg_transformed_cropped = image.intensity.sum(axis=0)\n# Plot the results\nfig, axs = plt.subplots(1, 2)\naxs[0].imshow(img_original)\naxs[1].imshow(img_transformed_cropped)\nplt.show()"
+        "data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))\n\n# Read contents of file into new CLSMImage\nsettings = {\n    \"channels\": [0, 1],\n    \"fill\": True,\n}\nimage = tttrlib.CLSMImage(data, **settings)\n\nimg_original = image.intensity.sum(axis=0)\n\n# Transform\n# do a 4x4 binning\nbin_line = 4\nbin_pixel = 4\nn_frames, n_lines, n_pixel = image.shape\nn_px = n_frames * n_lines * n_pixel\n\n# interleaved 1D array of origin and target indices.\nmapping = np.empty(n_px * 2, dtype=np.uint32)\ni = 0\nfor f in range(0, n_frames):\n    for l in range(0, n_lines):\n        for p in range(0, n_pixel):\n            source_idx = image.to1D(f, l, p)\n            # In this example the lines and pixels are binned by a factor of 4\n            target_idx = image.to1D(f, l // bin_line, p // bin_pixel)\n            mapping[i + 0] = source_idx\n            mapping[i + 1] = target_idx\n            i += 2\n\n# Any other arbitrary mapping cloud be used\nplt.plot(mapping)\nplt.show()\n\nimage.transform(mapping)\nimg_transformed = image.intensity.sum(axis=0)\n\n# Plot the results\nfig, axs = plt.subplots(1, 2)\naxs[0].imshow(img_original)\naxs[1].imshow(img_transformed)\nplt.show()\n\n# After transforming the image can be cropped\nimage.crop(0, n_frames, 0, n_lines // bin_line, 0, n_pixel // bin_pixel)\nimg_transformed_cropped = image.intensity.sum(axis=0)\n# Plot the results\nfig, axs = plt.subplots(1, 2)\naxs[0].imshow(img_original)\naxs[1].imshow(img_transformed_cropped)\nplt.show()"
       ]
     }
   ],

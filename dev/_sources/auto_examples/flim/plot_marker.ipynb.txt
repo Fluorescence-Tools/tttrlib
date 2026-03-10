@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "from __future__ import print_function\nimport tttrlib\nimport numpy as np\nimport pylab as plt"
+        "from __future__ import print_function\nimport os\nfrom pathlib import Path\nimport tttrlib\nimport numpy as np\nimport pylab as plt\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "fn_custom_lsm = '../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'\nfn_leica_sp8 = '../../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'\n\n# To decipher the data, we first read the TTTR streams.\ntttr_custom = tttrlib.TTTR(fn_custom_lsm, 1)\ntttr_leica = tttrlib.TTTR(fn_leica_sp8)"
+        "fn_custom_lsm = str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3')\nfn_leica_sp8 = str(DATA_ROOT / 'imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')\n\n# To decipher the data, we first read the TTTR streams.\ntttr_custom = tttrlib.TTTR(fn_custom_lsm, 1)\ntttr_leica = tttrlib.TTTR(fn_leica_sp8)"
       ]
     },
     {

@@ -127,7 +127,7 @@
     
   
 
-<a class="navbar-brand logo" href="../../contents.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -155,8 +155,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -169,18 +176,35 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
     Example Gallery
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -255,8 +279,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -269,8 +300,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
   </a>
 </li>
 
@@ -392,7 +430,7 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../../contents.html" class="nav-link" aria-label="Home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
@@ -457,7 +495,7 @@
 <span class="c1"># 5 = Photon-HDF5</span>
 
 <span class="c1"># Determine data root from environment or fall back to repository layout</span>
-<span class="n">DATA_ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;../../tttr-data&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="n">DATA_ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
 
 <span class="n">benchmark_files</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>

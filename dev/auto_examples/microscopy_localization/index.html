@@ -63,13 +63,11 @@
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/microscopy_localization/index';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Basic Image Localization Test" href="plot_basic_localization_test.html" />
+    <link rel="next" title="Miscellaneous" href="../miscellaneous/index.html" />
     <link rel="prev" title="Fitting ICS data by a RICS model" href="../image_correlation/plot_imaging_ics_fit.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -128,7 +126,7 @@
     
   
 
-<a class="navbar-brand logo" href="../../contents.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -156,8 +154,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -170,18 +175,35 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
     Example Gallery
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -256,8 +278,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -270,8 +299,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
   </a>
 </li>
 
@@ -393,7 +429,7 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../../contents.html" class="nav-link" aria-label="Home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
@@ -426,24 +462,7 @@
 <p>These examples show how to use the ImageLocalizer class to precisely localize
 fluorescent point sources (e.g., fluorescent beads or single molecules) with
 sub-pixel accuracy using 2D Gaussian curve fitting.</p>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the basic functionality of the Image Localization features in tttrlib by fitting a synthetic 2D Gaussian."><img alt="" src="../../_images/sphx_glr_plot_basic_localization_test_thumb.png" />
-<p><a class="reference internal" href="plot_basic_localization_test.html"><span class="doc">Basic Image Localization Test</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Basic Image Localization Test</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a NumPy-friendly wrapper for the tttrlib Image Localization functionality, making it easy to use NumPy arrays directly without manual conversion to SWIG vector types."><img alt="" src="../../_images/sphx_glr_plot_numpy_localization_wrapper_thumb.png" />
-<p><a class="reference internal" href="plot_numpy_localization_wrapper.html"><span class="doc">NumPy-friendly Localization Wrapper</span></a></p>
-  <div class="sphx-glr-thumbnail-title">NumPy-friendly Localization Wrapper</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the Image Localization functionality in tttrlib by creating synthetic fluorescent beads and localizing them using 2D Gaussian fitting."><img alt="" src="../../_images/sphx_glr_plot_synthetic_bead_localization_thumb.png" />
-<p><a class="reference internal" href="plot_synthetic_bead_localization.html"><span class="doc">Synthetic Bead Localization Demo</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Synthetic Bead Localization Demo</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the enhanced ImageLocalizer class with memory leak fixes, context manager support, and improved NumPy-friendly interface."><img alt="" src="../../_images/sphx_glr_plot_enhanced_image_localizer_thumb.png" />
-<p><a class="reference internal" href="plot_enhanced_image_localizer.html"><span class="doc">Enhanced ImageLocalizer with Memory Leak Fixes</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Enhanced ImageLocalizer with Memory Leak Fixes</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates an improved ImageLocalizer class that provides better memory management and a NumPy-friendly interface while working with the existing SWIG interface correctly."><img alt="" src="../../_images/sphx_glr_plot_improved_image_localizer_thumb.png" />
-<p><a class="reference internal" href="plot_improved_image_localizer.html"><span class="doc">Improved ImageLocalizer with Memory Leak Awareness</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Improved ImageLocalizer with Memory Leak Awareness</div>
-</div></div><div class="toctree-wrapper compound">
-</div>
-</section>
+<div class="sphx-glr-thumbnails"></div></section>
 
 
                 </article>
@@ -465,11 +484,11 @@ sub-pixel accuracy using 2D Gaussian curve fitting.</p>
       </div>
     </a>
     <a class="right-next"
-       href="plot_basic_localization_test.html"
+       href="../miscellaneous/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Basic Image Localization Test</p>
+        <p class="prev-next-title">Miscellaneous</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

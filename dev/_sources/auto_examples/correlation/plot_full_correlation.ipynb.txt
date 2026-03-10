@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import tttrlib\nimport matplotlib.pylab as plt\nimport numpy as np"
+        "import os\nfrom pathlib import Path\nimport tttrlib\nimport matplotlib.pylab as plt\nimport numpy as np\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))"
       ]
     },
     {
@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')"
+        "data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')"
       ]
     },
     {

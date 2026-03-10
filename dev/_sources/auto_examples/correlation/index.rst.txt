@@ -71,23 +71,6 @@ including gated, sliced, and normalized correlation variants.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data.">
-
-.. only:: html
-
-  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/correlation/plot_full_correlation`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Full correlation</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
 
 .. only:: html
@@ -100,6 +83,23 @@ including gated, sliced, and normalized correlation variants.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_full_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Full correlation</div>
     </div>
 
 
@@ -137,6 +137,23 @@ including gated, sliced, and normalized correlation variants.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_confocor3_two_ch_correlation_merge_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation (using merge method)</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -150,8 +167,9 @@ including gated, sliced, and normalized correlation variants.
    /auto_examples/correlation/plot_estimate_noise
    /auto_examples/correlation/plot_sliced_correlation
    /auto_examples/correlation/plot_gated_correlation
-   /auto_examples/correlation/plot_full_correlation
    /auto_examples/correlation/plot_confocor3_two_ch_correlation
+   /auto_examples/correlation/plot_full_correlation
    /auto_examples/correlation/plot_normal_correlation
    /auto_examples/correlation/plot_correlation_cr_filter
+   /auto_examples/correlation/plot_confocor3_two_ch_correlation_merge
 

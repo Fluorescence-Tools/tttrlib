@@ -1,0 +1,717 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Getting Started with tttrlib" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="getting-started.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="The purpose of this guide is to illustrate some of the main features that tttrlib provides. It assumes a very basic working knowledge of fluorescence spectroscopy (e.g., decay analysis, correlation..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_getting-started_1f5638ce.png" />
+<meta property="og:image:alt" content="The purpose of this guide is to illustrate some of the main features that tttrlib provides. It assumes a very basic working knowledge of fluorescence spectroscopy (e.g., decay analysis, correlation..." />
+<meta name="description" content="The purpose of this guide is to illustrate some of the main features that tttrlib provides. It assumes a very basic working knowledge of fluorescence spectroscopy (e.g., decay analysis, correlation..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Getting Started with tttrlib &#8212; tttrlib v0.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=7026087e"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="install.html" />
+    <link rel="prev" title="tttrlib: Time-Resolved Fluorescence Analysis" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting-started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Getting Started with tttrlib</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="getting-started-with-tttrlib">
+<span id="getting-started-detailed"></span><h1>Getting Started with tttrlib<a class="headerlink" href="#getting-started-with-tttrlib" title="Link to this heading">#</a></h1>
+<p>The purpose of this guide is to illustrate some of the main features that <strong>tttrlib</strong> provides.
+It assumes a very basic working knowledge of fluorescence spectroscopy (e.g., decay analysis, correlation spectroscopy).
+Please refer to our <span class="xref std std-ref">installation-instructions</span> for installing tttrlib.</p>
+<p><strong>tttrlib</strong> is an open-source library that supports a diverse set of experimental TTTR (Time-Tagged Time-Resolved) data.
+It provides efficient tools for reading, preprocessing, and analyzing photon streams recorded by PicoQuant, Becker &amp; Hickl, and open Photon-HDF instruments.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>We recommend using <strong>Miniforge</strong> (Conda-forge) for a robust, cross-platform Python environment.</p>
+<ol class="arabic">
+<li><p><strong>Install Miniforge</strong>
+- Download from <a class="github reference external" href="https://github.com/conda-forge/miniforge">conda-forge/miniforge</a>
+- Follow the installation instructions for your operating system (Linux, macOS, Windows).</p></li>
+<li><p><strong>Create a new environment</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>tttrlib-env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10
+conda<span class="w"> </span>activate<span class="w"> </span>tttrlib-env
+</pre></div>
+</div>
+</li>
+<li><p><strong>Install tttrlib</strong>
+- <strong>Linux/macOS</strong>: Use Bioconda (ensure <code class="xref any docutils literal notranslate"><span class="pre">conda-forge</span></code> has higher priority than <code class="xref any docutils literal notranslate"><span class="pre">defaults</span></code>):</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>bioconda<span class="w"> </span>tttrlib
+</pre></div>
+</div>
+</div></blockquote>
+<ul>
+<li><p><strong>Windows</strong>: Use the custom channel:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>tpeulen<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>tttrlib
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><strong>(Optional) Install Jupyter</strong> to run example notebooks:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>jupyter
+</pre></div>
+</div>
+</li>
+<li><p><strong>Alternative: pip</strong>
+- For PyPI releases:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tttrlib
+</pre></div>
+</div>
+</div></blockquote>
+<ul>
+<li><p>For the latest development version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/fluorescence-tools/tttrlib.git
+<span class="nb">cd</span><span class="w"> </span>tttrlib
+pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="quick-start-browse-the-example-gallery">
+<h2>Quick Start: Browse the Example Gallery<a class="headerlink" href="#quick-start-browse-the-example-gallery" title="Link to this heading">#</a></h2>
+<p>The fastest way to learn tttrlib is through our <strong>executable examples</strong>.</p>
+<p><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm reference internal" href="auto_examples/index.html"><span class="doc">📚 Browse All Examples</span></a></p>
+<p>The gallery includes:</p>
+<ul class="simple">
+<li><p><strong>Beginner tutorials</strong> - Reading files, basic operations</p></li>
+<li><p><strong>FLIM analysis</strong> - Lifetime fitting, image reconstruction</p></li>
+<li><p><strong>FCS/FCCS</strong> - Correlation analysis</p></li>
+<li><p><strong>Burst analysis</strong> - Single-molecule detection</p></li>
+<li><p><strong>CLSM imaging</strong> - Confocal microscopy workflows</p></li>
+</ul>
+<p>Each example is a complete, runnable Python script with explanations.</p>
+</section>
+<section id="running-examples-locally">
+<h2>Running Examples Locally<a class="headerlink" href="#running-examples-locally" title="Link to this heading">#</a></h2>
+<ul>
+<li><p>Download example TTTR files from <a class="reference external" href="https://www.peulen.xyz/downloads/tttr-data/">https://www.peulen.xyz/downloads/tttr-data/</a> or use your own experimental data.</p></li>
+<li><p>Open a Python shell or Jupyter notebook.</p></li>
+<li><p>Try this minimal example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="c1"># Use type inference (recommended)</span>
+<span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;path/to/example.ptu&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tttr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># If type inference fails:</span>
+<span class="c1"># tttr = tttrlib.TTTR(&quot;path/to/example.ptu&quot;, &quot;PTU&quot;)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="opening-tttr-files-and-accessing-data">
+<h2>Opening TTTR Files and Accessing Data<a class="headerlink" href="#opening-tttr-files-and-accessing-data" title="Link to this heading">#</a></h2>
+<p><strong>tttrlib</strong> provides a simple, unified interface for TTTR files via <a class="reference internal" href="glossary.html#term-TTTR"><span class="xref std std-term">TTTR</span></a> objects.
+A <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code> object represents the photon stream contained in a file and provides direct access to:</p>
+<ul class="simple">
+<li><p>Macro times (experiment time / sync pulse number)</p></li>
+<li><p>Micro times (delay after excitation)</p></li>
+<li><p>Routing channels (detector IDs)</p></li>
+<li><p>Event types (photon, marker, etc.)</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="n">tttr1</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">()</span>               <span class="c1"># create an empty TTTR object</span>
+<span class="n">tttr2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;filename.ptu&quot;</span><span class="p">)</span> <span class="c1"># load a TTTR file</span>
+<span class="n">micro_times</span> <span class="o">=</span> <span class="n">tttr2</span><span class="o">.</span><span class="n">micro_times</span>
+</pre></div>
+</div>
+<p><strong>TTTR objects</strong> can be used to compute correlation curves, fluorescence decays, photon distribution histograms, or to generate images from time-resolved confocal laser scanning microscopy (CLSM) data.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;clsm_filename.ptu&quot;</span><span class="p">)</span>
+<span class="n">clsm</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">intensity_image</span> <span class="o">=</span> <span class="n">clsm</span><span class="o">.</span><span class="n">intensity</span>
+</pre></div>
+</div>
+</section>
+<section id="understanding-tttr-file-formats">
+<h2>Understanding TTTR File Formats<a class="headerlink" href="#understanding-tttr-file-formats" title="Link to this heading">#</a></h2>
+<p>TTTR files store photon-by-photon data streams. Supported formats include:</p>
+<ul class="simple">
+<li><p>PicoQuant: PTU, HT3</p></li>
+<li><p>Becker &amp; Hickl: SPC</p></li>
+<li><p>Photon-HDF5: Open community standard</p></li>
+</ul>
+<p>Each file encodes photon arrival information as integer arrays of macro times, micro times, and routing channels.
+The file type can be inferred automatically or specified explicitly using the second argument of the constructor, e.g. <code class="xref any docutils literal notranslate"><span class="pre">&quot;PTU&quot;</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">&quot;SPC&quot;</span></code>, or <code class="xref any docutils literal notranslate"><span class="pre">&quot;HDF5&quot;</span></code>.</p>
+</section>
+<section id="basic-python-and-numpy-concepts">
+<h2>Basic Python and NumPy Concepts<a class="headerlink" href="#basic-python-and-numpy-concepts" title="Link to this heading">#</a></h2>
+<p>Some familiarity with NumPy array operations will help when working with tttrlib:</p>
+<ul class="simple">
+<li><p><strong>Slicing:</strong> <code class="xref any docutils literal notranslate"><span class="pre">tttr[:100]</span></code> selects the first 100 events</p></li>
+<li><p><strong>Boolean indexing:</strong> <code class="xref any docutils literal notranslate"><span class="pre">tttr[mask]</span></code> filters events</p></li>
+<li><p><strong>NumPy arrays:</strong> photon data is exposed as NumPy arrays for fast numerical processing</p></li>
+</ul>
+</section>
+<section id="quick-reference">
+<h2>Quick Reference<a class="headerlink" href="#quick-reference" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Read a file:</strong>
+<code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(filename,</span> <span class="pre">file_type=None)</span></code></p></li>
+<li><p><strong>Get macro times:</strong>
+<code class="docutils literal notranslate"><span class="pre">tttr.macro_times</span></code></p></li>
+<li><p><strong>Get micro times:</strong>
+<code class="docutils literal notranslate"><span class="pre">tttr.micro_times</span></code></p></li>
+<li><p><strong>Select by channel:</strong>
+<code class="docutils literal notranslate"><span class="pre">tttr.get_selection_by_channel([0,</span> <span class="pre">1])</span></code></p></li>
+<li><p><strong>Slice events:</strong>
+<code class="docutils literal notranslate"><span class="pre">tttr[100:200]</span></code></p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>This section introduced how TTTR files are read and how photon data can be accessed.
+To learn more, see:</p>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="user_guide.html#user-guide"><span class="std std-ref">User Guide</span></a> for advanced tools and workflows</p></li>
+<li><p>The <span class="xref std std-ref">general_examples</span> for practical scripts</p></li>
+<li><p>The <span class="xref std std-ref">tutorial_menu</span> for step-by-step learning resources</p></li>
+<li><p>The <span class="xref std std-ref">api_ref</span> for a complete reference of all public classes and methods</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">tttrlib: Time-Resolved Fluorescence Analysis</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="install.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-browse-the-example-gallery">Quick Start: Browse the Example Gallery</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-examples-locally">Running Examples Locally</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-tttr-files-and-accessing-data">Opening TTTR Files and Accessing Data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#understanding-tttr-file-formats">Understanding TTTR File Formats</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-python-and-numpy-concepts">Basic Python and NumPy Concepts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-reference">Quick Reference</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting-started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

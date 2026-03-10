@@ -4,7 +4,7 @@
       "cell_type": "markdown",
       "metadata": {},
       "source": [
-        "\n# FLIM-PIE\n\n## Overview\nDemonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).\n\n## Prerequisites\n- Set ``TTTRLIB_DATA`` to the dataset root. Falls back to ``../../tttr-data`` if\n  not set.\n\nIn Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The\nexciting light source is usually a pulsed laser. When analyzing the detected fluorescence the\ninterleaved excitation needs to be taken into account. For that, when two excitation sources are used,\nthe micro time detection windows is separted into two ranges, a prompt range (a blue laser excites the\ndonor in a FRET experiment) and the delay range (a red laser excites the acceptor in a FRET experiment).\n"
+        "\n# FLIM-PIE\n\n## Overview\nDemonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE).\n\n## Prerequisites\n- Set ``TTTRLIB_DATA`` to the dataset root.\n\nIn Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The\nexciting light source is usually a pulsed laser. When analyzing the detected fluorescence the\ninterleaved excitation needs to be taken into account. For that, when two excitation sources are used,\nthe micro time detection windows is separted into two ranges, a prompt range (a blue laser excites the\ndonor in a FRET experiment) and the delay range (a red laser excites the acceptor in a FRET experiment).\n"
       ]
     },
     {

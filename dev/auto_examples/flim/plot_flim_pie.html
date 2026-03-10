@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/flim/plot_flim_pie.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root. Falls back to../../tttr-data if not set.. In Pulsed in..." />
+<meta property="og:description" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root.. In Pulsed interleaved excitation (PIE) the sample is ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_flim_plot_flim_pie_009fa6c1.png" />
-<meta property="og:image:alt" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root. Falls back to../../tttr-data if not set.. In Pulsed in..." />
-<meta name="description" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root. Falls back to../../tttr-data if not set.. In Pulsed in..." />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_flim_plot_flim_pie_01f403d5.png" />
+<meta property="og:image:alt" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root.. In Pulsed interleaved excitation (PIE) the sample is ..." />
+<meta name="description" content="Overview: Demonstrates how to analyze FLIM data with pulsed interleaved excitation (PIE). Prerequisites: Set TTTRLIB_DATA to the dataset root.. In Pulsed interleaved excitation (PIE) the sample is ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>FLIM-PIE &#8212; tttrlib v0.0.0</title>
@@ -129,7 +129,7 @@
     
   
 
-<a class="navbar-brand logo" href="../../contents.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -157,8 +157,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -171,18 +178,35 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
     Example Gallery
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -257,8 +281,15 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../preface.html">
-    Welcome to tttrlib
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
   </a>
 </li>
 
@@ -271,8 +302,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../glossary.html">
-    Glossary
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
   </a>
 </li>
 
@@ -394,7 +432,7 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../../contents.html" class="nav-link" aria-label="Home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
@@ -433,7 +471,7 @@
 <section id="Prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#Prerequisites" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> to the dataset root. Falls back to <code class="docutils literal notranslate"><span class="pre">../../tttr-data</span></code> if not set.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> to the dataset root.</p></li>
 </ul>
 <p>In Pulsed interleaved excitation (PIE) the sample is excited by more than one light source. The exciting light source is usually a pulsed laser. When analyzing the detected fluorescence the interleaved excitation needs to be taken into account. For that, when two excitation sources are used, the micro time detection windows is separted into two ranges, a prompt range (a blue laser excites the donor in a FRET experiment) and the delay range (a red laser excites the acceptor in a FRET experiment).</p>
 <p>Import all required libraries</p>

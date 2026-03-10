@@ -107,7 +107,6 @@ Example Categories
    auto_examples/fluorescence_decay/index
    auto_examples/image_correlation/index
    auto_examples/microscopy_flim/index
-   auto_examples/microscopy_localization/index
    auto_examples/miscellaneous/index
    auto_examples/release_highlights/index
    auto_examples/single_molecule/index
@@ -393,23 +392,6 @@ including gated, sliced, and normalized correlation variants.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data.">
-
-.. only:: html
-
-  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/correlation/plot_full_correlation`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Full correlation</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
 
 .. only:: html
@@ -422,6 +404,23 @@ including gated, sliced, and normalized correlation variants.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the full correlation is computed for a sample that was measured in a pulsed excitation experiment. However, the same procedure can be applied to cw data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_full_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Full correlation</div>
     </div>
 
 
@@ -456,6 +455,23 @@ including gated, sliced, and normalized correlation variants.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Count rate filtered correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_confocor3_two_ch_correlation_merge_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation (using merge method)</div>
     </div>
 
 
@@ -619,23 +635,6 @@ segmentation-driven decays, and common image operations.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
-
-.. only:: html
-
-  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/flim/plot_lifetime_moments_bg`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see auto_examples/flim/plot_marker.py). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read.">
 
 .. only:: html
@@ -648,6 +647,23 @@ segmentation-driven decays, and common image operations.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_lifetime_moments_bg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
     </div>
 
 
@@ -1041,91 +1057,6 @@ sub-pixel accuracy using 2D Gaussian curve fitting.
     <div class="sphx-glr-thumbnails">
 
 .. thumbnail-parent-div-open
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the basic functionality of the Image Localization features in tttrlib by fitting a synthetic 2D Gaussian.">
-
-.. only:: html
-
-  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_basic_localization_test_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/microscopy_localization/plot_basic_localization_test`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Basic Image Localization Test</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a NumPy-friendly wrapper for the tttrlib Image Localization functionality, making it easy to use NumPy arrays directly without manual conversion to SWIG vector types.">
-
-.. only:: html
-
-  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_numpy_localization_wrapper_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/microscopy_localization/plot_numpy_localization_wrapper`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">NumPy-friendly Localization Wrapper</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the Image Localization functionality in tttrlib by creating synthetic fluorescent beads and localizing them using 2D Gaussian fitting.">
-
-.. only:: html
-
-  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_synthetic_bead_localization_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/microscopy_localization/plot_synthetic_bead_localization`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Synthetic Bead Localization Demo</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the enhanced ImageLocalizer class with memory leak fixes, context manager support, and improved NumPy-friendly interface.">
-
-.. only:: html
-
-  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_enhanced_image_localizer_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/microscopy_localization/plot_enhanced_image_localizer`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Enhanced ImageLocalizer with Memory Leak Fixes</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates an improved ImageLocalizer class that provides better memory management and a NumPy-friendly interface while working with the existing SWIG interface correctly.">
-
-.. only:: html
-
-  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_improved_image_localizer_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/microscopy_localization/plot_improved_image_localizer`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Improved ImageLocalizer with Memory Leak Awareness</div>
-    </div>
-
 
 .. thumbnail-parent-div-close
 
@@ -1548,6 +1479,23 @@ Application of ``tttrlib`` to single-molecule data.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Complete Burst Analysis Pipeline</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates advanced burst selection techniques using tttrlib, combining automatic (GMM) and manual (Gaussian fitting) approaches for single-molecule FRET data analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_selection_advanced_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_selection_advanced`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Advanced Burst Selection Analysis</div>
     </div>
 
 

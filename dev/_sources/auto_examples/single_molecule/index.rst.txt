@@ -293,6 +293,23 @@ Application of ``tttrlib`` to single-molecule data.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates advanced burst selection techniques using tttrlib, combining automatic (GMM) and manual (Gaussian fitting) approaches for single-molecule FRET data analysis.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_selection_advanced_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_selection_advanced`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Advanced Burst Selection Analysis</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -318,4 +335,5 @@ Application of ``tttrlib`` to single-molecule data.
    /auto_examples/single_molecule/plot_01_burst_analysis
    /auto_examples/single_molecule/plot_single_molecule_pda_2
    /auto_examples/single_molecule/plot_complete_burst_analysis_pipeline
+   /auto_examples/single_molecule/plot_burst_selection_advanced
 

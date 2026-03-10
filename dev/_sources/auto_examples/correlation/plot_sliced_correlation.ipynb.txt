@@ -22,7 +22,7 @@
       },
       "outputs": [],
       "source": [
-        "import pylab as plt\nimport tttrlib\nimport numpy as np\n\ndata = tttrlib.TTTR('../../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu')\nprint(data.header.get_json())"
+        "import os\nfrom pathlib import Path\nimport pylab as plt\nimport tttrlib\nimport numpy as np\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))\ndata = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))\nprint(data.header.get_json())"
       ]
     },
     {

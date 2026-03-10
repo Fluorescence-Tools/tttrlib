@@ -33,7 +33,7 @@
       },
       "outputs": [],
       "source": [
-        "DATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')"
+        "DATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')"
       ]
     },
     {

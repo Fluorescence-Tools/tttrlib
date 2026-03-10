@@ -157,23 +157,6 @@ segmentation-driven decays, and common image operations.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
-
-.. only:: html
-
-  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/flim/plot_lifetime_moments_bg`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see auto_examples/flim/plot_marker.py). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read.">
 
 .. only:: html
@@ -186,6 +169,23 @@ segmentation-driven decays, and common image operations.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_lifetime_moments_bg`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
     </div>
 
 
@@ -309,8 +309,8 @@ segmentation-driven decays, and common image operations.
    /auto_examples/flim/plot_transform
    /auto_examples/flim/plot_mean_lifetime
    /auto_examples/flim/plot_pixel_masks
-   /auto_examples/flim/plot_lifetime_moments_bg
    /auto_examples/flim/plot_read_clsm_data
+   /auto_examples/flim/plot_lifetime_moments_bg
    /auto_examples/flim/plot_mle_lifetime
    /auto_examples/flim/plot_phasor
    /auto_examples/flim/plot_tutorial_python

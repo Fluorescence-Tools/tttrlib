@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import tttrlib\nimport numpy as np\nimport pylab as plt\n\nfilename = '../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu'\nfilename_irf = '../../tttr-data/imaging/zeiss/eGFP_bad_background/IRF.ptu'\n\ndata = tttrlib.TTTR(filename)\nirf = tttrlib.TTTR(filename_irf)\n\nchannels_green = [0, 2]\nchannels_red = [1, 3]\n\n# Assume constant background (same shape as IRF)\ndata_irf = irf[irf.get_selection_by_channel(channels_red)]\nplt.xlim(0, 5000)\nirf_np, x = data_irf.get_microtime_histogram(1)\nbackground = np.ones_like(irf_np)\nplt.semilogy(background)"
+        "import os\nfrom pathlib import Path\nimport tttrlib\nimport numpy as np\nimport pylab as plt\n\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\"))\nfilename = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')\nfilename_irf = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/IRF.ptu')\n\ndata = tttrlib.TTTR(filename)\nirf = tttrlib.TTTR(filename_irf)\n\nchannels_green = [0, 2]\nchannels_red = [1, 3]\n\n# Assume constant background (same shape as IRF)\ndata_irf = irf[irf.get_selection_by_channel(channels_red)]\nplt.xlim(0, 5000)\nirf_np, x = data_irf.get_microtime_histogram(1)\nbackground = np.ones_like(irf_np)\nplt.semilogy(background)"
       ]
     },
     {

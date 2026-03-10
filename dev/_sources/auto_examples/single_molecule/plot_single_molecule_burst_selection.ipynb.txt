@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import os\nfrom pathlib import Path\nimport numpy as np\nimport tttrlib\nimport pylab as plt\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n\n\ndef save_burst_id(\n        fn: str,\n        start_stop: np.ndarray\n):\n    with open(fn, \"w\") as fp:\n        for start, stop in start_stop:\n            fp.write(\"%i\\t%i\\n\" % (start, stop))"
+        "import os\nfrom pathlib import Path\nimport numpy as np\nimport tttrlib\nimport pylab as plt\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n\n\ndef save_burst_id(\n        fn: str,\n        start_stop: np.ndarray\n):\n    with open(fn, \"w\") as fp:\n        for start, stop in start_stop:\n            fp.write(\"%i\\t%i\\n\" % (start, stop))"
       ]
     },
     {

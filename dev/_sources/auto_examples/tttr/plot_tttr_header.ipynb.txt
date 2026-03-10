@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import os\nfrom pathlib import Path\nimport tttrlib\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n# the header can be accesses by the method get_header or as an property\nheader = data.header"
+        "import os\nfrom pathlib import Path\nimport tttrlib\n\n# Use TTTRLIB_DATA if set, otherwise fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()\n\ndata = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')\n# the header can be accesses by the method get_header or as an property\nheader = data.header"
       ]
     },
     {

@@ -1,0 +1,151 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "\n# Confocor3 two channel cross-correlation (using merge method)\n\nThe raw FCS data format of the Zeiss Confocor3 is relatively simple.\nZeiss Confocor3 raw files store time-difference between photons.\nA relatively small header is followed by a set of 32-bit integers that\ncontain the time difference to the previous registered photon. Photons\nregistered by different channels are stored in separate files.\n\nThis example demonstrates how to use the new TTTR merge method to combine\nmultiple Confocor3 channels into a single photon stream for cross-correlation\nanalysis. The merge method automatically handles time sorting and is more\nefficient than manual concatenation.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import pathlib\nimport numpy as np\n\nimport pylab as plt\nimport tttrlib"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "------------\nThe photon data registered by different detectors are saved in separate files.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "from examples._example_data import get_data_root\n# Read the data of all channels that should be correlated into separate containers.\nfns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])\n\ntttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]\n\nprint(f\"Found {len(tttr_data)} channels\")\nfor i, tttr in enumerate(tttr_data):\n    print(f\"  Channel {i+1}: {tttr.get_number_of_records()} events\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "----------------\nYou can check the count rates of the channels using the macro time resolution \ncontained in the header\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "header = tttr_data[0].header\nmacro_time_resolution = header.macro_time_resolution\ncount_rates = [len(t) / (t.macro_times[-1] * macro_time_resolution) for t in tttr_data]\nprint(\"Count rates:\", count_rates)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---------------------------------------\nUse the new merge method to combine channels automatically\nThe merge method with strategy=1 (interleave) automatically sorts by time\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "tttr_merged = tttrlib.TTTR()\ntttr_merged.set_header(header)\n\n# Copy first channel\ntttr_merged.append_events(\n    macro_times=tttr_data[0].macro_times,\n    micro_times=tttr_data[0].micro_times,\n    routing_channels=tttr_data[0].routing_channels,\n    event_types=tttr_data[0].event_types\n)\n\n# Merge remaining channels with interleave strategy (chronological order)\nfor i in range(1, len(tttr_data)):\n    # Use channel offset to ensure unique channel numbers\n    # Channel numbers from Confocor3 files might be the same, so we offset them\n    channel_offset = i if tttr_data[i].routing_channels[0] == tttr_data[0].routing_channels[0] else 0\n    tttr_merged.merge(tttr_data[i], 0, channel_offset, 1)  # strategy=1 for interleave\n\nprint(f\"Merged data: {tttr_merged.get_number_of_records()} total events\")\nmerged_channels = sorted(set(tttr_merged.routing_channels))\nprint(f\"Merged channels: {merged_channels}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "-------------------------\nThe interleave merge strategy ensures events are sorted by time\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "times = tttr_merged.macro_times\nif np.all(np.diff(times) >= 0):\n    print(\"\u2713 Events are in chronological order\")\nelse:\n    print(\"\u2717 Events are NOT in chronological order\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---------------------------\nThe merged container can be used for standard analysis, e.g., correlations.\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "settings = {\n    \"n_bins\": 9,  # n_bins and n_casc defines the settings of the multi-tau\n    \"n_casc\": 19,  # correlation algorithm\n}\n\n# Create correlator\n# Caution: x-axis in units of macro time counter\n# tttrlib.Correlator is unaware of the calibration in the TTTR object\ncorrelator = tttrlib.Correlator(\n    channels=([merged_channels[0]], [merged_channels[1]]),  # Use merged channel numbers\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=f\"Corr({merged_channels[0]},{merged_channels[1]})\"\n)\n\n# Auto-correlation for first channel\ncorrelator = tttrlib.Correlator(\n    channels=([merged_channels[0]], [merged_channels[0]]),\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=f\"Corr({merged_channels[0]},{merged_channels[0]})\"\n)\n\n# Auto-correlation for second channel\ncorrelator = tttrlib.Correlator(\n    channels=([merged_channels[1]], [merged_channels[1]]),\n    tttr=tttr_merged,\n    **settings\n)\nplt.semilogx(\n    correlator.x_axis,\n    correlator.correlation,\n    label=f\"Corr({merged_channels[1]},{merged_channels[1]})\"\n)\n\nplt.xlabel(\"Lag Time (macro time units)\")\nplt.ylabel(\"Correlation\")\nplt.legend()\nplt.ylim(0.98, 1.30)\nplt.title(\"Confocor3 Cross-correlation (using TTTR merge method)\")\nplt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "--------------------------------\nCompare the new merge method with the old manual approach\n\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "collapsed": false
+      },
+      "outputs": [],
+      "source": [
+        "import time\n\n# Old method (manual concatenation and sorting)\nstart_time = time.time()\nmacro_times_old_list = []\nrouting_channels_old_list = []\nfor i, t in enumerate(tttr_data):\n    macro_times_old_list.append(t.macro_times)\n    # Match the channel offset logic of the new method\n    channel_offset = i if t.routing_channels[0] == tttr_data[0].routing_channels[0] else 0\n    routing_channels_old_list.append(t.routing_channels + channel_offset)\n\nmacro_times_old = np.concatenate(macro_times_old_list)\nrouting_channels_old = np.concatenate(routing_channels_old_list)\nsorted_indices = np.argsort(macro_times_old, kind='stable')\nrouting_channels_old = routing_channels_old[sorted_indices]\nmacro_times_old = macro_times_old[sorted_indices]\nold_time = time.time() - start_time\n\n\n# New method (TTTR merge)\nstart_time = time.time()\ntttr_new = tttrlib.TTTR()\ntttr_new.set_header(header)\ntttr_new.append_events(\n    macro_times=tttr_data[0].macro_times,\n    micro_times=tttr_data[0].micro_times,\n    routing_channels=tttr_data[0].routing_channels,\n    event_types=tttr_data[0].event_types\n)\nfor i in range(1, len(tttr_data)):\n    channel_offset = i if tttr_data[i].routing_channels[0] == tttr_data[0].routing_channels[0] else 0\n    tttr_new.merge(tttr_data[i], 0, channel_offset, 1)\nnew_time = time.time() - start_time\n\nprint(f\"\\nPerformance comparison:\")\nprint(f\"Old method: {old_time:.6f} seconds\")\nprint(f\"New method: {new_time:.6f} seconds\")\nprint(f\"Speedup: {old_time/new_time:.2f}x\" if new_time > 0 else \"N/A\")\n\n# Verify results are identical\nassert np.array_equal(macro_times_old, tttr_new.macro_times), \"Macro times should be identical\"\nassert np.array_equal(routing_channels_old, tttr_new.routing_channels), \"Routing channels should be identical\"\nprint(\"\u2713 Both methods produce identical results\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.10.19"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

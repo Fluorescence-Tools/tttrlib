@@ -15,7 +15,7 @@
       },
       "outputs": [],
       "source": [
-        "import os\nfrom pathlib import Path\nimport pylab as plt\nfrom matplotlib.pyplot import imread\nimport tttrlib\nimport numpy as np\n\n# Determine data root from environment or fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \"../../tttr-data\")).resolve()"
+        "import os\nfrom pathlib import Path\nimport pylab as plt\nfrom matplotlib.pyplot import imread\nimport tttrlib\nimport numpy as np\n\n# Determine data root from environment or fall back to repository layout\nDATA_ROOT = Path(os.environ.get(\"TTTRLIB_DATA\", \".\")).resolve()"
       ]
     },
     {
