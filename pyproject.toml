@@ -71,12 +71,13 @@ cmake.args = [
     "-DBUILD_R_INTERFACE:BOOL=OFF",
     "-DBUILD_LOGIC_ANALYZER:BOOL=OFF",
     "-DCMAKE_BUILD_TYPE=Release",
-    "-DBUILD_PHOTON_HDF:BOOL=OFF",
+    "-DBUILD_PHOTON_HDF:BOOL=ON",
     "-DBUILD_LIBRARY:BOOL=OFF",
     "-DCMAKE_C_VISIBILITY_PRESET=hidden",
     "-DCMAKE_CXX_VISIBILITY_PRESET=hidden",
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
+    "-DHDF5_USE_STATIC_LIBRARIES:BOOL=ON",
 ]
 wheel.packages = ["tttrlib"]
 # wheel.py-api = "py3"
@@ -104,7 +105,7 @@ test-skip = "*"
 [tool.cibuildwheel.macos]
 archs = ["x86_64"]
 before-all = [
-    "brew install cmake",
+    "brew install cmake hdf5",
 ]
 before-build = "pip install delocate"
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
@@ -114,25 +115,28 @@ MACOSX_DEPLOYMENT_TARGET = "13.0"
 CMAKE_PREFIX_PATH = "/usr/local"
 CMAKE_OSX_ARCHITECTURES = "x86_64"
 CMAKE_INSTALL_RPATH = "@loader_path"
+HDF5_DIR = "/usr/local/opt/hdf5"
+HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
 before-all = [
-    "dnf install -y epel-release --nogpgcheck && dnf install -y --enablerepo=powertools --nogpgcheck cmake && rm -f /usr/local/bin/swig*",
+    "dnf install -y epel-release --nogpgcheck && dnf install -y --enablerepo=powertools --nogpgcheck cmake hdf5-devel && rm -f /usr/local/bin/swig*",
 ]
 repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.linux.environment]
 CMAKE_INSTALL_RPATH = "$ORIGIN"
 CMAKE_PREFIX_PATH = "/usr"
+HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 # Run in cmd shell to expand environment variables
-before-build = "cmd /c \"pip install delvewheel\""
+before-build = "cmd /c \"set PATH=%VCPKG_ROOT%;%PATH% && vcpkg install hdf5:x64-windows-static && pip install delvewheel\""
 repair-wheel-command = "delvewheel repair --add-libcxx -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
@@ -140,4 +144,5 @@ CMAKE_GENERATOR = "Visual Studio 17 2022"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
+HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
