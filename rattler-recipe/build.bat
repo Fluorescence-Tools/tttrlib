@@ -21,19 +21,16 @@ cmake .. -G "NMake Makefiles" ^
 nmake install
 
 :: Convert SWIG output to a package
-:: SWIG generates: tttrlib.py (module) + _tttrlib*.pyd (extension)
-:: We need both in tttrlib\ package directory
-for /f "delims=" %%i in ('python -c "import site; print(site.getsitepackages()[0])"') do set PYTHON_SITE_PACKAGES=%%i
+:: SWIG generates files directly to %SP_DIR% (site-packages)
+:: Create tttrlib package directory if it doesn't exist
+if not exist "%SP_DIR%\tttrlib" mkdir "%SP_DIR%\tttrlib"
 
-:: Create tttrlib package directory
-if not exist "%PYTHON_SITE_PACKAGES%\tttrlib" mkdir "%PYTHON_SITE_PACKAGES%\tttrlib"
-
-:: Move the compiled extension (_tttrlib*.pyd) to package dir
-for %%f in ("%PYTHON_SITE_PACKAGES%"\_tttrlib*.pyd) do (
-    if exist "%%f" move "%%f" "%PYTHON_SITE_PACKAGES%\tttrlib\"
+:: Move the compiled extension (_tttrlib*.pyd) from site-packages root to tttrlib package dir
+for %%f in ("%SP_DIR%"\_tttrlib*.pyd) do (
+    if exist "%%f" move "%%f" "%SP_DIR%\tttrlib\"
 )
 
-:: Move the Python wrapper to __init__.py
-if exist "%PYTHON_SITE_PACKAGES%\tttrlib.py" (
-    move "%PYTHON_SITE_PACKAGES%\tttrlib.py" "%PYTHON_SITE_PACKAGES%\tttrlib\__init__.py"
+:: Move the Python wrapper (tttrlib.py) to __init__.py in package dir
+if exist "%SP_DIR%\tttrlib.py" (
+    move "%SP_DIR%\tttrlib.py" "%SP_DIR%\tttrlib\__init__.py"
 )
