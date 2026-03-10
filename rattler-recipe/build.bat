@@ -27,7 +27,6 @@ cmake -S .. -B . ^
   -DPython_ROOT_DIR="%PREFIX_W%" ^
   -DBUILD_LIBRARY=OFF ^
   -DBUILD_PYTHON_DOCS=OFF ^
-  -DBUILD_LOGIC_ANALYZER=OFF ^
   -DWITH_AVX=OFF
 if errorlevel 1 exit 1
 

@@ -30,7 +30,6 @@ cmake .. -G "NMake Makefiles" ^
  -DPython_ROOT_DIR="%PREFIX%\bin" ^
  -DBUILD_LIBRARY=OFF ^
  -DBUILD_PYTHON_DOCS=ON ^
- -DBUILD_LOGIC_ANALYZER=OFF ^
  -DWITH_AVX=OFF
 
 nmake install
