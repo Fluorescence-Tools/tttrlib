@@ -1,25 +1,26 @@
 :: Build script for Windows conda package (rattler-build)
 :: Relies on rattler-build's automatic environment activation
+@echo on
 
-cd %SRC_DIR%
+cd /d %SRC_DIR%
 rmdir /s /q b2 2>nul
 mkdir b2
 cd b2
 
 :: Query site-packages from the host Python
-if "%PYTHON%" == "" set PYTHON=%PREFIX%\python.exe
-for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
-echo SP_DIR=%SP_DIR%
+:: Use a more robust way to call python and handle output
+if "%PYTHON%" == "" set "PYTHON=%PREFIX%\python.exe"
+for /f "usebackq delims=" %%i in (`%PYTHON% -c "import site; print(site.getsitepackages()[0])"`) do set "SP_DIR=%%i"
+echo "SP_DIR detected as: %SP_DIR%"
 
-:: Convert paths to forward slashes for CMake
+:: Convert paths to forward slashes for CMake to avoid backslash escape issues
 set "PREFIX_W=%PREFIX:\=/%"
 set "SP_DIR_W=%SP_DIR:\=/%"
 
 cmake -S .. -B . ^
   -G Ninja ^
   %CMAKE_ARGS% ^
-  -DCMAKE_PREFIX_PATH="%PREFIX_W%/Library;%PREFIX_W%" ^
-  -DHDF5_ROOT="%PREFIX_W%/Library" ^
+  -DCMAKE_FIND_DEBUG_MODE=ON ^
   -DHDF5_USE_STATIC_LIBRARIES=OFF ^
   -DBUILD_PYTHON_INTERFACE=ON ^
   -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR_W%" ^
