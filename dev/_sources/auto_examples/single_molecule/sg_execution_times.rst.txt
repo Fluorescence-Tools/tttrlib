@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.031** total execution time for 16 files **from auto_examples/single_molecule**:
+**00:00.027** total execution time for 16 files **from auto_examples/single_molecule**:
 
 .. container::
 
@@ -33,7 +33,7 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_selection_advanced.py` (``plot_burst_selection_advanced.py``)
-     - 00:00.009
+     - 00:00.008
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py` (``plot_single_molecule_pda_2.py``)
      - 00:00.003
@@ -42,21 +42,30 @@ Computation times
      - 00:00.002
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_selection_minimal.py` (``plot_microtime_selection_minimal.py``)
-     - 00:00.002
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py` (``plot_single_molecule_mcs.py``)
-     - 00:00.002
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_complete_burst_analysis_pipeline.py` (``plot_complete_burst_analysis_pipeline.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py` (``plot_single_molecule_burst_selection.py``)
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py` (``plot_single_molecule_mcs.py``)
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_complete_burst_analysis_pipeline.py` (``plot_complete_burst_analysis_pipeline.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_01_burst_analysis.py` (``plot_01_burst_analysis.py``)
      - 00:00.001
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py` (``plot_single_molecule_burst_selection.py``)
+     - 00:00.001
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstfilter_dynamic_enhanced.py` (``plot_burstfilter_dynamic_enhanced.py``)
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstfilter_with_selection.py` (``plot_burstfilter_with_selection.py``)
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_selection_example_fixed.py` (``plot_microtime_selection_example_fixed.py``)
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_fret_burst_analysis.py` (``plot_fret_burst_analysis.py``)
      - 00:00.001
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_json.py` (``plot_burst_analysis_json.py``)
@@ -65,18 +74,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_selection_example.py` (``plot_microtime_selection_example.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_selection_example_fixed.py` (``plot_microtime_selection_example_fixed.py``)
-     - 00:00.001
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_with_filter.py` (``plot_burst_analysis_with_filter.py``)
-     - 00:00.001
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_fret_burst_analysis.py` (``plot_fret_burst_analysis.py``)
-     - 00:00.001
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_linearization.py` (``plot_microtime_linearization.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstfilter_with_selection.py` (``plot_burstfilter_with_selection.py``)
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_with_filter.py` (``plot_burst_analysis_with_filter.py``)
      - 00:00.001
      - 0.0
