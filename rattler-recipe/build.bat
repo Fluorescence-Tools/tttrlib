@@ -8,6 +8,7 @@ mkdir b2
 cd b2
 
 :: Query site-packages from the host Python (mirrors build.sh approach)
+if "%PYTHON%" == "" set PYTHON=%PREFIX%\python.exe
 for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
 echo SP_DIR=%SP_DIR%
 
