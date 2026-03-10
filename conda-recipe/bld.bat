@@ -1,21 +1,46 @@
-:: Submodules should already be checked out by GitHub Actions checkout step
+:: Build script for Windows conda package (conda-build)
+@echo on
+
 cd %SRC_DIR%
 
-:: Manually activate the VS2017 compiler from conda's vs2017_win-64 package
-:: The activation scripts should be sourced automatically by conda-build, but we'll do it explicitly
-for /f "usebackq tokens=*" %%i in (`"%BUILD_PREFIX%\Library\bin\vswhere.exe" -products * -version "[15.0,16.0)" -property installationPath`) do (
+:: Activate the MSVC compiler environment.
+:: Use vswhere to find the latest VS installation.
+set "VSWHERE=%BUILD_PREFIX%\Library\bin\vswhere.exe"
+if not exist "%VSWHERE%" set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if not exist "%VSWHERE%" (
+    echo WARNING: vswhere.exe not found, relying on environment
+    goto :skip_vcvars
+)
+
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
     set "VSINSTALLDIR=%%i"
 )
 
 if not defined VSINSTALLDIR (
-    echo "Visual Studio 2017 not found via vswhere"
-    exit 1
+    echo WARNING: No Visual Studio installation found via vswhere, relying on environment
+    goto :skip_vcvars
 )
 
-echo "Found VS2017 at: %VSINSTALLDIR%"
-call "%VSINSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+echo "Found Visual Studio at: %VSINSTALLDIR%"
+if exist "%VSINSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" (
+    call "%VSINSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+    if errorlevel 1 (
+        echo WARNING: vcvarsall.bat failed, relying on environment
+    )
+) else (
+    echo WARNING: vcvarsall.bat not found at expected location
+)
 
-rmdir b2 /s /q
+:skip_vcvars
+
+:: Verify compiler is available
+where cl.exe >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: cl.exe not found on PATH after environment setup
+    exit /b 1
+)
+
+rmdir b2 /s /q 2>nul
 mkdir b2
 cd b2
 
