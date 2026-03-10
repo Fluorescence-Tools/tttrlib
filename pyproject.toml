@@ -133,6 +133,7 @@ SKBUILD = "1"
 archs = ["AMD64"]
 # Run in cmd shell to expand environment variables
 before-build = "cmd /c \"set PATH=%VCPKG_ROOT%;%PATH% && vcpkg install hdf5:x64-windows && pip install delvewheel\""
+repair-wheel-command = "delvewheel repair --add-libcxx -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
