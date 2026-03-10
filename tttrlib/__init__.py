@@ -7,7 +7,7 @@ import tttrlib.tttrlib as _tttrlib_module
 for _name in dir(_tttrlib_module):
     if not _name.startswith('_'):
         globals()[_name] = getattr(_tttrlib_module, _name)
-del _tttrlib_module, _name, _sys
+del _tttrlib_module, _name
 
 from .ImageLocalizer import *
 
