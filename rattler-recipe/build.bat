@@ -11,6 +11,8 @@ if "%PYTHON%" == "" set "PYTHON=%PREFIX%\python.exe"
 :: Use sysconfig which is more reliable across platforms
 %PYTHON% -c "import sysconfig; print(sysconfig.get_path('purelib'))" > sp_dir.txt
 set /p SP_DIR=<sp_dir.txt
+:: Ensure backslashes for Windows commands
+set "SP_DIR=%SP_DIR:/=\%"
 echo "SP_DIR detected as: %SP_DIR%"
 
 :: Convert paths to forward slashes for CMake to avoid backslash escape issues
