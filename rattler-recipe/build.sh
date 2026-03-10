@@ -19,10 +19,16 @@ cmake -S .. -B . \
 
 ninja install -j ${CPU_COUNT}
 
-# Copy Python helper files from ext/python/ to site-packages
-# These files provide additional Python functionality beyond the SWIG-generated wrapper
+# Create tttrlib package directory and add __init__.py
+# The SWIG generates tttrlib.py as a module file, but we also have helper files
+# that need to be in a package directory for proper imports
 PYTHON_SITE_PACKAGES=$(${PREFIX}/bin/python -c "import site; print(site.getsitepackages()[0])")
-if [[ ! -d "${PYTHON_SITE_PACKAGES}/tttrlib" ]]; then
+
+# Move the generated tttrlib.py to tttrlib/ package
+if [[ -f "${PYTHON_SITE_PACKAGES}/tttrlib.py" ]]; then
     mkdir -p "${PYTHON_SITE_PACKAGES}/tttrlib"
+    mv "${PYTHON_SITE_PACKAGES}/tttrlib.py" "${PYTHON_SITE_PACKAGES}/tttrlib/__init__.py"
 fi
-cp ../ext/python/*.py "${PYTHON_SITE_PACKAGES}/tttrlib/"
+
+# Copy helper Python files from ext/python/
+cp ../ext/python/*.py "${PYTHON_SITE_PACKAGES}/tttrlib/" 2>/dev/null || true
