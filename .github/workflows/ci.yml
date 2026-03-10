@@ -193,7 +193,7 @@ jobs:
             rattler-build build --recipe rattler-recipe \
               --variant "python=$VER" \
               --output-dir ./conda-bld \
-              -c conda-forge --no-default-channels
+              -c conda-forge
           done
 
       - uses: actions/upload-artifact@v4
