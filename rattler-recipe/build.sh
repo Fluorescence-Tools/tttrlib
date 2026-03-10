@@ -19,4 +19,10 @@ cmake -S .. -B . \
 
 ninja install -j ${CPU_COUNT}
 
-# No executables to copy (tttrlib is a library only)
+# Copy Python helper files that are not included in the SWIG-generated wrapper
+# These files are in the tttrlib/ source directory
+PYTHON_SITE_PACKAGES=$(${PREFIX}/bin/python -c "import site; print(site.getsitepackages()[0])")
+if [[ ! -d "${PYTHON_SITE_PACKAGES}/tttrlib" ]]; then
+    mkdir -p "${PYTHON_SITE_PACKAGES}/tttrlib"
+fi
+cp ../tttrlib/*.py "${PYTHON_SITE_PACKAGES}/tttrlib/"
