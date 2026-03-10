@@ -15,6 +15,7 @@ tmp/
 playground
 junk/
 venv
+tttrlib
 
 # CMake builds
 cmake-build-*/
@@ -25,6 +26,7 @@ cmake-build-release/
 
 # Documentation and tools
 doc/_*
+doc/xml
 doc/_build/
 doc/paper*
 /doc/examples/

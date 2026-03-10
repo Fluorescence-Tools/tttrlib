@@ -33,6 +33,7 @@ from __future__ import annotations
 
 %pythoncode %{
 import sys
+import warnings
 
 if sys.version_info[0] < 3:
     from importlib_metadata import version
@@ -43,6 +44,56 @@ try:
     __version__ = version(__package__ or __name__)
 except Exception:
     __version__ = "0.0.0"
+
+
+class ExperimentalWarning(UserWarning):
+    """Warning for experimental features."""
+    pass
+
+
+def mark_experimental(cls, message=None):
+    """Mark a class as experimental by patching its __init__ and docstring."""
+    if message is None:
+        message = (
+            "This class is experimental and may change or be removed in a future "
+            "release. Use with caution."
+        )
+    
+    original_init = cls.__init__ if hasattr(cls, '__init__') else None
+    
+    def __init__(*args, **kwargs):
+        warnings.warn(
+            f"{cls.__name__}: {message}",
+            ExperimentalWarning,
+            stacklevel=2
+        )
+        if original_init is not None:
+            return original_init(*args, **kwargs)
+    
+    cls.__init__ = __init__
+    cls.__experimental__ = True
+    
+    if cls.__doc__:
+        cls.__doc__ = f".. warning:: Experimental\n\n{cls.__doc__}"
+    else:
+        cls.__doc__ = f".. warning:: Experimental\n\n{message}"
+    
+    return cls
+
+
+def experimental(cls):
+    """Decorator to mark a class as experimental."""
+    return mark_experimental(cls)
+
+
+# Apply experimental marking to SWIG classes that are not yet stable API.
+# This patches CLSMISM to emit warnings when instantiated.
+if 'CLSMISM' in dir():
+    mark_experimental(
+        CLSMISM,
+        "CLSMISM is experimental and may change or be removed in a future "
+        "release. Use with caution."
+    )
 %}
 
 %include "info.h"
