@@ -19,3 +19,21 @@ cmake .. -G "NMake Makefiles" ^
  -DWITH_AVX=OFF
 
 nmake install
+
+:: Convert SWIG output to a package
+:: SWIG generates: tttrlib.py (module) + _tttrlib*.pyd (extension)
+:: We need both in tttrlib\ package directory
+for /f "delims=" %%i in ('python -c "import site; print(site.getsitepackages()[0])"') do set PYTHON_SITE_PACKAGES=%%i
+
+:: Create tttrlib package directory
+if not exist "%PYTHON_SITE_PACKAGES%\tttrlib" mkdir "%PYTHON_SITE_PACKAGES%\tttrlib"
+
+:: Move the compiled extension (_tttrlib*.pyd) to package dir
+for %%f in ("%PYTHON_SITE_PACKAGES%"\_tttrlib*.pyd) do (
+    if exist "%%f" move "%%f" "%PYTHON_SITE_PACKAGES%\tttrlib\"
+)
+
+:: Move the Python wrapper to __init__.py
+if exist "%PYTHON_SITE_PACKAGES%\tttrlib.py" (
+    move "%PYTHON_SITE_PACKAGES%\tttrlib.py" "%PYTHON_SITE_PACKAGES%\tttrlib\__init__.py"
+)

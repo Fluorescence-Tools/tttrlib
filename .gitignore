@@ -17,6 +17,9 @@ junk/
 venv
 tttrlib
 
+# Windows artifacts
+nul
+
 # CMake builds
 cmake-build-*/
 cmake-build-release/

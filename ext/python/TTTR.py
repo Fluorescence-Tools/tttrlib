@@ -20,10 +20,6 @@ def micro_times(self):
 def macro_times(self):
     return self.get_macro_times()
 
-def __len__(self):
-    """Return the number of events in the TTTR data."""
-    return len(self.macro_times)
-
 def apply_channel_luts(self, channel_luts, channel_shifts=None):
     """
     Apply channel LUTs and shifts to this TTTR object.
@@ -143,10 +139,6 @@ def __getattr__(self, item):
     the corresponding getter method ('get_attribute') is called.
     Works for both instance and static methods.
     """
-    # Special case for apply_luts_and_shifts which is not exposed in current build
-    if item == "apply_luts_and_shifts":
-        return self._apply_luts_and_shifts_impl
-
     item = "get_" + str(item)
     # Check if the static method or instance method exists in the class
     if hasattr(self.__class__, item):

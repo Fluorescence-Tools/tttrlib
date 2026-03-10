@@ -84,7 +84,7 @@ class TestSimplifiedTTTRInterface:
         tttr = self._create_simple_tttr_data()
 
         # Invalid LUT type
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             tttr.apply_channel_luts({0: "invalid"})
 
     def test_tttr_constructor_with_channel_luts_file(self):
