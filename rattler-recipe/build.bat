@@ -12,16 +12,22 @@ if "%PYTHON%" == "" set PYTHON=%PREFIX%\python.exe
 for /f "delims=" %%i in ('"%PYTHON%" -c "import site; print(site.getsitepackages()[0])"') do set SP_DIR=%%i
 echo SP_DIR=%SP_DIR%
 
+:: Convert paths to forward slashes for CMake
+set "PREFIX_W=%PREFIX:\=/%"
+set "SP_DIR_W=%SP_DIR:\=/%"
+
+set "HDF5_ROOT=%PREFIX%\Library"
+
 cmake -S .. -B . ^
   -G Ninja ^
-  -DCMAKE_INSTALL_PREFIX="%PREFIX%\Library" ^
-  -DCMAKE_PREFIX_PATH="%PREFIX%\Library;%PREFIX%" ^
-  -DHDF5_ROOT="%PREFIX%\Library" ^
+  -DCMAKE_INSTALL_PREFIX="%PREFIX_W%/Library" ^
+  -DCMAKE_PREFIX_PATH="%PREFIX_W%/Library;%PREFIX_W%" ^
+  -DHDF5_ROOT="%PREFIX_W%/Library" ^
   -DBUILD_PYTHON_INTERFACE=ON ^
   -DCMAKE_BUILD_TYPE=Release ^
-  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR%" ^
-  -DCMAKE_SWIG_OUTDIR="%SP_DIR%" ^
-  -DPython_ROOT_DIR="%PREFIX%" ^
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%SP_DIR_W%" ^
+  -DCMAKE_SWIG_OUTDIR="%SP_DIR_W%" ^
+  -DPython_ROOT_DIR="%PREFIX_W%" ^
   -DBUILD_LIBRARY=OFF ^
   -DBUILD_PYTHON_DOCS=OFF ^
   -DBUILD_LOGIC_ANALYZER=OFF ^
