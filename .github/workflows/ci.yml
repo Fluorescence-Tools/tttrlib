@@ -72,6 +72,19 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }}
 
+      - name: Install HDF5 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # vcpkg is pre-installed on the runner at VCPKG_INSTALLATION_ROOT
+          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
+          & $vcpkg install hdf5:x64-windows --no-print-usage
+          $hdf5root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "HDF5_ROOT=$hdf5root" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$hdf5root" >> $env:GITHUB_ENV
+          echo "PATH=$hdf5root\bin;$env:PATH" >> $env:GITHUB_ENV
+          Write-Host "HDF5_ROOT set to $hdf5root"
+
       - name: Set CIBW environment
         shell: bash
         run: |
@@ -159,6 +172,7 @@ jobs:
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
+          init-shell: bash
 
       - name: Install rattler-build
         shell: bash -l {0}

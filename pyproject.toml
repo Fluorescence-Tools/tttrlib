@@ -80,7 +80,6 @@ cmake.args = [
 ]
 wheel.packages = ["tttrlib"]
 # wheel.py-api = "py3"
-wheel.expand-macos-universal-tags = true
 build-dir = "build/{wheel_tag}"
 install.strip = true
 install.components = ["bindings"]
@@ -107,11 +106,10 @@ before-all = [
     "brew install hdf5 || brew upgrade hdf5 || true",
 ]
 before-build = "pip install delocate"
-repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "13.0"
-HDF5_PREFIX = "$(brew --prefix hdf5)"
 CMAKE_PREFIX_PATH = "$(brew --prefix hdf5)"
 CMAKE_OSX_ARCHITECTURES = "x86_64"
 CMAKE_INSTALL_RPATH = "@loader_path"
@@ -132,7 +130,6 @@ SKBUILD = "1"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
-before-all = "vcpkg install hdf5:x64-windows"
 before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair --add-libcxx -w {dest_dir} {wheel}"
 
@@ -141,6 +138,8 @@ CMAKE_GENERATOR = "Visual Studio 17 2022"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
-CMAKE_TOOLCHAIN_FILE = "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+CMAKE_TOOLCHAIN_FILE = "$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 VCPKG_TARGET_TRIPLET = "x64-windows"
+HDF5_ROOT = "$HDF5_ROOT"
+CMAKE_PREFIX_PATH = "$CMAKE_PREFIX_PATH"
 SKBUILD = "1"
