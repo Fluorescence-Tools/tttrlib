@@ -10,7 +10,7 @@ on:
 
 env:
   DEFAULT_PYTHON: "3.10"
-  CIBW_VERSION: "2.22.0"
+  CIBW_VERSION: "2.23.3"
   # Space separated list of python versions for main build
   MAIN_PY_VERSIONS: "3.9 3.10 3.11 3.12 3.13"
 
