@@ -19,10 +19,20 @@ cmake -S .. -B . \
 
 ninja install -j ${CPU_COUNT}
 
-# SWIG generates tttrlib.py as a module file.
-# Convert it to a package by moving to tttrlib/__init__.py
+# Convert SWIG output to a package
+# SWIG generates: tttrlib.py (module) + _tttrlib*.so (extension)
+# We need both in tttrlib/ package directory
 PYTHON_SITE_PACKAGES=$(${PREFIX}/bin/python -c "import site; print(site.getsitepackages()[0])")
+
+# Find and move the compiled extension (_tttrlib*.so) to package dir
+mkdir -p "${PYTHON_SITE_PACKAGES}/tttrlib"
+for f in "${PYTHON_SITE_PACKAGES}"/_tttrlib*.so; do
+    if [[ -f "$f" ]]; then
+        mv "$f" "${PYTHON_SITE_PACKAGES}/tttrlib/"
+    fi
+done
+
+# Move the Python wrapper to __init__.py
 if [[ -f "${PYTHON_SITE_PACKAGES}/tttrlib.py" ]]; then
-    mkdir -p "${PYTHON_SITE_PACKAGES}/tttrlib"
     mv "${PYTHON_SITE_PACKAGES}/tttrlib.py" "${PYTHON_SITE_PACKAGES}/tttrlib/__init__.py"
 fi
