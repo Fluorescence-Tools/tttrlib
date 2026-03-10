@@ -8,8 +8,8 @@ cd b2
 
 :: Query site-packages from the host Python
 if "%PYTHON%" == "" set "PYTHON=%PREFIX%\python.exe"
-:: On Windows, the last element of getsitepackages() is usually the site-packages dir
-%PYTHON% -c "import site; print(site.getsitepackages()[-1])" > sp_dir.txt
+:: Use sysconfig which is more reliable across platforms
+%PYTHON% -c "import sysconfig; print(sysconfig.get_path('purelib'))" > sp_dir.txt
 set /p SP_DIR=<sp_dir.txt
 echo "SP_DIR detected as: %SP_DIR%"
 
