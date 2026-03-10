@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.328** total execution time for 9 files **from auto_examples/fluorescence_decay**:
+**00:00.355** total execution time for 9 files **from auto_examples/fluorescence_decay**:
 
 .. container::
 
@@ -33,7 +33,7 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_decay_fit_irf_bg.py` (``plot_decay_fit_irf_bg.py``)
-     - 00:00.320
+     - 00:00.346
      - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23_benchmark_1.py` (``plot_fit23_benchmark_1.py``)
      - 00:00.003
@@ -50,12 +50,12 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23.py` (``plot_fit23.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit25.py` (``plot_fit25.py``)
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py` (``plot_fit26.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit24.py` (``plot_fit24.py``)
      - 00:00.000
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py` (``plot_fit26.py``)
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit25.py` (``plot_fit25.py``)
      - 00:00.000
      - 0.0

@@ -39,14 +39,14 @@ Computation times
      - 00:00.003
      - 0.0
    * - :ref:`sphx_glr_auto_examples_beginner_plot_02_basic_operations.py` (``plot_02_basic_operations.py``)
-     - 00:00.003
+     - 00:00.002
      - 0.0
    * - :ref:`sphx_glr_auto_examples_beginner_plot_04_writing_files.py` (``plot_04_writing_files.py``)
      - 00:00.002
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_01_reading_files.py` (``plot_01_reading_files.py``)
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_05_microscopy.py` (``plot_05_microscopy.py``)
      - 00:00.001
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_beginner_plot_05_microscopy.py` (``plot_05_microscopy.py``)
+   * - :ref:`sphx_glr_auto_examples_beginner_plot_01_reading_files.py` (``plot_01_reading_files.py``)
      - 00:00.001
      - 0.0
