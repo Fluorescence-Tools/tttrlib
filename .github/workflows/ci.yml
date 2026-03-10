@@ -32,23 +32,25 @@ jobs:
             echo "is_main=false" >> $GITHUB_OUTPUT
           fi
 
-      - id: set-matrix
-        run: |
-          IS_MAIN="${{ github.ref == 'refs/heads/main' }}"
-          if [[ "$IS_MAIN" == "true" ]]; then
-            # Full build for main: Linux, macOS, Windows
-            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"},{\"os\":\"macos-latest\"},{\"os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\"}]}" >> $GITHUB_OUTPUT
-          else
-            # Cheap build for non-main: Linux only
-            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\"}]}" >> $GITHUB_OUTPUT
-          fi
+       - id: set-matrix
+         run: |
+           BRANCH="${{ github.ref }}"
+           # Full matrix for main and development branches: Linux, macOS, Windows
+           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
+             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+             echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+             echo "is_main=true" >> $GITHUB_OUTPUT
+           else
+             # Linux only for other branches (cheaper CI)
+             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+             echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+             echo "is_main=false" >> $GITHUB_OUTPUT
+           fi
 
   build_pip:
-    name: Pip Build ${{ matrix.os }}
+    name: Pip Build ${{ matrix.platform }}
     needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
@@ -95,7 +97,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   test_pip:
-    name: Pip Test ${{ matrix.runner }}
+    name: Pip Test ${{ matrix.platform }}
     needs: [setup, build_pip]
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -136,7 +138,7 @@ jobs:
           pytest
 
   build_conda:
-    name: Conda Build ${{ matrix.os }}
+    name: Conda Build ${{ matrix.platform }}
     needs: setup
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
@@ -190,7 +192,7 @@ jobs:
           path: ./conda-bld
 
   test_conda:
-    name: Conda Test ${{ matrix.runner }}
+    name: Conda Test ${{ matrix.platform }}
     needs: [setup, build_conda]
     runs-on: ${{ matrix.runner }}
     strategy:
