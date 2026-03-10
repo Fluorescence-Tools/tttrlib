@@ -77,7 +77,6 @@ cmake.args = [
     "-DCMAKE_CXX_VISIBILITY_PRESET=hidden",
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
-    "-DHDF5_USE_STATIC_LIBRARIES:BOOL=ON",
 ]
 wheel.packages = ["tttrlib"]
 # wheel.py-api = "py3"
@@ -115,8 +114,6 @@ MACOSX_DEPLOYMENT_TARGET = "13.0"
 CMAKE_PREFIX_PATH = "/usr/local"
 CMAKE_OSX_ARCHITECTURES = "x86_64"
 CMAKE_INSTALL_RPATH = "@loader_path"
-HDF5_DIR = "/usr/local/opt/hdf5"
-HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
 
 [tool.cibuildwheel.linux]
@@ -130,13 +127,12 @@ repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_
 [tool.cibuildwheel.linux.environment]
 CMAKE_INSTALL_RPATH = "$ORIGIN"
 CMAKE_PREFIX_PATH = "/usr"
-HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
 # Run in cmd shell to expand environment variables
-before-build = "cmd /c \"set PATH=%VCPKG_ROOT%;%PATH% && vcpkg install hdf5:x64-windows-static && pip install delvewheel\""
+before-build = "cmd /c \"set PATH=%VCPKG_ROOT%;%PATH% && vcpkg install hdf5:x64-windows && pip install delvewheel\""
 repair-wheel-command = "delvewheel repair --add-libcxx -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
@@ -144,5 +140,4 @@ CMAKE_GENERATOR = "Visual Studio 17 2022"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
-HDF5_USE_STATIC_LIBRARIES = "ON"
 SKBUILD = "1"
