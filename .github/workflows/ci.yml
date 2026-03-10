@@ -168,6 +168,7 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.DEFAULT_PYTHON }}
+          activate-environment: ""
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
@@ -219,6 +220,7 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.DEFAULT_PYTHON }}
+          activate-environment: ""
           miniforge-version: latest
           channels: conda-forge
           channel-priority: strict
