@@ -83,16 +83,6 @@ jobs:
             echo "CIBW_BUILD=cp${PY_VER_SHORT}-*" >> $GITHUB_ENV
           fi
 
-      - name: Install HDF5 (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install cmake hdf5
-
-      - name: Install HDF5 (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          vcpkg install hdf5:x64-windows
-
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
