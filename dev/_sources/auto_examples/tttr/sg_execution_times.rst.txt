@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.007** total execution time for 7 files **from auto_examples/tttr**:
+**00:00.009** total execution time for 7 files **from auto_examples/tttr**:
 
 .. container::
 
@@ -33,7 +33,7 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py` (``plot_tttr_read_benchmark.py``)
-     - 00:00.002
+     - 00:00.003
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py` (``plot_tttr_microtime_histogram.py``)
      - 00:00.001
