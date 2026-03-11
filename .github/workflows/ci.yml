@@ -596,3 +596,67 @@ jobs:
           publish_dir: ./doc/static_root
           keep_files: true
           destination_dir: .
+
+  # ── Publish to PyPI (main branch only, or manual trigger) ───────────────────
+
+  publish_pypi:
+    name: Publish to PyPI
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Build wheels
+        run: |
+          python -m pip install build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # ── Publish to Conda (main branch only, or manual trigger) ─────────────────
+
+  publish_conda:
+    name: Publish to Conda
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build Conda packages
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          for VER in ${{ env.MAIN_PY_VERSIONS }}; do
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --output-dir ./conda-bld \
+              -c conda-forge
+          done
+      - name: Upload to Conda
+        shell: bash -l {0}
+        run: |
+          conda install -y anaconda -c conda-forge
+          anaconda upload --user tpeulen \
+            --label main \
+            --force \
+            ./conda-bld/*/tttrlib-*.conda
