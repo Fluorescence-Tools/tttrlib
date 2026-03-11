@@ -609,6 +609,21 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          # Fetch tags to get version
+          fetch-tags: true
+      - name: Extract version from tag
+        id: version
+        run: |
+          # For releases, use the tag name (remove 'v' prefix if present)
+          # For workflow_dispatch, use pyproject.toml version
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${VERSION#refs/tags/}
+          else
+            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -633,6 +648,18 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          fetch-tags: true
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${VERSION#refs/tags/}
+          else
+            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
@@ -645,7 +672,8 @@ jobs:
       - name: Build Conda packages
         shell: bash -l {0}
         run: |
-          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          export PKG_VERSION=${{ steps.version.outputs.VERSION }}
+          echo "Building tttrlib $PKG_VERSION"
           for VER in ${{ env.MAIN_PY_VERSIONS }}; do
             rattler-build build --recipe rattler-recipe \
               --variant "python=$VER" \
