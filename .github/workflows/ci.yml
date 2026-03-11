@@ -139,7 +139,7 @@ jobs:
     name: Pip Build osx
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
-    runs-on: macos-15-intel
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,7 +158,7 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-macos-15-intel
+          name: pip-wheels-macos
           path: ./wheelhouse/*.whl
 
   build_pip_win:
@@ -234,7 +234,7 @@ jobs:
     name: Pip Test osx py${{ matrix.python }}
     needs: [setup, build_pip_osx, download_test_data]
     if: needs.setup.outputs.is_main == 'true'
-    runs-on: macos-15-intel
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
@@ -242,7 +242,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: pip-wheels-macos-15-intel
+          name: pip-wheels-macos
           path: wheelhouse
       - uses: actions/download-artifact@v4
         with:
