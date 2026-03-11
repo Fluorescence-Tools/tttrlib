@@ -135,8 +135,8 @@ jobs:
           name: pip-wheels-ubuntu-latest
           path: ./wheelhouse/*.whl
 
-  build_pip_osx:
-    name: Pip Build osx
+  build_pip_osx_arm64:
+    name: Pip Build osx arm64
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-26
@@ -156,10 +156,37 @@ jobs:
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
-          CIBW_ARCHS_MACOS: "universal2"
+          CIBW_ARCHS_MACOS: "arm64"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-macos
+          name: pip-wheels-macos-arm64
+          path: ./wheelhouse/*.whl
+
+  build_pip_osx_x86_64:
+    name: Pip Build osx x86_64
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
+          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_ARCHS_MACOS: "x86_64"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-macos-x86_64
           path: ./wheelhouse/*.whl
 
   build_pip_win:
@@ -233,7 +260,7 @@ jobs:
 
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
-    needs: [setup, build_pip_osx, download_test_data]
+    needs: [setup, build_pip_osx_arm64, build_pip_osx_x86_64, download_test_data]
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-26
     strategy:
@@ -243,8 +270,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: pip-wheels-macos
+          pattern: pip-wheels-macos-*
           path: wheelhouse
+          merge-multiple: true
       - uses: actions/download-artifact@v4
         with:
           name: tttr-test-data
