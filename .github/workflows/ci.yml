@@ -31,7 +31,6 @@ jobs:
             BUILD_SPEC=$(echo "${{ env.MAIN_PY_VERSIONS }}" | sed 's/\([0-9]\)\.\([0-9]*\)/cp\1\2-*/g')
             echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
             echo "py_versions=${{ env.MAIN_PY_VERSIONS }}" >> $GITHUB_OUTPUT
-            # JSON array for matrix use in test jobs
             echo 'py_matrix={"python":["3.9","3.10","3.11","3.12","3.13"]}' >> $GITHUB_OUTPUT
           else
             echo "is_main=false" >> $GITHUB_OUTPUT
@@ -41,9 +40,50 @@ jobs:
             echo 'py_matrix={"python":["3.10"]}' >> $GITHUB_OUTPUT
           fi
 
+  # ── Quick smoke test for feature branches (no artifact builds) ────────────
+
+  test_quick:
+    name: Quick Test (lnx)
+    needs: setup
+    if: needs.setup.outputs.is_main == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake
+      - name: Cache test data
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+      - name: Download test data
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
+      - name: Build and Test
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[test]"
+          python -m pytest
+
+  # ── Full builds + tests (main and development only) ───────────────────────
+
   download_test_data:
     name: Download Test Data
     needs: setup
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,6 +112,7 @@ jobs:
   build_pip_lnx:
     name: Pip Build lnx
     needs: setup
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -160,6 +201,7 @@ jobs:
   test_pip_lnx:
     name: Pip Test lnx py${{ matrix.python }}
     needs: [setup, build_pip_lnx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -191,7 +233,7 @@ jobs:
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
     needs: [setup, build_pip_osx, download_test_data]
-    if: needs.build_pip_osx.result == 'success'
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-15-intel
     strategy:
       fail-fast: false
@@ -223,7 +265,7 @@ jobs:
   test_pip_win:
     name: Pip Test win py${{ matrix.python }}
     needs: [setup, build_pip_win, download_test_data]
-    if: needs.build_pip_win.result == 'success'
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -257,6 +299,7 @@ jobs:
   build_conda_lnx:
     name: Conda Build lnx
     needs: setup
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
@@ -368,6 +411,7 @@ jobs:
   test_conda_lnx:
     name: Conda Test lnx py${{ matrix.python }}
     needs: [setup, build_conda_lnx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -401,7 +445,7 @@ jobs:
   test_conda_osx:
     name: Conda Test osx py${{ matrix.python }}
     needs: [setup, build_conda_osx, download_test_data]
-    if: needs.build_conda_osx.result == 'success'
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -435,7 +479,7 @@ jobs:
   test_conda_win:
     name: Conda Test win py${{ matrix.python }}
     needs: [setup, build_conda_win, download_test_data]
-    if: needs.build_conda_win.result == 'success'
+    if: needs.setup.outputs.is_main == 'true'
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -476,10 +520,10 @@ jobs:
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
       needs.test_pip_lnx.result == 'success' &&
       needs.test_conda_lnx.result == 'success' &&
-      (needs.test_pip_osx.result == 'success' || needs.test_pip_osx.result == 'skipped') &&
-      (needs.test_pip_win.result == 'success' || needs.test_pip_win.result == 'skipped') &&
-      (needs.test_conda_osx.result == 'success' || needs.test_conda_osx.result == 'skipped') &&
-      (needs.test_conda_win.result == 'success' || needs.test_conda_win.result == 'skipped')
+      needs.test_pip_osx.result == 'success' &&
+      needs.test_pip_win.result == 'success' &&
+      needs.test_conda_osx.result == 'success' &&
+      needs.test_conda_win.result == 'success'
     runs-on: ubuntu-latest
     env:
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
