@@ -156,6 +156,7 @@ jobs:
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_ARCHS_MACOS: "universal2"
       - uses: actions/upload-artifact@v4
         with:
           name: pip-wheels-macos
