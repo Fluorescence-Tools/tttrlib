@@ -431,7 +431,6 @@ jobs:
           miniforge-variant: Miniforge3
           miniforge-version: latest
           python-version: ${{ matrix.python }}
-          activate-environment: test
           use-mamba: true
           conda-remove-defaults: true
       - name: Install and Test
@@ -465,7 +464,6 @@ jobs:
           miniforge-variant: Miniforge3
           miniforge-version: latest
           python-version: ${{ matrix.python }}
-          activate-environment: test
           use-mamba: true
           conda-remove-defaults: true
       - name: Install and Test
@@ -499,7 +497,6 @@ jobs:
           miniforge-variant: Miniforge3
           miniforge-version: latest
           python-version: ${{ matrix.python }}
-          activate-environment: test
           use-mamba: true
           conda-remove-defaults: true
       - name: Install and Test
