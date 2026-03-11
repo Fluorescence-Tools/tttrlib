@@ -23,7 +23,6 @@ jobs:
       conda_matrix: ${{ steps.set-matrix.outputs.conda_matrix }}
       pip_test_matrix: ${{ steps.set-matrix.outputs.pip_test_matrix }}
       conda_test_matrix: ${{ steps.set-matrix.outputs.conda_test_matrix }}
-      data_matrix: ${{ steps.set-matrix.outputs.data_matrix }}
       is_main: ${{ steps.check-main.outputs.is_main }}
     steps:
       - id: check-main
@@ -37,37 +36,27 @@ jobs:
       - id: set-matrix
         run: |
           BRANCH="${{ github.ref }}"
-          # Full matrix for main and development branches: Linux, macOS, Windows
           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
             # macos-15-intel is the Intel (x86_64) runner (macos-13 was removed Dec 2025)
             # macos-latest is arm64 (Apple Silicon); conda builds natively for arm64
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-15-intel\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
-            # Separate test matrices: pip tests use pip build artifacts, conda tests use conda build artifacts
-            # data_platform must match the platform label used in the data_matrix cache keys
-            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\",\"data_platform\":\"lnx\"},{\"runner\":\"macos-15-intel\",\"artifact_os\":\"macos-15-intel\",\"platform\":\"osx\",\"data_platform\":\"osx-intel\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\",\"data_platform\":\"win\"}]}" >> $GITHUB_OUTPUT
-            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\",\"data_platform\":\"lnx\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\",\"platform\":\"osx\",\"data_platform\":\"osx-arm\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\",\"data_platform\":\"win\"}]}" >> $GITHUB_OUTPUT
-            # Data download matrix: one runner per distinct OS used across pip+conda tests
-            # ubuntu-24.04 covers all Linux jobs; macos-15-intel and macos-latest are different OS caches
-            echo "data_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"platform\":\"lnx\"},{\"runner\":\"macos-15-intel\",\"platform\":\"osx-intel\"},{\"runner\":\"macos-latest\",\"platform\":\"osx-arm\"},{\"runner\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-15-intel\",\"artifact_os\":\"macos-15-intel\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "is_main=true" >> $GITHUB_OUTPUT
           else
             # Linux only for other branches (cheaper CI)
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
-            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\",\"data_platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
-            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\",\"data_platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
-            echo "data_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
             echo "is_main=false" >> $GITHUB_OUTPUT
           fi
 
   download_test_data:
-    name: Download Test Data (${{ matrix.platform }})
+    name: Download Test Data
     needs: setup
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix: ${{fromJson(needs.setup.outputs.data_matrix)}}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -79,12 +68,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./tttr-data
-          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.platform }}
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
       - name: Download test data
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         run: |
           python -m pip install pooch tqdm
           python test/download_test_data.py --output-dir ./tttr-data --quiet
+      - name: Upload test data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+          retention-days: 1
 
   build_pip:
     name: Pip Build ${{ matrix.platform }}
@@ -111,7 +106,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          # vcpkg is pre-installed on the runner at VCPKG_INSTALLATION_ROOT
           $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
           & $vcpkg install hdf5:x64-windows --no-print-usage
           $hdf5root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
@@ -125,7 +119,6 @@ jobs:
         run: |
           echo "CIBW_SKIP=pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*" >> $GITHUB_ENV
           if [[ "${{ needs.setup.outputs.is_main }}" == "true" ]]; then
-            # Convert "3.9 3.10" to "cp39-* cp310-*"
             BUILD_SPEC=$(echo "${{ env.MAIN_PY_VERSIONS }}" | sed 's/\([0-9]\)\.\([0-9]*\)/cp\1\2-*/g')
             echo "CIBW_BUILD=$BUILD_SPEC" >> $GITHUB_ENV
           else
@@ -137,8 +130,6 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: 2
-          # Use uv instead of virtualenv to avoid downloading virtualenv.pyz
-          # from GitHub (which hits HTTP 429 rate-limit errors)
           CIBW_BUILD_FRONTEND: "build[uv]"
 
       - uses: actions/upload-artifact@v4
@@ -159,16 +150,14 @@ jobs:
         with:
           name: pip-wheels-${{ matrix.artifact_os }}
           path: wheelhouse
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: Restore test data cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ./tttr-data
-          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.data_platform }}
-          fail-on-cache-miss: true
       - name: Install and Test
         shell: bash
         env:
@@ -216,12 +205,8 @@ jobs:
           else
             PY_VERSIONS="${{ env.DEFAULT_PYTHON }}"
           fi
-          # Extract version from pyproject.toml
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           echo "Building tttrlib $PKG_VERSION"
-          # On Windows, override the default MSVC compiler from vs2017 to vs2022.
-          # conda-forge defaults to vs2017 whose activation scripts require the
-          # v141 toolset (MSVC 14.16) which is not installed on GitHub Actions runners.
           COMPILER_VARIANTS=""
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             COMPILER_VARIANTS='--variant "c_compiler=vs2022" --variant "cxx_compiler=vs2022"'
@@ -253,6 +238,10 @@ jobs:
         with:
           name: conda-packages-${{ matrix.artifact_os }}
           path: conda-bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -261,12 +250,6 @@ jobs:
           activate-environment: tttrlib
           use-mamba: true
           conda-remove-defaults: true
-      - name: Restore test data cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ./tttr-data
-          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.data_platform }}
-          fail-on-cache-miss: true
       - name: Install and Test
         shell: bash -l {0}
         env:
@@ -284,7 +267,6 @@ jobs:
     env:
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
       BUILD_TIER: 4
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -304,19 +286,14 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          # Build requirements
           python -m pip install scikit-build-core numpy swig
-          # Doc requirements
           python -m pip install sphinx sphinx-copybutton sphinx-design sphinxext-opengraph numpydoc nbsphinx matplotlib ipython sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme scikit-image phconvert numba imagecodecs
-          # Install package dependencies
           python -m pip install .[examples]
 
-      - name: Restore test data cache
-        uses: actions/cache/restore@v4
+      - uses: actions/download-artifact@v4
         with:
+          name: tttr-test-data
           path: ./tttr-data
-          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-lnx
-          fail-on-cache-miss: true
 
       - name: Build Documentation
         run: |
