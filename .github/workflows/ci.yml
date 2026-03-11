@@ -28,13 +28,13 @@ jobs:
           BRANCH="${{ github.ref }}"
           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
             echo "is_main=true" >> $GITHUB_OUTPUT
-            BUILD_SPEC=$(echo "${{ env.MAIN_PY_VERSIONS }}" | sed 's/\([0-9]\)\.\([0-9]*\)/cp\1\2-*/g')
+            BUILD_SPEC=$(python -c "print(','.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split(',')))")
             echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
             echo "py_versions=${{ env.MAIN_PY_VERSIONS }}" >> $GITHUB_OUTPUT
             echo 'py_matrix={"python":["3.9","3.10","3.11","3.12","3.13"]}' >> $GITHUB_OUTPUT
           else
             echo "is_main=false" >> $GITHUB_OUTPUT
-            PY_VER_SHORT=$(echo "${{ env.DEFAULT_PYTHON }}" | sed 's/\.//')
+            PY_VER_SHORT="${DEFAULT_PYTHON/./}"
             echo "cibw_build=cp${PY_VER_SHORT}-*" >> $GITHUB_OUTPUT
             echo "py_versions=${{ env.DEFAULT_PYTHON }}" >> $GITHUB_OUTPUT
             echo 'py_matrix={"python":["3.10"]}' >> $GITHUB_OUTPUT
@@ -255,7 +255,7 @@ jobs:
           TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pip install --upgrade pip
-          PY_VER_SHORT=$(echo "${{ matrix.python }}" | sed 's/\.//')
+          PY_VER_SHORT="${matrix.python/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
           python -m pytest
@@ -288,7 +288,7 @@ jobs:
           TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pip install --upgrade pip
-          PY_VER_SHORT=$(echo "${{ matrix.python }}" | sed 's/\.//')
+          PY_VER_SHORT="${matrix.python/./}"
           ARCH=$(uname -m)
           if [ "$ARCH" = "arm64" ]; then
             python -m pip install wheelhouse/*cp${PY_VER_SHORT}*arm64*.whl
@@ -325,7 +325,7 @@ jobs:
           TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pip install --upgrade pip
-          PY_VER_SHORT=$(echo "${{ matrix.python }}" | sed 's/\.//')
+          PY_VER_SHORT="${matrix.python/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
           python -m pytest
