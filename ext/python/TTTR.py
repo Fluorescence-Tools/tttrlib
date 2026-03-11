@@ -46,7 +46,7 @@ def apply_channel_luts(self, channel_luts, channel_shifts=None):
                 for val in lut_array:
                     lut_vec.append(float(val))
                 luts_map[ch] = lut_vec
-            elif hasattr(lut_array, '__iter__'):  # numpy array or similar
+            elif hasattr(lut_array, '__iter__') and not isinstance(lut_array, str):  # numpy array or similar
                 lut_vec = tttrlib.VectorFloat()
                 for val in lut_array:
                     lut_vec.append(float(val))

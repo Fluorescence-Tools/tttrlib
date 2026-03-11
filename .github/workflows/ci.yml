@@ -21,7 +21,8 @@ jobs:
     outputs:
       pip_matrix: ${{ steps.set-matrix.outputs.pip_matrix }}
       conda_matrix: ${{ steps.set-matrix.outputs.conda_matrix }}
-      test_matrix: ${{ steps.set-matrix.outputs.test_matrix }}
+      pip_test_matrix: ${{ steps.set-matrix.outputs.pip_test_matrix }}
+      conda_test_matrix: ${{ steps.set-matrix.outputs.conda_test_matrix }}
       is_main: ${{ steps.check-main.outputs.is_main }}
     steps:
       - id: check-main
@@ -37,17 +38,20 @@ jobs:
           BRANCH="${{ github.ref }}"
           # Full matrix for main and development branches: Linux, macOS, Windows
           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
-            # macos-13 is the last Intel (x86_64) runner; macos-latest is arm64 (M1)
-            # pip wheels are built for x86_64 so use macos-13; conda uses macos-latest (native arm64)
-            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-13\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            # macos-15-intel is the Intel (x86_64) runner (macos-13 was removed Dec 2025)
+            # macos-latest is arm64 (Apple Silicon); conda builds natively for arm64
+            echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-15-intel\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"os\":\"macos-latest\",\"platform\":\"osx\"},{\"os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-13\",\"artifact_os\":\"macos-13\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            # Separate test matrices: pip tests use pip build artifacts, conda tests use conda build artifacts
+            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-15-intel\",\"artifact_os\":\"macos-15-intel\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"},{\"runner\":\"macos-latest\",\"artifact_os\":\"macos-latest\",\"platform\":\"osx\"},{\"runner\":\"windows-latest\",\"artifact_os\":\"windows-latest\",\"platform\":\"win\"}]}" >> $GITHUB_OUTPUT
             echo "is_main=true" >> $GITHUB_OUTPUT
           else
             # Linux only for other branches (cheaper CI)
             echo "pip_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
             echo "conda_matrix={\"include\":[{\"os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
-            echo "test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+            echo "pip_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
+            echo "conda_test_matrix={\"include\":[{\"runner\":\"ubuntu-24.04\",\"artifact_os\":\"ubuntu-latest\",\"platform\":\"lnx\"}]}" >> $GITHUB_OUTPUT
             echo "is_main=false" >> $GITHUB_OUTPUT
           fi
 
@@ -117,7 +121,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.setup.outputs.test_matrix)}}
+      matrix: ${{fromJson(needs.setup.outputs.pip_test_matrix)}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -150,7 +154,7 @@ jobs:
           PY_VER_SHORT=$(echo "${{ env.DEFAULT_PYTHON }}" | sed 's/\.//')
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
-          pytest
+          python -m pytest
 
   build_conda:
     name: Conda Build ${{ matrix.platform }}
@@ -173,6 +177,7 @@ jobs:
           miniforge-version: latest
           activate-environment: tttrlib
           use-mamba: true
+          conda-remove-defaults: true
 
       - name: Install rattler-build
         shell: bash -l {0}
@@ -217,7 +222,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.setup.outputs.test_matrix)}}
+      matrix: ${{fromJson(needs.setup.outputs.conda_test_matrix)}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -231,6 +236,7 @@ jobs:
           miniforge-version: latest
           activate-environment: tttrlib
           use-mamba: true
+          conda-remove-defaults: true
       - name: Cache test data
         id: cache-test-data
         uses: actions/cache@v4
@@ -250,4 +256,4 @@ jobs:
         run: |
           conda install -y -c ./conda-bld/ tttrlib
           conda install -y pytest scipy
-          pytest
+          python -m pytest
