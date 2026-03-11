@@ -13,8 +13,6 @@ env:
   CIBW_VERSION: "2.23.3"
   # Space separated list of python versions for main build
   MAIN_PY_VERSIONS: "3.9 3.10 3.11 3.12 3.13"
-  # Single cache key shared by all test and doc jobs
-  TEST_DATA_KEY: tttr-test-data-${{ hashFiles('test/settings.json') }}
 
 jobs:
   setup:
@@ -81,7 +79,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./tttr-data
-          key: ${{ env.TEST_DATA_KEY }}-${{ matrix.platform }}
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.platform }}
       - name: Download test data
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         run: |
@@ -169,7 +167,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./tttr-data
-          key: ${{ env.TEST_DATA_KEY }}-${{ matrix.data_platform }}
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.data_platform }}
           fail-on-cache-miss: true
       - name: Install and Test
         shell: bash
@@ -267,7 +265,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./tttr-data
-          key: ${{ env.TEST_DATA_KEY }}-${{ matrix.data_platform }}
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-${{ matrix.data_platform }}
           fail-on-cache-miss: true
       - name: Install and Test
         shell: bash -l {0}
@@ -317,7 +315,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./tttr-data
-          key: ${{ env.TEST_DATA_KEY }}-lnx
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}-lnx
           fail-on-cache-miss: true
 
       - name: Build Documentation
