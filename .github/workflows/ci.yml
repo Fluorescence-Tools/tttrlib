@@ -322,14 +322,14 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install and Test
-        shell: bash
+        shell: pwsh
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pip install --upgrade pip
-          PY_VER="${{ matrix.python }}"
-          PY_VER_SHORT="${PY_VER/./}"
-          python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
+          $pyver = "${{ matrix.python }}" -replace '\.', ''
+          $whl = Get-ChildItem wheelhouse -Filter "*cp${pyver}*.whl" | Select-Object -First 1
+          python -m pip install $whl.FullName
           python -m pip install pytest scipy
           python -m pytest
 
