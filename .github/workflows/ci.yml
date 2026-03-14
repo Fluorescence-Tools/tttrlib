@@ -469,6 +469,7 @@ jobs:
         with:
           miniforge-variant: Miniforge3
           miniforge-version: latest
+          activate-environment: test
           python-version: ${{ matrix.python }}
           use-mamba: true
           conda-remove-defaults: true
@@ -502,6 +503,7 @@ jobs:
         with:
           miniforge-variant: Miniforge3
           miniforge-version: latest
+          activate-environment: test
           python-version: ${{ matrix.python }}
           use-mamba: true
           conda-remove-defaults: true
@@ -535,6 +537,7 @@ jobs:
         with:
           miniforge-variant: Miniforge3
           miniforge-version: latest
+          activate-environment: test
           python-version: ${{ matrix.python }}
           use-mamba: true
           conda-remove-defaults: true
