@@ -28,7 +28,7 @@ jobs:
           BRANCH="${{ github.ref }}"
           if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
             echo "is_main=true" >> $GITHUB_OUTPUT
-            BUILD_SPEC=$(python -c "print(','.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split()))")
+            BUILD_SPEC=$(python -c "print(' '.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split()))")
             echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
             echo "py_versions=${{ env.MAIN_PY_VERSIONS }}" >> $GITHUB_OUTPUT
             echo 'py_matrix={"python":["3.9","3.10","3.11","3.12","3.13"]}' >> $GITHUB_OUTPUT
