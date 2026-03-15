@@ -4,8 +4,13 @@ subsequent heap-corruption crash during Python interpreter shutdown.
 
 Usage: python run_pytest_windows.py [pytest args...] --exitcode-file=<path>
 
-The script runs pytest in a subprocess, writes the exit code to a file,
-then exits with code 0. The caller reads the file to get the real result.
+The script runs pytest in a subprocess, captures the return code at the
+Python level (before interpreter shutdown), writes it to a file, then
+calls os._exit(0) to skip Python's shutdown machinery entirely.
+
+This prevents the heap-corruption crash (0xC0000374) that occurs in
+tttrlib's C extension destructors from affecting the step exit code.
+The calling shell reads the exitcode file for the real pytest result.
 """
 import subprocess
 import sys
@@ -27,12 +32,16 @@ def main():
     result = subprocess.run(cmd)
     code = result.returncode
 
+    # Write exit code to file BEFORE any Python shutdown that could crash.
     with open(exitcode_file, "w") as f:
         f.write(str(code))
+        f.flush()
+        os.fsync(f.fileno())
 
-    # Exit cleanly so any shutdown crash doesn't corrupt the file write above.
-    # The calling shell reads the file for the real code.
-    sys.exit(0)
+    # os._exit() bypasses all atexit handlers, __del__ methods, and the
+    # Python interpreter shutdown sequence entirely. This prevents the
+    # C extension destructor heap crash from killing this wrapper process.
+    os._exit(0)
 
 if __name__ == "__main__":
     main()
