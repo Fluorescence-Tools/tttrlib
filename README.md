@@ -193,7 +193,7 @@ If you use this software, please cite:
 
 ## License
 
-Copyright 2007–2024 tttrlib developers
+Copyright 2007–2026 tttrlib developers
 Licensed under the **BSD-3-Clause** license.
 
 [3]: https://github.com/Fluorescence-Tools/tttrlib/blob/main/doc/logos/mashup.png?raw=true "tttrlib FLIM"
