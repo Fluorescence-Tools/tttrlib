@@ -322,7 +322,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install and Test
-        shell: pwsh
+        shell: pwsh -NoProfile -Command "{0}"
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
