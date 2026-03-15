@@ -1386,11 +1386,17 @@ void CLSMImage::fill(
     // We'll use get_macro_time_at() accessor instead
     
     // Configure OpenMP and get actual thread count
+    // NOTE: OpenMP is disabled on Windows in CLSMImage to avoid heap corruption
+    // (0xC0000374) with MSVC's OpenMP 2.0 runtime. Linux/macOS use GCC/Clang
+    // OpenMP which does not exhibit this issue.
+#ifndef _WIN32
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
     bool use_openmp = (num_threads > 1);
-    
-    // Adaptive threshold based on number of threads
     size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
@@ -1640,11 +1646,14 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
     auto *t = (unsigned short *) malloc(n_pixel_total * sizeof(unsigned short));
     
     // Configure OpenMP for parallel intensity computation
+#ifndef _WIN32
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
     bool use_openmp = (num_threads > 1);
-    
-    // Adaptive threshold based on number of threads
     size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames >= min_frames_for_parallel)
     for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
@@ -1700,8 +1709,12 @@ void CLSMImage::get_fluorescence_decay(
     }
     
     // Configure OpenMP for parallel decay computation
+#ifndef _WIN32
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
     bool use_openmp = (num_threads > 1);
+#else
+    bool use_openmp = false;
+#endif
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4 && !stack_frames)
     for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
@@ -1895,8 +1908,12 @@ void CLSMImage::get_mean_micro_time(
         auto *t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
         
         // Configure OpenMP for parallel mean microtime computation
+#ifndef _WIN32
         int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
         bool use_openmp = (num_threads > 1);
+#else
+        bool use_openmp = false;
+#endif
         
         #pragma omp parallel for schedule(dynamic) if(use_openmp && n_frames > 4)
         for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
@@ -2064,8 +2081,12 @@ void CLSMImage::get_mean_lifetime(
     memset(t, 0, o_frames * n_lines * n_pixel * sizeof(double));
     
     // Configure OpenMP for parallel mean lifetime computation
+#ifndef _WIN32
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
     bool use_openmp = (num_threads > 1);
+#else
+    bool use_openmp = false;
+#endif
     
     #pragma omp parallel for schedule(dynamic) if(use_openmp && o_frames > 4)
     for (int i_frame = 0; i_frame < o_frames; i_frame++) {
