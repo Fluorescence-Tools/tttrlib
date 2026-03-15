@@ -331,9 +331,9 @@ jobs:
       - name: Test
         run: |
           cd D:\a\tttrlib\tttrlib
-          python -c "import subprocess,sys; r=subprocess.run([sys.executable,'-m','pytest'],check=False); open('pytest_exit.txt','w').write(str(r.returncode))"
-          set /p PYTEST_EXIT=<pytest_exit.txt
-          echo Pytest exited with code %PYTEST_EXIT%
+          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          set /p PYTEST_EXIT=<pytest_exitcode.txt
+          echo Pytest exited with: %PYTEST_EXIT%
           exit %PYTEST_EXIT%
         shell: cmd
         env:
@@ -555,9 +555,9 @@ jobs:
       - name: Run tests
         run: |
           call conda activate test
-          python -c "import subprocess,sys; r=subprocess.run([sys.executable,'-m','pytest'],check=False); open('pytest_exit.txt','w').write(str(r.returncode))"
-          set /p PYTEST_EXIT=<pytest_exit.txt
-          echo Pytest exited with code %PYTEST_EXIT%
+          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          set /p PYTEST_EXIT=<pytest_exitcode.txt
+          echo Pytest exited with: %PYTEST_EXIT%
           exit %PYTEST_EXIT%
         shell: cmd
         env:
