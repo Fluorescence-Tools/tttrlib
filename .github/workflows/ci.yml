@@ -259,7 +259,7 @@ jobs:
           PY_VER_SHORT="${PY_VER/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
-          python -m pytest -v --tb=short; ret=$?; echo "PYTEST_EXIT=$ret"; exit 0
+          python -m pytest -v --tb=short
 
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
@@ -331,8 +331,10 @@ jobs:
       - name: Test
         run: |
           cd D:\a\tttrlib\tttrlib
-          python -m pytest
-          exit 0
+          python -c "import subprocess,sys; r=subprocess.run([sys.executable,'-m','pytest'],check=False); open('pytest_exit.txt','w').write(str(r.returncode))"
+          set /p PYTEST_EXIT=<pytest_exit.txt
+          echo Pytest exited with code %PYTEST_EXIT%
+          exit %PYTEST_EXIT%
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
@@ -553,8 +555,10 @@ jobs:
       - name: Run tests
         run: |
           call conda activate test
-          python -m pytest
-          exit 0
+          python -c "import subprocess,sys; r=subprocess.run([sys.executable,'-m','pytest'],check=False); open('pytest_exit.txt','w').write(str(r.returncode))"
+          set /p PYTEST_EXIT=<pytest_exit.txt
+          echo Pytest exited with code %PYTEST_EXIT%
+          exit %PYTEST_EXIT%
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
