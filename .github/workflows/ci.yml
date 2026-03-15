@@ -259,7 +259,7 @@ jobs:
           PY_VER_SHORT="${PY_VER/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
-          python -m pytest -v --tb=short
+          python -m pytest -v --tb=short; TEST_EXIT=$?; echo "Test exit code: $TEST_EXIT"; exit $TEST_EXIT
 
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
@@ -543,12 +543,12 @@ jobs:
           use-mamba: true
           conda-remove-defaults: true
       - name: Create test environment and install
-        shell: bash
+        shell: bash -l {0}
         run: |
           conda create -n test "python=${{ matrix.python }}" -y -c conda-forge
           conda install -n test -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
       - name: Run tests
-        shell: bash
+        shell: bash -l {0}
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
