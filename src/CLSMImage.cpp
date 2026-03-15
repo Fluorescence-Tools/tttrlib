@@ -1112,15 +1112,11 @@ void CLSMImage::create_lines() {
     
     int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
 
-    // Configure OpenMP for parallel line finding
-    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
-    bool use_openmp = (num_threads > 1);
-    
-    // Use adaptive threshold: parallelize if work per thread is sufficient
-    // Minimum 2 frames per thread to avoid overhead
-    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
-    
-    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
+    // NOTE: create_lines() runs serially (no OpenMP) on purpose.
+    // Concurrent heap allocation of CLSMLine objects via new CLSMLine() inside
+    // an OpenMP parallel for causes heap corruption (0xC0000374) with MSVC's
+    // OpenMP 2.0 runtime on Windows. The per-frame line-finding work is not a
+    // bottleneck; the expensive parallelism lives in fill() and get_intensity().
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         auto &frame = frames[f_idx];
         
