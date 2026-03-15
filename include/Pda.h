@@ -96,7 +96,9 @@ public:
         _implementation = implementation;
     }
 
-    ~Pda() = default;
+    ~Pda() {
+        delete _histogram_function;
+    }
     
     /*!
      * \brief Appends a species to the Pda object.
