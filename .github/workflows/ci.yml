@@ -543,13 +543,18 @@ jobs:
         shell: pwsh -NoProfile -Command "{0}"
         run: |
           conda create -n test "python=${{ matrix.python }}" -y -c conda-forge
-          conda run -n test conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
+          # Install directly into the named env to avoid conda run exit-code bug on Windows
+          conda install -n test -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
       - name: Run tests
         shell: pwsh -NoProfile -Command "{0}"
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
-          conda run -n test python -m pytest
+          # Resolve python from the named conda env to avoid conda run exit-code bug on Windows
+          $condaRoot = (conda info --base).Trim()
+          $envPython = Join-Path $condaRoot "envs\test\python.exe"
+          & $envPython -m pytest
+          exit $LASTEXITCODE
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
