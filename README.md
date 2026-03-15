@@ -2,9 +2,8 @@
 
 [![Anaconda](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![PyPI](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
-![Documentation](https://github.com/fluorescence-tools/tttrlib/actions/workflows/docs.yml/badge.svg)
-![Conda Build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
-![Build Wheels](https://github.com/fluorescence-tools/tttrlib/actions/workflows/build-wheels.yml/badge.svg)
+[![CI](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/ci.yml/badge.svg)](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/ci.yml)
+[![Documentation](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/docs.yml/badge.svg)](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/docs.yml)
 
 ---
 
