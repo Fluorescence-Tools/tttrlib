@@ -537,17 +537,19 @@ jobs:
         with:
           miniforge-variant: Miniforge3
           miniforge-version: latest
-          activate-environment: test
-          python-version: ${{ matrix.python }}
           use-mamba: true
           conda-remove-defaults: true
-      - name: Install and Test
-        shell: bash -l {0}
+      - name: Create test environment and install
+        shell: pwsh -NoProfile -Command "{0}"
+        run: |
+          conda create -n test "python=${{ matrix.python }}" -y -c conda-forge
+          conda run -n test conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
+      - name: Run tests
+        shell: pwsh -NoProfile -Command "{0}"
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
-          conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
-          python -m pytest
+          conda run -n test python -m pytest
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 

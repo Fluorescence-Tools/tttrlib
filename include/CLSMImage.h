@@ -845,6 +845,7 @@ public:
         CLSMFrame* f0 = frames[0];
         for (unsigned int i = 1; i < n_frames; i++) {
             *f0 += *frames[i];
+            delete frames[i];  // Free merged frame to avoid memory leak
         }
         frames.resize(1);
         n_frames = 1;

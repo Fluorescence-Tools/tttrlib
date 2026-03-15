@@ -2,6 +2,7 @@
 #include "include/Verbose.h"
 #include "include/info.h"
 #include <memory>
+#include <tuple>
 #include <cstring>  // for memset
 #include <iostream>
 #include <map>
@@ -57,7 +58,9 @@ static std::vector<int> collect_stacked_pixel_indices(
     size_t total_size = 0;
     for (const auto& frame : frames) {
         const auto& lines = frame->get_lines();
+        if (i_line >= lines.size()) continue;
         const auto& pixels = lines[i_line]->get_pixels();
+        if (i_pixel >= pixels.size()) continue;
         total_size += pixels[i_pixel].size();
     }
     
@@ -67,7 +70,9 @@ static std::vector<int> collect_stacked_pixel_indices(
     
     for (const auto& frame : frames) {
         const auto& lines = frame->get_lines();
+        if (i_line >= lines.size()) continue;
         const auto& pixels = lines[i_line]->get_pixels();
+        if (i_pixel >= pixels.size()) continue;
         const auto& dense_indices = pixels[i_pixel].get_tttr_indices();
         indices.insert(indices.end(), dense_indices.begin(), dense_indices.end());
     }
@@ -680,7 +685,10 @@ std::vector<int> CLSMImage::get_frame_edges(
     const unsigned short* micro_times = tttr->micro_times;
     
     // Build lookup table for frame markers - O(1) instead of O(n) per event
-    bool frame_marker_lookup_u16[65536] = {false};  // For SP8 (micro_times)
+    // Heap-allocate the 64KB lookup table to avoid stack overflow on Windows
+    // (especially with OpenMP threads that may have smaller stacks)
+    auto frame_marker_lookup_u16 = std::make_unique<bool[]>(65536);  // For SP8 (micro_times)
+    std::memset(frame_marker_lookup_u16.get(), 0, 65536 * sizeof(bool));
     bool frame_marker_lookup_i8[TTTRLIB_MAX_ROUTING_CHANNELS] = {false};  // For SP5/default (routing_channels)
     
     if (reading_routine == CLSM_SP8) {
@@ -1398,6 +1406,23 @@ void CLSMImage::fill(
             pixel_marker_times.reserve(n_pixel + 16);
         }
 
+        // Pre-allocate micro-time filter bitmap once per thread/frame
+        // to avoid repeated heap allocation/deallocation inside the line loop
+        bool* thread_local_bitmap = nullptr;
+        bool thread_owns_bitmap = false;
+        if (!micro_time_ranges.empty() && micro_time_bitmap == nullptr) {
+            thread_local_bitmap = new bool[65536];
+            std::memset(thread_local_bitmap, 0, 65536);
+            for (const auto& r: micro_time_ranges) {
+                int start = std::max(0, r.first);
+                int end = std::min(65535, r.second);
+                if (end >= start) {
+                    std::memset(&thread_local_bitmap[start], 1, end - start + 1);
+                }
+            }
+            thread_owns_bitmap = true;
+        }
+
         // We need the line index to decide if a line is "reversed"
         for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
             CLSMLine *line = frame->lines[l_idx];
@@ -1419,6 +1444,12 @@ void CLSMImage::fill(
             auto pixel_duration = line->get_pixel_duration();
             size_t n_pixels_in_line = line->pixels.size();
 
+            // Guard against division by zero: if pixel_duration is 0,
+            // no valid pixel binning is possible for this line
+            if (pixel_duration == 0) {
+                continue;
+            }
+
             // Determine if this line was scanned in reverse order (odd‐indexed lines)
             bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
 
@@ -1428,7 +1459,7 @@ void CLSMImage::fill(
 
             // The macro‐time clock at which this line began
             unsigned long long line_start_time = line->get_start_time(tttr_data);
-            
+
             // Pre-compute for faster pixel calculation
             int n_pixels_minus_1 = static_cast<int>(n_pixels_in_line) - 1;
             
@@ -1441,11 +1472,21 @@ void CLSMImage::fill(
                 ch_idx = f_idx / channel_block_size;
             }
             
-            // Setup micro-time filtering using helper
-            auto [micro_time_valid, owns_bitmap, use_micro_time_filter] = setup_microtime_filter(
-                micro_time_bitmap, n_micro_time_bitmap, micro_time_ranges,
-                channels, do_split_fill, ch_idx
-            );
+            // Setup micro-time filtering: use thread-local bitmap if available,
+            // otherwise fall back to setup_microtime_filter helper
+            bool* micro_time_valid = nullptr;
+            bool owns_bitmap = false;
+            bool use_micro_time_filter = false;
+            if (thread_owns_bitmap) {
+                // Reuse pre-allocated thread-local bitmap (no per-line heap alloc)
+                micro_time_valid = thread_local_bitmap;
+                use_micro_time_filter = true;
+            } else {
+                std::tie(micro_time_valid, owns_bitmap, use_micro_time_filter) = setup_microtime_filter(
+                    micro_time_bitmap, n_micro_time_bitmap, micro_time_ranges,
+                    channels, do_split_fill, ch_idx
+                );
+            }
             
             // Determine bitmap type for filter checking
             bool has_per_channel_bitmap = (micro_time_bitmap != nullptr && 
@@ -1551,10 +1592,15 @@ void CLSMImage::fill(
                 pixels_ptr[pixel_nbr].insert(event_i);
             }
             
-            // Clean up micro-time filter bitmap only if we allocated it
+            // Clean up micro-time filter bitmap only if setup_microtime_filter allocated it
             if (owns_bitmap && micro_time_valid != nullptr) {
                 delete[] micro_time_valid;
             }
+        }
+
+        // Clean up thread-local bitmap (allocated once per frame/thread)
+        if (thread_owns_bitmap && thread_local_bitmap != nullptr) {
+            delete[] thread_local_bitmap;
         }
     }
 
@@ -1616,7 +1662,11 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
         // Copy frame intensity into the output array at the correct offset
         if (frame_intensity != nullptr) {
             size_t frame_offset = i_frame * n_lines * n_pixel;
-            size_t frame_size = frame_lines * frame_pixels;
+            // Guard against buffer overflow: use the minimum of actual and expected frame size
+            size_t frame_size = std::min(
+                static_cast<size_t>(frame_lines) * static_cast<size_t>(frame_pixels),
+                static_cast<size_t>(n_lines) * static_cast<size_t>(n_pixel)
+            );
             std::memcpy(&t[frame_offset], frame_intensity, frame_size * sizeof(unsigned short));
             free(frame_intensity);
         }
