@@ -325,8 +325,7 @@ jobs:
         run: |
           cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
-          dir wheelhouse
-          python -m pip install wheelhouse
+          for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
           python -m pip install pytest scipy
         shell: cmd
       - name: Test
