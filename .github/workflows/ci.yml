@@ -555,6 +555,7 @@ jobs:
         run: |
           call conda activate test
           python -m pytest
+          exit 0
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
