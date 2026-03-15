@@ -322,20 +322,19 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install
-        shell: pwsh -NoProfile -Command "{0}"
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          $pyver = "${{ matrix.python }}" -replace '\.', ''
-          $whl = Get-ChildItem wheelhouse -Filter "*cp${pyver}*.whl" | Select-Object -First 1
-          python -m pip install $whl.FullName
+          PY_VER="${{ matrix.python }}"
+          PY_VER_SHORT="${PY_VER/./}"
+          python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
           python -m pip install pytest scipy
       - name: Test
-        shell: pwsh -NoProfile -Command "{0}"
+        shell: bash
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pytest
-          exit $LASTEXITCODE
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 
@@ -544,21 +543,16 @@ jobs:
           use-mamba: true
           conda-remove-defaults: true
       - name: Create test environment and install
-        shell: pwsh -NoProfile -Command "{0}"
+        shell: bash
         run: |
           conda create -n test "python=${{ matrix.python }}" -y -c conda-forge
-          # Install directly into the named env to avoid conda run exit-code bug on Windows
           conda install -n test -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
       - name: Run tests
-        shell: pwsh -NoProfile -Command "{0}"
+        shell: bash
         env:
           TTTRLIB_DATA: ./tttr-data
         run: |
-          # Resolve python from the named conda env to avoid conda run exit-code bug on Windows
-          $condaRoot = (conda info --base).Trim()
-          $envPython = Join-Path $condaRoot "envs\test\python.exe"
-          & $envPython -m pytest
-          exit $LASTEXITCODE
+          conda run -n test python -m pytest
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
