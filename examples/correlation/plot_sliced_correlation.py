@@ -29,11 +29,14 @@ Fluorescence Correlation Spectroscopy.
 # on the macro time calibration. We print the content of the data header
 # as is can be useful for asserting correct correlation parameters in later
 # steps.
+import os
+from pathlib import Path
 import pylab as plt
 import tttrlib
 import numpy as np
 
-data = tttrlib.TTTR('../../tttr-data/pq/ptu/pq_ptu_hh_t2.ptu')
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))
 print(data.header.get_json())
 
 #%%

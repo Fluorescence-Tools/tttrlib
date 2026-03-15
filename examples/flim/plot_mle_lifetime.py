@@ -7,9 +7,13 @@ Fit a decay to photons in pixel to determine a mean fluorescence lifetime.
 
 # %%
 # Import necessary libraries
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
+
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
 
 # %%
 # The fit operates on a parallel and a perpendicular detection
@@ -21,7 +25,7 @@ ch_s = [1]
 binning_factor = 64
 minimum_n_photons = 30
 
-fn_clsm = '../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3'
+fn_clsm = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3')
 data = tttrlib.TTTR(fn_clsm)
 
 # %%
@@ -35,7 +39,7 @@ clsm_s.stack_frames()
 # %%
 # We determine instrument response function in parallel and perpendicular
 # detection channels.
-fn_irf = '../../tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3'
+fn_irf = str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_mirror.ht3')
 irf_tttr = tttrlib.TTTR(fn_irf)
 irf_data_p: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_p)]
 irf_data_s: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_s)]

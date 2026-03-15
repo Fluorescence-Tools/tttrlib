@@ -1,18 +1,18 @@
 from __future__ import division
 
-import os
 import unittest
-import json
 import numpy as np
 import tempfile
 
 import tttrlib
 
-settings = json.load(open(file="./test/settings.json"))
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
 data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping TTTRMask tests")
 class Tests(unittest.TestCase):
 
     def test_set_tttr(self):
@@ -44,4 +44,3 @@ class Tests(unittest.TestCase):
 
     def test_select_channels(self):
         pass
-

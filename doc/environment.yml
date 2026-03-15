@@ -3,10 +3,12 @@ channels:
     - tpeulen
     - conda-forge
 dependencies:
-    - python=3.9
+    - python=3.10
+    - tttrlib
     - phconvert
     - doxygen
     - numba
+    - make
     - scipy
     - pillow
     - sphinx <7.0.0 # see: https://github.com/readthedocs/readthedocs.org/issues/10279
@@ -19,9 +21,12 @@ dependencies:
     - numpydoc
     - pyyaml
     - ipython
-    - sphinxcontrib-bibtex<2.0.0
+    - sphinxcontrib-bibtex>=2.6
     - sphinxcontrib-websupport
     - sphinx-copybutton
+    - sphinx-design
     - sphinxext-opengraph
+    - pydata-sphinx-theme
     - scikit-image
+
     - jinja2=3.1.2

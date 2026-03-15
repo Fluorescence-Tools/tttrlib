@@ -1,12 +1,26 @@
 #include "TTTRRange.h"
 
 TTTRRange::TTTRRange(const TTTRRange& p2){
-    _tttr_indices = p2._tttr_indices;
+    if(p2._tttr_indices){
+        _tttr_indices = std::make_unique<indices_set>(*p2._tttr_indices);
+    }
 }
 
 TTTRRange::TTTRRange(int start, int stop){
-    _tttr_indices.insert(start);
-    _tttr_indices.insert(stop);
+    _tttr_indices = std::make_unique<indices_set>();
+    _tttr_indices->push_back(start);
+    if (stop != start) _tttr_indices->push_back(stop);
+}
+
+std::vector<int> TTTRRange::get_tttr_indices() const{
+    // Use move semantics for RVO optimization
+    // Reserve exact size to avoid reallocation
+    std::vector<int> v;
+    if(_tttr_indices){
+        v.reserve(_tttr_indices->size());
+        v.assign(_tttr_indices->begin(), _tttr_indices->end());
+    }
+    return v;  // RVO/NRVO will elide the copy
 }
 
 double TTTRRange::compute_mean_lifetime(
@@ -37,8 +51,8 @@ double TTTRRange::get_mean_lifetime(
         std::vector<double> *background, double m0_bg, double m1_bg,
         double background_fraction
 ) {
-    auto s = get_tttr_indices();
-    std::vector<int> t(s.begin(), s.end());
+    // Avoid double copy: get_tttr_indices() already creates a vector
+    auto t = get_tttr_indices();
     return TTTRRange::compute_mean_lifetime(
             t,
             tttr_data,
@@ -49,5 +63,23 @@ double TTTRRange::get_mean_lifetime(
             background, m0_bg, m1_bg,
             background_fraction
     );
+}
+
+std::string TTTRRange::to_json() const {
+    nlohmann::json j;
+    j["start"] = get_start();
+    j["stop"] = get_stop();
+    std::vector<int> indices = get_tttr_indices();
+    j["indices"] = indices;
+    return j.dump();
+}
+
+void TTTRRange::from_json(const std::string& payload) {
+    nlohmann::json j = nlohmann::json::parse(payload);
+    clear();
+    std::vector<int> indices = j["indices"];
+    for (int idx : indices) {
+        insert(idx);
+    }
 }
 

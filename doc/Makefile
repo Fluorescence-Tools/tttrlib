@@ -2,8 +2,10 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -j auto
+SPHINXOPTS    =
 SPHINXBUILD  ?= sphinx-build
+BUILD_TIER   ?= 0
+
 PAPER         =
 BUILDDIR      = _build
 ifneq ($(EXAMPLES_PATTERN),)
@@ -43,19 +45,25 @@ html:
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
 	rm -rf _build/doctrees/
+	mkdir -p _build/api
 	
 	# Use Doxygen to build API html documentation files
 	doxygen
 
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
-	mv _build/api _build/html/stable
+	# Pass BUILD_TIER to sphinx via environment
+	env BUILD_TIER=$(BUILD_TIER) $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
+	rm -rf $(BUILDDIR)/html/stable/api
+	cp -r _build/api $(BUILDDIR)/html/stable/
+
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable"
 
 html-noplot:
 	# Use Doxygen to build xml files (used to breathe for sphinx docs)
+	mkdir -p _build/api
 	doxygen
 	$(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html/stable
+
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html/stable."
 

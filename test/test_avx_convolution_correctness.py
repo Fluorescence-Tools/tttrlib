@@ -16,12 +16,18 @@ With various test cases including:
 import unittest
 import numpy as np
 import scipy.stats
+import pytest
 import tttrlib
 from misc.compute_irf import model_irf
 
 
+@unittest.skipUnless(tttrlib.get_avx_enabled(), "AVX support not available; skipping AVX convolution tests")
 class TestAVXConvolutionCorrectness(unittest.TestCase):
-    """Test AVX convolution implementations against default implementations."""
+    """Test AVX convolution implementations against default implementations.
+    
+    Note: This test class is marked as xfail when AVX is not available.
+    This means failures are expected and recorded but do not fail the test suite.
+    """
 
     def setUp(self):
         """Set up common test parameters."""

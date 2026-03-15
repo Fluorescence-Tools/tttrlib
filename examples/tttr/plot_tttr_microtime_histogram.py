@@ -4,10 +4,15 @@ Micro time histograms
 =====================
 
 """
+import os
+from pathlib import Path
 import tttrlib
 import pylab as p
 
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 h, t = data.get_microtime_histogram(
     micro_time_coarsening=32
 )

@@ -52,11 +52,13 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 
 
 #%%
+from examples._example_data import get_data_path
+
 # 1. Loading data and creating the intensity images
 #--------------------------------------------------
 # First, read the TTTR data.
 # Define used channels
-filename_data = '../../tttr-data/imaging/pq/ht3/mGBP_DA.ht3'
+filename_data = str(get_data_path('imaging/pq/ht3/mGBP_DA.ht3'))
 tttr_data = tttrlib.TTTR(filename_data)
 
 print("Used routing channels:", tttr_data.used_routing_channels)
@@ -69,8 +71,9 @@ sum_all = green_ch + red_ch
 # --------------------------------
 # Split the data into prompt and delay.
 # For a more detailed description see plot_pie_flim.py
-filename_irf = '../../tttr-data/imaging/pq/ht3/mGBP_IRF.ht3'
+filename_irf = str(get_data_path('imaging/pq/ht3/mGBP_IRF.ht3'))
 irf = tttrlib.TTTR(filename_irf)
+
 tttr_irf_green = irf.get_tttr_by_channel(green_ch)
 tttr_irf_red = irf.get_tttr_by_channel(red_ch)
 tttr_green = tttr_data.get_tttr_by_channel(green_ch)
@@ -157,10 +160,11 @@ min_vesicle_size = 5  # give minimal vesicle size in pixel
 # Calculate intensity sum over all detection channels
 # This facilitates the segmentation due to higher SNR
 int_all_channel = clsm_green.intensity + clsm_red_prompt.intensity + clsm_red_delay.intensity
-filled_frames = 0, 378
+n_frames = int_all_channel.shape[0]
+filled_frames = range(n_frames)
 
 binary_img_vesicles = []
-for image in range(*filled_frames):
+for image in filled_frames:
     input_img = int_all_channel[image,:,:]
     # A. Gaussian filtering
     gaussian_img = ski.filters.gaussian(input_img, sigma=sigma_vesicles)
@@ -189,7 +193,7 @@ otsu_scaling_factor = 1.03  # increase Otsu threshold by multiplication with thi
 minimal_size = 10000  # give minimal cytoplasm size in pixel
 
 binary_img_cytoplasm = []
-for image in range(*filled_frames):
+for image in filled_frames:
     input_img = int_all_channel[image,:,:]
     # A. Median filtering
     median_img = ski.filters.median(input_img, ski.morphology.disk(disk_size_cyto))
@@ -228,7 +232,7 @@ minimal_nucleus_size = 2000 # minimal nucleus size
 
 binary_img_nucleus = []
 int_green = clsm_green.intensity
-for image in range(*filled_frames):
+for image in filled_frames:
     input_img = int_green[image,:,:]
     input_img_cytoplasm = cytoplasm_mask[image,:,:]
     # A. Gaussian img
@@ -276,7 +280,7 @@ nucleus_mask_avg = ski.morphology.remove_small_objects(thresholded_img, min_size
 inv_nucleus = ski.util.invert(nucleus_mask_avg)  # Invert nucleus_mask
 
 cytoplasm_wo_nucleus_list = []  # Apply nucleus mask on cytoplasm
-for image in range(cytoplasm_mask.shape[0]):
+for image in filled_frames:
     input_img = cytoplasm_mask[image,:,:]
     temp_cyto = input_img * inv_nucleus
     cytoplasm_wo_nucleus_list.append(temp_cyto)
@@ -286,7 +290,7 @@ cytoplasm_wo_nucleus = (np.array(cytoplasm_wo_nucleus_list, dtype=np.ubyte))
 inv_vesicles = ski.util.invert(vesicle_mask) - 254  # Invert vesicle_mask
 
 cytoplasm_wo_nucleus_vesicles = []  # Apply vesicle mask on cytoplasm_wo_nucleus
-for image in range(cytoplasm_mask.shape[0]):
+for image in filled_frames:
     input_img = cytoplasm_wo_nucleus[image,:,:]
     input_img_inv_vesicle = inv_vesicles[image,:,:]
     temp_cyto2 = input_img * input_img_inv_vesicle
@@ -302,7 +306,7 @@ mask_cytoplasm = (np.array(cytoplasm_wo_nucleus_vesicles, dtype=np.ubyte))
 # First vesicles inside the nucleus are removed, followed by those outside the 
 # main cell by multiplying with inverted masks.
 vesicles_wo_nucleus_list = []  # Apply nucleus mask
-for image in range(vesicle_mask.shape[0]):
+for image in filled_frames:
     input_img = vesicle_mask[image,:,:]
     temp_vesicle = input_img * inv_nucleus
     vesicles_wo_nucleus_list.append(temp_vesicle)
@@ -310,7 +314,7 @@ for image in range(vesicle_mask.shape[0]):
 vesicles_wo_nucleus = (np.array(vesicles_wo_nucleus_list, dtype=np.ubyte))
 
 vesicles_in_cytoplasm = []  # Apply cytoplasm mask on nucleus-free vesicles
-for image in range(vesicle_mask.shape[0]):
+for image in filled_frames:
     input_img_vesicle = vesicles_wo_nucleus[image,:,:]
     input_img_cytoplasm = cytoplasm_wo_nucleus[image,:,:]
     temp_vesicle_in_cyto = input_img_vesicle * input_img_cytoplasm
@@ -357,7 +361,7 @@ sum_decay_all = decay_all.sum(axis=0)
 # Caution: for nucleus only single average image mask was generated
 # "multiply" 400x to have a mask for each frame
 final_cytoplasm = np.zeros((n_frames, n_lines, n_pixel), dtype=np.uint8)
-for i in range(*filled_frames):
+for i in filled_frames:
     final_cytoplasm[i] = mask_cytoplasm[i]
 kw_cytoplasm = {
     "tttr_data": tttr_data,
@@ -369,7 +373,7 @@ decay_cytoplasm = clsm_green.get_decay_of_pixels(**kw_cytoplasm)
 sum_decay_cytoplasm = decay_cytoplasm.sum(axis=0)
 
 final_vesicles = np.zeros((n_frames, n_lines, n_pixel), dtype=np.uint8)
-for i in range(*filled_frames):
+for i in filled_frames:
     final_vesicles[i] = mask_vesicles[i]
 kw_vesicles = {
     "tttr_data": tttr_data,

@@ -4,6 +4,7 @@
 #include <iostream> /* cout, clog */
 #include <vector>
 #include <utility>
+#include <algorithm> // Required for std::any_of
 
 #include <cstring>
 #include <complex>
@@ -20,11 +21,17 @@
 #include "Correlator.h"
 
 
+/// Sentinel value indicating no stop marker (BH SPC-130 start-only mode)
+/// When marker_line_stop equals this value, lines are paired start-to-start
+constexpr int CLSM_MARKER_NO_STOP = 255;
+
+
 /// Different types of distances between two accessible volumes
 typedef enum{
-    CLSM_DEFAULT,         /// Default reading compute_icsroutine
+    CLSM_DEFAULT,         /// Default reading routine
     CLSM_SP5,             /// Leica SP5
-    CLSM_SP8              /// Leica SP5
+    CLSM_SP8,             /// Leica SP8
+    CLSM_BH_SPC130        /// Becker & Hickl SPC-130
 } ReadingRoutine;
 
 
@@ -79,82 +86,107 @@ static std::pair<int, int> find_clsm_start_stop(
 
 
 
-class CLSMSettings{
-
+class CLSMSettings {
     friend class CLSMImage;
 
-protected:
-
-    /// To skip incomplete frames
+public:
+    /// Skip events before the first frame marker?
     bool skip_before_first_frame_marker = false;
-    bool skip_after_last_frame_marker = false;
 
+    /// Skip events after the last frame marker?
+    bool skip_after_last_frame_marker  = false;
+
+    /// Which reading routine to use (e.g. CLSM_SP5, CLSM_SP8, or CLSM_DEFAULT)
     int reading_routine = CLSM_DEFAULT;
 
-    /// Defines the marker for a line start
+    /// Marker for a line start (routing channel or micro‐time channel)
     int marker_line_start = 0;
 
-    /// Defines the marker for a line stop
+    /// Marker for a line stop (routing channel or micro‐time channel)
     int marker_line_stop = 0;
 
-    /// Vector containing the tttr indices of the frame markers
+    /// Vector of TTTR indices that mark the start of each frame
     std::vector<int> marker_frame_start = {};
 
-    /// The event type used for the marker
+    /// The event type to interpret as a “marker” for frame/line
     int marker_event_type = 0;
 
+    /// Number of pixels per line. If 0, it will be auto‐determined from the first frame.
     int n_pixel_per_line = 0;
+
+    /// Number of lines per frame. If -1, auto‐detect based on first frame.
     int n_lines = 0;
 
-public:
+    /*** Bidirectional‐scan flag ***/
+    ///
+    /// If true, every odd‐indexed line was scanned in reverse direction.
+    /// After filling pixels, call CLSMImage::handleBidirectionalScanning() to flip them.
+    bool bidirectional_scan = false;
 
+    /// When true, split frames into separate channel groups using channel-flip markers.
+    /// When false (default), keep a flat single-channel view regardless of flips.
+    bool split_by_channel = false;
+
+    /// If true, use markers to determine pixel edges (Becker & Hickl mode).
+    bool use_pixel_markers = false;
+
+    /// The routing channel of the pixel markers (Becker & Hickl mode).
+    int marker_pixel = 1;
+
+public:
     /*!
      * \brief CLSMSettings Constructor.
      *
      * Constructs a CLSMSettings object with the specified parameters.
      *
-     * @param skip_before_first_frame_marker If true, skip TTTR events before the first frame marker (default is false).
-     * @param skip_after_last_frame_marker   If true, skip TTTR events after the last frame marker (default is false).
-     * @param reading_routine               An integer specifying the reading routine used to
-     *                                      read a CLSM image out of a TTTR data stream. A CLSM image can be encoded
-     *                                      in various ways in a TTTR stream.
-     * @param marker_line_start             Routing channel number or micro time channel number serving as a marker
-     *                                      for the start of a new line in a frame within the TTTR data stream.
-     * @param marker_line_stop              Routing channel number or micro time channel number serving as a marker
-     *                                      for the stop of a line in a frame within the TTTR data stream.
-     * @param marker_frame_start            Routing channel numbers (default reading routine)
-     *                                      or micro time channel number (SP8 reading routine) serving as a marker
-     *                                      for a new frame in the TTTR data stream.
-     * @param marker_event_type             Event types interpreted as markers for frames and lines.
-     * @param n_pixel_per_line              Number of pixels into which each line is separated.
-     *                                      If set to zero, the number of pixels per line corresponds to the number
-     *                                      of lines in the first frame.
-     * @param n_lines                       Number of lines (default is -1, auto-detect based on the first frame).
+     * @param skip_before_first_frame_marker If true, skip TTTR events before the first frame marker (default: false).
+     * @param skip_after_last_frame_marker   If true, skip TTTR events after the last frame marker (default: false).
+     * @param reading_routine               Integer specifying the reading routine used to
+     *                                      decode a CLSM image out of TTTR data. By default, CLSM_DEFAULT.
+     * @param marker_line_start             Routing‐channel or micro‐time index serving as a marker
+     *                                      for the start of a new line (default: 3).
+     * @param marker_line_stop              Routing‐channel or micro‐time index serving as a marker
+     *                                      for the end of a line (default: 2).
+     * @param marker_frame_start            Vector of routing‐channel (or micro‐time) indices serving
+     *                                      as frame‐start markers (default: {1}).
+     * @param marker_event_type             Event type to treat as a “marker” (default: 1).
+     * @param n_pixel_per_line              Number of pixels per line (default: 1). If set to zero,
+     *                                      the code will auto‐determine based on the first frame.
+     * @param n_lines                       Number of lines per frame. If -1, auto‐detect from the first frame (default: -1).
+     * @param bidirectional_scan            If true, every odd line was scanned in reverse direction (default: false).
+     * @param split_by_channel              If true, split frames into multiple channels using channel-flip markers (default: false).
+     * @param use_pixel_markers             If true, use markers to determine pixel edges (default: false).
+     * @param marker_pixel                  Routing channel of pixel markers (default: 1).
      */
     explicit CLSMSettings(
-        bool skip_before_first_frame_marker = false,
-        bool skip_after_last_frame_marker = false,
-        int reading_routine = CLSM_DEFAULT,
-        int marker_line_start = 3,
-        int marker_line_stop = 2,
-        std::vector<int> marker_frame_start = std::vector<int>({1}),
-        int marker_event_type = 1,
-        int n_pixel_per_line = 1,
-        int n_lines = -1
-        // long long macro_time_shift = 0
-    ){
+            bool skip_before_first_frame_marker = false,
+            bool skip_after_last_frame_marker  = false,
+            int reading_routine                = CLSM_DEFAULT,
+            int marker_line_start              = 3,
+            int marker_line_stop               = 2,
+            std::vector<int> marker_frame_start = std::vector<int>({1}),
+            int marker_event_type              = 1,
+            int n_pixel_per_line               = 0,
+            int n_lines                        = -1,
+            bool bidirectional_scan            = false,
+            bool split_by_channel              = false,
+            bool use_pixel_markers             = false,
+            int marker_pixel                   = 1
+    ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
-        this->skip_after_last_frame_marker = skip_after_last_frame_marker;
-        this->reading_routine = reading_routine;
-        this->n_pixel_per_line = n_pixel_per_line;
-        this->n_lines = n_lines;
-        this->marker_event_type = marker_event_type;
-        this->marker_line_stop = marker_line_stop;
-        this->marker_line_start = marker_line_start;
-        this->marker_frame_start = marker_frame_start;
-//        this->macro_time_shift = macro_time_shift;
+        this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
+        this->reading_routine                = reading_routine;
+        this->marker_line_start              = marker_line_start;
+        this->marker_line_stop               = marker_line_stop;
+        this->marker_frame_start             = std::move(marker_frame_start);
+        this->marker_event_type              = marker_event_type;
+        this->n_pixel_per_line               = n_pixel_per_line;
+        this->n_lines                        = n_lines;
+        this->bidirectional_scan             = bidirectional_scan;
+        this->split_by_channel               = split_by_channel;
+        this->use_pixel_markers              = use_pixel_markers;
+        this->marker_pixel                   = marker_pixel;
     }
-
 };
 
 
@@ -173,6 +205,11 @@ private:
     bool _is_filled_ = false;
 
     std::vector<CLSMFrame *> frames;
+
+    // Channel layout: frames may be grouped by channel. If only one channel, fall back to flat frames.
+    size_t n_channels = 1;
+    std::vector<size_t> channel_offsets; // starting frame index for each channel in 'frames'
+    std::vector<size_t> channel_counts;  // number of frames per channel
 
     void remove_incomplete_frames();
 
@@ -197,6 +234,9 @@ protected:
     void create_lines();
 
     void determine_number_of_lines();
+
+    // Recompute channel grouping from per-frame selection flags (channel flip)
+    void compute_channel_layout();
 
 public:
 
@@ -237,6 +277,28 @@ public:
     bool skip_after_last_frame_marker = false;
 
     /*!
+     * \brief Split frames by routing channel.
+     *
+     * Duplicates each original frame for every routing channel, creating separate
+     * frame copies that can be filled independently per channel. This is useful for
+     * multi-channel CLSM data where you want to separate photons by routing channel.
+     *
+     * After calling this method:
+     * - settings.split_by_channel is set to true
+     * - n_frames is multiplied by the number of channels
+     * - Each channel block is marked with channel flip flags
+     * - Original frames are replaced with empty copies (structure preserved)
+     *
+     * @param channels            List of routing channels to split by.
+     * @param tttr_data           TTTR data pointer (uses stored tttr if nullptr).
+     * @return                    The channel block size (original number of frames).
+     */
+    size_t split_frames_by_channel(
+            const std::vector<int>& channels,
+            std::shared_ptr<TTTR> tttr_data = nullptr
+    );
+
+    /*!
      * \brief Fills the time-tagged time-resolved (TTTR) indices of the pixels with the
      *        indices of the photons that fall within each pixel.
      *
@@ -253,12 +315,21 @@ public:
      *                            to the pixels.
      * @param micro_time_ranges   List of pairs representing micro-time ranges. If provided,
      *                            only events within these ranges are considered.
+     *                            Can be a single range list (applied to all channels) or
+     *                            a vector of range lists (one per channel).
+     * @param micro_time_bitmap   Pre-computed bitmap for micro-time filtering (65536 elements).
+     *                            If provided (not nullptr), this is used instead of micro_time_ranges.
+     *                            - If n_micro_time_bitmap == 65536: single bitmap for all channels
+     *                            - If n_micro_time_bitmap == 65536 * n_channels: per-channel bitmaps
+     * @param n_micro_time_bitmap Size of the bitmap array (65536 for single, 65536*n_channels for per-channel).
      */
     void fill(
-            TTTR *tttr_data = nullptr,
+            std::shared_ptr<TTTR> tttr_data = nullptr,
             std::vector<int> channels = std::vector<int>(),
             bool clear = true,
-            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>()
+            const std::vector<std::pair<int,int>> &micro_time_ranges = std::vector<std::pair<int,int>>(),
+            bool* micro_time_bitmap = nullptr,
+            int n_micro_time_bitmap = 0
     );
 
     /*!
@@ -282,7 +353,7 @@ public:
      *                            only events within these ranges are considered.
      */
     void fill_pixels(
-            TTTR *tttr_data,
+            std::shared_ptr<TTTR> tttr_data,
             std::vector<int> channels,
             bool clear_pixel = true,
             std::vector<std::pair<int,int>> micro_time_ranges = std::vector<std::pair<int,int>>()
@@ -568,7 +639,10 @@ public:
      * @return      One-dimensional index corresponding to the input coordinates.
      */
     inline int to1D(int frame, int line, int pixel) {
-        return (frame * n_lines * n_pixel) + (line * n_pixel) + pixel;
+        size_t total = static_cast<size_t>(frame) * n_lines * n_pixel
+                     + static_cast<size_t>(line) * n_pixel
+                     + static_cast<size_t>(pixel);
+        return static_cast<int>(total);
     }
 
 
@@ -582,10 +656,12 @@ public:
      * @return      Vector containing frame, line, and pixel indices in that order.
      */
     inline std::vector<int> to3D(int idx) {
-        int frame = idx / (n_lines * n_pixel);
-        idx -= (frame * n_lines * n_pixel);
-        int line = idx / n_pixel;
-        int pixel = idx % n_pixel;
+        size_t denom = n_lines * n_pixel;
+        size_t sidx = static_cast<size_t>(idx);
+        int frame = static_cast<int>(sidx / denom);
+        sidx -= static_cast<size_t>(frame) * denom;
+        int line = static_cast<int>(sidx / n_pixel);
+        int pixel = static_cast<int>(sidx % n_pixel);
         return std::vector<int>{frame, line, pixel};
     }
 
@@ -601,16 +677,17 @@ public:
      * @return      Pointer to the CLSMPixel object.
      */
     CLSMPixel* getPixel(unsigned int idx) {
-        int frame, line, pixel;
+        size_t sidx = static_cast<size_t>(idx);
+        size_t denom = n_lines * n_pixel;
 
-        frame = idx / (n_lines * n_pixel);
-        idx -= (frame * n_lines * n_pixel);
-        line = idx / n_pixel;
-        pixel = idx % n_pixel;
+        int frame = static_cast<int>(sidx / denom);
+        sidx -= static_cast<size_t>(frame) * denom;
+        int line = static_cast<int>(sidx / n_pixel);
+        int pixel = static_cast<int>(sidx % n_pixel);
 
-        CLSMFrame* s_frame = frames[frame];
-        CLSMLine*  s_line  = s_frame->lines[line];
-        CLSMPixel* s_pixel = &(s_line->pixels[pixel]);
+        CLSMFrame* s_frame = frames[static_cast<size_t>(frame)];
+        CLSMLine*  s_line  = s_frame->lines[static_cast<size_t>(line)];
+        CLSMPixel* s_pixel = &(s_line->pixels[static_cast<size_t>(pixel)]);
         return s_pixel;
     }
 
@@ -623,7 +700,7 @@ public:
      * @return The number of frames in the CLSM image.
      */
     int get_n_frames() const {
-        return n_frames;
+        return static_cast<int>(n_frames);
     }
 
 
@@ -635,7 +712,7 @@ public:
      * @return The number of lines per frame in the CLSMImage.
      */
     int get_n_lines() const {
-        return n_lines;
+        return static_cast<int>(n_lines);
     }
 
 
@@ -647,7 +724,42 @@ public:
      * @return The number of pixels per line in a frame of the CLSMImage.
      */
     int get_n_pixel() const {
-        return n_pixel;
+        return static_cast<int>(n_pixel);
+    }
+
+    // Channel-aware accessors
+    int get_n_channels() const {
+        return static_cast<int>(n_channels);
+    }
+
+    int get_channel_frame_count(int ch) const {
+        if (n_channels <= 1) return static_cast<int>(n_frames);
+        if (ch < 0 || static_cast<size_t>(ch) >= channel_counts.size()) return 0;
+        return static_cast<int>(channel_counts[static_cast<size_t>(ch)]);
+    }
+
+    // Flat frame accessor (for Python to bypass custom __getitem__ if needed)
+    CLSMFrame* frame_at(unsigned int i_frame) {
+        return frames[i_frame];
+    }
+
+    // Channel+frame accessor
+    CLSMFrame* get_frame_for_channel(int ch, int frame) {
+        if (n_channels <= 1) {
+            // Fallback: interpret 'ch' as 0 and frame as flat index
+            if (frame < 0) return nullptr;
+            if (static_cast<size_t>(frame) >= frames.size()) return nullptr;
+            return frames[static_cast<size_t>(frame)];
+        }
+        if (ch < 0) return nullptr;
+        size_t c = static_cast<size_t>(ch);
+        if (c >= channel_offsets.size()) return nullptr;
+        size_t off = channel_offsets[c];
+        size_t cnt = channel_counts[c];
+        if (frame < 0) return nullptr;
+        size_t f = static_cast<size_t>(frame);
+        if (f >= cnt) return nullptr;
+        return frames[off + f];
     }
 
     /*!
@@ -694,23 +806,7 @@ public:
      */
     void rebin(int bin_line, int bin_pixel);
 
-    /*!
-     * \brief Distribute the photons of a pixel_id to a set of pixel ids in a target image according to provided probabilities.
-     *
-     * This function distributes the photons of a specified pixel_id to a set of pixel_ids
-     * in a target CLSMImage based on the provided probabilities.
-     *
-     * @param pixel_id [in] The source pixel_id whose photons will be distributed.
-     * @param target [in] Pointer to the target CLSMImage.
-     * @param target_pixel_ids [in] Vector of target pixel_ids to which photons will be distributed.
-     * @param target_probabilities [in] Vector of probabilities corresponding to each target pixel_id.
-     */
-    void distribute(
-        unsigned int pixel_id,
-        CLSMImage* target,
-        std::vector<int>& target_pixel_ids,
-        std::vector<int>& target_probabilities
-    );
+
 
 
     /*!
@@ -731,6 +827,14 @@ public:
         int pixel_start, int pixel_stop
     );
 
+    /**
+     * Reshape the image from (n_frames × n_lines × n_pixel) into
+     * (new_n_frames × new_n_lines × new_n_pixel). The total number of pixels
+     * must remain constant. After calling reshape, pixel (f, l, p) in the old
+     * layout moves to the new position in row‐major order.
+     */
+    void reshape(int new_n_frames, int new_n_lines, int new_n_pixel);
+
     /*!
      * \brief Stack frames in the CLSMImage.
      *
@@ -741,6 +845,7 @@ public:
         CLSMFrame* f0 = frames[0];
         for (unsigned int i = 1; i < n_frames; i++) {
             *f0 += *frames[i];
+            delete frames[i];  // Free merged frame to avoid memory leak
         }
         frames.resize(1);
         n_frames = 1;
@@ -784,18 +889,24 @@ public:
                     std::vector<std::pair<int, int>>()
     );
 
-    /*!
-     * \brief Destructor for CLSMImage.
-     *
-     * Frees memory by deleting dynamically allocated CLSMFrame objects in the frames vector.
-     * It ensures proper cleanup of resources when a CLSMImage object is destroyed.
-     */
-    virtual ~CLSMImage() {
-        for (auto frame : frames) {
-            delete frame;
+    ~CLSMImage(){
+        for (auto& f : frames) {
+            delete f;
         }
     }
 
+    CLSMImage& operator=(const CLSMImage& other) {
+        if (this != &other) {
+            // Free existing resources
+            for (auto& f : frames) {
+                delete f;
+            }
+            frames.clear();
+            // Copy new data
+            copy(other, true);
+        }
+        return *this;
+    }
 
     /*!
      * \brief Accessor for CLSMFrame at the specified index in CLSMImage.
@@ -834,8 +945,11 @@ public:
      * @param subtract_average [in] Specifies background correction: "stack" subtracts the average over all frames,
      *                              "frame" subtracts the average of each frame. Default is no correction.
      * @param mask [in] Stack of images used as a mask to select pixels (optional).
-     * @param dmask1 [in] Number of frames in the mask.
-     * @param dmask2 [in] Number of lines in the mask.
+     * @param dmask1 [in] Number of frames; if smaller than ROI, the first mask frame
+     *                      is applied to all ROI frames greater than dmask1.
+     * @param dmask2 [in] Number of lines; if smaller than ROI, the outside region is
+     *                      selected, and the mask is applied to all lines smaller than
+     *                      dmask2.
      * @param dmask3 [in] Number of pixels per line in the mask.
      */
     static void compute_ics(
@@ -849,6 +963,7 @@ public:
             std::string subtract_average = "",
             uint8_t *mask = nullptr, int dmask1 = -1, int dmask2 = -1, int dmask3 = -1
     );
+
 
     /*!
      * \brief Copies a region of interest (ROI) from the input images, performs background
@@ -938,7 +1053,9 @@ public:
             int marker_event_type = 15,
             int reading_routine = CLSM_SP8,
             bool skip_before_first_frame_marker = false,
-            bool skip_after_last_frame_marker = false
+            bool skip_after_last_frame_marker = false,
+            int marker_line_start = 0,
+            int expected_n_lines = 0
     );
 
     /*!
@@ -1000,6 +1117,26 @@ public:
         int reading_routine = CLSM_SP8
     );
 
+    /*!
+     * \brief Detect if BH SPC-130 Frame 1 has an extra initialization line.
+     *
+     * For BH SPC data, Frame 1 often has an extra partial line at the start
+     * that should be skipped. This compares line marker counts between Frame 1 and Frame 2.
+     *
+     * @param tttr Pointer to TTTR data
+     * @param frame_marker Frame marker routing channel (default 4)
+     * @param line_marker Line marker routing channel (default 2)
+     * @param marker_event_type Marker event type (default 1)
+     * @return true if Frame 1 has one extra line marker compared to Frame 2
+     */
+    static bool detect_bh_frame1_extra_line(
+        TTTR* tttr,
+        int frame_marker = 4,
+        int line_marker = 2,
+        int marker_event_type = 1,
+        int expected_n_lines = 0
+    );
+
 
     /*!
      * \brief Obtains the duration of a line (in milliseconds) for a specified frame and line.
@@ -1024,8 +1161,8 @@ public:
             int start = l->get_start();
             int stop = l->get_stop();
 
-            unsigned long long t_stop = tttr->macro_times[stop];
-            unsigned long long t_start = tttr->macro_times[start];
+            unsigned long long t_stop = tttr->get_macro_time_at(stop);
+            unsigned long long t_start = tttr->get_macro_time_at(start);
             unsigned long long dt = t_stop - t_start;
             double res = header->get_macro_time_resolution() * 1000.0;
             re = dt * res;
@@ -1049,6 +1186,36 @@ public:
     double get_pixel_duration(int frame = 0, int line = 0){
         return get_line_duration(frame, line) / settings.n_pixel_per_line;
     }
+
+    /*!
+     * \brief Get the total memory usage of the CLSMImage in bytes.
+     *
+     * This function calculates the total memory used by the CLSMImage, including:
+     * - Frame, line, and pixel container overhead
+     * - TTTR indices stored in pixels
+     * - Range markers (start/stop) for frames, lines, and pixels
+     *
+     * @return Total memory usage in bytes.
+     */
+    size_t get_memory_usage_bytes() const;
+
+    /*!
+     * \brief Get detailed memory usage statistics for the CLSMImage.
+     *
+     * This function provides a breakdown of memory usage by component:
+     * - overhead: Container and object overhead
+     * - indices: TTTR photon indices storage
+     * - ranges: Start/stop range markers
+     *
+     * @param overhead [out] Memory used by container overhead (bytes)
+     * @param indices [out] Memory used by TTTR indices (bytes)
+     * @param ranges [out] Memory used by range markers (bytes)
+     */
+    void get_memory_usage_detailed(
+        size_t* overhead,
+        size_t* indices,
+        size_t* ranges
+    ) const;
 
 };
 

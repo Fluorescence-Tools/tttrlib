@@ -1,3 +1,4 @@
+#include "include/Verbose.h"
 #ifndef TTTRLIB_PDA_H
 #define TTTRLIB_PDA_H
 
@@ -8,6 +9,10 @@
 #include "TTTR.h"
 #include "PdaCallback.h"
 
+enum PdaImplementation {
+    PDA_DEFAULT,     ///< The default, original implementation
+    PDA_OPTIMIZED    ///< An optimized implementation using OpenMP and dynamic thresholds
+};
 
 /// \class Pda
 /// \brief Photon Distribution Analysis class for computing histograms.
@@ -18,6 +23,9 @@ private:
     /// the values reported in the histogram
     bool _is_valid_sgsr = false;
     PdaCallback* _histogram_function;
+
+    /// The selected PDA implementation
+    PdaImplementation _implementation = PdaImplementation::PDA_DEFAULT;
 
     /// Probablity of detecting a green photon for the species
     std::vector<double> _probability_ch1;
@@ -69,23 +77,28 @@ public:
      * @param background_ch1 Background level in the first channel (green channel).
      * @param background_ch2 Background level in the second channel (red channel).
      * @param pF Probability distribution of having a certain number of photons.
+     * @param implementation The PdaImplementation to use (default or optimized).
      */
     Pda(
         int hist2d_nmax=300,
         int hist2d_nmin=5,
         double background_ch1=0.0,
         double background_ch2=0.0,
-        std::vector<double> pF = std::vector<double>()
+        std::vector<double> pF = std::vector<double>(),
+        PdaImplementation implementation = PdaImplementation::PDA_DEFAULT
     ){
         set_max_number_of_photons(std::abs(hist2d_nmax));
         _n_2d_min = std::abs(hist2d_nmin);
         _histogram_function = new PdaCallback();
         _bg_ch1 = background_ch1;
         _bg_ch2 = background_ch2;
-        setPF(pF.data(), pF.size());
+        setPF(pF.data(), static_cast<int>(pF.size()));
+        _implementation = implementation;
     }
 
-    ~Pda() = default;
+    ~Pda() {
+        delete _histogram_function;
+    }
     
     /*!
      * \brief Appends a species to the Pda object.
@@ -119,7 +132,7 @@ public:
      * @param n_output[out] The number of species.
      */
     void get_amplitudes(double **output_view, int *n_output) {
-        *n_output = _amplitudes.size();
+        *n_output = static_cast<int>(_amplitudes.size());
         *output_view = _amplitudes.data();
     }
 
@@ -147,6 +160,25 @@ public:
      */
     void set_callback(PdaCallback* cb){
         _histogram_function = cb;
+    }
+
+    /*!
+     * \brief Get the current PDA implementation.
+     *
+     * @return The current PdaImplementation.
+     */
+    PdaImplementation get_implementation() const {
+        return _implementation;
+    }
+
+    /*!
+     * \brief Set the PDA implementation.
+     *
+     * @param impl The PdaImplementation to use.
+     */
+    void set_implementation(PdaImplementation impl) {
+        _implementation = impl;
+        _is_valid_sgsr = false;
     }
 
 public:
@@ -199,7 +231,7 @@ public:
      * @param n_output[out] The number of species.
      */
     void get_probabilities_ch1(double **output_view, int *n_output) {
-        *n_output = _probability_ch1.size();
+        *n_output = static_cast<int>(_probability_ch1.size());
         *output_view = _probability_ch1.data();
     }
 
@@ -246,9 +278,9 @@ public:
      * @param n_input[in] The number of elements in the input array.
      */
     void setPF(double *input, int n_input){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Setting pF " << std::endl;
-#endif
+}
         _is_valid_sgsr = false;
         pF.assign(input, input + n_input);
     }
@@ -260,7 +292,7 @@ public:
      * @param n_output[out] The number of elements in the output array.
      */
     void getPF(double** output_view, int* n_output){
-        *n_output = pF.size();
+        *n_output = static_cast<int>(pF.size());
         *output_view = pF.data();
     }
 
@@ -356,6 +388,29 @@ public:
      * @param amplitudes[in] Corresponding amplitudes.
      */
     static void S1S2_pF(
+        std::vector<double> &S1S2,
+        std::vector<double> &pF,
+        unsigned int Nmax,
+        double background_ch1,
+        double background_ch2,
+        std::vector<double> &p_ch1,
+        std::vector<double> &amplitudes
+    );
+
+    /*!
+     * \brief Calculates p(G,R) for several ratios using the same P(F) (optimized).
+     *
+     * This is an optimized version that uses OpenMP parallelization and dynamic thresholding.
+     *
+     * @param S1S2[in] See sgsr_pN.
+     * @param pF[in] Input P(F).
+     * @param Nmax[in] Maximum number of photons.
+     * @param background_ch1[in] Background in the green channel.
+     * @param background_ch2[in] Background in the red channel.
+     * @param p_ch1[in] Input probabilities for channel 1.
+     * @param amplitudes[in] Corresponding amplitudes.
+     */
+    static void S1S2_pF_optimized(
         std::vector<double> &S1S2,
         std::vector<double> &pF,
         unsigned int Nmax,

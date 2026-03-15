@@ -1,20 +1,26 @@
 from __future__ import division
 
 import unittest
+import os
+from pathlib import Path
 
 import json
 import tttrlib
 import numpy as np
-import skimage
+import pytest
 
-settings = json.load(open(file="./test/settings.json"))
+# Skip entire module if skimage is not available
+skimage = pytest.importorskip("skimage")
 
-sp5_filename = './tttr-data/imaging/leica/sp5/LSM_1.ptu'
-sp8_filename = './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
-ht3_filename = './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3'
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
+
+sp5_filename = settings["clsm_sp5_filename"]
+sp8_filename = settings["clsm_sp8_filename"]
+ht3_filename = settings["clsm_ht3_sample1_filename"]
 pq_test_files = [
-    './tttr-data/imaging/pq/Microtime200_HH400/beads.ptu',
-    './tttr-data/imaging/pq/Microtime200_TH260/beads.ptu'
+    settings["microtime_hh400_beads_filename"],
+    settings["microtime_th260_beads_filename"],
 ]
 
 sp8_reading_parameter = {
@@ -30,14 +36,33 @@ ht3_reading_parameter = {
     "reading_routine": 'default',
     "skip_before_first_frame_marker": True
 }
-ht3_data = tttrlib.TTTR(ht3_filename)
 
-sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+# Lazy load global data objects to avoid constructor failures during import
+ht3_data = None
+sp5_data = None
+
+def _load_global_data():
+    global ht3_data, sp5_data
+    if ht3_data is None and os.path.exists(ht3_filename):
+        try:
+            ht3_data = tttrlib.TTTR(ht3_filename)
+        except Exception as e:
+            print(f"Warning: Failed to load ht3_data: {e}")
+            ht3_data = None
+    
+    if sp5_data is None and os.path.exists(sp5_filename):
+        try:
+            sp5_data = tttrlib.TTTR(sp5_filename, 'PTU')
+        except Exception as e:
+            print(f"Warning: Failed to load sp5_data: {e}")
+            sp5_data = None
+
 sp5_reading_parameter = {
     "reading_routine": 'SP5'
 }
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping CLSM transform tests")
 class TestCLSMTransform(unittest.TestCase):
 
     # If this is set to True as set of files are written as a
@@ -46,6 +71,7 @@ class TestCLSMTransform(unittest.TestCase):
 
     def test_crop(self):
         # Read contents of file into new CLSMImage
+        _load_global_data()
         settings = {
             "channels": [0, 1],
             "fill": True,
@@ -59,6 +85,7 @@ class TestCLSMTransform(unittest.TestCase):
         self.assertTupleEqual(image.intensity.shape, (15, 128, 96))
 
     def test_index_transform(self):
+        _load_global_data()
         settings = {
             "channels": [0, 1],
             "fill": True,
@@ -81,6 +108,7 @@ class TestCLSMTransform(unittest.TestCase):
         self.assertTupleEqual(image.to3D(image.to1D(*idx)), idx)
 
     def test_clsm_binning(self):
+        _load_global_data()
         reading_parameter = dict()
         reading_parameter.update(ht3_reading_parameter)
         reading_parameter.update(
@@ -107,9 +135,7 @@ class TestCLSMTransform(unittest.TestCase):
         print(img_transformed)
 
         # compare to reference images
-        fn = './test/data/reference/img_ref_clsm_binning.tif'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_clsm_binning.tif')
         if self.make_reference:
             skimage.io.imsave(fn, img_transformed, check_contrast=False, imagej=True)
         np.testing.assert_array_almost_equal(skimage.io.imread(fn), img_transformed)
-
-

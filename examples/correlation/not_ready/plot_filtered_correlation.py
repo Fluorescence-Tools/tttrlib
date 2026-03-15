@@ -18,13 +18,17 @@ on dynamics.
 Objective scatter filtered correlation using filtered correlation
 
 """
+import os
+from pathlib import Path
 import pylab as plt
 import tttrlib
 import numpy as np
 
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+
 #%%
 # First, we read the data data
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # Next, we compute fluorescence intensity decay histograms for the

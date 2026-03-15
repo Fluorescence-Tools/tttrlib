@@ -10,13 +10,17 @@ the micro time, the macro time, and the routing channel numbers.
 
 #%%
 from __future__ import print_function
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
 
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+
 #%%
 # Read data of the CLSM image and fill CLSM image with photon information.
-data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')
+data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))
 
 settings = {
     "channels": [0, 1],

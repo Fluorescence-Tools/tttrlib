@@ -4,6 +4,12 @@
 #include "PdaCallback.h"
 %}
 
+// Forward declare and expose the enum
+enum PdaImplementation {
+    PDA_DEFAULT,
+    PDA_OPTIMIZED
+};
+
 //// internal
 %attribute(Pda, bool, hist_sgsr_valid, is_valid_sgsr, set_valid_sgsr);
 

@@ -1,4 +1,6 @@
 #include "DecayConvolution.h"
+#include "include/Verbose.h"
+#include "include/info.h"
 
 /* rescaling -- old version. sum(fit)->sum(decay) */
 void rescale(double *fit, double *decay, double *scale, int start, int stop) {
@@ -46,7 +48,7 @@ void rescale_w_bg(double *fit, double *decay, double *e_sq, double bg, double *s
     if (sumdenom != 0.) *scale = sumnom / sumdenom;
     for (int i = start; i < stop; i++)
         fit[i] *= *scale;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "RESCALE_W_BG" << std::endl;
     std::clog << "w_sq [start:stop]: "; for(int i=start; i<stop; i++) std::clog << e_sq[i] << " "; std::clog << std::endl;
     std::clog << "decay [start:stop]: "; for(int i=start; i<stop; i++) std::clog << decay[i] << " "; std::clog << std::endl;
@@ -54,7 +56,7 @@ void rescale_w_bg(double *fit, double *decay, double *e_sq, double bg, double *s
     std::clog << "-- sumnom: " << sumnom << std::endl;
     std::clog << "-- sumdenom: " << sumdenom << std::endl;
     std::clog << "-- final scale: " << *scale << std::endl;
-#endif
+}
 }
 
 
@@ -81,6 +83,11 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
 void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
 
     #ifdef __AVX__
+    // Add runtime detection with fallback
+    if (!tttrlib::cpu_features::get_avx_enabled()) {
+        fconv(fit, x, lamp, numexp, start, stop, dt);
+        return;
+    }
     
     int start1 = std::max(1, start);
 
@@ -114,10 +121,9 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
 #ifdef _WIN32
-        fit[0] += double(tmp.m256d_f64[0]);
-        fit[0] += double(tmp.m256d_f64[1]);
-        fit[0] += double(tmp.m256d_f64[2]);
-        fit[0] += double(tmp.m256d_f64[3]);
+        double tmp_vals[4];
+        _mm256_storeu_pd(tmp_vals, tmp);
+        fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
 #else
         fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -137,12 +143,11 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] = double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals2[4];
+            _mm256_storeu_pd(tmp_vals2, tmp);
+            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
 #else
-            fit[i] = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
         }
     }
@@ -166,7 +171,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
     int start1 = std::max(1, start);
     int stop1 = std::min(period_n+lamp_start, n_points);
 
-    #ifdef VERBOSE_TTTRLIB
+    if (is_verbose()) {
     std::clog << "FCONV_PER" << std::endl;
     std::clog << "-- numexp:" << numexp << std::endl;
     std::clog << "-- start:" << start << std::endl;
@@ -174,7 +179,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
     std::clog << "-- n_points:" << n_points << std::endl;
     std::clog << "-- period:" << period << std::endl;
     std::clog << "-- dt:" << dt << std::endl;
-    #endif
+}
 
     // Precompute everything needed for the convolution
     // lamp * dt * 0.5
@@ -186,7 +191,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
         double expcurr = exp(-dt/x[2*ne+1]);
         double tail_a = 1./(1.-exp(-period/x[2*ne+1]));
         double fitcurr = 0;
-        fit[0] += (fitcurr + l2[0]);
+        fit[0] += (fitcurr + l2[0])*x[2*ne];
         for (int i=start1; i<stop1; i++){
             fitcurr=(fitcurr + l2[i - 1])*expcurr + l2[i];
             fit[i] += fitcurr*x[2*ne];
@@ -206,7 +211,13 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
                    int n_points, double period, double dt) {
 #ifdef __AVX__
 
-#ifdef VERBOSE_TTTRLIB
+    // Add runtime detection with fallback
+    if (!tttrlib::cpu_features::get_avx_enabled()) {
+        fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
+        return;
+    }
+
+if (is_verbose()) {
     std::clog << "FCONV_PER_AVX" << std::endl;
     std::clog << "-- numexp: " << numexp << std::endl;
     std::clog << "-- start: " << start << std::endl;
@@ -214,7 +225,7 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
     std::clog << "-- n_points: " << n_points << std::endl;
     std::clog << "-- period: " << period << std::endl;
     std::clog << "-- dt: " << dt << std::endl;
-#endif
+}
     int start1 = std::max(1, start);
     stop = (stop < 0) ? n_points: stop;
     // make sure that there are always multiple of the AVX register size
@@ -273,10 +284,9 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
 #ifdef _WIN32
-        fit[0] += double(tmp.m256d_f64[0]);
-        fit[0] += double(tmp.m256d_f64[1]);
-        fit[0] += double(tmp.m256d_f64[2]);
-        fit[0] += double(tmp.m256d_f64[3]);
+        double tmp_vals[4];
+        _mm256_storeu_pd(tmp_vals, tmp);
+        fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
 #else
         fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -297,12 +307,11 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
 #ifdef _WIN32
-            fit[i] = double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals2[4];
+            _mm256_storeu_pd(tmp_vals2, tmp);
+            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
 #else
-            fit[i] = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
         }
         // fitcurr *= scale[ne];
@@ -315,10 +324,9 @@ void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, 
             tmp = _mm256_mul_pd(fitcurr, a);
             tmp = _mm256_mul_pd(tmp, t);
 #ifdef _WIN32
-            fit[i] += double(tmp.m256d_f64[0]);
-            fit[i] += double(tmp.m256d_f64[1]);
-            fit[i] += double(tmp.m256d_f64[2]);
-            fit[i] += double(tmp.m256d_f64[3]);
+            double tmp_vals3[4];
+            _mm256_storeu_pd(tmp_vals3, tmp);
+            fit[i] += tmp_vals3[0] + tmp_vals3[1] + tmp_vals3[2] + tmp_vals3[3];
 #else
             fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #endif
@@ -427,7 +435,7 @@ void add_pile_up_to_model(
     stop = stop < 0 ? n_data : std::min(n_data, stop);
     start = start < 0 ? 0 : std::min(n_data, start);
     stop = std::min(n_data, n_model);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "ADD PILE-UP" << std::endl;
     std::clog << "-- Repetition_rate [MHz]: " << repetition_rate << std::endl;
     std::clog << "-- Dead_time [ns]: " << instrument_dead_time << std::endl;
@@ -436,11 +444,11 @@ void add_pile_up_to_model(
     std::clog << "-- n_model: " << n_model << std::endl;
     std::clog << "-- start: " << start << std::endl;
     std::clog << "-- stop: " << stop << std::endl;
-#endif
+}
     if(strcmp(pile_up_model.c_str(), "coates") == 0){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- pile_up_model: " << pile_up_model << std::endl;
-#endif
+}
         repetition_rate *= 1e6;
         instrument_dead_time *= 1e-9;
         std::vector<double> cum_sum(n_data);
@@ -449,12 +457,12 @@ void add_pile_up_to_model(
         double total_dead_time = n_pulse_detected * instrument_dead_time;
         double live_time = measurement_time - total_dead_time;
         double n_excitation_pulses = std::max(live_time * repetition_rate, (double) n_pulse_detected);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- live_time [s]: " << live_time << std::endl;
         std::clog << "-- total_dead_time [s]: " << total_dead_time << std::endl;
         std::clog << "-- n_pulse_detected [#]: " << n_pulse_detected << std::endl;
         std::clog << "-- n_excitation_pulses [#]: " << n_excitation_pulses << std::endl;
-#endif
+}
         // Coates, 1968, eq. 2 & 4
         std::vector<double> rescaled_data(n_data);
 
@@ -478,7 +486,7 @@ void discriminate_small_amplitudes(
         double amplitude_threshold
 ){
     int number_of_exponentials = n_lifetime_spectrum / 2;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "APPLY_AMPLITUDE_THRESHOLD" << std::endl;
     std::clog << "-- amplitude_threshold spectrum: " << amplitude_threshold << std::endl;
     std::clog << "-- lifetime spectrum before: ";
@@ -486,20 +494,20 @@ void discriminate_small_amplitudes(
         std::clog << lifetime_spectrum[i] << ' ';
     }
     std::clog << std::endl;
-#endif
+}
     for(int ne = 0; ne<number_of_exponentials; ne++){
         double amplitude = lifetime_spectrum[2 * ne];
         if(std::abs(amplitude) < amplitude_threshold){
             lifetime_spectrum[2 * ne] = 0.0;
         }
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- lifetime spectrum after: ";
     for (int i=0; i < number_of_exponentials * 2; i++){
         std::clog << lifetime_spectrum[i] << ' ';
     }
     std::clog << std::endl;
-#endif
+}
 }
 
 
@@ -569,12 +577,12 @@ void fconv_cs_time_axis_old(
         int convolution_stop
 ){
     int number_of_exponentials = n_lifetime_spectrum / 2;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "convolve_lifetime_spectrum... " << std::endl;
     std::clog << "-- number_of_exponentials: " << number_of_exponentials << std::endl;
     std::clog << "-- convolution_start: " << convolution_start << std::endl;
     std::clog << "-- convolution_stop: " << convolution_stop << std::endl;
-#endif
+}
     for(int ne=0; ne<number_of_exponentials; ne++){
         double a = lifetime_spectrum[2 * ne];
         double current_lifetime = (lifetime_spectrum[2 * ne + 1]);

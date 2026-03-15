@@ -17,6 +17,7 @@ private:
 
     std::vector<CLSMLine*> lines;
     TTTR* _tttr = nullptr;
+    std::shared_ptr<TTTR> _tttr_shared = nullptr;  // For compatibility with set_tttr
 
 public:
 
@@ -31,6 +32,19 @@ public:
     std::vector<CLSMLine*> get_lines() {
         return lines;
     }
+    
+    std::shared_ptr<TTTR> get_tttr(){
+        return _tttr_shared;
+    }
+
+    void set_tttr(std::shared_ptr<TTTR> tttr){
+        _tttr_shared = tttr;
+        _tttr = tttr.get();
+        // Propagate to all lines
+        for (auto& line : lines) {
+            line->set_tttr(tttr);
+        }
+    }
 
 
     /*!
@@ -38,7 +52,7 @@ public:
      *
      * @return The number of lines in the CLSMFrame.
      */
-    size_t size() final{
+    size_t size() const override final{
         return lines.size();
     }
 
@@ -56,9 +70,30 @@ public:
      * @param fill [in] If set to false, the content of the pixels is not copied.
      */
     CLSMFrame(const CLSMFrame& old_frame, bool fill = true) : TTTRSelection(old_frame) {
+        _tttr_shared = old_frame._tttr_shared;
+        _tttr = old_frame._tttr;
         for (auto& l : old_frame.lines) {
             lines.emplace_back(new CLSMLine(*l, fill));
         }
+    }
+
+    CLSMFrame& operator=(const CLSMFrame& other) {
+        if (this != &other) {
+            // Free existing resources
+            for (auto& l : lines) {
+                delete l;
+            }
+            lines.clear();
+
+            // Copy new data
+            _tttr_shared = other._tttr_shared;
+            _tttr = other._tttr;
+            for (auto& l : other.lines) {
+                lines.emplace_back(new CLSMLine(*l, true));
+            }
+            TTTRSelection::operator=(other);
+        }
+        return *this;
     }
 
     /*!
@@ -82,7 +117,7 @@ public:
      * @param frame_stop [in] The stopping frame index for the CLSMFrame.
      * @param tttr [in] Pointer to a TTTR object containing time-resolved data.
      */
-    explicit CLSMFrame(size_t frame_start, size_t frame_stop, TTTR* tttr);
+    explicit CLSMFrame(size_t frame_start, size_t frame_stop, std::shared_ptr<TTTR> tttr);
 
     /*!
      * \brief Append a CLSMLine to the current CLSMFrame.
@@ -133,6 +168,24 @@ public:
         int pixel_start, int pixel_stop
     );
 
+    /*!
+     * \brief Get the intensity array for this frame.
+     *
+     * This function computes the intensity (photon count) for each pixel in the frame
+     * and returns it as a 2D array (lines × pixels).
+     *
+     * @param output [out] Pointer to the output array (will be allocated).
+     * @param dim1 [out] Number of lines.
+     * @param dim2 [out] Number of pixels per line.
+     */
+    void get_intensity(unsigned short **output, int *dim1, int *dim2);
+
+    /*!
+     * \brief Get the memory usage of this frame in bytes.
+     *
+     * @return Total memory usage in bytes.
+     */
+    size_t get_memory_usage_bytes() const;
 
 };
 

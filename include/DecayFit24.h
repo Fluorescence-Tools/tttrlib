@@ -1,9 +1,12 @@
 #ifndef TTTRLIB_DECAYFIT24_H
 #define TTTRLIB_DECAYFIT24_H
 
+#include <nlohmann/json.hpp>
 #include "DecayFit.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
+
+using json = nlohmann::json;
 
 
 class DecayFit24 : DecayFit {
@@ -110,6 +113,14 @@ public:
      */
     static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r);
 
+    static std::string to_json(const double *x,
+                               const short *fixed,
+                               const MParam *p,
+                               double result);
+
+    static void from_json(const json &j,
+                         double *x,
+                         short *fixed);
 
 };
 

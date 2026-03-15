@@ -27,6 +27,8 @@ correlators [12].
 
 
 """
+import os
+from pathlib import Path
 import matplotlib.pylab as plt
 import tttrlib
 import numpy as np
@@ -35,7 +37,9 @@ import numpy as np
 fig, ax = plt.subplots(sharex='col', sharey='row')
 
 #  Read the data data
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 # Correlator settings, if the same settings are used repeatedly it is useful to define them once
 settings = {

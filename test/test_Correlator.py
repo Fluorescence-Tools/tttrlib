@@ -1,17 +1,18 @@
 from __future__ import division
 
 import unittest
-import json
 import numpy as np
 import scipy.spatial
 
 import tttrlib
 
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
-settings = json.load(open(file="./test/settings.json"))
 spc132_filename = settings["spc132_filename"]
 
 
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping Correlator tests")
 class Tests(unittest.TestCase):
 
     data = tttrlib.TTTR(spc132_filename, 'SPC-130')
@@ -98,7 +99,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = './tttr-data/bh/bh_spc132.spc'
+        # Use the resolved spc132_filename from settings
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         ch1_indeces = data.get_selection_by_channel([8])
@@ -151,8 +152,7 @@ class Tests(unittest.TestCase):
 
         import tttrlib
         import numpy as np
-        spc132_filename = './tttr-data/bh/bh_spc132.spc'
-
+        # Use the resolved spc132_filename from settings
         data = tttrlib.TTTR(spc132_filename, 'SPC-130')
 
         correlator = tttrlib.Correlator(
@@ -281,7 +281,6 @@ class Tests(unittest.TestCase):
     #     data = self.data
     #
     #     # import tttrlib
-    #     # import pylab as p
     #     # data = tttrlib.TTTR('./tttr-data/bh/bh_spc132.spc', 'SPC-130')
     #
     #     # get the indices of the two channels

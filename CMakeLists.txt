@@ -1,8 +1,5 @@
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
-
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+
 SET(PROJECT_NAME tttrlib)
 PROJECT(${PROJECT_NAME})
 
@@ -19,42 +16,122 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics" ON)
+# Default WITH_AVX to OFF for conda/pip builds (safer, wider compatibility)
+# Users can enable with: cmake -DWITH_AVX=ON
+OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics (default OFF for conda/pip builds)" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
+
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
-OPTION(Boost_USE_STATIC_LIBS "Static boost build" ON)
+
+## System-specific adjustments
+################################
+
 
 ## System specific compiler flags
 ################################
-# AVX
-IF((NOT CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64") OR APPLE)
-  set(WITH_AVX OFF CACHE STRING "Disable AVX when compiling WITH_AVX=OFF." FORCE)
+# AVX - Only enable on Intel x86_64 machines (all platforms)
+# Disable on ARM (aarch64, arm64) and other non-x86_64 architectures
+IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+  set(WITH_AVX OFF CACHE STRING "Disable AVX on non-x86_64 architectures (ARM, etc.)." FORCE)
+  MESSAGE(STATUS "SIMD/AVX disabled: Not an x86_64 machine (detected: ${CMAKE_HOST_SYSTEM_PROCESSOR})")
+ELSE()
+  IF(WITH_AVX)
+    MESSAGE(STATUS "SIMD/AVX enabled: (${CMAKE_SYSTEM_NAME})")
+  ELSE()
+    MESSAGE(STATUS "SIMD/AVX disabled via WITH_AVX=OFF (${CMAKE_SYSTEM_NAME})")
+  ENDIF()
 ENDIF()
 IF(WITH_AVX)
     INCLUDE(simd)
-    IF (MSVC)
-        # https://devblogs.microsoft.com/cppblog/simd-extension-to-c-openmp-in-visual-studio/
-        # /Oi is for intrinsics
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oi")
-    ELSE(MSVC)
-        STRING(APPEND CMAKE_CXX_FLAGS " -O3 -mfma")
-    ENDIF ()
 ENDIF()
 
-# Debug build
+IF(WITH_AVX)
+    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=1)
+ELSE()
+    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=0)
+ENDIF()
+
+# OpenMP - Works on all architectures (x86_64, ARM, etc.)
+OPTION(WITH_OPENMP "Enable OpenMP parallelization for correlation" ON)
+IF(WITH_OPENMP)
+    FIND_PACKAGE(OpenMP)
+    IF(OpenMP_CXX_FOUND)
+        MESSAGE(STATUS "OpenMP enabled: ${OpenMP_CXX_VERSION} (${CMAKE_HOST_SYSTEM_PROCESSOR})")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    ELSE()
+        MESSAGE(WARNING "OpenMP requested but not found")
+        SET(WITH_OPENMP OFF)
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "OpenMP disabled")
+ENDIF()
+
+################################################################################
+# HDF5 Support (Mandatory for Photon HDF)
+################################################################################
+IF(BUILD_PHOTON_HDF)
+    ADD_COMPILE_DEFINITIONS(BUILD_PHOTON_HDF)
+    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C)
+ENDIF()
+
+# Build type specific optimizations
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
   SET(VERBOSE_TTTRLIB ON)
+  MESSAGE(STATUS "Debug build: Enabling all warnings")
   if(MSVC)
-    ADD_COMPILE_OPTIONS(/Wall)
+    ADD_COMPILE_OPTIONS(/Wall /bigobj)
   ELSE(MSVC)
       ADD_COMPILE_OPTIONS(-Wall -Wextra -pedantic)
   ENDIF(MSVC)
-ENDIF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
+  # Aggressive optimizations for Release builds
+  MESSAGE(STATUS "Release build: Enabling aggressive optimizations and disabling warnings")
+  if(MSVC)
+    # Remove default warning levels to avoid D9025 warning
+    string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/W[0-4]" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    
+    # MSVC optimizations
+    ADD_COMPILE_OPTIONS(
+      /O2          # Maximum optimization (speed)
+      /Ob2         # Inline function expansion
+      /Oi          # Enable intrinsic functions
+      /Ot          # Favor fast code
+      /GL          # Whole program optimization
+      /w           # Disable all warnings in Release builds
+    )
+    # Add AVX2 flag only if explicitly enabled by user
+    IF(WITH_AVX)
+      ADD_COMPILE_OPTIONS(/arch:AVX2)
+      MESSAGE(STATUS "MSVC: AVX2 flag enabled via /arch:AVX2")
+    ELSE()
+      MESSAGE(STATUS "MSVC: AVX2 flag disabled (use -DWITH_AVX=ON to enable)")
+    ENDIF()
+    # Suppress informational pragma messages from external libraries (HighFive)
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")  # Disable deprecation warnings
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")  # Link-time code generation
+    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+  ELSE()
+    # GCC/Clang optimizations
+    ADD_COMPILE_OPTIONS(
+      -O3                    # Maximum optimization
+      -funroll-loops         # Unroll loops
+      -finline-functions     # Inline functions
+      -fomit-frame-pointer   # Omit frame pointer
+      -flto                  # Link-time optimization
+      -w                     # Disable all warnings in Release builds
+    )
+    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
+    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+  ENDIF()
+ENDIF ()
 
 # Operation sytem specific flags
 IF (MSVC)
@@ -92,31 +169,13 @@ endif()
 # INCLUDES AND LIBRARIES
 #######################################
 
-## Boost
-###########################
-IF(Boost_USE_STATIC_LIBS)
-  SET(Boost_USE_STATIC_LIBS ON)
-ENDIF(Boost_USE_STATIC_LIBS)
-FIND_PACKAGE(Boost 1.36)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
-## HDF5
-###########################cd
-IF(BUILD_PHOTON_HDF)
-  FIND_PACKAGE(HDF5 1.10 COMPONENTS C)
-  IF(HDF5_FOUND)
-    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
-    LINK_LIBRARIES(${HDF5_LIBRARIES})
-    add_compile_definitions(BUILD_PHOTON_HDF)
-    # needed for build on Windows
-    ADD_DEFINITIONS(-DH5_BUILT_AS_DYNAMIC_LIB)
-  ELSE(HDF5_FOUND)
-    SET(BUILD_PHOTON_HDF FALSE)
-  ENDIF(HDF5_FOUND)    
-ENDIF(BUILD_PHOTON_HDF)
+# HDF5 is now handled above with dual source approach
+
+
 
 IF(VERBOSE_TTTRLIB)
-  add_compile_definitions(VERBOSE_TTTRLIB)
+    ADD_COMPILE_DEFINITIONS(VERBOSE_TTTRLIB)
 ENDIF(VERBOSE_TTTRLIB)
 
 # Targets
@@ -126,12 +185,29 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# third party includes/code
-FILE(GLOB_RECURSE SRC_files_thirdparty "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/*.cpp")
-LIST(APPEND SRC_files ${SRC_files_thirdparty})
+# Third party
+#############################
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nlohmann_json/include)
 
-ADD_SUBDIRECTORY(ext)
+# LBFGS
+FILE(GLOB_RECURSE LBFGS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp")
+LIST(APPEND SRC_files ${LBFGS})
+
+# ALGLib
+FILE(GLOB_RECURSE ALGLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/alglib/*.cpp")
+LIST(APPEND SRC_files ${ALGLIB})
+
+# HighFive HDF5 reader
+IF(BUILD_PHOTON_HDF)
+  IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")
+    ADD_SUBDIRECTORY(thirdparty/HighFive)
+    LINK_LIBRARIES(HighFive::HighFive)
+  ELSE()
+    MESSAGE(WARNING "HighFive third-party sources are missing; disabling photon HDF support")
+    SET(BUILD_PHOTON_HDF OFF CACHE BOOL "Build photon hdf5 reader" FORCE)
+  ENDIF()
+ENDIF()
 
 
 IF(BUILD_LIBRARY)
@@ -141,17 +217,20 @@ IF(BUILD_LIBRARY)
   ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
   ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
 
+  # Link libraries (Boost removed - using C++17 standard library)
+
   # Define which headers are going to be included in the install target
   FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 
   # By default the output name is the target. To not have different names, i.e.,
-  # ProjectNameShard.dll and ProjectNameStatic.lib the output names are set manually.
+  # ProjectNameShared.dll and ProjectNameStatic.lib the output names are set manually.
+  # Use different names to avoid "multiple rules generate" ninja error
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}")
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES LIBRARY_OUTPUT_NAME "${PROJECT_NAME}_static")
+  SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_static")
 
   # Add install target
   #######################
@@ -171,6 +250,11 @@ IF(BUILD_LIBRARY)
   ENDIF(INSTALL)
 ENDIF(BUILD_LIBRARY)
 
+# SWIG Extensions
+#####################################
+ADD_SUBDIRECTORY(ext)
+
+
 # Print additional (Debug) info
 #####################################
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -187,5 +271,4 @@ IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "LINK_DIRECTORIES='${dir}'")
   endforeach()
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
 

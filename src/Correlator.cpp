@@ -1,4 +1,20 @@
 #include <include/Correlator.h>
+#include "include/Verbose.h"
+#include "info.h"
+
+// OpenMP for parallel processing
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+// AVX intrinsics for vectorization
+#if defined(__AVX__) || defined(__AVX2__)
+#include <immintrin.h>
+#endif
+
+// Runtime AVX control using CPU feature detection from info.h
+// Set TTTRLIB_USE_AVX=0 to disable AVX optimizations at runtime
+static bool g_use_avx = tttrlib::cpu_features::get_avx_enabled();
 
 
 Correlator::Correlator(
@@ -8,15 +24,15 @@ Correlator::Correlator(
         int n_casc,
         bool make_fine
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "CORRELATOR" << std::endl;
-#endif
+}
     curve.set_n_bins(n_bins);
     curve.set_n_casc(n_casc);
     if (tttr != nullptr) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "-- Passed a TTTR object" << std::endl;
-#endif
+}
         set_tttr(tttr, tttr, make_fine);
     }
     set_correlation_method(method);
@@ -26,10 +42,10 @@ void Correlator::set_macrotimes(
         unsigned long long *t1v, int n_t1v,
         unsigned long long *t2v, int n_t2v
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting macro times..." << std::endl;
     std::clog << "-- n_t1v, n_t2v: " << n_t1v << "," << n_t2v << std::endl;
-#endif
+}
     is_valid = false;
     p1.times.resize(n_t1v);
     p2.times.resize(n_t1v);
@@ -41,11 +57,11 @@ void Correlator::set_weights(
         double* weight_ch1, int n_weights_ch1,
         double* weight_ch2, int n_weights_ch2
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting weights..." << std::endl;
     std::clog << "-- n_weights_ch1, n_weights_ch2: " <<
     n_weights_ch1 << "," << n_weights_ch2 << std::endl;
-#endif
+}
     is_valid = false;
     p1.resize(n_weights_ch1);
     p2.resize(n_weights_ch2);
@@ -65,16 +81,16 @@ void Correlator::set_events(
 }
 
 void Correlator::run(){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Running correlator..." << std::endl;
     std::clog << "-- Correlation mode: " << correlation_method << std::endl;
     std::clog << "-- Filling correlation vectors with zero." << std::endl;
-#endif
+}
     if(is_valid){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "CORRELATOR::RUN" << std::endl;
         std::clog << "-- Results are already valid." << std::endl;
-#endif
+}
         return;
     } else {
         if(!p1.empty() && !p2.empty()){
@@ -116,9 +132,9 @@ void Correlator::set_microtimes(
         unsigned short* tac_2, int n_tac_2,
         unsigned int number_of_microtime_channels
         ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Setting micro times..." << std::endl;
-#endif
+}
     is_valid = false;
     p1.make_fine(tac_1, n_tac_1, number_of_microtime_channels);
     p2.make_fine(tac_2, n_tac_2, number_of_microtime_channels);
@@ -130,11 +146,11 @@ uint64_t Correlator::dt(){
     uint64_t dt2 = p2.dt();
     /// The maximum time of an event in the first and second correlation channel, max(t1, t2)
     uint64_t maximum_macro_time = std::max(dt1, dt2);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Maximum time (Ch1): " << dt1 << std::endl;
     std::clog << "-- Maximum time (Ch2): " << dt2 << std::endl;
     std::clog << "-- Maximum time: " << maximum_macro_time << std::endl;
-#endif
+}
     return maximum_macro_time;
 }
 
@@ -188,9 +204,9 @@ void Correlator::ccf_felekyan(
     // nc:                  number of evenly spaced elements per block
     // nb:                  number of blocks of increasing spacing
     // corrl:               pointer to correlation output
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Copying data to new arrays..." << std::endl;
-#endif
+}
     // the arrays can be modified inplace during the correlation. Thus, copied to a new array.
     auto t1c = (unsigned long long *) malloc(sizeof(unsigned long long) * np1);
     std::memcpy(t1c, t1, sizeof(unsigned long long) * np1);
@@ -219,7 +235,7 @@ void Correlator::ccf_felekyan(
     {
         // Determines spacing; used 2time spacing of one
         if (k==0) {pw=1;}
-        else {pw=pow(2, k-1);};
+        else {pw=static_cast<unsigned long long>(pow(2, k-1));};
 
         // p is the starting photon in second array
         p=0;
@@ -310,6 +326,11 @@ void Correlator::ccf_felekyan(
         }
         np2=j;
     }
+    // Free allocated memory to prevent memory leaks
+    free(t1c);
+    free(t2c);
+    free(w1);
+    free(w2);
 }
 
 inline void ccf_wahl_correlate(
@@ -330,17 +351,81 @@ inline void ccf_wahl_correlate(
     size_t offset = tau_offset / scale;
 
     p = start_2;
-    for (i1 = start_1; i1 < end_1; i1++) {
-        if (w1[i1] == 0) continue;
-        size_t edge_l = t1[i1] + offset;
-        size_t edge_r = edge_l + n_bins;
-        for (i2 = p; i2 < end_2; i2++) {
-            if (t2[i2] > edge_r) break;
-            if (t2[i2] > edge_l) {
-                index = t2[i2] - edge_l + i_casc * n_bins;
-                corr[index] += (w1[i1] * w2[i2]);
-            } else {
+    
+#if defined(__AVX__) || defined(__AVX2__)
+    // Use AVX optimization if available at runtime
+    if (g_use_avx) {
+        // AVX-optimized version: process inner loop with SIMD
+        for (i1 = start_1; i1 < end_1; i1++) {
+            if (w1[i1] == 0) continue;
+            
+            double w1_val = w1[i1];
+            size_t edge_l = t1[i1] + offset;
+            size_t edge_r = edge_l + n_bins;
+            
+            // Broadcast w1[i1] to all lanes of AVX register
+            __m256d v_w1 = _mm256_set1_pd(w1_val);
+            
+            // Process inner loop with AVX (4 doubles at a time)
+            i2 = p;
+            
+            // Scalar processing until we find valid range
+            while (i2 < end_2 && t2[i2] <= edge_l) {
                 p++;
+                i2++;
+            }
+            
+            // Vectorized processing of valid range
+            while (i2 + 3 < end_2) {
+                // Check if all 4 elements are within bounds
+                if (t2[i2 + 3] > edge_r) break;
+                
+                // Load 4 weights from w2
+                __m256d v_w2 = _mm256_loadu_pd(&w2[i2]);
+                
+                // Compute w1[i1] * w2[i2:i2+3]
+                __m256d v_product = _mm256_mul_pd(v_w1, v_w2);
+                
+                // Calculate indices and accumulate
+                // Note: This part needs scalar processing due to indirect indexing
+                double products[4];
+                _mm256_storeu_pd(products, v_product);
+                
+                for (int k = 0; k < 4; k++) {
+                    if (t2[i2 + k] > edge_l && t2[i2 + k] <= edge_r) {
+                        index = t2[i2 + k] - edge_l + i_casc * n_bins;
+                        corr[index] += products[k];
+                    }
+                }
+                
+                i2 += 4;
+            }
+            
+            // Process remaining elements with scalar code
+            for (; i2 < end_2; i2++) {
+                if (t2[i2] > edge_r) break;
+                if (t2[i2] > edge_l) {
+                    index = t2[i2] - edge_l + i_casc * n_bins;
+                    corr[index] += (w1_val * w2[i2]);
+                }
+            }
+        }
+    } else
+#endif
+    {
+        // Scalar version (used when AVX not compiled in OR disabled at runtime)
+        for (i1 = start_1; i1 < end_1; i1++) {
+            if (w1[i1] == 0) continue;
+            size_t edge_l = t1[i1] + offset;
+            size_t edge_r = edge_l + n_bins;
+            for (i2 = p; i2 < end_2; i2++) {
+                if (t2[i2] > edge_r) break;
+                if (t2[i2] > edge_l) {
+                    index = t2[i2] - edge_l + i_casc * n_bins;
+                    corr[index] += (w1[i1] * w2[i2]);
+                } else {
+                    p++;
+                }
             }
         }
     }
@@ -352,30 +437,146 @@ void Correlator::ccf_wahl(
         CorrelatorPhotonStream &p1,
         CorrelatorPhotonStream &p2
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "CORRELATOR::CCF" << std::endl;
     std::clog << "-- Copying data to new arrays..." << std::endl;
-#endif
-    // the photon streams are modified inplace. Thus, copies are creates
+}
+    // the photon streams are modified inplace. Thus, copies are created
     CorrelatorPhotonStream s1(p1);
     CorrelatorPhotonStream s2(p2);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "taus:" << std::endl;
     for(auto v: taus){
         std::clog << v << ",";
     }
+}
+
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    if (use_openmp) {
+        int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+        if (num_threads > 0) {
+            omp_set_num_threads(num_threads);
+        }
+        
+        if (is_verbose()) {
+            std::clog << "-- OpenMP enabled with " << omp_get_max_threads() << " threads" << std::endl;
+            std::clog << "-- Initial stream sizes: s1=" << s1.size() << ", s2=" << s2.size() << std::endl;
+        }
+        
+        // Parallelize across cascades - each thread computes its own coarsened streams
+        // This avoids memory bottleneck from pre-computing all cascades
+        #pragma omp parallel
+        {
+            // Thread-local correlation buffer and streams
+            std::vector<double> local_corr(corr.size(), 0.0);
+            
+            #pragma omp for schedule(dynamic) nowait
+            for (long long i_casc = 0; i_casc < (long long)n_casc; i_casc++) {
+                // Each thread creates its own coarsened copy for this cascade
+                std::vector<unsigned long long> t1 = s1.times;
+                std::vector<double> w1 = s1.weights;
+                std::vector<unsigned long long> t2 = s2.times;
+                std::vector<double> w2 = s2.weights;
+                
+                // Coarsen i_casc times
+                for (long long coarsen_step = 0; coarsen_step < i_casc; coarsen_step++) {
+                    // Coarsen t1/w1
+                    for(size_t i = 0; i < t1.size(); i++) 
+                        t1[i] /= 2;
+                    for (size_t i = 1; i < t1.size(); i++) {
+                        if (t1[i] == t1[i - 1]) {
+                            w1[i] += w1[i - 1];
+                            w1[i - 1] = 0.0;
+                        }
+                    }
+                    size_t j = 0;
+                    for (size_t i = 0; i < t1.size(); i++) {
+                        if (w1[i] != 0) {
+                            w1[j] = w1[i];
+                            t1[j] = t1[i];
+                            j++;
+                        }
+                    }
+                    t1.resize(j);
+                    w1.resize(j);
+                    
+                    // Coarsen t2/w2
+                    for(size_t i = 0; i < t2.size(); i++) 
+                        t2[i] /= 2;
+                    for (size_t i = 1; i < t2.size(); i++) {
+                        if (t2[i] == t2[i - 1]) {
+                            w2[i] += w2[i - 1];
+                            w2[i - 1] = 0.0;
+                        }
+                    }
+                    j = 0;
+                    for (size_t i = 0; i < t2.size(); i++) {
+                        if (w2[i] != 0) {
+                            w2[j] = w2[i];
+                            t2[j] = t2[i];
+                            j++;
+                        }
+                    }
+                    t2.resize(j);
+                    w2.resize(j);
+                }
+                
+                if (is_verbose()) {
+                    #pragma omp critical
+                    {
+                        std::clog << "-- Cascade " << i_casc << ": sizes t1=" << t1.size() 
+                                  << ", t2=" << t2.size() << " (thread " << omp_get_thread_num() << ")" << std::endl;
+                    }
+                }
+                
+                // Correlate
+                ccf_wahl_correlate(
+                        0, t1.size(),
+                        0, t2.size(),
+                        (size_t)i_casc, n_bins,
+                        taus, local_corr,
+                        t1.data(), w1.data(), t1.size(),
+                        t2.data(), w2.data(), t2.size()
+                );
+            }
+            
+            // Accumulate results into global correlation array
+            if (is_verbose()) {
+                #pragma omp critical
+                {
+                    std::clog << "-- Thread " << omp_get_thread_num() << " reducing results" << std::endl;
+                }
+            }
+            
+            #pragma omp critical
+            {
+                for (size_t i = 0; i < corr.size(); i++) {
+                    corr[i] += local_corr[i];
+                }
+            }
+        }
+        
+        if (is_verbose()) {
+            std::clog << "-- OpenMP correlation complete" << std::endl;
+        }
+    } else
 #endif
-    for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
-        ccf_wahl_correlate(
-                0, s1.size(),
-                0, s2.size(),
-                i_casc, n_bins,
-                taus, corr,
-                s1.times.data(), s1.weights.data(), s1.size(),
-                s2.times.data(), s2.weights.data(), s2.size()
-        );
-        s1.coarsen();
-        s2.coarsen();
+    {
+        // Serial version (OpenMP disabled or not available)
+        for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
+            ccf_wahl_correlate(
+                    0, s1.size(),
+                    0, s2.size(),
+                    i_casc, n_bins,
+                    taus, corr,
+                    s1.times.data(), s1.weights.data(), s1.size(),
+                    s2.times.data(), s2.weights.data(), s2.size()
+            );
+            s1.coarsen();
+            s2.coarsen();
+        }
     }
 }
 
@@ -385,7 +586,7 @@ void Correlator::ccf_laurence(
             CorrelatorPhotonStream &p1,
             CorrelatorPhotonStream &p2
 ){
-    int nbins = taus.size();
+    int nbins = static_cast<int>(taus.size());
     long i, j, k, l;
     
     std::vector<long> jmin(taus.size(), 0);
@@ -396,8 +597,8 @@ void Correlator::ccf_laurence(
         double w1 = p1.weights[i];
         
         for(int k = 0; k < nbins - 1; k++){
-            double tau_min = taus[k + 0]; // lower edge of tau bin
-            double tau_max = taus[k + 1]; // upper edge of tau bin
+            double tau_min = static_cast<double>(taus[k + 0]); // lower edge of tau bin
+            double tau_max = static_cast<double>(taus[k + 1]); // upper edge of tau bin
 
             if(k == 0){
                 j = jmin[k];
@@ -420,9 +621,9 @@ void Correlator::ccf_laurence(
 }
 
 void Correlator::normalize(Correlator* correlator, CorrelatorCurve &curve){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Normalizing correlation curve..." << std::endl;
-#endif
+}
     for(size_t i=0; i < curve.corr_normalized.size(); i++) curve.corr_normalized[i] = curve.correlation[i];
     uint64_t maximum_macro_time = correlator->dt();
     if(correlator->correlation_method == "wahl"){
@@ -465,7 +666,7 @@ void Correlator::normalize_ccf_wahl(
     double cr2 = (double) np2 / std::max(1.0, (double) dt2);
     double maximum_macro_time = (double) std::max(dt1, dt2);
     for (unsigned int j = 0; j < x_axis.size(); j++) {
-        double pw = (uint64_t) pow(2.0, (int) (double(j - 1) / n_bins));
+        double pw = static_cast<double>(static_cast<uint64_t>(pow(2.0, static_cast<int>(static_cast<double>(j - 1) / n_bins))));
         double delta_t = (double) (maximum_macro_time - x_axis[j]);
         corr[j] /= pw; 
         corr[j] /= (cr1 * cr2 * delta_t);
@@ -485,8 +686,8 @@ void Correlator::normalize_ccf_laurence(
     double n1 = p1.sum_of_weights();
     double n2 = p2.sum_of_weights();
 
-    for (int i = 0; i < axis.size() - 1; i++) {
-        double dtau = axis[i + 1] - axis[i];
+    for (int i = 0; i < static_cast<int>(axis.size()) - 1; i++) {
+        double dtau = static_cast<double>(axis[i + 1] - axis[i]);
         double scale = (duration / dtau - 1.0);
 
         // double w1 = 0.0;

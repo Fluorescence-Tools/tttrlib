@@ -52,6 +52,8 @@
 #define BH_RECORD_TYPE_SPC600_4096  9
 #define CZ_RECORD_TYPE_CONFOCOR3    10
 #define SM_RECORD_TYPE              11
+#define PQ_RECORD_TYPE_GENERIC_T3   12  // MultiHarp 150 / PicoHarp 330 T3 mode
+#define PQ_RECORD_TYPE_GENERIC_T2   13  // MultiHarp 150 / PicoHarp 330 T2 mode
 
 
 /*

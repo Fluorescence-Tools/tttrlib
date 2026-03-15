@@ -1,4 +1,10 @@
 #include "TTTRMask.h"
+#include "info.h"
+#include <nlohmann/json.hpp>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 void TTTRMask::set_tttr(TTTR* tttr){
     masked.resize(tttr->size(), false);
@@ -14,10 +20,40 @@ void TTTRMask::select_channels(
         bool mask
 ) {
     set_tttr(tttr);
+    
+    // Build lookup table for O(1) channel checking
+    // Routing channels are typically in range [-128, 127] or [0, 255]
+    constexpr int LOOKUP_SIZE = 256;
+    bool channel_lookup[LOOKUP_SIZE] = {false};
+    
     for (int i = 0; i < n_routing_channels; i++) {
-        int ch = routing_channels[i];
-        for (int j = 0; j < tttr->size(); j++) {
-            if (tttr->routing_channels[j] == ch) {
+        // Handle signed char by offsetting to [0, 255]
+        unsigned char ch_idx = static_cast<unsigned char>(routing_channels[i]);
+        channel_lookup[ch_idx] = true;
+    }
+    
+    int n = static_cast<int>(tttr->size());
+    signed char* channels = tttr->routing_channels;
+    
+    // Use OpenMP for large datasets
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+#ifdef _OPENMP
+    if (use_openmp && n > 100000) {
+        #pragma omp parallel for schedule(static)
+        for (int j = 0; j < n; j++) {
+            unsigned char ch_idx = static_cast<unsigned char>(channels[j]);
+            if (channel_lookup[ch_idx]) {
+                masked[j] = mask;
+            }
+        }
+    } else
+#endif
+    {
+        // Serial version for small datasets or when OpenMP disabled
+        for (int j = 0; j < n; j++) {
+            unsigned char ch_idx = static_cast<unsigned char>(channels[j]);
+            if (channel_lookup[ch_idx]) {
                 masked[j] = mask;
             }
         }
@@ -29,14 +65,46 @@ void TTTRMask::select_microtime_ranges(
         std::vector<std::pair<int, int>> micro_time_ranges
 ) {
     set_tttr(tttr);
-    for(int i=0; i < tttr->size(); i++){
-        auto micro_time = tttr->micro_times[i];
-        bool out_of_bounds = false;
-        for(auto r: micro_time_ranges){
-            out_of_bounds |= micro_time <= r.first;
-            out_of_bounds |= micro_time >= r.second;
+    
+    if (micro_time_ranges.empty()) {
+        return;  // No ranges to filter
+    }
+    
+    int n = static_cast<int>(tttr->size());
+    unsigned short* micro_times = tttr->micro_times;
+    
+    // Build bitmap for O(1) lookup (micro times are 16-bit: 0-65535)
+    constexpr int MICROTIME_MAX = 65536;
+    bool micro_time_valid[MICROTIME_MAX];
+    std::memset(micro_time_valid, 0, MICROTIME_MAX);
+    
+    // Mark valid ranges in bitmap using memset for contiguous ranges
+    for (const auto& r : micro_time_ranges) {
+        int start = std::max(0, r.first + 1);  // Exclusive lower bound
+        int end = std::min(MICROTIME_MAX - 1, r.second - 1);  // Exclusive upper bound
+        if (end >= start) {
+            std::memset(&micro_time_valid[start], 1, end - start + 1);
         }
-        masked[i] = masked[i] || out_of_bounds;
+    }
+    
+    bool use_openmp = tttrlib::cpu_features::get_openmp_enabled();
+    
+    #ifdef _OPENMP
+    if (use_openmp && n > 100000) {
+        #pragma omp parallel for schedule(static)
+        for(int i = 0; i < n; i++){
+            if (!micro_time_valid[micro_times[i]]) {
+                masked[i] = 1;
+            }
+        }
+    } else
+#endif
+    {
+        for(int i = 0; i < n; i++){
+            if (!micro_time_valid[micro_times[i]]) {
+                masked[i] = 1;
+            }
+        }
     }
 }
 
@@ -67,6 +135,10 @@ std::vector<int> TTTRMask::get_selected_ranges() {
                 break;
             }
         }
+        // If we reached the end without finding a selected element, exit
+        if(start >= size()){
+            break;
+        }
         // linear search for last element
         for(stop=start + 1; stop < size(); stop++){
             if(masked[stop] == 0){
@@ -75,6 +147,8 @@ std::vector<int> TTTRMask::get_selected_ranges() {
         }
         rng.emplace_back(start);
         rng.emplace_back(stop);
+        // Move start to the end of the current range to continue searching
+        start = stop;
     }
 
     return rng;
@@ -90,10 +164,32 @@ void TTTRMask::select_count_rate(TTTR* tttr, double time_window, int n_ph_max, b
     int i = 0;
     while (i < tttr->size() - 1){
         int n_ph = 0; int r = i;
-        while((tttr->macro_times[r] - tttr->macro_times[i] < tw) && (r < tttr->size() - 1)){
+        unsigned long long t_i = tttr->get_macro_time_at(i);
+        while((tttr->get_macro_time_at(r) - t_i < tw) && (r < tttr->size() - 1)){
             r++; n_ph++;
         }
         masked[i] = invert ? (n_ph >= n_ph_max) : (n_ph < n_ph_max);
         i = r;
+    }
+}
+
+std::string TTTRMask::to_json() const {
+    nlohmann::json j;
+    j["size"] = static_cast<int>(masked.size());
+    std::vector<int> mask_data;
+    for (const auto& m : masked) {
+        mask_data.push_back(m ? 1 : 0);
+    }
+    j["mask"] = mask_data;
+    return j.dump();
+}
+
+void TTTRMask::from_json(const std::string& payload) {
+    nlohmann::json j = nlohmann::json::parse(payload);
+    int size = j["size"];
+    std::vector<int> mask_data = j["mask"];
+    masked.resize(size);
+    for (int i = 0; i < size && i < static_cast<int>(mask_data.size()); ++i) {
+        masked[i] = mask_data[i] ? 1 : 0;
     }
 }

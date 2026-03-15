@@ -1,29 +1,26 @@
 from __future__ import division
 
 import unittest
-
+import os
+from pathlib import Path
 import json
 import numpy as np
 import tttrlib
 
-settings = json.load(open(file="./test/settings.json"))
-
+# Centralized test settings
+from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
 clsm = {
     'sp5': {
-        'filename': './tttr-data/imaging/leica/sp5/LSM_1.ptu',
-        'reading_parameter': {
-            "reading_routine": 'SP5'
-        }
+        'filename': settings['clsm_sp5_filename'],
+        'reading_parameter': {"reading_routine": 'SP5'}
     },
     'sp8': {
-        'filename': './tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu',
-        'reading_parameter': {
-            "reading_routine": 'SP8'
-        }
+        'filename': settings['clsm_sp8_filename'],
+        'reading_parameter': {"reading_routine": 'SP8'}
     },
     'seidel_ht3_sample_1': {
-        'filename': './tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3',
+        'filename': settings['clsm_ht3_sample1_filename'],
         'reading_parameter': {
             "marker_frame_start": [4],
             "marker_line_start": 1,
@@ -35,8 +32,8 @@ clsm = {
         }
     },
     'seidel_ht3_sample_2': {
-        'filename': './tttr-data/imaging/pq/ht3/crn_clv_img.ht3',
-        'irf': './tttr-data/imaging/pq/ht3/crn_clv_mirror.ht3',
+        'filename': settings['clsm_ht3_img_filename'],
+        'irf': settings['clsm_ht3_mirror_filename'],  # Correct IRF for crn_clv_img.ht3
         'reading_parameter': {
             "marker_frame_start": [4],
             "marker_line_start": 1,
@@ -48,14 +45,14 @@ clsm = {
         }
     },
     'zeiss980_1': {
-        'filename': './tttr-data/imaging/zeiss/lsm980_pq/Training_2021-03-04.sptw/Cell_GFP/Cell1_T_0_P_0_Idx_4.ptu',
+        'filename': settings['zeiss980_cell1_idx4_filename'],
         'reading_parameter': {}
     }
 }
 
 make_reference = settings['make_references']
 
-
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping CLSM tests")
 class TestCLSM(unittest.TestCase):
 
     def test_zeiss980_1(self):
@@ -92,7 +89,7 @@ class TestCLSM(unittest.TestCase):
             **reading_parameter
         )
         img = clsm_image.intensity.sum(axis=0)
-        fn = './test/data/reference/img_intensity_image_sp5.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_intensity_image_sp5.npy')
         if make_reference:
             np.save(fn, img)
         self.assertEqual(np.allclose(np.load(fn), img), True)
@@ -134,7 +131,7 @@ class TestCLSM(unittest.TestCase):
         dt = header.micro_time_resolution
         x_axis = np.arange(counts.shape[0]) * dt
         decay = np.vstack([x_axis, counts]).T
-        fn = './test/data/reference/img_decay_histogram.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_histogram.npy')
         if make_reference:
             np.save(fn, decay)
         self.assertEqual(np.allclose(np.load(fn), decay), True)
@@ -152,7 +149,7 @@ class TestCLSM(unittest.TestCase):
             channels=[0]
         )
 
-        fn = './test/data/reference/img_ref_intensity.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_intensity.npy')
         img = clsm_image_1.get_intensity().sum(axis=0)
         if make_reference:
             np.save(fn, img)
@@ -170,7 +167,7 @@ class TestCLSM(unittest.TestCase):
             tttr_data=data,
             channels=[0]
         )
-        fn = './test/data/reference/img_ref_mean_tac.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_mean_tac.npy')
         img = clsm_image_1.get_mean_micro_time(tttr_data=data, minimum_number_of_photons=1)
         img = np.clip(img, 0, np.inf).sum(axis=0)
         if make_reference:
@@ -182,7 +179,7 @@ class TestCLSM(unittest.TestCase):
             micro_time_coarsening=tac_coarsening,
             stack_frames=True
         ).sum(axis=0)
-        fn = './test/data/reference/img_ref_decay_image.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_ref_decay_image.npy')
         if make_reference:
             np.save(fn, img)
         np.testing.assert_array_almost_equal(img, np.load(fn))
@@ -204,7 +201,7 @@ class TestCLSM(unittest.TestCase):
             minimum_number_of_photons=4,
             stack_frames=True
         )
-        fn = './test/data/reference/img_decay_mean_tau.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_mean_tau.npy')
         if make_reference:
             np.save(fn, img)
         ref = np.load(fn)
@@ -227,7 +224,7 @@ class TestCLSM(unittest.TestCase):
             minimum_number_of_photons=4,
             stack_frames=False
         )
-        fn = './test/data/reference/img_decay_mean_tau_2.npy'
+        fn = os.path.join(os.path.dirname(__file__), 'data/reference/img_decay_mean_tau_2.npy')
         if make_reference:
             np.save(fn, img)
         ref = np.load(fn)

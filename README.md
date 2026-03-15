@@ -1,8 +1,12 @@
 # tttrlib
-[![Anaconda-Server Badge](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
-[![PyPI version](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
-![conda build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
 
+[![Anaconda](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
+[![PyPI](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
+![Documentation](https://github.com/fluorescence-tools/tttrlib/actions/workflows/docs.yml/badge.svg)
+![Conda Build](https://github.com/fluorescence-tools/tttrlib/actions/workflows/conda-build.yml/badge.svg)
+![Build Wheels](https://github.com/fluorescence-tools/tttrlib/actions/workflows/build-wheels.yml/badge.svg)
+
+---
 
 ## General description
 tttrlib is a file format agnostic high performance library to
@@ -10,78 +14,97 @@ read, process, and write time-tagged-time resolved (TTTR) data acquired by
 PicoQuant (PQ) and Becker & Hickl measurement devices/cards or TTTR
 files in the open Photon-HDF format.
 
-The library facilitates the work with files containing
-time-tagged time resolved photon streams by providing
-a vendor independent C++ application programming interface (API)
-for TTTR files that is wrapped by SWIG (Simplified Wrapper and Interface
-Generator) for common scripting languages as Python as target languages
-and non-scripting languages such as C# and Java including Octave,
-Scilab and R. Currently, tttrlib is wrapped for the use in Python.
+**tttrlib** is a high-performance, file-format-agnostic library to read, process, and write **time-tagged time-resolved (TTTR)** data from
+**PicoQuant**, **Becker & Hickl**, and **Photon-HDF5** files.
 
-* Multi-dimensional histograms
-* Correlation analysis
-* Time-window analysis
-* Photon distribution anaylsis
-* FLIM image generation and analysis
+Written in **C++** with **Python bindings**, it provides a fast, vendor-independent API for handling photon streams and enables integration into advanced data analysis pipelines for time-resolved fluorescence spectroscopy and imaging.
 
 ![tttrlib FLIM][3]
 
-`tttrlib` is programmed in C++ and wrapped for python. Thus, it can be used to integrate time-resolved data into 
-advanced data analysis pipelines.
+### Key Features
 
-### Capabilities
+* Fast TTTR file reading (IO-limited)
+* Multi-dimensional histogramming
+* Correlation analysis
+* Fluorescence decay generation and analysis
+* Photon distribution (FIDA/PCH)
+* Burst and time-window selection
+* FLIM and ISM image generation
+* Experimental ISM tools (Adaptive Pixel Reassignment, Focus-ISM background rejection)
 
-* Fast reading TTTR files (IO limited)
-* Generation / analysis of fluorescence decays
-* Time window analysis
-* Correlation of time event traces
-* Filtering of time event traces to generate instrument response functions for fluorescence decays analysis without the need of independent measurements..
-* Fast photon distribution analysis
-* Fast selection of photons from a photon stream
+`tttrlib` typically outperforms pure Python implementations by
+~40× in decay histogramming and ~2–5× in burst selection.
 
-Generation of fluorescence decay histograms tttrlib outperforms pure numpy and Python based
-libraries by a factor of ~40.
 
-## Documentation
+## Installation
 
-### Installation
-In an [anaconda](https://www.anaconda.com/) environment the library can
-be installed by the following command:
+We recommend using [**Miniforge**](https://github.com/conda-forge/miniforge) with the fast **mamba** solver.
 
-```console
-conda install -c tpeulen tttrlib
+### Conda / Mamba
+
+**macOS / Linux**
+
+```bash
+mamba install -c bioconda tttrlib
 ```
 
-Alternatively, you can use pip to install `tttrlib`
+**Windows**
 
-```console
-pip install tttrlib
+```bash
+mamba install -c tpeulen tttrlib
 ```
 
-### Usage
-The API of tttrlib as well as some use cases are documented on its [web page](https://docs.peulen.xyz/tttrlib).
-Below you find a small selection of code snippets.
+### pip (development version)
 
-Access photon data as follows:
+```bash
+pip install git+https://github.com/fluorescence-tools/tttrlib
+# or for the development branch
+pip install git+https://github.com/fluorescence-tools/tttrlib@development
+```
+
+### From Source
+
+```bash
+git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
+cd tttrlib
+pip install -e .
+```
+
+Precompiled packages are available for Windows, Linux (x86, ARM64, PPCle), and macOS.
+Legacy 32-bit and Python 2.7 are not supported.
+
+---
+
+## Usage
+
+See [**docs.peulen.xyz/tttrlib**](https://docs.peulen.xyz/tttrlib) for the full API and tutorials.
+Below are minimal examples.
+
+Detailed build instructions for developers are available in [BUILDING.md](BUILDING.md).
+
+### Read TTTR data
+
+```python
+import tttrlib
+data = tttrlib.TTTR("photon_stream.ptu")
+
+macro = data.macro_times
+micro = data.micro_times
+routing = data.routing_channels
+```
+
+### Inspect header
+
 ```python
 import tttrlib
 fn = 'photon_stream.ptu'
 data = tttrlib.TTTR(fn)
-
-macro_times = data.macro_times
-micro_times = data.micro_times
-routing_channels = data.routing_channels
+print(data.header.json)
+print(data.header.to_csv())
 ```
 
-Print header-information:
-```python
-import tttrlib
-fn = 'photon_stream.ptu'
-data = tttrlib.TTTR(fn)
-print(data.json)
-```
+### Cross-correlate photon streams
 
-Correlate photon streams:
 ```python
 import tttrlib
 fn = 'photon_stream.ptu'
@@ -94,94 +117,85 @@ taus = correlator.x_axis,
 correlation_amplitude = correlator.correlation
 ```
 
-Create intensity images from CLSM data:
+### Create intensity images (CLSM)
+
 ```python
 import tttrlib
 fn = 'image.ptu'
 data = tttrlib.TTTR(fn)
-clsm = tttrlib.CLSM(data)
-
+clsm = tttrlib.CLSMImage(data)
 channels = [0, 1]
 prompt_range = [0, 16000]
 clsm.fill(channels=channels, micro_time_ranges=[prompt_range])
-
 intensity_image = clsm.intensity
+
+# Alternatively
+clsm = tttrlib.CLSMImage(fn, fill=True)
+intensity_image = clsm.intensity
+
 ```
 
-tttrlib is in active development. In case you notice unusual behaviour do not
-hesitate to contact the authors.
+### Minimal burst search
 
-## Supported file formats
+```python
+import tttrlib
+import numpy as np
 
-### PicoQuant (PQ)
-* PicoHarp ptu, T2/T3
-* HydraHarp ptu, T2/T3
-* HydraHarp ht3, PTU
+fn = 'photon_stream.ptu'
+tttr = tttrlib.TTTR(fn)
 
-### Becker & Hickl (BH)
-* spc132
-* spc630 (256 & 4096 mode)
-
-### Photon HDF5
-
-## Design goals
-* Low memory footprint (keep objective large datasets, e.g., FLIM in memory).
-* Platform independent C/C++ library with interfaces for scripting libraries
-
-## Building and Installation
-
-### C++ shared library
-
-The C++ shared library can be installed from source with [cmake](https://cmake.org/):
-
-```console
-git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
-mkdir tttrlib/build; cd tttrlib/build
-cmake ..
-sudo make install
+# Bust selection
+L, m, T = 30, 10, 1e-3  # min photons, window photons, window time [s]
+ranges = tttr.burst_search(L=L, m=m, T=T)  # flat [start, stop, start, stop, ...]
+bursts = list(zip(ranges[0::2], ranges[1::2]))
 ```
 
-On Linux you can build and install a package instead:
+For PIE/ALEX data, add micro-time gating before burst search; see the tutorial for donor/acceptor prompt examples.
+For details, parameters, and plotting examples, see the Burst Analysis tutorial.
 
-### Python bindings
+## Supported File Formats
 
-The Python bindings can be either be installed by downloading and compiling the source code or by using a
-precompiled distribution for Python anaconda environment.
+* **PicoQuant:** PicoHarp/TimeHarp/HydraHarp (`ptu`, `ht3`, T2/T3)
+* **Becker & Hickl:** `spc132`, `spc630` (256 & 4096 mode)
+* **Photon-HDF5:** open standard format
 
-The following commands can be used to download and compile the source code:
+---
 
-```console
-git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
-cd tttrlib
-sudo python setup.py install
-```
+## Contributing
 
-In an [anaconda](https://www.anaconda.com/) environment the library can
-be installed by the following command:
+To add support for a new format / microscope:
 
-```console
-conda install -c tpeulen tttrlib
-```
+1. Open a GitHub issue describing the format and instrument.
+2. Share a small demo file (<100 MB) with expected results.
+3. If relevant, document your workflow or analysis steps.
 
-For most users, the latter approach is recommended. Currently, pre-compiled
-packages for the anaconda distribution system are available for Windows (x86),
-Linux (x86, ARM64, PPCle), and macOS (x86). Precompiled libary are linked against 
-conda-forge HDF5 & Boost. Thus, the use of [miniforge](https://github.com/conda-forge/miniforge) 
-is recommended.
+With this information, we can integrate and test the new format automatically.
 
-Legacy 32-bit platforms and versions of programming languages, e.g., Python 2.7
-are not supported.
+---
+
+## Design Goals
+
+* Low memory footprint for large datasets (e.g. FLIM)
+* Cross-platform C/C++ library with SWIG bindings (Python, C#, Java, etc.)
+* Modular and extendable design for fluorescence spectroscopy and imaging
+
+---
 
 ## Citation
-If you use this software please also check the pre-print:
->tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling;
-Thomas-Otavio Peulen, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb, Suren Felekyan, Andrej Sali, 
-Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze; [https://arxiv.org/abs/2402.17252](arXiv:2402.17252)
->
+
+If you use this software, please cite:
+
+> **Thomas-Otavio Peulen**, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb, Suren Felekyan, Andrej Sali, Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze.
+> *“tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling.”*
+> **Bioinformatics** 41 (2): btaf025 (2025).
+> [https://doi.org/10.1093/bioinformatics/btaf025](https://doi.org/10.1093/bioinformatics/btaf025)
+
+---
 
 ## License
 
-Copyright 2007-2024 tttrlib developers.
-Licensed under the BSD-3-Clause
+Copyright 2007–2024 tttrlib developers
+Licensed under the **BSD-3-Clause** license.
 
-[3]: https://github.com/Fluorescence-Tools/tttrlib/blob/master/doc/logos/mashup.png?raw=true "tttrlib FLIM"
+[3]: https://github.com/Fluorescence-Tools/tttrlib/blob/main/doc/logos/mashup.png?raw=true "tttrlib FLIM"
+

@@ -4,8 +4,8 @@
 LVI32Array *CreateLVI32Array(size_t len) {
     auto ts = new LVI32Array();
     ts->data = (int *) malloc(len * sizeof(int));
-    for(int i=0;i<len;i++) ts->data[i] = 0;
-    ts->length = len;
+    for(size_t i=0;i<len;i++) ts->data[i] = 0;
+    ts->length = static_cast<int>(len);
     return ts;
 }
 
@@ -13,8 +13,8 @@ LVI32Array *CreateLVI32Array(size_t len) {
 LVDoubleArray *CreateLVDoubleArray(size_t len) {
     auto ts = new LVDoubleArray();
     ts->data = (double *) malloc(len * sizeof(double));
-    for(int i=0;i<len;i++) ts->data[i] = 0;
-    ts->length = len;
+    for(size_t i=0;i<len;i++) ts->data[i] = 0;
+    ts->length = static_cast<int>(len);
     return ts;
 }
 
@@ -33,11 +33,11 @@ MParam* CreateMParam(
     ts->M = (LVDoubleArray **) calloc(1, sizeof(LVDoubleArray *));
     ts->expdata = (LVI32Array **) calloc(1, sizeof(LVI32Array *));
 
-    int n_channels = std::max(
+    int n_channels = static_cast<int>(std::max(
         {irf.size() / 2,
          background.size() / 2,
          data.size() / 2}
-    );
+    ));
     // all channel numbers are multiplied by two for jordi format
     *(ts->irf) = CreateLVDoubleArray((size_t) 2 * n_channels);
     *(ts->expdata) = CreateLVI32Array((size_t) 2 * n_channels);

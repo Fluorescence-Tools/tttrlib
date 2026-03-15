@@ -1,4 +1,7 @@
 
+# PDA Implementation constants
+PDA_DEFAULT = 0
+PDA_OPTIMIZED = 1
 
 def histogram_function(self, cb):
     # type: (Callable) -> None

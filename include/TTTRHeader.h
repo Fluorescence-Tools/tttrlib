@@ -16,16 +16,21 @@
 #include <numeric>
 #include <iostream>
 #include <sstream>      // std::stringstream
+#include "string_encoding.h"
 #include <iomanip> /* std::setfill */
 #include <fstream> /* ifstream */
 #include <cstring> /* std::memcpy */
 
 #include <any>
-// #include <boost/any.hpp>
-//#include <boost/filesystem.hpp>
-//#include <boost/locale.hpp>
 
-#include "json.hpp"
+#ifdef BUILD_PHOTON_HDF
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
+#endif
+
+#include <nlohmann/json.hpp>
 
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
@@ -79,6 +84,11 @@ void SwapEndian(T &val) {
 class TTTRHeader {
 
     friend class TTTR;
+
+private:
+#ifdef BUILD_PHOTON_HDF
+    void process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name);
+#endif
 
 protected:
 
@@ -165,7 +175,6 @@ public:
             nlohmann::json &json_data,
             const std::string &name,
             std::any value,
-            // boost::any value,
             unsigned int type = tyAnsiString,
             int idx = -1
     );
@@ -204,7 +213,12 @@ public:
      * the number of micro time channels.
      */
      unsigned int get_number_of_micro_time_channels(){
-        return (unsigned int) get_tag(json_data, TTTRNMicroTimes)["value"];
+         int v = get_tag(json_data, TTTRNMicroTimes)["value"];
+         if(v < 0){
+             return 0;
+         } else{
+             return v;
+         }
      }
 
     /// Resolution for the macro time in nanoseconds
@@ -215,13 +229,19 @@ public:
         return get_tag(json_data, TTTRTagRes)["value"];
     }
 
+    /// Set the microtime resolution in nanoseconds
+    void set_micro_time_resolution(double resolution){
+        TTTRHeader::add_tag(json_data, TTTRTagRes, resolution, tyFloat8, -1);
+    }
+
     /// Duration of a pixel in LSM in units of macro time clock
     int get_pixel_duration(){
         double pixel_duration_d = TTTRHeader::get_tag(
                 json_data, "$TimePerPixel")["value"];
         double global_res = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
-        long pixel_duration = std::round(pixel_duration_d / global_res);
+        // Round to nearest integer duration in macro clock units and cast explicitly to int
+        int pixel_duration = static_cast<int>(std::llround(pixel_duration_d / global_res));
         return pixel_duration;
     }
 
@@ -232,7 +252,8 @@ public:
         double global_res_d = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
         double n_pixel = TTTRHeader::get_tag(json_data, "ImgHdr_PixX")["value"];
-        return std::ceil((pixel_duration_d * n_pixel) / global_res_d);
+        int line_duration = static_cast<int>(std::ceil((pixel_duration_d * n_pixel) / global_res_d));
+        return line_duration;
     }
 
     /*!
@@ -293,6 +314,8 @@ public:
             bool rewind = true
     );
 
+    int read_photon_hdf5_setup(const char *fn);
+
     /*!
      * @brief Reads the header of an HT3 file and sets the reading routing.
      *
@@ -334,6 +357,21 @@ public:
             nlohmann::json &data,
             bool rewind = true
     );
+
+    /*!
+     * @brief Reads a Becker & Hickl .set file and extracts imaging parameters.
+     *
+     * Parses the BH .set file to extract SP_IMG_X (pixels per line),
+     * SP_IMG_Y (lines per frame), and SP_PIX_CLK (pixel clock mode).
+     * These values are stored in json_data under tags:
+     *   - ImgHdr_PixX
+     *   - ImgHdr_PixY
+     *   - BH_UsePixelClock
+     *
+     * @param filename Path to the .set file
+     * @return true if parsing succeeded, false otherwise
+     */
+    bool read_bh_set_file(const std::string& filename);
 
     /*!
      * @brief Reads the header of a Carl Zeiss (CZ) Confocor3 file and sets the reading routing.

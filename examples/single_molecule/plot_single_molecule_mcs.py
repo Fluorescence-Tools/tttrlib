@@ -19,7 +19,7 @@ computed using the function ``tttrlib.compute_intensity_trace`` or using the met
 
 .. code-block:: python
 
-    tttr_object = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+    tttr_object = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
     # option 1
     tttr_object = tttrlib.compute_intensity_trace(
         data.macro_times,
@@ -38,12 +38,15 @@ created is already considered. The time window length are in units of milli seco
 
 
 """
+import os
+from pathlib import Path
 import matplotlib.pylab as p
 import numpy as np
 
 import tttrlib
 
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 mt = data.get_macro_times()
 
 green_indeces = data.get_selection_by_channel([0, 8])

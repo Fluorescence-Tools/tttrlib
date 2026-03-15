@@ -24,6 +24,8 @@ Such a filter can be used to remove the background in a single-molecule experime
 that decreased the correlation amplitude.
 
 """
+import os
+from pathlib import Path
 import numpy as np
 import matplotlib.pylab as plt
 import tttrlib
@@ -33,7 +35,9 @@ import tttrlib
 # --------------
 # First, we do a normal correlation where all unfiltered data is correlated.
 # For that, we first read the data into a TTTR container.
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # We use a dictionary that contains the most relevant parameters for the

@@ -3,5 +3,6 @@
 Fluorescence lifetime imaging
 -----------------------------
 
-Time resolved imaging, e.g., Fluorescence lifetime imaging.
+Examples showing lifetime image generation, phasor analysis, moment analysis,
+segmentation-driven decays, and common image operations.
 

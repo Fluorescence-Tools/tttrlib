@@ -4,8 +4,65 @@
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
+#include "string_encoding.h"
 
 #include "TTTRHeader.h"
+
+// ============================================================================
+// Portable 64-bit file I/O macros
+// On Windows, long is 32-bit even in 64-bit builds, so we need _fseeki64/_ftelli64
+// On Unix, we use fseeko/ftello which use off_t (typically 64-bit)
+// ============================================================================
+#ifdef _WIN32
+  #define fseek64(fp, off, whence) _fseeki64(fp, static_cast<__int64>(off), whence)
+  #define ftell64(fp)              _ftelli64(fp)
+#else
+  #define fseek64(fp, off, whence) fseeko(fp, static_cast<off_t>(off), whence)
+  #define ftell64(fp)              ftello(fp)
+#endif
+
+/**
+ * @brief Converts a UTF-8 encoded string to the system's native encoding for file operations.
+ * 
+ * This utility function converts a string from UTF-8 encoding to the system's
+ * native encoding to ensure proper handling of non-ASCII characters in filenames.
+ * 
+ * @param utf8_str The UTF-8 encoded string to convert.
+ * @return The string converted to the system's native encoding.
+ */
+std::string utf8_to_native(const std::string& utf8_str);
+
+/**
+ * @brief Converts a string from the system's native encoding to UTF-8.
+ * 
+ * This utility function converts a string from the system's native encoding
+ * to UTF-8 encoding to ensure proper handling of non-ASCII characters in filenames.
+ * 
+ * @param native_str The native encoded string to convert.
+ * @return The string converted to UTF-8 encoding.
+ */
+std::string native_to_utf8(const std::string& native_str);
+
+/**
+ * @brief Opens a file with support for non-ASCII filenames.
+ * 
+ * This function handles filename encoding conversions needed for proper
+ * handling of non-ASCII characters across different platforms.
+ * 
+ * @param filename The name of the file to open (UTF-8 encoded).
+ * @param mode The file opening mode (e.g., "rb", "w", etc.).
+ * @return A FILE pointer to the opened file, or nullptr if the file could not be opened.
+ */
+FILE* open_file(const std::string& filename, const char* mode);
 
 /**
  * @brief Checks if the given file is an HDF5 file.
@@ -88,6 +145,16 @@ int inferTTTRFileType(const char* fn);
  * @return True if the file is a CZ Confocor3 file, false otherwise.
  */
 bool isCZConfocor3File(const std::string& filename);
+
+/**
+ * @brief Returns a list of supported file extensions.
+ * 
+ * This function returns a vector containing all the file extensions (file endings)
+ * that are supported by the library.
+ * 
+ * @return std::vector<std::string> A vector of supported file extensions.
+ */
+std::vector<std::string> get_supported_filetypes();
 
 
 #endif //TTTRLIB_FILECHECK_H

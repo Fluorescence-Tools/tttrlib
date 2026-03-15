@@ -82,10 +82,10 @@ def __init__(
         self.this.append(this)
     except:
         self.this = this
-    if weights:
+    if weights is not None:
         w1, w2 = weights
         self.set_weights(w1, w2)
-    if macro_times:
+    if macro_times is not None:
         t1, t2 = macro_times
         self.set_macrotimes(t1, t2)
     if isinstance(tttr, tuple):

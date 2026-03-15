@@ -24,8 +24,10 @@ import tttrlib
 # Reading data
 # ------------
 # The photon data registered by different detectors are saved in separate files.
+from examples._example_data import get_data_root
 # Read the data of all channels that should be correlated into separate containers.
-fns = [str(p) for p in pathlib.Path('../../tttr-data/cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')]
+fns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])
+
 tttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]
 
 #%%
@@ -47,7 +49,8 @@ print("Count rates:", count_rates)
 # marco times need to be sorted first.
 macro_times = np.concatenate([t.macro_times for t in tttr_data])
 routing_channels = np.concatenate([t.routing_channels for t in tttr_data])
-sorted_indices = np.argsort(macro_times)
+sorted_indices = np.argsort(macro_times, kind='stable')
+
 
 #%%
 # Using the sorted macro times we sort the routing channel numbers

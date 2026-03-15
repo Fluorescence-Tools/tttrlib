@@ -1,0 +1,7 @@
+# Gallery examples to skip (broken or not ready for release)
+# microscopy_localization: uses low-level SWIG C API, not ready for 0.26.0
+plot_basic_localization_test.py
+plot_enhanced_image_localizer.py
+plot_improved_image_localizer.py
+plot_numpy_localization_wrapper.py
+plot_synthetic_bead_localization.py

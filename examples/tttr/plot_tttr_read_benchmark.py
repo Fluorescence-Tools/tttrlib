@@ -9,7 +9,7 @@ import os
 os.environ['NUMBA_DISABLE_JIT'] = "0"
 
 import timeit
-import pathlib
+from pathlib import Path
 
 #############
 # Test the TTTR reading function
@@ -32,31 +32,34 @@ import pylab as p
 # 4 = BH-Spc600_4096 (I don't have a sample file)
 # 5 = Photon-HDF5
 
+# Determine data root from environment or fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+
 benchmark_files = [
     {
         "name": "spc132",
-        "file": '../../tttr-data/bh/bh_spc132.spc',
+        "file": str(DATA_ROOT / 'bh/bh_spc132.spc'),
         "tttr_mode": 2,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-134'"
     },
     {
         "name": "spc630_256",
-        "file": '../../tttr-data/bh/bh_spc630_256.spc',
+        "file": str(DATA_ROOT / 'bh/bh_spc630_256.spc'),
         "tttr_mode": 3,
         "phconvert": "bhreader.load_spc",
         "phconvert_args": "spc_model='SPC-630'"
     },
     {
         "name": "ht3",
-        "file": '../../tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3',
+        "file": str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3'),
         "tttr_mode": 1,
         "phconvert": "pqreader.load_ht3",
         "phconvert_args": "ovcfunc=None"
     },
     {
         "name": "ptu",
-        "file": '../../tttr-data/pq/ptu/pq_ptu_hh_t3.ptu',
+        "file": str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu'),
         "tttr_mode": 0,
         "phconvert": "pqreader.load_ptu",
         "phconvert_args": "ovcfunc=None"
@@ -68,10 +71,10 @@ times_phconvert_python = list()
 times_tttrlib = list()
 for benchmark_file in benchmark_files:
     name = benchmark_file["name"]
-    filename = pathlib.Path(benchmark_file["file"])
+    filename = Path(benchmark_file["file"]).resolve()
     size_bytes = filename.stat().st_size
     size_mb = size_bytes / (1024 * 1024)
-    filename = str(filename.absolute().as_posix())
+    filename = str(filename.as_posix())
 
     n_test_runs = 1
     ph_str = 'phconvert.{:}("{:}", {:})'.format(

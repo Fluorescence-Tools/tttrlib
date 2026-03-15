@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <cmath>
+#include <math.h>   // for floor()
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -15,14 +16,20 @@
 #include <memory>       /* shared_ptr */
 #include <stdlib.h>     /* malloc, calloc, realloc, exit, free */
 #include <numeric>
+#include <unordered_set>
 #include <cinttypes>    /* uint64, int64, etc */
 #include <fstream> /* ifstream */
 
-#include <boost/bimap.hpp>
+#include <filesystem>
+#include "bimap.h"
+
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
 #ifdef BUILD_PHOTON_HDF
-#include "hdf5.h"
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
 #endif
 
 #include "Histogram.h"
@@ -31,6 +38,7 @@
 #include "TTTRMask.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
+#include "MicrotimeLinearization.h"
 #include "info.h"
 
 
@@ -100,28 +108,31 @@ void ranges_by_time_window(
 );
 
 
-/*!
- * \brief Computes the intensity trace for a sequence of time events.
+/**
+ * Compute an intensity trace from sorted timestamps.
  *
- * The intensity trace is calculated by partitioning the time events into
- * time windows with a minimum specified length and counting the number
- * of photons in each window.
+ * Parameters:
+ *   output                 - pointer to the returned array of counts
+ *   n_output               - pointer to the number of bins returned
+ *   input                  - sorted array of timestamps (same units as time_window)
+ *   n_input                - number of timestamps in `input[]`
+ *   time_window            - if overlapping==1: length of each sliding window;
+ *                            if overlapping==0: total time to cover (will be compared with t_max)
+ *   macro_time_resolution  - if overlapping==1: step size between successive window starts;
+ *                            if overlapping==0: non‐overlapping bin width
+ *   overlapping            - 1 ⇒ compute a sliding (overlapping) intensity trace;
+ *                            0 ⇒ compute non‐overlapping histogram bins
  *
- * \param output Pointer to an array storing the number of photons in each time window.
- * \param n_output Pointer to the variable storing the number of time windows.
- * \param input Array of time points representing the time events.
- * \param n_input Number of time points in the input array.
- * \param time_window_length Size of the time window in units of the macro time resolution.
- * \param macro_time_resolution The resolution of the macro time clock (default is 1.0).
+ * Behavior when overlapping==1 (“sliding‐window”):
+ *   - Each window j spans [j·res, j·res + time_window), for j = 0..floor(t_max/res).
+ *   - n_output = floor(t_max / res) + 1.
+ *   - At each j, count how many timestamps fall into that window.
  *
- * The function calculates the intensity trace by dividing the time events into
- * non-overlapping time windows of the specified length. The output array holds
- * the count of photons in each time window, and n_output is updated accordingly.
- * The input array contains the time points of events, and n_input is the total
- * number of events. The time_window_length parameter defines the size of the
- * time windows, and macro_time_resolution specifies the resolution of the macro
- * time clock (default is 1.0). The calculated intensity trace is stored in the
- * output array, and the total number of time windows is updated in n_output.
+ * Behavior when overlapping==0 (“non‐overlapping bins”):
+ *   - We cover up to max(t_max, time_window).  Define
+ *       total_span = fmax((double)t_max, time_window).
+ *   - n_output = ceil(total_span / macro_time_resolution).
+ *   - Bin j spans [j·res, (j+1)·res).  Count how many timestamps fall into each bin.
  */
 void compute_intensity_trace(
         int **output, int *n_output,
@@ -211,11 +222,11 @@ private:
     TTTRHeader *header = nullptr;
 
     /// map to translates string container types to int container types
-    static boost::bimap<std::string, int> container_names;
+    static tttrlib::bimap<std::string, int> container_names;
 
     // Static function to initialize the container_names
-    static boost::bimap<std::string, int> initialize_container_names() {
-        boost::bimap<std::string, int> m;
+    static tttrlib::bimap<std::string, int> initialize_container_names() {
+        tttrlib::bimap<std::string, int> m;
         m.insert({std::string("PTU"), PQ_PTU_CONTAINER});
         m.insert({std::string("HT3"), PQ_HT3_CONTAINER});
         m.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
@@ -226,28 +237,6 @@ private:
         m.insert({std::string("SM"), SM_CONTAINER});
         return m;
     }
-
-    typedef bool (*processRecord_t)(
-            uint32_t&,  // input
-            uint64_t&,  // overflow counter
-            uint64_t&,  // true number of sync pulses
-            uint32_t&,  // microtime
-            int16_t&,   // channel number (16bit more than enough, negative numbers - potential future special cases
-            int16_t&    // the event type: photon, or marker (overflows are treated separately and removed during reading)
-    );
-
-    std::map<int, processRecord_t> processRecord_map = {
-            {PQ_RECORD_TYPE_HHT2v1,      ProcessHHT2v1},
-            {PQ_RECORD_TYPE_HHT2v2,      ProcessHHT2v2},
-            {PQ_RECORD_TYPE_HHT3v1,      ProcessHHT3v1},
-            {PQ_RECORD_TYPE_HHT3v2,      ProcessHHT3v2},
-            {PQ_RECORD_TYPE_PHT2,        ProcessPHT2},
-            {PQ_RECORD_TYPE_PHT3,        ProcessPHT3},
-            {BH_RECORD_TYPE_SPC600_256,  ProcessSPC600_256},
-            {BH_RECORD_TYPE_SPC600_4096, ProcessSPC600_4096},
-            {BH_RECORD_TYPE_SPC130,      ProcessSPC130},
-            {CZ_RECORD_TYPE_CONFOCOR3,   ProcessCzRaw}
-    };
 
     /*!
      * The type of the TTTR file.
@@ -285,32 +274,57 @@ private:
     /// the data contained in the current TTTRRecord
     uint64_t TTTRRecord;
 
-    /*!
-    * The reading routine for a photon accepts as a first argument a
-    * pointer to a 64bit integer.
-    * The integer is processed by the reading routing and writes to the
-    * @return The return value is true if the record is not an overflow record.
-    */
-    bool (*processRecord)(
-            uint32_t&, // input
-            uint64_t&, // overflow counter
-            uint64_t&, // true number of sync pulses
-            uint32_t&, // microtime
-            int16_t&,   // channel number (16bit more than enough, negative numbers - potential future special cases
-            int16_t&   // the event type: photon, or marker (overflows are treated separately and removed during reading)
-    );
-
-    /// The number of sync pulses
+private:
+    /// The number of sync pulses (PRIVATE - use get/set_macro_time_at)
     unsigned long long *macro_times;
 
-    /// Micro time
+    /// Delta-compressed macro times (32-bit deltas when compression is enabled)
+    uint32_t *macro_times_compressed;
+
+    /// Keyframes: periodic 64-bit reference points for delta compression
+    unsigned long long *macro_time_keyframes;
+
+    /// Number of keyframes
+    size_t n_keyframes;
+
+    /// Keyframe interval (number of events between keyframes)
+    size_t keyframe_interval;
+
+    /// Flag indicating if macro time compression is enabled
+    bool macro_time_compression_enabled;
+
+    /// Static flag: automatically compress macro times when reading files (default: true)
+    static bool auto_compress_on_read;
+
+    /// Microtime linearizer instance for the TTTR object
+    MicrotimeLinearization* mt_linearizer = nullptr;
+
+    /// Micro time (PRIVATE - use get/set_micro_time_at)
     unsigned short *micro_times;
 
-    /// The channel number
+    /// The channel number (PRIVATE - use get/set_routing_channel_at)
     signed char *routing_channels;
 
-    /// The event type
+    /// The event type (PRIVATE - use get/set_event_type_at)
     signed char *event_types;
+
+    // Friend declarations for functions that need direct array access for performance
+    template<int RecordType>
+    friend void process_records_batch(
+        const signed char* buffer,
+        size_t num_records,
+        size_t bytes_per_record,
+        uint64_t& overflow_counter,
+        unsigned long long* macro_times,
+        unsigned short* micro_times,
+        signed char* routing_channels,
+        signed char* event_types,
+        size_t& valid_count
+    );
+
+public:
+
+    long long macro_time_offset = 0; // Cache for macro time offset
 
     /// the number of time tagged data records in the TTTR file
     size_t n_records_in_file = 0;
@@ -320,6 +334,9 @@ private:
 
     /// the number of valid read records (excluded overflow and invalid records)
     size_t n_valid_events = 0;
+
+    /// the capacity of allocated memory (for efficient resizing)
+    size_t capacity = 0;
 
     /*!
      * \brief Allocates memory for storing time-tagged records.
@@ -335,6 +352,153 @@ private:
      * \see deallocate_memory_for_records
      */
     void allocate_memory_for_records(size_t n_rec);
+
+    /*!  
+     * \brief Reallocates memory for storing time-tagged records with capacity management.
+     *
+     * This method reallocates memory to store a specified number of time-tagged records,
+     * using a growth factor to reduce the number of reallocations.
+     *
+     * \param n_rec Number of records to allocate memory for.
+     * \param exact_size If true, allocate exactly n_rec; if false, use growth factor.
+     */
+    void reallocate_memory_for_records(size_t n_rec, bool exact_size = false);
+
+    /*!
+     * \brief Compresses macro times using delta encoding.
+     *
+     * Converts 64-bit macro times to 32-bit deltas relative to a base value.
+     * This reduces memory usage by 50% for macro times.
+     */
+    void compress_macro_times();
+
+    /*!
+     * \brief Decompresses macro times from delta encoding.
+     *
+     * Converts 32-bit deltas back to 64-bit absolute macro times.
+     */
+    void decompress_macro_times();
+
+    /*!
+     * \brief Gets a macro time value at a specific index (transparent compression).
+     *
+     * Uses keyframe-based decompression for reliable access to arbitrarily long time spans.
+     *
+     * \param index Index of the event.
+     * \return The macro time value at the specified index.
+     */
+    inline unsigned long long get_macro_time_at(size_t index) const {
+        if (macro_time_compression_enabled) {
+            // Find the keyframe for this index
+            size_t keyframe_idx = index / keyframe_interval;
+            unsigned long long keyframe = macro_time_keyframes[keyframe_idx];
+            return keyframe + (unsigned long long)macro_times_compressed[index];
+        } else {
+            return macro_times[index];
+        }
+    }
+
+    /*!
+     * \brief Sets a macro time value at a specific index (transparent compression).
+     *
+     * Uses keyframe-based compression for reliable storage of arbitrarily long time spans.
+     *
+     * \param index Index of the event.
+     * \param value The macro time value to set.
+     */
+    inline void set_macro_time_at(size_t index, unsigned long long value) {
+        if (macro_time_compression_enabled) {
+            // Find the keyframe for this index
+            size_t keyframe_idx = index / keyframe_interval;
+            
+            // Check if keyframe needs initialization or update
+            // During sequential building, update keyframe to minimum value seen
+            if (keyframe_idx < n_keyframes) {
+                unsigned long long& keyframe = macro_time_keyframes[keyframe_idx];
+                
+                // If this is the first value in this keyframe interval, or value is smaller
+                if (index % keyframe_interval == 0 || value < keyframe) {
+                    keyframe = value;
+                    macro_times_compressed[index] = 0;
+                } else if (value >= keyframe) {
+                    unsigned long long delta = value - keyframe;
+                    if (delta > UINT32_MAX) {
+                        // Delta too large - adjust keyframe down
+                        keyframe = value;
+                        macro_times_compressed[index] = 0;
+                    } else {
+                        macro_times_compressed[index] = (uint32_t)delta;
+                    }
+                } else {
+                    // Value before keyframe - should not happen in sorted data
+                    // Set to 0 and continue (keyframe already correct)
+                    macro_times_compressed[index] = 0;
+                }
+            }
+        } else {
+            macro_times[index] = value;
+        }
+    }
+
+    /*!
+     * \brief Gets a micro time value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The micro time value at the specified index.
+     */
+    inline unsigned short get_micro_time_at(size_t index) const {
+        return micro_times[index];
+    }
+
+    /*!
+     * \brief Sets a micro time value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The micro time value to set.
+     */
+    inline void set_micro_time_at(size_t index, unsigned short value) {
+        micro_times[index] = value;
+    }
+
+    /*!
+     * \brief Gets a routing channel value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The routing channel value at the specified index.
+     */
+    inline signed char get_routing_channel_at(size_t index) const {
+        return routing_channels[index];
+    }
+
+    /*!
+     * \brief Sets a routing channel value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The routing channel value to set.
+     */
+    inline void set_routing_channel_at(size_t index, signed char value) {
+        routing_channels[index] = value;
+    }
+
+    /*!
+     * \brief Gets an event type value at a specific index.
+     *
+     * \param index Index of the event.
+     * \return The event type value at the specified index.
+     */
+    inline signed char get_event_type_at(size_t index) const {
+        return event_types[index];
+    }
+
+    /*!
+     * \brief Sets an event type value at a specific index.
+     *
+     * \param index Index of the event.
+     * \param value The event type value to set.
+     */
+    inline void set_event_type_at(size_t index, signed char value) {
+        event_types[index] = value;
+    }
 
     /*!
      * \brief Deallocates memory used for storing time-tagged records.
@@ -397,6 +561,8 @@ private:
      *
      * Reads records from the current file position to the end of the file.
      * No specific number of records is specified.
+     *
+     * Uses optimized template-dispatched processing for maximum performance.
      */
     void read_records();
 
@@ -417,6 +583,12 @@ protected:
 
 
 public:
+
+    /// \brief shift the micro time (wraps around by mod number of micro time channels)
+    TTTR& operator%(unsigned short mod_value);
+
+    // \brief shift the macro time
+    TTTR& operator<<(long long offset);
 
     /// \brief Returns a shared pointer to the current instance of TTTR.
     ///
@@ -500,6 +672,22 @@ public:
         long long macro_time_offset = 0
     );
 
+    /**
+     * @brief Assigns a microtime based on the alternating-laser excitation (ALEX) period.
+     *
+     * This method computes a microtime for each macrotime value by taking the modulo
+     * operation of the macrotime with respect to the specified ALEX period. Optionally,
+     * a period shift can be applied to adjust the macrotime before the computation.
+     *
+     * microtime = (macrotime - period_shift) modulo alex_period
+     *
+     * @param alex_period The ALEX period in units of macrotime.
+     * @param period_shift An optional shift applied to the macrotime before computing
+     *                     the microtime. Default is 0.
+     *
+     */
+    void alex_to_microtime(unsigned long alex_period, int period_shift=0);
+
     /*!
      * \brief Appends a single event to the TTTR object.
      *
@@ -538,7 +726,17 @@ public:
             long long macro_time_offset=0
     );
 
-     /*!
+    /**
+     * @brief Shift the micro‐time of all events on a given routing channel.
+     *
+     * Wraps around modulo the number of micro‐time channels.
+     *
+     * @param channel       The routing channel to apply the shift to.
+     * @param shift_value   Number of micro‐time bins to add (can be larger than the number of bins).
+     */
+    void shift_micro_time_by_channel(signed char channel, unsigned short shift_value);
+
+    /*!
       * \brief Returns the number of valid events in the TTTR data.
       *
       * This function is a wrapper for the get_n_valid_events() method and returns
@@ -551,24 +749,49 @@ public:
      }
 
     /**
-    * Sliding window burst search.
-    *
-    * Finds bursts in the macro time array. A burst starts when the photon rate
-    * is above a minimum threshold, and ends when the rate falls below the same
-    * threshold. The rate-threshold is defined by the ratio `m`/`T` (`m` photons
-    * in a time interval `T`). A burst is discarded if it has less than `L`
-    * photons.
-    *
-    * Arguments:
-    *     L (int): minimum number of photons in a burst. Bursts with size
-    *         (or counts) < L are discarded.
-    *     m (int): number of consecutive photons used to compute the rate.
-    *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
-    *
-    * Returns:
-    *     vector<int64_t>: A vector of interleaved start and stop indices.
-    */
-    std::vector<long long> burst_search(int L, int m, double T);
+     * Sliding window burst search.
+     *
+     * Finds bursts in the macro time array. A burst starts when the photon rate
+     * is above a minimum threshold, and ends when the rate falls below the same
+     * threshold. The rate-threshold is defined by the ratio `m`/`T` (`m` photons
+     * in a time interval `T`). A burst is discarded if it has less than `L`
+     * photons.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst. Bursts with size
+     *         (or counts) < L are discarded.
+     *     m (int): number of consecutive photons used to compute the rate.
+     *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
+     *     mode (string): "sliding_window" or "cusum_sprt" (default: "sliding_window")
+     *     alpha (double): SPRT alpha parameter (default: 0.05)
+     *     beta (double): SPRT beta parameter (default: 0.05)
+     *
+     * Returns:
+     *     vector<int64_t>: A vector of interleaved start and stop indices.
+     */
+    std::vector<long long> burst_search(
+        int L, int m, double T, 
+        const std::string& mode = "sliding_window",
+        double alpha = 0.05,
+        double beta = 0.05
+    );
+
+    std::vector<long long> burst_search_sliding_window(int L, int m, double T);
+
+    std::vector<long long> burst_search_cusum_sprt(
+        int min_photons,
+        double background_cps,
+        double signal_to_background_ratio,
+        double alpha = 0.05,
+        double beta = 0.05
+    );
+
+    void merge(
+        const TTTR& other, 
+        unsigned long long offset_macro_time, 
+        int channel_offset, 
+        int strategy = 0
+    );
 
     /*!
      * \brief Retrieves the used routing channel numbers from the TTTR data.
@@ -616,9 +839,9 @@ public:
       * @param output Pointer to the array to store the intensity trace.
       * @param n_output Pointer to the number of points in the intensity trace.
       * @param time_window_length The length of the integration time windows in
-      *        units of milliseconds.
+      *        units of seconds.
       */
-     void get_intensity_trace(int **output, int *n_output, double time_window_length = 1.0);
+     void get_intensity_trace(int **output, int *n_output, double time_window_length = 0.001);
 
      /*!
       * \brief Returns an array containing the routing channel numbers of the valid TTTR events.
@@ -663,6 +886,112 @@ public:
      size_t get_n_valid_events();
 
      /*!
+      * \brief Shrinks the allocated memory to fit exactly the number of valid events.
+      *
+      * This function reallocates memory to match exactly the number of valid events,
+      * freeing any excess capacity. Useful after a series of operations that may have
+      * over-allocated memory.
+      */
+     void shrink_to_fit();
+
+     /*!
+      * \brief Reserves memory for a specified number of events.
+      *
+      * This function pre-allocates memory for the specified number of events,
+      * which can improve performance when the final size is known in advance.
+      * Does nothing if the current capacity is already sufficient.
+      *
+      * @param n Number of events to reserve memory for.
+      */
+     void reserve(size_t n);
+
+     /*!
+      * \brief Returns the current memory capacity in number of events.
+      *
+      * This function returns the total allocated capacity, which may be larger than
+      * the number of valid events.
+      *
+      * @return Current capacity in number of events.
+      */
+     size_t get_capacity() const { return capacity; }
+
+     /*!
+      * \brief Returns the memory usage in bytes.
+      *
+      * This function calculates and returns the total memory used by the TTTR data arrays.
+      * Takes into account whether macro time compression is enabled.
+      *
+      * @return Memory usage in bytes.
+      */
+     size_t get_memory_usage_bytes() const {
+         if (macro_time_compression_enabled) {
+             // 32-bit deltas + keyframe overhead
+             size_t delta_size = capacity * sizeof(uint32_t);
+             size_t keyframe_size = n_keyframes * sizeof(unsigned long long);
+             return delta_size + keyframe_size + capacity * (sizeof(unsigned short) + 2 * sizeof(signed char));
+         } else {
+             return capacity * (sizeof(unsigned long long) + sizeof(unsigned short) + 2 * sizeof(signed char));
+         }
+     }
+
+     /*!
+      * \brief Enables keyframe-based delta compression for macro times.
+      *
+      * Uses periodic 64-bit keyframes with 32-bit deltas between them.
+      * This allows compression of arbitrarily long time spans.
+      * 
+      * @param keyframe_interval Number of events between keyframes (default: 1000000)
+      *                          Smaller = more keyframes = more memory but safer
+      *                          Larger = fewer keyframes = less memory but requires longer monotonic segments
+      * @param force If true, recompresses even if already compressed.
+      * @return True if compression succeeded, false on error.
+      */
+     bool enable_macro_time_compression(size_t keyframe_interval = 1000000, bool force = false);
+
+     /*!
+      * \brief Disables delta compression for macro times.
+      *
+      * Converts 32-bit deltas back to 64-bit absolute macro times.
+      */
+     void disable_macro_time_compression();
+
+     /*!
+      * \brief Checks if macro time compression is enabled.
+      *
+      * @return True if compression is enabled, false otherwise.
+      */
+     bool is_macro_time_compression_enabled() const {
+         return macro_time_compression_enabled;
+     }
+
+     /*!
+      * \brief Returns the compression ratio for macro times.
+      *
+      * @return Compression ratio (e.g., 0.5 means 50% of original size).
+      */
+     double get_macro_time_compression_ratio() const {
+         return macro_time_compression_enabled ? 0.5 : 1.0;
+     }
+
+     /*!
+      * \brief Sets whether to automatically compress macro times when reading files.
+      *
+      * @param enable If true, files will be automatically compressed after reading (default behavior).
+      */
+     static void set_auto_compress_on_read(bool enable) {
+         auto_compress_on_read = enable;
+     }
+
+     /*!
+      * \brief Checks if automatic compression on read is enabled.
+      *
+      * @return True if files will be automatically compressed after reading.
+      */
+     static bool get_auto_compress_on_read() {
+         return auto_compress_on_read;
+     }
+
+     /*!
       * \brief Returns the container type used to open the TTTR file.
       *
       * This function retrieves and returns the container type that was used to open
@@ -683,16 +1012,31 @@ public:
      * A list of supported container names.
      *
      */
-     static std::vector<std::string> get_supported_container_names(){
-
-        // Extract container names from the right side of the bimap
-        std::vector<std::string> supported_container_names;
-        for (const auto& element : container_names.left) {
-            supported_container_names.push_back(element.first);
+    static std::vector<std::string> get_supported_container_names() {
+        // 1) pull into a vector of (name, id)
+        std::vector<std::pair<std::string,int>> items;
+        items.reserve(container_names.size());
+        for (auto const& kv : container_names.left) {
+            // kv.first  = std::string
+            // kv.second = int
+            items.emplace_back(kv.first, kv.second);
         }
 
-        return supported_container_names;
-     }
+        // 2) sort by the int
+        std::sort(items.begin(), items.end(),
+                  [](auto const& a, auto const& b){
+                      return a.second < b.second;
+                  });
+
+        // 3) project out just the names
+        std::vector<std::string> supported;
+        supported.reserve(items.size());
+        for (auto const& p : items) {
+            supported.push_back(p.first);
+        }
+        return supported;
+    }
+
 
      /*!
       * \brief Creates a new TTTR object by selecting specific events based on the provided indices.
@@ -717,8 +1061,6 @@ public:
      * \brief Copy constructor for the TTTR (Time-Tagged Time-Resolved) class.
      *
      * This constructor creates a new TTTR object by copying the information from another TTTR object.
-     *
-     * @param p2 The TTTR object from which the information is copied.
      */
     TTTR(const TTTR &p2);
 
@@ -758,7 +1100,7 @@ public:
     TTTR(const char *filename);
 
     /*!
-     * Constructor for TTTR object that reads the content of the file.
+     * Constructor for TTTR object that reads the content of the file and applies LUTs/shifts.
      *
      * @param filename TTTR filename.
      * @param container_type Container type as int:
@@ -769,8 +1111,14 @@ public:
      *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
      *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
      *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
+     * @param channel_luts Map of routing channel -> LUT vector for microtime linearization
+     * @param channel_shifts Map of routing channel -> microtime shift value (bins to add, modulo wraparound)
+     * @param read_input If true, reads the content of the file and applies LUTs/shifts (default: true).
      */
-    TTTR(const char *filename, int container_type);
+    TTTR(const char *filename, int container_type,
+         const std::map<int, std::vector<float>>& channel_luts = std::map<int, std::vector<float>>(),
+         const std::map<signed char, int>& channel_shifts = std::map<signed char, int>(),
+         bool read_input = true);
 
     /*!
      * Constructor for TTTR object.
@@ -784,7 +1132,10 @@ public:
      *   - "SPC-600_4096": Becker & Hickl SPC-600 with 4096 channels Container
      *   - "PHOTON-HDF5": Photon-HDF5 Container
      *   - "CZ_CONFOCOR3_CONTAINER": Carl Zeiss ConfoCor3 Container
+     * @param read_input If true, reads the content of the file.
      */
+    TTTR(const char *filename, const char* container_type, bool read_input);
+
     TTTR(const char *filename, const char* container_type);
 
      /*!
@@ -879,12 +1230,17 @@ public:
             double macro_time_calibration = -1,
             bool invert=false
     ){
-        if(macro_time_calibration < 0){
-            macro_time_calibration = header->get_macro_time_resolution();
+        if(macro_time_calibration < 0.0){
+            if(header != nullptr){
+                macro_time_calibration = header->get_macro_time_resolution();
+            } else {
+                macro_time_calibration = 1.0;
+            }
         }
+
         ranges_by_time_window(
                 output, n_output,
-                macro_times, n_valid_events,
+                macro_times, static_cast<int>(n_valid_events),
                 minimum_window_length,
                 maximum_window_length,
                 minimum_number_of_photons_in_time_window,
@@ -1061,56 +1417,75 @@ public:
      void shift_macro_time(int shift);
 
     /*!
-      * @brief Adds the events of another TTTR object to the current TTTR object.
-      *
-      * @param other Pointer to the TTTR object whose events will be added.
-      * @return Pointer to a new TTTR object containing the combined events.
-      */
-    TTTR* operator+(const TTTR* other) const {
-        auto re = new TTTR();
-        re->copy_from(*this, true);
-        re->append(other);
-        return re;
-    }
+     * @brief Adds the events of another TTTR object to the current TTTR object.
+     *
+     * @param other Pointer to the TTTR object whose events will be added.
+     * @return TTTR object containing the combined events.
+     */
+    TTTR operator+(const TTTR* other) const;
+
+
+    /*!
+    * @brief Computes a histogram of the TTTR data's micro times.
+    *
+    * @param tttr_data Pointer to the TTTR object containing the data.
+    * @param output Pointer to which the histogram will be written (memory is allocated by the method).
+    * @param n_output Pointer to the number of points in the histogram.
+    * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+    * @param n_time Pointer to the number of points in the time axis.
+    * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+    * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
+    * @param channels Optional list of routing channels to filter photons.
+    * @param minlength Minimal length of output array (optional)
+    */
+    static void compute_microtime_histogram(
+            TTTR *tttr_data,
+            double** output, int* n_output,
+            double** time, int* n_time,
+            unsigned short micro_time_coarsening = 1,
+            std::vector<int> *tttr_indices = nullptr,
+            std::vector<int> *channels = nullptr,
+            int minlength = -1
+    );
 
      /*!
-      * @brief Computes a histogram of the TTTR data's micro times.
-      *
-      * @param tttr_data Pointer to the TTTR object containing the data.
-      * @param output Pointer to which the histogram will be written (memory is allocated by the method).
-      * @param n_output Pointer to the number of points in the histogram.
-      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
-      * @param n_time Pointer to the number of points in the time axis.
-      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
-      * @param tttr_indices Optional pointer to store the indices of TTTR events used in the histogram.
-      */
-     static void compute_microtime_histogram(
-             TTTR *tttr_data,
-             double** output, int* n_output,
-             double **time, int *n_time,
-             unsigned short micro_time_coarsening = 1,
-             std::vector<int> *tttr_indices = nullptr
-     );
-
-     /*!
-      * @brief Computes and returns a histogram of the TTTR data's micro times.
-      *
-      * @param histogram Pointer to which the histogram will be written (memory is allocated by the method).
-      * @param n_histogram Pointer to the number of points in the histogram.
-      * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
-      * @param n_time Pointer to the number of points in the time axis.
-      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
-      */
+     * @brief Computes and returns a histogram of the TTTR data's micro times.
+     *
+     * @param histogram Pointer to which the histogram will be written (memory is allocated by the method).
+     * @param n_histogram Pointer to the number of points in the histogram.
+     * @param time Pointer to the time axis of the histogram (memory is allocated by the method).
+     * @param n_time Pointer to the number of points in the time axis.
+     * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
+     * @param channels Optional list of routing channels to filter photons.
+     * @param minlength Minimum number of photons required; if the selection contains fewer photons,
+     *                  an empty/zero histogram is returned (default -1 disables the check).
+     */
      void get_microtime_histogram(
              double **histogram, int *n_histogram,
              double **time, int *n_time,
-             unsigned short micro_time_coarsening = 1
+             unsigned short micro_time_coarsening = 1,
+             std::vector<int> channels = std::vector<int>(),
+             int minlength = -1
      ){
-      compute_microtime_histogram(
-              this, histogram, n_histogram,
-              time, n_time,
-              micro_time_coarsening
-      );
+         if(!channels.empty()){
+             compute_microtime_histogram(
+                     this, histogram, n_histogram,
+                     time, n_time,
+                     micro_time_coarsening,
+                     nullptr,
+                     &channels,
+                     minlength
+             );
+         } else{
+             compute_microtime_histogram(
+                     this, histogram, n_histogram,
+                     time, n_time,
+                     micro_time_coarsening,
+                     nullptr,
+                     nullptr,
+                     minlength
+             );
+         }
      }
 
      /*!
@@ -1233,6 +1608,100 @@ public:
                 this, tttr_indices,
                 microtime_resolution, minimum_number_of_photons);
     }
+
+    /*!
+     * @brief Configure channel LUTs and shifts for existing TTTR data
+     *
+     * Configures microtime correction LUTs and shifts for an already loaded TTTR object.
+     * The LUTs are stored in the class MicrotimeLinearization member for later application.
+     * Use apply_luts_and_shifts() to actually apply the configured corrections.
+     *
+     * @param channel_luts Map of routing channel -> LUT vector for microtime linearization
+     * @param channel_shifts Map of routing channel -> microtime shift value (bins to add, modulo wraparound)
+     * @return 1 on success, 0 on failure
+     *
+     * \note Actual application of LUTs and shifts is done by calling apply_luts_and_shifts()
+     */
+    int apply_channel_luts(
+        const std::map<int, std::vector<float>>& channel_luts,
+        const std::map<signed char, int>& channel_shifts = std::map<signed char, int>()
+    );
+
+    /*!
+     * \brief Apply LUTs and microtime shifts per routing channel to the loaded TTTR data.
+     *
+     * This method applies the stored LUTs and shifts to the microtime data after loading.
+     * LUTs are applied per routing channel, and shifts are applied per channel.
+     *
+     * @param seed Random seed for dithering (-1 to use TTTR_RND_SEED environment variable)
+     * @param use_dithering Whether to apply random dithering (default: true)
+     */
+    int apply_luts_and_shifts(int seed = -1, bool use_dithering = true);
+
+    /*!
+     * \brief Get the MicrotimeLinearization instance
+     *
+     * \return Pointer to the MicrotimeLinearization instance
+     */
+    MicrotimeLinearization* get_mt_linearizer();
+
+    /*!
+     * \brief Set the MicrotimeLinearization instance
+     *
+     * \param mt_linearizer Pointer to the MicrotimeLinearization instance to set
+     */
+    void set_mt_linearizer(MicrotimeLinearization* mt_linearizer);
+
+    /*!
+     * \brief Set channel LUTs from a 2D numpy array
+     *
+     * Convenience method that sets LUTs on the internal MicrotimeLinearization object.
+     *
+     * \param luts 2D numpy array [n_channels x lut_size]
+     * \param n_channels Number of channels
+     * \param lut_size Size of each LUT
+     */
+    void set_channel_luts(const float* luts, int n_channels, int lut_size);
+
+    /*!
+     * \brief Set channel shifts from a 1D numpy array
+     *
+     * Convenience method that sets shifts on the internal MicrotimeLinearization object.
+     *
+     * \param shifts 1D numpy array [n_channels]
+     * \param n_channels Number of channels
+     */
+    void set_channel_shifts(const int* shifts, int n_channels);
+
+    /*!
+     * \brief Get channel LUTs as a 2D numpy array
+     *
+     * Convenience method that gets LUTs from the internal MicrotimeLinearization object.
+     *
+     * \param luts Output 2D numpy array [n_channels x lut_size]
+     * \param n_channels Number of channels (output)
+     * \param lut_size Size of each LUT (output)
+     */
+    void get_channel_luts(float** luts, int* n_channels, int* lut_size);
+
+    /*!
+     * \brief Get channel shifts as a 1D numpy array
+     *
+     * Convenience method that gets shifts from the internal MicrotimeLinearization object.
+     *
+     * \param shifts Output 1D numpy array [n_channels]
+     * \param n_channels Number of channels (output)
+     */
+    void get_channel_shifts(int** shifts, int* n_channels);
+
+    /*!
+     * \brief Update microtime resolution after LUT application
+     *
+     * Calculates the effective resolution change based on LUT range transformations
+     * and updates the microtime resolution in the header accordingly.
+     */
+    void update_microtime_resolution_after_lut();
+
 
 };
 

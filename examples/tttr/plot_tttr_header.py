@@ -6,8 +6,8 @@ TTTR-Header
 Introduction
 ============
 TTTR files can contain additional meta-data. In tttrlib the meta data can be
-accessed and edited via the TTTRHeader class. Some TTTR file formats suchh as the
-PTU format provide the option for arbitrary meta data. In other TTTR formats have
+accessed and edited via the TTTRHeader class. Some TTTR file formats such as the
+PTU format provide the option for arbitrary meta data. Other TTTR formats have
 defined / fixed headers. Some of the information that can be found in a TTTR file
 is listed in `Header tags sheet <https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL>`_.
 
@@ -23,9 +23,14 @@ For that, a ``TTTR`` object provides a header attribute. The header attribute is
 of the type :class:`.Header`.
 """
 
+import os
+from pathlib import Path
 import tttrlib
 
-data = tttrlib.TTTR('../../tttr-data/bh/pq/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 # the header can be accesses by the method get_header or as an property
 header = data.header
 
@@ -41,7 +46,7 @@ header = data.header
 # attribute modifies the header / meta data of a TTTR object.
 
 import json
-data = tttrlib.TTTR('./test/data/PQ/PTU/pq_ptu_hh_t3.ptu', 'PTU')
+data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu'), 'PTU')
 
 #%%
 # the header can be accesses by the method get_header or as a property
@@ -57,7 +62,7 @@ print(header_dict)
 # Essential for the analysis of TTTR data is the time calibration (time resolution)
 # of the macro and the micro times in addition to the number of possible micro time
 # channels. In many functions the micro and macro time calibration are transparently
-# handeled, meaning there is no need to worry. The ``macro_time`` and the
+# handled, meaning there is no need to worry. The ``macro_time`` and the
 # ``micro_time`` TTTR attributes correspond the to raw uncalibrated data.
 #
 # The macro and micro time resolution is accessed as follows.

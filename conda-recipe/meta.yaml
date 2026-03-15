@@ -14,7 +14,6 @@ build:
   run_exports: '{{ pin_subpackage("tttrlib", max_pin="x.x") }}'
 
 requirements:
-requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
@@ -22,34 +21,26 @@ requirements:
     - cmake
     - ninja
     - make # [not win]
+    - hdf5
   host:
-    - swig <4.3.0
+    - swig <4.2
     - doxygen
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
-    - boost-cpp
-    - hdf5
     - python
     - pip
     - numpy
+    - hdf5
   run:
     - python
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
-    - boost-cpp
-    - tqdm
     - numpy
-    - click
-    - click-didyoumean
-    - scikit-image
-    - matplotlib-base
     - hdf5
 
 test:
- imports:
-   - tttrlib
- commands:               # [not win]
-   - tttrlib --help      # [not win]
+  imports:
+    - tttrlib
 
 about:
   home: https://github.com/fluorescence-tools/tttrlib

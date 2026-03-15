@@ -1,4 +1,5 @@
 #include "DecayStatistics.h"
+#include "include/Verbose.h"
 
 const double twopi = 6.2831853071795865;
 const double logtwopi = log(twopi);
@@ -32,12 +33,12 @@ double statistics::chi2_counting(
         int x_max,
         const char* type
 ){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cout << "CHI2_COUNTING" << std::endl;
     std::cout << "-- type: " << type << std::endl;
     std::cout << "-- x_min: " << x_min << std::endl;
     std::cout << "-- x_max: " << x_max << std::endl;
-#endif
+}
     double chi2;
     if(strcmp(type, "neyman") == 0){
         chi2 = neyman(data.data(), model.data(), x_min, x_max);
@@ -52,9 +53,9 @@ double statistics::chi2_counting(
     } else{
         chi2 = sswr(data.data(), model.data(), data_noise.data(), x_min, x_max);
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cout << "-- chi2: " << chi2 << std::endl;
-#endif
+}
     return chi2;
 }
 

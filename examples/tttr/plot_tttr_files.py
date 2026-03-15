@@ -6,10 +6,14 @@ Working with TTTR files
 To open TTTR files import the ``tttrlib`` library.
 
 """
-import pathlib
+import os
+from pathlib import Path
 import tttrlib
 
-data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+
+data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 #%%
 # TTTR attributes
@@ -26,7 +30,7 @@ data = tttrlib.TTTR('../../tttr-data/bh/bh_spc132.spc', 'SPC-130')
 #
 # TTTR files are handled by creating :class:`TTTR` objects that contain the TTTR
 # data of the files. The data contained in the files can be accessed by the methods
-# provided by the TTTR class. Opening and and accessing the information contained in
+# provided by the TTTR class. Opening and accessing the information contained in
 # TTTR files is demonstrated by the Python code examples shown below. A TTTR object
 # provides getter methods to access the data contained in the associated file.
 

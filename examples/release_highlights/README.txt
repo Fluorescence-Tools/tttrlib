@@ -3,4 +3,5 @@
 Release Highlights
 ------------------
 
-These examples illustrate the main features of the releases of tttrlib.
+Short, visual examples that showcase new features and improvements introduced
+in recent tttrlib releases. Start here to see what's new at a glance.

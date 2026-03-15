@@ -48,12 +48,15 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 
 
 #%%
+from examples._example_data import get_data_path
+
 # The FLIM dataset consists of a measurement of the sample
 # and an instrument response function (IRF).
 # We inspect the used routing channels to make sure which
 # detectors have been used in the measurement.
-data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/mGBP_DA.ht3')
-irf = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/mGBP_IRF.ht3')
+data = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/mGBP_DA.ht3')))
+irf = tttrlib.TTTR(str(get_data_path('imaging/pq/ht3/mGBP_IRF.ht3')))
+
 print("Used routing channels: ", data.used_routing_channels)
 
 #%

@@ -1,0 +1,743 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+env:
+  DEFAULT_PYTHON: "3.10"
+  CIBW_VERSION: "2.23.3"
+  MAIN_PY_VERSIONS: "3.9 3.10 3.11 3.12 3.13"
+
+jobs:
+  setup:
+    name: Setup Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      is_main: ${{ steps.check.outputs.is_main }}
+      cibw_build: ${{ steps.check.outputs.cibw_build }}
+      py_versions: ${{ steps.check.outputs.py_versions }}
+      py_matrix: ${{ steps.check.outputs.py_matrix }}
+    steps:
+      - id: check
+        run: |
+          BRANCH="${{ github.ref }}"
+          if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
+            echo "is_main=true" >> $GITHUB_OUTPUT
+            BUILD_SPEC=$(python -c "print(' '.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split()))")
+            echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
+            echo "py_versions=${{ env.MAIN_PY_VERSIONS }}" >> $GITHUB_OUTPUT
+            echo 'py_matrix={"python":["3.9","3.10","3.11","3.12","3.13"]}' >> $GITHUB_OUTPUT
+          else
+            echo "is_main=false" >> $GITHUB_OUTPUT
+            PY_VER_SHORT="${DEFAULT_PYTHON/./}"
+            echo "cibw_build=cp${PY_VER_SHORT}-*" >> $GITHUB_OUTPUT
+            echo "py_versions=${{ env.DEFAULT_PYTHON }}" >> $GITHUB_OUTPUT
+            echo 'py_matrix={"python":["3.10"]}' >> $GITHUB_OUTPUT
+          fi
+
+  # ── Quick smoke test for feature branches (no artifact builds) ────────────
+
+  test_quick:
+    name: Quick Test (lnx)
+    needs: setup
+    if: needs.setup.outputs.is_main == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake
+      - name: Cache test data
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+      - name: Download test data
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
+      - name: Build and Test
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[test]"
+          python -m pytest
+
+  # ── Full builds + tests (main and development only) ───────────────────────
+
+  download_test_data:
+    name: Download Test Data
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Cache test data
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ./tttr-data
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
+      - name: Download test data
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+          retention-days: 1
+
+  # ── Pip builds ────────────────────────────────────────────────────────────
+
+  build_pip_lnx:
+    name: Pip Build lnx
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
+          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_FRONTEND: "build[uv]"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-ubuntu-latest
+          path: ./wheelhouse/*.whl
+
+  build_pip_osx_arm64:
+    name: Pip Build osx arm64
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
+          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_ARCHS_MACOS: "arm64"
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-macos-arm64
+          path: ./wheelhouse/*.whl
+
+  build_pip_osx_x86_64:
+    name: Pip Build osx x86_64
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
+          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_FRONTEND: "build[uv]"
+          CIBW_ARCHS_MACOS: "x86_64"
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-macos-x86_64
+          path: ./wheelhouse/*.whl
+
+  build_pip_win:
+    name: Pip Build win
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      - name: Install HDF5
+        shell: pwsh
+        run: |
+          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
+          & $vcpkg install hdf5:x64-windows --no-print-usage
+          $hdf5root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "HDF5_ROOT=$hdf5root" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$hdf5root" >> $env:GITHUB_ENV
+          echo "PATH=$hdf5root\bin;$env:PATH" >> $env:GITHUB_ENV
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
+          CIBW_BUILD_VERBOSITY: 2
+          CIBW_BUILD_FRONTEND: "build[uv]"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-wheels-windows-latest
+          path: ./wheelhouse/*.whl
+
+  # ── Pip tests: one job per platform×python-version ────────────────────────
+
+  test_pip_lnx:
+    name: Pip Test lnx py${{ matrix.python }}
+    needs: [setup, build_pip_lnx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pip-wheels-ubuntu-latest
+          path: wheelhouse
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install and Test
+        shell: bash
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python -m pip install --upgrade pip
+          PY_VER="${{ matrix.python }}"
+          PY_VER_SHORT="${PY_VER/./}"
+          python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
+          python -m pip install pytest scipy
+          python -m pytest -v --tb=short
+
+  test_pip_osx:
+    name: Pip Test osx py${{ matrix.python }}
+    needs: [setup, build_pip_osx_arm64, build_pip_osx_x86_64, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pip-wheels-macos-*
+          path: wheelhouse
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install and Test
+        shell: bash
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          python -m pip install --upgrade pip
+          PY_VER="${{ matrix.python }}"
+          PY_VER_SHORT="${PY_VER/./}"
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "arm64" ]; then
+            python -m pip install wheelhouse/*cp${PY_VER_SHORT}*arm64*.whl
+          else
+            python -m pip install wheelhouse/*cp${PY_VER_SHORT}*x86_64*.whl
+          fi
+          python -m pip install pytest scipy
+          python -m pytest
+
+  test_pip_win:
+    name: Pip Test win py${{ matrix.python }}
+    needs: [setup, build_pip_win, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pip-wheels-windows-latest
+          path: wheelhouse
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          cd D:\a\tttrlib\tttrlib
+          python -m pip install --upgrade pip
+          for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
+          python -m pip install pytest scipy
+        shell: cmd
+      - name: Test
+        run: |
+          cd D:\a\tttrlib\tttrlib
+          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          set /p PYTEST_EXIT=<pytest_exitcode.txt
+          echo Pytest exited with: %PYTEST_EXIT%
+          exit %PYTEST_EXIT%
+        shell: cmd
+        env:
+          TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+
+  # ── Conda builds ──────────────────────────────────────────────────────────
+
+  build_conda_lnx:
+    name: Conda Build lnx
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build Conda packages
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          for VER in ${{ needs.setup.outputs.py_versions }}; do
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --output-dir ./conda-bld \
+              -c conda-forge
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-ubuntu-latest
+          path: ./conda-bld
+
+  build_conda_osx:
+    name: Conda Build osx
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build Conda packages
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          for VER in ${{ needs.setup.outputs.py_versions }}; do
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --output-dir ./conda-bld \
+              -c conda-forge
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-macos-latest
+          path: ./conda-bld
+
+  build_conda_win:
+    name: Conda Build win
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build Conda packages
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          for VER in ${{ needs.setup.outputs.py_versions }}; do
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --variant "c_compiler=vs2022" \
+              --variant "cxx_compiler=vs2022" \
+              --output-dir ./conda-bld \
+              -c conda-forge
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-windows-latest
+          path: ./conda-bld
+
+  # ── Conda tests: one job per platform×python-version ─────────────────────
+
+  test_conda_lnx:
+    name: Conda Test lnx py${{ matrix.python }}
+    needs: [setup, build_conda_lnx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages-ubuntu-latest
+          path: conda-bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: test
+          python-version: ${{ matrix.python }}
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install and Test
+        shell: bash -l {0}
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
+          python -m pytest
+
+  test_conda_osx:
+    name: Conda Test osx py${{ matrix.python }}
+    needs: [setup, build_conda_osx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages-macos-latest
+          path: conda-bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: test
+          python-version: ${{ matrix.python }}
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install and Test
+        shell: bash -l {0}
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
+          conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
+          python -m pytest
+
+  test_conda_win:
+    name: Conda Test win py${{ matrix.python }}
+    needs: [setup, build_conda_win, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages-windows-latest
+          path: conda-bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Create test environment and install
+        run: |
+          call conda create -n test python=%PYTHON_VERSION% -y -c conda-forge
+          call conda install -n test -y -c D:\a\tttrlib\tttrlib\conda-bld -c conda-forge python=%PYTHON_VERSION% tttrlib pytest scipy
+        shell: cmd
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}
+      - name: Run tests
+        run: |
+          call conda activate test
+          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          set /p PYTEST_EXIT=<pytest_exitcode.txt
+          echo Pytest exited with: %PYTEST_EXIT%
+          exit %PYTEST_EXIT%
+        shell: cmd
+        env:
+          TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+
+  # ── Docs: after all tests pass ────────────────────────────────────────────
+
+  build_docs:
+    name: Build Documentation
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    if: |
+      always() &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
+      needs.test_pip_lnx.result == 'success' &&
+      needs.test_conda_lnx.result == 'success' &&
+      needs.test_pip_osx.result == 'success' &&
+      needs.test_pip_win.result == 'success' &&
+      needs.test_conda_osx.result == 'success' &&
+      needs.test_conda_win.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+      BUILD_TIER: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install scikit-build-core numpy swig
+          python -m pip install sphinx sphinx-copybutton sphinx-design sphinxext-opengraph numpydoc nbsphinx matplotlib ipython sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme scikit-image phconvert numba imagecodecs
+          python -m pip install .[examples]
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - name: Build Documentation
+        run: |
+          cd doc
+          mkdir -p _build/api
+          doxygen
+          BUILD_TIER=4 sphinx-build -v -b html -T -d _build/doctrees . _build/html/stable 2>&1 | tee sphinx_build.log
+          ls -la _build/html/stable/
+          ls -la _build/html/stable/auto_examples 2>/dev/null || echo "No auto_examples directory"
+          rm -rf _build/html/stable/api
+          cp -r _build/api _build/html/stable/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: html-docs
+          path: doc/_build/html/stable
+      - name: Deploy to GitHub Pages (main/stable)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/_build/html/stable
+          keep_files: true
+          destination_dir: stable
+      - name: Deploy Root Redirect (main)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/static_root
+          keep_files: true
+          destination_dir: .
+      - name: Deploy to GitHub Pages (development/dev)
+        if: github.ref == 'refs/heads/development'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/_build/html/stable
+          keep_files: true
+          destination_dir: dev
+      - name: Deploy Root Redirect (development)
+        if: github.ref == 'refs/heads/development'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/static_root
+          keep_files: true
+          destination_dir: .
+
+  # ── Publish to PyPI (main branch only, or manual trigger) ───────────────────
+
+  publish_pypi:
+    name: Publish to PyPI
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          # Fetch tags to get version
+          fetch-tags: true
+      - name: Extract version from tag
+        id: version
+        run: |
+          # For releases, use the tag name (remove 'v' prefix if present)
+          # For workflow_dispatch, use pyproject.toml version
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${VERSION#refs/tags/}
+          else
+            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Build wheels
+        run: |
+          python -m pip install build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # ── Publish to Conda (main branch only, or manual trigger) ─────────────────
+
+  publish_conda:
+    name: Publish to Conda
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          fetch-tags: true
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${VERSION#refs/tags/}
+          else
+            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build Conda packages
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=${{ steps.version.outputs.VERSION }}
+          echo "Building tttrlib $PKG_VERSION"
+          for VER in ${{ env.MAIN_PY_VERSIONS }}; do
+            rattler-build build --recipe rattler-recipe \
+              --variant "python=$VER" \
+              --output-dir ./conda-bld \
+              -c conda-forge
+          done
+      - name: Upload to Conda
+        shell: bash -l {0}
+        run: |
+          conda install -y anaconda -c conda-forge
+          anaconda upload --user tpeulen \
+            --label main \
+            --force \
+            ./conda-bld/*/tttrlib-*.conda

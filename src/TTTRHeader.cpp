@@ -1,10 +1,13 @@
 #include "TTTR.h"
 #include "TTTRRange.h"
 #include "TTTRHeader.h"
+#include "FileCheck.h"
+#include "include/Verbose.h"
 
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
 
 
 TTTRHeader::TTTRHeader() :
@@ -14,16 +17,16 @@ TTTRHeader::TTTRHeader() :
     json_data["tags"] = nlohmann::json::array();
     json_data[TTTRContainerType] = 0;
     json_data[TTTRRecordType] = -1;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader" << std::endl;
-#endif
+}
 }
 
 TTTRHeader::TTTRHeader(const TTTRHeader &p2)
 {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader - Copy constructor" << std::endl;
-#endif
+}
     json_data = p2.json_data;
     header_end = p2.header_end;
 }
@@ -34,10 +37,10 @@ TTTRHeader::TTTRHeader(
         bool close_file
         ) : TTTRHeader(tttr_container_type)
 {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader - Opening file" << std::endl;
     std::clog << "reading header" << std::endl;
-#endif
+}
     int tttr_record_type;
     if(tttr_container_type == PQ_PTU_CONTAINER){
         header_end = read_ptu_header(fpin, tttr_record_type, json_data);
@@ -56,17 +59,21 @@ TTTRHeader::TTTRHeader(
             case rtHydraHarpT3:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
                 break;
-            case rtMultiHarpT2:
             case rtHydraHarp2T2:
             case rtTimeHarp260NT2:
             case rtTimeHarp260PT2:
                 tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
                 break;
-            case rtMultiHarpT3:
+            case rtMultiHarpT2:
+                tttr_record_type = PQ_RECORD_TYPE_GENERIC_T2;
+                break;
             case rtHydraHarp2T3:
             case rtTimeHarp260NT3:
             case rtTimeHarp260PT3:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+                break;
+            case rtMultiHarpT3:
+                tttr_record_type = PQ_RECORD_TYPE_GENERIC_T3;
                 break;
             default:
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
@@ -103,17 +110,17 @@ TTTRHeader::TTTRHeader(
     }
     set_tttr_record_type(tttr_record_type);
     if(close_file) fclose(fpin);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "End of header: " << header_end << std::endl;
     std::clog << json_data << std::endl;
-#endif
+}
 }
 
 
 TTTRHeader::TTTRHeader(
         std::string fn,
         int tttr_container_type
-) : TTTRHeader(fopen(fn.c_str(), "r"), tttr_container_type, true) {
+) : TTTRHeader(open_file(fn, "r"), tttr_container_type, true) {
 
 }
 
@@ -138,12 +145,73 @@ size_t TTTRHeader::read_bh132_header(
     add_tag(data, TTTRNMicroTimes, 4096, tyInt8);
     add_tag(data, TTTRTagBits, 32, tyInt8);
 
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- BH132 header reader " << std::endl;
     std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
     std::clog << "-- micro_time_resolution: " << mi_clk << std::endl;
-#endif
+}
     return 4;
+}
+
+
+bool TTTRHeader::read_bh_set_file(const std::string& filename) {
+    std::ifstream f(filename);
+    if (!f.is_open()) {
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(f, line)) {
+        // Remove leading/trailing whitespace
+        size_t start = line.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) continue;
+        size_t end = line.find_last_not_of(" \t\r\n");
+        line = line.substr(start, end - start + 1);
+
+        if (line.empty() || line[0] == '*') {
+            continue;
+        }
+
+        // Parse BH .set file format: "#SP [KEY,TYPE,VALUE]"
+        // Example: "#SP [SP_IMG_X,I,512]"
+        if (line.rfind("#SP [", 0) == 0) {
+            size_t bracket_start = line.find('[');
+            size_t bracket_end = line.find(']');
+            if (bracket_start != std::string::npos && bracket_end != std::string::npos && bracket_end > bracket_start) {
+                std::string content = line.substr(bracket_start + 1, bracket_end - bracket_start - 1);
+
+                // Split by commas: "SP_IMG_X,I,512" -> key, type, value
+                size_t first_comma = content.find(',');
+                size_t last_comma = content.rfind(',');
+
+                if (first_comma != std::string::npos && last_comma != std::string::npos && last_comma > first_comma) {
+                    std::string key = content.substr(0, first_comma);
+                    std::string val = content.substr(last_comma + 1);
+
+                    try {
+                        if (key == "SP_IMG_X") {
+                            add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
+                        } else if (key == "SP_IMG_Y") {
+                            add_tag(json_data, "ImgHdr_PixY", std::stoi(val), tyInt8);
+                        } else if (key == "SP_PIX_CLK") {
+                            int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
+                            add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+                        }
+                    } catch (const std::exception& e) {
+                        #ifdef VERBOSE_TTTRLIB
+                        std::clog << "-- BH .set parse warning: skipping line with invalid value: " 
+                                  << e.what() << std::endl;
+                        #endif
+                    } catch (...) {
+                        #ifdef VERBOSE_TTTRLIB
+                        std::clog << "-- BH .set parse warning: skipping line with unknown error" << std::endl;
+                        #endif
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 
@@ -214,7 +282,7 @@ size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
     add_tag(j, "num_channels", (int) num_channels, tyInt8);
 
     header.channel_labels.resize(num_channels);
-    for (uint32_t i = 0; i < num_channels; ++i) {
+    for (int32_t i = 0; i < num_channels; ++i) {
         uint32_t size;
         fread(&size, sizeof(size), 1, file);
         SwapEndian(size);
@@ -224,7 +292,7 @@ size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
     add_tag(j, TTTRTagGlobRes, (double) header.col2_resolution, tyFloat8);
 
     // Return the current file position, which is the cursor
-    return ftell(file);
+    return ftell64(file);
 }
 
 
@@ -264,7 +332,7 @@ size_t TTTRHeader::read_cz_confocor3_header(
     add_tag(data, "kinetic_index", kinetic_index + 1, tyInt8);
     add_tag(data, "repetition_number", repetition_number + 1, tyInt8);
     add_tag(data, TTTRTagBits, 32, tyInt8);
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- Confocor3 header reader " << std::endl;
     std::clog << "-- frequency_float: " << frequency_float << std::endl;
     std::clog << "-- measure_id_string: " << hex_measure_id << std::endl;
@@ -274,8 +342,8 @@ size_t TTTRHeader::read_cz_confocor3_header(
     std::clog << "-- kinetic_index: " << kinetic_index << std::endl;
     std::clog << "-- repetition_number: " << repetition_number << std::endl;
     std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
-#endif
-    return (size_t) ftell(fpin);
+}
+    return static_cast<size_t>(ftell64(fpin));
 }
 
 
@@ -284,9 +352,9 @@ size_t TTTRHeader::read_ht3_header(
         nlohmann::json &data,
         bool rewind
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- READ_HT3_HEADER" << std::endl;
-#endif
+}
     if(rewind) std::fseek(fpin, 0, SEEK_SET);
     // Header of HT3 file
     pq_ht3_Header_t ht3_header_begin;
@@ -362,34 +430,177 @@ size_t TTTRHeader::read_ht3_header(
     add_tag(data, TTTRTagRes, resolution, tyFloat8);
 
     // TODO: add identification of HydraHarp HHT3v1 files
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "FormatVersion:-" << get_tag(data, "FormatVersion")["value"] << "-" << std::endl;
-#endif
+}
     if (get_tag(data, "Ident")["value"] == "HydraHarp") {
         if(get_tag(data, "FormatVersion")["value"] == "1.0"){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v1" << std::endl;
-#endif
+}
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v1, tyInt8);
         } else{
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
             std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v2" << std::endl;
-#endif
+}
             add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v2, tyInt8);
         }
     } else {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "Record reader:" << "PQ_RECORD_TYPE_PHT3" << std::endl;
-#endif
+}
         add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_PHT3, tyInt8);
     }
     // Effective number of micro time channels
     // TODO: divide by binning factor
     add_tag(data, TTTRNMicroTimes, (int) 32768 / std::max(1, ht3_header_begin.Binning), tyInt8);
     //return 880; // guessed by inspecting several ht3 files
-    return (size_t) ftell(fpin);
+    return static_cast<size_t>(ftell64(fpin));
 }
 
+#ifdef BUILD_PHOTON_HDF
+// Helper function to process datasets in a given group
+void TTTRHeader::process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name) {
+    // Get all objects in the group
+    auto object_names = group.listObjectNames();
+    for (const auto& obj_name : object_names) {
+if (is_verbose()) {
+        std::cout << "Processing object: " << obj_name << std::endl;
+}
+
+        // Check if the object is a dataset
+        if (group.getObjectType(obj_name) != HighFive::ObjectType::Dataset) {
+if (is_verbose()) {
+            std::cout << obj_name << " is not a dataset. Skipping." << std::endl;
+}
+            continue;
+        }
+
+        // Open the dataset
+        auto dataset = group.getDataSet(obj_name);
+        auto datatype = dataset.getDataType();
+        auto dataspace = dataset.getSpace();
+        auto dims = dataspace.getDimensions();
+
+if (is_verbose()) {
+        std::cout << "datatype in hdf: " << datatype.string() << std::endl;
+        std::cout << "dims.size(): " << dims.size() << std::endl;
+}
+
+        // Process scalar or vector data
+        if (dims.empty() || dims.size() == 1) {
+            bool is_scalar = dims.empty() || dims[0] == 1;
+            if (datatype == HighFive::AtomicType<int8_t>() || datatype == HighFive::AtomicType<uint8_t>() ||
+                datatype == HighFive::AtomicType<int16_t>() || datatype == HighFive::AtomicType<uint16_t>() ||
+                datatype == HighFive::AtomicType<int32_t>() || datatype == HighFive::AtomicType<uint32_t>() ||
+                datatype == HighFive::AtomicType<int64_t>() || datatype == HighFive::AtomicType<uint64_t>()) {
+
+                if (is_scalar) {
+                    int value;
+                    dataset.read(value);
+if (is_verbose()) {
+                    std::cout << obj_name << " (int): " << value << std::endl;
+}
+                    add_tag(json_data, group_name + "." + obj_name, value, tyInt8, 0);
+                } else {
+                    std::vector<int> values;
+                    dataset.read(values);
+if (is_verbose()) {
+                    std::cout << obj_name << " (int vector): ";
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        std::cout << values[idx] << " ";
+                    }
+                    std::cout << std::endl;
+}
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyInt8, static_cast<int>(idx));
+                    }
+                }
+            } else if (datatype == HighFive::AtomicType<float>() || datatype == HighFive::AtomicType<double>()) {
+                if (is_scalar) {
+                    double value;
+                    dataset.read(value);
+                    add_tag(json_data, group_name + "." + obj_name, value, tyFloat8, 0);
+                } else {
+                    std::vector<double> values;
+                    dataset.read(values);
+if (is_verbose()) {
+                    std::cout << obj_name << " (float vector): ";
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        std::cout << values[idx] << " ";
+                    }
+                    std::cout << std::endl;
+}
+                    for (size_t idx = 0; idx < values.size(); ++idx) {
+                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyFloat8, static_cast<int>(idx));
+                    }
+                }
+            } else {
+                std::string value;
+                dataset.read(value);
+
+                // Allocate memory and copy string data
+                char* allocated_str = new char[value.size() + 2];
+                std::strcpy(allocated_str, value.c_str());
+
+                add_tag(json_data, group_name + "." + obj_name, allocated_str, tyAnsiString, 0);
+
+                // Free allocated memory
+                delete[] allocated_str;
+            }
+        } else {
+if (is_verbose()) {
+            std::cerr << "Unsupported number of dimensions: " << dims.size() << " for " << obj_name << std::endl;
+}
+        }
+    }
+}
+
+int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
+    try {
+if (is_verbose()) {
+        std::cout << "Opening file: " << fn << std::endl;
+}
+        // Open the HDF5 file using HighFive
+        HighFive::File file(fn, HighFive::File::ReadOnly);
+
+if (is_verbose()) {
+        std::cout << "File opened successfully." << std::endl;
+}
+        json_data["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
+
+        if (file.exist("/setup")) {
+            process_hdf5_group_datasets(file.getGroup("/setup"), "setup");
+        }
+        if (file.exist("/identity")) {
+            process_hdf5_group_datasets(file.getGroup("/identity"), "identity");
+        }
+        if (file.exist("/photon_data/timestamps_specs")) {
+            process_hdf5_group_datasets(file.getGroup("/photon_data/timestamps_specs"), "timestamps_specs");
+            double v = get_tag(json_data, "timestamps_specs.timestamps_unit")["value"];
+            add_tag(json_data, TTTRTagGlobRes, v, tyFloat8);
+        }
+        if (file.exist("/photon_data/nanotimes_specs")) {
+            process_hdf5_group_datasets(file.getGroup("/photon_data/nanotimes_specs"), "nanotimes_specs");
+            int v1 = get_tag(json_data, "nanotimes_specs.tcspc_num_bins")["value"];
+            add_tag(json_data, TTTRNMicroTimes, v1, tyInt8);
+            double v2 = get_tag(json_data, "nanotimes_specs.tcspc_unit")["value"];
+            add_tag(json_data, TTTRTagRes, v2, tyFloat8);
+        }
+        return 0; // Return success
+    } catch (const HighFive::Exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return -1; // Return error
+    }
+}
+#else
+
+int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
+    (void) fn;
+    return -1;
+}
+
+#endif
 
 size_t TTTRHeader::read_ptu_header(
         std::FILE *fpin,
@@ -397,9 +608,9 @@ size_t TTTRHeader::read_ptu_header(
         nlohmann::json &json_data,
         bool rewind
 ) {
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "-- TTTRHeader::read_ptu_header" << std::endl;
-#endif
+}
     /// The version of the PTU file
     char version[8];
     char Magic[8];
@@ -417,12 +628,10 @@ size_t TTTRHeader::read_ptu_header(
 
     // read the header
     fread(&Magic, 1, sizeof(Magic), fpin);
-    // check if file is a PQ-PTU file
     if (strncmp(Magic, "PQTTTR", 6) != 0) {
         throw std::string("\nWrong Magic, this is not a PTU file.");
     }
 
-    // Get the version
     tmp = fread(&version, 1, sizeof(version), fpin);
     if (tmp != sizeof(version)) {
         throw std::string("\nerror reading header, aborted.");
@@ -430,127 +639,106 @@ size_t TTTRHeader::read_ptu_header(
     sprintf(buffer_out, "%s", version);
     json_data["Tag Version"] = buffer_out;
 
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "PTU ID:" << Magic << std::endl;
     std::clog << "Tag version:" << json_data["Tag Version"] << std::endl;
     std::clog << "Reading keys..." << std::endl;
-#endif
+}
     do {
         uint64_t Result;
-        // This loop all header items and displays the identifier and the associated
-        // value, independent of what the tags mean in detail. Only some selected
-        // items are explicitly retrieved and kept in memory because they are
-        // needed to subsequently interpret the TTTR record data.
         Result = fread(&TagHead, 1, sizeof(TagHead), fpin);
         if (Result != sizeof(TagHead))
             throw std::string("Incomplete File.");
-        // Record type
         if (TTTRTagTTTRRecType == TagHead.Ident)
             file_type = TagHead.TagValue;
         std::string key = TagHead.Ident;
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << key << ":" << TagHead.Typ << ":" << TagHead.TagValue << ";" << std::endl;
-#endif
-        // The header end tag is skipped.
-       if(FileTagEnd != TagHead.Ident){
-            switch (TagHead.Typ) {
-                case tyEmpty8:
-                    add_tag(json_data, key, nullptr, TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyBool8:
-                    add_tag(json_data, key, *(bool *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyInt8:
-                case tyBitSet64:
-                case tyColor8:
-                    add_tag(json_data, key, *(int *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyFloat8:
-                    add_tag(json_data, key, *(double *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyTDateTime:
-                    double time;
-                    time = *(double *) &(TagHead.TagValue); time -= 25569; time *= 86400;
-                    add_tag(json_data, key, time, TagHead.Typ, TagHead.Idx);
-                    break;
-                case tyFloat8Array:
-                    // sprintf(buffer_out, "<Float Array with %llu Entries>", TagHead.TagValue / sizeof(double));
-                    // only seek the Data, if one needs the data, it can be loaded here
-//                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
-                    b = (double *) calloc((size_t) TagHead.TagValue, 1);
-                    fread(b, 1, (size_t) TagHead.TagValue, fpin);
-                    vec.assign(b, b + TagHead.TagValue);
-                    add_tag(json_data, key, vec, TagHead.Typ, TagHead.Idx);
-                    free(b);
-                    break;
-                case tyAnsiString:
-                    AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
-                    Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                    if (Result != TagHead.TagValue) {
-                        free(AnsiBuffer);
-                        throw std::string("Incomplete File.");
-                    }
-                    add_tag(json_data, key,AnsiBuffer, TagHead.Typ, TagHead.Idx);
+}
+        if (FileTagEnd != TagHead.Ident) {
+            if (TagHead.Typ == tyEmpty8) {
+                add_tag(json_data, key, nullptr, TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyBool8) {
+                add_tag(json_data, key, *(bool *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyInt8 || TagHead.Typ == tyBitSet64 || TagHead.Typ == tyColor8) {
+                add_tag(json_data, key, *(int *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyFloat8) {
+                add_tag(json_data, key, *(double *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyTDateTime) {
+                double time = *(double *) &(TagHead.TagValue); time -= 25569; time *= 86400;
+                add_tag(json_data, key, time, TagHead.Typ, TagHead.Idx);
+            } else if (TagHead.Typ == tyFloat8Array) {
+                b = (double *) calloc((size_t) TagHead.TagValue, 1);
+                fread(b, 1, (size_t) TagHead.TagValue, fpin);
+                vec.assign(b, b + TagHead.TagValue);
+                add_tag(json_data, key, vec, TagHead.Typ, TagHead.Idx);
+                free(b);
+            } else if (TagHead.Typ == tyAnsiString) {
+                AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
+                Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
+                if (Result != TagHead.TagValue) {
                     free(AnsiBuffer);
-                    break;
-                case tyWideString:
-                      WideBuffer = (wchar_t *) calloc((size_t) TagHead.TagValue, 1);
-                      Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                      std::cerr << "ERROR: reading of tyWideString currently not supported" << std::endl;
-                      if (Result != TagHead.TagValue) {
-                          free(WideBuffer);
-                          throw std::string("Incomplete File");
-                      }
-                      add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
-                      free(WideBuffer);
-                    break;
-                case tyBinaryBlob:
-                    std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
-                    //sprintf(buffer_out, "<Binary Blob contains %llu Bytes>", TagHead.TagValue);
-                    // only seek the Data, if one needs the data, it can be loaded here
-                    fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
-                    break;
-                default:
-                    throw std::string("Illegal Type identifier! Broken file?");
+                    throw std::string("Incomplete File.");
+                }
+                add_tag(json_data, key, AnsiBuffer, TagHead.Typ, TagHead.Idx);
+                free(AnsiBuffer);
+            } else if (TagHead.Typ == tyWideString) {
+                size_t buffer_size = TagHead.TagValue;
+                WideBuffer = (wchar_t *) calloc((size_t) buffer_size, 1);
+                Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
+                if (Result != TagHead.TagValue) {
+                    free(WideBuffer);
+                    throw std::string("Incomplete File");
+                } else{
+                    add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
+                    free(WideBuffer);
+                }
+            } else if (TagHead.Typ == tyBinaryBlob) {
+                std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
+                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
+            } else {
+                throw std::string("Illegal Type identifier! Broken file?");
             }
         }
     } while (FileTagEnd != TagHead.Ident);
 
-    // select the reading routine
-    switch (file_type) {
-        case rtPicoHarpT2:
-            tttr_record_type = PQ_RECORD_TYPE_PHT2;
-            break;
-        case rtPicoHarpT3:
-            tttr_record_type = PQ_RECORD_TYPE_PHT3;
-            break;
-        case rtHydraHarpT2:
-            tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
-            break;
-        case rtMultiHarpT2:
-        case rtHydraHarp2T2:
-        case rtTimeHarp260NT2:
-        case rtTimeHarp260PT2:
-            tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
-            break;
-        case rtHydraHarpT3:
-        case rtMultiHarpT3:
-        case rtHydraHarp2T3:
-        case rtTimeHarp260NT3:
-        case rtTimeHarp260PT3:
-            tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
-            break;
-        default:
-            std::cerr << "PTU file type not supported." << std::endl;
+    if (file_type == rtPicoHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_PHT2;
+    } else if (file_type == rtPicoHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_PHT3;
+    } else if (file_type == rtHydraHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
+    } else if (file_type == rtMultiHarpT2) {
+        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T2;
+    } else if (
+            file_type == rtHydraHarp2T2 ||
+            file_type == rtTimeHarp260NT2 ||
+            file_type == rtTimeHarp260PT2
+    ) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
+    } else if (file_type == rtHydraHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
+    } else if (file_type == rtMultiHarpT3) {
+        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T3;
+    } else if (
+            file_type == rtHydraHarp2T3 ||
+            file_type == rtTimeHarp260NT3 ||
+            file_type == rtTimeHarp260PT3
+    ) {
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+    } else {
+        std::cerr << "PTU file with undefined TTTRTagTTTRRecType." << std::endl;
+        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
     }
-    // Effective number of micro time channels
-    try{
+
+    try {
         int bining_factor = get_tag(json_data, "MeasDesc_BinningFactor")["value"];
-        add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true); //2**15
+        if (bining_factor < 1) bining_factor = 1;
+        add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true);
     } catch (...) {
         std::cerr << "ERROR: MeasDesc_BinningFactor not found." << std::endl;
-    }
-    return (size_t) ftell(fpin);
+}
+    return static_cast<size_t>(ftell64(fpin));
 }
 
 void TTTRHeader::write_spc132_header(
@@ -571,9 +759,9 @@ void TTTRHeader::write_spc132_header(
 
 
 void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::string modes){
-    #ifdef VERBOSE_TTTRLIB
+    if (is_verbose()) {
     std::clog << "TTTRHeader::write_ptu_header" << std::endl;
-    #endif
+}
     // Check for existing file
     // if(boost::filesystem::exists(fn)){
     //     std::clog << "WARNING: File exists" << fn << "." << std::endl;
@@ -608,9 +796,9 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     bool header_end_written = false;
     for(auto &it: header->json_data["tags"].items()){
         auto tag = it.value();
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << tag << std::endl;
-#endif
+}
         tag_head_t TagHead;
         tmp_str.clear();
         tmp_str = tag["name"];
@@ -687,9 +875,9 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
         }
     }
     if(!header_end_written){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
         std::clog << "Header_End is missing. Adding Header_End to tag list." << std::endl;
-#endif
+}
         tag_head_t TagHead;
         TagHead.TagValue = 0;
         strcpy(TagHead.Ident, FileTagEnd.c_str());
@@ -713,9 +901,9 @@ int TTTRHeader::find_tag(
         }
         curr_idx++;
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "FIND_TAG: " << name << ":" << idx << ":" << tag_idx  << std::endl;
-#endif
+}
     return tag_idx;
 }
 
@@ -822,13 +1010,12 @@ void TTTRHeader::add_tag(
         nlohmann::json &json_data,
         const std::string &name,
         std::any value,
-        // boost::any value,
         unsigned int type,
         int idx
 ) {
     using namespace std;
     nlohmann::json tag;
-    tag["name"] = name; // boost::locale::conv::to_utf<char>(name,"ISO-8859-1"); // there are sometimes conversion issues
+    tag["name"] = tttrlib::string_encoding::iso_8859_1_to_utf8(name); // there are sometimes conversion issues
     tag["type"] = type;
     tag["idx"] = idx;
     if (type == tyEmpty8) {
@@ -843,12 +1030,10 @@ void TTTRHeader::add_tag(
         tag["value"] = any_cast<std::vector<double>>(value);
     }
     else if (type == tyAnsiString) {
-        auto str = any_cast<char*>(value);
-        tag["value"] = str;
-        // the stuff below work better but depnds on boost
-        // auto str2 = std::string(str);
-        // auto str3 = boost::locale::conv::to_utf<char>(str2,"ISO-8859-1");
-        // tag["value"] = str3;
+         auto str = any_cast<char*>(value);
+         auto str2 = std::string(str);
+         auto str3 = tttrlib::string_encoding::iso_8859_1_to_utf8(str2);
+         tag["value"] = str3;
     }
     else if (type == tyWideString) {
         auto str = any_cast<wchar_t *>(value);
@@ -866,9 +1051,9 @@ void TTTRHeader::add_tag(
     } else {
         json_data["tags"][tag_idx] = tag;
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::clog << "ADD_TAG: " << tag << std::endl;
-#endif
+}
 }
 
 
@@ -880,16 +1065,16 @@ nlohmann::json TTTRHeader::get_tag(
     for (auto& it : json_data["tags"].items()) {
         if(it.value()["name"] == name){
             if((idx < 0) || (idx == it.value()["idx"])){
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
                 std::clog << "-- GET_TAG:" << name << ":" << it << std::endl;
-#endif
+}
                 return it.value();
             }
         }
     }
-#ifdef VERBOSE_TTTRLIB
+if (is_verbose()) {
     std::cerr << "ERROR: TTTR-TAG " << name << ":" << idx << " not found." << std::endl;
-#endif
+}
     nlohmann::json re = {
             {"value", -1.0},
             {"idx", -1},
@@ -925,4 +1110,3 @@ std::string TTTRHeader::get_json(std::string tag_name, int idx, int indent){
     }
     return s;
 }
-

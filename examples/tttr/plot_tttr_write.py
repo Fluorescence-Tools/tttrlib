@@ -22,18 +22,22 @@ The source code of this example can be used to build analysis pipelines to mix a
 different software.
 """
 #%%
+import os
+from pathlib import Path
 import json
 import tttrlib
 import numpy as np
 import pylab as plt
 
 #%%
-filename_tttr = '../../tttr-data/imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu'
+# Use TTTRLIB_DATA if set, otherwise fall back to repository layout
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+filename_tttr = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
 tttr = tttrlib.TTTR(filename_tttr)
 
 clsm = tttrlib.CLSMImage(tttr, fill=True, channels=tttr.used_routing_channels)
 
-# simple filter that selectes indices in pixels by the number of photons
+# simple filter that selects indices in pixels by the number of photons
 def pixel_with_less_photons(clsm: tttrlib.CLSMImage, n_min: int = 3):
     idx_del = list()
     for frame in clsm:

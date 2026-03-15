@@ -1,12 +1,30 @@
+:: Build script for Windows conda package (conda-build)
+@echo on
+setlocal EnableDelayedExpansion
+
 cd %SRC_DIR%
 
-echo "Build app wrapper"
-:: build app wrapper
-copy "%RECIPE_DIR%\app_wrapper.c" .
-cl app_wrapper.c shell32.lib
-if errorlevel 1 exit 1
+:: Check if the compiler is already available from conda-build activation.
+where cl.exe >nul 2>&1
+if errorlevel 1 (
+    echo cl.exe not on PATH, attempting manual VS activation...
+    call :activate_vs
+    if errorlevel 1 (
+        echo ERROR: Failed to activate Visual Studio environment
+        exit /b 1
+    )
+) else (
+    echo cl.exe found on PATH, using existing environment
+)
 
-rmdir b2 /s /q
+:: Final verification
+where cl.exe >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: cl.exe not found on PATH
+    exit /b 1
+)
+
+rmdir b2 /s /q 2>nul
 mkdir b2
 cd b2
 
@@ -21,14 +39,60 @@ cmake .. -G "NMake Makefiles" ^
  -DPython_ROOT_DIR="%PREFIX%\bin" ^
  -DBUILD_LIBRARY=OFF ^
  -DBUILD_PYTHON_DOCS=ON ^
- -DWITH_AVX=OFF ^
- -DBoost_USE_STATIC_LIBS=OFF
+ -DWITH_AVX=OFF
 
 nmake install
 
-:: Add wrappers to path for each Python command line tool
-:: (all files without an extension)
-cd %SRC_DIR%\bin
-for /f %%f in ('dir /b *.py') do copy "%SRC_DIR%\bin\%%f" "%PREFIX%\Library\bin\%%f"
-for /f %%f in ('dir /b *.') do copy "%SRC_DIR%\app_wrapper.exe" "%PREFIX%\Library\bin\%%f.exe"
-if errorlevel 1 exit 1
+exit /b %ERRORLEVEL%
+
+:: ============================================================
+:: Subroutine: activate_vs
+:: ============================================================
+:activate_vs
+set "VSWHERE="
+if exist "%BUILD_PREFIX%\Library\bin\vswhere.exe" (
+    set "VSWHERE=%BUILD_PREFIX%\Library\bin\vswhere.exe"
+)
+if not defined VSWHERE (
+    set "VSWHERE_SYS=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+)
+if not defined VSWHERE if defined VSWHERE_SYS (
+    if exist "!VSWHERE_SYS!" set "VSWHERE=!VSWHERE_SYS!"
+)
+if not defined VSWHERE (
+    echo ERROR: vswhere.exe not found
+    exit /b 1
+)
+
+set "VSINSTALLDIR="
+for /f "usebackq tokens=*" %%i in (`"!VSWHERE!" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+    set "VSINSTALLDIR=%%i"
+)
+if not defined VSINSTALLDIR (
+    echo ERROR: No Visual Studio found via vswhere
+    exit /b 1
+)
+echo Found Visual Studio at: !VSINSTALLDIR!
+set "VCVARSALL=!VSINSTALLDIR!\VC\Auxiliary\Build\vcvarsall.bat"
+if not exist "!VCVARSALL!" (
+    echo ERROR: vcvarsall.bat not found
+    exit /b 1
+)
+
+:: Clear stale VsDevCmd state from any prior (failed) activation
+set "__VSCMD_PREINIT_PATH="
+set "VSINSTALLDIR="
+set "VCINSTALLDIR="
+set "VCToolsVersion="
+set "VCToolsInstallDir="
+set "VCToolsRedistDir="
+set "VisualStudioVersion="
+set "VSCMD_VER="
+set "VSCMD_ARG_HOST_ARCH="
+set "VSCMD_ARG_TGT_ARCH="
+set "VSCMD_ARG_app_plat="
+set "DevEnvDir="
+set "CommandPromptType="
+
+call "!VCVARSALL!" x64
+exit /b %ERRORLEVEL%

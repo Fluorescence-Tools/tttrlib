@@ -26,12 +26,14 @@ can be used to estimate the resolution of the image.
 """
 from __future__ import annotations
 
+import os
+from pathlib import Path
 import numpy as np
 import pylab as plt
 import tttrlib
 
-
-filename = '../../tttr-data/imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu'
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+filename = str(DATA_ROOT / 'imaging/leica/sp8/da/G-28_C-28_S1_6_1.ptu')
 data = tttrlib.TTTR(filename, 'PTU')
 
 line_factor = 1

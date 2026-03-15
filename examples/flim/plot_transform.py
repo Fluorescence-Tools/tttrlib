@@ -16,13 +16,17 @@ and aquire the data as needed (pixel dwell times, laser power, etc.).
 
 #%%
 from __future__ import print_function
+import os
+from pathlib import Path
 import tttrlib
 import numpy as np
 import pylab as plt
 
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+
 #%%
 # Read data of the CLSM image
-data = tttrlib.TTTR('../../tttr-data/imaging/pq/ht3/crn_clv_img.ht3')
+data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/crn_clv_img.ht3'))
 
 # Read contents of file into new CLSMImage
 settings = {
