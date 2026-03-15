@@ -3,7 +3,6 @@
 [![Anaconda](https://anaconda.org/tpeulen/tttrlib/badges/version.svg)](https://anaconda.org/tpeulen/tttrlib)
 [![PyPI](https://badge.fury.io/py/tttrlib.svg)](https://pypi.org/project/tttrlib/)
 [![CI](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/ci.yml/badge.svg)](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/ci.yml)
-[![Documentation](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/docs.yml/badge.svg)](https://github.com/Fluorescence-Tools/tttrlib/actions/workflows/docs.yml)
 
 ---
 
