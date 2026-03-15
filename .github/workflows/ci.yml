@@ -321,17 +321,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Install and Test
+      - name: Install
         shell: pwsh -NoProfile -Command "{0}"
-        env:
-          TTTRLIB_DATA: ./tttr-data
         run: |
           python -m pip install --upgrade pip
           $pyver = "${{ matrix.python }}" -replace '\.', ''
           $whl = Get-ChildItem wheelhouse -Filter "*cp${pyver}*.whl" | Select-Object -First 1
           python -m pip install $whl.FullName
           python -m pip install pytest scipy
+      - name: Test
+        shell: pwsh -NoProfile -Command "{0}"
+        env:
+          TTTRLIB_DATA: ./tttr-data
+        run: |
           python -m pytest
+          exit $LASTEXITCODE
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 

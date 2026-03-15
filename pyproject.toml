@@ -90,7 +90,6 @@ version.write-to = "tttrlib/_version.py"
 [tool.pytest.ini_options]
 testpaths = ["test"]
 norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
-qt_api = "pyqt5"
 markers = ["integration: marks tests as integration tests requiring external resources"]
 
 [tool.cibuildwheel]
