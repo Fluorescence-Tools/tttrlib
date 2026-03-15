@@ -323,15 +323,18 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install
         run: |
+          cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
           python -m pip install wheelhouse\*.whl
           python -m pip install pytest scipy
         shell: cmd
       - name: Test
-        run: python -m pytest
+        run: |
+          cd D:\a\tttrlib\tttrlib
+          python -m pytest
         shell: cmd
         env:
-          TTTRLIB_DATA: ./tttr-data
+          TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 
@@ -542,7 +545,7 @@ jobs:
       - name: Create test environment and install
         run: |
           call conda create -n test python=%PYTHON_VERSION% -y -c conda-forge
-          call conda install -n test -y --use-local -c conda-forge python=%PYTHON_VERSION% tttrlib pytest scipy
+          call conda install -n test -y -c D:\a\tttrlib\tttrlib\conda-bld -c conda-forge python=%PYTHON_VERSION% tttrlib pytest scipy
         shell: cmd
         env:
           PYTHON_VERSION: ${{ matrix.python }}
@@ -552,7 +555,7 @@ jobs:
           python -m pytest
         shell: cmd
         env:
-          TTTRLIB_DATA: ./tttr-data
+          TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
