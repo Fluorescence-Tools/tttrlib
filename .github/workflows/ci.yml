@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+  release:
+    types: [published]
 
 env:
   DEFAULT_PYTHON: "3.10"
@@ -701,94 +703,74 @@ jobs:
           keep_files: true
           destination_dir: .
 
-  # ── Publish to PyPI (main branch only, or manual trigger) ───────────────────
+  # ── Publish to PyPI ─────────────────────────────────────────────────────────
+  # Downloads pre-built cibuildwheel artifacts from all platforms, builds an
+  # sdist, and publishes everything to PyPI.
 
   publish_pypi:
     name: Publish to PyPI
-    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    needs: [build_pip_lnx, build_pip_osx_arm64, build_pip_osx_x86_64, build_pip_win,
+            test_pip_lnx, test_pip_osx, test_pip_win]
+    if: >
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
-          # Fetch tags to get version
           fetch-tags: true
-      - name: Extract version from tag
-        id: version
-        run: |
-          # For releases, use the tag name (remove 'v' prefix if present)
-          # For workflow_dispatch, use pyproject.toml version
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            VERSION=${VERSION#refs/tags/}
-          else
-            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version: $VERSION"
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: Build wheels
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pip-wheels-*
+          path: dist
+          merge-multiple: true
+      - name: Build sdist
         run: |
           python -m pip install build
-          python -m build
+          python -m build --sdist
+      - name: List packages
+        run: ls -la dist/
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-  # ── Publish to Conda (main branch only, or manual trigger) ─────────────────
+  # ── Publish to Conda (Windows only — Linux/macOS via bioconda) ──────────────
+  # Downloads pre-built Windows conda packages and uploads to anaconda.org/tpeulen.
+  # Linux and macOS conda packages are published through bioconda.
 
   publish_conda:
-    name: Publish to Conda
-    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
+    name: Publish to Conda (Windows)
+    needs: [build_conda_win, test_conda_win]
+    if: >
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Download conda packages (Windows)
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-          submodules: recursive
-          fetch-tags: true
-      - name: Extract version from tag
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            VERSION=${VERSION#refs/tags/}
-          else
-            VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version: $VERSION"
+          name: conda-packages-windows-latest
+          path: conda-bld
+      - name: List packages
+        run: find conda-bld -name '*.conda' -o -name '*.tar.bz2' | sort
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: build
+          activate-environment: upload
           use-mamba: true
           conda-remove-defaults: true
-      - name: Install rattler-build
-        shell: bash -l {0}
-        run: conda install -y rattler-build -c conda-forge
-      - name: Build Conda packages
-        shell: bash -l {0}
-        run: |
-          export PKG_VERSION=${{ steps.version.outputs.VERSION }}
-          echo "Building tttrlib $PKG_VERSION"
-          for VER in ${{ env.MAIN_PY_VERSIONS }}; do
-            rattler-build build --recipe rattler-recipe \
-              --variant "python=$VER" \
-              --output-dir ./conda-bld \
-              -c conda-forge
-          done
       - name: Upload to Conda
         shell: bash -l {0}
         run: |
-          conda install -y anaconda -c conda-forge
-          anaconda upload --user tpeulen \
+          conda install -y anaconda-client -c conda-forge
+          anaconda --token ${{ secrets.ANACONDA_TOKEN }} upload \
+            --user tpeulen \
             --label main \
             --force \
-            ./conda-bld/*/tttrlib-*.conda
+            conda-bld/*/tttrlib-*.conda

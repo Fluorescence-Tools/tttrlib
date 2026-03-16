@@ -36,39 +36,42 @@ Written in **C++** with **Python bindings**, it provides a fast, vendor-independ
 
 ## Installation
 
-We recommend using [**Miniforge**](https://github.com/conda-forge/miniforge) with the fast **mamba** solver.
+### pip (recommended)
+
+```bash
+pip install tttrlib
+```
+
+Pre-built wheels are available on [PyPI](https://pypi.org/project/tttrlib/) for
+**Linux** (x86_64), **macOS** (arm64, x86_64), and **Windows** (x86_64)
+across Python 3.9–3.13.
 
 ### Conda / Mamba
 
-**macOS / Linux**
+**macOS / Linux** (via [bioconda](https://bioconda.github.io/recipes/tttrlib/README.html))
 
 ```bash
-mamba install -c bioconda tttrlib
+mamba install -c conda-forge -c bioconda tttrlib
 ```
 
-**Windows**
+**Windows** (via [tpeulen](https://anaconda.org/tpeulen/tttrlib))
 
 ```bash
 mamba install -c tpeulen tttrlib
 ```
 
-### pip (development version)
-
-```bash
-pip install git+https://github.com/fluorescence-tools/tttrlib
-# or for the development branch
-pip install git+https://github.com/fluorescence-tools/tttrlib@development
-```
+We recommend [**Miniforge**](https://github.com/conda-forge/miniforge) with the
+fast **mamba** solver.
 
 ### From Source
 
 ```bash
-git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
+git clone https://github.com/fluorescence-tools/tttrlib.git
 cd tttrlib
 pip install -e .
 ```
 
-Precompiled packages are available for Windows, Linux (x86, ARM64, PPCle), and macOS.
+Pre-compiled packages are available for Windows, Linux (x86_64), and macOS (arm64, x86_64).
 Legacy 32-bit and Python 2.7 are not supported.
 
 ---
