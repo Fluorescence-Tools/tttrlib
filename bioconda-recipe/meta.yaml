@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/Fluorescence-Tools/tttrlib/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: {{ sha256 }}
+  sha256: 69ece9af27cdcc64778a79bebdae4370df739d78ec440c6c8edb031ca77ca2a2
 
 build:
   number: 0
