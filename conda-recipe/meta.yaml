@@ -22,7 +22,7 @@ requirements:
     - ninja
     - make # [not win]
   host:
-    - swig <4.2
+    - swig >=4.1
     - doxygen
     - llvm-openmp   # [osx]
     - libgomp   # [linux]

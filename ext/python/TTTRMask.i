@@ -19,7 +19,7 @@
     // Set the array to NOT own the data (it's owned by the C++ vector)
     PyArray_CLEARFLAGS((PyArrayObject*)obj, NPY_ARRAY_OWNDATA);
     
-    $result = SWIG_Python_AppendOutput($result, obj);
+    $result = SWIG_AppendOutput($result, obj);
 }
 
 // Rename methods for Python

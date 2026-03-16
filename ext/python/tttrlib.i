@@ -18,8 +18,9 @@ from __future__ import annotations
 // This fixes numpy int casting to std::vector,int>
 // (see: https://github.com/swig/swig/issues/888)
 #define SWIG_PYTHON_CAST_MODE
-// This is needed for numpy as you need SWIG_FILE_WITH_INIT
-#define SWIG_FILE_WITH_INIT
+    // SWIG_FILE_WITH_INIT was historically used to signal numpy init,
+    // but SWIG 4.3 documents it as having no effect. Kept for reference.
+    #define SWIG_FILE_WITH_INIT
 #include <assert.h>
 %}
 

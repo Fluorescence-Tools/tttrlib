@@ -58,7 +58,7 @@ repository = "https://github.com/fluorescence-tools/tttrlib.git"
 requires = [
     "scikit-build-core>=0.10",
     "numpy",
-    "swig<4.2",
+    "swig>=4.1",
 ]
 build-backend = "scikit_build_core.build"
 

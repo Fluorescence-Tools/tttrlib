@@ -27,7 +27,7 @@ requirements:
     - cmake
     - ninja
   host:
-    - swig <4.2
+    - swig >=4.1
     - doxygen
     - if: osx
       then: llvm-openmp
