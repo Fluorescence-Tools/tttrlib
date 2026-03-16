@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
 import glob
-import typing
-import numpy as np
-import skimage as ski
-import matplotlib.pylab as plt
-
 import os
-import tqdm
-import tttrlib
+import typing
 
 import click
 from click_didyoumean import DYMGroup
@@ -48,14 +42,19 @@ from click_didyoumean import DYMGroup
 def trace_correlate(
         input, # type: str
         correlation_channel_1, # type: typing.List[int]
-        correlation_channel_2 = None, # type: typing.List[int] 
-        fine = False, # type: bool 
-        n_casc = 25, # type: int 
-        n_bins = 9, # type: int 
+        correlation_channel_2 = None, # type: typing.List[int]
+        fine = False, # type: bool
+        n_casc = 25, # type: int
+        n_bins = 9, # type: int
         n_chunks = 5, # type: int
         join = True, # type: bool
         do_plot = True # type: bool
 ):
+    import numpy as np
+    import matplotlib.pylab as plt
+    import tqdm
+    import tttrlib
+
     def get_correlation(data, start_stop, settings, correlation_channel1, correlation_channel2):
         correlation = tttrlib.Correlator(**settings)
         correlations = list()
@@ -232,6 +231,9 @@ def image_export(
         input, # type: str
         channels = None # type: str
 ):
+    import skimage as ski
+    import tttrlib
+
     data = tttrlib.TTTR(input)
     clsm = tttrlib.CLSMImage(data)
     if channels is None:
