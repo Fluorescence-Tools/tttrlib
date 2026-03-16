@@ -16,6 +16,7 @@ playground
 junk/
 venv
 tttrlib
+!bin/tttrlib
 
 # Windows artifacts
 nul
