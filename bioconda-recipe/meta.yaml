@@ -1,42 +1,47 @@
-{% set pyproject = load_file_data('../pyproject.toml', from_recipe_dir=True) %}
-{% set data = pyproject.get('project', {}) %}
+{% set name = "tttrlib" %}
+{% set version = "0.26.1" %}
 
 package:
-  name: {{ data.get('name') }}
-  version: {{ data.get('version') }}
+  name: {{ name }}
+  version: {{ version }}
 
 source:
-  path: ..
+  url: https://github.com/Fluorescence-Tools/tttrlib/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: {{ sha256 }}
 
 build:
-  number: 1
-  detect_binary_files_with_prefix: True  # [not win]
+  number: 0
   run_exports: '{{ pin_subpackage("tttrlib", max_pin="x.x") }}'
 
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
-    - pkg-config # [not win]
+    - pkg-config
     - cmake
     - ninja
-    - make # [not win]
+    - make
   host:
     - swig <4.2
     - doxygen
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
-    - python
-    - pip
-    - numpy
     - hdf5
     - highfive
     - nlohmann_json
+    - python
+    - pip
+    - numpy
   run:
     - python
     - llvm-openmp   # [osx]
     - libgomp   # [linux]
+    - tqdm
+    - click
+    - click-didyoumean
     - numpy
+    - scikit-image
+    - matplotlib-base
     - hdf5
 
 test:
@@ -48,7 +53,7 @@ about:
   summary: 'A file format agnostic library for time-resolved imaging and spectroscopic data.'
   description: |
     tttrlib is a simple, fast, libray to read, write and process
-    time-resolved imaging and spectroscopic data. For speed, it 
+    time-resolved imaging and spectroscopic data. For speed, it
     is written in C++ and wrapped for Python via SWIG.
   license: BSD-3-Clause
   license_family: BSD
@@ -60,3 +65,6 @@ extra:
   recipe-maintainers:
     - tpeulen
     - khemmen
+  additional-platforms:
+    - linux-aarch64
+    - osx-arm64

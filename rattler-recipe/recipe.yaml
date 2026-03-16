@@ -1,7 +1,7 @@
 context:
   # Version is injected via PKG_VERSION env var in CI (extracted from pyproject.toml)
   # Fallback: update manually on each release
-  version: ${{ env.get("PKG_VERSION", default="0.26.0") }}
+  version: ${{ env.get("PKG_VERSION", default="0.26.1") }}
 
 package:
   name: tttrlib
@@ -26,7 +26,6 @@ requirements:
         - make
     - cmake
     - ninja
-    - hdf5
   host:
     - swig <4.2
     - doxygen
@@ -38,6 +37,8 @@ requirements:
     - pip
     - numpy
     - hdf5
+    - highfive
+    - nlohmann_json
   run:
     - python
     - if: osx

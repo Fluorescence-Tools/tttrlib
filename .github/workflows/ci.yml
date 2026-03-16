@@ -563,11 +563,51 @@ jobs:
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
 
+  # ── Bioconda-style build test (linux only, main branch) ──────────────────
+
+  test_bioconda:
+    name: Bioconda Build Test (lnx)
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install conda-build and bioconda channel
+        shell: bash -l {0}
+        run: |
+          conda install -y -c conda-forge conda-build
+          conda config --add channels bioconda
+          conda config --add channels conda-forge
+      - name: Compute sha256 and prepare recipe
+        shell: bash -l {0}
+        run: |
+          VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          echo "VERSION=$VERSION"
+          URL="https://github.com/Fluorescence-Tools/tttrlib/archive/refs/tags/v${VERSION}.tar.gz"
+          SHA256=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+          echo "SHA256=$SHA256"
+          sed -i "s/^{% set version = .* %}$/{% set version = \"${VERSION}\" %}/" bioconda-recipe/meta.yaml
+          sed -i "s/sha256: .*/sha256: ${SHA256}/" bioconda-recipe/meta.yaml
+          echo "--- meta.yaml after substitution ---"
+          grep -E "version|sha256" bioconda-recipe/meta.yaml
+      - name: Build with conda-build
+        shell: bash -l {0}
+        run: |
+          conda build bioconda-recipe/ -c conda-forge -c bioconda --no-anaconda-upload
+
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
   build_docs:
     name: Build Documentation
-    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win, test_bioconda]
     if: |
       always() &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
@@ -576,7 +616,8 @@ jobs:
       needs.test_pip_osx.result == 'success' &&
       needs.test_pip_win.result == 'success' &&
       needs.test_conda_osx.result == 'success' &&
-      needs.test_conda_win.result == 'success'
+      needs.test_conda_win.result == 'success' &&
+      (needs.test_bioconda.result == 'success' || needs.test_bioconda.result == 'skipped')
     runs-on: ubuntu-latest
     env:
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
