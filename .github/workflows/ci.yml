@@ -600,8 +600,8 @@ jobs:
           RECIPE=bioconda-recipes/recipes/tttrlib/meta.yaml
           echo "Commit:  $COMMIT"
           echo "SHA256:  $SHA256"
-          # Patch version to dev
-          sed -i 's/{% set version = .*/{% set version = "dev" %}/' "$RECIPE"
+          # Patch version (must be valid semver for pin_subpackage)
+          sed -i 's/{% set version = .*/{% set version = "0.0.0" %}/' "$RECIPE"
           # Patch source url to point at this commit
           sed -i "s|url: .*|url: ${TARBALL_URL}|" "$RECIPE"
           # Patch sha256
