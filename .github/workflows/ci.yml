@@ -563,10 +563,11 @@ jobs:
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
 
-  # ── Bioconda build test (linux only, main/development branches) ─────────────
-  # Uses the recipe from tpeulen/bioconda-recipes:add_tttrlib (the maintained
-  # fork branch), which is the same recipe that will be submitted as a PR to
-  # bioconda. This mirrors the bioconda local testing workflow exactly.
+  # ── Bioconda build test (linux only, development branch) ─────────────────────
+  # Clones the OFFICIAL bioconda-recipes, then patches only the version, source
+  # url, and sha256 so the current development commit is built. Everything else
+  # (build.sh, deps, test commands) stays exactly as upstream bioconda has it.
+  # This catches breakage against the real recipe before a bioconda PR is filed.
 
   test_bioconda:
     name: Bioconda Build Test (lnx)
@@ -585,9 +586,28 @@ jobs:
       - name: Install bioconda-utils
         shell: bash -l {0}
         run: mamba install -y -c conda-forge -c bioconda bioconda-utils
-      - name: Clone tpeulen/bioconda-recipes fork (add_tttrlib branch)
+      - name: Clone official bioconda-recipes
         shell: bash -l {0}
-        run: git clone --depth=1 --branch add_tttrlib https://github.com/tpeulen/bioconda-recipes.git
+        run: git clone --depth=1 https://github.com/bioconda/bioconda-recipes.git
+      - name: Patch recipe for current commit
+        shell: bash -l {0}
+        run: |
+          COMMIT=${{ github.sha }}
+          TARBALL_URL="https://github.com/Fluorescence-Tools/tttrlib/archive/${COMMIT}.tar.gz"
+          curl -sL "$TARBALL_URL" -o /tmp/tttrlib-src.tar.gz
+          SHA256=$(sha256sum /tmp/tttrlib-src.tar.gz | cut -d' ' -f1)
+          rm /tmp/tttrlib-src.tar.gz
+          RECIPE=bioconda-recipes/recipes/tttrlib/meta.yaml
+          echo "Commit:  $COMMIT"
+          echo "SHA256:  $SHA256"
+          # Patch version to dev
+          sed -i 's/{% set version = .*/{% set version = "dev" %}/' "$RECIPE"
+          # Patch source url to point at this commit
+          sed -i "s|url: .*|url: ${TARBALL_URL}|" "$RECIPE"
+          # Patch sha256
+          sed -i "s|sha256: .*|sha256: ${SHA256}|" "$RECIPE"
+          echo "--- Patched meta.yaml ---"
+          cat "$RECIPE"
       - name: Build and test with bioconda-utils
         shell: bash -l {0}
         run: |
