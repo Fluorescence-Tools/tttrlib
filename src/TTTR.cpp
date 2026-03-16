@@ -1085,7 +1085,7 @@ void TTTR::get_macro_times(unsigned long long** output, int* n_output){
 
     // Allocate memory for the output array
     *n_output = static_cast<int>(n_valid_events); // Number of valid events
-    *output = new unsigned long long[*n_output];
+    *output = (unsigned long long*) malloc(*n_output * sizeof(unsigned long long));
 
     // Compute shifted macro_times, ensuring no value is less than zero
     // Handle both compressed and uncompressed storage transparently

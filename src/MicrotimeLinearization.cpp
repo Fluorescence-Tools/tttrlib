@@ -129,7 +129,7 @@ void MicrotimeLinearization::get_channel_luts_as_array(float** luts, int* n_chan
 
     // Allocate output array: [n_channels x lut_size]
     size_t total_size = static_cast<size_t>(*n_channels) * static_cast<size_t>(*lut_size);
-    *luts = new float[total_size];
+    *luts = (float*) malloc(total_size * sizeof(float));
 
     // Copy LUTs to the output array (row-major order)
     for (int ch = 0; ch < *n_channels; ++ch) {
@@ -160,7 +160,7 @@ void MicrotimeLinearization::get_channel_shifts_as_array(int** shifts, int* n_ch
     *n_channels = max_channel + 1;
 
     // Allocate output array
-    *shifts = new int[*n_channels];
+    *shifts = (int*) malloc(*n_channels * sizeof(int));
 
     // Copy shifts to the output array
     for (int ch = 0; ch < *n_channels; ++ch) {

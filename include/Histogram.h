@@ -21,9 +21,9 @@ private:
 
     std::map<size_t , HistogramAxis<T>> axes;
 
-    T* histogram; // A 1D array of that contains the histogram
-    int number_of_axis;
-    int n_total_bins;
+    T* histogram = nullptr; // A 1D array of that contains the histogram
+    int number_of_axis = 0;
+    int n_total_bins = 0;
     size_t getAxisDimensions(){
         return axes.size();
     }
@@ -46,7 +46,9 @@ public:
 
         // initialize a new empty histogram
         // clear the memory of the old histogram
-        free(histogram);
+        if (histogram != nullptr) {
+            free(histogram);
+        }
         // 1. count the total number of bins
         n_total_bins = 1;
         n_axis = 0;
@@ -89,8 +91,27 @@ public:
         }
     }
 
+    /**
+     * @brief Gets the histogram as a raw pointer and size.
+     * 
+     * Allocates a copy of the internal data that Python can safely own and free.
+     * The SWIG typemap will call free() on this pointer when the numpy array is garbage collected.
+     *
+     * @param hist Pointer to receive the data pointer (T*)
+     * @param dim Pointer to receive the number of elements
+     */
     void get_histogram(T** hist, int* dim){
-        *hist = histogram;
+        if (histogram == nullptr || n_total_bins <= 0) {
+            *hist = nullptr;
+            *dim = 0;
+            return;
+        }
+        // Allocate a copy using malloc() so Python can safely free() it
+        // This aligns with SWIG's ARGOUTVIEWM_ARRAY1 typemap
+        *hist = (T*) malloc(sizeof(T) * n_total_bins);
+        if (*hist != nullptr) {
+            memcpy(*hist, histogram, sizeof(T) * n_total_bins);
+        }
         *dim = n_total_bins;
     }
 
@@ -114,7 +135,12 @@ public:
 
     Histogram() = default;
 
-    ~Histogram() = default;
+    virtual ~Histogram() {
+        if (histogram != nullptr) {
+            free(histogram);
+            histogram = nullptr;
+        }
+    }
 
 };
 
