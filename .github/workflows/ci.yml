@@ -258,7 +258,7 @@ jobs:
           PY_VER="${{ matrix.python }}"
           PY_VER_SHORT="${PY_VER/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
-          python -m pip install pytest scipy
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
           python -m pytest -v --tb=short
 
   test_pip_osx:
@@ -297,7 +297,7 @@ jobs:
           else
             python -m pip install wheelhouse/*cp${PY_VER_SHORT}*x86_64*.whl
           fi
-          python -m pip install pytest scipy
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
           python -m pytest
 
   test_pip_win:
@@ -326,7 +326,7 @@ jobs:
           cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
           for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
-          python -m pip install pytest scipy
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
         shell: cmd
       - name: Test
         run: |

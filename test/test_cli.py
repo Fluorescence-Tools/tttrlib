@@ -13,6 +13,12 @@ import os
 
 import pytest
 
+# Skip the entire module if CLI deps are not installed.
+# The CI wheel-test jobs install click/click-didyoumean explicitly;
+# this guard protects minimal pip environments that omit them.
+pytest.importorskip("click", reason="click not installed — CLI tests skipped")
+pytest.importorskip("click_didyoumean", reason="click-didyoumean not installed — CLI tests skipped")
+
 
 # ---------------------------------------------------------------------------
 # Path to the CLI script
