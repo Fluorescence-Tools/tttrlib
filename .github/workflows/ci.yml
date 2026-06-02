@@ -597,26 +597,33 @@ jobs:
         shell: bash -l {0}
         run: |
           COMMIT=${{ github.sha }}
-          TARBALL_URL="https://github.com/Fluorescence-Tools/tttrlib/archive/${COMMIT}.tar.gz"
-          curl -sL "$TARBALL_URL" -o /tmp/tttrlib-src.tar.gz
-          SHA256=$(sha256sum /tmp/tttrlib-src.tar.gz | cut -d' ' -f1)
-          rm /tmp/tttrlib-src.tar.gz
           RECIPE=bioconda-recipes/recipes/tttrlib/meta.yaml
-          echo "Commit:  $COMMIT"
-          echo "SHA256:  $SHA256"
-          # Patch version (must be valid semver for pin_subpackage)
-          sed -i 's/{% set version = .*/{% set version = "0.0.0" %}/' "$RECIPE"
-          # Patch source url to point at this commit
-          sed -i "s|url: .*|url: ${TARBALL_URL}|" "$RECIPE"
-          # Patch sha256
-          sed -i "s|sha256: .*|sha256: ${SHA256}|" "$RECIPE"
+          TARBALL_URL="https://github.com/Fluorescence-Tools/tttrlib/archive/${COMMIT}.tar.gz"
+          
+          if [ "$ACT" = "true" ]; then
+            echo "Running in act: packaging local workspace"
+            mkdir -p bioconda-recipes/recipes/tttrlib/src_clean
+            tar --exclude='./.git' --exclude='./bioconda-recipes' --exclude='./tttr-data' --exclude='./build' --exclude='./build-dir' --exclude='./cmake-build-debug' --exclude='./cmake-build-release' --exclude='./test/data' --exclude='./doc' --exclude='./test.ptu' --exclude='./.cache' --exclude='./.idea' --exclude='./.kilocode' --exclude='./.ruff_cache' --exclude='./wheelhouse' -cf - . | tar -C bioconda-recipes/recipes/tttrlib/src_clean -xf -
+            SHA256=""
+          else
+            curl -sL "$TARBALL_URL" -o /tmp/tttrlib-src.tar.gz
+            SHA256=$(sha256sum /tmp/tttrlib-src.tar.gz | cut -d' ' -f1)
+            rm /tmp/tttrlib-src.tar.gz
+          fi
+
+          python3 -c "import sys, re; recipe, act, url, sha = sys.argv[1:5]; c = open(recipe).read(); c = re.sub(r'{% set version = .* %}', '{% set version = \"0.0.0\" %}', c); c = re.sub(r'source:\s+url:\s*[^\n]+\s+sha256:\s*[^\n]+', 'source:\n  path: src_clean', c) if act == 'true' else re.sub(r'sha256: .*', f'sha256: {sha}', re.sub(r'url: .*', f'url: {url}', c)); open(recipe, 'w').write(c)" "$RECIPE" "$ACT" "$TARBALL_URL" "$SHA256"
+
           echo "--- Patched meta.yaml ---"
           cat "$RECIPE"
       - name: Build and test with bioconda-utils
         shell: bash -l {0}
         run: |
           cd bioconda-recipes
-          bioconda-utils build --docker --mulled-test --packages tttrlib
+          EXTRA_ARGS=""
+          if [ "$ACT" = "true" ]; then
+            EXTRA_ARGS="--docker-base-image quay.io/bioconda/bioconda-utils-build-env-cos7:latest"
+          fi
+          bioconda-utils build --docker --mulled-test $EXTRA_ARGS --packages tttrlib
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
