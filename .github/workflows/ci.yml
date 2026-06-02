@@ -586,6 +586,7 @@ jobs:
           activate-environment: bioconda
           use-mamba: true
           conda-remove-defaults: true
+          channels: conda-forge,bioconda
       - name: Install bioconda-utils
         shell: bash -l {0}
         run: mamba install -y -c conda-forge -c bioconda bioconda-utils
