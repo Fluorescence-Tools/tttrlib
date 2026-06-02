@@ -2030,7 +2030,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
         // append records
         if (record_type == BH_RECORD_TYPE_SPC130) {
             write_spc132_events(fp, this);
-        } else if(record_type == PQ_RECORD_TYPE_HHT3v2){
+        } else if(record_type == PQ_RECORD_TYPE_HHT3v2 || record_type == PQ_RECORD_TYPE_GENERIC_T3){
             write_hht3v2_events(fp, this);
         } else{
             std::cerr << "ERROR: Record type " << record_type << " not supported" << std::endl;
