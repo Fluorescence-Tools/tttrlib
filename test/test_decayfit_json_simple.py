@@ -136,8 +136,8 @@ class TestDecayFitJSON(unittest.TestCase):
         ]
         bg = np.zeros_like(irf_np)
         
-        # Create MParam structure
-        m_param = tttrlib.CreateMParam(
+        # Create DecayFitData container
+        m_param = tttrlib.DecayFitData(
             irf=irf_np,
             background=bg,
             corrections=corrections,

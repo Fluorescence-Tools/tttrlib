@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_DECAYFIT23_H
 #define TTTRLIB_DECAYFIT23_H
 
@@ -11,7 +12,7 @@
 #include <nlohmann/json.hpp>
 
 #include "i_lbfgs.h"
-#include "LvArrays.h"
+#include "DecayFitData.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
 #include "DecayFit.h"
@@ -35,13 +36,13 @@ public:
 
     static double targetf(double *x, void *pv);
 
-    static double fit(double *x, short *fixed, MParam *p);
+    static double fit(double *x, short *fixed, DecayFitData *p);
 
-    static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r);
+    static void correct_input(double *x, double *xm, double *corrections, int return_r);
 
     static std::string fit_to_json(const double *x,
                                    const short *fixed,
-                                   const MParam *p,
+                                   const DecayFitData *p,
                                    double result);
 
     static std::string modelf_to_json(const double *param,
@@ -55,7 +56,7 @@ public:
 
     static std::string to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result);
 
     static void from_json(const json &j,

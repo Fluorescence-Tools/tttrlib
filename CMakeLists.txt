@@ -194,14 +194,6 @@ ELSE()
   LINK_LIBRARIES(nlohmann_json::nlohmann_json)
 ENDIF()
 
-# LBFGS
-FILE(GLOB_RECURSE LBFGS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/lbfgs/*.cpp")
-LIST(APPEND SRC_files ${LBFGS})
-
-# ALGLib
-FILE(GLOB_RECURSE ALGLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/alglib/*.cpp")
-LIST(APPEND SRC_files ${ALGLIB})
-
 # HighFive HDF5 reader
 IF(BUILD_PHOTON_HDF)
   IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")

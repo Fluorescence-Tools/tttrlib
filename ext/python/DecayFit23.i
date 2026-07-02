@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 %{
 #include "DecayFit23.h"
 %}
@@ -5,7 +6,7 @@
 
 %extend DecayFit23{
 
-    static double my_fit(double* x, int n_x, short* fixed, int n_fixed, MParam* p){
+    static double my_fit(double* x, int n_x, short* fixed, int n_fixed, DecayFitData* p){
         if (n_x != 8) {
             PyErr_Format(
                     PyExc_ValueError,
@@ -21,7 +22,7 @@
         return DecayFit23::fit(x, fixed, p);
     }
 
-    static double my_targetf(double* x, int n_x, MParam* p){
+    static double my_targetf(double* x, int n_x, DecayFitData* p){
         if (n_x != 8) {
             PyErr_Format(
                     PyExc_ValueError,

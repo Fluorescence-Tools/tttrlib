@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "include/MicrotimeLinearization.h"
 #include <algorithm>
 #include <chrono>

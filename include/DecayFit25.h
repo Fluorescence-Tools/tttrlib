@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_DECAYFIT25_H
 #define TTTRLIB_DECAYFIT25_H
 
@@ -25,7 +26,7 @@ public:
      * @param return_r
      * @return
      */
-    static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r);
+    static void correct_input(double *x, double *xm, double *corrections, int return_r);
 
 
     /*!
@@ -59,16 +60,16 @@ public:
      * [7] r Scatter (output only), [8] r Experimental (output only)
      * @param fixed array that is of least of length 5. Only the element fixed[4]
      * is used. If fixed[4] is zero gamma is optimized for each lifetime.
-     * @param p an instance of MParam that contains all relevant information, i.e.,
+     * @param p an instance of DecayFitData that contains all relevant information, i.e.,
      * experimental data, the instrument response function, the needed corrections for
      * the anisotropy (g-factor, l1, l2)
      * @return
      */
-    static double fit(double *x, short *fixed, MParam *p);
+    static double fit(double *x, short *fixed, DecayFitData *p);
 
     static std::string to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result);
 
     static void from_json(const json &j,

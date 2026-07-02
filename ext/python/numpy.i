@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 /* -*- C -*-  (not really, but good for syntax highlighting) */
 
 /*

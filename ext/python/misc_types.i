@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 %include "stl.i";
 %include "typemaps.i";
 %include "std_string.i";

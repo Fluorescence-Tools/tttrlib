@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "DecayConvolution.h"
 #include "include/Verbose.h"
 #include "include/info.h"

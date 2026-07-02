@@ -57,8 +57,8 @@ tttrlib.DecayFit23.modelf(param, irf_np, bg, dt, corrections, model)
 # add poisson noise to model and use as data
 data = np.random.poisson(model * n_photons)
 
-# create MParam structure that contains all parameters for fitting
-m_param = tttrlib.CreateMParam(
+# create DecayFitData container that contains all parameters for fitting
+m_param = tttrlib.DecayFitData(
     irf=irf_np,
     background=bg,
     data=data.astype(np.int32),

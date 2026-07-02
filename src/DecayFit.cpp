@@ -1,21 +1,22 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit.h"
 
-void DecayFitIntegrateSignals::compute_signal_and_background(MParam *p) {
-    LVI32Array *expdata = *(p->expdata);
-    LVDoubleArray *bg = *(p->bg);
-    int Nchannels_exp = expdata->length / 2;
+void DecayFitIntegrateSignals::compute_signal_and_background(DecayFitData *p) {
+    const int *expdata = p->data.data();
+    const double *bg = p->background.data();
+    int Nchannels_exp = p->n_channels();
 
     Sp = 0.; Ss = 0.;
     Bp = 0.; Bs = 0.;
 
     int i;
     for (i = 0; i < Nchannels_exp; i++) {
-        Sp += expdata->data[i];
-        Bp += bg->data[i];
+        Sp += expdata[i];
+        Bp += bg[i];
     }
     for (; i < 2 * Nchannels_exp; i++) {
-        Ss += expdata->data[i];
-        Bs += bg->data[i];
+        Ss += expdata[i];
+        Bs += bg[i];
     }
     B = std::max(1.0, Bp + Bs);
     Bp *= (Sp + Ss) / std::max(1., B);

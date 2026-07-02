@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "CLSMISM.h"
 #include "info.h"
 #include <cstdio>

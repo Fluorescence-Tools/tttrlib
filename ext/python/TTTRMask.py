@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 
 def __getattr__(self, item):
     """

@@ -136,14 +136,14 @@ class Tests(unittest.TestCase):
     #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, 2, 2, 3, 0, 1, 0,
     #         1, 1, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     #     ]
-    #     # create MParam structure that contains all parameters for fitting
+    #     # create DecayFitData container that contains all parameters for fitting
     #     bifl_scatter = 1  # if smaller than zero use soft-bifl fit
     #     p_2s = 0  # if bigger than zero use p2s_twoIstar
     #     x = np.zeros(8, dtype=np.float64)
     #     x[:6] = [tau, gamma, r0, rho, bifl_scatter, p_2s]
     #
     #     # test targetf23
-    #     m_param = tttrlib.CreateMParam(
+    #     m_param = tttrlib.DecayFitData(
     #         irf=irf,  # numpy array, float; instrument response function
     #         background=bg,  # numpy array, float; background pattern
     #         data=data,  # numpy array, integer; experimental data / decay
@@ -189,8 +189,8 @@ class Tests(unittest.TestCase):
         ]
         bg = np.zeros_like(irf_np)
 
-        # create MParam structure that contains all parameters for fitting
-        m_param = tttrlib.CreateMParam(
+        # create DecayFitData container that contains all parameters for fitting
+        m_param = tttrlib.DecayFitData(
             irf=irf_np,
             background=bg,
             corrections=corrections,

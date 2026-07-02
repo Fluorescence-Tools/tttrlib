@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 %{
 #include "BurstFeatureExtractor.h"
 #include <nlohmann/json.hpp>

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_LOCALIZATION_H
 #define TTTRLIB_LOCALIZATION_H
 
@@ -7,7 +8,6 @@
 #include <vector>
 
 #include "i_lbfgs.h"
-#include "LvArrays.h"
 
 
 typedef struct {
@@ -47,15 +47,6 @@ typedef struct {
     double max_y;
     double Ncounts;
 } ResultsCluster;
-
-//This struct is legacy.
-//Instead, use GaussDataType
-typedef struct {
-    LVDoubleArray **subimage;
-    int osize;
-    LVDoubleArray **M;
-} MGParam;
-
 
 class localization {
 

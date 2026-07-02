@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_READHEADER_H
 #define TTTRLIB_READHEADER_H
 

@@ -116,8 +116,8 @@ class Tests(unittest.TestCase):
         a2 = 0.8
         offset = 1
 
-        # create MParam structure that contains all parameters for fitting
-        m_param = tttrlib.CreateMParam(
+        # create DecayFitData container that contains all parameters for fitting
+        m_param = tttrlib.DecayFitData(
             irf=irf,
             background=bg,
             corrections=corrections,

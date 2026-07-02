@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef TTTRLIB_DECAYFIT_H
 #define TTTRLIB_DECAYFIT_H
@@ -14,7 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "i_lbfgs.h"
-#include "LvArrays.h"
+#include "DecayFitData.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
 
@@ -221,7 +221,7 @@ struct DecayFitIntegrateSignals {
         return (Sp - g * Ss) / (Sp * (1. - 3. * l2) + (2. - 3. * l1) * g * Ss);
     }
 
-    void compute_signal_and_background(MParam *p);
+    void compute_signal_and_background(DecayFitData *p);
 
     void normM(double *M, int Nchannels);
 
@@ -293,12 +293,12 @@ public:
     };
 
 
-    static double fit(double *x, short *fixed, MParam *p) {
+    static double fit(double *x, short *fixed, DecayFitData *p) {
         return 0.0;
     };
 
 
-    static void correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r) {};
+    static void correct_input(double *x, double *xm, double *corrections, int return_r) {};
 
     static std::string parameters_to_json(double *param, int n_param) {
         json j;

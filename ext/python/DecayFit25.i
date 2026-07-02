@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: BSD-3-Clause
 %{
 #include "DecayFit25.h"
 %}
 
 %extend DecayFit25{
 
-    static double my_targetf(double* x, int n_x, MParam* p){
+    static double my_targetf(double* x, int n_x, DecayFitData* p){
         if (n_x != 8) {
             PyErr_Format(PyExc_ValueError,
                          "The length of the parameter vector must of length 8. "
@@ -15,7 +16,7 @@
         return DecayFit25::targetf(x, p);
     }
 
-    static double my_fit(double* x, int n_x, short* fixed, int n_fixed, MParam* p){
+    static double my_fit(double* x, int n_x, short* fixed, int n_fixed, DecayFitData* p){
         if (n_x != 9) {
             PyErr_Format(PyExc_ValueError,
                          "The length of the parameter vector must of length 9. "

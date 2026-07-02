@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_LAYERNODE_H
 #define TTTRLIB_LAYERNODE_H
 

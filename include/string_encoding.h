@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_STRING_ENCODING_H
 #define TTTRLIB_STRING_ENCODING_H
 

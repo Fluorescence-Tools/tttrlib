@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: BSD-3-Clause
 %{
 #include "DecayFit.h"
+#include "DecayFitData.h"
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 %}
@@ -15,7 +17,6 @@ using json = nlohmann::json;
  * 2) Typemap & helper includes — before all code using them
  * ------------------------------------------------------------------ */
 %include <std_string.i>       // For std::string ↔ Python str
-%include "DecayLvArrays.i"    // LabView array typemaps
 
 /* ------------------------------------------------------------------
  * 3) Apply typemaps to all pointer/length pairs
@@ -49,6 +50,7 @@ using json = nlohmann::json;
 /* ------------------------------------------------------------------
  * 4) Core header and .i file inclusions
  * ------------------------------------------------------------------ */
+%include "DecayFitData.h"
 %include "DecayFit.h"
 
 /* Python-side helper (pure Python) */
@@ -137,7 +139,7 @@ using json = nlohmann::json;
 %extend DecayFit23 {
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
-                               MParam* p, double result) {
+                               DecayFitData* p, double result) {
         return DecayFit23::to_json(x, fixed, p, result);
     }
 
@@ -150,7 +152,7 @@ using json = nlohmann::json;
 
     static std::string fit_to_json(double* x, int n_x,
                                    short* fixed, int n_fixed,
-                                   MParam* p, double result) {
+                                   DecayFitData* p, double result) {
         return DecayFit23::fit_to_json(x, fixed, p, result);
     }
 };
@@ -158,7 +160,7 @@ using json = nlohmann::json;
 %extend DecayFit24 {
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
-                               MParam* p, double result) {
+                               DecayFitData* p, double result) {
         return DecayFit24::to_json(x, fixed, p, result);
     }
 
@@ -173,7 +175,7 @@ using json = nlohmann::json;
 %extend DecayFit25 {
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
-                               MParam* p, double result) {
+                               DecayFitData* p, double result) {
         return DecayFit25::to_json(x, fixed, p, result);
     }
 
@@ -188,7 +190,7 @@ using json = nlohmann::json;
 %extend DecayFit26 {
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
-                               MParam* p, double result) {
+                               DecayFitData* p, double result) {
         return DecayFit26::to_json(x, fixed, p, result);
     }
 

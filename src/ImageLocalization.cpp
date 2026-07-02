@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "ImageLocalization.h"
 
 using namespace std;
@@ -20,8 +21,6 @@ double localization::target2DGaussian(double *vars, void *gdata_dummy) {
     //convert void into GaussDataType.
     GaussDataType *gdata = (GaussDataType *) gdata_dummy;
     int osize = gdata->xlen * gdata->ylen;
-    //	MGParam* p = (MGParam*)pM;
-    //	LVDoubleArray *subimage = *(p->subimage), *M = *(p->M);
 
     vars[0] = varinbounds(vars[0], 0, (double) gdata->xlen);
     vars[1] = varinbounds(vars[1], 0, (double) gdata->ylen);

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "BurstFilter.h"
 #include <algorithm>
 #include <numeric>

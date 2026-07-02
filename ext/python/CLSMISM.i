@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 // CLSMISM SWIG interface (embedded into the main tttrlib module)
 %include "misc_types.i"
 

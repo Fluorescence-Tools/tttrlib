@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include <include/Correlator.h>
 #include "include/Verbose.h"
 #include "info.h"

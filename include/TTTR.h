@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #define _CRT_SECURE_NO_DEPRECATE
 
 #ifndef TTTRLIB_TTTR_H

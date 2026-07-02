@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_DECAYFIT26_H
 #define TTTRLIB_DECAYFIT26_H
 
@@ -30,21 +31,21 @@ public:
      *
      * Fits the fraction of a mixture of two patterns
      *
-     * The two patterns are set by the attributes irf and bg of the MParam
+     * The two patterns are set by the attributes irf and background of the DecayFitData
      * structure.
      *
      * @param x [0] fraction of pattern 1
      * @param fixed not used
-     * @param p an instance of MParam that contains the patterns. The fist pattern is
+     * @param p an instance of DecayFitData that contains the patterns. The fist pattern is
      * contained in the instrument response function array, the second in the background,
      * array, the experimental data is in the array expdata.
      * @return
      */
-    static double fit(double* x, short* fixed, MParam* p);
+    static double fit(double* x, short* fixed, DecayFitData* p);
 
     static std::string to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result);
 
     static void from_json(const json &j,

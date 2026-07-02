@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 from dataclasses import dataclass
 from typing import Mapping, MutableSequence, Optional, Sequence, Tuple, TYPE_CHECKING, Union
 import weakref

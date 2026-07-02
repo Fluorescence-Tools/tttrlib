@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 // Linking issues against Python in Windows
 %begin %{
 #ifdef _MSC_VER

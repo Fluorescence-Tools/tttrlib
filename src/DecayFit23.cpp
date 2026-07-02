@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit23.h"
 #include "include/Verbose.h"
 
@@ -5,9 +6,9 @@
 #include <limits>
 
 
-static DecayFitIntegrateSignals fit_signals;
-static DecayFitCorrections fit_corrections;
-static DecayFitSettings fit_settings;
+static thread_local DecayFitIntegrateSignals fit_signals;
+static thread_local DecayFitCorrections fit_corrections;
+static thread_local DecayFitSettings fit_settings;
 
 namespace {
 
@@ -59,7 +60,7 @@ inline double safe_harmonic_mean(double a, double b) {
 
 
 
-void DecayFit23::correct_input(double *x, double *xm, LVDoubleArray *corrections, int return_r) {
+void DecayFit23::correct_input(double *x, double *xm, double *corrections, int return_r) {
     fit_signals.corrections = &fit_corrections;
 
     const Decay23Parameters initial = sanitise_parameters(x);
@@ -68,7 +69,7 @@ void DecayFit23::correct_input(double *x, double *xm, LVDoubleArray *corrections
     fit_settings.penalty = (x[0] < kMinTau) ? -x[0] : 0.;
 
     fit_corrections.set_gamma(initial.gamma);
-    apply_corrections(corrections->data);
+    apply_corrections(corrections);
 
     xm[1] = initial.gamma;
     xm[2] = initial.r0;
@@ -171,20 +172,21 @@ double DecayFit23::targetf(double *x, void *pv) {
 
     double w, xm[8], Bgamma;
     (void)Bgamma; // silence unused variable warning on MSVC
-    MParam *p = (MParam *) pv;
+    DecayFitData *p = (DecayFitData *) pv;
 
-    LVI32Array *expdata = *(p->expdata);
-    int Nchannels = expdata->length / 2;
-    LVDoubleArray *irf = *(p->irf), *bg = *(p->bg), *corrections = *(p->corrections), *M = *(p->M);
+    int *expdata = p->data.data();
+    int Nchannels = p->n_channels();
+    double *irf = p->irf.data(), *bg = p->background.data(),
+            *corrections = p->corrections.data(), *M = p->model.data();
     DecayFit23::correct_input(x, xm, corrections, 0);
     fit_signals.compute_signal_and_background(p);
 
-    DecayFit23::modelf(xm, irf->data, bg->data, Nchannels, p->dt, corrections->data, M->data);
-    fit_signals.normM(M->data, 1., Nchannels);
+    DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
+    fit_signals.normM(M, 1., Nchannels);
     if (fit_settings.p2s_twoIstar)
-        w = Wcm_p2s(expdata->data, M->data, Nchannels);
+        w = Wcm_p2s(expdata, M, Nchannels);
     else
-        w = Wcm(expdata->data, M->data, Nchannels);
+        w = Wcm(expdata, M, Nchannels);
 
     if (fit_settings.softbifl && (fit_signals.Bexpected > 0.)) {
         w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(fit_signals.Bexpected + 1.);
@@ -193,23 +195,14 @@ double DecayFit23::targetf(double *x, void *pv) {
 if (is_verbose()) {
     std::cout << "COMPUTING TARGET23" << std::endl;
     std::cout << "xm:" ; for(int i=0; i<8;i++) std::cout << xm[i] << " "; std::cout << std::endl;
-    std::cout << "corrections:" ;
-    std::cout << corrections->str() << std::endl;
-    std::cout << "irf:" ;
-    std::cout << irf->str() << std::endl;
-    std::cout << "bg:" ;
-    std::cout << bg->str() << std::endl;
-    std::cout << "Data:" ;
-    std::cout << expdata->str() << std::endl;
-    std::cout << "Model:" ;
-    std::cout << M->str() << std::endl;
+    std::cout << p->str();
     std::cout << "score:"  << v << std::endl;
 }
     return v;
 }
 
 
-double DecayFit23::fit(double *x, short *fixed, MParam *p) {
+double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
     double tIstar, xm[8];
     int info = -1;
 
@@ -221,12 +214,12 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     fit_signals.corrections = &fit_corrections;
     fit_settings.fixedrho = fixed[3];
 
-    LVDoubleArray *corrections = *(p->corrections), *M = *(p->M);
+    double *corrections = p->corrections.data(), *M = p->model.data();
     fit_signals.compute_signal_and_background(p);
     correct_input(x, xm, corrections, 1);
 
-    LVI32Array *expdata = *(p->expdata);
-    int Nchannels = expdata->length / 2;
+    int *expdata = p->data.data();
+    int Nchannels = p->n_channels();
 
     bfgs bfgs_o(DecayFit23::targetf, 4);
 
@@ -252,9 +245,9 @@ double DecayFit23::fit(double *x, short *fixed, MParam *p) {
     // use return_r to get the anisotropy in x
     correct_input(x, xm, corrections, 1);
     if (fit_settings.p2s_twoIstar)
-        tIstar = twoIstar_p2s(expdata->data, M->data, Nchannels);
+        tIstar = twoIstar_p2s(expdata, M, Nchannels);
     else
-        tIstar = twoIstar(expdata->data, M->data, Nchannels);
+        tIstar = twoIstar(expdata, M, Nchannels);
 
     if (info == 5 || x[0] < 0.) x[0] = -1.;        // for report
     x[1] = xm[1];
@@ -277,7 +270,7 @@ if (is_verbose()) {
 
 std::string DecayFit23::fit_to_json(const double *x,
                                    const short *fixed,
-                                   const MParam *p,
+                                   const DecayFitData *p,
                                    double result) {
     json j;
 
@@ -300,23 +293,14 @@ std::string DecayFit23::fit_to_json(const double *x,
     if (p != nullptr) {
         json jp;
         jp["dt"] = p->dt;
-        if (p->expdata && *(p->expdata)) {
-            jp["data_length"] = (*(p->expdata))->length;
-        }
-        if (p->corrections && *(p->corrections)) {
-            LVDoubleArray *corr = *(p->corrections);
+        jp["data_length"] = static_cast<int>(p->data.size());
+        {
             json jcorr = json::array();
-            for (int i = 0; i < corr->length; ++i) {
-                jcorr.push_back(corr->data[i]);
-            }
+            for (double v: p->corrections) jcorr.push_back(v);
             jp["corrections"] = jcorr;
         }
-        if (p->irf && *(p->irf)) {
-            jp["irf_length"] = (*(p->irf))->length;
-        }
-        if (p->bg && *(p->bg)) {
-            jp["background_length"] = (*(p->bg))->length;
-        }
+        jp["irf_length"] = static_cast<int>(p->irf.size());
+        jp["background_length"] = static_cast<int>(p->background.size());
         j["mparam"] = jp;
     }
 
@@ -326,7 +310,7 @@ std::string DecayFit23::fit_to_json(const double *x,
 
 std::string DecayFit23::to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result) {
     return fit_to_json(x, fixed, p, result);
 }

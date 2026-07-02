@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_BURSTFILTER_H
 #define TTTRLIB_BURSTFILTER_H
 

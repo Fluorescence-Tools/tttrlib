@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit26.h"
 #include "include/Verbose.h"
 
 
-static double Sp, Ss, Bp, Bs;
-static double penalty = 0.;
+static thread_local double Sp, Ss, Bp, Bs;
+static thread_local double penalty = 0.;
 
 
 void DecayFit26::correct_input(double* x, double* xm)
@@ -34,50 +35,50 @@ double DecayFit26::targetf(double* x, void* pv)
 
     double s = 0., xm[1], w, f;
     int i;
-    MParam* p = (MParam*)pv;
+    DecayFitData* p = (DecayFitData*)pv;
 
-    LVI32Array* expdata = *(p->expdata);
-    int Nchannels = expdata->length;
-    LVDoubleArray *irf = *(p->irf), *bg = *(p->bg), *M = *(p->M);
+    int *expdata = p->data.data();
+    int Nchannels = static_cast<int>(p->data.size());
+    double *irf = p->irf.data(), *bg = p->background.data(), *M = p->model.data();
 
     correct_input(x, xm);
     f = xm[0];
     // irf is pattern 1, bg is pattern 2
     for(i=0; i<Nchannels; i++)
     {
-        M->data[i] = f*irf->data[i] + (1.-f)*bg->data[i];
-        s += expdata->data[i];
+        M[i] = f*irf[i] + (1.-f)*bg[i];
+        s += expdata[i];
     }
-    for(i=0; i<Nchannels; i++) M->data[i] *= s;
+    for(i=0; i<Nchannels; i++) M[i] *= s;
 
     // divide here Nchannels / 2, because Wcm multiplies Nchannels by two
-    w = Wcm(expdata->data, M->data, Nchannels / 2);
+    w = Wcm(expdata, M, Nchannels / 2);
 
     return w/Nchannels + penalty;
 
 }
 
 
-double DecayFit26::fit(double* x, short* fixed, MParam* p)
+double DecayFit26::fit(double* x, short* fixed, DecayFitData* p)
 {
     // x is:
     // [0] fraction of pattern 1
     double tIstar, xm[1], f, s = 0., s1 = 0., s2 = 0.;
     int i, info;
 
-    LVI32Array* expdata = *(p->expdata);
-    int Nchannels = expdata->length;
-    LVDoubleArray *irf = *(p->irf), *bg = *(p->bg), *M = *(p->M);
+    int *expdata = p->data.data();
+    int Nchannels = static_cast<int>(p->data.size());
+    double *irf = p->irf.data(), *bg = p->background.data(), *M = p->model.data();
     for(i=0; i<Nchannels; i++)
     {
-        s1 += irf->data[i];
-        s2 += bg->data[i];
+        s1 += irf[i];
+        s2 += bg[i];
     }
     s1 = 1./s1; s2 = 1./s2;
     for(i=0; i<Nchannels; i++)
     {
-        irf->data[i]*=s1;
-        bg->data[i]*=s2;
+        irf[i]*=s1;
+        bg[i]*=s2;
     }
     bfgs bfgs_o(targetf, 1);
     info = bfgs_o.minimize(x,p);
@@ -88,13 +89,13 @@ double DecayFit26::fit(double* x, short* fixed, MParam* p)
     // irf is pattern 1, bg is pattern 2
     for(i=0; i<Nchannels; i++)
     {
-        M->data[i] = f*irf->data[i] + (1.-f)*bg->data[i];
-        s += expdata->data[i];
+        M[i] = f*irf[i] + (1.-f)*bg[i];
+        s += expdata[i];
     }
-    for(i=0; i<Nchannels; i++) M->data[i] *= s;
+    for(i=0; i<Nchannels; i++) M[i] *= s;
 
     // divide here Nchannels / 2, because twoIstar multiplies Nchannels by two
-    tIstar = twoIstar(expdata->data, M->data, Nchannels / 2);
+    tIstar = twoIstar(expdata, M, Nchannels / 2);
     if (info==5) x[0] = -1.;		// for report
     x[1]=1.-x[0];
     return tIstar;
@@ -104,7 +105,7 @@ double DecayFit26::fit(double* x, short* fixed, MParam* p)
 
 std::string DecayFit26::to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result) {
     json j;
 
@@ -126,15 +127,9 @@ std::string DecayFit26::to_json(const double *x,
 
     if (p != nullptr) {
         json jp;
-        if (p->expdata && *(p->expdata)) {
-            jp["data_length"] = (*(p->expdata))->length;
-        }
-        if (p->irf && *(p->irf)) {
-            jp["irf_length"] = (*(p->irf))->length;
-        }
-        if (p->bg && *(p->bg)) {
-            jp["background_length"] = (*(p->bg))->length;
-        }
+        jp["data_length"] = static_cast<int>(p->data.size());
+        jp["irf_length"] = static_cast<int>(p->irf.size());
+        jp["background_length"] = static_cast<int>(p->background.size());
         j["mparam"] = jp;
     }
 

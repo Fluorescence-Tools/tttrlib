@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "TTTRMask.h"
 #include "info.h"
 #include <nlohmann/json.hpp>

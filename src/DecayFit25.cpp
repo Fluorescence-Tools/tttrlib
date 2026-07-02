@@ -1,22 +1,23 @@
+// SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit25.h"
 #include "include/Verbose.h"
 
 
 // normalization
-static int fixedrho = 0;
-static int softbifl = 0;
-static int p2s_twoIstar = 0;
-static int firstcall = 1;
-static double penalty = 0.;
+static thread_local int fixedrho = 0;
+static thread_local int softbifl = 0;
+static thread_local int p2s_twoIstar = 0;
+static thread_local int firstcall = 1;
+static thread_local double penalty = 0.;
 
 
-static DecayFitCorrections fit_corrections;
-static DecayFitIntegrateSignals fit_signals;
-static DecayFitSettings fit_settings;
+static thread_local DecayFitCorrections fit_corrections;
+static thread_local DecayFitIntegrateSignals fit_signals;
+static thread_local DecayFitSettings fit_settings;
 
 
 
-void DecayFit25::correct_input(double* x, double* xm, LVDoubleArray* corrections, int return_r)
+void DecayFit25::correct_input(double* x, double* xm, double* corrections, int return_r)
 {
     // correct input parameters (take care of unreasonable values)
     // here x = [tau gamma r0 rho] + outputs
@@ -25,10 +26,14 @@ void DecayFit25::correct_input(double* x, double* xm, LVDoubleArray* corrections
     xm[0] = x[0];
     penalty = 0.;
     xm[2] = x[2];
+    // gamma is taken from x[1] (clamped like fit23). Previously xm[1] was
+    // read here before ever being written — an uninitialized stack read that
+    // made fit25 results depend on the process memory layout.
+    xm[1] = std::max(0.0, std::min(x[1], 0.999));
     fit_corrections.set_gamma(xm[1]);
-    fit_corrections.g = corrections->data[1];
-    fit_corrections.l1 = corrections->data[2];
-    fit_corrections.l2 = corrections->data[3];
+    fit_corrections.g = corrections[1];
+    fit_corrections.l1 = corrections[2];
+    fit_corrections.l2 = corrections[3];
 
     if (!fixedrho) {
         xm[3] = fit_signals.rho(x[0], x[2]); // rho = tau/(r0/r-1)
@@ -57,21 +62,21 @@ double DecayFit25::targetf(double* x, void* pv)
     fit_signals.corrections = &fit_corrections;
 
     double w, xm[4], Bgamma;
-    MParam* p = (MParam*)pv;
+    DecayFitData* p = (DecayFitData*)pv;
 
-    LVI32Array* expdata = *(p->expdata);
-    int Nchannels = expdata->length/2;
-    LVDoubleArray *irf = *(p->irf), *bg = *(p->bg),
-            *corrections = *(p->corrections), *M = *(p->M);
+    int *expdata = p->data.data();
+    int Nchannels = p->n_channels();
+    double *irf = p->irf.data(), *bg = p->background.data(),
+            *corrections = p->corrections.data(), *M = p->model.data();
 
     correct_input(x, xm, corrections, 0);
-    DecayFit23::modelf(xm, irf->data, bg->data, Nchannels, p->dt, corrections->data, M->data);
-    fit_signals.normM(M->data, Nchannels);
+    DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
+    fit_signals.normM(M, Nchannels);
 
     if (p2s_twoIstar)
-        w = Wcm_p2s(expdata->data, M->data, Nchannels);
+        w = Wcm_p2s(expdata, M, Nchannels);
     else
-        w = Wcm(expdata->data, M->data, Nchannels);
+        w = Wcm(expdata, M, Nchannels);
 
     if (softbifl & (fit_signals.Bexpected > 0.)) {
         Bgamma = xm[1]*(fit_signals.Sp+fit_signals.Ss);
@@ -82,7 +87,7 @@ double DecayFit25::targetf(double* x, void* pv)
 }
 
 
-double DecayFit25::fit (double* x, short* fixed, MParam* p)
+double DecayFit25::fit (double* x, short* fixed, DecayFitData* p)
 {
     // x is:
     // [0] tau1 always fixed
@@ -106,10 +111,10 @@ double DecayFit25::fit (double* x, short* fixed, MParam* p)
     softbifl = (x[6]<0.);
     p2s_twoIstar = 1;
 
-    LVI32Array* expdata = *(p->expdata);
-    int Nchannels = expdata->length/2;
-    LVDoubleArray *irf = *(p->irf), *bg = *(p->bg),
-            *corrections = *(p->corrections), *M = *(p->M);
+    int *expdata = p->data.data();
+    int Nchannels = p->n_channels();
+    double *irf = p->irf.data(), *bg = p->background.data(),
+            *corrections = p->corrections.data(), *M = p->model.data();
 
     // total signal and background
 
@@ -134,10 +139,10 @@ double DecayFit25::fit (double* x, short* fixed, MParam* p)
 
         // calculate 2I*
         correct_input(xtmp, xm, corrections, 1);
-        DecayFit23::modelf(xm, irf->data, bg->data, Nchannels, p->dt, corrections->data, M->data);
-        fit_signals.normM(M->data, Nchannels);
-        if (p2s_twoIstar) tIstar = twoIstar_p2s(expdata->data, M->data, Nchannels);
-        else tIstar = twoIstar(expdata->data, M->data, Nchannels);
+        DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
+        fit_signals.normM(M, Nchannels);
+        if (p2s_twoIstar) tIstar = twoIstar_p2s(expdata, M, Nchannels);
+        else tIstar = twoIstar(expdata, M, Nchannels);
 if (is_verbose()) {
         std::cout<< x[i] << "\t" << tIstar << "\t"  << std::endl;
 }
@@ -154,8 +159,8 @@ if (is_verbose()) {
 
     // calculate model function for taubest
     correct_input(xtmp, xm, corrections, 1);
-    DecayFit23::modelf(xm, irf->data, bg->data, Nchannels, p->dt, corrections->data, M->data);
-    fit_signals.normM(M->data, Nchannels);
+    DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
+    fit_signals.normM(M, Nchannels);
 
     x[7] = xtmp[7]; x[8] = xtmp[8];
     return tIstarbest;
@@ -165,7 +170,7 @@ if (is_verbose()) {
 
 std::string DecayFit25::to_json(const double *x,
                                const short *fixed,
-                               const MParam *p,
+                               const DecayFitData *p,
                                double result) {
     json j;
 
@@ -188,23 +193,14 @@ std::string DecayFit25::to_json(const double *x,
     if (p != nullptr) {
         json jp;
         jp["dt"] = p->dt;
-        if (p->expdata && *(p->expdata)) {
-            jp["data_length"] = (*(p->expdata))->length;
-        }
-        if (p->corrections && *(p->corrections)) {
-            LVDoubleArray *corr = *(p->corrections);
+        jp["data_length"] = static_cast<int>(p->data.size());
+        {
             json jcorr = json::array();
-            for (int i = 0; i < corr->length; ++i) {
-                jcorr.push_back(corr->data[i]);
-            }
+            for (double v: p->corrections) jcorr.push_back(v);
             jp["corrections"] = jcorr;
         }
-        if (p->irf && *(p->irf)) {
-            jp["irf_length"] = (*(p->irf))->length;
-        }
-        if (p->bg && *(p->bg)) {
-            jp["background_length"] = (*(p->bg))->length;
-        }
+        jp["irf_length"] = static_cast<int>(p->irf.size());
+        jp["background_length"] = static_cast<int>(p->background.size());
         j["mparam"] = jp;
     }
 
