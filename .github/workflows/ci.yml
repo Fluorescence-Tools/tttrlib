@@ -198,7 +198,12 @@ jobs:
     name: Pip Build win
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
-    runs-on: windows-latest
+    # Pin to windows-2022: on windows-latest (windows-2025) CMake's
+    # "Visual Studio 17 2022" generator fails to discover the VS instance
+    # ("could not find any instance of Visual Studio"). windows-2022 has a
+    # discoverable VS 2022. (Conda builds are unaffected — they use the
+    # conda-forge MSVC toolchain, not CMake's system-VS discovery.)
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
         with:
