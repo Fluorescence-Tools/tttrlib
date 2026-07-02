@@ -49,6 +49,11 @@ static int myErr = 0; // flag to save error state
 
 %shared_ptr(CLSMImage)
 
+// Release the Python GIL around the (OpenMP-parallelized) image fill, which
+// touches no Python objects. Results are only returned once the fill completes.
+TTTRLIB_NOGIL(CLSMImage::fill)      // src/CLSMImage.cpp:1394
+TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLSMImage.cpp:641)
+
 %include "CLSMPixel.h"
 %include "CLSMLine.h"
 %include "CLSMFrame.h"

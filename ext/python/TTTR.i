@@ -41,6 +41,15 @@
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *routing_channels, int n_routing_channels)} 
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *event_types, int n_event_types)} 
 
+// Release the Python GIL around heavy, Python-object-free file I/O so other
+// threads can run while a file is loaded. numpy typemaps marshal under the GIL
+// before/after $action; only the C++ read executes GIL-free.
+TTTRLIB_NOGIL(TTTR::read_file)      // src/TTTR.cpp:494 — pure C file I/O
+TTTRLIB_NOGIL(TTTR::read_records)   // all overloads, src/TTTR.cpp:796+
+TTTRLIB_NOGIL(TTTR::read_hdf_file)  // src/TTTR.cpp:282
+TTTRLIB_NOGIL(TTTR::read_sm_file)   // src/TTTR.cpp:392
+TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
+
 %include "TTTR.h" 
 
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}

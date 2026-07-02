@@ -25,6 +25,36 @@ from __future__ import annotations
 #include <assert.h>
 %}
 
+%{
+// RAII: release the Python GIL for the scope's lifetime and re-acquire it on
+// destruction — including during C++ exception unwinding, so the catch handlers
+// in TTTRLIB_NOGIL (which call the Python C-API via SWIG_exception) run with the
+// GIL held.
+struct tttrlib_gil_release {
+    PyThreadState *_save;
+    tttrlib_gil_release()  { _save = PyEval_SaveThread(); }
+    ~tttrlib_gil_release() { PyEval_RestoreThread(_save); }
+};
+%}
+
+// Release the GIL around a heavy, Python-object-free method while preserving the
+// project's standard std::exception -> Python exception translation (see the
+// global %exception in MicrotimeLinearization.i). Apply before the header %include.
+%define TTTRLIB_NOGIL(Method)
+%exception Method {
+    try {
+        tttrlib_gil_release _gil_guard;
+        $action
+    } catch (const std::invalid_argument& e) {
+        SWIG_exception(SWIG_ValueError, e.what());
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    } catch (...) {
+        SWIG_exception(SWIG_UnknownError, "Unknown exception");
+    }
+}
+%enddef
+
 // Keep SWIG output quiet by default (runtime verbosity is controlled via TTTRLIB_VERBOSE).
 // Warning 302: Identifier redefined (ignored) (Renamed from 'pair< std::shared_ptr< TTTR >,std::shared_ptr< TTTR > >'),
 // Warning 389: operator[] ignored (consider using %extend)

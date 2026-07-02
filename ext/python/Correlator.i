@@ -26,6 +26,10 @@
 
 %include "CorrelatorPhotonStream.h"
 %include "CorrelatorCurve.h"
+// Release the Python GIL around the heavy correlation compute (internal C++
+// vectors only; no Python objects touched).
+TTTRLIB_NOGIL(Correlator::run)      // src/Correlator.cpp:84
+
 %include "Correlator.h"
 
 %extend Correlator{
