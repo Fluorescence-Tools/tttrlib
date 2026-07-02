@@ -85,7 +85,7 @@ class TestCLSM(unittest.TestCase):
         mean_tac_image = np.clip(mean_tac_image, 0, 1280000)
         mean_tac_image = mean_tac_image.sum(axis=0)
         here = os.path.dirname(__file__)
-        fn = os.path.join(here, 'data/reference/img_ref_mean_tac_sp8.npy')
+        fn = os.path.join(here, '..', '..', 'data/reference/img_ref_mean_tac_sp8.npy')
         if self.make_reference:
             np.save(fn, mean_tac_image)
         # Pixel with less than minimum_number_of_photons have negative numbers
@@ -99,7 +99,7 @@ class TestCLSM(unittest.TestCase):
             stack_frames=True
         )
         here = os.path.dirname(__file__)
-        fn = os.path.join(here, 'data/reference/img_ref_decay_image_sp8.npy')
+        fn = os.path.join(here, '..', '..', 'data/reference/img_ref_decay_image_sp8.npy')
         if self.make_reference:
             np.save(fn, decay_image)
         np.testing.assert_allclose(np.load(fn), decay_image)

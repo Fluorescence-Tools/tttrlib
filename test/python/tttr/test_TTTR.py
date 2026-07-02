@@ -139,7 +139,7 @@ class Tests(unittest.TestCase):
             file_root, _ = os.path.splitext(os.path.basename(file_type[0]))
             data = tttrlib.TTTR(*file_type)
 
-            reference_path = Path(__file__).resolve().parent / 'data' / 'reference' / f"{file_root}.npz"
+            reference_path = Path(__file__).resolve().parent.parent.parent / 'data' / 'reference' / f"{file_root}.npz"
             if make_references:
                 routing_channels = data.routing_channels
                 micro_times = data.micro_times

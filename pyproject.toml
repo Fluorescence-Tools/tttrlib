@@ -88,7 +88,7 @@ version.provider = "scikit_build_core.metadata.setuptools_scm"
 version.write-to = "tttrlib/_version.py"
 
 [tool.pytest.ini_options]
-testpaths = ["test"]
+testpaths = ["test/python"]
 norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
 markers = ["integration: marks tests as integration tests requiring external resources"]
 

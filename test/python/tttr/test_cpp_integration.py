@@ -29,7 +29,7 @@ def tttrlib_dll() -> ctypes.CDLL:
     else:
         # Search in common build directories relative to repo root
         test_dir = Path(__file__).parent
-        repo_root = test_dir.parent
+        repo_root = test_dir.parent.parent.parent
         possible_paths = [
             repo_root / "build-release" / "Release" / "tttrlib.dll",
             repo_root / "build" / "Release" / "tttrlib.dll",

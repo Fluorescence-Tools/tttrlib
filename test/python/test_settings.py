@@ -22,8 +22,9 @@ from typing import Any, Dict, List, Tuple
 
 # Paths
 _THIS_DIR = Path(__file__).parent
-_REPO_ROOT = _THIS_DIR.parent
-_SETTINGS_PATH = _THIS_DIR / "settings.json"
+_TEST_ROOT = _THIS_DIR.parent
+_REPO_ROOT = _TEST_ROOT.parent
+_SETTINGS_PATH = _TEST_ROOT / "settings.json"
 
 # Load settings.json (do not fail hard if missing; tests can skip)
 try:

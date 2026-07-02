@@ -18,7 +18,7 @@ python test/download_test_data.py
 python test/download_test_data.py --output-dir /path/to/tttr-data
 
 # Then run tests
-pytest test/
+pytest test/python
 ```
 
 ### Manual Setup
@@ -34,19 +34,19 @@ Set the `TTTRLIB_DATA` environment variable to point to your test data directory
 #### Linux/macOS
 ```bash
 export TTTRLIB_DATA=/path/to/tttr-data
-pytest test/
+pytest test/python
 ```
 
 #### Windows (PowerShell)
 ```powershell
 $env:TTTRLIB_DATA = "Q:/tttr-data"
-pytest test/
+pytest test/python
 ```
 
 #### Windows (Command Prompt)
 ```cmd
 set TTTRLIB_DATA=Q:/tttr-data
-pytest test/
+pytest test/python
 ```
 
 ### Option 2: settings.json
@@ -91,22 +91,22 @@ tttr-data/
 
 ### Run all tests
 ```bash
-pytest test/
+pytest test/python
 ```
 
 ### Run specific test file
 ```bash
-pytest test/test_TTTR.py -v
+pytest test/python/tttr/test_TTTR.py -v
 ```
 
 ### Run with custom data location
 ```bash
-TTTRLIB_DATA=/custom/path pytest test/test_swig_coverage.py -v
+TTTRLIB_DATA=/custom/path pytest test/python/tttr/test_swig_coverage.py -v
 ```
 
 ### Check test data availability
 ```bash
-pytest test/ --collect-only
+pytest test/python --collect-only
 ```
 
 The test output will show:
@@ -126,31 +126,31 @@ To see which data files are being used:
 
 ```bash
 # Run with verbose output
-pytest test/ -vv
+pytest test/python -vv
 
 # Run with print statements
-pytest test/ -s
+pytest test/python -s
 ```
 
-The `conftest.py` file in the test directory will print the resolved data root path at the start of the test run.
+The `conftest.py` file in `test/python/` will print the resolved data root path at the start of the test run.
 
 ## Environment Variable Examples
 
 ### Using a network share (Windows)
 ```powershell
 $env:TTTRLIB_DATA = "\\server\share\tttr-data"
-pytest test/
+pytest test/python
 ```
 
 ### Using a local directory (Linux)
 ```bash
 export TTTRLIB_DATA=$HOME/data/tttr-data
-pytest test/
+pytest test/python
 ```
 
 ### Temporary for single test run
 ```bash
-TTTRLIB_DATA=/tmp/test-data pytest test/test_TTTR.py
+TTTRLIB_DATA=/tmp/test-data pytest test/python/tttr/test_TTTR.py
 ```
 
 ## Troubleshooting
@@ -214,13 +214,12 @@ NumPy-facing API works (no test data required), run:
 ```powershell
 # Ensure the extension from your in-tree build is on sys.path (handled by conftest.py)
 # Build as you normally do, then:
-pytest -q test/test_burstfilter_structured_props.py \
-         test/test_burstfeature_numpy_shapes.py \
-         test/test_burstfilter_helpers_empty.py \
-         test/test_burstfilter_matrix_empty.py \
-         test/test_burstfeature_legacy_matrix_empty.py \
-         test/test_burstfilter_sequence_empty.py \
-         test/test_burstfeature_json_empty.py
+pytest -q test/python/burstfilter/test_burstfilter_structured_props.py \
+         test/python/burstfilter/test_burstfeature_numpy_shapes.py \
+         test/python/burstfilter/test_burstfilter_helpers_empty.py \
+         test/python/burstfilter/test_burstfilter_matrix_empty.py \
+         test/python/burstfilter/test_burstfilter_sequence_empty.py \
+         test/python/burstfilter/test_burstfeature_json_empty.py
 ```
 
 These tests instantiate empty TTTR/BurstFilter objects and validate:

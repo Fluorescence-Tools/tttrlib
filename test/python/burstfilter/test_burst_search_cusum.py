@@ -12,7 +12,7 @@ class TestBurstSearchCUSUM(unittest.TestCase):
     def setUpClass(cls):
         # Get test data root
         data_root = os.environ.get('TTTRLIB_DATA', './tttr-data')
-        settings_file = os.path.join(os.path.dirname(__file__), 'settings.json')
+        settings_file = os.path.join(os.path.dirname(__file__), '..', '..', 'settings.json')
         
         if os.path.exists(settings_file):
             with open(settings_file, 'r') as f:

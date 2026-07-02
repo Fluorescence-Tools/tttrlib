@@ -13,7 +13,7 @@ import sys
 import os
 
 # Add the parent directory to the path to import tttrlib
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def test_burstfilter_json():
     """Test BurstFilter JSON functionality."""

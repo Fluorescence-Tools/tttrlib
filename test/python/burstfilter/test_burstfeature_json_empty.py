@@ -11,7 +11,7 @@ import sys
 import json
 
 # Ensure repository root is importable if needed
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
 def test_burstfeature_json_empty_keys():

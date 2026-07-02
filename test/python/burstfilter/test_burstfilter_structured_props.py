@@ -6,7 +6,7 @@ import os
 import sys
 
 # Ensure repository root is importable if needed
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def test_burstfilter_structured_empty():
     import numpy as np
