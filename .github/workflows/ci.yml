@@ -619,10 +619,11 @@ jobs:
         shell: bash -l {0}
         run: |
           cd bioconda-recipes
-          EXTRA_ARGS=""
-          if [ "$ACT" = "true" ]; then
-            EXTRA_ARGS="--docker-base-image quay.io/bioconda/bioconda-utils-build-env-cos7:latest"
-          fi
+          # bioconda-utils installed from conda can report its version as
+          # 0.0.0, which makes its default docker base image tag
+          # (quay.io/bioconda/bioconda-utils-build-env-cos7:0.0.0) point at a
+          # nonexistent image. Pin the base image to :latest explicitly.
+          EXTRA_ARGS="--docker-base-image quay.io/bioconda/bioconda-utils-build-env-cos7:latest"
           bioconda-utils build --docker --mulled-test $EXTRA_ARGS --packages tttrlib
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
