@@ -365,7 +365,9 @@ class Fit26(Fit2x):
                 "length 5 to specify the fixed state for all 6 model "
                 "parameters."
             )
-        x = np.zeros(1, dtype=np.float64)
+        # x[0]: fraction of pattern 1 (in/out); x[1]: 1 - x[0] (output).
+        # fit26 writes both - a 1-element array would overflow.
+        x = np.zeros(2, dtype=np.float64)
         x[0] = initial_values[0]
         if self._verbose:
             print("Fitting")

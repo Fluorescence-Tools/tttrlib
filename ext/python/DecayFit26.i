@@ -17,10 +17,13 @@
     }
 
     static double my_fit(double* x, int n_x, short* fixed, int n_fixed, DecayFitData* p){
-        if (n_x != 1) {
+        // fit26 writes the fitted fraction to x[0] and the complementary
+        // fraction to x[1]; a 1-element array would overflow (heap corruption)
+        if (n_x < 2) {
             PyErr_Format(PyExc_ValueError,
-                         "The length of the parameter vector must of length 1. "
-                         "Arrays of length (%d) given",
+                         "The parameter vector must be at least of length 2 "
+                         "(x[0] fraction in, x[1] complementary fraction out). "
+                         "Array of length (%d) given",
                          n_x);
             return 0.0;
         }

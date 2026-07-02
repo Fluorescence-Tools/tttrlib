@@ -62,7 +62,7 @@ class Tests(unittest.TestCase):
         }
         fit26 = tttrlib.Fit26(**settings)
         x1 = 0.5
-        x = np.array([x1])
+        x = np.array([x1, 0.0])  # x[1] receives the complementary fraction
         fixed = np.array([0])
         r = fit26(
             data=data,
