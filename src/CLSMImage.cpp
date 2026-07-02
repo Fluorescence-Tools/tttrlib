@@ -1236,9 +1236,14 @@ void CLSMImage::create_lines() {
         
         if (is_bh_spc130 && is_last_frame && is_start_only_markers && 
             missing_exactly_one && !line_edges.empty()) {
-            // Add extra line: from last line stop to frame end
+            // Add extra line: from last line stop to frame end. The frame
+            // edge can be one past the last event (end-of-stream); the line
+            // stop must be a valid event index, otherwise the line duration
+            // is computed from an out-of-bounds macro time read (undefined,
+            // heap-layout dependent binning).
             int last_line_stop = line_edges.back();  // Current last edge
-            int frame_end = frame->get_stop();
+            int frame_end = std::min(frame->get_stop(),
+                                     static_cast<int>(tttr->size()) - 1);
             line_edges.push_back(last_line_stop);  // New line start
             line_edges.push_back(frame_end);       // New line stop
             
