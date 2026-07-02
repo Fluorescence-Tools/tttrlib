@@ -1556,8 +1556,10 @@ void CLSMImage::fill(
 
         // Word-per-thread build: each thread owns whole 64-bit words of every
         // mask, so the read-modify-writes are race-free.
+        // 'int' induction variable: MSVC's OpenMP 2.0 is strict about the
+        // loop index type (n_words fits: 2^31 words = 137G events)
         #pragma omp parallel for schedule(static) if(use_openmp && n_events >= ACCEPT_MASK_MIN_EVENTS)
-        for (int64_t wi = 0; wi < static_cast<int64_t>(n_words); ++wi) {
+        for (int wi = 0; wi < static_cast<int>(n_words); ++wi) {
             const size_t base = static_cast<size_t>(wi) << 6;
             const int lim = static_cast<int>(std::min<size_t>(64, n_events - base));
             for (int b = 0; b < lim; ++b) {
@@ -2206,8 +2208,9 @@ void CLSMImage::get_intensity_masked(
     //    bit per event (photon type, channel, micro time)
     const size_t n_words = (n_events + 63) >> 6;
     std::vector<uint64_t> accept(n_words, 0);
+    // 'int' induction variable for MSVC OpenMP 2.0 compatibility
     #pragma omp parallel for schedule(static) if(use_openmp && n_events >= (size_t(1) << 20))
-    for (int64_t wi = 0; wi < static_cast<int64_t>(n_words); ++wi) {
+    for (int wi = 0; wi < static_cast<int>(n_words); ++wi) {
         const size_t base = static_cast<size_t>(wi) << 6;
         const int lim = static_cast<int>(std::min<size_t>(64, n_events - base));
         uint64_t bits = 0;
