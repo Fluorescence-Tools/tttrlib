@@ -87,7 +87,11 @@ $result = swig::from($1);
 %apply(long long* IN_ARRAY1, int DIM1) {(long long *input, int n_input)}
 %apply(unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *input, int n_input)}
 
-// Bool arrays (for micro-time bitmap)
+// Bool arrays (for micro-time bitmap).
+// numpy.i does not instantiate bool typemaps by default (see numpy.i:3164);
+// without this line the %apply below silently matches nothing and the
+// micro_time_bitmap parameter is not callable from Python.
+%numpy_typemaps(bool, NPY_BOOL, int)
 %apply(bool* IN_ARRAY1, int DIM1) {(bool* micro_time_bitmap, int n_micro_time_bitmap)}
 
 // Output arrays views

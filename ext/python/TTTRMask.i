@@ -5,7 +5,9 @@
 // Hide the std::vector<bool> version (slow in Python)
 %ignore TTTRMask::get_mask_as_vector();
 
-// Custom typemap for get_mask - returns numpy array VIEW (no ownership transfer)
+// Custom typemap for get_mask - returns numpy array VIEW (no ownership transfer).
+// The mask is stored bit-packed internally; the view points at a cached
+// unpacked snapshot that is refreshed on every get_mask call.
 %typemap(in, numinputs=0) (unsigned char** output, int* n_output) (unsigned char* temp_ptr, int temp_size) {
     $1 = &temp_ptr;
     $2 = &temp_size;

@@ -211,6 +211,91 @@ private:
     std::vector<size_t> channel_offsets; // starting frame index for each channel in 'frames'
     std::vector<size_t> channel_counts;  // number of frames per channel
 
+    /// Optional per-pixel dwell times (lines x pixels, in macro time units),
+    /// applied to every frame. Owned copy; empty when durations are uniform.
+    std::vector<std::vector<double>> pixel_duration_matrix;
+
+    /// Prefix sums of pixel_duration_matrix (same shape). Rebuilt whenever the
+    /// matrix is set so fill() only needs a binary search per photon.
+    std::vector<std::vector<double>> pixel_duration_cumsum;
+
+    void rebuild_pixel_duration_cumsum();
+
+    /// Bounds-checked access to the precomputed cumulative durations of a
+    /// line. Returns nullptr when no durations are available for the line.
+    const std::vector<double>* line_cumsum(size_t l) const{
+        if(l >= pixel_duration_cumsum.size()) return nullptr;
+        const std::vector<double>& c = pixel_duration_cumsum[l];
+        return c.empty() ? nullptr : &c;
+    }
+
+    // ------------------------------------------------------------------
+    // Lazy fill state. The primary representation of a filled image is a
+    // packed per-event acceptance bitmask on the TTTR stream; the per-pixel
+    // photon index vectors are materialized from it on demand. This keeps
+    // fill() at the cost of one pass over the stream (~n_events/8 bytes)
+    // until someone actually needs per-pixel indices.
+    // Note: mask_tttr_ keeps the fill-time TTTR alive until the masks are
+    // consumed or dropped. Lazy materialization is not thread-safe for
+    // concurrent readers (same non-guarantee as the previous eager fill).
+    // ------------------------------------------------------------------
+
+    /// One mask per channel block (split fill) or a single mask
+    std::vector<std::vector<uint64_t>> stream_masks_;
+
+    /// Frames per channel block at fill time (split fill)
+    size_t mask_block_size_ = 0;
+
+    /// True when stream_masks_ holds one mask per channel block
+    bool mask_split_ = false;
+
+    /// The TTTR stream the masks were built on (fill may receive a stream
+    /// different from the stored tttr member)
+    std::shared_ptr<TTTR> mask_tttr_;
+
+    /// True when the per-pixel index vectors reflect the fill state
+    /// (an empty image counts as materialized)
+    bool pixels_materialized_ = true;
+
+    /// Sticky: set once a frame/line/pixel handle escaped to the caller;
+    /// from then on fill() materializes eagerly so held handles stay valid
+    bool pixel_access_observed_ = false;
+
+    void ensure_pixels_materialized();
+
+    void materialize_pixel_handles(){
+        pixel_access_observed_ = true;
+        ensure_pixels_materialized();
+    }
+
+    void drop_stream_masks(){
+        stream_masks_.clear();
+        stream_masks_.shrink_to_fit();
+        mask_tttr_.reset();
+        mask_block_size_ = 0;
+        mask_split_ = false;
+    }
+
+    /// Insert the photons selected by 'masks' into the pixels (never clears)
+    void consume_masks_into_pixels(
+            const std::vector<std::vector<uint64_t>>& masks,
+            size_t block_size, bool split, std::shared_ptr<TTTR> tttr_data);
+
+    /// Fused intensity from the stored stream masks (no materialization)
+    void get_intensity_from_masks(unsigned short** output, int* dim1, int* dim2, int* dim3);
+
+    /*!
+     * Visit every accepted photon of the stored stream masks together with
+     * its pixel assignment: visit(f_idx, l_idx, line, pixel_nbr, event_i).
+     * Photons are visited in ascending event order per line; frames are
+     * iterated in ascending order when parallel_frames is false (required by
+     * order-dependent accumulations such as running means), otherwise the
+     * frame loop runs under OpenMP. Defined in CLSMImage.cpp — all
+     * instantiations live there.
+     */
+    template<typename Visitor>
+    void for_each_mask_photon(bool parallel_frames, Visitor&& visit);
+
     void remove_incomplete_frames();
 
     void create_pixels_in_lines();
@@ -240,13 +325,87 @@ protected:
 
 public:
 
+    /*!
+     * \brief Set per-pixel dwell times used by fill() to assign photons to pixels.
+     *
+     * The matrix is indexed as durations[line][pixel], is given in macro time
+     * units, and applies to every frame. The values are copied; cumulative
+     * sums are precomputed once so filling stays fast. Pass an empty vector
+     * to return to uniform pixel durations.
+     */
+    void set_pixel_duration_matrix(const std::vector<std::vector<double>>& durations);
+
+    /*!
+     * \brief Set per-pixel dwell times from a flat row-major 2D array.
+     *
+     * @param data Row-major matrix of dwell times (macro time units), copied.
+     * @param nx   Number of lines.
+     * @param ny   Number of pixels per line.
+     */
+    void set_pixel_duration_matrix(double* data, int nx, int ny);
+
+    /*!
+     * \brief Get the per-pixel dwell times as a newly allocated flat row-major
+     *        2D array (nx lines, ny pixels per line). Outputs nullptr / 0 when
+     *        no matrix is set. The caller owns the array.
+     */
+    void get_pixel_duration_matrix(double** data, int* nx, int* ny) const;
+
+    /// Per-pixel dwell time matrix (lines x pixels); empty when uniform.
+    const std::vector<std::vector<double>>& get_pixel_duration_matrix() const;
+
+    /// True when a per-pixel dwell time matrix is set.
+    bool has_non_uniform_durations() const;
+
+    /// Cumulative dwell times of one line (empty when out of range or unset).
+    /// The durations apply to all frames; frame_idx only needs to be >= 0.
+    std::vector<double> get_cumulative_durations(int frame_idx, int line_idx) const;
+
+    /*!
+     * \brief Compute an intensity image directly from a per-event acceptance
+     *        bitmask on the TTTR stream, without filling pixels ("virtual fill").
+     *
+     * Instead of storing photon indices in every pixel (fill + get_intensity),
+     * a packed acceptance bitmask (one bit per TTTR event; photon type,
+     * channel and micro time acceptance) is built in a single pass and the
+     * photons are scatter-added into the intensity image on the fly. The
+     * pixels of the image are not modified. Uses the line event ranges of the
+     * existing image structure; pixel-marker binning (use_pixel_markers) is
+     * not supported here.
+     *
+     * @param output [out] Intensity image (frames x lines x pixel), allocated by the function.
+     * @param dim1 [out] Number of frames.
+     * @param dim2 [out] Number of lines.
+     * @param dim3 [out] Number of pixels per line.
+     * @param tttr_data TTTR stream (uses the stored tttr when nullptr).
+     * @param channels Routing channels (all used channels when empty).
+     * @param micro_time_ranges Optional inclusive micro time ranges.
+     */
+    void get_intensity_masked(
+            unsigned short **output, int *dim1, int *dim2, int *dim3,
+            std::shared_ptr<TTTR> tttr_data = nullptr,
+            std::vector<int> channels = std::vector<int>(),
+            std::vector<std::pair<int,int>> micro_time_ranges =
+                    std::vector<std::pair<int,int>>()
+    );
+
+    /*!
+     * \brief Get the sorted TTTR indices of all photons contained in the image.
+     *
+     * Union over all pixels (all channel blocks in split mode). Derived from
+     * the stream acceptance bitmask when the image has not been materialized,
+     * otherwise aggregated from the pixels. The output array is allocated by
+     * the function.
+     */
+    void get_tttr_indices(int** output, int* n_output);
+
     std::shared_ptr<TTTR> get_tttr(){
         return tttr;
     }
 
     void set_tttr(std::shared_ptr<TTTR> v){
         tttr = v;
-    }    
+    }
 
     const CLSMSettings* get_settings(){
         return &settings;
@@ -438,6 +597,7 @@ public:
      * @return Vector of CLSMFrame pointers representing the frames in the CLSMImage.
      */
     std::vector<CLSMFrame *> get_frames() {
+        materialize_pixel_handles();
         return frames;
     }
 
@@ -677,6 +837,7 @@ public:
      * @return      Pointer to the CLSMPixel object.
      */
     CLSMPixel* getPixel(unsigned int idx) {
+        materialize_pixel_handles();
         size_t sidx = static_cast<size_t>(idx);
         size_t denom = n_lines * n_pixel;
 
@@ -740,11 +901,13 @@ public:
 
     // Flat frame accessor (for Python to bypass custom __getitem__ if needed)
     CLSMFrame* frame_at(unsigned int i_frame) {
+        materialize_pixel_handles();
         return frames[i_frame];
     }
 
     // Channel+frame accessor
     CLSMFrame* get_frame_for_channel(int ch, int frame) {
+        materialize_pixel_handles();
         if (n_channels <= 1) {
             // Fallback: interpret 'ch' as 0 and frame as flat index
             if (frame < 0) return nullptr;
@@ -842,6 +1005,8 @@ public:
      * of each corresponding pixel in all frames.
      */
     void stack_frames() {
+        materialize_pixel_handles();
+        drop_stream_masks();  // pixel contents change; masks are stale
         CLSMFrame* f0 = frames[0];
         for (unsigned int i = 1; i < n_frames; i++) {
             *f0 += *frames[i];
@@ -917,6 +1082,7 @@ public:
      * @return Pointer to the CLSMFrame at the specified index.
      */
     CLSMFrame* operator[](unsigned int i_frame) {
+        materialize_pixel_handles();
         return frames[i_frame];
     }
 
@@ -1153,9 +1319,11 @@ public:
     double get_line_duration(int frame = 0, int line = 0){
         double re = -1.0;
         if(tttr != nullptr){
-            auto header = tttr->get_header();
-            
+            if(frame < 0 || static_cast<size_t>(frame) >= frames.size()) return re;
             auto f = frames[frame];
+            if(line < 0 || static_cast<size_t>(line) >= f->lines.size()) return re;
+            auto header = tttr->get_header();
+
             auto l = f->lines[line];
 
             int start = l->get_start();
@@ -1184,7 +1352,10 @@ public:
      *              out of bounds.
      */
     double get_pixel_duration(int frame = 0, int line = 0){
-        return get_line_duration(frame, line) / settings.n_pixel_per_line;
+        if(settings.n_pixel_per_line <= 0) return -1.0;
+        double line_duration = get_line_duration(frame, line);
+        if(line_duration < 0.0) return -1.0;
+        return line_duration / settings.n_pixel_per_line;
     }
 
     /*!

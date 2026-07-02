@@ -2135,6 +2135,20 @@ void TTTR::compute_microtime_histogram(
     // Prepare histogram container
     std::vector<double> hist_vec(n_channels, 0.0);
 
+    // Channel lookup table for O(1) membership tests instead of a per-photon
+    // std::find over the channel list. Routing channels are signed char, so
+    // only list values in [-128, 127] can ever match.
+    bool chan_ok[256];
+    const bool filter_channels = (routing_channels != nullptr);
+    if (filter_channels) {
+        std::memset(chan_ok, 0, sizeof(chan_ok));
+        for (int v : *routing_channels) {
+            if (v >= -128 && v <= 127) {
+                chan_ok[static_cast<unsigned char>(static_cast<signed char>(v))] = true;
+            }
+        }
+    }
+
     // Collect micro-time values
     std::vector<unsigned short> selected;
     if (!tttr_indices) {
@@ -2144,9 +2158,8 @@ void TTTR::compute_microtime_histogram(
         if (micro_times && n_micro_times > 0) {
             selected.reserve(n_micro_times);
             for (int i = 0; i < n_micro_times; ++i) {
-                if (!routing_channels ||
-                    std::find(routing_channels->begin(), routing_channels->end(),
-                              tttr_data->routing_channels[i]) != routing_channels->end()) {
+                if (!filter_channels ||
+                    chan_ok[static_cast<unsigned char>(tttr_data->routing_channels[i])]) {
                     selected.push_back(micro_times[i] / micro_time_coarsening);
                 }
             }
@@ -2154,9 +2167,8 @@ void TTTR::compute_microtime_histogram(
     } else {
         selected.reserve(tttr_indices->size());
         for (int idx : *tttr_indices) {
-            if (!routing_channels ||
-                std::find(routing_channels->begin(), routing_channels->end(),
-                          tttr_data->routing_channels[idx]) != routing_channels->end()) {
+            if (!filter_channels ||
+                chan_ok[static_cast<unsigned char>(tttr_data->routing_channels[idx])]) {
                 selected.push_back(tttr_data->micro_times[idx] / micro_time_coarsening);
             }
         }

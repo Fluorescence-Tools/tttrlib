@@ -215,7 +215,7 @@ std::shared_ptr<TTTRMask> BurstFilter::create_burst_mask() {
             
             for (int64_t idx = start; idx <= stop; ++idx) {
                 if (idx >= 0 && idx < static_cast<int64_t>(tttr_data->size())) {
-                    mask->masked[static_cast<size_t>(idx)] = 1;
+                    mask->set_bit(static_cast<size_t>(idx), true);
                 }
             }
         }
@@ -235,8 +235,8 @@ std::vector<int64_t> BurstFilter::apply_mask(const TTTRMask& mask) {
             
             bool burst_overlaps = false;
             for (int64_t idx = start; idx <= stop && !burst_overlaps; ++idx) {
-                if (idx >= 0 && idx < static_cast<int64_t>(mask.masked.size())) {
-                    if (mask.masked[static_cast<size_t>(idx)]) {
+                if (idx >= 0 && idx < static_cast<int64_t>(mask.masked_size)) {
+                    if (mask.get_bit(static_cast<size_t>(idx))) {
                         burst_overlaps = true;
                     }
                 }

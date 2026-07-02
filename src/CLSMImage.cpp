@@ -1,4 +1,5 @@
 #include "include/CLSMImage.h"
+#include "include/BitOps.h"
 #include "include/Verbose.h"
 #include "include/info.h"
 #include <memory>
@@ -79,6 +80,49 @@ static std::vector<int> collect_stacked_pixel_indices(
     
     return indices;
 }
+
+// Sequential macro time reader. Replicates TTTR::get_macro_time_at exactly
+// but replaces the per-photon keyframe division (index / keyframe_interval)
+// of the compressed representation with an incremental keyframe pointer.
+// Requires monotonically increasing indices between reset() calls.
+// The raw pointers are extracted inside CLSMImage member functions
+// (CLSMImage is a friend of TTTR).
+namespace {
+struct SeqMacroTime {
+    const unsigned long long* raw;        // non-null when compression is off
+    const uint32_t* comp;
+    const unsigned long long* kfs;
+    size_t interval;
+    size_t kf_idx = 0;
+    unsigned long long kf = 0;
+    size_t kf_end = 0;
+
+    SeqMacroTime(const unsigned long long* raw_,
+                 const uint32_t* comp_,
+                 const unsigned long long* kfs_,
+                 size_t interval_)
+        : raw(raw_), comp(comp_), kfs(kfs_),
+          interval(interval_ > 0 ? interval_ : 1) {}
+
+    inline void reset(size_t start) {
+        if (raw == nullptr) {
+            kf_idx = start / interval;
+            kf = kfs[kf_idx];
+            kf_end = (kf_idx + 1) * interval;
+        }
+    }
+
+    inline unsigned long long at(size_t i) {
+        if (raw != nullptr) return raw[i];
+        while (i >= kf_end) {
+            ++kf_idx;
+            kf = kfs[kf_idx];
+            kf_end += interval;
+        }
+        return kf + static_cast<unsigned long long>(comp[i]);
+    }
+};
+} // namespace
 
 // Helper to setup micro-time filtering bitmap
 // Returns: {bitmap_pointer, owns_bitmap_flag, use_filter_flag}
@@ -239,12 +283,15 @@ void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     if (is_verbose()) {
         std::clog << "-- Copying frame: " << std::flush;
     }
+    // Pixel contents are only copied from a materialized source; a lazy
+    // source hands over its stream masks instead (photons stay recomputable)
+    const bool copy_pixels = fill && p2.pixels_materialized_;
     for (auto f: p2.frames) {
         i_frame++;
         if (is_verbose()) {
             std::clog << i_frame << " " << std::flush;
         }
-        frames.emplace_back(new CLSMFrame(*f, fill));
+        frames.emplace_back(new CLSMFrame(*f, copy_pixels));
     }
     if (is_verbose()) {
         std::clog << std::endl;
@@ -253,11 +300,33 @@ void CLSMImage::copy(const CLSMImage &p2, bool fill) {
         std::clog << "-- Linking TTTR: " << std::endl << std::flush;
     }
     this->tttr = p2.tttr;
-    // public attributes
     settings = p2.settings;
     n_frames = p2.n_frames;
     n_lines = p2.n_lines;
     n_pixel = p2.n_pixel;
+    pixel_duration_matrix = p2.pixel_duration_matrix;
+    pixel_duration_cumsum = p2.pixel_duration_cumsum;
+
+    // Lazy fill state
+    pixel_access_observed_ = false;
+    if (fill) {
+        _is_filled_ = p2._is_filled_;
+        if (p2.pixels_materialized_) {
+            drop_stream_masks();
+            pixels_materialized_ = true;
+        } else {
+            stream_masks_ = p2.stream_masks_;
+            mask_block_size_ = p2.mask_block_size_;
+            mask_split_ = p2.mask_split_;
+            mask_tttr_ = p2.mask_tttr_;
+            pixels_materialized_ = false;
+        }
+    } else {
+        // Structure-only copy: empty pixels, no masks (legacy contract)
+        drop_stream_masks();
+        pixels_materialized_ = true;
+        _is_filled_ = false;
+    }
     // Copy channel layout as well
     n_channels = p2.n_channels;
     channel_offsets = p2.channel_offsets;
@@ -628,6 +697,10 @@ void CLSMImage::create_pixels_in_lines() {
 }
 
 void CLSMImage::append(CLSMFrame *frame) {
+    // External pixel state enters the image: bring our own pixels up to date
+    // and invalidate the stream masks (they do not cover the new frame)
+    materialize_pixel_handles();
+    drop_stream_masks();
     frames.emplace_back(frame);
     n_frames++;
 }
@@ -1092,7 +1165,10 @@ void CLSMImage::create_frames(bool clear_first) {
         auto frame = new CLSMFrame(
             frame_edges[i], frame_edges[i + 1], tttr);
         frame->set_tttr(tttr);
-        append(frame);
+        // Internal structural append: bypass the public append() so image
+        // construction does not trip the lazy-fill access tracking
+        frames.emplace_back(frame);
+        n_frames++;
         if (is_verbose()) {
             std::cout << " " << i << std::flush;
         }
@@ -1234,6 +1310,8 @@ void CLSMImage::clear() {
         std::clog << "Clear pixels of photons" << std::endl;
     }
     _is_filled_ = false;
+    drop_stream_masks();
+    pixels_materialized_ = true;  // empty pixels reflect the (empty) fill state
     for (auto *frame: frames) {
         for (auto &line: frame->lines) {
             for (auto &pixel: line->pixels) {
@@ -1272,7 +1350,12 @@ size_t CLSMImage::split_frames_by_channel(
     // Store original frames
     size_t original_frames = frames.size();
     std::vector<CLSMFrame*> original = frames;
-    
+
+    // The rebuilt frames start with empty pixels; pending masks from an
+    // earlier fill no longer apply to the new layout
+    drop_stream_masks();
+    pixels_materialized_ = true;
+
     // Clear and rebuild frame list
     frames.clear();
     n_frames = 0;
@@ -1397,7 +1480,166 @@ void CLSMImage::fill(
     bool use_openmp = false;
     size_t min_frames_for_parallel = SIZE_MAX;
 #endif
-    
+    (void) use_openmp;
+
+    // ------------------------------------------------------------------
+    // Precomputed per-event acceptance bitmask
+    //
+    // One pass over the event stream bakes photon-type, channel and
+    // micro-time acceptance into packed 64-bit words. The per-line photon
+    // loops then visit only accepted events, skipping 64 rejected events per
+    // zero word. In split-by-channel mode one mask is built per channel in
+    // the same single pass, replacing n_channels rescans of the raw arrays.
+    // ------------------------------------------------------------------
+    const size_t n_events = static_cast<size_t>(tttr_data->size());
+
+    // Shared micro-time table when ranges are given without a bitmap
+    // (inclusive bounds, matching setup_microtime_filter). Built once and
+    // read-only in the parallel region, replacing the previous per-thread
+    // per-frame allocations.
+    std::unique_ptr<bool[]> shared_mt_table;
+    if (!micro_time_ranges.empty() && micro_time_bitmap == nullptr) {
+        shared_mt_table.reset(new bool[65536]);
+        std::memset(shared_mt_table.get(), 0, 65536);
+        for (const auto& r: micro_time_ranges) {
+            int start = std::max(0, r.first);
+            int end = std::min(65535, r.second);
+            if (end >= start) {
+                std::memset(&shared_mt_table[start], 1, end - start + 1);
+            }
+        }
+    }
+
+    const bool mask_has_per_channel_bitmap = (micro_time_bitmap != nullptr &&
+            n_micro_time_bitmap == 65536 * static_cast<int>(channels.size()));
+    const bool mask_has_global_bitmap = (micro_time_bitmap != nullptr &&
+            n_micro_time_bitmap == 65536);
+    const bool mt_filter_any = (shared_mt_table != nullptr) ||
+            mask_has_per_channel_bitmap || mask_has_global_bitmap;
+
+    // The acceptance mask is the primary representation of a filled image:
+    // fill() normally stops after building it and the per-pixel index vectors
+    // are materialized lazily on first access. Only degenerate cases (no
+    // events, no frames, oversized per-channel masks) run the legacy eager
+    // loop below.
+    constexpr size_t ACCEPT_MASK_MIN_EVENTS = size_t(1) << 20;
+    const size_t n_masks = do_split_fill ? channels.size() : 1;
+    bool use_accept_mask = n_events > 0 && !frames.empty();
+    // With an absurd number of channels fall back to the legacy loop instead
+    // of allocating oversized masks.
+    if (use_accept_mask && n_masks * ((n_events + 7) / 8) > (size_t(256) << 20)) {
+        use_accept_mask = false;
+    }
+
+    std::vector<std::vector<uint64_t>> accept_masks;
+    if (use_accept_mask) {
+        // For every routing channel value: which mask(s) receive its photons
+        // (several in split mode when a channel is listed twice) and its first
+        // position in 'channels' (per-channel bitmap slice, first match wins
+        // exactly like passes_microtime_filter).
+        std::vector<std::vector<int>> mask_targets(TTTRLIB_MAX_ROUTING_CHANNELS);
+        int first_pos[TTTRLIB_MAX_ROUTING_CHANNELS];
+        std::fill(std::begin(first_pos), std::end(first_pos), -1);
+        for (size_t i = 0; i < channels.size(); i++) {
+            int ch = channels[i];
+            if (ch < 0 || ch >= TTTRLIB_MAX_ROUTING_CHANNELS) continue;
+            if (first_pos[ch] < 0) first_pos[ch] = static_cast<int>(i);
+            if (do_split_fill) {
+                mask_targets[ch].push_back(static_cast<int>(i));
+            } else if (mask_targets[ch].empty()) {
+                mask_targets[ch].push_back(0);
+            }
+        }
+
+        const size_t n_words = (n_events + 63) >> 6;
+        accept_masks.assign(n_masks, std::vector<uint64_t>(n_words, 0));
+
+        // Word-per-thread build: each thread owns whole 64-bit words of every
+        // mask, so the read-modify-writes are race-free.
+        #pragma omp parallel for schedule(static) if(use_openmp && n_events >= ACCEPT_MASK_MIN_EVENTS)
+        for (int64_t wi = 0; wi < static_cast<int64_t>(n_words); ++wi) {
+            const size_t base = static_cast<size_t>(wi) << 6;
+            const int lim = static_cast<int>(std::min<size_t>(64, n_events - base));
+            for (int b = 0; b < lim; ++b) {
+                const size_t i = base + b;
+                if (event_types[i] != RECORD_PHOTON) continue;
+                const unsigned char uc = static_cast<unsigned char>(routing_channels_ptr[i]);
+                const auto& targets = mask_targets[uc];
+                if (targets.empty()) continue;
+                for (int mi : targets) {
+                    if (mt_filter_any) {
+                        const bool* table;
+                        if (mask_has_per_channel_bitmap) {
+                            table = micro_time_bitmap + static_cast<size_t>(
+                                    do_split_fill ? mi : first_pos[uc]) * 65536;
+                        } else if (mask_has_global_bitmap) {
+                            table = micro_time_bitmap;
+                        } else {
+                            table = shared_mt_table.get();
+                        }
+                        if (!table[micro_times[i]]) continue;
+                    }
+                    accept_masks[mi][static_cast<size_t>(wi)] |= 1ull << b;
+                }
+            }
+        }
+    }
+
+    if (use_accept_mask) {
+        // Keep the fill-time timing of the "line without pixel" warning
+        // (materialization only skips such lines silently)
+        for (auto* f: frames) {
+            for (auto* l: f->lines) {
+                if (l->pixels.empty()) {
+                    std::clog << "WARNING: Line without pixel." << std::endl;
+                }
+            }
+        }
+
+        // The constructor calls fill(..., clear=false) on a fresh image, so
+        // the lazy/eager decision cannot key on 'clear' alone: a fill over an
+        // image that never held photons (and whose pixels were never handed
+        // out) is also "fresh".
+        const bool fresh = clear || (!_is_filled_ && !pixel_access_observed_);
+        if (fresh) {
+            if (clear) {
+                // Drop content of a previous (possibly materialized) fill
+                for (auto* f: frames) {
+                    for (auto* l: f->lines) {
+                        for (auto &p: l->pixels) p.clear();
+                    }
+                }
+            }
+            stream_masks_ = std::move(accept_masks);
+            mask_block_size_ = channel_block_size;
+            mask_split_ = do_split_fill;
+            mask_tttr_ = tttr_data;
+            pixels_materialized_ = false;
+        } else {
+            // clear==false on an image that already holds photons: legacy
+            // accumulate semantics (duplicates preserved — OR-merging masks
+            // would collapse them), so materialize and insert on top.
+            ensure_pixels_materialized();
+            consume_masks_into_pixels(accept_masks, channel_block_size,
+                                      do_split_fill, tttr_data);
+            for (auto &f: frames) {
+                for (auto &l: f->lines) {
+                    for (auto &p: l->pixels) p.shrink_to_fit();
+                }
+            }
+            drop_stream_masks();
+            pixels_materialized_ = true;
+        }
+        _is_filled_ = true;
+        // Protect frame/line/pixel handles the caller may still hold from an
+        // earlier access: refills stay eager once a handle escaped.
+        if (pixel_access_observed_) ensure_pixels_materialized();
+        return;
+    }
+
+    // ------------------------------------------------------------------
+    // Legacy eager population (mask cap exceeded or degenerate input)
+    // ------------------------------------------------------------------
     #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         CLSMFrame* frame = frames[f_idx];
@@ -1406,23 +1648,6 @@ void CLSMImage::fill(
         std::vector<unsigned long long> pixel_marker_times;
         if (settings.use_pixel_markers) {
             pixel_marker_times.reserve(n_pixel + 16);
-        }
-
-        // Pre-allocate micro-time filter bitmap once per thread/frame
-        // to avoid repeated heap allocation/deallocation inside the line loop
-        bool* thread_local_bitmap = nullptr;
-        bool thread_owns_bitmap = false;
-        if (!micro_time_ranges.empty() && micro_time_bitmap == nullptr) {
-            thread_local_bitmap = new bool[65536];
-            std::memset(thread_local_bitmap, 0, 65536);
-            for (const auto& r: micro_time_ranges) {
-                int start = std::max(0, r.first);
-                int end = std::min(65535, r.second);
-                if (end >= start) {
-                    std::memset(&thread_local_bitmap[start], 1, end - start + 1);
-                }
-            }
-            thread_owns_bitmap = true;
         }
 
         // We need the line index to decide if a line is "reversed"
@@ -1446,9 +1671,16 @@ void CLSMImage::fill(
             auto pixel_duration = line->get_pixel_duration();
             size_t n_pixels_in_line = line->pixels.size();
 
+            // Precomputed cumulative pixel durations for this line (nullptr
+            // when uniform durations are used); fetched once per line so the
+            // event loop below stays allocation-free
+            const std::vector<double>* cumsum =
+                    has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+
             // Guard against division by zero: if pixel_duration is 0,
             // no valid pixel binning is possible for this line
-            if (pixel_duration == 0) {
+            // (with non-uniform durations the cumulative sums are used instead)
+            if (pixel_duration == 0 && cumsum == nullptr) {
                 continue;
             }
 
@@ -1474,14 +1706,13 @@ void CLSMImage::fill(
                 ch_idx = f_idx / channel_block_size;
             }
             
-            // Setup micro-time filtering: use thread-local bitmap if available,
-            // otherwise fall back to setup_microtime_filter helper
+            // Micro-time filtering for the legacy event loop
             bool* micro_time_valid = nullptr;
             bool owns_bitmap = false;
             bool use_micro_time_filter = false;
-            if (thread_owns_bitmap) {
-                // Reuse pre-allocated thread-local bitmap (no per-line heap alloc)
-                micro_time_valid = thread_local_bitmap;
+            if (shared_mt_table != nullptr) {
+                // Shared read-only table built once before the parallel region
+                micro_time_valid = shared_mt_table.get();
                 use_micro_time_filter = true;
             } else {
                 std::tie(micro_time_valid, owns_bitmap, use_micro_time_filter) = setup_microtime_filter(
@@ -1518,7 +1749,54 @@ void CLSMImage::fill(
                 }
             }
 
-            // Walk through each TTTR event that falls within this line's event indices
+            // Assign one accepted photon to its pixel. Type/channel/micro-time
+            // acceptance has already been checked by the per-event checks below.
+            auto assign_photon = [&](int event_i) {
+                // Compute the "raw" pixel index
+                int raw_pixel = -1;
+                if (settings.use_pixel_markers) {
+                    if (pixel_marker_times.empty()) return;
+                    unsigned long long photon_time = tttr_data->get_macro_time_at(event_i);
+                    auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
+
+                    if (it == pixel_marker_times.begin()) {
+                        return; // Before first marker
+                    } else if (it == pixel_marker_times.end()) {
+                        // After last marker: belongs to the last pixel segment
+                        raw_pixel = static_cast<int>(pixel_marker_times.size()) - 1;
+                    } else {
+                        // Between markers
+                        raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
+                    }
+                } else {
+                    // Compute using reciprocal multiplication (faster than division)
+                    // Use accessor to handle both compressed and uncompressed macro times
+                    unsigned long long time_offset = tttr_data->get_macro_time_at(event_i) - line_start_time;
+
+                    if (cumsum != nullptr) {
+                        // Non-uniform pixel durations: binary search on the
+                        // cumulative durations precomputed for this line
+                        auto it = std::upper_bound(cumsum->begin(), cumsum->end(), static_cast<double>(time_offset));
+                        raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                    } else {
+                        // Uniform pixel durations: use simple division
+                        double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
+                        raw_pixel = static_cast<int>(pixel_idx_float);
+                    }
+                }
+
+                // If the computed raw index falls outside the line, skip (single comparison)
+                if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) {
+                    return;
+                }
+                // If the line was scanned right→left, flip the raw index
+                int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
+
+                // Insert the event index using cached pointer
+                pixels_ptr[pixel_nbr].insert(event_i);
+            };
+
+            // Legacy per-event loop
             for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
                 // Prefetch next iteration's data for better cache utilization
                 if (event_i + 16 < stop_idx) {
@@ -1526,7 +1804,7 @@ void CLSMImage::fill(
                     PREFETCH(&routing_channels_ptr[event_i + 16]);
                     // Note: Cannot prefetch macro_times when using compression
                 }
-                
+
                 // Only process photon events, skip all others
                 signed char event_type = event_types[event_i];
                 if (event_type != RECORD_PHOTON) {
@@ -1550,59 +1828,22 @@ void CLSMImage::fill(
                     }
                 }
 
-                // Compute the "raw" pixel index
-                int raw_pixel = -1;
-                if (settings.use_pixel_markers) {
-                    if (pixel_marker_times.empty()) continue;
-                    unsigned long long photon_time = tttr_data->get_macro_time_at(event_i);
-                    auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
-
-                    if (it == pixel_marker_times.begin()) {
-                        continue; // Before first marker
-                    } else if (it == pixel_marker_times.end()) {
-                        // After last marker: belongs to the last pixel segment
-                        raw_pixel = static_cast<int>(pixel_marker_times.size()) - 1;
-                    } else {
-                        // Between markers
-                        raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
-                    }
-                } else {
-                    // Compute using reciprocal multiplication (faster than division)
-                    // Use accessor to handle both compressed and uncompressed macro times
-                    unsigned long long time_offset = tttr_data->get_macro_time_at(event_i) - line_start_time;
-                    double pixel_idx_float = static_cast<double>(time_offset) * pixel_duration_reciprocal;
-                    raw_pixel = static_cast<int>(pixel_idx_float);
-                }
-                
-                // If the computed raw index falls outside the line, skip (single comparison)
-                if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) {
-                    continue;
-                }
-                // If the line was scanned right→left, flip the raw index
-                int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
-
                 // Verify that the photon's micro time falls within the specified ranges (bitmap lookup)
                 if (use_micro_time_filter) {
                     unsigned short micro_time = micro_times[event_i];
-                    if (!passes_microtime_filter(micro_time, micro_time_valid, has_per_channel_bitmap, 
+                    if (!passes_microtime_filter(micro_time, micro_time_valid, has_per_channel_bitmap,
                                                  do_split_fill, c, channels)) {
                         continue;
                     }
                 }
 
-                // Insert the event index using cached pointer
-                pixels_ptr[pixel_nbr].insert(event_i);
+                assign_photon(event_i);
             }
-            
+
             // Clean up micro-time filter bitmap only if setup_microtime_filter allocated it
             if (owns_bitmap && micro_time_valid != nullptr) {
                 delete[] micro_time_valid;
             }
-        }
-
-        // Clean up thread-local bitmap (allocated once per frame/thread)
-        if (thread_owns_bitmap && thread_local_bitmap != nullptr) {
-            delete[] thread_local_bitmap;
         }
     }
 
@@ -1616,11 +1857,284 @@ void CLSMImage::fill(
         }
     }
 
+    // Legacy path populated the pixels eagerly
+    drop_stream_masks();
+    pixels_materialized_ = true;
+
     // Mark the image as filled so downstream methods know pixels are populated
     _is_filled_ = true;
 }
 
+void CLSMImage::ensure_pixels_materialized() {
+    if (pixels_materialized_) return;
+    pixels_materialized_ = true;  // set first: guards against re-entry
+    if (!stream_masks_.empty() && mask_tttr_ != nullptr) {
+        consume_masks_into_pixels(stream_masks_, mask_block_size_, mask_split_,
+                                  mask_tttr_);
+        for (auto &f: frames) {
+            for (auto &l: f->lines) {
+                for (auto &p: l->pixels) p.shrink_to_fit();
+            }
+        }
+    }
+    // The masks are kept: they are small (n_events/8 bytes per block) and
+    // enable fused reads such as get_intensity without touching pixels.
+}
+
+void CLSMImage::consume_masks_into_pixels(
+        const std::vector<std::vector<uint64_t>>& masks,
+        size_t block_size, bool split, std::shared_ptr<TTTR> tttr_data
+) {
+    if (tttr_data == nullptr || masks.empty()) return;
+    const size_t n_events = static_cast<size_t>(tttr_data->size());
+    if (n_events == 0) return;
+
+    // Hoisted macro time access (sequential keyframe reader avoids the
+    // per-photon division of the compressed representation; bit-identical)
+    const unsigned long long* mt_raw = tttr_data->is_macro_time_compression_enabled()
+            ? nullptr : tttr_data->macro_times;
+    const uint32_t* mt_comp = tttr_data->macro_times_compressed;
+    const unsigned long long* mt_kfs = tttr_data->macro_time_keyframes;
+    const size_t mt_interval = tttr_data->keyframe_interval;
+
+    const signed char* event_types = tttr_data->event_types;
+    const signed char* routing_channels_ptr = tttr_data->routing_channels;
+
+#ifndef _WIN32
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
+    (void) use_openmp;
+
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
+        CLSMFrame* frame = frames[f_idx];
+        SeqMacroTime smt(mt_raw, mt_comp, mt_kfs, mt_interval);
+
+        // Channel block of this frame; blocks beyond the mask list receive
+        // nothing (matches the legacy check_channel_match == false behavior)
+        const size_t mi = (split && block_size > 0)
+                ? static_cast<size_t>(f_idx) / block_size : 0;
+        if (mi >= masks.size()) continue;
+        const uint64_t* accept_words = masks[mi].data();
+
+        std::vector<unsigned long long> pixel_marker_times;
+        if (settings.use_pixel_markers) {
+            pixel_marker_times.reserve(n_pixel + 16);
+        }
+
+        for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
+            CLSMLine *line = frame->lines[l_idx];
+            if (line->pixels.empty()) continue;
+
+            auto pixel_duration = line->get_pixel_duration();
+            const std::vector<double>* cumsum =
+                    has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+            if (pixel_duration == 0 && cumsum == nullptr) continue;
+
+            bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
+            int start_idx = line->get_start();
+            int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+            if (start_idx < 0 || stop_idx <= start_idx) continue;
+
+            unsigned long long line_start_time = line->get_start_time(tttr_data);
+            int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
+            double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
+            auto* pixels_ptr = line->pixels.data();
+
+            // Collect pixel marker times if marker-based binning is enabled
+            if (settings.use_pixel_markers) {
+                pixel_marker_times.clear();
+                smt.reset(static_cast<size_t>(start_idx));
+                for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
+                    if (event_types[event_i] == RECORD_MARKER && routing_channels_ptr[event_i] == settings.marker_pixel) {
+                        pixel_marker_times.push_back(smt.at(static_cast<size_t>(event_i)));
+                    }
+                }
+            }
+
+            // Assign one accepted photon to its pixel (acceptance was baked
+            // into the mask at fill time)
+            auto assign_photon = [&](int event_i) {
+                int raw_pixel = -1;
+                if (settings.use_pixel_markers) {
+                    if (pixel_marker_times.empty()) return;
+                    unsigned long long photon_time = smt.at(static_cast<size_t>(event_i));
+                    auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
+
+                    if (it == pixel_marker_times.begin()) {
+                        return; // Before first marker
+                    } else if (it == pixel_marker_times.end()) {
+                        raw_pixel = static_cast<int>(pixel_marker_times.size()) - 1;
+                    } else {
+                        raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
+                    }
+                } else {
+                    unsigned long long time_offset = smt.at(static_cast<size_t>(event_i)) - line_start_time;
+                    if (cumsum != nullptr) {
+                        auto it = std::upper_bound(cumsum->begin(), cumsum->end(), static_cast<double>(time_offset));
+                        raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                    } else {
+                        raw_pixel = static_cast<int>(
+                                static_cast<double>(time_offset) * pixel_duration_reciprocal);
+                    }
+                }
+                if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) return;
+                int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
+                pixels_ptr[pixel_nbr].insert(event_i);
+            };
+
+            // Visit only accepted photons; zero words skip 64 events at once
+            smt.reset(static_cast<size_t>(start_idx));
+            const int64_t w_first = start_idx >> 6;
+            const int64_t w_last = (stop_idx - 1) >> 6;
+            for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                uint64_t w = accept_words[wi];
+                if (wi == w_first) {
+                    w &= (~0ull) << (start_idx & 63);
+                }
+                if (wi == w_last) {
+                    const int r = (stop_idx - 1) & 63;
+                    if (r != 63) w &= (1ull << (r + 1)) - 1;
+                }
+                while (w) {
+                    const int b = tttrlib::bitops::ctz64(w);
+                    w &= w - 1;   // clear lowest set bit; ascending order
+                    assign_photon(static_cast<int>((wi << 6) + b));
+                }
+            }
+        }
+    }
+}
+
+template<typename Visitor>
+void CLSMImage::for_each_mask_photon(bool parallel_frames, Visitor&& visit) {
+    if (stream_masks_.empty() || mask_tttr_ == nullptr) return;
+    std::shared_ptr<TTTR> tttr_data = mask_tttr_;
+    const size_t n_events = static_cast<size_t>(tttr_data->size());
+    if (n_events == 0) return;
+
+    // Hoisted macro time access (sequential keyframe reader avoids the
+    // per-photon division of the compressed representation; bit-identical)
+    const unsigned long long* mt_raw = tttr_data->is_macro_time_compression_enabled()
+            ? nullptr : tttr_data->macro_times;
+    const uint32_t* mt_comp = tttr_data->macro_times_compressed;
+    const unsigned long long* mt_kfs = tttr_data->macro_time_keyframes;
+    const size_t mt_interval = tttr_data->keyframe_interval;
+
+    const signed char* event_types = tttr_data->event_types;
+    const signed char* routing_channels_ptr = tttr_data->routing_channels;
+
+#ifndef _WIN32
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
+    (void) use_openmp;
+
+    #pragma omp parallel for schedule(dynamic) if(parallel_frames && use_openmp && frames.size() >= min_frames_for_parallel)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
+        CLSMFrame* frame = frames[f_idx];
+        SeqMacroTime smt(mt_raw, mt_comp, mt_kfs, mt_interval);
+
+        const size_t mi = (mask_split_ && mask_block_size_ > 0)
+                ? static_cast<size_t>(f_idx) / mask_block_size_ : 0;
+        if (mi >= stream_masks_.size()) continue;
+        const uint64_t* accept_words = stream_masks_[mi].data();
+
+        std::vector<unsigned long long> pixel_marker_times;
+        if (settings.use_pixel_markers) {
+            pixel_marker_times.reserve(n_pixel + 16);
+        }
+
+        for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
+            CLSMLine *line = frame->lines[l_idx];
+            if (line->pixels.empty()) continue;
+
+            auto pixel_duration = line->get_pixel_duration();
+            const std::vector<double>* cumsum =
+                    has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+            if (pixel_duration == 0 && cumsum == nullptr) continue;
+
+            bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
+            int start_idx = line->get_start();
+            int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+            if (start_idx < 0 || stop_idx <= start_idx) continue;
+
+            unsigned long long line_start_time = line->get_start_time(tttr_data);
+            int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
+            double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
+
+            if (settings.use_pixel_markers) {
+                pixel_marker_times.clear();
+                smt.reset(static_cast<size_t>(start_idx));
+                for (int event_i = start_idx; event_i < stop_idx; ++event_i) {
+                    if (event_types[event_i] == RECORD_MARKER && routing_channels_ptr[event_i] == settings.marker_pixel) {
+                        pixel_marker_times.push_back(smt.at(static_cast<size_t>(event_i)));
+                    }
+                }
+            }
+
+            auto assign_photon = [&](int event_i) {
+                int raw_pixel = -1;
+                if (settings.use_pixel_markers) {
+                    if (pixel_marker_times.empty()) return;
+                    unsigned long long photon_time = smt.at(static_cast<size_t>(event_i));
+                    auto it = std::upper_bound(pixel_marker_times.begin(), pixel_marker_times.end(), photon_time);
+                    if (it == pixel_marker_times.begin()) {
+                        return;
+                    } else if (it == pixel_marker_times.end()) {
+                        raw_pixel = static_cast<int>(pixel_marker_times.size()) - 1;
+                    } else {
+                        raw_pixel = static_cast<int>(std::distance(pixel_marker_times.begin(), it) - 1);
+                    }
+                } else {
+                    unsigned long long time_offset = smt.at(static_cast<size_t>(event_i)) - line_start_time;
+                    if (cumsum != nullptr) {
+                        auto it = std::upper_bound(cumsum->begin(), cumsum->end(), static_cast<double>(time_offset));
+                        raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                    } else {
+                        raw_pixel = static_cast<int>(
+                                static_cast<double>(time_offset) * pixel_duration_reciprocal);
+                    }
+                }
+                if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) return;
+                int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
+                visit(f_idx, l_idx, line, pixel_nbr, event_i);
+            };
+
+            smt.reset(static_cast<size_t>(start_idx));
+            const int64_t w_first = start_idx >> 6;
+            const int64_t w_last = (stop_idx - 1) >> 6;
+            for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                uint64_t w = accept_words[wi];
+                if (wi == w_first) w &= (~0ull) << (start_idx & 63);
+                if (wi == w_last) {
+                    const int r = (stop_idx - 1) & 63;
+                    if (r != 63) w &= (1ull << (r + 1)) - 1;
+                }
+                while (w) {
+                    const int b = tttrlib::bitops::ctz64(w);
+                    w &= w - 1;
+                    assign_photon(static_cast<int>((wi << 6) + b));
+                }
+            }
+        }
+    }
+}
+
 void CLSMImage::strip(const std::vector<int> &tttr_indices, int offset) {
+    // Pixel contents change: bring them up to date first, the stream masks
+    // become stale afterwards
+    materialize_pixel_handles();
+    drop_stream_masks();
     for (auto &f: get_frames()) {
         for (auto &l: f->get_lines()) {
             for (auto &p: l->get_pixels()) {
@@ -1630,7 +2144,349 @@ void CLSMImage::strip(const std::vector<int> &tttr_indices, int offset) {
     }
 }
 
+void CLSMImage::get_intensity_masked(
+        unsigned short **output, int *dim1, int *dim2, int *dim3,
+        std::shared_ptr<TTTR> tttr_data,
+        std::vector<int> channels,
+        std::vector<std::pair<int,int>> micro_time_ranges
+) {
+    *dim1 = static_cast<int>(n_frames);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
+    const size_t n_total = n_frames * n_lines * n_pixel;
+    auto* img = static_cast<unsigned short*>(
+            calloc(std::max(n_total, size_t(1)), sizeof(unsigned short)));
+    *output = img;
+
+    if (tttr_data == nullptr) tttr_data = tttr;
+    if (img == nullptr || tttr_data == nullptr || n_total == 0) return;
+
+    if (channels.empty()) {
+        signed char* chs; int nchs;
+        tttr_data->get_used_routing_channels(&chs, &nchs);
+        for (int i = 0; i < nchs; i++) channels.emplace_back(chs[i]);
+        free(chs);
+    }
+
+    const size_t n_events = static_cast<size_t>(tttr_data->size());
+    if (n_events == 0) return;
+
+    bool channel_lookup[TTTRLIB_MAX_ROUTING_CHANNELS] = {false};
+    for (auto ch: channels) {
+        if (ch >= 0 && ch < TTTRLIB_MAX_ROUTING_CHANNELS) channel_lookup[ch] = true;
+    }
+
+    // Micro time acceptance table (inclusive bounds, same as fill)
+    std::unique_ptr<bool[]> mt_table;
+    if (!micro_time_ranges.empty()) {
+        mt_table.reset(new bool[65536]);
+        std::memset(mt_table.get(), 0, 65536);
+        for (const auto& r: micro_time_ranges) {
+            int start = std::max(0, r.first);
+            int end = std::min(65535, r.second);
+            if (end >= start) std::memset(&mt_table[start], 1, end - start + 1);
+        }
+    }
+
+    const signed char* event_types = tttr_data->event_types;
+    const signed char* routing_channels_ptr = tttr_data->routing_channels;
+    const unsigned short* micro_times = tttr_data->micro_times;
+
+#ifndef _WIN32
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
+    (void) use_openmp;
+
+    // 1) The "image as a bitmask on the TTTR stream": one packed acceptance
+    //    bit per event (photon type, channel, micro time)
+    const size_t n_words = (n_events + 63) >> 6;
+    std::vector<uint64_t> accept(n_words, 0);
+    #pragma omp parallel for schedule(static) if(use_openmp && n_events >= (size_t(1) << 20))
+    for (int64_t wi = 0; wi < static_cast<int64_t>(n_words); ++wi) {
+        const size_t base = static_cast<size_t>(wi) << 6;
+        const int lim = static_cast<int>(std::min<size_t>(64, n_events - base));
+        uint64_t bits = 0;
+        for (int b = 0; b < lim; ++b) {
+            const size_t i = base + b;
+            if (event_types[i] != RECORD_PHOTON) continue;
+            const unsigned char uc = static_cast<unsigned char>(routing_channels_ptr[i]);
+            if (!channel_lookup[uc]) continue;
+            if (mt_table != nullptr && !mt_table[micro_times[i]]) continue;
+            bits |= 1ull << b;
+        }
+        accept[static_cast<size_t>(wi)] = bits;
+    }
+
+    // 2) Fused consumption: scatter-add accepted photons into the image,
+    //    using the same per-line pixel binning as fill()
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
+        if (static_cast<size_t>(f_idx) >= n_frames) continue;
+        CLSMFrame* frame = frames[f_idx];
+        unsigned short* frame_img = img + static_cast<size_t>(f_idx) * n_lines * n_pixel;
+
+        const size_t lines_in_frame = std::min(frame->lines.size(), n_lines);
+        for (size_t l_idx = 0; l_idx < lines_in_frame; ++l_idx) {
+            CLSMLine* line = frame->lines[l_idx];
+
+            auto pixel_duration = line->get_pixel_duration();
+            const std::vector<double>* cumsum =
+                    has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+            if (pixel_duration == 0 && cumsum == nullptr) continue;
+
+            const bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
+            const int start_idx = line->get_start();
+            const int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+            if (start_idx < 0 || stop_idx <= start_idx) continue;
+
+            const unsigned long long line_start_time = line->get_start_time(tttr_data);
+            const int n_pixels_minus_1 = static_cast<int>(n_pixel) - 1;
+            const double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
+            unsigned short* line_img = frame_img + l_idx * n_pixel;
+
+            const int64_t w_first = start_idx >> 6;
+            const int64_t w_last = (stop_idx - 1) >> 6;
+            for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                uint64_t w = accept[wi];
+                if (wi == w_first) w &= (~0ull) << (start_idx & 63);
+                if (wi == w_last) {
+                    const int r = (stop_idx - 1) & 63;
+                    if (r != 63) w &= (1ull << (r + 1)) - 1;
+                }
+                while (w) {
+                    const int b = tttrlib::bitops::ctz64(w);
+                    w &= w - 1;
+                    const int event_i = static_cast<int>((wi << 6) + b);
+
+                    unsigned long long time_offset =
+                            tttr_data->get_macro_time_at(event_i) - line_start_time;
+                    int raw_pixel;
+                    if (cumsum != nullptr) {
+                        auto it = std::upper_bound(cumsum->begin(), cumsum->end(),
+                                                   static_cast<double>(time_offset));
+                        raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                    } else {
+                        raw_pixel = static_cast<int>(
+                                static_cast<double>(time_offset) * pixel_duration_reciprocal);
+                    }
+                    if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) continue;
+                    const int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
+                    line_img[pixel_nbr]++;
+                }
+            }
+        }
+    }
+}
+
+void CLSMImage::get_intensity_from_masks(
+        unsigned short **output, int *dim1, int *dim2, int *dim3
+) {
+    // Fused counts from the stream acceptance masks: one pass per channel
+    // block, no per-pixel index vectors touched (same binning as
+    // consume_masks_into_pixels; scatter-add instead of insert).
+    *dim1 = static_cast<int>(n_frames);
+    *dim2 = static_cast<int>(n_lines);
+    *dim3 = static_cast<int>(n_pixel);
+    const size_t n_total = n_frames * n_lines * n_pixel;
+    auto* img = static_cast<unsigned short*>(
+            calloc(std::max(n_total, size_t(1)), sizeof(unsigned short)));
+    *output = img;
+    if (img == nullptr || n_total == 0) return;
+    if (stream_masks_.empty() || mask_tttr_ == nullptr) return;
+
+    std::shared_ptr<TTTR> tttr_data = mask_tttr_;
+    const size_t n_events = static_cast<size_t>(tttr_data->size());
+    if (n_events == 0) return;
+
+    // Hoisted macro time access (sequential keyframe reader avoids the
+    // per-photon division of the compressed representation; bit-identical)
+    const unsigned long long* mt_raw = tttr_data->is_macro_time_compression_enabled()
+            ? nullptr : tttr_data->macro_times;
+    const uint32_t* mt_comp = tttr_data->macro_times_compressed;
+    const unsigned long long* mt_kfs = tttr_data->macro_time_keyframes;
+    const size_t mt_interval = tttr_data->keyframe_interval;
+
+#ifndef _WIN32
+    int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
+    bool use_openmp = (num_threads > 1);
+    size_t min_frames_for_parallel = use_openmp ? std::max(size_t(8), size_t(num_threads * 2)) : SIZE_MAX;
+#else
+    bool use_openmp = false;
+    size_t min_frames_for_parallel = SIZE_MAX;
+#endif
+    (void) use_openmp;
+
+    #pragma omp parallel for schedule(dynamic) if(use_openmp && frames.size() >= min_frames_for_parallel)
+    for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
+        if (static_cast<size_t>(f_idx) >= n_frames) continue;
+        CLSMFrame* frame = frames[f_idx];
+        SeqMacroTime smt(mt_raw, mt_comp, mt_kfs, mt_interval);
+
+        const size_t mi = (mask_split_ && mask_block_size_ > 0)
+                ? static_cast<size_t>(f_idx) / mask_block_size_ : 0;
+        if (mi >= stream_masks_.size()) continue;
+        const uint64_t* accept_words = stream_masks_[mi].data();
+
+        unsigned short* frame_img = img + static_cast<size_t>(f_idx) * n_lines * n_pixel;
+        const size_t lines_in_frame = std::min(frame->lines.size(), n_lines);
+        for (size_t l_idx = 0; l_idx < lines_in_frame; ++l_idx) {
+            CLSMLine* line = frame->lines[l_idx];
+            if (line->pixels.empty()) continue;
+
+            auto pixel_duration = line->get_pixel_duration();
+            const std::vector<double>* cumsum =
+                    has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+            if (pixel_duration == 0 && cumsum == nullptr) continue;
+
+            const bool is_reversed = settings.bidirectional_scan && ((l_idx % 2) == 1);
+            const int start_idx = line->get_start();
+            const int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+            if (start_idx < 0 || stop_idx <= start_idx) continue;
+
+            const unsigned long long line_start_time = line->get_start_time(tttr_data);
+            const int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
+            const double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
+            unsigned short* line_img = frame_img + l_idx * n_pixel;
+
+            smt.reset(static_cast<size_t>(start_idx));
+            const int64_t w_first = start_idx >> 6;
+            const int64_t w_last = (stop_idx - 1) >> 6;
+            for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                uint64_t w = accept_words[wi];
+                if (wi == w_first) w &= (~0ull) << (start_idx & 63);
+                if (wi == w_last) {
+                    const int r = (stop_idx - 1) & 63;
+                    if (r != 63) w &= (1ull << (r + 1)) - 1;
+                }
+                while (w) {
+                    const int b = tttrlib::bitops::ctz64(w);
+                    w &= w - 1;
+                    const int event_i = static_cast<int>((wi << 6) + b);
+
+                    unsigned long long time_offset =
+                            smt.at(static_cast<size_t>(event_i)) - line_start_time;
+                    int raw_pixel;
+                    if (cumsum != nullptr) {
+                        auto it = std::upper_bound(cumsum->begin(), cumsum->end(),
+                                                   static_cast<double>(time_offset));
+                        raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                    } else {
+                        raw_pixel = static_cast<int>(
+                                static_cast<double>(time_offset) * pixel_duration_reciprocal);
+                    }
+                    if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) continue;
+                    const int pixel_nbr = is_reversed ? (n_pixels_minus_1 - raw_pixel) : raw_pixel;
+                    if (pixel_nbr < static_cast<int>(n_pixel)) line_img[pixel_nbr]++;
+                }
+            }
+        }
+    }
+}
+
+void CLSMImage::get_tttr_indices(int** output, int* n_output) {
+    *output = nullptr;
+    *n_output = 0;
+
+    // Marker-based binning is not replicated in the mask scan below
+    if (settings.use_pixel_markers) ensure_pixels_materialized();
+
+    std::vector<int> all;
+    if (!pixels_materialized_ && !stream_masks_.empty() && mask_tttr_ != nullptr) {
+        // Collect the assigned photons straight from the stream masks
+        // (serial; per-line bounds identical to consume_masks_into_pixels)
+        const size_t n_events = static_cast<size_t>(mask_tttr_->size());
+        const unsigned long long* mt_raw = mask_tttr_->is_macro_time_compression_enabled()
+                ? nullptr : mask_tttr_->macro_times;
+        SeqMacroTime smt(mt_raw, mask_tttr_->macro_times_compressed,
+                         mask_tttr_->macro_time_keyframes, mask_tttr_->keyframe_interval);
+        for (size_t f_idx = 0; f_idx < frames.size(); ++f_idx) {
+            const size_t mi = (mask_split_ && mask_block_size_ > 0)
+                    ? f_idx / mask_block_size_ : 0;
+            if (mi >= stream_masks_.size()) continue;
+            const uint64_t* accept_words = stream_masks_[mi].data();
+            CLSMFrame* frame = frames[f_idx];
+            for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
+                CLSMLine* line = frame->lines[l_idx];
+                if (line->pixels.empty()) continue;
+                auto pixel_duration = line->get_pixel_duration();
+                const std::vector<double>* cumsum =
+                        has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+                if (pixel_duration == 0 && cumsum == nullptr) continue;
+                const int start_idx = line->get_start();
+                const int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+                if (start_idx < 0 || stop_idx <= start_idx) continue;
+                const unsigned long long line_start_time = line->get_start_time(mask_tttr_);
+                const int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
+                const double reciprocal = 1.0 / static_cast<double>(pixel_duration);
+
+                smt.reset(static_cast<size_t>(start_idx));
+                const int64_t w_first = start_idx >> 6;
+                const int64_t w_last = (stop_idx - 1) >> 6;
+                for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                    uint64_t w = accept_words[wi];
+                    if (wi == w_first) w &= (~0ull) << (start_idx & 63);
+                    if (wi == w_last) {
+                        const int r = (stop_idx - 1) & 63;
+                        if (r != 63) w &= (1ull << (r + 1)) - 1;
+                    }
+                    while (w) {
+                        const int b = tttrlib::bitops::ctz64(w);
+                        w &= w - 1;
+                        const int event_i = static_cast<int>((wi << 6) + b);
+                        unsigned long long time_offset =
+                                smt.at(static_cast<size_t>(event_i)) - line_start_time;
+                        int raw_pixel;
+                        if (cumsum != nullptr) {
+                            auto it = std::upper_bound(cumsum->begin(), cumsum->end(),
+                                                       static_cast<double>(time_offset));
+                            raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                        } else {
+                            raw_pixel = static_cast<int>(
+                                    static_cast<double>(time_offset) * reciprocal);
+                        }
+                        if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) continue;
+                        all.push_back(event_i);
+                    }
+                }
+            }
+        }
+    } else {
+        // Aggregate from the materialized pixels
+        for (auto* f: frames) {
+            for (auto* l: f->lines) {
+                for (auto& p: l->pixels) {
+                    const auto& v = p.get_tttr_indices();
+                    all.insert(all.end(), v.begin(), v.end());
+                }
+            }
+        }
+    }
+    std::sort(all.begin(), all.end());
+
+    *n_output = static_cast<int>(all.size());
+    auto* out = static_cast<int*>(malloc(std::max(all.size(), size_t(1)) * sizeof(int)));
+    if (out == nullptr) { *n_output = 0; return; }
+    std::memcpy(out, all.data(), all.size() * sizeof(int));
+    *output = out;
+}
+
 void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3) {
+    // Lazy fill: compute the counts straight from the stream masks (no
+    // per-pixel index materialization). Marker-based binning is handled by
+    // the materialized path.
+    if (!pixels_materialized_ && !stream_masks_.empty()) {
+        if (settings.use_pixel_markers) {
+            ensure_pixels_materialized();
+        } else {
+            get_intensity_from_masks(output, dim1, dim2, dim3);
+            return;
+        }
+    }
     *dim1 = static_cast<int>(n_frames);
     *dim2 = static_cast<int>(n_lines);
     *dim3 = static_cast<int>(n_pixel);
@@ -1698,8 +2554,40 @@ void CLSMImage::get_fluorescence_decay(
 
     size_t n_tac_total = nf * n_lines * n_pixel * n_tac;
     // Use malloc + memset for large arrays - faster than calloc
-    auto *t = (unsigned char *) malloc(n_tac_total * sizeof(unsigned char));
+    auto *t = (unsigned char *) malloc(std::max(n_tac_total, size_t(1)) * sizeof(unsigned char));
     memset(t, 0, n_tac_total * sizeof(unsigned char));
+    // Degenerate micro time axis: return the empty histogram instead of
+    // writing out of bounds below
+    if (n_tac == 0) {
+        *output = t;
+        return;
+    }
+
+    // Fused path: histogram straight from the stream masks (no per-pixel
+    // index materialization). Stacked output shares frame 0, so it runs the
+    // frame loop serially; non-stacked frames are independent and parallel.
+    if (!pixels_materialized_ && !stream_masks_.empty()) {
+        const unsigned short* mt = tttr_data->micro_times;
+        // Micro time -> histogram bin lookup (identical to the division,
+        // computed once per possible micro time; -1 marks out-of-range bins)
+        std::vector<int32_t> tac_lut(65536);
+        for (int v = 0; v < 65536; v++) {
+            size_t q = static_cast<size_t>(v) / micro_time_coarsening;
+            tac_lut[v] = (q < n_tac) ? static_cast<int32_t>(q) : -1;
+        }
+        for_each_mask_photon(!stack_frames,
+            [&](int f, size_t l, CLSMLine*, int p, int i) {
+                if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                size_t target_frame = stack_frames ? 0 : static_cast<size_t>(f);
+                size_t base = target_frame * (n_lines * n_pixel * n_tac) +
+                              l * (n_pixel * n_tac) +
+                              static_cast<size_t>(p) * n_tac;
+                int32_t q = tac_lut[mt[i]];
+                if (q >= 0) t[base + static_cast<size_t>(q)] += 1;
+            });
+        *output = t;
+        return;
+    }
     if (is_verbose()) {
         std::clog << "-- Number of frames, lines, pixel: " << n_frames << ", " << n_lines << ", " << n_pixel <<
                 std::endl;
@@ -1731,7 +2619,7 @@ void CLSMImage::get_fluorescence_decay(
                 const auto& indices = pixel.get_tttr_indices();
                 for (auto i: indices) {
                     size_t i_tac = tttr_data->micro_times[i] / micro_time_coarsening;
-                    t[pixel_nbr + i_tac] += 1;
+                    if (i_tac < n_tac) t[pixel_nbr + i_tac] += 1;
                 }
             }
         }
@@ -1749,6 +2637,8 @@ void CLSMImage::get_fcs_image(
     const bool normalized_correlation,
     const int min_photons
 ) {
+    ensure_pixels_materialized();
+    if (clsm_other != nullptr) clsm_other->ensure_pixels_materialized();
     if (is_verbose()) {
         std::clog << "Get fluorescence correlation image" << std::endl;
     }
@@ -1861,11 +2751,31 @@ void CLSMImage::get_decay_of_pixels(
     *dim1 = static_cast<int>(n_decays);
     *dim2 = static_cast<int>(n_tac);
     size_t n_tac_total = n_decays * n_tac;
-    auto *t = (unsigned int *) calloc(n_tac_total, sizeof(unsigned int));
+    auto *t = (unsigned int *) calloc(std::max(n_tac_total, size_t(1)), sizeof(unsigned int));
+    if (n_tac == 0) {
+        *output = t;  // degenerate micro time axis: empty histogram
+        return;
+    }
     if ((dmask1 != n_frames) || (dmask2 != n_lines) || (dmask3 != n_pixel)) {
         std::cerr << "Error: the dimensions of the selection ("
                 << n_frames << ", " << n_lines << ", " << n_pixel
                 << ") does not match the CLSM image dimensions.";
+    } else if (!pixels_materialized_ && !stream_masks_.empty()) {
+        // Fused path: masked pixel decays straight from the stream masks
+        const unsigned short* mts = tttr_data->micro_times;
+        std::vector<int32_t> tac_lut(65536);
+        for (int v = 0; v < 65536; v++) {
+            size_t q = static_cast<size_t>(v) / tac_coarsening;
+            tac_lut[v] = (q < n_tac) ? static_cast<int32_t>(q) : -1;
+        }
+        for_each_mask_photon(false,
+            [&](int f, size_t l, CLSMLine*, int p, int i) {
+                if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                if (!mask[static_cast<size_t>(f) * (n_lines * n_pixel) + l * n_pixel + p]) return;
+                int32_t q = tac_lut[mts[i]];
+                size_t w_frame = stack_frames ? 0 : static_cast<size_t>(f);
+                if (q >= 0) t[w_frame * n_tac + static_cast<size_t>(q)] += 1;
+            });
     } else {
         size_t w_frame = 0;
         for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
@@ -1878,7 +2788,7 @@ void CLSMImage::get_decay_of_pixels(
                         const auto& indices = pixel.get_tttr_indices();
                         for (auto i: indices) {
                             size_t i_tac = tttr_data->micro_times[i] / tac_coarsening;
-                            t[w_frame * n_tac + i_tac] += 1;
+                            if (i_tac < n_tac) t[w_frame * n_tac + i_tac] += 1;
                         }
                     }
                 }
@@ -1904,6 +2814,41 @@ void CLSMImage::get_mean_micro_time(
     }
     if (microtime_resolution < 0)
         microtime_resolution = tttr_data->header->get_micro_time_resolution();
+
+    // Fused path: per-pixel running means straight from the stream masks.
+    // TTTR::compute_mean_microtime uses an order-dependent iterative mean;
+    // photons are visited per pixel in the same ascending order as the
+    // materialized index lists, so the result is bit-identical. Stacked
+    // output accumulates across frames in frame order -> serial frame loop.
+    if (!pixels_materialized_ && !stream_masks_.empty()) {
+        const size_t o_frames = stack_frames ? 1 : n_frames;
+        const size_t n_total = o_frames * n_lines * n_pixel;
+        std::vector<double> value(n_total, 0.0);
+        std::vector<double> nph(n_total, 0.0);
+        const unsigned short* mts = tttr_data->micro_times;
+        for_each_mask_photon(!stack_frames,
+            [&](int f, size_t l, CLSMLine*, int p, int i) {
+                if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                size_t of = stack_frames ? 0 : static_cast<size_t>(f);
+                size_t idx = of * (n_lines * n_pixel) + l * n_pixel + p;
+                double& v = value[idx];
+                double& n = nph[idx];
+                v += 1. / (n + 1.) * (double) (mts[i] - v);
+                n += 1.0;
+            });
+        auto *t = (double *) malloc(std::max(n_total, size_t(1)) * sizeof(double));
+        for (size_t idx = 0; idx < n_total; idx++) {
+            double v = value[idx] * microtime_resolution;
+            if (nph[idx] < minimum_number_of_photons) v = -1.0;
+            t[idx] = v;
+        }
+        *dim1 = static_cast<int>(o_frames);
+        *dim2 = static_cast<int>(n_lines);
+        *dim3 = static_cast<int>(n_pixel);
+        *output = t;
+        return;
+    }
+
     if (!stack_frames) {
         auto *t = (double *) malloc(n_frames * n_lines * n_pixel * sizeof(double));
         
@@ -1980,6 +2925,55 @@ void CLSMImage::get_phasor(
     // Use malloc + memset for large arrays - faster than calloc
     auto *t = (float *) malloc(o_frames * n_lines * n_pixel * 2 * sizeof(float));
     memset(t, 0, o_frames * n_lines * n_pixel * 2 * sizeof(float));
+
+    // Fused path: per-pixel g/s sums straight from the stream masks (same
+    // ascending accumulation order as DecayPhasor::compute_phasor over the
+    // materialized index lists -> bit-identical). Stacked output shares
+    // frame 0 -> serial frame loop.
+    if (!pixels_materialized_ && !stream_masks_.empty()) {
+        const size_t n_out = static_cast<size_t>(o_frames) * n_lines * n_pixel;
+        std::vector<double> g_sum(n_out, 0.0), s_sum(n_out, 0.0), cnt(n_out, 0.0);
+        const unsigned short* mts = tttr_data->micro_times;
+        // Micro times take at most 65536 distinct values: precompute cos/sin
+        // once (identical std::cos/std::sin inputs -> bit-identical sums)
+        std::vector<double> cos_lut(65536), sin_lut(65536);
+        for (int v = 0; v < 65536; v++) {
+            unsigned short mtv = static_cast<unsigned short>(v);
+            cos_lut[v] = std::cos(mtv * factor);
+            sin_lut[v] = std::sin(mtv * factor);
+        }
+        for_each_mask_photon(!stack_frames,
+            [&](int f, size_t l, CLSMLine*, int p, int i) {
+                if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                size_t of = stack_frames ? 0 : static_cast<size_t>(f);
+                size_t idx = of * (n_lines * n_pixel) + l * n_pixel + p;
+                auto mtv = mts[i];
+                g_sum[idx] += cos_lut[mtv];
+                s_sum[idx] += sin_lut[mtv];
+                cnt[idx] += 1.0;
+            });
+        for (size_t idx = 0; idx < n_out; idx++) {
+            double gg = -1.0, ss = -1.0;
+            if (cnt[idx] > minimum_number_of_photons) {
+                double g_exp = g_sum[idx] / std::max(1., cnt[idx]);
+                double s_exp = s_sum[idx] / std::max(1., cnt[idx]);
+                gg = DecayPhasor::g(g_irf, s_irf, g_exp, s_exp);
+                ss = DecayPhasor::s(g_irf, s_irf, g_exp, s_exp);
+            }
+            t[idx * 2 + 0] = static_cast<float>(gg);
+            t[idx * 2 + 1] = static_cast<float>(ss);
+        }
+        if (is_verbose()) {
+            std::clog << "GET_PHASOR_IMAGE (fused)..." << std::endl;
+        }
+        *dim1 = static_cast<int>(o_frames);
+        *dim2 = static_cast<int>(n_lines);
+        *dim3 = static_cast<int>(n_pixel);
+        *dim4 = 2;
+        *output = t;
+        return;
+    }
+
     for (int i_line = 0; i_line < n_lines; i_line++) {
         for (int i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
             if (stack_frames) {
@@ -2079,7 +3073,47 @@ void CLSMImage::get_mean_lifetime(
     // Use malloc + memset for large arrays - faster than calloc
     auto *t = (double *) malloc(o_frames * n_lines * n_pixel * sizeof(double));
     memset(t, 0, o_frames * n_lines * n_pixel * sizeof(double));
-    
+
+    // Fused path: per-pixel photon count (m0) and micro-time sum (m1)
+    // straight from the stream masks, then the same moments formula as
+    // TTTR::compute_mean_lifetime (IRF/background moments precomputed above).
+    // Plain sums in ascending order -> bit-identical to the legacy path.
+    if (!pixels_materialized_ && !stream_masks_.empty()) {
+        // TTTR::compute_mean_lifetime falls back to the header resolution
+        // when the passed dt is negative — replicate that quirk exactly
+        double dt_eff = dt;
+        if (dt_eff < 0.0) dt_eff = tttr_data->header->get_micro_time_resolution();
+        const size_t n_out = o_frames * n_lines * n_pixel;
+        std::vector<double> m0_h(n_out, 0.0), m1_h(n_out, 0.0);
+        const unsigned short* mts = tttr_data->micro_times;
+        for_each_mask_photon(!stack_frames,
+            [&](int f, size_t l, CLSMLine*, int p, int i) {
+                if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                size_t of = stack_frames ? 0 : static_cast<size_t>(f);
+                size_t idx = of * (n_lines * n_pixel) + l * n_pixel + p;
+                m0_h[idx] += 1.0;
+                m1_h[idx] += mts[i];
+            });
+        for (size_t idx = 0; idx < n_out; idx++) {
+            double m0b = m0_bg, m1b = m1_bg;
+            if (background_fraction > 0.0) {
+                m1b = m1_bg * (m0_h[idx] / m0_bg) * background_fraction;
+                m0b = m0_h[idx] * background_fraction;
+            }
+            double lt = 0.0;
+            if (m0_h[idx] > minimum_number_of_photons) {
+                lt = (m1_h[idx] - m1b) / (m0_h[idx] - m0b) - m1_irf / m0_irf;
+                lt *= dt_eff;
+            }
+            t[idx] = lt;
+        }
+        *dim1 = static_cast<int>(o_frames);
+        *dim2 = static_cast<int>(n_lines);
+        *dim3 = static_cast<int>(n_pixel);
+        *output = t;
+        return;
+    }
+
     // Configure OpenMP for parallel mean lifetime computation
 #ifndef _WIN32
     int num_threads = tttrlib::cpu_features::configure_openmp(is_verbose());
@@ -2136,6 +3170,26 @@ void CLSMImage::get_roi(
 ) {
     if (is_verbose()) {
         std::clog << "CREATE ROI" << std::endl;
+    }
+    // When the CLSM image is in lazy (bitmask) state, take the per-pixel
+    // counts from the fused intensity instead of materializing index vectors
+    std::vector<unsigned short> clsm_counts;
+    size_t clsm_nl = 0, clsm_np = 0;
+    if (clsm != nullptr) {
+        if (!clsm->pixels_materialized_ && !clsm->stream_masks_.empty() &&
+            !clsm->settings.use_pixel_markers) {
+            unsigned short* buf = nullptr;
+            int d1 = 0, d2 = 0, d3 = 0;
+            clsm->get_intensity_from_masks(&buf, &d1, &d2, &d3);
+            if (buf != nullptr) {
+                clsm_counts.assign(buf, buf + static_cast<size_t>(d1) * d2 * d3);
+                free(buf);
+            }
+            clsm_nl = static_cast<size_t>(d2);
+            clsm_np = static_cast<size_t>(d3);
+        } else {
+            clsm->ensure_pixels_materialized();
+        }
     }
     // determine the total number of frames, lines, and pixel in the input
     size_t nf, nl, np; // the number frames, lines, and pixel in the input
@@ -2247,9 +3301,15 @@ void CLSMImage::get_roi(
                 if (mask_v[current_pixel]) {
                     double value;
                     if (clsm != nullptr) {
-                        auto frame = clsm->frames[f];
-                        auto line = frame->lines[l];
-                        value = static_cast<double>(line->pixels[p].size());
+                        if (!clsm_counts.empty()) {
+                            value = static_cast<double>(clsm_counts[
+                                    static_cast<size_t>(f) * (clsm_nl * clsm_np) +
+                                    static_cast<size_t>(l) * clsm_np + p]);
+                        } else {
+                            auto frame = clsm->frames[f];
+                            auto line = frame->lines[l];
+                            value = static_cast<double>(line->pixels[p].size());
+                        }
                     } else if (images != nullptr) {
                         value = images[f * (nl * np) + l * nl + p];
                     }
@@ -2437,6 +3497,9 @@ void CLSMImage::compute_ics(
 
 
 void CLSMImage::transform(unsigned int *input, int n_input) {
+    // Pixel contents are rearranged: work on materialized pixels, masks stale
+    materialize_pixel_handles();
+    drop_stream_masks();
     CLSMImage *source = new CLSMImage(*this, true);
     CLSMImage *target = this;
 
@@ -2458,6 +3521,9 @@ void CLSMImage::transform(unsigned int *input, int n_input) {
 
 
 void CLSMImage::reshape(int new_n_frames, int new_n_lines, int new_n_pixel) {
+    // Geometry changes: materialize with the old layout, masks become stale
+    materialize_pixel_handles();
+    drop_stream_masks();
     if (is_verbose()) {
         std::clog << "-- Reshaping image from ("
                 << n_frames << " × " << n_lines << " × " << n_pixel
@@ -2538,6 +3604,9 @@ void CLSMImage::crop(
     int line_start, int line_stop,
     int pixel_start, int pixel_stop
 ) {
+    // Geometry changes: materialize with the old layout, masks become stale
+    materialize_pixel_handles();
+    drop_stream_masks();
     frame_stop = std::min(std::max(0, frame_stop), static_cast<int>(size()));
     frame_start = std::max(0, frame_start);
 
@@ -2586,10 +3655,16 @@ size_t CLSMImage::get_memory_usage_bytes() const {
     // Channel layout vectors
     total += channel_offsets.capacity() * sizeof(size_t);
     total += channel_counts.capacity() * sizeof(size_t);
-    
+
     // Marker frame vector
     total += marker_frame.capacity() * sizeof(int);
-    
+
+    // Stream acceptance masks (lazy fill representation)
+    total += stream_masks_.capacity() * sizeof(std::vector<uint64_t>);
+    for (const auto& m: stream_masks_) {
+        total += m.capacity() * sizeof(uint64_t);
+    }
+
     return total;
 }
 
@@ -2601,7 +3676,7 @@ void CLSMImage::get_memory_usage_detailed(
     if (overhead) *overhead = 0;
     if (indices) *indices = 0;
     if (ranges) *ranges = 0;
-    
+
     // CLSMImage object overhead
     if (overhead) {
         *overhead += sizeof(CLSMImage);
@@ -2609,6 +3684,13 @@ void CLSMImage::get_memory_usage_detailed(
         *overhead += channel_offsets.capacity() * sizeof(size_t);
         *overhead += channel_counts.capacity() * sizeof(size_t);
         *overhead += marker_frame.capacity() * sizeof(int);
+    }
+
+    // Stream acceptance masks: the photon-index representation of a lazy fill
+    if (indices) {
+        for (const auto& m: stream_masks_) {
+            *indices += m.capacity() * sizeof(uint64_t);
+        }
     }
     
     // Accumulate from all frames
@@ -2666,3 +3748,75 @@ void CLSMImage::get_memory_usage_detailed(
         }
     }
 }
+
+void CLSMImage::rebuild_pixel_duration_cumsum(){
+    pixel_duration_cumsum.clear();
+    pixel_duration_cumsum.resize(pixel_duration_matrix.size());
+    for(size_t l = 0; l < pixel_duration_matrix.size(); l++){
+        const auto& durations = pixel_duration_matrix[l];
+        auto& cumsum = pixel_duration_cumsum[l];
+        cumsum.resize(durations.size());
+        double sum = 0.0;
+        for(size_t i = 0; i < durations.size(); i++){
+            sum += durations[i];
+            cumsum[i] = sum;
+        }
+    }
+}
+
+void CLSMImage::set_pixel_duration_matrix(const std::vector<std::vector<double>>& durations){
+    // A deferred fill must be binned with the durations that were active at
+    // fill time, so materialize before the cumulative sums change
+    ensure_pixels_materialized();
+    pixel_duration_matrix = durations;
+    rebuild_pixel_duration_cumsum();
+}
+
+void CLSMImage::set_pixel_duration_matrix(double* data, int nx, int ny){
+    // See the vector overload: deferred fills bin with the fill-time durations
+    ensure_pixels_materialized();
+    pixel_duration_matrix.clear();
+    if(data != nullptr && nx > 0 && ny > 0){
+        pixel_duration_matrix.resize(static_cast<size_t>(nx));
+        for(int l = 0; l < nx; l++){
+            const double* row = data + static_cast<size_t>(l) * static_cast<size_t>(ny);
+            pixel_duration_matrix[static_cast<size_t>(l)].assign(row, row + ny);
+        }
+    }
+    rebuild_pixel_duration_cumsum();
+}
+
+void CLSMImage::get_pixel_duration_matrix(double** data, int* nx, int* ny) const{
+    *data = nullptr;
+    *nx = 0;
+    *ny = 0;
+    size_t rows = pixel_duration_matrix.size();
+    size_t cols = 0;
+    for(const auto& line: pixel_duration_matrix) cols = std::max(cols, line.size());
+    if(rows == 0 || cols == 0) return;
+    auto* out = static_cast<double*>(malloc(rows * cols * sizeof(double)));
+    if(out == nullptr) return;
+    for(size_t l = 0; l < rows; l++){
+        size_t n = std::min(cols, pixel_duration_matrix[l].size());
+        for(size_t p = 0; p < n; p++) out[l * cols + p] = pixel_duration_matrix[l][p];
+        for(size_t p = n; p < cols; p++) out[l * cols + p] = 0.0;
+    }
+    *data = out;
+    *nx = static_cast<int>(rows);
+    *ny = static_cast<int>(cols);
+}
+
+const std::vector<std::vector<double>>& CLSMImage::get_pixel_duration_matrix() const{
+    return pixel_duration_matrix;
+}
+
+bool CLSMImage::has_non_uniform_durations() const{
+    return !pixel_duration_matrix.empty();
+}
+
+std::vector<double> CLSMImage::get_cumulative_durations(int frame_idx, int line_idx) const{
+    if(frame_idx < 0 || line_idx < 0) return {};
+    const std::vector<double>* c = line_cumsum(static_cast<size_t>(line_idx));
+    return c ? *c : std::vector<double>{};
+}
+

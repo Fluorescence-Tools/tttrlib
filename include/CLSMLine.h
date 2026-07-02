@@ -15,8 +15,9 @@ class CLSMLine : public TTTRSelection{
 private:
 
     std::vector<CLSMPixel> pixels;
+    std::vector<double> pixel_durations;
     int pixel_duration = -1;
-    std::shared_ptr<TTTR> _tttr = nullptr;  // Only lines need TTTR reference, not pixels
+    std::shared_ptr<TTTR> _tttr = nullptr;
 
 public:
 
@@ -41,12 +42,41 @@ public:
         this->pixel_duration = v;
     }
 
+    void set_pixel_durations(const std::vector<double>& durations){
+        this->pixel_durations = durations;
+    }
+
+    const std::vector<double>& get_pixel_durations() const{
+        return pixel_durations;
+    }
+
+    bool has_non_uniform_durations() const{
+        return !pixel_durations.empty();
+    }
+
+    std::vector<double> get_cumulative_durations() const{
+        if(pixel_durations.empty()){
+            return {};
+        }
+        std::vector<double> cumulative;
+        cumulative.resize(pixel_durations.size());
+        double sum = 0.0;
+        for(size_t i = 0; i < pixel_durations.size(); i++){
+            sum += pixel_durations[i];
+            cumulative[i] = sum;
+        }
+        return cumulative;
+    }
+
     unsigned long long get_pixel_duration(){
+        if(!pixel_durations.empty()){
+            return static_cast<unsigned long long>(pixel_durations[0]);
+        }
         if(pixel_duration < 0){
             if(_tttr && size() > 0){
                 return (size_t) (get_duration(_tttr) / size());
             }
-            return 0;  // Return 0 if no TTTR data or no pixels
+            return 0;
         } else{
             return pixel_duration;
         }
@@ -57,8 +87,8 @@ public:
     }
 
     CLSMLine(const CLSMLine& old_line, bool fill=true) : TTTRSelection(old_line){
-        // Copy private attributes
         pixel_duration = old_line.pixel_duration;
+        pixel_durations = old_line.pixel_durations;
         _tttr = old_line._tttr;
         pixels.resize(old_line.pixels.size());
         pixels = old_line.pixels;

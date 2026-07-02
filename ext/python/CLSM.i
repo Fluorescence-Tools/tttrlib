@@ -41,6 +41,11 @@ static int myErr = 0; // flag to save error state
 %ignore CLSMImage();
 %ignore CLSMImage(const CLSMImage& p2, bool fill=false);
 
+// Keep the raw-pointer pixel-duration overloads C++-only; Python uses the
+// nested-vector forms (VectorDouble_2D converts from nested lists)
+%ignore CLSMImage::set_pixel_duration_matrix(double*, int, int);
+%ignore CLSMImage::get_pixel_duration_matrix(double**, int*, int*) const;
+
 %shared_ptr(CLSMImage)
 
 %include "CLSMPixel.h"
