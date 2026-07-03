@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "domains": [
+    {
+      "name": "TTTR core and photon selections",
+      "source_pages": ["workflows.rst", "tttr-core.rst", "tttr.rst"],
+      "html_pages": ["workflows.html", "tttr-core.html", "tttr.html"],
+      "examples": [
+        "examples/beginner/plot_01_reading_files.py",
+        "examples/beginner/plot_03_selections.py",
+        "examples/beginner/plot_04_writing_files.py",
+        "examples/tttr/plot_tttr_header.py",
+        "examples/tttr/plot_tttr_microtime_histogram.py",
+        "examples/tttr/plot_tttr_transcode.py"
+      ],
+      "symbols": ["TTTR", "TTTRHeader", "TTTRMask", "TTTRSelection", "TTTRRange"]
+    },
+    {
+      "name": "Selections, masks, and ranges",
+      "source_pages": ["workflows.rst", "tttr-core.rst", "burst-analysis.rst"],
+      "html_pages": ["workflows.html", "tttr-core.html", "burst-analysis.html"],
+      "examples": [
+        "examples/beginner/plot_03_selections.py",
+        "examples/single_molecule/plot_burstfilter_with_selection.py",
+        "examples/single_molecule/plot_microtime_selection_example.py"
+      ],
+      "symbols": ["TTTRMask", "TTTRSelection", "TTTRRange"]
+    },
+    {
+      "name": "File I/O and transcoding",
+      "source_pages": ["workflows.rst", "tttr-core.rst"],
+      "html_pages": ["workflows.html", "tttr-core.html"],
+      "examples": [
+        "examples/beginner/plot_01_reading_files.py",
+        "examples/beginner/plot_04_writing_files.py",
+        "examples/tttr/plot_tttr_header.py",
+        "examples/tttr/plot_tttr_files.py",
+        "examples/tttr/plot_tttr_transcode.py",
+        "examples/tttr/plot_tttr_write.py"
+      ],
+      "symbols": ["TTTR", "TTTRHeader"]
+    },
+    {
+      "name": "Single-molecule burst analysis",
+      "source_pages": ["workflows.rst", "burst-analysis.rst", "single_molecule.rst"],
+      "html_pages": ["workflows.html", "burst-analysis.html", "single_molecule.html"],
+      "examples": [
+        "examples/single_molecule/plot_01_burst_analysis.py",
+        "examples/single_molecule/plot_burst_analysis_with_filter.py",
+        "examples/single_molecule/plot_burstfilter_with_selection.py",
+        "examples/single_molecule/plot_complete_burst_analysis_pipeline.py",
+        "examples/single_molecule/plot_fret_burst_analysis.py"
+      ],
+      "symbols": ["BurstFilter", "BurstFeatureExtractor", "TTTRRange", "TTTRSelection"]
+    },
+    {
+      "name": "Photon Distribution Analysis",
+      "source_pages": ["workflows.rst", "pda-guide.rst"],
+      "html_pages": ["workflows.html", "pda-guide.html", "modules/pda.html"],
+      "examples": [
+        "examples/single_molecule/plot_pda_synthetic.py",
+        "examples/single_molecule/plot_single_molecule_pda_1.py",
+        "examples/single_molecule/plot_single_molecule_pda_2.py"
+      ],
+      "symbols": ["Pda", "PdaCallback", "PDA_DEFAULT", "PDA_OPTIMIZED"]
+    },
+    {
+      "name": "FCS and correlation",
+      "source_pages": ["workflows.rst", "fcs-correlation.rst"],
+      "html_pages": ["workflows.html", "fcs-correlation.html", "modules/fcs.html", "modules/correlation.html"],
+      "examples": [
+        "examples/correlation/plot_normal_correlation.py",
+        "examples/correlation/plot_full_correlation.py",
+        "examples/correlation/plot_gated_correlation.py",
+        "examples/correlation/plot_sliced_correlation.py",
+        "examples/correlation/plot_confocor3_two_ch_correlation.py",
+        "examples/image_correlation/plot_imaging_ics_tttrlib.py"
+      ],
+      "symbols": ["Correlator", "CorrelatorPhotonStream"]
+    },
+    {
+      "name": "Image correlation spectroscopy",
+      "source_pages": ["workflows.rst", "fcs-correlation.rst", "clsm-flim-guide.rst"],
+      "html_pages": ["workflows.html", "fcs-correlation.html", "clsm-flim-guide.html"],
+      "examples": [
+        "examples/image_correlation/plot_imaging_ics_tttrlib.py",
+        "examples/image_correlation/plot_imaging_ics_numpy.py",
+        "examples/image_correlation/plot_imaging_ics_fit.py",
+        "examples/image_correlation/plot_imaging_ics_benchmark.py"
+      ],
+      "symbols": ["CLSMImage", "Correlator", "compute_ics"]
+    },
+    {
+      "name": "CLSM, FLIM, and image analysis",
+      "source_pages": ["workflows.rst", "clsm-flim-guide.rst", "imaging.rst"],
+      "html_pages": ["workflows.html", "clsm-flim-guide.html", "imaging.html", "modules/imaging.html", "modules/imaging_mle.html"],
+      "examples": [
+        "examples/beginner/plot_05_microscopy.py",
+        "examples/flim/plot_read_clsm_data.py",
+        "examples/flim/plot_intensity_image.py",
+        "examples/flim/plot_mean_lifetime.py",
+        "examples/flim/plot_phasor.py",
+        "examples/flim/plot_mle_lifetime.py",
+        "examples/flim/plot_segmentation_based_decays.py",
+        "examples/image_correlation/plot_imaging_ics_tttrlib.py"
+      ],
+      "symbols": [
+        "CLSMSettings",
+        "CLSMImage",
+        "CLSMFrame",
+        "CLSMLine",
+        "CLSMPixel",
+        "CLSMISM",
+        "CLSM_DEFAULT",
+        "CLSM_SP5",
+        "CLSM_SP8",
+        "CLSM_BH_SPC130"
+      ]
+    },
+    {
+      "name": "Image localization",
+      "source_pages": ["workflows.rst", "localization-guide.rst"],
+      "html_pages": ["workflows.html", "localization-guide.html", "auto_examples/microscopy_localization/plot_image_localization.html"],
+      "examples": [
+        "examples/microscopy_localization/plot_image_localization.py"
+      ],
+      "symbols": ["ImageLocalizer", "GaussianFitResult"]
+    },
+    {
+      "name": "Phasor and mean-lifetime analysis",
+      "source_pages": ["workflows.rst", "clsm-flim-guide.rst", "fit-guide.rst"],
+      "html_pages": ["workflows.html", "clsm-flim-guide.html", "fit-guide.html"],
+      "examples": [
+        "examples/flim/plot_phasor.py",
+        "examples/flim/plot_mean_lifetime.py",
+        "examples/flim/plot_lifetime_moments.py",
+        "examples/flim/plot_lifetime_moments_bg.py"
+      ],
+      "symbols": ["DecayPhasor", "get_phasor", "get_mean_lifetime", "get_mean_micro_time_image"]
+    },
+    {
+      "name": "Fluorescence decay and fitting",
+      "source_pages": ["workflows.rst", "fit-guide.rst"],
+      "html_pages": ["workflows.html", "fit-guide.html", "modules/decay.html"],
+      "examples": [
+        "examples/fluorescence_decay/plot_fit23.py",
+        "examples/fluorescence_decay/plot_fit23_usage_2.py",
+        "examples/fluorescence_decay/plot_fit24.py",
+        "examples/fluorescence_decay/plot_fit25.py",
+        "examples/fluorescence_decay/plot_fit26.py",
+        "examples/fluorescence_decay/plot_fit_helpers.py",
+        "examples/fluorescence_decay/plot_convolution_routines.py",
+        "examples/flim/plot_mle_lifetime.py"
+      ],
+      "symbols": [
+        "Fit2x",
+        "Fit23",
+        "Fit24",
+        "Fit25",
+        "Fit26",
+        "fit23",
+        "fit24",
+        "fit25",
+        "fit26",
+        "DecayFit23",
+        "DecayFit24",
+        "DecayFit25",
+        "DecayFit26",
+        "DecayFitData",
+        "DecayConvolution",
+        "DecayPhasor"
+      ]
+    }
+  ]
+}
