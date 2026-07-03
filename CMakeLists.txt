@@ -174,7 +174,11 @@ IF (MSVC)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     # Issue with MSVC exceptions (https://stackoverflow.com/questions/6832666/lnk2019-when-including-asio-headers-solution-generated-with-cmake)
     # https://github.com/microsoft/vcpkg/discussions/25414
-    ADD_DEFINITIONS(/DWIN32 /D_WINDOWS /GR /EHsc)
+    ADD_DEFINITIONS(/DWIN32 /D_WINDOWS)
+    # /GR /EHsc are cl-only flags: keep them out of ADD_DEFINITIONS, or the
+    # Ninja generator (cmcldeps) forwards them to rc.exe, which then fails
+    # with RC1203 on the bundled libtiff version resource.
+    ADD_COMPILE_OPTIONS("$<$<COMPILE_LANGUAGE:CXX>:/GR;/EHsc>")
 ENDIF (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
@@ -290,6 +294,13 @@ IF(WITH_TIFF)
     SET(webp          OFF CACHE BOOL "" FORCE)
     SET(pixarlog      OFF CACHE BOOL "" FORCE)
     ADD_SUBDIRECTORY(thirdparty/libtiff EXCLUDE_FROM_ALL)
+    IF(NOT MSVC)
+      # libtiff.a may be archived by an 'ar' without the LTO plugin (conda's
+      # binutils, MinGW). Slim LTO members then have invisible symbols and the
+      # final link silently leaves TIFF* symbols undefined (import error at
+      # runtime). Always put real machine code into the bundled archive.
+      TARGET_COMPILE_OPTIONS(tiff PRIVATE -fno-lto)
+    ENDIF()
     LINK_LIBRARIES(TIFF::tiff)
     ADD_COMPILE_DEFINITIONS(BUILD_TIFF)
     MESSAGE(STATUS "TIFF support: bundled libtiff 4.7.0 (static, built-in codecs; Deflate/ZIP=${WITH_TIFF_ZLIB})")

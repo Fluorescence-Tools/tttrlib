@@ -702,7 +702,7 @@ jobs:
 
   build_conda_docs:
     name: Docs Build (rattler)
-    needs: setup
+    needs: [setup, build_conda_lnx]
     if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -721,12 +721,20 @@ jobs:
       - name: Install rattler-build
         shell: bash -l {0}
         run: conda install -y rattler-build -c conda-forge
+      # The docs recipe consumes the tttrlib conda package built by
+      # build_conda_lnx instead of rebuilding from source, so the docs are
+      # rendered against exactly what gets shipped.
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-packages-ubuntu-latest
+          path: local-channel
       - name: Build documentation package (rattler)
         shell: bash -l {0}
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           rattler-build build --recipe recipes/docs \
             --output-dir ./conda-bld \
+            -c "file://$PWD/local-channel" \
             -c conda-forge
       # PRD-003 M1: extract the built HTML from the docs package (install it into a
       # throwaway prefix, then copy) so the gh-pages deploy job can consume the
@@ -734,7 +742,7 @@ jobs:
       - name: Extract built HTML
         shell: bash -l {0}
         run: |
-          mamba create -y -p ./docsenv -c ./conda-bld -c conda-forge tttrlib-docs
+          mamba create -y -p ./docsenv -c ./conda-bld -c ./local-channel -c conda-forge tttrlib-docs
           mkdir -p docs-html
           cp -r ./docsenv/share/doc/tttrlib/html/. docs-html/
           ls docs-html | head

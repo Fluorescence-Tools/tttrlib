@@ -1,6 +1,10 @@
 # rattler-build recipe that builds the tttrlib HTML documentation (Sphinx +
 # Doxygen) reproducibly and packages it under share/doc/tttrlib/html.
-# Build with:  rattler-build build --recipe recipes/docs -c conda-forge
+# tttrlib itself is NOT built here: it is consumed as a conda package from the
+# channel passed on the command line (in CI: the conda-bld artifact of the
+# Linux conda build job).
+# Build with:
+#   rattler-build build --recipe recipes/docs -c <channel-with-tttrlib> -c conda-forge
 context:
   version: ${{ env.get("PKG_VERSION", default="0.27.0") }}
 
@@ -18,23 +22,17 @@ build:
 
 requirements:
   build:
-    - ${{ compiler('c') }}
-    - ${{ compiler('cxx') }}
-    - cmake
-    - ninja
-    - make
-    - swig >=4.1
     - doxygen
     - pandoc
     - graphviz
   host:
     - python
-    - pip
-    - scikit-build-core
+    # The package under documentation - freshly built by the CI conda job.
+    - tttrlib ==${{ version }}
     - numpy
-    - hdf5
-    - highfive
-    - nlohmann_json
+    # Reference data download (test/download_test_data.py)
+    - pooch
+    - tqdm
     # Sphinx documentation stack (mirrors the CI docs dependencies)
     - sphinx
     - sphinx-copybutton

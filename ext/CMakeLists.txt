@@ -15,12 +15,15 @@ MESSAGE(STATUS "SWIG_VERSION: ${SWIG_VERSION}")
 INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(.)
 
-# glibc on LP64 Linux defines int64_t as 'long', but SWIG's stdint.i typedefs
-# (applied by SWIG >= 4.4 whenever stdint.i is included) resolve int64_t to
-# 'long long' unless SWIGWORDSIZE64 is defined. Without this flag the
-# generated wrappers mix std::vector<long long> with the library's
-# std::vector<long> and do not compile on Linux.
-IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+# glibc on LP64 Linux defines int64_t as 'long', but SWIG >= 4.4 eagerly
+# resolves the stdint.i typedefs and picks 'long long' unless SWIGWORDSIZE64
+# is defined. Without this flag the generated wrappers mix
+# std::vector<long long> with the library's std::vector<long> and do not
+# compile on Linux. Only define it for SWIG >= 4.4: older SWIG keeps int64_t
+# literal in generated code (so the flag is unnecessary), and SWIG 4.2's R
+# backend mishandles 'long long' returns under SWIGWORDSIZE64 (the C side
+# returns a native vector while the R proxy expects an external pointer).
+IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT SWIG_VERSION VERSION_LESS "4.4")
     SET(TTTRLIB_SWIG_INT64_FLAG "-DSWIGWORDSIZE64")
     LIST(APPEND CMAKE_SWIG_FLAGS ${TTTRLIB_SWIG_INT64_FLAG})
 ENDIF()
