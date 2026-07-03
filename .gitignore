@@ -1,5 +1,7 @@
 # Build outputs
-build/
+# Root-anchored: rattler-build's path source copy honors .gitignore, and an
+# unanchored build/ would drop the tracked thirdparty/libtiff/build/ directory.
+/build/
 bld-dir/
 dist/
 dist

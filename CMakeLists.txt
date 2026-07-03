@@ -155,11 +155,16 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       -funroll-loops         # Unroll loops
       -finline-functions     # Inline functions
       -fomit-frame-pointer   # Omit frame pointer
-      -flto                  # Link-time optimization
       -w                     # Disable all warnings in Release builds
     )
-    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
-    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+    # LTO everywhere except MinGW: MinGW's ld fails to resolve symbols from
+    # LTO bitcode inside static archives (e.g. TIFFSetErrorHandler from the
+    # bundled libtiff.a), producing undefined references at link time.
+    IF(NOT MINGW)
+      ADD_COMPILE_OPTIONS(-flto)
+      SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
+      SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+    ENDIF()
   ENDIF()
 ENDIF ()
 
@@ -174,17 +179,18 @@ ENDIF (MSVC)
 if(APPLE)
     FIND_PACKAGE(Threads)
 
-    # comatibility with older systems
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.13")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.13")
-    set(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.13")
+    # Compatibility with older systems. 10.15 is the floor: the sources use
+    # std::filesystem and std::filesystem::path::u8string, which Apple's SDK
+    # marks unavailable before macOS 10.15.
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.15")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.15")
+    set(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.15")
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
     # explicit link to libc++ for recent osx versions
     MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
     ADD_DEFINITIONS(-stdlib=libc++)
-    SET(CMAKE_LFLAGS "${CMAKE_LFLAGS} -mmacosx-version-min=10.9")
     # Don't set MACOSX_RPATH by default
     # https://github.com/conda/conda/issues/3624
     if(DEFINED ENV{CONDA_PREFIX})

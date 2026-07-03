@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+%include "stdint.i";
 %include "stl.i";
 %include "typemaps.i";
 %include "std_string.i";
@@ -74,6 +75,16 @@ $result = swig::from($1);
 // Pair templates
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
 %template(VectorPairInt64) std::vector<std::pair<long long, long long>>;
+
+// With SWIGWORDSIZE64 (Linux, see ext/CMakeLists.txt) int64_t is 'long' and
+// therefore a different type than the 'long long' containers above.
+// Instantiate the int64_t-based containers there so the APIs spelled with
+// int64_t (BurstFilter, BurstFeatureExtractor) convert to/from native lists
+// just like they do on Windows/macOS, where int64_t is 'long long'.
+#ifdef SWIGWORDSIZE64
+%template(VectorInt64T) std::vector<int64_t>;
+%template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
+#endif
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 

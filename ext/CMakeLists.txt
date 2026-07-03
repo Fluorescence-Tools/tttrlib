@@ -15,6 +15,16 @@ MESSAGE(STATUS "SWIG_VERSION: ${SWIG_VERSION}")
 INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(.)
 
+# glibc on LP64 Linux defines int64_t as 'long', but SWIG's stdint.i typedefs
+# (applied by SWIG >= 4.4 whenever stdint.i is included) resolve int64_t to
+# 'long long' unless SWIGWORDSIZE64 is defined. Without this flag the
+# generated wrappers mix std::vector<long long> with the library's
+# std::vector<long> and do not compile on Linux.
+IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    SET(TTTRLIB_SWIG_INT64_FLAG "-DSWIGWORDSIZE64")
+    LIST(APPEND CMAKE_SWIG_FLAGS ${TTTRLIB_SWIG_INT64_FLAG})
+ENDIF()
+
 IF(BUILD_PYTHON_INTERFACE)
 
     IF(BUILD_PYTHON_DOCS)
@@ -199,7 +209,7 @@ IF(BUILD_R_INTERFACE)
             SWIG_MODULE_NAME tttrlib)
 
     # r/tttrlib.i re-includes the shared fragments that live in ext/python.
-    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python)
+    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG})
 
     # Rerun SWIG when any shared fragment, the R module, or the R array library changes.
     file(GLOB R_SWIG_DEPS
@@ -250,7 +260,7 @@ IF(BUILD_JAVA_INTERFACE)
     SET_SOURCE_FILES_PROPERTIES(java/tttrlib.i PROPERTIES
             CPLUSPLUS ON
             SWIG_MODULE_NAME tttrlib)
-    SET(CMAKE_SWIG_FLAGS -package ${J_PACKAGE} -I${CMAKE_CURRENT_SOURCE_DIR}/python)
+    SET(CMAKE_SWIG_FLAGS -package ${J_PACKAGE} -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG})
     SET(CMAKE_SWIG_OUTDIR ${J_OUTDIR})
 
     file(GLOB J_SWIG_DEPS
