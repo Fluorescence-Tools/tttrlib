@@ -1,0 +1,10 @@
+{
+  "versions": [
+    {
+      "version": "dev",
+      "label": "development",
+      "url": "dev/index.html",
+      "stable": false
+    }
+  ]
+}
