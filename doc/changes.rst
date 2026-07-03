@@ -4,6 +4,13 @@
 
 Version 0.26
 ============
+* **TIFF I/O for 2D/3D arrays**: New ``tttrlib.imread(path)`` / ``imwrite(path,
+  array)`` read and write 2-D images and 3-D (multi-page) stacks as TIFF.
+  ``imread`` auto-detects the pixel type (uint8/16/32, int32, float32/64) and
+  returns a NumPy array of that dtype; ``imwrite`` picks the on-disk type from
+  the array and supports ``none``/``lzw``/``packbits``/``deflate`` compression
+  and BigTIFF. Backed by a bundled, statically-linked libtiff, so no new runtime
+  dependency is added (built-in codecs only; ``WITH_TIFF_ZLIB`` adds deflate).
 * Improved support for Photon-HDF5 for better ALEX support
 * Transparent in-memory compression of TTTR and CLSMImage objects
 * Added linearity correction for micro times

@@ -21,6 +21,12 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics (default OFF for conda/pip builds)" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
+# TIFF I/O for 2D/3D arrays via a bundled, statically-linked libtiff. No new
+# runtime dependency: only libtiff's built-in codecs (uncompressed, LZW,
+# PackBits, CCITT, ...) are compiled in. WITH_TIFF_ZLIB additionally enables the
+# Deflate/"ZIP" codec, which requires a zlib to link against.
+OPTION(WITH_TIFF "Build bundled libtiff-based TIFF I/O (no external runtime dependency)" ON)
+OPTION(WITH_TIFF_ZLIB "Also enable libtiff Deflate/ZIP codec (requires zlib to link against)" OFF)
 
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
@@ -210,6 +216,46 @@ IF(BUILD_PHOTON_HDF)
     ELSE()
       MESSAGE(WARNING "HighFive not found; disabling photon HDF support")
     ENDIF()
+  ENDIF()
+ENDIF()
+
+
+# libtiff (bundled) - TIFF I/O for 2D/3D arrays
+#############################
+IF(WITH_TIFF)
+  IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libtiff/CMakeLists.txt")
+    # Build libtiff as a STATIC, position-independent library with only its
+    # built-in codecs so it can be bundled directly into the tttrlib module
+    # without adding a runtime dependency. External codec libraries (jpeg, zstd,
+    # lzma, webp, ...) and the tools/tests/docs/C++ wrapper are all disabled.
+    SET(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    SET(tiff-tools    OFF CACHE BOOL "" FORCE)
+    SET(tiff-tests    OFF CACHE BOOL "" FORCE)
+    SET(tiff-contrib  OFF CACHE BOOL "" FORCE)
+    SET(tiff-docs     OFF CACHE BOOL "" FORCE)
+    SET(tiff-install  OFF CACHE BOOL "" FORCE)
+    SET(cxx           OFF CACHE BOOL "" FORCE)
+    IF(WITH_TIFF_ZLIB)
+      SET(zlib        ON  CACHE BOOL "" FORCE)
+    ELSE()
+      SET(zlib        OFF CACHE BOOL "" FORCE)
+    ENDIF()
+    SET(libdeflate    OFF CACHE BOOL "" FORCE)
+    SET(jpeg          OFF CACHE BOOL "" FORCE)
+    SET(old-jpeg      OFF CACHE BOOL "" FORCE)
+    SET(jbig          OFF CACHE BOOL "" FORCE)
+    SET(lerc          OFF CACHE BOOL "" FORCE)
+    SET(lzma          OFF CACHE BOOL "" FORCE)
+    SET(zstd          OFF CACHE BOOL "" FORCE)
+    SET(webp          OFF CACHE BOOL "" FORCE)
+    SET(pixarlog      OFF CACHE BOOL "" FORCE)
+    ADD_SUBDIRECTORY(thirdparty/libtiff EXCLUDE_FROM_ALL)
+    LINK_LIBRARIES(TIFF::tiff)
+    ADD_COMPILE_DEFINITIONS(BUILD_TIFF)
+    MESSAGE(STATUS "TIFF support: bundled libtiff 4.7.0 (static, built-in codecs; Deflate/ZIP=${WITH_TIFF_ZLIB})")
+  ELSE()
+    MESSAGE(WARNING "WITH_TIFF=ON but thirdparty/libtiff not found; disabling TIFF support")
   ENDIF()
 ENDIF()
 

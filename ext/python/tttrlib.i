@@ -151,6 +151,9 @@ if 'CLSMISM' in dir():
 %include "CLSMISM.i"
 %include "Localization.i"
 
+/* TIFF I/O for 2D/3D arrays (imread / imwrite) */
+%include "Tiff.i"
+
 /* Phasor analysis */
 %include "DecayPhasor.i"
 
