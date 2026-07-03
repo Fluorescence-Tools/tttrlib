@@ -136,8 +136,10 @@ private:
     static constexpr double kEps = 1e-8;
 
     void seed_population();               ///< initial molecules (discrete + open-volume)
-    void inject_open_volume();            ///< surface-flux injection for population mode
+    void inject_open_volume(double windows = 1.0);  ///< surface-flux injection (over N windows)
     void init_orientation(Mol& m);        ///< random dipole orientation (anisotropy)
+    bool any_molecule_in_focus() const;   ///< true if a molecule is inside the excitation grid box
+    void coarse_skip();                   ///< advance one safe coarse step over empty windows
     double detection_eff(int ch, double x, double y, double z) const;
     void push_marker(int routing_channel);  ///< append a marker event at the current window
     void emit_window();                   ///< one time window: photophysics + emission + diffusion
@@ -177,13 +179,6 @@ private:
             double tau_off = (koff > kEps) ? 1.0 / koff : 0.0;
             t_tr = (koff > kEps) ? t_shift - std::log(rng.random0e1e()) * tau_off : dt + 1.0;
 
-            double sumw = 0.0;
-            const auto& qi = sample_.species()[i].q;
-            for (int j = 0; j < nchan; ++j) {
-                double qij = (j < int(qi.size())) ? qi[j] : 0.0;
-                w[j] = qij * detection_eff(j, m.x, m.y, m.z);
-                sumw += w[j];
-            }
             if (aniso_[i]) {
                 // Anisotropy (rotdiff): x-polarised photoselection (∝ 3·ox²); the emission
                 // dipole is the absorption dipole tilted by the intrinsic r0 cone AND rotated
@@ -240,6 +235,18 @@ private:
                     }
                 }
             } else {
+                // Detection weights depend only on position (fixed within the window) and
+                // are used only for emission; when the excitation field is zero (molecule
+                // outside the focus/grid) no photon can be produced, so skip the lookups.
+                double sumw = 0.0;
+                if (Iex > 0.0) {
+                    const auto& qi = sample_.species()[i].q;
+                    for (int j = 0; j < nchan; ++j) {
+                        double qij = (j < int(qi.size())) ? qi[j] : 0.0;
+                        w[j] = qij * detection_eff(j, m.x, m.y, m.z);
+                        sumw += w[j];
+                    }
+                }
                 double lambda = Iex * sumw;
                 if (lambda > kEps) {
                     double t = t_shift - std::log(rng.random0e1e()) / lambda;
@@ -267,14 +274,31 @@ private:
         m.state = i;
 
         if (m.mobile) {
-            double D = sample_.species()[i].D;
-            double step = std::sqrt(2.0 * D * dt);
-            m.x += step * rng.randomNorm();
-            m.y += step * rng.randomNorm();
-            m.z += step * rng.randomNorm();
+            const double step = diff_step_[i];   // precomputed sqrt(2·D·dt) per species
+            double g0, g1, g2;
+            norm3(rng, g0, g1, g2);
+            m.x += step * g0;
+            m.y += step * g1;
+            m.z += step * g2;
             if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
                 m.alive = false;
         }
+    }
+
+    /// Draw three independent standard normals (the per-step diffusion displacement).
+    /// Marsaglia polar: each accepted (u,v) in the unit disc yields two normals, so two
+    /// rejection loops cover three draws. Stateless (no cached spare), so a molecule's
+    /// stream stays a pure function of (id, window) and results remain thread-independent.
+    template <class Rng>
+    static inline void norm3(Rng& rng, double& a, double& b, double& c) {
+        double u, v, s;
+        do { u = 2.0 * rng.random0i1e() - 1.0; v = 2.0 * rng.random0i1e() - 1.0; s = u*u + v*v; }
+        while (s >= 1.0 || s <= 0.0);
+        double f = std::sqrt(-2.0 * std::log(s) / s);
+        a = u * f; b = v * f;
+        do { u = 2.0 * rng.random0i1e() - 1.0; v = 2.0 * rng.random0i1e() - 1.0; s = u*u + v*v; }
+        while (s >= 1.0 || s <= 0.0);
+        c = u * std::sqrt(-2.0 * std::log(s) / s);
     }
 
     /// Run all molecules for the current window into bufs_ (serial or thread-pool),
@@ -325,6 +349,7 @@ private:
     // precomputed per-species anisotropy parameters (empty q-sum for aniso rate)
     std::vector<char> aniso_;                         // 1 if species has anisotropy
     std::vector<double> qtot_, tg_th0_, l1l2f_, rot_step_;
+    std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
     bool any_aniso_ = false;
     // open-volume injection bookkeeping
     std::vector<double> step_, rate_in_, t_in_;

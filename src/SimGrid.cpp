@@ -20,16 +20,24 @@ double SimGrid::at(double x, double y, double z) const {
         return 0.0;  // outside the grid
     }
 
-    int ix = int(std::floor(fx)), iy = int(std::floor(fy)), iz = int(std::floor(fz));
-    int ix1 = (ix < nx - 1) ? ix + 1 : ix;
-    int iy1 = (iy < ny - 1) ? iy + 1 : iy;
-    int iz1 = (iz < nz - 1) ? iz + 1 : iz;
+    // fx,fy,fz are >= 0 here, so truncation equals floor (no std::floor needed).
+    int ix = int(fx), iy = int(fy), iz = int(fz);
     double tx = fx - ix, ty = fy - iy, tz = fz - iz;
 
-    double c000 = at_voxel(ix,  iy,  iz),  c100 = at_voxel(ix1, iy,  iz);
-    double c010 = at_voxel(ix,  iy1, iz),  c110 = at_voxel(ix1, iy1, iz);
-    double c001 = at_voxel(ix,  iy,  iz1), c101 = at_voxel(ix1, iy,  iz1);
-    double c011 = at_voxel(ix,  iy1, iz1), c111 = at_voxel(ix1, iy1, iz1);
+    // Neighbour offsets: clamp to the last plane at the upper edge (matches ix+1 etc.).
+    const size_t sx = 1;
+    const size_t sy = size_t(nx);
+    const size_t sz = size_t(nx) * ny;
+    size_t base = (size_t(iz) * ny + iy) * nx + ix;
+    size_t ox = (ix < nx - 1) ? sx : 0;
+    size_t oy = (iy < ny - 1) ? sy : 0;
+    size_t oz = (iz < nz - 1) ? sz : 0;
+    const double* d = data.data();
+
+    double c000 = d[base],           c100 = d[base + ox];
+    double c010 = d[base + oy],      c110 = d[base + ox + oy];
+    double c001 = d[base + oz],      c101 = d[base + ox + oz];
+    double c011 = d[base + oy + oz], c111 = d[base + ox + oy + oz];
 
     double c00 = c000 * (1 - tx) + c100 * tx;
     double c10 = c010 * (1 - tx) + c110 * tx;

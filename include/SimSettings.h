@@ -47,6 +47,14 @@ struct SimSettings {
     /// count (each molecule keyed by id+window). PerThread: one stream per worker, seeded
     /// once per window — faster/simpler but results depend on thread count and partition.
     SimRngScope rng_scope = SimRngScope::PerMolecule;
+
+    /// Opt-in throughput mode (PRD-007 G2): when no molecule is inside the excitation
+    /// volume, advance by one safe coarse time-step (bounded so no molecule can reach the
+    /// focus during it) instead of many empty fine windows. Background is batched over the
+    /// interval. Preserves count-rate/burst statistics; changes the exact RNG draw pattern
+    /// (so not bit-identical to fixed-dt). No effect during a CLSM scan.
+    bool skip_empty_windows = false;
+    double skip_safety = 3.0;             ///< coarse step ≈ (distance-to-focus / skip_safety)
 };
 
 } // namespace tttrlib

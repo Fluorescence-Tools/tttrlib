@@ -103,6 +103,23 @@ def test_rng_thread_count_independent(kind):
     assert np.array_equal(t1, t8) and np.array_equal(c1, c8)
 
 
+def test_skip_empty_windows_preserves_count_rate():
+    """PRD-007 G2: adaptive empty-window skipping keeps the count-rate statistics."""
+    def run(skip):
+        s = tttrlib.SimSample()
+        sp = tttrlib.SimSpecies(); sp.D = 50.0; sp.q = _vd([50.0, 50.0]); s.add_species(sp)
+        s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
+        s.set_box(2.0, 4.0); s.set_population(0, 5.0)
+        exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.2, 2.0, 0.05, 1.0)
+        st = tttrlib.SimSettings(); st.dt = 0.001; st.n_channels = 2
+        st.n_ph_max = 15000; st.max_windows = 10 ** 9
+        st.skip_empty_windows = skip
+        eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()
+        return eng.n_photons() / eng.current_window()
+    rate_fixed, rate_skip = run(False), run(True)
+    assert abs(rate_skip / rate_fixed - 1.0) < 0.06   # count rate preserved
+
+
 def test_spc132_encoder_roundtrip(tmp_path):
     s = _point_sample()
     exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.5, 3.0, 0.05, 1.0)
