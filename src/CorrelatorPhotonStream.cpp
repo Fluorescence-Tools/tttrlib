@@ -79,21 +79,28 @@ void CorrelatorPhotonStream::set_tttr(
 }
 
 void CorrelatorPhotonStream::coarsen() {
-    for(size_t i=0; i< size(); i++) 
-        times[i] /= 2;
-    for (size_t i = 1; i < times.size(); i++) {
-        if (times[i] == times[i - 1]) {
-            weights[i] += weights[i - 1];
-            weights[i - 1] = 0.0;
+    // Single fused pass: halve the times, merge runs of photons that land in
+    // the same coarse bin and drop entries whose merged weight is zero
+    // (j never exceeds the run start, so compaction is safe in place).
+    // Exactly equivalent to the former halve/merge/compact three-pass
+    // version, including its left-to-right weight accumulation order.
+    const size_t n = size();
+    size_t j = 0;
+    size_t i = 0;
+    while (i < n) {
+        const unsigned long long t = times[i] / 2;
+        double w = weights[i];
+        size_t m = i + 1;
+        while (m < n && times[m] / 2 == t) {
+            w += weights[m];
+            m++;
         }
-    }
-    size_t j=0;
-    for (size_t i = 0; i < size(); i++) {
-        if (weights[i] != 0) {
-            weights[j] = weights[i];
-            times[j] = times[i];
+        if (w != 0.0) {
+            times[j] = t;
+            weights[j] = w;
             j++;
         }
+        i = m;
     }
     times.resize(j);
     weights.resize(j);
