@@ -1,12 +1,175 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "include/Pda.h"
 #include "include/Verbose.h"
+#include "include/info.h"   // AVX/FMA intrinsics + runtime dispatch macros
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 #include "thirdparty/pocketfft/pocketfft_hdronly.h"
 #include <complex>
 #include <cmath>
+
+// Runtime AVX/FMA control (CPU detection + TTTRLIB_USE_AVX/FMA env overrides).
+static bool g_pda_use_avx = tttrlib::cpu_features::get_avx_enabled();
+static bool g_pda_use_fma = tttrlib::cpu_features::get_fma_enabled();
+#if TTTRLIB_COMPILE_NEON
+static bool g_pda_use_neon = tttrlib::cpu_features::get_neon_enabled();
+#endif
+
+#if TTTRLIB_COMPILE_AVX
+// AVX+FMA kernel for the S1S2_pF probability-propagation recurrence:
+//   cur[col+1] = pre[col]*(1-p) + pre[col+1]*p,  col = 0 .. row-1
+// The current and previous matrix rows never overlap, so the row can be
+// vectorized. Only entered when the CPU supports AVX and FMA at runtime.
+TTTRLIB_TARGET_AVX_FMA
+static void pda_propagate_row_avx(double* cur, const double* pre, size_t row, double p) {
+    const double one_minus_p = 1.0 - p;
+    __m256d v_p  = _mm256_set1_pd(p);
+    __m256d v_1p = _mm256_set1_pd(one_minus_p);
+    const size_t n_vec = (row / 4) * 4;
+    size_t col = 0;
+    for (; col < n_vec; col += 4) {
+        __m256d v_pre0 = _mm256_loadu_pd(&pre[col]);      // pre[col]
+        __m256d v_pre1 = _mm256_loadu_pd(&pre[col + 1]);  // pre[col+1]
+        // cur[col+1] = pre[col]*(1-p) + pre[col+1]*p
+        __m256d v_res = _mm256_fmadd_pd(v_pre1, v_p, _mm256_mul_pd(v_pre0, v_1p));
+        _mm256_storeu_pd(&cur[col + 1], v_res);
+    }
+    for (; col < row; ++col) {
+        cur[col + 1] = pre[col] * one_minus_p + pre[col + 1] * p;
+    }
+}
+
+// AVX+FMA dot product for the conv_pF background convolution.
+TTTRLIB_TARGET_AVX_FMA
+static double pda_dot_avx(const double* a, const double* b, size_t n) {
+    __m256d acc = _mm256_setzero_pd();
+    const size_t n_vec = (n / 4) * 4;
+    size_t i = 0;
+    for (; i < n_vec; i += 4) {
+        acc = _mm256_fmadd_pd(_mm256_loadu_pd(&a[i]), _mm256_loadu_pd(&b[i]), acc);
+    }
+    __m128d lo = _mm256_castpd256_pd128(acc);
+    __m128d hi = _mm256_extractf128_pd(acc, 1);
+    lo = _mm_add_pd(lo, hi);
+    double s = _mm_cvtsd_f64(_mm_add_sd(lo, _mm_unpackhi_pd(lo, lo)));
+    for (; i < n; ++i) s += a[i] * b[i];
+    return s;
+}
+#endif // TTTRLIB_COMPILE_AVX
+
+#if TTTRLIB_COMPILE_NEON
+// NEON dot product for the conv_pF background convolution (2 accumulators to
+// hide the FMA latency chain).
+static double pda_dot_neon(const double* a, const double* b, size_t n) {
+    float64x2_t acc0 = vdupq_n_f64(0.0), acc1 = vdupq_n_f64(0.0);
+    const size_t n_vec = (n / 4) * 4;
+    size_t i = 0;
+    for (; i < n_vec; i += 4) {
+        acc0 = vfmaq_f64(acc0, vld1q_f64(&a[i]), vld1q_f64(&b[i]));
+        acc1 = vfmaq_f64(acc1, vld1q_f64(&a[i + 2]), vld1q_f64(&b[i + 2]));
+    }
+    double s = vaddvq_f64(vaddq_f64(acc0, acc1));
+    for (; i < n; ++i) s += a[i] * b[i];
+    return s;
+}
+#endif // TTTRLIB_COMPILE_NEON
+
+// Runtime-dispatched dot product (AVX+FMA on x86, NEON on AArch64, scalar
+// fallback everywhere).
+static inline double pda_dot(const double* a, const double* b, size_t n) {
+#if TTTRLIB_COMPILE_AVX
+    if (g_pda_use_avx && g_pda_use_fma) return pda_dot_avx(a, b, n);
+#elif TTTRLIB_COMPILE_NEON
+    if (g_pda_use_neon) return pda_dot_neon(a, b, n);
+#endif
+    double s = 0.0;
+    for (size_t i = 0; i < n; ++i) s += a[i] * b[i];
+    return s;
+}
+
+// Runtime-dispatched row propagation shared by S1S2_pF and S1S2_pF_optimized.
+// No NEON kernel: benchmarked slower than the autovectorized scalar loop.
+static inline void pda_propagate_row(double* cur, const double* pre, size_t row, double p) {
+#if TTTRLIB_COMPILE_AVX
+    if (g_pda_use_avx && g_pda_use_fma) {
+        pda_propagate_row_avx(cur, pre, row, p);
+        return;
+    }
+#endif
+    const double one_minus_p = 1.0 - p;
+    for (size_t col = 0; col < row; ++col) {
+        cur[col + 1] = pre[col] * one_minus_p + pre[col + 1] * p;
+    }
+}
+
+// Computes one species' contribution to the FgFr matrix: binomially splits
+// pF over the two channels with per-channel probability p and accumulates
+// with amplitude a. tmp is caller-provided (Nmax+1)^2 scratch; every element
+// read is written first, so it needs no re-zeroing between species.
+static void pda_accumulate_species(
+        std::vector<double>& FgFr,
+        std::vector<double>& tmp,
+        double p, double a,
+        const std::vector<double>& pF,
+        unsigned int Nmax
+) {
+    tmp[0] = 1.;
+    // Propagate the probabilities to other matrix rows
+    for (size_t row = 1; row <= Nmax; row++) {
+        // marks beginning of current and previous matrix row
+        size_t row_offset_cur = (row + 0) * (Nmax + 1);
+        size_t row_offset_pre = (row - 1) * (Nmax + 1);
+        tmp[row_offset_cur + 0] = tmp[row_offset_pre + 0] * p;
+        pda_propagate_row(&tmp[row_offset_cur], &tmp[row_offset_pre], row, p);
+    }
+    for (size_t row = 0; row < Nmax; row++) {
+        for (size_t red = 0; red <= row; red++)
+            FgFr[(row - red) * (Nmax + 1) + red] +=
+                    tmp[row * (Nmax + 1) + red] * a * pF[row];
+    }
+    for (size_t red = 0; red < Nmax; red++)
+        FgFr[(Nmax - red) * (Nmax + 1) + red] +=
+                tmp[Nmax * (Nmax + 1) + red] * a * pF[Nmax];
+}
+
+static int good_fft_size(int Nmax);
+
+// FFT-based row convolution for conv_pF, used when the Poisson kernel support
+// is too wide for the truncated direct method (large backgrounds).
+// For every row r of `in` computes conv(in[r,:], kernel) and writes result k
+// to out[(Nmax+1)*k + r] (transposed, matching conv_pF's access pattern),
+// restricted to the triangle k + r <= Nmax.
+static void pda_conv_rows_fft(
+        std::vector<double>& out,
+        const std::vector<double>& in,
+        const std::vector<double>& kernel,
+        unsigned int Nmax
+) {
+    const size_t n = Nmax + 1;
+    const size_t M = (size_t) good_fft_size((int) Nmax); // power of 2 >= 2(Nmax+1), no circular wrap
+    pocketfft::shape_t shape{M};
+    pocketfft::stride_t stride{sizeof(std::complex<double>)};
+    pocketfft::shape_t axes{0};
+    std::vector<std::complex<double>> K(M, std::complex<double>(0.0, 0.0));
+    for (size_t i = 0; i < n; i++) K[i] = kernel[i];
+    pocketfft::c2c(shape, stride, stride, axes, true, K.data(), K.data(), 1.0);
+    std::vector<std::complex<double>> buf(M);
+    for (size_t row = 0; row < n; row++) {
+        std::fill(buf.begin(), buf.end(), std::complex<double>(0.0, 0.0));
+        const double* src = &in[n * row];
+        for (size_t i = 0; i < n; i++) buf[i] = src[i];
+        pocketfft::c2c(shape, stride, stride, axes, true, buf.data(), buf.data(), 1.0);
+        for (size_t i = 0; i < M; i++) buf[i] *= K[i];
+        pocketfft::c2c(shape, stride, stride, axes, false, buf.data(), buf.data(), 1.0 / M);
+        for (size_t k = 0; k + row <= Nmax; k++) {
+            // clamp spectral round-off: probabilities must stay non-negative
+            // (downstream MLE takes log of these values)
+            double v = buf[k].real();
+            out[n * k + row] = v < 0.0 ? 0.0 : v;
+        }
+    }
+}
 
 void Pda::get_1dhistogram(
         double **histogram_x, int *n_histogram_x,
@@ -80,15 +243,40 @@ if (is_verbose()) {
                               x_min + bin_width * (double) bin;
     // histogram Y
     for (bin = 0; bin < n_bins; bin++) (*histogram_y)[bin] = 0.;
+    // The callback value of a cell (ch1, ch2) is independent of the model
+    // amplitudes/probabilities, so the target bin of every visited cell is
+    // cached across calls (fit iterations). set_callback and any change of
+    // the binning parameters invalidate the cache.
+    bool cache_ok = _hist1d_valid
+            && _hist1d_xmax == x_max && _hist1d_xmin == x_min
+            && _hist1d_nbins == n_bins && _hist1d_logx == log_x
+            && _hist1d_nmax == n_max && _hist1d_nmin == n_min
+            && _hist1d_skip == skip_zero_photon;
+    if (!cache_ok) {
+        _hist1d_bin_cache.assign((size_t)(n_max + 1) * (n_max + 1), -1);
+        for (ch1 = first_photon; ch1 <= n_max; ch1++) {
+            first_ch2 = ch1 > n_min ? 1 : n_min - ch1;
+            for (ch2 = first_ch2; ch2 <= n_max - ch1; ch2++) {
+                double x = log_x ?
+                    log(_histogram_function->run(ch1, ch2)):
+                    _histogram_function->run(ch1, ch2);
+                double binf = std::floor((x - xmincorr) * inverse_bin_width);
+                if ((binf < Nbinsf) && (binf >= 0.)){
+                    _hist1d_bin_cache[ch2 * (n_max + 1) + ch1] = (int) binf;
+                }
+            }
+        }
+        _hist1d_xmax = x_max; _hist1d_xmin = x_min;
+        _hist1d_nbins = n_bins; _hist1d_logx = log_x;
+        _hist1d_nmax = n_max; _hist1d_nmin = n_min;
+        _hist1d_skip = skip_zero_photon;
+        _hist1d_valid = true;
+    }
     for (ch1 = first_photon; ch1 <= n_max; ch1++) {
         first_ch2 = ch1 > n_min ? 1 : n_min - ch1;
         for (ch2 = first_ch2; ch2 <= n_max - ch1; ch2++) {
-            double x = log_x ?
-                log(_histogram_function->run(ch1, ch2)):
-                _histogram_function->run(ch1, ch2);
-            double binf = std::floor((x - xmincorr) * inverse_bin_width);
-            bin = (int) binf;
-            if ((binf < Nbinsf) && (binf >= 0.)){
+            bin = _hist1d_bin_cache[ch2 * (n_max + 1) + ch1];
+            if (bin >= 0) {
                 (*histogram_y)[bin] += s1s2[ch2 * (n_max + 1) + ch1];
             }
         }
@@ -101,7 +289,7 @@ if (is_verbose()) {
     std::clog << "-- evaluate PDA..." << std::endl;
     std::clog << "-- making sure array sizes match" << std::endl;
 }
-    for(int i =0; i < _S1S2.size(); i++) _S1S2[i] = 0;
+    std::fill(_S1S2.begin(), _S1S2.end(), 0.0);
     auto Nmax = get_max_number_of_photons();
     if(pF.size() < Nmax + 1){
         std::cout << "WARNING pF array too short. Appending zeros" << std::endl;
@@ -117,7 +305,7 @@ if (is_verbose()) {
     }
     if(_amplitudes.size() < _probability_ch1.size()){
         std::cout << "WARNING amplitude array too short. Appending zeros" << std::endl;
-        while(_amplitudes.size() < _amplitudes.size()){
+        while(_amplitudes.size() < _probability_ch1.size()){
             _amplitudes.emplace_back(0.0);
         }
     }
@@ -152,32 +340,69 @@ void Pda::conv_pF(
         double background_ch1,
         double background_ch2
 ) {
-    std::vector<double> tmp((Nmax + 1) * (Nmax + 1), 0.0);
-    std::vector<double> bg(Nmax + 1, 0.0);
+    const size_t n = Nmax + 1;
+    std::vector<double> tmp(n * n, 0.0);
+    std::vector<double> bg(n, 0.0);
     poisson_0toN(bg, 0, background_ch1, Nmax);
-    std::vector<double> br(Nmax + 1, 0.0);
+    std::vector<double> br(n, 0.0);
     poisson_0toN(br, 0, background_ch2, Nmax);
-    // sum
-    for (size_t red = 0; red <= Nmax; red++) {
-        size_t i_start = 0;
-        for (size_t green = 0; green <= Nmax - red; green++) {
-            double s = 0.;
-            size_t j = (Nmax + 1) * green;
-            for (size_t i = i_start; i <= red; i++){
-                s += F1F2[j + i] * br[red - i];
+
+    // Effective support of the Poisson kernels: terms beyond T are < 1e-15
+    // and numerically irrelevant, so the convolutions are truncated there
+    // (O(Nmax^2 T) instead of O(Nmax^3)). The tail is monotone past the mode.
+    size_t Tr = Nmax; while (Tr > 0 && br[Tr] < 1e-15) Tr--;
+    size_t Tg = Nmax; while (Tg > 0 && bg[Tg] < 1e-15) Tg--;
+
+    // Reversed kernels so both dot-product operands ascend contiguously:
+    // br[red - i] == br_rev[(Nmax - red) + i]
+    std::vector<double> br_rev(n), bg_rev(n);
+    for (size_t i = 0; i < n; i++) {
+        br_rev[i] = br[Nmax - i];
+        bg_rev[i] = bg[Nmax - i];
+    }
+
+    // For very wide kernels (large backgrounds) the FFT row convolution,
+    // O(Nmax^2 log Nmax), beats the truncated direct method.
+    const size_t fft_crossover = std::max<size_t>(64, Nmax / 5);
+
+#ifdef _OPENMP
+    bool use_omp = tttrlib::cpu_features::get_openmp_enabled() && Nmax >= 64;
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+#endif
+
+    // pass 1: convolve each F1F2 row (fixed green) with the ch2 background,
+    // writing transposed into tmp
+    if (Tr > fft_crossover) {
+        pda_conv_rows_fft(tmp, F1F2, br, Nmax);
+    } else {
+#ifdef _OPENMP
+        #pragma omp parallel for schedule(static, 1) num_threads(num_threads) if(use_omp)
+#endif
+        for (long long red_ll = 0; red_ll <= (long long) Nmax; red_ll++) {
+            const size_t red = (size_t) red_ll;
+            const size_t i_start = red > Tr ? red - Tr : 0;
+            const size_t len = red - i_start + 1;
+            const double* krn = &br_rev[Nmax - red + i_start];
+            for (size_t green = 0; green <= Nmax - red; green++) {
+                tmp[n * red + green] = pda_dot(&F1F2[n * green + i_start], krn, len);
             }
-            tmp[(Nmax + 1) * red + green] = s;
         }
     }
-    for (size_t green = 0; green <= Nmax; green++) {
-        size_t i_start = 0;
-        for (size_t red = 0; red <= Nmax - green; red++) {
-            double s = 0.;
-            size_t j = (Nmax + 1) * red;
-            for (size_t i = i_start; i <= green; i++){
-                s += tmp[j + i] * bg[green - i];
+    // pass 2: convolve each tmp row (fixed red) with the ch1 background
+    if (Tg > fft_crossover) {
+        pda_conv_rows_fft(S1S2, tmp, bg, Nmax);
+    } else {
+#ifdef _OPENMP
+        #pragma omp parallel for schedule(static, 1) num_threads(num_threads) if(use_omp)
+#endif
+        for (long long green_ll = 0; green_ll <= (long long) Nmax; green_ll++) {
+            const size_t green = (size_t) green_ll;
+            const size_t i_start = green > Tg ? green - Tg : 0;
+            const size_t len = green - i_start + 1;
+            const double* krn = &bg_rev[Nmax - green + i_start];
+            for (size_t red = 0; red <= Nmax - green; red++) {
+                S1S2[n * green + red] = pda_dot(&tmp[n * red + i_start], krn, len);
             }
-            S1S2[(Nmax + 1) * green + red] = s;
         }
     }
 }
@@ -202,27 +427,7 @@ void Pda::S1S2_pF(
 if (is_verbose()) {
         std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
 }
-        tmp[0] = 1.;
-        // Propagate the probabilities to other matrix rows
-        for (size_t row = 1; row <= Nmax; row++) {
-            // marks beginning of current and previous matrix row
-            size_t row_offset_cur = (row + 0) * (Nmax + 1);
-            size_t row_offset_pre = (row - 1) * (Nmax + 1);
-            tmp[row_offset_cur + 0] = tmp[row_offset_pre + 0] * p;
-            for(size_t col = 0; col < row; col++){
-                tmp[row_offset_cur + col + 1] =
-                        tmp[row_offset_pre + col + 0] * (1. - p) +
-                        tmp[row_offset_pre + col + 1] * p;
-            }
-        }
-        for (size_t row = 0; row < Nmax; row++) {
-            for (size_t red = 0; red <= row; red++)
-                FgFr[(row - red) * (Nmax + 1) + red] +=
-                        tmp[row * (Nmax + 1) + red] * a * pF[row];
-        }
-        for (size_t red = 0; red < Nmax; red++)
-            FgFr[(Nmax - red) * (Nmax + 1) + red] +=
-                    tmp[Nmax * (Nmax + 1) + red] * a * pF[Nmax];
+        pda_accumulate_species(FgFr, tmp, p, a, pF, Nmax);
     }
     /*** S1S2: matrix, S1S2(i,j) = p(S1 = i, S2 = j) ***/
     conv_pF(S1S2, FgFr, Nmax, background_ch1, background_ch2);
@@ -452,43 +657,19 @@ void Pda::S1S2_pF_optimized(
 #ifdef _OPENMP
     #pragma omp parallel
     {
-#endif
         std::vector<double> tmp(matrix_elements, 0.0);
         std::vector<double> FgFr_local(matrix_elements, 0.0);
 
-#ifdef _OPENMP
         #pragma omp for
-#endif
         for(int pg_idx = 0; pg_idx < (int)p_ch1.size(); pg_idx++) {
             auto p = p_ch1[pg_idx];
             auto a = amplitudes[pg_idx];
             if (is_verbose()) {
                 std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
             }
-            tmp[0] = 1.;
-            // Propagate the probabilities to other matrix rows
-            for (size_t row = 1; row <= Nmax; row++) {
-                // marks beginning of current and previous matrix row
-                size_t row_offset_cur = (row + 0) * (Nmax + 1);
-                size_t row_offset_pre = (row - 1) * (Nmax + 1);
-                tmp[row_offset_cur + 0] = tmp[row_offset_pre + 0] * p;
-                for(size_t col = 0; col < row; col++){
-                    tmp[row_offset_cur + col + 1] =
-                            tmp[row_offset_pre + col + 0] * (1. - p) +
-                            tmp[row_offset_pre + col + 1] * p;
-                }
-            }
-            for (size_t row = 0; row < Nmax; row++) {
-                for (size_t red = 0; red <= row; red++)
-                    FgFr_local[(row - red) * (Nmax + 1) + red] +=
-                            tmp[row * (Nmax + 1) + red] * a * pF[row];
-            }
-            for (size_t red = 0; red < Nmax; red++)
-                FgFr_local[(Nmax - red) * (Nmax + 1) + red] +=
-                        tmp[Nmax * (Nmax + 1) + red] * a * pF[Nmax];
+            pda_accumulate_species(FgFr_local, tmp, p, a, pF, Nmax);
         }
 
-#ifdef _OPENMP
         #pragma omp critical
         {
             for(size_t i = 0; i < matrix_elements; i++){
@@ -497,7 +678,17 @@ void Pda::S1S2_pF_optimized(
         }
     }
 #else
-    FgFr = FgFr_local;
+    {
+        std::vector<double> tmp(matrix_elements, 0.0);
+        for(int pg_idx = 0; pg_idx < (int)p_ch1.size(); pg_idx++) {
+            auto p = p_ch1[pg_idx];
+            auto a = amplitudes[pg_idx];
+            if (is_verbose()) {
+                std::clog << "-- Computing S1S2 for species (amplitude, p(ch1)): " << a << ", " << p << std::endl;
+            }
+            pda_accumulate_species(FgFr, tmp, p, a, pF, Nmax);
+        }
+    }
 #endif
 
     /*** Multi-molecule correction using FFT ***/

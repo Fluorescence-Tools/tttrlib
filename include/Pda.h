@@ -28,6 +28,16 @@ private:
     /// The selected PDA implementation
     PdaImplementation _implementation = PdaImplementation::PDA_DEFAULT;
 
+    /// Cache for get_1dhistogram: target bin per S1S2 cell (-1 = out of
+    /// range). The callback value of a cell only depends on the callback and
+    /// the binning parameters, so it is reused across calls (fit iterations)
+    /// and rebuilt when the callback or any binning parameter changes.
+    std::vector<int> _hist1d_bin_cache;
+    bool _hist1d_valid = false;
+    double _hist1d_xmax = 0.0, _hist1d_xmin = 0.0;
+    int _hist1d_nbins = -1, _hist1d_nmax = -1, _hist1d_nmin = -1;
+    bool _hist1d_logx = false, _hist1d_skip = false;
+
     /// Probablity of detecting a green photon for the species
     std::vector<double> _probability_ch1;
 
@@ -161,6 +171,7 @@ public:
      */
     void set_callback(PdaCallback* cb){
         _histogram_function = cb;
+        _hist1d_valid = false;
     }
 
     /*!

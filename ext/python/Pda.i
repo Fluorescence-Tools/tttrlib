@@ -35,10 +35,20 @@ enum PdaImplementation {
 %attribute(Pda, unsigned int, hist2d_nmin, get_min_number_of_photons, set_min_number_of_photons);
 %attribute(Pda, unsigned int, hist2d_nmax, get_max_number_of_photons, set_max_number_of_photons);
 %attribute(Pda, bool, hist2d_valid, is_valid_sgsr, set_valid_sgsr);
+#ifdef SWIGPYTHON
 %extend Pda{%pythoncode "./ext/python/Pda.py"}
+#endif
 
 // Used for PdaCallback
 // see https://github.com/swig/swig/tree/master/Examples/python/callback
+#ifdef SWIGPYTHON
 %feature("director") PdaCallback;
+#endif
+
+// Release the GIL around the heavy model computations. NOT get_1dhistogram:
+// it calls back into Python through the PdaCallback director.
+TTTRLIB_NOGIL(Pda::evaluate)                          // src/Pda.cpp
+TTTRLIB_NOGIL(Pda::compute_experimental_histograms)   // src/Pda.cpp
+
 %include "Pda.h"
 %include "PdaCallback.h"
