@@ -32,8 +32,25 @@
 %include "TiffArrayIO.h"
 
 // One binding entry point per pixel type - the six concrete instantiations of
-// the single read_tiff/write_tiff template. Named with a leading underscore:
-// these are internal plumbing, users call imread()/imwrite().
+// the single read_tiff/write_tiff template. Python names them with a leading
+// underscore because users call imread()/imwrite(); R cannot parse generated
+// wrapper references to symbols starting with "_" (for example "f <- _name"),
+// so use R-safe names there.
+#ifdef SWIGR
+%template(tiff_read_u8)   tttrlib::read_tiff<unsigned char>;
+%template(tiff_read_u16)  tttrlib::read_tiff<unsigned short>;
+%template(tiff_read_u32)  tttrlib::read_tiff<unsigned int>;
+%template(tiff_read_i32)  tttrlib::read_tiff<int>;
+%template(tiff_read_f32)  tttrlib::read_tiff<float>;
+%template(tiff_read_f64)  tttrlib::read_tiff<double>;
+
+%template(tiff_write_u8)  tttrlib::write_tiff<unsigned char>;
+%template(tiff_write_u16) tttrlib::write_tiff<unsigned short>;
+%template(tiff_write_u32) tttrlib::write_tiff<unsigned int>;
+%template(tiff_write_i32) tttrlib::write_tiff<int>;
+%template(tiff_write_f32) tttrlib::write_tiff<float>;
+%template(tiff_write_f64) tttrlib::write_tiff<double>;
+#else
 %template(_tiff_read_u8)   tttrlib::read_tiff<unsigned char>;
 %template(_tiff_read_u16)  tttrlib::read_tiff<unsigned short>;
 %template(_tiff_read_u32)  tttrlib::read_tiff<unsigned int>;
@@ -47,6 +64,7 @@
 %template(_tiff_write_i32) tttrlib::write_tiff<int>;
 %template(_tiff_write_f32) tttrlib::write_tiff<float>;
 %template(_tiff_write_f64) tttrlib::write_tiff<double>;
+#endif
 
 // ---- Single, auto-dispatching user interface (Python) -----------------------
 #ifdef SWIGPYTHON

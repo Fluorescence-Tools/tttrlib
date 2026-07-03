@@ -29,6 +29,7 @@ requirements:
     # CHARACTER_POINTER); pin to R 4.4.x, matching the CI R test.
     - r-base >=4.4,<4.5
     - hdf5
+    - libtiff
     - highfive
     - nlohmann_json
     - if: osx
@@ -38,6 +39,7 @@ requirements:
   run:
     - r-base >=4.4,<4.5   # keep in sync with the host pin above
     - hdf5
+    - libtiff
     - if: osx
       then: llvm-openmp
     - if: linux

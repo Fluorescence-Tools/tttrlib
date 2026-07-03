@@ -15,6 +15,8 @@ cmake -S .. -B . \
   -DBUILD_R_INTERFACE=ON \
   -DBUILD_LIBRARY=ON \
   -DWITH_AVX=OFF \
+  -DWITH_TIFF=ON \
+  -DWITH_TIFF_SYSTEM=ON \
   -DCMAKE_BUILD_TYPE=Release \
   -G Ninja
 ninja tttrlibR tttrlibStatic -j "${CPU_COUNT}"
@@ -39,7 +41,7 @@ INCDIRS="-I${ROOT}/include -I${ROOT}/src -I${ROOT}/thirdparty -I${ROOT}/thirdpar
 sed -e "s|@TTTRLIB_INCLUDE@|${ROOT}|g" \
     -e "s|@HDF5_CFLAGS@|${INCDIRS}|g" \
     -e "s|@TTTRLIB_LIBS@|${STATIC}|g" \
-    -e "s|@HDF5_LIBS@|-L${PREFIX}/lib -lhdf5|g" \
+    -e "s|@HDF5_LIBS@|-L${PREFIX}/lib -lhdf5 -ltiff|g" \
     ext/r/pkg/src/Makevars.in > ext/r/pkg/src/Makevars
 rm -f ext/r/pkg/src/Makevars.in
 printf 'CXX_STD = CXX17\n' >> ext/r/pkg/src/Makevars
