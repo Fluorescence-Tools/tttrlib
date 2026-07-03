@@ -60,14 +60,6 @@ except Exception:
 root_doc = "index"
 master_doc = "index"
 
-# Accept both .rst and .ipynb as source files
-# --- Make sure notebooks are parsed as notebooks ---
-# Sphinx 4–7: either form is fine; this one is explicit and robust
-source_suffix = {
-    ".rst": "restructuredtext"
-}
-print("[conf] source_suffix   :", source_suffix)
-
 templates_path = ["_templates"] if (HERE / "_templates").exists() else []
 
 # Exclusions (keep minimal at tier 0)
@@ -163,6 +155,18 @@ if BUILD_TIER >= 3:
     for e in NB_EXTS:
         if _try_import(e):
             extensions.append(e)
+    if "nbsphinx" in extensions:
+        source_suffix = {
+            ".rst": "restructuredtext",
+            ".ipynb": "jupyter_notebook",
+        }
+        # Sphinx-Gallery writes notebooks for download. They should not become
+        # independent source documents because each gallery example already has
+        # a generated .rst page.
+        exclude_patterns += [
+            "auto_examples/**/*.ipynb",
+            "auto_examples/*.ipynb",
+        ]
     # Conservative notebook settings
     nbsphinx_execute = "never"
     nbsphinx_allow_errors = True
@@ -173,6 +177,12 @@ if BUILD_TIER >= 3:
     # ]
 print("[conf] exclude_patterns:", exclude_patterns)
 print("[conf] extensions", extensions)
+
+if "source_suffix" not in globals():
+    source_suffix = {
+        ".rst": "restructuredtext",
+    }
+print("[conf] source_suffix   :", source_suffix)
 
 if BUILD_TIER >= 4:
     # Headless + no-op show (helps avoid hanger)
@@ -230,7 +240,7 @@ if BUILD_TIER >= 4:
             "gallery_dirs": ["auto_examples"],
             "filename_pattern": r"plot_.*\.py$",
             "ignore_pattern": ignore_pat,     # <-- blacklist in effect
-            "plot_gallery": True,
+            "plot_gallery": os.environ.get("TTTRLIB_DOCS_EXECUTE_EXAMPLES", "0").lower() in {"1", "true", "yes", "on"},
             "image_scrapers": ("matplotlib",),
             "reset_modules": ("matplotlib",),
             "remove_config_comments": True,
@@ -275,11 +285,9 @@ html_copy_source = True
 html_domain_indices = False
 html_use_index = False
 
-# Theme options kept minimal to reduce breakage
-html_theme_options = {
-    "navigation_depth": 3,
-    "show_toc_level": 2,
-}
+html_theme_options = {"navigation_depth": 3}
+if html_theme == "pydata_sphinx_theme":
+    html_theme_options["show_toc_level"] = 2
 
 # Optional sidebars only if the theme ships them
 html_sidebars = {
