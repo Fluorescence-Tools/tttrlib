@@ -1,209 +1,137 @@
 .. _overview:
 
-.. title:: tttrlib: Time-Resolved Fluorescence Analysis
+tttrlib
+#######
+
+Fast, modular, open-source analysis for time-tagged time-resolved (TTTR)
+photon data.
+
+**tttrlib** reads, processes, and writes photon streams from PicoQuant,
+Becker & Hickl, and Photon-HDF5 files through one vendor-independent API. The
+core algorithms are written in C++ and exposed to **Python, R, and Java** from a
+single shared interface — plus an **ImageJ/Fiji plugin** for point-and-click FLIM
+reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
+Jupyter-based workflows. See :doc:`languages` for the same examples in every
+language.
+
+Quick links
+-----------
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 0
+
+   * - Start using tttrlib
+     - :doc:`getting-started`
+   * - Run small examples
+     - :doc:`quickstart`
+   * - Use Python, R, or Java
+     - :doc:`languages`
+   * - Reconstruct FLIM in ImageJ/Fiji
+     - :doc:`imagej-plugin`
+   * - Choose an analysis workflow
+     - :doc:`workflows`
+   * - Browse executable workflows
+     - :doc:`auto_examples/index`
+   * - Read the manual
+     - :doc:`user_guide`
+   * - Report a problem
+     - `GitHub issues <https://github.com/Fluorescence-Tools/tttrlib/issues>`__
+   * - Cite tttrlib
+     - `Bioinformatics paper <https://doi.org/10.1093/bioinformatics/btaf025>`__
+
+Project focus
+-------------
+
+tttrlib is designed for time-resolved fluorescence spectroscopy and imaging
+workflows where photon streams need to stay close to their original timing
+information:
+
+* TTTR file I/O and metadata inspection.
+* Photon selection by channel, event type, time window, and micro-time range.
+* Fluorescence decay generation, convolution, phasor analysis, and fitting.
+* FCS/FCCS autocorrelation and cross-correlation analysis.
+* Single-molecule burst search and burst-level statistics.
+* CLSM, FLIM, and image scanning microscopy reconstruction.
+* Photon distribution and PDA-style analysis workflows.
+
+Reproducible workflows
+----------------------
+
+The examples and notebooks are written as executable analysis records: load a
+file, state the channel and timing selections, compute a result, and plot or
+export it. This follows the same reproducibility-first documentation style used
+by projects such as FRETBursts, while keeping tttrlib focused on a broader TTTR
+data model.
+
+Start with :doc:`getting-started` if you are new to the package. Use
+:doc:`auto_examples/index` when you already know the analysis type you need.
+
+Installation
+------------
+
+Install from PyPI:
+
+.. code-block:: bash
+
+   pip install tttrlib
+
+Install with Conda or Mamba on macOS and Linux:
+
+.. code-block:: bash
+
+   mamba install -c conda-forge -c bioconda tttrlib
+
+Install with Conda or Mamba on Windows:
+
+.. code-block:: bash
+
+   mamba install -c tpeulen tttrlib
+
+For build-from-source instructions, see the repository's ``BUILDING.md`` file.
+
+Documentation
+-------------
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    getting-started
-   install
+   quickstart
+   languages
+   r-package
+   imagej-plugin
+   workflows
+   tttr-core
+   burst-analysis
+   pda-guide
+   fcs-correlation
+   clsm-flim-guide
+   fit-guide
    user_guide
-   whats_new
    modules/index
    auto_examples/index
+   troubleshooting
+   docs-warning-burndown
+   faq
+   support
+   whats_new
+   glossary
 
-.. container:: landing-page
+.. toctree::
+   :hidden:
 
-   .. div:: hero-section text-center
-   
-      .. image:: logos/tttrlib-logo.svg
-         :width: 400px
-         :alt: tttrlib logo
-         :align: center
-         :class: hero-logo
+   install
+   configuration
+   contents
+   performance_guide
+   roadmap
+   changes
 
-      tttrlib
-      =======
+External resources
+------------------
 
-      **Fast, modular, and open-source analysis for Time-Tagged Time-Resolved (TTTR) data.**
-
-      Read, process, and analyze photon streams from PicoQuant, Becker & Hickl, and Photon-HDF5 files.
-      Built with C++ speed and Python flexibility.
-
-       .. grid:: 1 1 2 3
-          :gutter: 2
-          :class-container: hero-buttons
-
-          .. grid-item::
-             :class: text-center
-
-             .. button-ref:: getting_started_detailed
-                :color: primary
-                :shadow:
-                :expand:
-                
-                Getting Started
-
-          .. grid-item::
-             :class: text-center
-
-             .. button-ref:: auto_examples/index
-                :color: success
-                :shadow:
-                :expand:
-                
-                📚 Examples
-
-          .. grid-item::
-             :class: text-center
-
-             .. button-link:: https://github.com/fluorescence-tools/tttrlib
-                :color: secondary
-                :shadow:
-                :expand:
-                
-                View on GitHub
-
-   .. div:: section-header
-
-      Key Capabilities
-      ----------------
-
-   .. grid:: 1 2 3 3
-      :gutter: 3
-
-      .. grid-item-card::
-         :icon: fa-solid fa-chart-line
-         :link: modules/workflow_burst_analysis
-         :link-type: doc
-
-         Burst Analysis
-         ^^^^^^^^^^^^^^
-         Single-molecule burst detection, FRET efficiency, E-S histograms, and population analysis for ALEX/PIE data.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-microscope
-         :link: modules/imaging
-         :link-type: doc
-
-         Imaging (CLSM/FLIM)
-         ^^^^^^^^^^^^^^^^^^^
-         Construct images from TTTR streams, perform pixel-wise lifetime analysis, and export to standard formats.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-wave-square
-         :link: topics/correlation_analysis
-         :link-type: doc
-
-         Correlation (FCS/FCCS)
-         ^^^^^^^^^^^^^^^^^^^^^^
-         Fast autocorrelation and cross-correlation analysis for diffusion time and concentration measurements.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-hourglass-half
-         :link: topics/lifetime_analysis
-         :link-type: doc
-
-         Lifetime Analysis
-         ^^^^^^^^^^^^^^^^^
-         Generate microtime histograms, fit fluorescence decays, and analyze lifetime distributions.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-file-import
-         :link: auto_examples/beginner/plot_01_reading_files
-         :link-type: doc
-
-         Universal I/O
-         ^^^^^^^^^^^^^
-         Seamlessly read PTU, HT3, SPC, and Photon-HDF5 files without manual conversion.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-images
-         :link: auto_examples/index
-         :link-type: doc
-
-         Example Gallery
-         ^^^^^^^^^^^^^^^
-         Browse dozens of executable examples covering everything from basic I/O to advanced single-molecule workflows.
-
-      .. grid-item-card::
-         :icon: fa-solid fa-book
-         :link: https://docs.peulen.xyz/tttrlib/stable/api/index.html
-
-         API Reference
-         ^^^^^^^^^^^^^
-         Detailed C++ and Python API documentation, including classes, methods, and parameters.
-
-
-   .. div:: section-header
-
-      Installation
-      ------------
-
-   Get up and running in seconds using Conda or Pip.
-
-   .. grid:: 1 1 2 2
-      :gutter: 3
-
-      .. grid-item-card:: Conda (Recommended)
-
-         .. code-block:: bash
-
-            conda install -c tpeulen -c conda-forge tttrlib
-
-      .. grid-item-card:: Pip
-
-         .. code-block:: bash
-
-            pip install tttrlib
-
-   .. div:: section-header
-
-      Why tttrlib?
-      ------------
-
-   .. grid:: 1 3 3 3
-      :gutter: 2
-
-      .. grid-item-card:: 
-         :class-header: bg-light
-
-         🚀 High Performance
-         ^^^^^^^^^^^^^^^^^^^
-         Core algorithms written in C++ for maximum speed, handling gigabytes of photon data efficiently.
-
-      .. grid-item-card::
-         :class-header: bg-light
-
-         🐍 Pythonic API
-         ^^^^^^^^^^^^^^^
-         Integrates seamlessly with NumPy, SciPy, and Matplotlib. Use familiar slicing and indexing syntax.
-
-      .. grid-item-card::
-         :class-header: bg-light
-
-         🔧 Modular Design
-         ^^^^^^^^^^^^^^^^^
-         Build custom analysis pipelines by combining modular components for correlation, histograms, and bursts.
-
-
-   .. div:: section-header
-
-      Resources
-      ---------
-
-   .. grid:: 1 2 2 2
-      :gutter: 3
-
-      .. grid-item-card:: 📖 Read the Paper
-         :link: https://doi.org/10.1093/bioinformatics/btaf025
-
-         **tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling.**
-         *Bioinformatics* (2025).
-
-      .. grid-item-card:: 📢 What's New?
-         :link: whats_new
-         :link-type: doc
-
-         Check out the latest features, bug fixes, and improvements in the recent releases of tttrlib.
+* `Source code <https://github.com/Fluorescence-Tools/tttrlib>`__
+* `PyPI package <https://pypi.org/project/tttrlib/>`__
+* `Conda package <https://anaconda.org/tpeulen/tttrlib>`__
+* `tttrlib paper <https://doi.org/10.1093/bioinformatics/btaf025>`__
