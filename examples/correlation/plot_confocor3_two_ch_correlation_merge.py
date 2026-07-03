@@ -1,7 +1,7 @@
 """
-=======================================
+===============================================================
 Confocor3 two channel cross-correlation (using merge method)
-=======================================
+===============================================================
 
 The raw FCS data format of the Zeiss Confocor3 is relatively simple.
 Zeiss Confocor3 raw files store time-difference between photons.
@@ -21,7 +21,9 @@ import numpy as np
 import pylab as plt
 import tttrlib
 
-#%% Reading data
+#%%
+#
+# Reading data
 # ------------
 # The photon data registered by different detectors are saved in separate files.
 from examples._example_data import get_data_root
@@ -29,13 +31,20 @@ from examples._example_data import get_data_root
 fns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])
 
 tttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]
+if len(tttr_data) < 2:
+    raise SystemExit(
+        "Confocor3 demo data were not found. Set TTTRLIB_DATA to a data bundle "
+        "containing cz/fcs/*Ch*.raw files to execute this example."
+    )
 
 print(f"Found {len(tttr_data)} channels")
 for i, tttr in enumerate(tttr_data):
-    print(f"  Channel {i+1}: {tttr.get_number_of_records()} events")
+    print(f"  Channel {i+1}: {tttr.size()} events")
 
-#%% Check count rates
-# ----------------
+#%%
+#
+# Check count rates
+# -----------------
 # You can check the count rates of the channels using the macro time resolution 
 # contained in the header
 header = tttr_data[0].header
@@ -43,8 +52,10 @@ macro_time_resolution = header.macro_time_resolution
 count_rates = [len(t) / (t.macro_times[-1] * macro_time_resolution) for t in tttr_data]
 print("Count rates:", count_rates)
 
-#%% Merge channels using TTTR merge method
-# ---------------------------------------
+#%%
+#
+# Merge channels using TTTR merge method
+# --------------------------------------
 # Use the new merge method to combine channels automatically
 # The merge method with strategy=1 (interleave) automatically sorts by time
 tttr_merged = tttrlib.TTTR()
@@ -65,21 +76,25 @@ for i in range(1, len(tttr_data)):
     channel_offset = i if tttr_data[i].routing_channels[0] == tttr_data[0].routing_channels[0] else 0
     tttr_merged.merge(tttr_data[i], 0, channel_offset, 1)  # strategy=1 for interleave
 
-print(f"Merged data: {tttr_merged.get_number_of_records()} total events")
+print(f"Merged data: {tttr_merged.size()} total events")
 merged_channels = sorted(set(tttr_merged.routing_channels))
 print(f"Merged channels: {merged_channels}")
 
-#%% Verify chronological order
-# -------------------------
+#%%
+#
+# Verify chronological order
+# --------------------------
 # The interleave merge strategy ensures events are sorted by time
 times = tttr_merged.macro_times
 if np.all(np.diff(times) >= 0):
-    print("✓ Events are in chronological order")
+    print("Events are in chronological order")
 else:
-    print("✗ Events are NOT in chronological order")
+    print("Events are NOT in chronological order")
 
-#%% Cross-correlation analysis
-# ---------------------------
+#%%
+#
+# Cross-correlation analysis
+# --------------------------
 # The merged container can be used for standard analysis, e.g., correlations.
 settings = {
     "n_bins": 9,  # n_bins and n_casc defines the settings of the multi-tau
@@ -131,8 +146,10 @@ plt.ylim(0.98, 1.30)
 plt.title("Confocor3 Cross-correlation (using TTTR merge method)")
 plt.show()
 
-#%% Performance comparison (optional)
-# --------------------------------
+#%%
+#
+# Performance comparison (optional)
+# ---------------------------------
 # Compare the new merge method with the old manual approach
 import time
 
@@ -177,4 +194,4 @@ print(f"Speedup: {old_time/new_time:.2f}x" if new_time > 0 else "N/A")
 # Verify results are identical
 assert np.array_equal(macro_times_old, tttr_new.macro_times), "Macro times should be identical"
 assert np.array_equal(routing_channels_old, tttr_new.routing_channels), "Routing channels should be identical"
-print("✓ Both methods produce identical results")
+print("Both methods produce identical results")

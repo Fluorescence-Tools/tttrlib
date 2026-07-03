@@ -158,12 +158,12 @@ def __len__(self):
 
 def __getitem__(self, key):
     import numpy as np
-    if isinstance(key, tuple):
-        key = np.array(key)
+    if isinstance(key, (tuple, list)):
+        key = np.asarray(key)
     if isinstance(key, slice):
         sel = np.arange(*key.indices(self.get_n_valid_events()), dtype=np.int32)
     elif isinstance(key, np.ndarray):
-        sel = key.astype(np.int32)
+        sel = key.astype(np.int32).ravel()
     else:
         sel = np.array([key], dtype=np.int32)
     return TTTR(self, sel)
