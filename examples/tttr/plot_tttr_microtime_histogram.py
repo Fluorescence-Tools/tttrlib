@@ -3,6 +3,18 @@
 Micro time histograms
 =====================
 
+The micro time histogram (the TCSPC decay) is built from the micro time of every
+photon. By default the histogram spans the **full TAC range** reported by the
+device header (``header.number_of_micro_time_channels``). TAC cards usually
+report many more channels than a single excitation period actually covers, so the
+decay carries a long, empty (or noise-only) tail beyond ``1 / rep_rate``.
+
+Passing ``minlength=-2`` clips the histogram to just the channels that fit inside
+one excitation period,
+``floor((1 / rep_rate) / micro_time_resolution)`` — the value exposed as
+``header.get_effective_number_of_micro_time_channels()``. When the header lacks
+the repetition-rate information (effective count of 0) the full TAC range is used
+instead, so the call is always safe.
 """
 import os
 from pathlib import Path
@@ -12,20 +24,46 @@ import pylab as p
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
 DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
 
+###############################################################################
+# Effect of micro time coarsening
+# -------------------------------
+# ``micro_time_coarsening`` divides the micro times before binning, trading
+# resolution for counts per bin.
 data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
-h, t = data.get_microtime_histogram(
-    micro_time_coarsening=32
-)
-p.semilogy(t, h, label="micro_time_coarsening=32")
+for coarsening in (32, 8, 4):
+    h, t = data.get_microtime_histogram(micro_time_coarsening=coarsening)
+    p.semilogy(t, h, label=f"micro_time_coarsening={coarsening}")
+p.xlabel("Micro time / s")
+p.ylabel("Counts")
+p.legend()
+p.show()
 
-h, t = data.get_microtime_histogram(
-    micro_time_coarsening=8
-)
-p.semilogy(t, h, label="micro_time_coarsening=16")
+###############################################################################
+# Limiting the histogram to one excitation period
+# -----------------------------------------------
+# Use a pulsed (T3) file where the TAC range is much wider than one excitation
+# period. ``minlength=-2`` drops the empty/noise tail beyond ``1 / rep_rate``.
+data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu'), 'PTU')
 
-h, t = data.get_microtime_histogram(
-    micro_time_coarsening=4
+# Full TAC range (default behaviour)
+h_full, t_full = data.get_microtime_histogram(micro_time_coarsening=8)
+
+# Clipped to the repetition period
+h_rep, t_rep = data.get_microtime_histogram(
+    micro_time_coarsening=8,
+    minlength=-2  # clip to floor((1 / rep_rate) / micro_time_resolution)
 )
-p.semilogy(t, h, label="micro_time_coarsening=8")
+
+n_total = data.header.number_of_micro_time_channels
+n_effective = data.header.get_effective_number_of_micro_time_channels()
+print(f"TAC channels (full)          : {n_total}")
+print(f"Effective channels (rep rate): {n_effective}")
+print(f"Full histogram bins          : {len(h_full)}")
+print(f"Clipped histogram bins       : {len(h_rep)}")
+
+p.semilogy(t_full, h_full, label=f"full TAC range ({len(h_full)} bins)")
+p.semilogy(t_rep, h_rep, '--', label=f"minlength=-2 ({len(h_rep)} bins)")
+p.xlabel("Micro time / s")
+p.ylabel("Counts")
 p.legend()
 p.show()

@@ -351,8 +351,9 @@ public:
      * @param time Pointer to the time array.
      * @param n_time Pointer to the size of the time array.
      * @param micro_time_coarsening Microtime coarsening factor.
-     * @param minlength Minimum number of photons required; if fewer are present,
-     *        an empty/zero histogram is returned.
+     * @param minlength Minimum number of bins in the returned histogram. The special value -2
+     *        instead clips the histogram to the number of micro time channels that fit within one
+     *        excitation period, floor((1/rep_rate) / micro_time_resolution).
      */
     void get_microtime_histogram(
             std::shared_ptr<TTTR> tttr,

@@ -2104,6 +2104,10 @@ void TTTR::compute_microtime_histogram(
     // Prevent zero coarsening
     if (micro_time_coarsening == 0) micro_time_coarsening = 1;
 
+    // minlength == -2 is a sentinel that clips the histogram to one excitation
+    // period (see below) rather than acting as a minimum length.
+    const bool limit_to_repetition_period = (minlength == -2);
+
     // Default resolution and base channel count
     double resolution = 1.0;
     int base_channels = 0;
@@ -2113,7 +2117,17 @@ void TTTR::compute_microtime_histogram(
         auto header = *header_ptr;
         double hdr_res = header.get_micro_time_resolution();
         resolution = (hdr_res > 0 ? hdr_res : 1.0);
-        base_channels = header.get_number_of_micro_time_channels();
+        if (limit_to_repetition_period) {
+            // Clip the histogram to the channels that fit within one excitation
+            // period: floor((1/rep_rate) / micro_time_resolution). Fall back to
+            // the total TAC channel count when the header lacks the rep-rate /
+            // global-resolution info (effective count would be 0).
+            unsigned int eff = header.get_effective_number_of_micro_time_channels();
+            base_channels = (eff > 0) ? (int) eff
+                                      : header.get_number_of_micro_time_channels();
+        } else {
+            base_channels = header.get_number_of_micro_time_channels();
+        }
     }
 
     // Determine number of bins

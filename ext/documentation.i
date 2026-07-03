@@ -2977,9 +2977,15 @@ Parameters
     method)  
 * `n_time` :  
     the number of points in the time axis  
-* `micro_time_coarsening` :  
+* `micro_time_coarsening` :
     a factor by which the micro times in the TTTR object are divided (default
-    value is 1).  
+    value is 1).
+* `minlength` :
+    minimum number of bins in the returned histogram (default -1 disables the
+    check). The special value -2 instead clips the histogram to the number of
+    micro time channels that fit within one excitation period, floor((1/rep_rate)
+    / micro_time_resolution), falling back to the full TAC range when the header
+    lacks rep-rate info.
 ";
 
 %feature("docstring") TTTR::compute_mean_lifetime "

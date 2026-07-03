@@ -1458,8 +1458,11 @@ public:
      * @param n_time Pointer to the number of points in the time axis.
      * @param micro_time_coarsening A factor by which the micro times in the TTTR object are divided (default value is 1).
      * @param channels Optional list of routing channels to filter photons.
-     * @param minlength Minimum number of photons required; if the selection contains fewer photons,
-     *                  an empty/zero histogram is returned (default -1 disables the check).
+     * @param minlength Minimum number of bins in the returned histogram (default -1 disables the
+     *                  check). The special value -2 instead clips the histogram to the number of
+     *                  micro time channels that fit within one excitation period,
+     *                  floor((1/rep_rate) / micro_time_resolution), falling back to the full TAC
+     *                  range when the header lacks rep-rate info.
      */
      void get_microtime_histogram(
              double **histogram, int *n_histogram,

@@ -259,6 +259,54 @@ class Tests(unittest.TestCase):
             ), True
         )
 
+    def _assert_leading_bins_preserved(self, coarsening, h0, t0, h1, t1):
+        # Clipping only changes the length of the tail; every leading bin value
+        # and time-axis point must be identical to the full histogram.
+        self.assertEqual(len(t1), len(h1))
+        self.assertLessEqual(len(h1), len(h0))
+        self.assertTrue(np.array_equal(h1, h0[:len(h1)]))
+        self.assertTrue(np.allclose(t1, t0[:len(t1)]))
+
+    def test_microtime_histogram_limit_to_repetition_period(self):
+        # SPC-130: the effective (rep-rate-limited) count equals the full TAC
+        # range, so minlength == -2 is a no-op for this file.
+        data = tttrlib.TTTR(settings["spc132_filename"], 'SPC-130')
+        coarsening = 32
+        h0, t0 = data.get_microtime_histogram(coarsening)
+        h1, t1 = data.get_microtime_histogram(coarsening, minlength=-2)
+        eff = data.header.get_effective_number_of_micro_time_channels()
+        expected = (eff // coarsening) if eff > 0 else len(h0)
+        self.assertEqual(len(h1), expected)
+        self._assert_leading_bins_preserved(coarsening, h0, t0, h1, t1)
+
+    def test_microtime_histogram_repetition_period_clips_t3(self):
+        # Pulsed (T3) file: the TAC range is much wider than one excitation
+        # period, so minlength == -2 genuinely shortens the histogram.
+        data = tttrlib.TTTR(settings["ptu_hh_t3_filename"], 'PTU')
+        coarsening = 8
+        eff = data.header.get_effective_number_of_micro_time_channels()
+        self.assertGreater(eff, 0)
+        h0, t0 = data.get_microtime_histogram(coarsening)
+        h1, t1 = data.get_microtime_histogram(coarsening, minlength=-2)
+        self.assertEqual(len(h1), eff // coarsening)
+        self.assertLess(len(h1), len(h0))  # actually clipped
+        self._assert_leading_bins_preserved(coarsening, h0, t0, h1, t1)
+        # Total number of photons is conserved for the leading (kept) range.
+        self.assertEqual(h1.sum(), h0[:len(h1)].sum())
+
+    def test_microtime_histogram_repetition_period_fallback(self):
+        # T2 mode has no meaningful excitation period, so the effective count is
+        # 0 and minlength == -2 must fall back to the full TAC range.
+        data = tttrlib.TTTR(settings["ptu_hh_t2_filename"], 'PTU')
+        self.assertEqual(
+            data.header.get_effective_number_of_micro_time_channels(), 0
+        )
+        coarsening = 8
+        h0, _ = data.get_microtime_histogram(coarsening)
+        h1, _ = data.get_microtime_histogram(coarsening, minlength=-2)
+        self.assertEqual(len(h1), len(h0))
+        self.assertTrue(np.array_equal(h1, h0))
+
     def test_header(self):
         data = tttrlib.TTTR(settings["ptu_hh_t3_filename"], 'PTU')
         header = data.header
