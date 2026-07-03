@@ -15,8 +15,15 @@ tmp/
 playground
 junk/
 venv
-tttrlib
+# root-level build/install copy only — must not match nested package dirs
+# such as ext/**/io/github/fluorescencetools/tttrlib/ or ext/python/tttrlib.*
+/tttrlib
 !bin/tttrlib
+
+# Local planning and agent state
+PRDs/
+PLANS/
+.omx/
 
 # Windows artifacts
 nul
@@ -24,9 +31,30 @@ nul
 # CMake builds
 cmake-build-*/
 cmake-build-release/
+build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+DartConfiguration.tcl
+install_manifest.txt
+_deps/
+
+# Local ImageJ/Fiji plugin build & launch folder (native libs, ij.jar, jars)
+imagej-test/
+
+# Conda/rattler build output
+conda-bld/
+docsenv/
 
 # act cache
 .act-cache/
+
+# Local tooling state
+.claude/settings.local.json
 
 # Documentation and tools
 doc/_*
@@ -34,6 +62,7 @@ doc/xml
 doc/_build/
 doc/paper*
 /doc/examples/
+doc/sg_execution_times.rst
 
 # IDE
 .vscode
@@ -44,7 +73,19 @@ doc/paper*
 # Python
 __pycache__
 *.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+.benchmarks/
 .ipynb_checkpoints
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+pip-wheel-metadata/
 
 # Test data
 tttr-data
