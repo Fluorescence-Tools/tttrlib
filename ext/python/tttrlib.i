@@ -167,3 +167,6 @@ if 'CLSMISM' in dir():
 /* DecayFit(s) */
 %include "DecayFit.i"
 // %include "DecayFitMLEWrapper.i"  // Not ready yet
+
+/* Photon simulator (PRD-005) */
+%include "Sim.i"
