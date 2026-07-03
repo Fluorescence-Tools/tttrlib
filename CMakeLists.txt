@@ -16,9 +16,24 @@ MESSAGE(STATUS "CMAKE_MODULE_PATH='${CMAKE_MODULE_PATH}'")
 ################################################################################
 # BUILD OPTIONS
 ################################################################################
-# Default WITH_AVX to OFF for conda/pip builds (safer, wider compatibility)
-# Users can enable with: cmake -DWITH_AVX=ON
-OPTION(WITH_AVX "Compile tttrlib with AVX intrinsics (default OFF for conda/pip builds)" OFF)
+# SIMD / AVX
+# ----------
+# tttrlib builds a SINGLE portable binary that contains both scalar and AVX
+# kernels and dispatches between them at RUNTIME based on the host CPU's
+# capabilities (see tttrlib::cpu_features in include/info.h). This runtime
+# dispatch is enabled automatically on x86_64 - no flag needed - and stays safe
+# on machines without AVX because the AVX kernels use per-function target
+# attributes and are only entered after a CPUID check.
+#
+# Two optional switches change this default behaviour:
+#   WITH_AVX (default OFF): additionally compile the ENTIRE library with native
+#       AVX2/FMA arch flags (-mavx2 -mfma / /arch:AVX2). Produces a faster but
+#       NON-portable binary that REQUIRES an AVX2 CPU. Use only for machine-tuned
+#       local builds, never for conda/pip/wheel distribution.
+#   TTTRLIB_NO_SIMD (default OFF): compile a scalar-only binary with no AVX
+#       kernels at all.
+OPTION(WITH_AVX "Also build the whole library with native AVX2/FMA arch flags (non-portable, requires AVX2 CPU)" OFF)
+OPTION(TTTRLIB_NO_SIMD "Disable all SIMD/AVX code paths (scalar-only build)" OFF)
 OPTION(INSTALL "Install the library and the include files" ON)
 OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
 # TIFF I/O for 2D/3D arrays via a bundled, statically-linked libtiff. No new
@@ -44,26 +59,28 @@ OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
 ## System specific compiler flags
 ################################
-# AVX - Only enable on Intel x86_64 machines (all platforms)
-# Disable on ARM (aarch64, arm64) and other non-x86_64 architectures
+# AVX - runtime dispatch on x86_64, force-scalar elsewhere / on request.
 IF(NOT CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
-  set(WITH_AVX OFF CACHE STRING "Disable AVX on non-x86_64 architectures (ARM, etc.)." FORCE)
-  MESSAGE(STATUS "SIMD/AVX disabled: Not an x86_64 machine (detected: ${CMAKE_HOST_SYSTEM_PROCESSOR})")
+  # Non-x86 (ARM, etc.): no AVX kernels compiled in.
+  set(WITH_AVX OFF CACHE STRING "AVX unavailable on non-x86_64 architectures." FORCE)
+  ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=0)
+  MESSAGE(STATUS "SIMD/AVX: non-x86_64 host (${CMAKE_HOST_SYSTEM_PROCESSOR}) - scalar only")
+ELSEIF(TTTRLIB_NO_SIMD)
+  set(WITH_AVX OFF CACHE STRING "SIMD disabled via TTTRLIB_NO_SIMD." FORCE)
+  ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=0)
+  MESSAGE(STATUS "SIMD/AVX: disabled via TTTRLIB_NO_SIMD (scalar-only build)")
 ELSE()
+  # Default: AVX kernels compiled in, selected at runtime via CPUID.
+  ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=1)
+  MESSAGE(STATUS "SIMD/AVX: runtime dispatch enabled (portable binary, ${CMAKE_SYSTEM_NAME})")
   IF(WITH_AVX)
-    MESSAGE(STATUS "SIMD/AVX enabled: (${CMAKE_SYSTEM_NAME})")
-  ELSE()
-    MESSAGE(STATUS "SIMD/AVX disabled via WITH_AVX=OFF (${CMAKE_SYSTEM_NAME})")
-  ENDIF()
-ENDIF()
-IF(WITH_AVX)
+    # Opt-in: build the WHOLE library with native AVX2/FMA (non-portable).
     INCLUDE(simd)
-ENDIF()
-
-IF(WITH_AVX)
-    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=1)
-ELSE()
-    ADD_COMPILE_DEFINITIONS(TTTRLIB_WITH_AVX=0)
+    IF(NOT MSVC)
+      ADD_COMPILE_OPTIONS(-mavx2 -mfma)
+    ENDIF()
+    MESSAGE(STATUS "SIMD/AVX: WITH_AVX=ON - whole library built with native AVX2/FMA (non-portable, requires AVX2 CPU)")
+  ENDIF()
 ENDIF()
 
 # OpenMP - Works on all architectures (x86_64, ARM, etc.)
@@ -115,12 +132,15 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       /GL          # Whole program optimization
       /w           # Disable all warnings in Release builds
     )
-    # Add AVX2 flag only if explicitly enabled by user
+    # Native AVX2 for the whole library only when explicitly opted in via
+    # WITH_AVX (non-portable). Runtime-dispatched AVX kernels do NOT need this:
+    # MSVC accepts AVX/FMA intrinsics without /arch and the scalar paths stay
+    # portable to non-AVX CPUs.
     IF(WITH_AVX)
       ADD_COMPILE_OPTIONS(/arch:AVX2)
-      MESSAGE(STATUS "MSVC: AVX2 flag enabled via /arch:AVX2")
+      MESSAGE(STATUS "MSVC: whole library built with /arch:AVX2 (non-portable)")
     ELSE()
-      MESSAGE(STATUS "MSVC: AVX2 flag disabled (use -DWITH_AVX=ON to enable)")
+      MESSAGE(STATUS "MSVC: runtime AVX dispatch (no global /arch:AVX2)")
     ENDIF()
     # Suppress informational pragma messages from external libraries (HighFive)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)

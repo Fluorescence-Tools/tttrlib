@@ -80,16 +80,12 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
 }
 
 
-// fast convolution AVX
-void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
-
-    #ifdef __AVX__
-    // Add runtime detection with fallback
-    if (!tttrlib::cpu_features::get_avx_enabled()) {
-        fconv(fit, x, lamp, numexp, start, stop, dt);
-        return;
-    }
-    
+#if TTTRLIB_COMPILE_AVX
+// AVX+FMA kernel for fconv(). Only called after a runtime CPUID check confirms
+// the host supports AVX and FMA (see fconv_avx() dispatcher below); the target
+// attribute lets it use AVX/FMA even when the TU is built without -mavx.
+TTTRLIB_TARGET_AVX_FMA
+static void fconv_avx_impl(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
     int start1 = std::max(1, start);
 
     // make sure that there are always multiple of 4 in the lifetimes
@@ -112,6 +108,7 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
 
     std::fill(fit, fit + stop, 0.0);
     __m256d e, a, fitcurr, l2p, l2c, tmp;
+    double tmp_vals[4];
     for (int ne = 0; ne < numexp; ne += chunk_size) {
         // expcurr = exp(-dt / x[2 * ne + 1]);
         e = _mm256_load_pd(&ex[ne]);
@@ -121,13 +118,8 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
         // fit[0] += l2[0] * a;
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
-#ifdef _WIN32
-        double tmp_vals[4];
         _mm256_storeu_pd(tmp_vals, tmp);
         fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
-#else
-        fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
-#endif
         fitcurr = _mm256_set1_pd(0.0);
         // convolution
         for (int i = start1; i < stop; i++) {
@@ -135,26 +127,64 @@ void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int 
             l2c = _mm256_set1_pd(l2[i]);
             //fitcurr = (fitcurr + l2[i - 1]) * expcurr + l2[i];
             fitcurr = _mm256_add_pd(fitcurr, l2p);
-#ifdef __FMA__
             fitcurr = _mm256_fmadd_pd(fitcurr, e, l2c);
-#else
-            fitcurr = _mm256_mul_pd(fitcurr, e);
-            fitcurr = _mm256_add_pd(fitcurr, l2c);
-#endif
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
-#ifdef _WIN32
-            double tmp_vals2[4];
-            _mm256_storeu_pd(tmp_vals2, tmp);
-            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
-#else
-            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
-#endif
+            _mm256_storeu_pd(tmp_vals, tmp);
+            fit[i] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
         }
     }
+    free(l2);
     _mm_free(ex); _mm_free(p);
+}
+#endif // TTTRLIB_COMPILE_AVX
 
-    #endif //__AVX__
+#if TTTRLIB_COMPILE_NEON
+// NEON kernel for fconv(): processes 2 lifetimes per float64x2_t. The per-
+// lifetime recurrence cannot be autovectorized, so this manual 2-wide version
+// wins (~1.75x on Apple M1). NEON is baseline on AArch64 - no CPUID needed.
+static void fconv_neon_impl(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+    int start1 = std::max(1, start);
+    const int chunk_size = 2; // lifetimes per NEON register (float64x2_t)
+    int n_ele = ((numexp + chunk_size - 1) / chunk_size) * chunk_size;
+
+    std::vector<double> p(n_ele, 0.0), ex(n_ele, 0.0), l2(stop);
+    for (int i = 0; i < numexp; i++) { p[i] = x[2 * i]; ex[i] = exp(-dt / x[2 * i + 1]); }
+    for (int i = 0; i < stop; i++) l2[i] = dt * 0.5 * lamp[i];
+
+    std::fill(fit, fit + stop, 0.0);
+    for (int ne = 0; ne < numexp; ne += chunk_size) {
+        float64x2_t e = vld1q_f64(&ex[ne]);
+        float64x2_t a = vld1q_f64(&p[ne]);
+        float64x2_t tmp = vmulq_f64(vdupq_n_f64(l2[0]), a);
+        fit[0] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        float64x2_t fitcurr = vdupq_n_f64(0.0);
+        for (int i = start1; i < stop; i++) {
+            fitcurr = vaddq_f64(fitcurr, vdupq_n_f64(l2[i - 1]));
+            // fitcurr = fitcurr * e + l2[i]
+            fitcurr = vfmaq_f64(vdupq_n_f64(l2[i]), fitcurr, e);
+            tmp = vmulq_f64(fitcurr, a);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+    }
+}
+#endif // TTTRLIB_COMPILE_NEON
+
+// fast convolution - runtime dispatcher (AVX/FMA on x86, NEON on AArch64,
+// scalar fconv() otherwise).
+void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+#if TTTRLIB_COMPILE_AVX
+    if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
+        fconv_avx_impl(fit, x, lamp, numexp, start, stop, dt);
+        return;
+    }
+#elif TTTRLIB_COMPILE_NEON
+    if (tttrlib::cpu_features::get_neon_enabled()) {
+        fconv_neon_impl(fit, x, lamp, numexp, start, stop, dt);
+        return;
+    }
+#endif
+    fconv(fit, x, lamp, numexp, start, stop, dt);
 }
 
 
@@ -207,17 +237,11 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
 }
 
 
-// fast convolution, high repetition rate, AVX
-void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+#if TTTRLIB_COMPILE_AVX
+// AVX+FMA kernel for fconv_per(); dispatched only on AVX+FMA capable CPUs.
+TTTRLIB_TARGET_AVX_FMA
+static void fconv_per_avx_impl(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                    int n_points, double period, double dt) {
-#ifdef __AVX__
-
-    // Add runtime detection with fallback
-    if (!tttrlib::cpu_features::get_avx_enabled()) {
-        fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
-        return;
-    }
-
 if (is_verbose()) {
     std::clog << "FCONV_PER_AVX" << std::endl;
     std::clog << "-- numexp: " << numexp << std::endl;
@@ -274,6 +298,7 @@ if (is_verbose()) {
     // CONVOLUTION
     std::fill(fit, fit + n_points, 0.0);
     __m256d fitcurr, l2p, l2c, a, e, s, t, tmp;
+    double tmp_vals[4];
     for (int ne = 0; ne < numexp; ne += chunk_size) {
         e = _mm256_load_pd(&ex[ne]);     // expcurr = exp(-dt / x[2 * ne + 1]);
         a = _mm256_load_pd(&p[ne]);      // amplitudes
@@ -284,13 +309,8 @@ if (is_verbose()) {
         // fit[0] += l2[0] * a;
         l2c = _mm256_set1_pd(l2[0]);
         tmp = _mm256_mul_pd(l2c, a);
-#ifdef _WIN32
-        double tmp_vals[4];
         _mm256_storeu_pd(tmp_vals, tmp);
         fit[0] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
-#else
-        fit[0] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
-#endif
         fitcurr = _mm256_set1_pd(0.0);
         for (int i = start1; i < stop1; i++) {
             //fitcurr = (fitcurr + l2[i - 1]) * expcurr + l2[i];
@@ -299,21 +319,11 @@ if (is_verbose()) {
             l2p = _mm256_set1_pd(l2[pre]);
             l2c = _mm256_set1_pd(l2[i]);
             fitcurr = _mm256_add_pd(fitcurr, l2p);
-#ifdef __FMA__
             fitcurr = _mm256_fmadd_pd(fitcurr, e, l2c);
-#else
-            fitcurr = _mm256_mul_pd(fitcurr, e);
-            fitcurr = _mm256_add_pd(fitcurr, l2c);
-#endif
             // fit[i] += fitcurr * a;
             tmp = _mm256_mul_pd(fitcurr, a);
-#ifdef _WIN32
-            double tmp_vals2[4];
-            _mm256_storeu_pd(tmp_vals2, tmp);
-            fit[i] += tmp_vals2[0] + tmp_vals2[1] + tmp_vals2[2] + tmp_vals2[3];
-#else
-            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
-#endif
+            _mm256_storeu_pd(tmp_vals, tmp);
+            fit[i] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
         }
         // fitcurr *= scale[ne];
         fitcurr = _mm256_mul_pd(fitcurr, s);
@@ -324,18 +334,84 @@ if (is_verbose()) {
             //fit[i] += fitcurr * a[ne] * tails[ne];
             tmp = _mm256_mul_pd(fitcurr, a);
             tmp = _mm256_mul_pd(tmp, t);
-#ifdef _WIN32
-            double tmp_vals3[4];
-            _mm256_storeu_pd(tmp_vals3, tmp);
-            fit[i] += tmp_vals3[0] + tmp_vals3[1] + tmp_vals3[2] + tmp_vals3[3];
-#else
-            fit[i] += tmp[0] + tmp[1] + tmp[2] + tmp[3];
-#endif
+            _mm256_storeu_pd(tmp_vals, tmp);
+            fit[i] += tmp_vals[0] + tmp_vals[1] + tmp_vals[2] + tmp_vals[3];
         }
     }
     free(l2); _mm_free(p); _mm_free(ex); _mm_free(scale); _mm_free(tails);
-    
-    #endif //__AVX__
+}
+#endif // TTTRLIB_COMPILE_AVX
+
+#if TTTRLIB_COMPILE_NEON
+// NEON kernel for fconv_per(): 2 lifetimes per float64x2_t (mirror of the AVX
+// kernel). Wins on AArch64 because the per-lifetime recurrence cannot be
+// autovectorized.
+static void fconv_per_neon_impl(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+                   int n_points, double period, double dt) {
+if (is_verbose()) {
+    std::clog << "FCONV_PER_NEON" << std::endl;
+}
+    int start1 = std::max(1, start);
+    stop = (stop < 0) ? n_points: stop;
+    const int chunk_size = 2; // lifetimes per NEON register
+    int n_ele = ((numexp + chunk_size - 1) / chunk_size) * chunk_size;
+
+    int period_n = (int)ceil(period/dt-0.5);
+    int lamp_start = 0;
+    while (lamp[lamp_start++] == 0);
+    int stop1 = std::min(period_n+lamp_start, n_points);
+
+    std::vector<double> l2(stop), ex(n_ele, 0.0), p(n_ele, 0.0), scale(n_ele, 0.0), tails(n_ele, 0.0);
+    for (int i = 0; i < stop; i++) l2[i] = dt * 0.5 * lamp[i];
+    for (int i = 0; i < numexp; i++) {
+        ex[i] = exp(-dt / x[2 * i + 1]);
+        p[i] = x[2 * i];
+        scale[i] = exp(-(period_n - stop1 + start) * dt / x[2 * i + 1]);
+        tails[i] = 1. / (1. - exp(-period / x[2 * i + 1]));
+    }
+
+    std::fill(fit, fit + n_points, 0.0);
+    for (int ne = 0; ne < numexp; ne += chunk_size) {
+        float64x2_t e = vld1q_f64(&ex[ne]);
+        float64x2_t a = vld1q_f64(&p[ne]);
+        float64x2_t s = vld1q_f64(&scale[ne]);
+        float64x2_t t = vld1q_f64(&tails[ne]);
+
+        float64x2_t tmp = vmulq_f64(vdupq_n_f64(l2[0]), a);
+        fit[0] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        float64x2_t fitcurr = vdupq_n_f64(0.0);
+        for (int i = start1; i < stop1; i++) {
+            int pre = std::max(0, i - 1);
+            fitcurr = vaddq_f64(fitcurr, vdupq_n_f64(l2[pre]));
+            fitcurr = vfmaq_f64(vdupq_n_f64(l2[i]), fitcurr, e);
+            tmp = vmulq_f64(fitcurr, a);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+        fitcurr = vmulq_f64(fitcurr, s);
+        for (int i = start; i < stop; i++) {
+            fitcurr = vmulq_f64(fitcurr, e);
+            tmp = vmulq_f64(vmulq_f64(fitcurr, a), t);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+    }
+}
+#endif // TTTRLIB_COMPILE_NEON
+
+// fast convolution, high repetition rate - runtime dispatcher
+void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+                   int n_points, double period, double dt) {
+#if TTTRLIB_COMPILE_AVX
+    if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
+        fconv_per_avx_impl(fit, x, lamp, numexp, start, stop, n_points, period, dt);
+        return;
+    }
+#elif TTTRLIB_COMPILE_NEON
+    if (tttrlib::cpu_features::get_neon_enabled()) {
+        fconv_per_neon_impl(fit, x, lamp, numexp, start, stop, n_points, period, dt);
+        return;
+    }
+#endif
+    fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
 }
 
 
@@ -523,18 +599,12 @@ void fconv_per_cs_time_axis(
         double period
 ){
     double dt = time_axis[1] - time_axis[0];
-#ifdef __AVX__
+    // fconv_per_avx() dispatches to the AVX kernel when the CPU supports it and
+    // falls back to the scalar fconv_per() otherwise.
     fconv_per_avx(
             model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, n_model, period, dt
     );
-#endif
-#ifndef __AVX__
-    fconv_per(
-            model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
-            convolution_start, convolution_stop, n_model, period, dt
-    );
-#endif
 }
 
 
@@ -548,7 +618,8 @@ void fconv_cs_time_axis(
         int convolution_stop
 ){
     double dt = time_axis[1] - time_axis[0];
-#ifdef __AVX__
+    // fconv_avx() dispatches to the AVX kernel when the CPU supports it and
+    // falls back to the scalar fconv() otherwise.
     fconv_avx(
             output,
             lifetime_spectrum,
@@ -556,16 +627,6 @@ void fconv_cs_time_axis(
             (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, dt
     );
-#endif
-#ifndef __AVX__
-    fconv(
-            output,
-            lifetime_spectrum,
-            irf,
-            (int) n_lifetime_spectrum / 2,
-            convolution_start, convolution_stop, dt
-    );
-#endif
 }
 
 

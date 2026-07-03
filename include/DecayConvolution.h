@@ -9,19 +9,9 @@
 #include <algorithm> /* std::max */
 #include <string.h> /* strcmp */
 
-#if defined(__AVX__)
-  #if defined(_MSC_VER)
-    /* Microsoft C/C++-compatible compiler */
-    #include <intrin.h>
-  #else
-    /* GNU or Clang compiler - use immintrin.h which includes all intrinsics */
-    #include <immintrin.h>
-  #endif
-
-  #ifndef __FMA__
-    #define __FMA__ 1
-  #endif
-#endif
+/* AVX/FMA intrinsics and the runtime-dispatch macros live in info.h; the AVX
+ * kernels in DecayConvolution.cpp are compiled in on x86 and selected at
+ * runtime. No compiler-wide AVX flag is required here. */
 
 
 /*!

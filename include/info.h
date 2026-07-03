@@ -30,6 +30,53 @@
     #define TTTRLIB_X86_FEATURES 0
 #endif
 
+// -----------------------------------------------------------------------------
+// SIMD (AVX/FMA) compile-in and runtime-dispatch control
+// -----------------------------------------------------------------------------
+// The library ships a single portable binary that contains BOTH scalar and AVX
+// code paths and selects between them at runtime (see cpu_features below).
+//
+// TTTRLIB_COMPILE_AVX == 1 means the AVX intrinsic kernels are compiled into the
+// binary. We do this on any x86 target regardless of the baseline ISA the rest
+// of the translation unit is built with: the per-function target attributes
+// below make the intrinsics valid inside individual kernels even when the TU is
+// compiled without -mavx, so scalar code stays portable to non-AVX CPUs while
+// the AVX kernels are only *entered* after a runtime CPU-feature check.
+#if TTTRLIB_X86_FEATURES
+    #define TTTRLIB_COMPILE_AVX 1
+    #include <immintrin.h>
+#else
+    #define TTTRLIB_COMPILE_AVX 0
+#endif
+
+// Per-function code-generation attributes. On GCC/Clang these enable AVX/FMA
+// instruction selection for a single function without applying -mavx globally
+// (which would let the compiler emit AVX in scalar code and crash on old CPUs).
+// A function tagged TTTRLIB_TARGET_AVX_FMA must only be *called* when the CPU
+// actually supports FMA (guard with cpu_features::get_fma_enabled()); likewise
+// TTTRLIB_TARGET_AVX with get_avx_enabled(). MSVC accepts AVX/FMA intrinsics
+// unconditionally and needs no such attribute.
+#if TTTRLIB_COMPILE_AVX && (defined(__GNUC__) || defined(__clang__))
+    #define TTTRLIB_TARGET_AVX      __attribute__((target("avx")))
+    #define TTTRLIB_TARGET_AVX_FMA  __attribute__((target("avx,fma")))
+#else
+    #define TTTRLIB_TARGET_AVX
+    #define TTTRLIB_TARGET_AVX_FMA
+#endif
+
+// ARM NEON (AArch64). Unlike AVX, NEON is a MANDATORY part of the AArch64
+// baseline ISA: it is always present, needs no CPUID check and no per-function
+// target attribute. We only wire NEON kernels for the few hot loops where they
+// measurably beat the autovectorized scalar code (double-precision NEON is only
+// 2-wide, so memory-bound ops are better left to the autovectorizer). Runtime
+// opt-out via TTTRLIB_USE_NEON=0.
+#if (defined(__aarch64__) || defined(_M_ARM64))
+    #define TTTRLIB_COMPILE_NEON 1
+    #include <arm_neon.h>
+#else
+    #define TTTRLIB_COMPILE_NEON 0
+#endif
+
 // Runtime CPU feature detection
 namespace tttrlib {
 namespace cpu_features {
@@ -98,11 +145,14 @@ namespace cpu_features {
     
     // Get AVX status (CPU detection + environment override)
     inline bool get_avx_enabled() {
-#if defined(TTTRLIB_WITH_AVX)
-        constexpr bool avx_compiled_in = (TTTRLIB_WITH_AVX != 0);
-#else
-        // If TTTRLIB_WITH_AVX is not defined, assume AVX was NOT compiled in (safe default)
+        // The AVX kernels are compiled into the binary whenever we build for an
+        // x86 target (TTTRLIB_COMPILE_AVX); whether they run is decided here at
+        // runtime. TTTRLIB_WITH_AVX, if defined by the build to 0, force-disables
+        // AVX entirely (e.g. for a deliberately scalar-only build).
+#if defined(TTTRLIB_WITH_AVX) && (TTTRLIB_WITH_AVX == 0)
         constexpr bool avx_compiled_in = false;
+#else
+        constexpr bool avx_compiled_in = (TTTRLIB_COMPILE_AVX != 0);
 #endif
 
         if (!avx_compiled_in) {
@@ -127,6 +177,16 @@ namespace cpu_features {
         return is_feature_enabled_by_env("TTTRLIB_USE_FMA", has_fma);
     }
     
+    // Get NEON status. NEON is guaranteed present on AArch64, so this is a
+    // compile-time capability with an environment opt-out (TTTRLIB_USE_NEON=0).
+    inline bool get_neon_enabled() {
+#if TTTRLIB_COMPILE_NEON
+        return is_feature_enabled_by_env("TTTRLIB_USE_NEON", true);
+#else
+        return false;
+#endif
+    }
+
     // Get OpenMP status (compile-time + environment override)
     inline bool get_openmp_enabled() {
 #ifdef _OPENMP
