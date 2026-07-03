@@ -14,6 +14,10 @@ fluorescent point sources (e.g., fluorescent beads or single molecules) with
 sub-pixel accuracy using 2D Gaussian curve fitting.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -21,9 +25,32 @@ sub-pixel accuracy using 2D Gaussian curve fitting.
 
 .. thumbnail-parent-div-open
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example localizes a bright point source in a 2D image using tttrlib.ImageLocalizer. The image below is a small synthetic placeholder; replace image with a camera, CLSM, or other microscopy image when applying the workflow to real data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_image_localization_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/microscopy_localization/plot_image_localization`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">2D Gaussian image localization</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
 
     </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/microscopy_localization/plot_image_localization
 

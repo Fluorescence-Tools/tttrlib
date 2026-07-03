@@ -656,22 +656,10 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 4,
+   "execution_count": null,
    "id": "2d181dd4-6700-4e84-88e4-c4212691b260",
    "metadata": {},
-   "outputs": [
-    {
-     "ename": "NameError",
-     "evalue": "name 'ptu_file' is not defined",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
-      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
-      "Cell \u001b[0;32mIn[4], line 1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m data_ptu \u001b[38;5;241m=\u001b[39m tttrlib\u001b[38;5;241m.\u001b[39mTTTR(\u001b[43mptu_file\u001b[49m)\n",
-      "\u001b[0;31mNameError\u001b[0m: name 'ptu_file' is not defined"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "data_ptu = tttrlib.TTTR(ptu_file)"
    ]

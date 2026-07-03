@@ -31,6 +31,10 @@ Application of ``tttrlib`` to single-molecule data.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -52,6 +56,23 @@ Application of ``tttrlib`` to single-molecule data.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon Distribution Analysis (PDA) starts from a probability distribution for the total fluorescence photons, P(F), and predicts how those photons split between two detection channels. This small example is intentionally synthetic: it shows the object contract before moving to data-backed single-molecule PDA examples.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_pda_synthetic_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_pda_synthetic`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">PDA from a synthetic photon distribution</div>
     </div>
 
 
@@ -321,6 +342,7 @@ Application of ``tttrlib`` to single-molecule data.
    :hidden:
 
    /auto_examples/single_molecule/plot_single_molecule_mcs
+   /auto_examples/single_molecule/plot_pda_synthetic
    /auto_examples/single_molecule/plot_microtime_selection_minimal
    /auto_examples/single_molecule/plot_single_molecule_burst_selection
    /auto_examples/single_molecule/plot_microtime_selection_example_fixed

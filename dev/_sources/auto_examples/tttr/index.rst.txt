@@ -10,6 +10,10 @@ Working with TTTR objects
 Examples for reading/writing/transcoding TTTR files, inspecting headers,
 microtime histograms, and I/O performance benchmarking.
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -36,23 +40,6 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
-
-.. only:: html
-
-  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/tttr/plot_tttr_microtime_histogram`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the option for arbitrary meta data. Other TTTR formats have defined / fixed headers. Some of the information that can be found in a TTTR file is listed in Header tags sheet.">
 
 .. only:: html
@@ -70,6 +57,23 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The micro time histogram (the TCSPC decay) is built from the micro time of every photon. By default the histogram spans the full TAC range reported by the device header (``header.number_of_micro_time_channels``). TAC cards usually report many more channels than a single excitation period actually covers, so the decay carries a long, empty (or noise-only) tail beyond 1 / rep_rate.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_microtime_histogram`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of an existing CLSM experiment is read, masked, and the masked data is written to  a file that can be processed by any other software processing the original TTTR data.">
 
 .. only:: html
@@ -82,6 +86,23 @@ microtime histograms, and I/O performance benchmarking.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Convert a TTTR measurement between all writable container formats and verify what survives each trip.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_file_conversion_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_file_conversion`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR file conversion between formats</div>
     </div>
 
 
@@ -147,9 +168,10 @@ microtime histograms, and I/O performance benchmarking.
    :hidden:
 
    /auto_examples/tttr/plot_tttr_transcode
-   /auto_examples/tttr/plot_tttr_microtime_histogram
    /auto_examples/tttr/plot_tttr_header
+   /auto_examples/tttr/plot_tttr_microtime_histogram
    /auto_examples/tttr/plot_tttr_write
+   /auto_examples/tttr/plot_tttr_file_conversion
    /auto_examples/tttr/plot_tttr_read_benchmark
    /auto_examples/tttr/plot_tttr_files
    /auto_examples/tttr/compression_example

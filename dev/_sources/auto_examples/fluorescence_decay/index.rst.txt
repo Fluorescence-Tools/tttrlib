@@ -12,6 +12,10 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -21,18 +25,18 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
+  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
     </div>
 
 
@@ -55,18 +59,18 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
+    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
+  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
     </div>
 
 
@@ -157,6 +161,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The one-call helpers fit23, fit24, fit25, and fit26 wrap the reusable fit classes. They are useful for notebooks and scripts where one decay or one pattern mixture is fitted at a time. This example runs every helper and then runs the matching class API with the same data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit_helpers_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit_helpers`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">One-call fit helper overview</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared.">
 
 .. only:: html
@@ -182,13 +203,14 @@ routines, and demonstrations of different fit configurations and benchmarks.
 .. toctree::
    :hidden:
 
-   /auto_examples/fluorescence_decay/plot_fit25
-   /auto_examples/fluorescence_decay/plot_fit26
    /auto_examples/fluorescence_decay/plot_fit24
+   /auto_examples/fluorescence_decay/plot_fit26
+   /auto_examples/fluorescence_decay/plot_fit25
    /auto_examples/fluorescence_decay/plot_fit23
    /auto_examples/fluorescence_decay/plot_decay_fit_irf_bg
    /auto_examples/fluorescence_decay/plot_fit23_usage_2
    /auto_examples/fluorescence_decay/plot_pile_up
    /auto_examples/fluorescence_decay/plot_convolution_routines
+   /auto_examples/fluorescence_decay/plot_fit_helpers
    /auto_examples/fluorescence_decay/plot_fit23_benchmark_1
 

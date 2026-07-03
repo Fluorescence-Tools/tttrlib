@@ -12,6 +12,10 @@ segmentation-driven decays, and common image operations.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -225,6 +229,23 @@ segmentation-driven decays, and common image operations.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The whole TIFF layer is backed by a bundled libtiff (statically linked), so it adds no runtime dependency to tttrlib.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_export_flim_tiff_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_export_flim_tiff`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Exporting FLIM images to TIFF (no ImageJ)</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions.">
 
 .. only:: html
@@ -313,6 +334,7 @@ segmentation-driven decays, and common image operations.
    /auto_examples/flim/plot_lifetime_moments_bg
    /auto_examples/flim/plot_mle_lifetime
    /auto_examples/flim/plot_phasor
+   /auto_examples/flim/plot_export_flim_tiff
    /auto_examples/flim/plot_tutorial_python
    /auto_examples/flim/plot_flim_pie
    /auto_examples/flim/plot_imaging_representations

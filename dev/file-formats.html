@@ -1,0 +1,1293 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="1. TTTR File Formats and Conversion" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="file-formats.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_file-formats_b6119906.png" />
+<meta property="og:image:alt" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
+<meta name="description" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>1. TTTR File Formats and Conversion &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'file-formats';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Burst Analysis" href="burst-analysis.html" />
+    <link rel="prev" title="TTTR Core, Selections, Masks, and I/O" href="tttr-core.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.26
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="#">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.26
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">1. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tttr.html">2. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="single_molecule.html">3. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/decay.html">3.1. Fluorescence decays</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="modules/fcs.html">3.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">3.4. Photon distribution analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="imaging.html">4. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">4.1. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">5. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verbosity.html">6. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">7. References</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/file-formats.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">1. </span>TTTR File Formats and Conversion</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tttr-file-formats-and-conversion">
+<span id="file-formats"></span><h1><span class="section-number">1. </span>TTTR File Formats and Conversion<a class="headerlink" href="#tttr-file-formats-and-conversion" title="Link to this heading">#</a></h1>
+<p>tttrlib reads and writes all common time-tagged time-resolved (TTTR) container
+formats. This page explains each supported file type, the read/write support
+matrix, and what information survives a conversion between formats. All
+conversions shown here are exercised by the unit tests
+(<code class="docutils literal notranslate"><span class="pre">test/python/tttr/test_TTTR_roundtrip.py</span></code>) and the gallery example
+<a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html"><span class="doc">TTTR file conversion between formats</span></a>.</p>
+<p>Every TTTR file, regardless of vendor, decodes into the same four per-event
+arrays:</p>
+<ul class="simple">
+<li><p><strong>macro times</strong> — the coarse arrival time (sync counter for T3, time tag for T2),</p></li>
+<li><p><strong>micro times</strong> — the TCSPC arrival time within the excitation period (T3 only),</p></li>
+<li><p><strong>routing channels</strong> — the detector/router number,</p></li>
+<li><p><strong>event types</strong> — photon (0) or marker (1); markers carry scanner
+synchronization in imaging data.</p></li>
+</ul>
+<p>Round-trip fidelity in tttrlib is defined on these decoded arrays, not on the
+raw byte stream: a written file may pack overflow records differently than the
+original, but reading it back yields identical arrays.</p>
+<section id="supported-file-types">
+<h2><span class="section-number">1.1. </span>Supported file types<a class="headerlink" href="#supported-file-types" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</dt><dd><p>The PicoQuant <em>unified</em> container. A tagged header (typed key/value tags)
+is followed by a stream of 32-bit records. The record layout depends on
+the instrument and mode, stored in the <code class="docutils literal notranslate"><span class="pre">TTResultFormat_TTTRRecType</span></code> tag:
+PicoHarp T2/T3, HydraHarp v1 T2/T3, HydraHarp v2 / TimeHarp 260 T2/T3, or
+MultiHarp / PicoHarp 330 generic T2/T3. T3 records store the sync counter
+(10 bit for HydraHarp), micro time (15 bit) and channel (6 bit); T2
+records store a 25-bit time tag and channel but <strong>no micro time</strong>.
+Imaging (CLSM) acquisitions store scanner markers as special records and
+the scan geometry in <code class="docutils literal notranslate"><span class="pre">ImgHdr_*</span></code> tags.</p>
+</dd>
+<dt>PicoQuant HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</dt><dd><p>The older HydraHarp v1/v2 container: a fixed binary header (identity,
+measurement and display settings, per-channel input settings, TT-mode
+block, optional imaging block) followed by the same HydraHarp T3 records
+as PTU. tttrlib selects the record decoder from the <code class="docutils literal notranslate"><span class="pre">Ident</span></code> and
+<code class="docutils literal notranslate"><span class="pre">FormatVersion</span></code> header fields.</p>
+</dd>
+<dt>SF-compressed HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</dt><dd><p>HT3 files converted with Suren Felekyan’s HT3 compression (Seidel lab,
+Düsseldorf). The header is a regular HydraHarp v1 HT3 header and the
+photon/marker records are ordinary HydraHarp T3 records, but a <em>run</em> of
+macro time overflow records is collapsed into a single overflow record
+whose lowest 24 bits carry the number of additional overflows
+(advancing the sync counter by <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">+</span> <span class="pre">count)</span> <span class="pre">×</span> <span class="pre">1024</span></code>). tttrlib
+auto-detects SF compression when reading HT3 files by inspecting the
+overflow record payloads (plain v1 overflow records have an all-zero
+payload, so detection is unambiguous), and can write SF files — set
+<code class="docutils literal notranslate"><span class="pre">header.tttr_record_type</span> <span class="pre">=</span> <span class="pre">14</span></code> to compress a T3 dataset on write.</p>
+</dd>
+<dt>Becker &amp; Hickl SPC-130/150/830 (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>, container <code class="docutils literal notranslate"><span class="pre">SPC-130</span></code>)</dt><dd><p>A single 4-byte header word holding the macro time clock, then 32-bit
+records: 12-bit macro time, 4-bit routing, 12-bit inverted ADC (micro
+time), and flag bits. Macro time overflows are carried by dedicated
+overflow records (28-bit overflow count) or a per-record overflow bit.
+Markers (pixel/line/frame clock from a scanner) are encoded with the
+invalid+mark bits; an optional <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar file with instrument
+settings is parsed automatically when present.</p>
+</dd>
+<dt>Becker &amp; Hickl SPC-600/630, 256-channel mode (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>, container <code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code>)</dt><dd><p>Headerless 32-bit records with 8-bit inverted ADC, 17-bit macro time and
+3-bit routing. Every macro time overflow accounts for 2<sup>17</sup> units.</p>
+</dd>
+<dt>Becker &amp; Hickl SPC-600/630, 4096-channel mode (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>, container <code class="docutils literal notranslate"><span class="pre">SPC-600_4096</span></code>)</dt><dd><p>Headerless <strong>6-byte</strong> records with 12-bit inverted ADC, 24-bit macro time
+and 8-bit inverted routing. Overflow records advance the clock by
+2<sup>24</sup> units each.</p>
+</dd>
+<dt>Photon-HDF5 (<code class="docutils literal notranslate"><span class="pre">.hdf5</span></code>, <code class="docutils literal notranslate"><span class="pre">.h5</span></code>)</dt><dd><p>The open, vendor-neutral HDF5-based format (<a class="reference external" href="http://photon-hdf5.org/">photon-hdf5.org</a>). The decoded arrays are stored directly:
+<code class="docutils literal notranslate"><span class="pre">/photon_data/timestamps</span></code> (64 bit), <code class="docutils literal notranslate"><span class="pre">detectors</span></code> (8 bit) and
+<code class="docutils literal notranslate"><span class="pre">nanotimes</span></code> (16 bit), with resolutions in <code class="docutils literal notranslate"><span class="pre">timestamps_specs</span></code> /
+<code class="docutils literal notranslate"><span class="pre">nanotimes_specs</span></code>. tttrlib writes spec-conformant v0.5 files with the
+mandatory <code class="docutils literal notranslate"><span class="pre">/setup</span></code> and <code class="docutils literal notranslate"><span class="pre">/identity</span></code> groups (see the <em>phconvert</em>
+reference implementation). Ideal as an archival and interchange format —
+nothing that tttrlib decodes is lost.</p>
+</dd>
+<dt>Carl Zeiss ConfoCor3 raw (<code class="docutils literal notranslate"><span class="pre">.raw</span></code>, container <code class="docutils literal notranslate"><span class="pre">CZ-RAW</span></code>)</dt><dd><p>FCS raw data from the ConfoCor3. A 128-byte header (measurement identity,
+channel number, macro time clock) is followed by 32-bit records that hold
+<em>macro time deltas</em> only. There are no micro times and no per-event
+channels — one file per detection channel.</p>
+</dd>
+<dt>SM (<code class="docutils literal notranslate"><span class="pre">.sm</span></code>, container <code class="docutils literal notranslate"><span class="pre">SM</span></code>)</dt><dd><p>The MFD single-molecule format: a big-endian tagged header followed by
+12-byte records of a 64-bit macro time and a 32-bit channel number, and a
+26-byte trailer. No micro times.</p>
+</dd>
+</dl>
+</section>
+<section id="support-matrix">
+<h2><span class="section-number">1.2. </span>Support matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 14.0%" />
+<col style="width: 6.0%" />
+<col style="width: 6.0%" />
+<col style="width: 12.0%" />
+<col style="width: 10.0%" />
+<col style="width: 8.0%" />
+<col style="width: 26.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Container</p></th>
+<th class="head"><p>Record types</p></th>
+<th class="head"><p>Read</p></th>
+<th class="head"><p>Write</p></th>
+<th class="head"><p>Micro time</p></th>
+<th class="head"><p>Channel</p></th>
+<th class="head"><p>Markers</p></th>
+<th class="head"><p>Header metadata (on write)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PTU</span></code></p></td>
+<td><p>PH T2/T3, HH v1/v2 T2/T3, generic T2/T3</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>15 bit (T3) / — (T2)</p></td>
+<td><p>6 bit (PH: 4 bit)</p></td>
+<td><p>✓</p></td>
+<td><p><strong>Full</strong> — every header tag is re-written (except wide-string and
+binary-blob tags)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HT3</span></code></p></td>
+<td><p>HH v1/v2 T3, PH T3, SF-compressed</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>15 bit</p></td>
+<td><p>6 bit</p></td>
+<td><p>✓</p></td>
+<td><p><strong>Parsed fields</strong> — identity, measurement/display settings,
+per-channel inputs, sync rate, imaging (CLSM) block</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-130</span></code></p></td>
+<td><p>SPC-130/140/150/830</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>12 bit</p></td>
+<td><p>4 bit</p></td>
+<td><p>✓</p></td>
+<td><p><strong>Macro clock only</strong> (4-byte header); <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar settings are
+read but not written</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code></p></td>
+<td><p>SPC-600/630 (32 bit)</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>8 bit</p></td>
+<td><p>3 bit</p></td>
+<td><p>✗</p></td>
+<td><p><strong>None</strong> (headerless format)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-600_4096</span></code></p></td>
+<td><p>SPC-600/630 (48 bit)</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>12 bit</p></td>
+<td><p>8 bit</p></td>
+<td><p>✗</p></td>
+<td><p><strong>None</strong> (headerless format)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PHOTON-HDF5</span></code></p></td>
+<td><p>decoded arrays</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>16 bit</p></td>
+<td><p>8 bit</p></td>
+<td><p>✗</p></td>
+<td><p><strong>Resolutions + setup</strong> — timestamps/nanotimes units, TCSPC bin
+count, <code class="docutils literal notranslate"><span class="pre">/setup</span></code> fields; <code class="docutils literal notranslate"><span class="pre">/identity</span></code> is regenerated</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CZ-RAW</span></code></p></td>
+<td><p>ConfoCor3 raw</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+<td><p>header only</p></td>
+<td><p>✗</p></td>
+<td><p><strong>Measurement identity</strong> — measure id, position/kinetic/repetition
+indices, channel, macro clock</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SM</span></code></p></td>
+<td><p>SM</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+<td><p>✗</p></td>
+<td><p>32 bit</p></td>
+<td><p>✗</p></td>
+<td><p><strong>Header fields</strong> — version, comment, column names/resolutions
+(channel labels are dropped)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Same-format round trips (<code class="docutils literal notranslate"><span class="pre">read</span> <span class="pre">→</span> <span class="pre">write</span> <span class="pre">→</span> <span class="pre">read</span></code>) reproduce the decoded event
+stream exactly for every container. Writing v1 HydraHarp records (HT3 v1
+files, old PTU files) is supported so v1 sources round-trip without record
+upgrades.</p>
+</section>
+<section id="metadata-preservation">
+<h2><span class="section-number">1.3. </span>Metadata preservation<a class="headerlink" href="#metadata-preservation" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TTTR.header</span></code> holds all metadata parsed from the source file as typed tags.
+On writing, each container writer re-emits as much of that metadata as the
+target format can physically store:</p>
+<ul class="simple">
+<li><p><strong>PTU</strong> is the richest vendor target: the writer serializes the <em>entire</em>
+tag list, so foreign metadata (e.g. tags of a source SPC or HT3 header)
+is carried along verbatim. Only <code class="docutils literal notranslate"><span class="pre">tyWideString</span></code> and <code class="docutils literal notranslate"><span class="pre">tyBinaryBlob</span></code>
+tags are skipped (with a warning).</p></li>
+<li><p><strong>HT3</strong> has a fixed binary header: all fields the reader parses are
+restored from tags (including the imaging block used by CLSM
+reconstruction). Fields that are not parsed into tags (display curve
+mappings, hardware module list) are zeroed.</p></li>
+<li><p><strong>Photon-HDF5</strong> keeps the time calibrations in
+<code class="docutils literal notranslate"><span class="pre">timestamps_specs</span></code>/<code class="docutils literal notranslate"><span class="pre">nanotimes_specs</span></code> and preserves <code class="docutils literal notranslate"><span class="pre">/setup</span></code> values
+from a Photon-HDF5 source; other groups are regenerated.</p></li>
+<li><p><strong>SPC-130/SPC-600, CZ-RAW, SM</strong> headers are small fixed structures — only
+the fields listed in the table survive.</p></li>
+</ul>
+<p>The essential calibration — macro time resolution and micro time
+resolution — is preserved by <em>every</em> writable container that has a header:
+PTU and Photon-HDF5 store both explicitly, HT3 stores them as sync rate and
+resolution (the writer derives the sync rate from the global resolution when
+transcoding), SPC-130 and CZ-RAW store the macro clock. Only the headerless
+SPC-600 containers cannot carry calibration; check
+<code class="docutils literal notranslate"><span class="pre">header.macro_time_resolution</span></code> after reading such files.</p>
+<p>When metadata fidelity matters across a conversion, prefer <strong>PTU</strong> (vendor
+tooling compatibility) or <strong>Photon-HDF5</strong> (open interchange) as the target.</p>
+</section>
+<section id="conversion-between-formats">
+<h2><span class="section-number">1.4. </span>Conversion between formats<a class="headerlink" href="#conversion-between-formats" title="Link to this heading">#</a></h2>
+<p>To convert, read a file and write it with a header whose container (and
+optionally record) type points at the target format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;measurement.spc&quot;</span><span class="p">,</span> <span class="s2">&quot;SPC-130&quot;</span><span class="p">)</span>
+
+<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
+<span class="n">header</span><span class="o">.</span><span class="n">tttr_container_type</span> <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># PQ_PTU_CONTAINER</span>
+<span class="n">header</span><span class="o">.</span><span class="n">tttr_record_type</span> <span class="o">=</span> <span class="mi">4</span>      <span class="c1"># PQ_RECORD_TYPE_HHT3v2</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.ptu&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the header’s record type does not fit the target container, tttrlib
+falls back to the container’s canonical record type (HydraHarp v2 T3 for
+PTU/HT3). Container and record type identifiers:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 33.3%" />
+<col style="width: 11.1%" />
+<col style="width: 44.4%" />
+<col style="width: 11.1%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Container</p></th>
+<th class="head"><p>ID</p></th>
+<th class="head"><p>Record type</p></th>
+<th class="head"><p>ID</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PTU</span></code></p></td>
+<td><p>0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PQ_RECORD_TYPE_HHT2v2</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HT3</span></code></p></td>
+<td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PQ_RECORD_TYPE_HHT3v1</span></code></p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-130</span></code></p></td>
+<td><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PQ_RECORD_TYPE_HHT3v2</span></code></p></td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code></p></td>
+<td><p>3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PQ_RECORD_TYPE_PHT3</span></code></p></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-600_4096</span></code></p></td>
+<td><p>4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BH_RECORD_TYPE_SPC130</span></code></p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PHOTON-HDF5</span></code></p></td>
+<td><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BH_RECORD_TYPE_SPC600_256</span></code></p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CZ-RAW</span></code></p></td>
+<td><p>6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BH_RECORD_TYPE_SPC600_4096</span></code></p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SM</span></code></p></td>
+<td><p>7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CZ_RECORD_TYPE_CONFOCOR3</span></code> / <code class="docutils literal notranslate"><span class="pre">SM_RECORD_TYPE</span></code> / generic T3/T2</p></td>
+<td><p>10 / 11 / 12 / 13</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PQ_RECORD_TYPE_SF_HT3</span></code> (SF-compressed HT3)</p></td>
+<td><p>14</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="what-survives-a-conversion">
+<h3><span class="section-number">1.4.1. </span>What survives a conversion<a class="headerlink" href="#what-survives-a-conversion" title="Link to this heading">#</a></h3>
+<p>Conversions are lossy when the target format cannot represent a field. The
+rules follow directly from the record layouts above:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Conversion</p></th>
+<th class="head"><p>Fidelity</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>anything → <code class="docutils literal notranslate"><span class="pre">PHOTON-HDF5</span></code></p></td>
+<td><p><strong>Lossless</strong> for macro times, micro times and channels (event types
+are not stored; markers read back as photons).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-130</span></code> → PTU/HT3 (T3)</p></td>
+<td><p>Lossless — 12-bit micro times and 4-bit channels fit the HydraHarp
+T3 record.</p></td>
+</tr>
+<tr class="row-even"><td><p>PTU/HT3 (T3) → <code class="docutils literal notranslate"><span class="pre">SPC-130</span></code></p></td>
+<td><p>Micro times clip to 12 bit, channels to 4 bit. Scanner markers are
+written as BH marker records (marker bits in the routing field).</p></td>
+</tr>
+<tr class="row-odd"><td><p>T3 → T2 (<code class="docutils literal notranslate"><span class="pre">PTU</span></code>)</p></td>
+<td><p>Micro times are dropped (T2 records have none); macro times,
+channels and markers survive.</p></td>
+</tr>
+<tr class="row-even"><td><p>T2 → T3</p></td>
+<td><p>Micro times read as 0 and are written as 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p>anything → <code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code></p></td>
+<td><p>Micro times clip to 8 bit, channels to 3 bit, markers dropped.</p></td>
+</tr>
+<tr class="row-even"><td><p>anything → <code class="docutils literal notranslate"><span class="pre">SPC-600_4096</span></code></p></td>
+<td><p>Micro times clip to 12 bit, markers dropped.</p></td>
+</tr>
+<tr class="row-odd"><td><p>anything → <code class="docutils literal notranslate"><span class="pre">SM</span></code></p></td>
+<td><p>Macro times and channels survive; micro times and markers are
+dropped.</p></td>
+</tr>
+<tr class="row-even"><td><p>anything → <code class="docutils literal notranslate"><span class="pre">CZ-RAW</span></code></p></td>
+<td><p>Only macro times survive (stored as 32-bit deltas). The channel
+number is a single header field (taken from the <code class="docutils literal notranslate"><span class="pre">channel</span></code> tag,
+default 1).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="time-calibration-across-formats">
+<h3><span class="section-number">1.4.2. </span>Time calibration across formats<a class="headerlink" href="#time-calibration-across-formats" title="Link to this heading">#</a></h3>
+<p>Conversion preserves the <em>raw counter values</em>. The macro and micro time
+resolutions travel in the header (<code class="docutils literal notranslate"><span class="pre">MeasDesc_GlobalResolution</span></code> /
+<code class="docutils literal notranslate"><span class="pre">MeasDesc_Resolution</span></code> tags, or the format’s native equivalent), so times
+in seconds are preserved whenever the target header format can store the
+calibration. The headerless SPC-600 containers assume a fixed clock; verify
+<code class="docutils literal notranslate"><span class="pre">header.macro_time_resolution</span></code> after reading converted files.</p>
+</section>
+</section>
+<section id="tested-conversion-scripts">
+<h2><span class="section-number">1.5. </span>Tested conversion scripts<a class="headerlink" href="#tested-conversion-scripts" title="Link to this heading">#</a></h2>
+<p>Ready-to-run conversion scripts (executed as part of the documentation
+build and mirrored by unit tests):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html"><span class="doc">TTTR file conversion between formats</span></a> —
+the conversion matrix: PTU ⇄ SPC, → Photon-HDF5, → SM, T3 → T2.</p></li>
+<li><p><a class="reference internal" href="auto_examples/beginner/plot_04_writing_files.html"><span class="doc">Basic Example 4: Writing TTTR data and converting formats</span></a> —
+writing subsets and format copies.</p></li>
+<li><p><a class="reference internal" href="auto_examples/tttr/plot_tttr_transcode.html"><span class="doc">TTTR writing / Transcode</span></a> —
+transcoding with a header borrowed from another file.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tttr-core.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">TTTR Core, Selections, Masks, and I/O</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="burst-analysis.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Burst Analysis</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-file-types">1.1. Supported file types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#support-matrix">1.2. Support matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metadata-preservation">1.3. Metadata preservation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conversion-between-formats">1.4. Conversion between formats</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-survives-a-conversion">1.4.1. What survives a conversion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-calibration-across-formats">1.4.2. Time calibration across formats</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tested-conversion-scripts">1.5. Tested conversion scripts</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/file-formats.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

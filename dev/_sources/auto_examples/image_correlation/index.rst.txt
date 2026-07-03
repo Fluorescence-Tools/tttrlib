@@ -12,6 +12,10 @@ comparison between NumPy-based and tttrlib-based implementations.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 

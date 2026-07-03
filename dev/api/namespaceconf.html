@@ -128,8 +128,6 @@ str&#160;</td><td class="memItemRight" valign="bottom"><b>root_doc</b> = &quot;i
 <tr class="memitem:aa95c63cf0a3d87fed36d450840c6fd48" id="r_aa95c63cf0a3d87fed36d450840c6fd48"><td class="memItemLeft" align="right" valign="top"><a id="aa95c63cf0a3d87fed36d450840c6fd48" name="aa95c63cf0a3d87fed36d450840c6fd48"></a>
 str&#160;</td><td class="memItemRight" valign="bottom"><b>master_doc</b> = &quot;index&quot;</td></tr>
 <tr class="separator:aa95c63cf0a3d87fed36d450840c6fd48"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a522f87436bac0f83cd3e3427e4198daf" id="r_a522f87436bac0f83cd3e3427e4198daf"><td class="memItemLeft" align="right" valign="top">dict&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceconf.html#a522f87436bac0f83cd3e3427e4198daf">source_suffix</a></td></tr>
-<tr class="separator:a522f87436bac0f83cd3e3427e4198daf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae850ae634911b713e036b43894fdd525" id="r_ae850ae634911b713e036b43894fdd525"><td class="memItemLeft" align="right" valign="top"><a id="ae850ae634911b713e036b43894fdd525" name="ae850ae634911b713e036b43894fdd525"></a>
 list&#160;</td><td class="memItemRight" valign="bottom"><b>templates_path</b> = [&quot;_templates&quot;] if (HERE / &quot;_templates&quot;).exists() else []</td></tr>
 <tr class="separator:ae850ae634911b713e036b43894fdd525"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,6 +165,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>numpydoc_class_member
 <tr class="memitem:a144eca20779c3861343e4e7641636b2e" id="r_a144eca20779c3861343e4e7641636b2e"><td class="memItemLeft" align="right" valign="top"><a id="a144eca20779c3861343e4e7641636b2e" name="a144eca20779c3861343e4e7641636b2e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>numpydoc_show_class_members</b> = False</td></tr>
 <tr class="separator:a144eca20779c3861343e4e7641636b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7eb0246d4ad39598f4ee4f0e66afd618" id="r_a7eb0246d4ad39598f4ee4f0e66afd618"><td class="memItemLeft" align="right" valign="top">dict&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceconf.html#a7eb0246d4ad39598f4ee4f0e66afd618">source_suffix</a></td></tr>
+<tr class="separator:a7eb0246d4ad39598f4ee4f0e66afd618"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32209722557005b42ad73ddec12d6b29" id="r_a32209722557005b42ad73ddec12d6b29"><td class="memItemLeft" align="right" valign="top"><a id="a32209722557005b42ad73ddec12d6b29" name="a32209722557005b42ad73ddec12d6b29"></a>
 str&#160;</td><td class="memItemRight" valign="bottom"><b>nbsphinx_execute</b> = &quot;never&quot;</td></tr>
 <tr class="separator:a32209722557005b42ad73ddec12d6b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -243,7 +243,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>html_domain_indices</
 <tr class="memitem:a4d0d804307a4398ab49887aad69dbc76" id="r_a4d0d804307a4398ab49887aad69dbc76"><td class="memItemLeft" align="right" valign="top"><a id="a4d0d804307a4398ab49887aad69dbc76" name="a4d0d804307a4398ab49887aad69dbc76"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>html_use_index</b> = False</td></tr>
 <tr class="separator:a4d0d804307a4398ab49887aad69dbc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a920ff115ba22562a3dab4b3f4c9bd634" id="r_a920ff115ba22562a3dab4b3f4c9bd634"><td class="memItemLeft" align="right" valign="top">dict&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceconf.html#a920ff115ba22562a3dab4b3f4c9bd634">html_theme_options</a></td></tr>
+<tr class="memitem:a920ff115ba22562a3dab4b3f4c9bd634" id="r_a920ff115ba22562a3dab4b3f4c9bd634"><td class="memItemLeft" align="right" valign="top"><a id="a920ff115ba22562a3dab4b3f4c9bd634" name="a920ff115ba22562a3dab4b3f4c9bd634"></a>
+dict&#160;</td><td class="memItemRight" valign="bottom"><b>html_theme_options</b> = {&quot;navigation_depth&quot;: 3}</td></tr>
 <tr class="separator:a920ff115ba22562a3dab4b3f4c9bd634"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af76996b1c5d49898080663f3633b9ab8" id="r_af76996b1c5d49898080663f3633b9ab8"><td class="memItemLeft" align="right" valign="top"><a id="af76996b1c5d49898080663f3633b9ab8" name="af76996b1c5d49898080663f3633b9ab8"></a>
 dict&#160;</td><td class="memItemRight" valign="bottom"><b>html_sidebars</b> = &quot;pydata_sphinx_theme&quot; else {}</td></tr>
@@ -381,24 +382,6 @@ Example:
 </div><!-- fragment -->
 </div>
 </div>
-<a id="a920ff115ba22562a3dab4b3f4c9bd634" name="a920ff115ba22562a3dab4b3f4c9bd634"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a920ff115ba22562a3dab4b3f4c9bd634">&#9670;&#160;</a></span>html_theme_options</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">dict conf.html_theme_options</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  {</div>
-<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;navigation_depth&quot;</span>: 3,</div>
-<div class="line"><span class="lineno">    3</span>    <span class="stringliteral">&quot;show_toc_level&quot;</span>: 2,</div>
-<div class="line"><span class="lineno">    4</span>}</div>
-</div><!-- fragment -->
-</div>
-</div>
 <a id="a92a41f663d41803fc3a5545f9f050a02" name="a92a41f663d41803fc3a5545f9f050a02"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a92a41f663d41803fc3a5545f9f050a02">&#9670;&#160;</a></span>intersphinx_mapping</h2>
 
@@ -453,8 +436,8 @@ Example:
 </div><!-- fragment -->
 </div>
 </div>
-<a id="a522f87436bac0f83cd3e3427e4198daf" name="a522f87436bac0f83cd3e3427e4198daf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a522f87436bac0f83cd3e3427e4198daf">&#9670;&#160;</a></span>source_suffix</h2>
+<a id="a7eb0246d4ad39598f4ee4f0e66afd618" name="a7eb0246d4ad39598f4ee4f0e66afd618"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7eb0246d4ad39598f4ee4f0e66afd618">&#9670;&#160;</a></span>source_suffix</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -465,8 +448,9 @@ Example:
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  {</div>
-<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;.rst&quot;</span>: <span class="stringliteral">&quot;restructuredtext&quot;</span></div>
-<div class="line"><span class="lineno">    3</span>}</div>
+<div class="line"><span class="lineno">    2</span>            <span class="stringliteral">&quot;.rst&quot;</span>: <span class="stringliteral">&quot;restructuredtext&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>            <span class="stringliteral">&quot;.ipynb&quot;</span>: <span class="stringliteral">&quot;jupyter_notebook&quot;</span>,</div>
+<div class="line"><span class="lineno">    4</span>        }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -487,7 +471,7 @@ Example:
 <div class="line"><span class="lineno">    4</span>            <span class="stringliteral">&quot;gallery_dirs&quot;</span>: [<span class="stringliteral">&quot;auto_examples&quot;</span>],</div>
 <div class="line"><span class="lineno">    5</span>            <span class="stringliteral">&quot;filename_pattern&quot;</span>: <span class="stringliteral">r&quot;plot_.*\.py$&quot;</span>,</div>
 <div class="line"><span class="lineno">    6</span>            <span class="stringliteral">&quot;ignore_pattern&quot;</span>: ignore_pat,     <span class="comment"># &lt;-- blacklist in effect</span></div>
-<div class="line"><span class="lineno">    7</span>            <span class="stringliteral">&quot;plot_gallery&quot;</span>: <span class="keyword">True</span>,</div>
+<div class="line"><span class="lineno">    7</span>            <span class="stringliteral">&quot;plot_gallery&quot;</span>: os.environ.get(<span class="stringliteral">&quot;TTTRLIB_DOCS_EXECUTE_EXAMPLES&quot;</span>, <span class="stringliteral">&quot;0&quot;</span>).lower() <span class="keywordflow">in</span> {<span class="stringliteral">&quot;1&quot;</span>, <span class="stringliteral">&quot;true&quot;</span>, <span class="stringliteral">&quot;yes&quot;</span>, <span class="stringliteral">&quot;on&quot;</span>},</div>
 <div class="line"><span class="lineno">    8</span>            <span class="stringliteral">&quot;image_scrapers&quot;</span>: (<span class="stringliteral">&quot;matplotlib&quot;</span>,),</div>
 <div class="line"><span class="lineno">    9</span>            <span class="stringliteral">&quot;reset_modules&quot;</span>: (<span class="stringliteral">&quot;matplotlib&quot;</span>,),</div>
 <div class="line"><span class="lineno">   10</span>            <span class="stringliteral">&quot;remove_config_comments&quot;</span>: <span class="keyword">True</span>,</div>

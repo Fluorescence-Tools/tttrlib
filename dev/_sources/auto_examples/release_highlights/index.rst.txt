@@ -11,6 +11,10 @@ Short, visual examples that showcase new features and improvements introduced
 in recent tttrlib releases. Start here to see what's new at a glance.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 

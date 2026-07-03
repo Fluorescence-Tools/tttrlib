@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.216** total execution time for 2 files **from auto_examples/release_highlights**:
+**00:00.000** total execution time for 2 files **from auto_examples/release_highlights**:
 
 .. container::
 
@@ -32,9 +32,9 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_24_0.py` (``plot_release_highlights_0_24_0.py``)
-     - 00:00.111
-     - 0.0
    * - :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_20_0.py` (``plot_release_highlights_0_20_0.py``)
-     - 00:00.105
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_24_0.py` (``plot_release_highlights_0_24_0.py``)
+     - 00:00.000
      - 0.0

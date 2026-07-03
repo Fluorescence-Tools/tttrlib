@@ -1,0 +1,1163 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Fluorescence Decay Fitting" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="fit-guide.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="tttrlib exposes fluorescence decay fitting through three layers: one-call helpers fit23, fit24, fit25, and fit26;, reusable classes Fit23, Fit24, Fit25, and Fit26 built on the shared Fit2x wrapper;..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_fit-guide_f0ff4031.png" />
+<meta property="og:image:alt" content="tttrlib exposes fluorescence decay fitting through three layers: one-call helpers fit23, fit24, fit25, and fit26;, reusable classes Fit23, Fit24, Fit25, and Fit26 built on the shared Fit2x wrapper;..." />
+<meta name="description" content="tttrlib exposes fluorescence decay fitting through three layers: one-call helpers fit23, fit24, fit25, and fit26;, reusable classes Fit23, Fit24, Fit25, and Fit26 built on the shared Fit2x wrapper;..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Fluorescence Decay Fitting &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'fit-guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User Guide" href="user_guide.html" />
+    <link rel="prev" title="CLSM, FLIM, and Image Workflows" href="clsm-flim-guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.26
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting Started with tttrlib
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.26
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/fit-guide.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fluorescence Decay Fitting</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fluorescence-decay-fitting">
+<span id="fit-guide"></span><h1>Fluorescence Decay Fitting<a class="headerlink" href="#fluorescence-decay-fitting" title="Link to this heading">#</a></h1>
+<p>tttrlib exposes fluorescence decay fitting through three layers:</p>
+<ol class="arabic simple">
+<li><p>one-call helpers <code class="docutils literal notranslate"><span class="pre">fit23</span></code>, <code class="docutils literal notranslate"><span class="pre">fit24</span></code>, <code class="docutils literal notranslate"><span class="pre">fit25</span></code>, and <code class="docutils literal notranslate"><span class="pre">fit26</span></code>;</p></li>
+<li><p>reusable classes <code class="docutils literal notranslate"><span class="pre">Fit23</span></code>, <code class="docutils literal notranslate"><span class="pre">Fit24</span></code>, <code class="docutils literal notranslate"><span class="pre">Fit25</span></code>, and <code class="docutils literal notranslate"><span class="pre">Fit26</span></code> built on
+the shared <code class="docutils literal notranslate"><span class="pre">Fit2x</span></code> wrapper;</p></li>
+<li><p>low-level <code class="docutils literal notranslate"><span class="pre">DecayFit23</span></code>-<code class="docutils literal notranslate"><span class="pre">DecayFit26</span></code> functions with <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code>.</p></li>
+</ol>
+<p>Use the highest-level API that gives enough control for the analysis. The
+low-level API is useful for testing, migration, and advanced integrations, but
+most user-facing notebooks should use the helpers or reusable classes.</p>
+<section id="which-fit-should-i-use">
+<h2>Which Fit Should I Use?<a class="headerlink" href="#which-fit-should-i-use" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 12.0%" />
+<col style="width: 22.0%" />
+<col style="width: 18.0%" />
+<col style="width: 16.0%" />
+<col style="width: 18.0%" />
+<col style="width: 14.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Fit</p></th>
+<th class="head"><p>Use when</p></th>
+<th class="head"><p>Parameters</p></th>
+<th class="head"><p>Typical <code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></th>
+<th class="head"><p>Result fields</p></th>
+<th class="head"><p>Main example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit23</span></code> / <code class="docutils literal notranslate"><span class="pre">fit23</span></code></p></td>
+<td><p>Single fluorescence lifetime with polarization-resolved decays and
+anisotropy-related outputs.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tau</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">r0</span></code>, <code class="docutils literal notranslate"><span class="pre">rho</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">0]</span></code> when fitting lifetime and rotation time.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> lifetime, <code class="docutils literal notranslate"><span class="pre">x[3]</span></code> rotation time, <code class="docutils literal notranslate"><span class="pre">twoIstar</span></code>, optional
+<code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></td>
+<td><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23.html"><span class="doc">Polarization resolved lifetime MLE</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit24</span></code> / <code class="docutils literal notranslate"><span class="pre">fit24</span></code></p></td>
+<td><p>Bi-exponential lifetime model with two lifetimes, amplitude, scattered
+fraction, and offset.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tau1</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">tau2</span></code>, <code class="docutils literal notranslate"><span class="pre">A2</span></code>, <code class="docutils literal notranslate"><span class="pre">offset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code> for a full synthetic-data fit; fix <code class="docutils literal notranslate"><span class="pre">offset</span></code> when
+background is independently known.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">x[2]</span></code> lifetimes, <code class="docutils literal notranslate"><span class="pre">x[3]</span></code> second amplitude,
+<code class="docutils literal notranslate"><span class="pre">twoIstar</span></code>, optional <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></td>
+<td><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit24.html"><span class="doc">Bi-exponential model</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit25</span></code> / <code class="docutils literal notranslate"><span class="pre">fit25</span></code></p></td>
+<td><p>Select the best lifetime from four fixed candidates, optionally fitting
+<code class="docutils literal notranslate"><span class="pre">gamma</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tau1</span></code>-<code class="docutils literal notranslate"><span class="pre">tau4</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">r0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> when only selecting the best candidate lifetime.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> selected lifetime, <code class="docutils literal notranslate"><span class="pre">x[4]</span></code> scattered fraction,
+<code class="docutils literal notranslate"><span class="pre">twoIstar</span></code>, optional <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></td>
+<td><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html"><span class="doc">Lifetime selection</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit26</span></code> / <code class="docutils literal notranslate"><span class="pre">fit26</span></code></p></td>
+<td><p>Fit the fraction of two known reference patterns.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fraction_1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0]</span></code> to optimize the first pattern fraction.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> first fraction, <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> complementary fraction,
+<code class="docutils literal notranslate"><span class="pre">twoIstar</span></code>, optional <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></td>
+<td><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit26.html"><span class="doc">fit26</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="common-failure-modes">
+<h2>Common Failure Modes<a class="headerlink" href="#common-failure-modes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 42.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Fit</p></th>
+<th class="head"><p>Typical failure</p></th>
+<th class="head"><p>Check first</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit23</span></code></p></td>
+<td><p>Unrealistic <code class="docutils literal notranslate"><span class="pre">rho</span></code> or lifetime when photon counts are low.</p></td>
+<td><p>IRF alignment, fixed mask for <code class="docutils literal notranslate"><span class="pre">r0</span></code>/<code class="docutils literal notranslate"><span class="pre">gamma</span></code>, and whether the Jordi
+parallel/perpendicular order is correct.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit24</span></code></p></td>
+<td><p>Lifetimes exchange order or the second amplitude runs to a boundary.</p></td>
+<td><p>Initial values, fixed offset/background, and whether a two-component
+model is identifiable from the photon counts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit25</span></code></p></td>
+<td><p>The selected lifetime is always the same candidate.</p></td>
+<td><p>Candidate spacing, <code class="docutils literal notranslate"><span class="pre">gamma</span></code> fixed/free choice, and whether candidates
+cover the observed decay.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit26</span></code></p></td>
+<td><p>Fitted fraction is outside the expected range or tracks one pattern only.</p></td>
+<td><p>Pattern normalization, pattern similarity, and whether both references
+are measured with the same binning as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="shared-inputs">
+<h2>Shared Inputs<a class="headerlink" href="#shared-inputs" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">data</span></code></dt><dd><p>Experimental decay histogram. For polarization-resolved fits this is usually
+Jordi format: parallel decay followed by perpendicular decay.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">irf</span></code></dt><dd><p>Instrument response function in the same format and binning as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">background</span></code></dt><dd><p>Background pattern in the same format as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dt</span></code></dt><dd><p>Width of one microtime channel.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">period</span></code></dt><dd><p>Excitation period, in the same time units as the lifetimes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fixed</span></code></dt><dd><p>Integer array where <code class="docutils literal notranslate"><span class="pre">1</span></code> means fixed and <code class="docutils literal notranslate"><span class="pre">0</span></code> means optimized.</p>
+</dd>
+</dl>
+</section>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">#</a></h2>
+<p>Every high-level fit returns a dictionary with:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">x</span></code></dt><dd><p>Fitted parameter array. Some entries are outputs written by the low-level
+routine, so always use the fit-specific table.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fixed</span></code></dt><dd><p>The fixed/free parameter mask used by the fit.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">twoIstar</span></code></dt><dd><p>Fit quality value.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">model</span></code></dt><dd><p>Optional model decay when <code class="docutils literal notranslate"><span class="pre">include_model=True</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="parameter-arrays">
+<h2>Parameter Arrays<a class="headerlink" href="#parameter-arrays" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 12.0%" />
+<col style="width: 44.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Fit</p></th>
+<th class="head"><p>Input slots</p></th>
+<th class="head"><p>Output interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit23</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[:4]</span> <span class="pre">=</span> <span class="pre">[tau,</span> <span class="pre">gamma,</span> <span class="pre">r0,</span> <span class="pre">rho]</span></code>. Additional slots are reserved for
+scatter/objective flags and low-level outputs.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> is the recovered lifetime, <code class="docutils literal notranslate"><span class="pre">x[3]</span></code> is the recovered rotational
+correlation time, and <code class="docutils literal notranslate"><span class="pre">twoIstar</span></code> reports fit quality.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit24</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[:5]</span> <span class="pre">=</span> <span class="pre">[tau1,</span> <span class="pre">gamma,</span> <span class="pre">tau2,</span> <span class="pre">A2,</span> <span class="pre">offset]</span></code>. <code class="docutils literal notranslate"><span class="pre">A2</span></code> is the second
+component amplitude.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">x[2]</span></code> are the fitted lifetimes, <code class="docutils literal notranslate"><span class="pre">x[3]</span></code> is the second
+component fraction, <code class="docutils literal notranslate"><span class="pre">x[4]</span></code> is the offset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fit25</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[:6]</span> <span class="pre">=</span> <span class="pre">[tau1,</span> <span class="pre">tau2,</span> <span class="pre">tau3,</span> <span class="pre">tau4,</span> <span class="pre">gamma,</span> <span class="pre">r0]</span></code>. The four lifetimes are
+candidates rather than continuous lifetime parameters.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> is overwritten with the selected lifetime; <code class="docutils literal notranslate"><span class="pre">gamma</span></code> may be
+optimized when the fixed mask allows it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fit26</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span> <span class="pre">=</span> <span class="pre">fraction_1</span></code> for the first reference pattern.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x[0]</span></code> is the fitted fraction of pattern 1 and <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> is the
+complementary fraction of pattern 2.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="simple-helper-api">
+<h2>Simple Helper API<a class="headerlink" href="#simple-helper-api" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">fit23</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
+    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+    <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+    <span class="n">tau</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">r0</span><span class="o">=</span><span class="mf">0.38</span><span class="p">,</span>
+    <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">include_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="reusable-class-api">
+<h2>Reusable Class API<a class="headerlink" href="#reusable-class-api" title="Link to this heading">#</a></h2>
+<p>Use a class when many decays share the same IRF, background, and instrument
+settings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fit23</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Fit23</span><span class="p">(</span>
+    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
+    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+    <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+    <span class="n">convolution_stop</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit23</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="low-level-api">
+<h2>Low-Level API<a class="headerlink" href="#low-level-api" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> and <code class="docutils literal notranslate"><span class="pre">DecayFit23.fit</span></code> only when you need exact control over
+the arrays passed to the C++ layer:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitData</span><span class="p">(</span>
+    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+    <span class="n">corrections</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">period</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">irf</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span>
+    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
+    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="n">x</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+<span class="n">fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+<span class="n">two_istar</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit23</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="related-decay-tools">
+<h2>Related Decay Tools<a class="headerlink" href="#related-decay-tools" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">DecayConvolution</span></code></dt><dd><p>Convolves model decays with the instrument response function. Use it when
+building or validating custom models outside the helper fits.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">DecayPhasor</span></code></dt><dd><p>Computes phasor coordinates for decay histograms. Use it for fast lifetime
+screening, FLIM map inspection, and model-free comparisons.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code></dt><dd><p>Bundles data, IRF, background, corrections, and fit windows for the low-level
+<code class="docutils literal notranslate"><span class="pre">DecayFit23</span></code>, <code class="docutils literal notranslate"><span class="pre">DecayFit24</span></code>, <code class="docutils literal notranslate"><span class="pre">DecayFit25</span></code>, and <code class="docutils literal notranslate"><span class="pre">DecayFit26</span></code> routines.</p>
+</dd>
+</dl>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>Unstable fit</dt><dd><p>Check IRF alignment, background, <code class="docutils literal notranslate"><span class="pre">fixed</span></code> mask, bounds implied by the model,
+and whether the selected photons contain enough counts.</p>
+</dd>
+<dt>Wrong lifetime units</dt><dd><p>Ensure <code class="docutils literal notranslate"><span class="pre">dt</span></code>, <code class="docutils literal notranslate"><span class="pre">period</span></code>, and initial lifetimes use the same units.</p>
+</dd>
+<dt>Poor model agreement</dt><dd><p>Plot <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">irf</span></code>, <code class="docutils literal notranslate"><span class="pre">background</span></code>, and the fitted <code class="docutils literal notranslate"><span class="pre">model</span></code> together.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23.html"><span class="doc">Polarization resolved lifetime MLE</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_usage_2.html"><span class="doc">MLE fit23: Usage example 2</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit_helpers.html"><span class="doc">One-call fit helper overview</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit24.html"><span class="doc">Bi-exponential model</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html"><span class="doc">Lifetime selection</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit26.html"><span class="doc">fit26</span></a></p></li>
+<li><p><a class="reference internal" href="auto_examples/flim/plot_mle_lifetime.html"><span class="doc">Lifetime analysis</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="clsm-flim-guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">CLSM, FLIM, and Image Workflows</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="user_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">User Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-fit-should-i-use">Which Fit Should I Use?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-failure-modes">Common Failure Modes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-inputs">Shared Inputs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#result-contract">Result Contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-arrays">Parameter Arrays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-helper-api">Simple Helper API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reusable-class-api">Reusable Class API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#low-level-api">Low-Level API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-decay-tools">Related Decay Tools</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/fit-guide.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

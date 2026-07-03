@@ -137,12 +137,33 @@ Example Categories
 * :ref:`Miscellaneous <sphx_glr_auto_examples_miscellaneous>` - Additional helper scripts
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
     <div class="sphx-glr-thumbnails">
 
 .. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the new MicrotimeLinearization API that allows per-channel correction of non-linearities in Time-to-Amplitude Converters (TAC).">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_microtime_linearization_example_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/microtime_linearization_example`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Example: Microtime Linearization with Channel-Specific LUTs and Shifts</div>
+    </div>
+
 
 .. raw:: html
 
@@ -171,6 +192,7 @@ Example Categories
 .. toctree::
    :hidden:
 
+   /auto_examples/microtime_linearization_example
    /auto_examples/clsm_memory_usage_example
 
 
@@ -208,6 +230,10 @@ python plot_01_read_tttr.py
 
 Each script will either run and generate figures/output files, or exit with a clear message if the demo data cannot be found.
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -331,6 +357,10 @@ Fluorescence correlation
 Examples for computing auto-/cross-correlation functions from TTTR data,
 including gated, sliced, and normalized correlation variants.
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -489,6 +519,10 @@ Examples showing lifetime image generation, phasor analysis, moment analysis,
 segmentation-driven decays, and common image operations.
 
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -703,6 +737,23 @@ segmentation-driven decays, and common image operations.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The whole TIFF layer is backed by a bundled libtiff (statically linked), so it adds no runtime dependency to tttrlib.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_export_flim_tiff_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_export_flim_tiff`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Exporting FLIM images to TIFF (no ImageJ)</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions.">
 
 .. only:: html
@@ -784,6 +835,10 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -793,18 +848,18 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
+  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
     </div>
 
 
@@ -827,18 +882,18 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
+    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
+  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
     </div>
 
 
@@ -929,6 +984,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The one-call helpers fit23, fit24, fit25, and fit26 wrap the reusable fit classes. They are useful for notebooks and scripts where one decay or one pattern mixture is fitted at a time. This example runs every helper and then runs the matching class API with the same data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit_helpers_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit_helpers`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">One-call fit helper overview</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared.">
 
 .. only:: html
@@ -958,6 +1030,10 @@ Examples for spatial/temporal image correlation analysis, benchmarking, and
 comparison between NumPy-based and tttrlib-based implementations.
 
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -1051,12 +1127,33 @@ fluorescent point sources (e.g., fluorescent beads or single molecules) with
 sub-pixel accuracy using 2D Gaussian curve fitting.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
     <div class="sphx-glr-thumbnails">
 
 .. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example localizes a bright point source in a 2D image using tttrlib.ImageLocalizer. The image below is a small synthetic placeholder; replace image with a camera, CLSM, or other microscopy image when applying the workflow to real data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/microscopy_localization/images/thumb/sphx_glr_plot_image_localization_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/microscopy_localization/plot_image_localization`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">2D Gaussian image localization</div>
+    </div>
+
 
 .. thumbnail-parent-div-close
 
@@ -1072,6 +1169,10 @@ Various utility examples such as 1D/2D histograms and performance benchmarks
 that support broader analysis workflows and development.
 
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -1144,6 +1245,10 @@ Release Highlights
 Short, visual examples that showcase new features and improvements introduced
 in recent tttrlib releases. Start here to see what's new at a glance.
 
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
 
 
 .. raw:: html
@@ -1220,6 +1325,10 @@ Application of ``tttrlib`` to single-molecule data.
 
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -1241,6 +1350,23 @@ Application of ``tttrlib`` to single-molecule data.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon Distribution Analysis (PDA) starts from a probability distribution for the total fluorescence photons, P(F), and predicts how those photons split between two detection channels. This small example is intentionally synthetic: it shows the object contract before moving to data-backed single-molecule PDA examples.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_pda_synthetic_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_pda_synthetic`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">PDA from a synthetic photon distribution</div>
     </div>
 
 
@@ -1512,6 +1638,10 @@ Working with TTTR objects
 Examples for reading/writing/transcoding TTTR files, inspecting headers,
 microtime histograms, and I/O performance benchmarking.
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -1538,23 +1668,6 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
-
-.. only:: html
-
-  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/tttr/plot_tttr_microtime_histogram`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the option for arbitrary meta data. Other TTTR formats have defined / fixed headers. Some of the information that can be found in a TTTR file is listed in Header tags sheet.">
 
 .. only:: html
@@ -1572,6 +1685,23 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The micro time histogram (the TCSPC decay) is built from the micro time of every photon. By default the histogram spans the full TAC range reported by the device header (``header.number_of_micro_time_channels``). TAC cards usually report many more channels than a single excitation period actually covers, so the decay carries a long, empty (or noise-only) tail beyond 1 / rep_rate.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_microtime_histogram`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of an existing CLSM experiment is read, masked, and the masked data is written to  a file that can be processed by any other software processing the original TTTR data.">
 
 .. only:: html
@@ -1584,6 +1714,23 @@ microtime histograms, and I/O performance benchmarking.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Convert a TTTR measurement between all writable container formats and verify what survives each trip.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_file_conversion_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_file_conversion`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR file conversion between formats</div>
     </div>
 
 

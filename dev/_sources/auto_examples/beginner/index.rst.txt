@@ -39,6 +39,10 @@ python plot_01_read_tttr.py
 Each script will either run and generate figures/output files, or exit with a clear message if the demo data cannot be found.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 

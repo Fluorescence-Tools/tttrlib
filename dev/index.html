@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="tttrlib: Time-Resolved Fluorescence Analysis" />
+<meta property="og:title" content="tttrlib" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="index.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="tttrlib logo Fast, modular, and open-source analysis for Time-Tagged Time-Resolved (TTTR) data. Read, process, and analyze photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files. ..." />
+<meta property="og:description" content="Fast, modular, open-source analysis for time-tagged time-resolved (TTTR) photon data. tttrlib reads, processes, and writes photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files t..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_index_355222f1.png" />
-<meta property="og:image:alt" content="tttrlib logo Fast, modular, and open-source analysis for Time-Tagged Time-Resolved (TTTR) data. Read, process, and analyze photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files. ..." />
-<meta name="description" content="tttrlib logo Fast, modular, and open-source analysis for Time-Tagged Time-Resolved (TTTR) data. Read, process, and analyze photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files. ..." />
+<meta property="og:image" content="_images/social_previews/summary_index_73d2ab91.png" />
+<meta property="og:image:alt" content="Fast, modular, open-source analysis for time-tagged time-resolved (TTTR) photon data. tttrlib reads, processes, and writes photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files t..." />
+<meta name="description" content="Fast, modular, open-source analysis for time-tagged time-resolved (TTTR) photon data. tttrlib reads, processes, and writes photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files t..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>tttrlib: Time-Resolved Fluorescence Analysis &#8212; tttrlib v0.0.0</title>
+    <title>tttrlib &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -38,55 +38,63 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- So that users can add custom icons -->
-  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="_static/documentation_options.js?v=7026087e"></script>
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Getting Started with tttrlib" href="getting-started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.0" />
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
   </head>
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
-
+  <body data-default-mode="">
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  
+  
+  
   
   <dialog id="pst-search-dialog">
     
@@ -112,7 +120,7 @@
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
   <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
@@ -138,8 +146,8 @@
       
     
     
-    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
-    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
   
   
 </a></div>
@@ -162,29 +170,29 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="install.html">
-    Installation
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="user_guide.html">
-    User Guide
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="whats_new.html">
-    Release History
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="modules/index.html">
-    Modules
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
   </a>
 </li>
 
@@ -197,8 +205,162 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
     Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.26
   </a>
 </li>
 
@@ -226,11 +388,18 @@
       
         <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
       
     </div>
     
@@ -288,8 +457,85 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="install.html">
-    Installation
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
   </a>
 </li>
 
@@ -297,13 +543,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="user_guide.html">
     User Guide
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="whats_new.html">
-    Release History
   </a>
 </li>
 
@@ -321,6 +560,90 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.26
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -333,11 +656,18 @@
         
           <div class="navbar-item">
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
         
       </div>
     
@@ -361,13 +691,13 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
         <div class="sidebar-primary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
     </div>
   
   
@@ -398,128 +728,332 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <div class="toctree-wrapper compound" id="overview">
+  <section id="tttrlib">
+<span id="overview"></span><h1>tttrlib<a class="headerlink" href="#tttrlib" title="Link to this heading">#</a></h1>
+<p>Fast, modular, open-source analysis for time-tagged time-resolved (TTTR)
+photon data.</p>
+<p><strong>tttrlib</strong> reads, processes, and writes photon streams from PicoQuant,
+Becker &amp; Hickl, and Photon-HDF5 files through one vendor-independent API. The
+core algorithms are written in C++ and exposed to <strong>Python, R, and Java</strong> from a
+single shared interface — plus an <strong>ImageJ/Fiji plugin</strong> for point-and-click FLIM
+reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
+Jupyter-based workflows. See <a class="reference internal" href="languages.html"><span class="doc">tttrlib in your language</span></a> for the same examples in every
+language.</p>
+<section id="quick-links">
+<h2>Quick links<a class="headerlink" href="#quick-links" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Start using tttrlib</p></td>
+<td><p><a class="reference internal" href="getting-started.html"><span class="doc">Getting Started with tttrlib</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Run small examples</p></td>
+<td><p><a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Use Python, R, or Java</p></td>
+<td><p><a class="reference internal" href="languages.html"><span class="doc">tttrlib in your language</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Reconstruct FLIM in ImageJ/Fiji</p></td>
+<td><p><a class="reference internal" href="imagej-plugin.html"><span class="doc">tttrlib for Java &amp; the ImageJ/Fiji plugin</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Choose an analysis workflow</p></td>
+<td><p><a class="reference internal" href="workflows.html"><span class="doc">Workflow Index</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Browse executable workflows</p></td>
+<td><p><a class="reference internal" href="auto_examples/index.html"><span class="doc">Example Gallery</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Read the manual</p></td>
+<td><p><a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Report a problem</p></td>
+<td><p><a class="reference external" href="https://github.com/Fluorescence-Tools/tttrlib/issues">GitHub issues</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Cite tttrlib</p></td>
+<td><p><a class="reference external" href="https://doi.org/10.1093/bioinformatics/btaf025">Bioinformatics paper</a></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<div class="landing-page docutils container">
-<div class="hero-section text-center docutils">
-<a class="hero-logo reference internal image-reference" href="_images/tttrlib-logo.svg"><img alt="tttrlib logo" class="hero-logo align-center" src="_images/tttrlib-logo.svg" style="width: 400px;" />
-</a>
-<p><strong>Fast, modular, and open-source analysis for Time-Tagged Time-Resolved (TTTR) data.</strong></p>
-<p>Read, process, and analyze photon streams from PicoQuant, Becker &amp; Hickl, and Photon-HDF5 files.
-Built with C++ speed and Python flexibility.</p>
-<blockquote>
-<div><div class="sd-container-fluid sd-sphinx-override sd-mb-4 hero-buttons docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-2 sd-row-cols-lg-3 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
-<div class="sd-col sd-d-flex-column text-center docutils">
-<p><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm reference internal" href="getting-started.html#getting-started-detailed"><span class="std std-ref">Getting Started</span></a></span></p>
-</div>
-<div class="sd-col sd-d-flex-column text-center docutils">
-<p><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-success sd-shadow-sm reference internal" href="auto_examples/index.html"><span class="doc">📚 Examples</span></a></span></p>
-</div>
-<div class="sd-col sd-d-flex-column text-center docutils">
-<p><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-secondary sd-shadow-sm reference external" href="https://github.com/fluorescence-tools/tttrlib"><span>View on GitHub</span></a></span></p>
-</div>
-</div>
-</div>
-</div></blockquote>
-</div>
-<div class="section-header docutils">
-</div>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-3 sd-row-cols-lg-3 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 docutils">
-</div>
-</div>
-<div class="section-header docutils">
-</div>
-<p>Get up and running in seconds using Conda or Pip.</p>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-Conda (Recommended)</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>tpeulen<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>tttrlib
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-Pip</div>
+</section>
+<section id="project-focus">
+<h2>Project focus<a class="headerlink" href="#project-focus" title="Link to this heading">#</a></h2>
+<p>tttrlib is designed for time-resolved fluorescence spectroscopy and imaging
+workflows where photon streams need to stay close to their original timing
+information:</p>
+<ul class="simple">
+<li><p>TTTR file I/O and metadata inspection.</p></li>
+<li><p>Photon selection by channel, event type, time window, and micro-time range.</p></li>
+<li><p>Fluorescence decay generation, convolution, phasor analysis, and fitting.</p></li>
+<li><p>FCS/FCCS autocorrelation and cross-correlation analysis.</p></li>
+<li><p>Single-molecule burst search and burst-level statistics.</p></li>
+<li><p>CLSM, FLIM, and image scanning microscopy reconstruction.</p></li>
+<li><p>Photon distribution and PDA-style analysis workflows.</p></li>
+</ul>
+</section>
+<section id="reproducible-workflows">
+<h2>Reproducible workflows<a class="headerlink" href="#reproducible-workflows" title="Link to this heading">#</a></h2>
+<p>The examples and notebooks are written as executable analysis records: load a
+file, state the channel and timing selections, compute a result, and plot or
+export it. This follows the same reproducibility-first documentation style used
+by projects such as FRETBursts, while keeping tttrlib focused on a broader TTTR
+data model.</p>
+<p>Start with <a class="reference internal" href="getting-started.html"><span class="doc">Getting Started with tttrlib</span></a> if you are new to the package. Use
+<a class="reference internal" href="auto_examples/index.html"><span class="doc">Example Gallery</span></a> when you already know the analysis type you need.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>Install from PyPI:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tttrlib
 </pre></div>
 </div>
+<p>Install with Conda or Mamba on macOS and Linux:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>bioconda<span class="w"> </span>tttrlib
+</pre></div>
 </div>
+<p>Install with Conda or Mamba on Windows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>tpeulen<span class="w"> </span>tttrlib
+</pre></div>
 </div>
+<p>For build-from-source instructions, see the repository’s <code class="docutils literal notranslate"><span class="pre">BUILDING.md</span></code> file.</p>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started with tttrlib</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#quick-start-browse-the-example-gallery">Quick Start: Browse the Example Gallery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#running-examples-locally">Running Examples Locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#opening-tttr-files-and-accessing-data">Opening TTTR Files and Accessing Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#understanding-tttr-file-formats">Understanding TTTR File Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#basic-python-and-numpy-concepts">Basic Python and NumPy Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#quick-reference">Quick Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#minimal-examples">Minimal Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="languages.html">tttrlib in your language</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#load-a-file-and-inspect-the-photon-stream">Load a file and inspect the photon stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#build-a-micro-time-decay-histogram">Build a micro-time (decay) histogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#reconstruct-a-flim-image-clsm">Reconstruct a FLIM image (CLSM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#how-consistent-are-the-bindings">How consistent are the bindings?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="languages.html#where-next">Where next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="r-package.html">tttrlib for R (<code class="docutils literal notranslate"><span class="pre">r-tttrlib</span></code>)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="r-package.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-package.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-package.html#testing-status">Testing status</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imagej-plugin.html">tttrlib for Java &amp; the ImageJ/Fiji plugin</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#using-the-java-api">Using the Java API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#the-imagej-fiji-plugin">The ImageJ/Fiji plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#testing-status">Testing status</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">Workflow Index</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html#decision-path">Decision Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html#documentation-completeness">Documentation Completeness</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tttr-core.html">TTTR Core, Selections, Masks, and I/O</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#core-objects">Core Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#simple-path">Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#advanced-path">Advanced Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#writing-and-transcoding">Writing and Transcoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#connections-to-other-workflows">Connections to Other Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr-core.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="file-formats.html">1. TTTR File Formats and Conversion</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#supported-file-types">1.1. Supported file types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#support-matrix">1.2. Support matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#metadata-preservation">1.3. Metadata preservation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#conversion-between-formats">1.4. Conversion between formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#tested-conversion-scripts">1.5. Tested conversion scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="burst-analysis.html">Burst Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#core-objects">Core Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#simple-path">Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#advanced-path">Advanced Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#outputs-and-checks">Outputs and Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pda-guide.html">Photon Distribution Analysis (PDA)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#core-objects">Core Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#concepts">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#simple-path">Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#what-to-document-in-a-pda-result">What To Document In a PDA Result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#advanced-path">Advanced Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#experimental-histogram-workflow">Experimental Histogram Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#optimized-implementation">Optimized Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#array-shape-checks">Array Shape Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fcs-correlation.html">FCS and Correlation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#core-objects">Core Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#simple-path">Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#what-to-document-in-an-fcs-result">What To Document In an FCS Result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#advanced-paths">Advanced Paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#manual-stream-workflow">Manual Stream Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#image-correlation">Image Correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#parameter-reference">Parameter Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fcs-correlation.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="clsm-flim-guide.html">CLSM, FLIM, and Image Workflows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#core-objects">Core Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#marker-routines">Marker Routines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#simple-path">Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#what-to-document-in-a-clsm-flim-result">What To Document In a CLSM/FLIM Result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#analysis-paths">Analysis Paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#pixel-level-decay-workflow">Pixel-Level Decay Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#phasor-workflow">Phasor Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#safe-transformations">Safe Transformations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#required-checks">Required Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fit-guide.html">Fluorescence Decay Fitting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#which-fit-should-i-use">Which Fit Should I Use?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#common-failure-modes">Common Failure Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#shared-inputs">Shared Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#result-contract">Result Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#parameter-arrays">Parameter Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#simple-helper-api">Simple Helper API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#reusable-class-api">Reusable Class API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#low-level-api">Low-Level API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#related-decay-tools">Related Decay Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html">1. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr.html">2. TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_molecule.html">3. Single-molecule fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imaging.html">4. Fluorescence imaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">5. Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="verbosity.html">6. Verbosity / Debug output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zreferences.html">7. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-gallery">Example Gallery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules/index.html">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html">TTTR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Header">Header</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Operations">Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Selections">Selections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#TTTR-ranges">TTTR ranges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/correlation.html">Correlators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/fcs.html">3.3. Fluorescence correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/decay.html">3.1. Fluorescence decays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/decay.html#Maximum-likelihood-fits">3.2. Maximum likelihood fits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html">Imaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Mean-lifetime">Mean lifetime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Formats">Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pg4-file">pg4 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pr4-file">pr4 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Applications">Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Image-markers">Image markers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#CLSMImage">CLSMImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Decay-moments">Decay moments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">3.4. Photon distribution analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">4.1. Image correlation spectroscopy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#quick-links">Quick Links</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#how-to-use-these-examples">How to Use These Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#example-categories">Example Categories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#fluorescence-lifetime-imaging">Fluorescence lifetime imaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#fluorescence-decays">Fluorescence decays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#image-correlation-spectroscopy">Image correlation spectroscopy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html#image-localization-examples">Image Localization Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#release-highlights">Release Highlights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#single-molecule">Single-molecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#working-with-tttr-objects">Working with TTTR objects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#type-inference-fails">Type Inference Fails</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#channel-mapping-mismatch">Channel Mapping Mismatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#alternation-parameters-alex-pie">Alternation Parameters (ALEX/PIE)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#performance-memory">Performance / Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#writing-converting-files">Writing/Converting Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docs-warning-burndown.html">Documentation Warning Burn-Down</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs-warning-burndown.html#current-baseline">Current Baseline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs-warning-burndown.html#non-blocking-rationale">Non-Blocking Rationale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs-warning-burndown.html#required-checks">Required Checks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#what-does-the-project-name-mean">What does the project name mean?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#what-is-tttrlib">What is tttrlib?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#how-can-i-install-tttrlib">How can I install tttrlib?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#how-can-i-load-my-own-datasets">How can I load my own datasets?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#how-can-i-get-help-using-tttrlib">How can I get help using tttrlib?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#how-can-i-enable-verbose-or-debug-output">How can I enable verbose or debug output?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#where-can-i-find-examples">Where can I find examples?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#where-can-i-get-community-help">Where can I get community help?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#where-can-i-cite-tttrlib">Where can I cite tttrlib?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#what-license-does-tttrlib-use">What license does tttrlib use?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="support.html#user-questions">User questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="support.html#bug-tracker">Bug tracker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="whats_new.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="whats_new/v0.26.0.html">Version 0.26.0 (Current)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whats_new/v0.22.0.html">Version 0.22.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
 </div>
+<div class="toctree-wrapper compound">
 </div>
-</div>
-<div class="section-header docutils">
-</div>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-3 sd-row-cols-md-3 sd-row-cols-lg-3 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
-<div class="sd-card-header bg-light docutils">
-<p class="sd-card-text">🚀 High Performance</p>
-</div>
-<div class="sd-card-body docutils">
-<p class="sd-card-text">Core algorithms written in C++ for maximum speed, handling gigabytes of photon data efficiently.</p>
-</div>
-</div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
-<div class="sd-card-header bg-light docutils">
-<p class="sd-card-text">🐍 Pythonic API</p>
-</div>
-<div class="sd-card-body docutils">
-<p class="sd-card-text">Integrates seamlessly with NumPy, SciPy, and Matplotlib. Use familiar slicing and indexing syntax.</p>
-</div>
-</div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
-<div class="sd-card-header bg-light docutils">
-<p class="sd-card-text">🔧 Modular Design</p>
-</div>
-<div class="sd-card-body docutils">
-<p class="sd-card-text">Build custom analysis pipelines by combining modular components for correlation, histograms, and bursts.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="section-header docutils">
-</div>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-📖 Read the Paper</div>
-<p class="sd-card-text"><strong>tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling.</strong>
-<em>Bioinformatics</em> (2025).</p>
-</div>
-<a class="sd-stretched-link sd-hide-link-text reference external" href="https://doi.org/10.1093/bioinformatics/btaf025"><span>https://doi.org/10.1093/bioinformatics/btaf025</span></a></div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-📢 What’s New?</div>
-<p class="sd-card-text">Check out the latest features, bug fixes, and improvements in the recent releases of tttrlib.</p>
-</div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="whats_new.html"><span class="doc">Release History</span></a></div>
-</div>
-</div>
-</div>
-</div>
+</section>
+<section id="external-resources">
+<h2>External resources<a class="headerlink" href="#external-resources" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/Fluorescence-Tools/tttrlib">Source code</a></p></li>
+<li><p><a class="reference external" href="https://pypi.org/project/tttrlib/">PyPI package</a></p></li>
+<li><p><a class="reference external" href="https://anaconda.org/tpeulen/tttrlib">Conda package</a></p></li>
+<li><p><a class="reference external" href="https://doi.org/10.1093/bioinformatics/btaf025">tttrlib paper</a></p></li>
+</ul>
+</section>
+</section>
 
 
                 </article>
@@ -552,13 +1086,32 @@ Pip</div>
 
 
   <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-links">Quick links</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-focus">Project focus</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducible-workflows">Reproducible workflows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a><ul class="pst-show_toc_level nav section-nav flex-column">
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-resources">External resources</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
 
 </div></div>
               
@@ -573,8 +1126,8 @@ Pip</div>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -608,7 +1161,7 @@ Pip</div>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
 </p></div>
       
     </div>

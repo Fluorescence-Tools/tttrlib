@@ -11,6 +11,10 @@ Examples for computing auto-/cross-correlation functions from TTTR data,
 including gated, sliced, and normalized correlation variants.
 
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
