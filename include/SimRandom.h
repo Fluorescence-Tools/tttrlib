@@ -71,6 +71,10 @@ public:
         return y ^ (y >> 18);
     }
 
+    /// Alias for the raw 32-bit output, matching the other RNG backends' interface
+    /// (so the shared ziggurat sampler is generic over the backend).
+    inline uint32_t next_u32() { return randomUInt(); }
+
     /// (0,1) open interval — used for `-log(u)` exponential sampling.
     inline double random0e1e() { return (double(randomUInt()) + 0.5) * kF1; }
     /// [0,1) half-open interval.

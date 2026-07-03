@@ -16,6 +16,8 @@
 #ifndef TTTRLIB_SIMENGINE_H
 #define TTTRLIB_SIMENGINE_H
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -118,6 +120,8 @@ private:
     struct Mol {
         double x, y, z; int state; bool mobile; int id; bool alive;
         double ox = 0, oy = 0, oz = 1;   // dipole orientation (unit vector) for anisotropy
+        bool coasting = false;           // per-molecule skip: frozen (no diffusion/emission)
+        uint32_t w_sleep = 0, w_wake = 0;  // coast span [w_sleep, w_wake) in window units
     };
 
     /// Photons produced by one worker over its molecule range (merged after the loop).
@@ -138,11 +142,129 @@ private:
     void seed_population();               ///< initial molecules (discrete + open-volume)
     void inject_open_volume(double windows = 1.0);  ///< surface-flux injection (over N windows)
     void init_orientation(Mol& m);        ///< random dipole orientation (anisotropy)
-    bool any_molecule_in_focus() const;   ///< true if a molecule is inside the excitation grid box
-    void coarse_skip();                   ///< advance one safe coarse step over empty windows
     double detection_eff(int ch, double x, double y, double z) const;
     void push_marker(int routing_channel);  ///< append a marker event at the current window
     void emit_window();                   ///< one time window: photophysics + emission + diffusion
+
+    // --- per-molecule coasting (opt-in) ----------------------------------------
+    void compute_focus_aabb();            ///< effective-focus AABB + uniform_D_/any_knrad_ (once)
+    void batch_background(uint64_t n_windows);  ///< emit background over a fast-forwarded gap
+
+    /// Distance from (x,y,z) to the effective-focus AABB (0 inside; grid extent if AABB invalid).
+    inline double focus_gap(double x, double y, double z) const {
+        double lx0, ly0, lz0, lx1, ly1, lz1;
+        if (focus_aabb_valid_) {
+            lx0 = fx0_; ly0 = fy0_; lz0 = fz0_; lx1 = fx1_; ly1 = fy1_; lz1 = fz1_;
+        } else if (exc_.nx > 0) {
+            lx0 = exc_.x0; ly0 = exc_.y0; lz0 = exc_.z0;
+            lx1 = exc_.x0 + (exc_.nx - 1) * exc_.dx;
+            ly1 = exc_.y0 + (exc_.ny - 1) * exc_.dy;
+            lz1 = exc_.z0 + (exc_.nz - 1) * exc_.dz;
+        } else {
+            return 0.0;
+        }
+        auto gap = [](double p, double lo, double hi) {
+            return p < lo ? lo - p : (p > hi ? p - hi : 0.0);
+        };
+        const double gx = gap(x, lx0, lx1), gy = gap(y, ly0, ly1), gz = gap(z, lz0, lz1);
+        return std::sqrt(gx * gx + gy * gy + gz * gz);
+    }
+
+    /// Conservative distance from (x,y,z) to the open-volume ellipsoid surface (>=0 inside).
+    /// In the metric u=(x,y,√box_r_sq·z) the boundary is the sphere |u|=box_xy; box_r_sq<=1
+    /// for a z-elongated box, so |Δu| <= |Δx|, i.e. this under-estimates the true Euclidean
+    /// gap — safe for bounding the coast (never lets a sleeper cross the surface).
+    inline double surface_margin(double x, double y, double z) const {
+        if (!open_volume_) return 1e300;
+        const double bxy = sample_.box_xy(), bz = sample_.box_z();
+        const double box_r_sq = (bxy * bxy) / (bz * bz);
+        const double rho = std::sqrt(x * x + y * y + box_r_sq * z * z);
+        return bxy - rho;
+    }
+
+    /// Advance a molecule's photophysical state over `tau` under spontaneous (k_nrad-only)
+    /// kinetics — the exact dynamics outside the focus (Iex=0, no emission).
+    template <class Rng>
+    int evolve_spontaneous(int state, double tau, Rng& rng) const {
+        if (!any_knrad_ || tau <= 0.0) return state;
+        const int nsp = sample_.n_species();
+        const auto& kn = sample_.k_nrad();
+        int i = state; double t = 0.0;
+        for (;;) {
+            const double koff = koff_nrad_[i];
+            if (koff <= kEps) break;
+            const double hold = -std::log(rng.random0e1e()) / koff;
+            if (t + hold >= tau) break;
+            t += hold;
+            double r = (1.0 - rng.random0i1e()) * koff;
+            int j = -1;
+            while (r > 0.0 && j < nsp - 1) {
+                ++j;
+                const double knij = (size_t(i * nsp + j) < kn.size()) ? kn[i * nsp + j] : 0.0;
+                r -= knij;
+            }
+            if (j < 0) j = i;
+            i = j;
+        }
+        return i;
+    }
+
+    /// After processing molecule `m` at window `T0`, decide whether it may sleep. The coast
+    /// is sized by its own distance to the nearest boundary (focus or box surface), so it can
+    /// reach neither while asleep.
+    template <class Rng>
+    void maybe_sleep(Mol& m, uint32_t T0, Rng&) {
+        if (!m.mobile || !m.alive) return;
+        const double D = sample_.species()[m.state].D;
+        if (D <= kEps) return;
+        double d = focus_gap(m.x, m.y, m.z);
+        if (d <= 0.0) return;                                  // inside focus: stay awake
+        d = std::min(d, surface_margin(m.x, m.y, m.z));
+        if (d <= 0.0) return;
+        const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
+        const double sigma = d / safety;                       // allowed per-step displacement std
+        const uint64_t n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+        if (n < set_.min_coast_windows) return;
+        m.coasting = true; m.w_sleep = T0 + 1; m.w_wake = uint32_t(T0 + 1 + n);
+    }
+
+    /// Wake a coasting molecule at window `T0`: one exact Gaussian catch-up over the elapsed
+    /// coast (variance accumulated along the spontaneous-state path) + spontaneous-state jump.
+    template <class Rng>
+    void wake_molecule(Mol& m, uint32_t T0) {
+        const double tau = double(T0 - m.w_sleep) * set_.dt;
+        m.coasting = false;
+        if (tau <= 0.0) return;
+        Rng crng; crng.reset(mol_base_seed_ ^ kCoastSalt, uint32_t(m.id),
+                             uint64_t(m.w_sleep) * kWindowStride);
+        const int nsp = sample_.n_species();
+        const auto& kn = sample_.k_nrad();
+        int i = m.state; double t = 0.0, var = 0.0;
+        for (;;) {
+            const double koff = any_knrad_ ? koff_nrad_[i] : 0.0;
+            const double hold = (koff > kEps) ? -std::log(crng.random0e1e()) / koff : 1e300;
+            const double seg = std::min(hold, tau - t);
+            var += 2.0 * sample_.species()[i].D * seg;         // piecewise-const D along the path
+            t += seg;
+            if (t >= tau - kEps || koff <= kEps) break;
+            double r = (1.0 - crng.random0i1e()) * koff;
+            int j = -1;
+            while (r > 0.0 && j < nsp - 1) {
+                ++j;
+                const double knij = (size_t(i * nsp + j) < kn.size()) ? kn[i * nsp + j] : 0.0;
+                r -= knij;
+            }
+            if (j < 0) j = i;
+            i = j;
+        }
+        const double s = std::sqrt(var);
+        m.x += s * crng.randomNorm(); m.y += s * crng.randomNorm(); m.z += s * crng.randomNorm();
+        m.state = i;
+        const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
+        const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
+        if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
+            m.alive = false;
+    }
 
     /// Process one molecule for the current window into `buf` using RNG backend `Rng`.
     /// The per-molecule stream is (re)positioned from (mol_base_seed_, id, counter_start),
@@ -308,6 +430,18 @@ private:
         const size_t nmol = mols_.size();
         const int nchan = set_.n_channels;
         const bool per_thread = (set_.rng_scope == SimRngScope::PerThread);
+        const bool coast = set_.per_molecule_skip;
+        const uint32_t T0 = uint32_t(counter_start / kWindowStride);
+        auto handle = [&](Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf) {
+            if (coast && m.coasting) {
+                if (T0 < m.w_wake) return;               // still asleep: skip entirely
+                wake_molecule<Rng>(m, T0);               // exact catch-up
+                if (!m.alive) return;                    // left the box on wake
+            }
+            if (!per_thread) rng.reset(mol_base_seed_, uint32_t(m.id), counter_start);
+            process_molecule(m, rng, w, buf);
+            if (coast) maybe_sleep<Rng>(m, T0, rng);
+        };
         if (parallel) {
             pool_->parallel_for(nmol, [&](size_t b, size_t e, unsigned wi) {
                 Rng rng; std::vector<double> w(nchan, 0.0);
@@ -317,8 +451,7 @@ private:
                 for (size_t k = b; k < e; ++k) {
                     Mol& m = mols_[k];
                     if (!m.alive) continue;
-                    if (!per_thread) rng.reset(mol_base_seed_, uint32_t(m.id), counter_start);
-                    process_molecule(m, rng, w, buf);
+                    handle(m, rng, w, buf);
                 }
             });
         } else {
@@ -327,8 +460,7 @@ private:
             for (size_t k = 0; k < nmol; ++k) {
                 Mol& m = mols_[k];
                 if (!m.alive) continue;
-                if (!per_thread) rng.reset(mol_base_seed_, uint32_t(m.id), counter_start);
-                process_molecule(m, rng, w, bufs_[0]);
+                handle(m, rng, w, bufs_[0]);
             }
         }
     }
@@ -351,6 +483,14 @@ private:
     std::vector<double> qtot_, tg_th0_, l1l2f_, rot_step_;
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
     bool any_aniso_ = false;
+
+    // effective-focus AABB (voxels where Iex > focus_threshold·peak) + coasting precompute
+    double fx0_ = 0, fy0_ = 0, fz0_ = 0, fx1_ = 0, fy1_ = 0, fz1_ = 0;
+    bool focus_aabb_valid_ = false;
+    bool uniform_D_ = false;      ///< all species share D within kEps
+    bool any_knrad_ = false;      ///< any spontaneous (k_nrad) transition possible
+    static constexpr uint32_t kCoastSalt = 0x00C0A57u;  ///< salt for the per-molecule coast RNG
+
     // open-volume injection bookkeeping
     std::vector<double> step_, rate_in_, t_in_;
     bool open_volume_ = false;

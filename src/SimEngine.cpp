@@ -98,7 +98,42 @@ SimEngine::SimEngine(SimSample sample, SimGrid excitation,
 
     mol_base_seed_ = set_.seed_emission ^ (set_.seed_diffusion * 2654435761u);
 
+    // Coasting precompute: diffusion decouples from state iff all D equal; spontaneous
+    // kinetics exist iff any k_nrad row sum > 0.
+    uniform_D_ = true;
+    for (int i = 1; i < nsp; ++i)
+        if (std::fabs(sample_.species()[i].D - sample_.species()[0].D) > kEps) uniform_D_ = false;
+    any_knrad_ = false;
+    for (int i = 0; i < nsp; ++i) if (koff_nrad_[i] > kEps) { any_knrad_ = true; break; }
+    compute_focus_aabb();
+
     seed_population();
+}
+
+void SimEngine::compute_focus_aabb() {
+    // Effective focus = tight AABB over excitation voxels exceeding focus_threshold·peak,
+    // independent of the (possibly box-spanning) grid extent, so a coasting molecule's
+    // distance to the focus is measured against where excitation is actually significant.
+    focus_aabb_valid_ = false;
+    if (exc_.nx <= 0 || exc_.data.empty()) return;
+    double vmax = 0.0;
+    for (double v : exc_.data) if (v > vmax) vmax = v;
+    if (vmax <= 0.0) return;
+    const double thr = ((set_.focus_threshold > 0.0) ? set_.focus_threshold : 1e-3) * vmax;
+    int ix0 = exc_.nx, iy0 = exc_.ny, iz0 = exc_.nz, ix1 = -1, iy1 = -1, iz1 = -1;
+    for (int iz = 0; iz < exc_.nz; ++iz)
+        for (int iy = 0; iy < exc_.ny; ++iy)
+            for (int ix = 0; ix < exc_.nx; ++ix)
+                if (exc_.data[exc_.index(ix, iy, iz)] > thr) {
+                    if (ix < ix0) ix0 = ix; if (ix > ix1) ix1 = ix;
+                    if (iy < iy0) iy0 = iy; if (iy > iy1) iy1 = iy;
+                    if (iz < iz0) iz0 = iz; if (iz > iz1) iz1 = iz;
+                }
+    if (ix1 < 0) return;
+    fx0_ = exc_.x0 + (ix0 - 1) * exc_.dx; fx1_ = exc_.x0 + (ix1 + 1) * exc_.dx;
+    fy0_ = exc_.y0 + (iy0 - 1) * exc_.dy; fy1_ = exc_.y0 + (iy1 + 1) * exc_.dy;
+    fz0_ = exc_.z0 + (iz0 - 1) * exc_.dz; fz1_ = exc_.z0 + (iz1 + 1) * exc_.dz;
+    focus_aabb_valid_ = true;
 }
 
 void SimEngine::init_orientation(Mol& m) {
@@ -317,77 +352,23 @@ void SimEngine::step(uint64_t n_windows) {
     for (uint64_t k = 0; k < n_windows; ++k) emit_window();
 }
 
-bool SimEngine::any_molecule_in_focus() const {
-    if (exc_.nx <= 0) return true;
-    const double x0 = exc_.x0, y0 = exc_.y0, z0 = exc_.z0;
-    const double x1 = x0 + (exc_.nx - 1) * exc_.dx;
-    const double y1 = y0 + (exc_.ny - 1) * exc_.dy;
-    const double z1 = z0 + (exc_.nz - 1) * exc_.dz;
-    for (const auto& m : mols_) {
-        if (!m.alive) continue;
-        if (m.x >= x0 && m.x <= x1 && m.y >= y0 && m.y <= y1 && m.z >= z0 && m.z <= z1)
-            return true;
-    }
-    return false;
-}
-
-void SimEngine::coarse_skip() {
-    // Distance of each molecule to the excitation box; coarse dt is bounded so the
-    // closest molecule's ~skip_safety·sigma step cannot reach the box.
-    const double x0 = exc_.x0, y0 = exc_.y0, z0 = exc_.z0;
-    const double x1 = x0 + (exc_.nx - 1) * exc_.dx;
-    const double y1 = y0 + (exc_.ny - 1) * exc_.dy;
-    const double z1 = z0 + (exc_.nz - 1) * exc_.dz;
-    auto axis_gap = [](double p, double lo, double hi) {
-        return p < lo ? lo - p : (p > hi ? p - hi : 0.0);
-    };
-    const double safety = (set_.skip_safety > 1e-3) ? set_.skip_safety : 3.0;
-    double dt_coarse = 1e300;
-    for (const auto& m : mols_) {
-        if (!m.alive || !m.mobile) continue;
-        double D = sample_.species()[m.state].D;
-        if (D <= kEps) continue;
-        double gx = axis_gap(m.x, x0, x1), gy = axis_gap(m.y, y0, y1), gz = axis_gap(m.z, z0, z1);
-        double d = std::sqrt(gx * gx + gy * gy + gz * gz);
-        double dt_i = (d / safety) * (d / safety) / (2.0 * D);   // (d/safety)^2 / (2D)
-        if (dt_i < dt_coarse) dt_coarse = dt_i;
-    }
-    uint64_t n_skip = (dt_coarse < 1e299) ? uint64_t(dt_coarse / set_.dt) : 100000;
-    if (n_skip < 1) { emit_window(); return; }                    // too close — step normally
-    if (set_.max_windows && T0_ + n_skip > set_.max_windows)
-        n_skip = set_.max_windows - T0_;
-    if (n_skip < 1) { emit_window(); return; }
-    const double coarse = double(n_skip) * set_.dt;
-
-    // Advance all mobile molecules by one coarse Gaussian step (free diffusion is
-    // scale-free, so a single large step is exact); delete any that leave the box.
-    const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
-    const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
-    for (auto& m : mols_) {
-        if (!m.alive || !m.mobile) continue;
-        double step = std::sqrt(2.0 * sample_.species()[m.state].D * coarse);
-        m.x += step * rng_diff_.randomNorm();
-        m.y += step * rng_diff_.randomNorm();
-        m.z += step * rng_diff_.randomNorm();
-        if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
-            m.alive = false;
-    }
-    if (open_volume_) { size_t a = 0; for (auto& m : mols_) if (m.alive) ++a; mol_alive_ = a; }
-
-    // Background over the coarse interval (batched, placed at the right macro-windows).
+void SimEngine::batch_background(uint64_t n_windows) {
+    // Emit background over a fast-forwarded gap of n_windows, placing each photon at its
+    // correct macro-window (identical statistics to per-window emission, just batched).
+    if (n_windows == 0) return;
     const int nchan = set_.n_channels, nsp = sample_.n_species();
     const auto& qbg = sample_.background();
     const auto& bgd = sample_.background_decays();
     if (!t_bg_setup_) { t_bg_.assign(nchan, 0.0); t_bg_setup_ = true; }
+    const double gap = double(n_windows) * set_.dt;
     struct BgPh { uint32_t win; double t; int16_t ch; uint16_t micro; };
     std::vector<BgPh> bgph;
     for (int j = 0; j < nchan; ++j) {
         double rate = (j < int(qbg.size())) ? qbg[j] : 0.0;
         if (rate < kEps) continue;
-        const SimDecay* dec = nullptr;
-        if (bgd.size() == 1) dec = &bgd[0];
-        else if (j < int(bgd.size())) dec = &bgd[j];
-        while (t_bg_[j] < coarse) {
+        const SimDecay* dec = (bgd.size() == 1) ? &bgd[0]
+                            : (j < int(bgd.size()) ? &bgd[j] : nullptr);
+        while (t_bg_[j] < gap) {
             uint64_t w = uint64_t(t_bg_[j] / set_.dt);
             double arr = t_bg_[j] - double(w) * set_.dt;
             uint16_t micro = 0;
@@ -395,14 +376,13 @@ void SimEngine::coarse_skip() {
                 double mns = std::fmod(dec->sample_ns(rng_emit_), set_.laser_period);
                 if (mns < 0.0) mns += set_.laser_period;
                 int ch = int(mns / set_.microtime_resolution);
-                if (ch < 0) ch = 0;
-                else if (ch >= set_.n_microtime_channels) ch = set_.n_microtime_channels - 1;
+                if (ch < 0) ch = 0; else if (ch >= set_.n_microtime_channels) ch = set_.n_microtime_channels - 1;
                 micro = uint16_t(ch);
             }
             bgph.push_back(BgPh{uint32_t(T0_ + w), arr, int16_t(j), micro});
             t_bg_[j] -= std::log(rng_emit_.random0e1e()) / rate;
         }
-        t_bg_[j] -= coarse;
+        t_bg_[j] -= gap;
     }
     std::sort(bgph.begin(), bgph.end(), [](const BgPh& a, const BgPh& b) {
         return a.win != b.win ? a.win < b.win : a.t < b.t;
@@ -411,18 +391,36 @@ void SimEngine::coarse_skip() {
         T_.push_back(p.win); t_.push_back(p.t); N_.push_back(p.ch);
         sp_.push_back(int16_t(nsp)); mol_.push_back(0); et_.push_back(0); micro_.push_back(p.micro);
     }
-
-    if (open_volume_) inject_open_volume(double(n_skip));
-    T0_ += n_skip;
 }
 
 void SimEngine::run() {
-    const bool adaptive = set_.skip_empty_windows;
+    const bool coast = set_.per_molecule_skip;
     while (n_photons() < set_.n_ph_max) {
-        if (adaptive && !any_molecule_in_focus())
-            coarse_skip();
-        else
-            emit_window();
+        // Fast-forward when every alive molecule is asleep and not yet due to wake: nothing
+        // can enter the focus during the gap, so only background is emitted. Surface flux
+        // injection still runs over the whole gap, so the open-volume population stays balanced.
+        if (coast && mol_alive_ > 0) {
+            uint32_t earliest = UINT32_MAX;
+            bool all_asleep = true;
+            for (const auto& m : mols_) {
+                if (!m.alive) continue;
+                if (!m.coasting || m.w_wake <= T0_) { all_asleep = false; break; }
+                if (m.w_wake < earliest) earliest = m.w_wake;
+            }
+            if (all_asleep && earliest > T0_ && earliest != UINT32_MAX) {
+                uint64_t G = uint64_t(earliest - T0_);
+                if (set_.max_windows && T0_ + G > set_.max_windows)
+                    G = set_.max_windows - T0_;
+                if (G >= 1) {
+                    batch_background(G);
+                    if (open_volume_) inject_open_volume(double(G));
+                    T0_ += uint32_t(G);
+                    if (set_.max_windows && T0_ >= set_.max_windows) break;
+                    continue;
+                }
+            }
+        }
+        emit_window();
         if (set_.max_windows && T0_ >= set_.max_windows) break;
     }
 }

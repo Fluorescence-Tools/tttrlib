@@ -48,13 +48,18 @@ struct SimSettings {
     /// once per window — faster/simpler but results depend on thread count and partition.
     SimRngScope rng_scope = SimRngScope::PerMolecule;
 
-    /// Opt-in throughput mode (PRD-007 G2): when no molecule is inside the excitation
-    /// volume, advance by one safe coarse time-step (bounded so no molecule can reach the
-    /// focus during it) instead of many empty fine windows. Background is batched over the
-    /// interval. Preserves count-rate/burst statistics; changes the exact RNG draw pattern
-    /// (so not bit-identical to fixed-dt). No effect during a CLSM scan.
-    bool skip_empty_windows = false;
-    double skip_safety = 3.0;             ///< coarse step ≈ (distance-to-focus / skip_safety)
+    /// Per-molecule coasting (opt-in throughput, PRD-007 G2). A molecule far from BOTH the
+    /// focus and the box surface sleeps — its diffusion/state/emission are skipped — and is
+    /// caught up exactly on wake. The coast is bounded by the molecule's own distance to the
+    /// nearest boundary (÷ coast_safety), so a sleeper can reach neither the focus (no missed
+    /// photons) nor the surface (no missed open-volume deaths); surface flux injection is
+    /// unchanged (still per-window), so the population stays balanced. When every molecule is
+    /// asleep the engine fast-forwards to the earliest wake, batching background over the gap.
+    /// Changes the exact RNG draw pattern (validated statistically). No effect during a scan.
+    bool per_molecule_skip = false;
+    double coast_safety = 3.0;            ///< coast step std ≤ (distance-to-boundary / coast_safety)
+    uint64_t min_coast_windows = 8;       ///< don't sleep for fewer than this many windows
+    double focus_threshold = 1e-3;        ///< fraction of peak excitation defining the focus AABB
 };
 
 } // namespace tttrlib
