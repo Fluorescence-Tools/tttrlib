@@ -309,6 +309,31 @@ private:
     /// The event type (PRIVATE - use get/set_event_type_at)
     signed char *event_types;
 
+    /*!
+     * \brief Reads a record-stream TTTR file (header followed by fixed-size records).
+     *
+     * Covers all containers that store a header followed by a stream of
+     * fixed-size records (PTU, HT3, SPC-130, SPC-600, CZ-RAW). Photon-HDF5
+     * and SM files are handled by read_hdf_file() / read_sm_file().
+     *
+     * \param fn Filename of the TTTR file.
+     * \param container_type The container type (see TTTRHeaderTypes.h).
+     * \return 1 on success, 0 otherwise.
+     */
+    int read_records_file(const char *fn, int container_type);
+
+    /*!
+     * \brief For BH SPC files: parse an optional ".set" sidecar file located
+     * next to the ".spc" file (same base name) into the header.
+     */
+    void read_bh_set_sidecar();
+
+    /*!
+     * \brief CZ ConfoCor3 raw files store the channel number in the header,
+     * not in the records; back-fill the routing channel array from the header.
+     */
+    void backfill_cz_routing_channels();
+
     // Friend declarations for functions that need direct array access for performance
     template<int RecordType>
     friend void process_records_batch(
@@ -1401,6 +1426,125 @@ public:
      * @param tttr The TTTR object containing the events to be written.
      */
     void write_hht3v2_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as HHT3v1.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_hht3v1_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as SF-compressed HT3.
+     *
+     * SF compression (Suren Felekyan's HT3 conversion): HydraHarp T3
+     * photon/marker records; runs of macro time overflows are collapsed
+     * into a single overflow record carrying a 24-bit overflow count.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_sf_ht3_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as HHT2v2 (T2 mode).
+     *
+     * T2 records carry no micro time; the micro times are dropped.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_hht2v2_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as HHT2v1 (T2 mode).
+     *
+     * T2 records carry no micro time; the micro times are dropped.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_hht2v1_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as PicoHarp T3.
+     *
+     * Markers are encoded with dtime = 0 (PicoHarp convention); photon
+     * micro times are clipped to the range [1, 4095].
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_pht3_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as PicoHarp T2.
+     *
+     * T2 records carry no micro time; the micro times are dropped. Markers
+     * are stored in the lowest 4 bits of the time tag.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_pht2_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as SPC-600 (256 channel mode).
+     *
+     * Micro times are clipped to 8 bit, routing channels to 3 bit.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_spc600_256_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as SPC-600 (4096 channel mode).
+     *
+     * 6 bytes per record; micro times are clipped to 12 bit.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_spc600_4096_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as CZ ConfoCor3 raw records.
+     *
+     * Records store 32-bit macro time deltas only. Micro times, per-event
+     * routing channels (the header carries a single channel number) and
+     * event types are dropped.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_cz_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as SM records.
+     *
+     * Big-endian records of 8-byte macro time and 4-byte channel, followed
+     * by the 26-byte SM file trailer. Micro times are dropped.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     */
+    void write_sm_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Writes the content of the TTTR object to a Photon-HDF5 file.
+     *
+     * Writes /photon_data/{timestamps,detectors,nanotimes} together with
+     * the timestamps_specs and nanotimes_specs groups so the file can be
+     * read back including its resolutions.
+     *
+     * @param fn The filename of the Photon-HDF5 file.
+     * @param header Optional TTTRHeader providing resolutions (default:
+     *        the header of this TTTR object).
+     * @return True if the write operation is successful, false otherwise.
+     */
+    bool write_hdf_file(std::string fn, TTTRHeader* header = nullptr);
 
      /*!
       * @brief Writes the header information to a TTTR file.

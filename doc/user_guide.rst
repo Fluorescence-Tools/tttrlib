@@ -20,6 +20,7 @@ Previous releases are available through the read-the-docs `page <https://tttrlib
    :numbered:
    :maxdepth: 3
 
+   file-formats
    tttr.rst
    single_molecule.rst
    imaging.rst

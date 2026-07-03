@@ -103,6 +103,7 @@ Documentation
    imagej-plugin
    workflows
    tttr-core
+   file-formats
    burst-analysis
    pda-guide
    fcs-correlation

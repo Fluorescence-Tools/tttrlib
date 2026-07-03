@@ -23,3 +23,4 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [002](PRD-002-java-nd-output-array-marshalling.md) | Java N-dimensional / generic output-array marshalling | Done |
 | [003](PRD-003-docs-deploy-via-rattler.md) | Documentation deploy via rattler | In Progress |
 | [004](PRD-004-single-frame-flim-ptu-clsm.md) | Single-frame FLIM PTU CLSM reconstruction | In Progress |
+| [006](PRD-006-tttr-file-roundtrip-io.md) | TTTR file round-trip I/O for all supported containers | In Progress |

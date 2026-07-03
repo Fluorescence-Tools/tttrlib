@@ -55,6 +55,7 @@
 #define SM_RECORD_TYPE              11
 #define PQ_RECORD_TYPE_GENERIC_T3   12  // MultiHarp 150 / PicoHarp 330 T3 mode
 #define PQ_RECORD_TYPE_GENERIC_T2   13  // MultiHarp 150 / PicoHarp 330 T2 mode
+#define PQ_RECORD_TYPE_SF_HT3       14  // SF-compressed HT3 (S. Felekyan): HHT3 records, overflow record carries a 24-bit count
 
 
 /*

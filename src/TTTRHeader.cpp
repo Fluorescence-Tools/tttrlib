@@ -360,8 +360,13 @@ if (is_verbose()) {
     // Header of HT3 file
     pq_ht3_Header_t ht3_header_begin;
     fread(&ht3_header_begin, 1, sizeof(ht3_header_begin), fpin);
-    if(strncmp(ht3_header_begin.FormatVersion, "1.0", 3) != 0){
-        std::cerr << "WARNING: Only HT3 files in version 1.0 supported." << std::endl;
+    // Versions 1.0 (HHT3v1 / PicoHarp) and 2.0 (HHT3v2) are supported;
+    // warn only for genuinely unknown format versions.
+    if((strncmp(ht3_header_begin.FormatVersion, "1.0", 3) != 0) &&
+       (strncmp(ht3_header_begin.FormatVersion, "2.0", 3) != 0)){
+        std::cerr << "WARNING: Unknown HT3 format version '"
+                  << std::string(ht3_header_begin.FormatVersion, 3)
+                  << "' - only versions 1.0 and 2.0 are supported." << std::endl;
     }
     add_tag(data, "Ident", ht3_header_begin.Ident);
     add_tag(data, "FormatVersion", ht3_header_begin.FormatVersion);
@@ -910,100 +915,257 @@ if (is_verbose()) {
 
 
 void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes){
-//#ifdef VERBOSE_TTTRLIB
-//    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
-//#endif
-//    if(boost::filesystem::exists(fn)){
-//        std::clog << "WARNING: File exists" << fn << "." << std::endl;
-//    }
-//    auto json = header->json_data;
-//    std::string s;
-//    FILE* fp = fopen(fn.c_str(), modes.c_str());
-//    // Header of HT3 file
-//    pq_ht3_Header_t ht3_header_begin;
-//    strcpy(ht3_header_begin.FormatVersion, "1.0");
-//
-//    //
-//    s = TTTRHeader::get_tag("Ident", json)["value"];
-//    strcpy(ht3_header_begin.Ident, s.c_str());
-//    //
-//    s = TTTRHeader::get_tag("FormatVersion", json)["value"];
-//    strcpy(ht3_header_begin.FormatVersion, s.c_str());
-//    //
-//    s = TTTRHeader::get_tag("CreatorName", json)["value"];
-//    strcpy(ht3_header_begin.CreatorName, s.c_str());
-//    //
-//    s = TTTRHeader::get_tag("CreatorVersion", json)["value"];
-//    strcpy(ht3_header_begin.CreatorVersion, s.c_str());
-//    //
-//    s = TTTRHeader::get_tag("FileTime", json)["value"];
-//    strcpy(ht3_header_begin.FileTime, s.c_str());
-//    //
-//    s = TTTRHeader::get_tag("Comment", json)["value"];
-//    strcpy(ht3_header_begin.CommentField, s.c_str());
-//    //
-//    ht3_header_begin.NumberOfCurves = TTTRHeader::get_tag("NumberOfCurves", json)["value"];
-//    ht3_header_begin.BitsPerRecord = TTTRHeader::get_tag(TTTRTagBits, json)["value"];
-//    ht3_header_begin.ActiveCurve = TTTRHeader::get_tag("ActiveCurve", json)["value"];
-//    ht3_header_begin.MeasurementMode = TTTRHeader::get_tag("MeasurementMode", json)["value"];
-//    ht3_header_begin.SubMode = TTTRHeader::get_tag("SubMode", json)["value"];
-//    ht3_header_begin.Binning = TTTRHeader::get_tag("Binning", json)["value"];
-//    ht3_header_begin.Resolution = TTTRHeader::get_tag("Resolution", json)["value"];
-//    ht3_header_begin.Offset = TTTRHeader::get_tag("Offset", json)["value"];
-//    ht3_header_begin.AquisitionTime = TTTRHeader::get_tag("AquisitionTime", json)["value"];
-//    ht3_header_begin.StopAt = TTTRHeader::get_tag("StopAt", json)["value"];
-//    ht3_header_begin.StopOnOvfl = TTTRHeader::get_tag("StopOnOvfl", json)["value"];
-//    ht3_header_begin.Restart = TTTRHeader::get_tag("Restart", json)["value"];
-//    ht3_header_begin.DispLinLog = TTTRHeader::get_tag("DispLinLog", json)["value"];
-//    ht3_header_begin.DispTimeFrom = TTTRHeader::get_tag("DispTimeFrom", json)["value"];
-//    ht3_header_begin.DispTimeTo = TTTRHeader::get_tag("DispTimeTo", json)["value"];
-//    ht3_header_begin.DispCountsFrom = TTTRHeader::get_tag("DispCountsFrom", json)["value"];
-//    ht3_header_begin.DispCountsTo = TTTRHeader::get_tag("DispCountsTo", json)["value"];
-//
-//    std::vector<pq_ht3_ChannelHeader_t> channel_settings;
-//    channel_settings.resize(ht3_header_begin.InpChansPresent);
-//    for(int i=0; i<ht3_header_begin.InpChansPresent; i++){
-//        channel_settings[i].InputCFDLevel = TTTRHeader::get_tag("InputCFDLevel", json, i)["value"];
-//        channel_settings[i].InputCFDZeroCross = TTTRHeader::get_tag("InputCFDZeroCross", json, i)["value"];
-//        channel_settings[i].InputOffset = TTTRHeader::get_tag("InputOffset", json, i)["value"];
-//        channel_settings[i].InputRate = TTTRHeader::get_tag("InputRate", json, i)["value"];
-//    }
-//
-//    // pq_ht3_TTModeHeader_t
-//    pq_ht3_TTModeHeader_t tt_mode_hdr;
-//    fread(&tt_mode_hdr, 1, sizeof(tt_mode_hdr), fpin);
-//    add_tag(data, "SyncRate", tt_mode_hdr.SyncRate, tyInt8);
-//    add_tag(data, "StopAfter", tt_mode_hdr.StopAfter, tyInt8);
-//    add_tag(data, "StopReason", tt_mode_hdr.StopReason, tyInt8);
-//    add_tag(data, "ImgHdrSize", tt_mode_hdr.ImgHdrSize, tyInt8);
-//    add_tag(data, "nRecords", (int) tt_mode_hdr.nRecords, tyInt8);
-//
-//    // ImgHdr
-////    fseek(fpin, (long) tt_mode_hdr.ImgHdrSize, SEEK_CUR);
-//    int ImgHdrSize = tt_mode_hdr.ImgHdrSize;
-//    if(ImgHdrSize > 0){
-//        auto imgHdr_array = (int32_t*) calloc(ImgHdrSize, sizeof(int32_t));
-//        fread(imgHdr_array, sizeof(int32_t), ImgHdrSize, fpin);
-//        std::vector<int32_t> v;
-//        for (int i=0; i<ImgHdrSize; i++) {
-//            v.emplace_back(imgHdr_array[i]);
-//        };
-//        free(imgHdr_array);
-//        add_tag(data, "ImgHdr", v, tyBinaryBlob);
-//        add_tag(data, "ImgHdr", v, tyBinaryBlob);
-//
-//        add_tag(data, "ImgHdr_Frame", v[2] + 1, tyInt8);
-//        add_tag(data, "ImgHdr_LineStart", v[3], tyInt8);
-//        add_tag(data, "ImgHdr_LineStop", v[4], tyInt8);
-//        add_tag(data, "ImgHdr_PixX", v[6], tyInt8);
-//        add_tag(data, "ImgHdr_PixY", v[7], tyInt8);
-//    }
-//
-//    double resolution = std::max(1.0, ht3_header_begin.Resolution) * 1e-12;
-//    add_tag(data, TTTRTagRes, resolution, tyFloat8);
-//
-//    //return 880; // guessed by inspecting several ht3 files
-//    return (size_t) ftell(fpin);
+if (is_verbose()) {
+    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
+}
+    nlohmann::json &json = header->json_data;
+
+    // Tag lookup helpers with defaults (get_tag returns a NONE tag when a
+    // tag is missing, e.g. when transcoding from another container)
+    auto tag_int = [&json](const std::string &name, int32_t d, int idx = -1) -> int32_t {
+        if (TTTRHeader::find_tag(json, name, idx) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name, idx)["value"];
+        if (v.is_boolean()) return (int32_t) v.get<bool>();
+        if (v.is_number()) return (int32_t) v.get<double>();
+        return d;
+    };
+    auto tag_double = [&json](const std::string &name, double d) -> double {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_number() ? v.get<double>() : d;
+    };
+    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_string() ? v.get<std::string>() : d;
+    };
+    auto copy_str = [](char* dst, size_t dst_size, const std::string &src) {
+        std::memset(dst, 0, dst_size);
+        std::strncpy(dst, src.c_str(), dst_size - 1);
+    };
+
+    // Defaults consistent with the record type actually written, so the
+    // file reads back with the correct record decoder (the reader selects
+    // HHT3v1/HHT3v2/PHT3 from Ident and FormatVersion).
+    int record_type = header->get_tttr_record_type();
+    std::string default_ident = "HydraHarp";
+    std::string default_version = "2.0";
+    if (record_type == PQ_RECORD_TYPE_HHT3v1 ||
+        record_type == PQ_RECORD_TYPE_SF_HT3) {
+        // SF-compressed files keep the HydraHarp v1 header; the SF record
+        // stream is detected from the overflow record payloads on reading
+        default_version = "1.0";
+    } else if (record_type == PQ_RECORD_TYPE_PHT3) {
+        default_ident = "PicoHarp 300";
+    }
+
+    pq_ht3_Header_t ht3_header;
+    std::memset(&ht3_header, 0, sizeof(ht3_header));
+    copy_str(ht3_header.Ident, sizeof(ht3_header.Ident), tag_string("Ident", default_ident));
+    copy_str(ht3_header.FormatVersion, sizeof(ht3_header.FormatVersion), tag_string("FormatVersion", default_version));
+    copy_str(ht3_header.CreatorName, sizeof(ht3_header.CreatorName), tag_string("CreatorName", "tttrlib"));
+    copy_str(ht3_header.CreatorVersion, sizeof(ht3_header.CreatorVersion), tag_string("CreatorVersion", ""));
+    copy_str(ht3_header.FileTime, sizeof(ht3_header.FileTime), tag_string("FileTime", ""));
+    ht3_header.CRLF[0] = '\r'; ht3_header.CRLF[1] = '\n';
+    copy_str(ht3_header.CommentField, sizeof(ht3_header.CommentField), tag_string("Comment", ""));
+
+    ht3_header.NumberOfCurves = tag_int("NumberOfCurves", 0);
+    ht3_header.BitsPerRecord = tag_int(TTTRTagBits, 32);
+    ht3_header.ActiveCurve = tag_int("ActiveCurve", 0);
+    ht3_header.MeasurementMode = tag_int("MeasurementMode", 3);
+    ht3_header.SubMode = tag_int("SubMode", 0);
+    // The reader reconstructs the number of micro time channels as
+    // 32768 / Binning; derive a default Binning from the number of micro
+    // time channels when the Binning tag is absent.
+    int n_micro = tag_int(TTTRNMicroTimes, 32768);
+    int default_binning = n_micro > 0 ? std::max(1, 32768 / n_micro) : 1;
+    ht3_header.Binning = tag_int("Binning", default_binning);
+    // Resolution is stored in ps; TTTRTagRes is in seconds
+    ht3_header.Resolution = tag_double("Resolution", tag_double(TTTRTagRes, 1e-12) * 1e12);
+    ht3_header.Offset = tag_int("Offset", 0);
+    ht3_header.AquisitionTime = tag_int("AquisitionTime", 0);
+    ht3_header.StopAt = (uint32_t) tag_int("StopAt", 0);
+    ht3_header.StopOnOvfl = tag_int("StopOnOvfl", 0);
+    ht3_header.Restart = tag_int("Restart", 0);
+    ht3_header.DispLinLog = tag_int("DispLinLog", 0);
+    ht3_header.DispTimeFrom = tag_int("DispTimeFrom", 0);
+    ht3_header.DispTimeTo = tag_int("DispTimeTo", 0);
+    ht3_header.DispCountsFrom = tag_int("DispCountsFrom", 0);
+    ht3_header.DispCountsTo = tag_int("DispCountsTo", 0);
+
+    // Channel headers: count the per-channel tags written by the reader
+    int n_channels = 0;
+    while (TTTRHeader::find_tag(json, "InputRate", n_channels) >= 0) n_channels++;
+    ht3_header.InpChansPresent = n_channels;
+
+    // TT mode header; the record count is derived from the file size on
+    // reading, nRecords is informational.
+    // The macro time calibration of HT3 files is carried by SyncRate
+    // (resolution = 1 / SyncRate); when transcoding from a container that
+    // stores the global resolution as a tag, derive SyncRate from it so the
+    // calibration survives the conversion.
+    int default_sync_rate = 0;
+    double glob_res = tag_double(TTTRTagGlobRes, -1.0);
+    if (glob_res > 0) {
+        default_sync_rate = (int) std::llround(1.0 / glob_res);
+    }
+    pq_ht3_TTModeHeader_t tt_mode_hdr;
+    std::memset(&tt_mode_hdr, 0, sizeof(tt_mode_hdr));
+    tt_mode_hdr.SyncRate = tag_int("SyncRate", default_sync_rate);
+    tt_mode_hdr.StopAfter = tag_int("StopAfter", 0);
+    tt_mode_hdr.StopReason = tag_int("StopReason", 0);
+    tt_mode_hdr.nRecords = (uint64_t) tag_int("nRecords", 0);
+
+    // Imaging header blob (marker/scan configuration for CLSM files)
+    std::vector<int32_t> img_hdr;
+    if (TTTRHeader::find_tag(json, "ImgHdr") >= 0) {
+        auto v = TTTRHeader::get_tag(json, "ImgHdr")["value"];
+        if (v.is_array()) img_hdr = v.get<std::vector<int32_t>>();
+    }
+    tt_mode_hdr.ImgHdrSize = (int32_t) img_hdr.size();
+
+    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    if (fp == nullptr) {
+        std::cerr << "ERROR: Cannot write HT3 header to file: " << fn << std::endl;
+        return;
+    }
+    fwrite(&ht3_header, sizeof(ht3_header), 1, fp);
+    pq_ht3_ChannelHeader_t channel_header;
+    for (int i = 0; i < n_channels; i++) {
+        std::memset(&channel_header, 0, sizeof(channel_header));
+        channel_header.InputCFDLevel = tag_int("InputCFDLevel", 0, i);
+        channel_header.InputCFDZeroCross = tag_int("InputCFDZeroCross", 0, i);
+        channel_header.InputOffset = tag_int("InputOffset", 0, i);
+        channel_header.InputRate = tag_int("InputRate", 0, i);
+        fwrite(&channel_header, sizeof(channel_header), 1, fp);
+    }
+    fwrite(&tt_mode_hdr, sizeof(tt_mode_hdr), 1, fp);
+    if (!img_hdr.empty()) {
+        fwrite(img_hdr.data(), sizeof(int32_t), img_hdr.size(), fp);
+    }
+    fclose(fp);
+}
+
+
+void TTTRHeader::write_sm_header(std::string fn, TTTRHeader* header, std::string modes){
+if (is_verbose()) {
+    std::clog << "-- WRITE_SM_HEADER" << std::endl;
+}
+    nlohmann::json &json = header->json_data;
+    auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_number() ? (int32_t) v.get<double>() : d;
+    };
+    auto tag_double = [&json](const std::string &name, double d) -> double {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_number() ? v.get<double>() : d;
+    };
+    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_string() ? v.get<std::string>() : d;
+    };
+
+    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    if (fp == nullptr) {
+        std::cerr << "ERROR: Cannot write SM header to file: " << fn << std::endl;
+        return;
+    }
+
+    // All values are stored big-endian (see read_sm_header)
+    auto write_swapped = [&fp](auto value) {
+        SwapEndian(value);
+        fwrite(&value, sizeof(value), 1, fp);
+    };
+    // Strings are stored as a 32-bit big-endian length followed by the
+    // characters including a terminating null byte
+    auto write_string = [&](const std::string &s) {
+        uint32_t size = (uint32_t) s.size() + 1;
+        write_swapped(size);
+        fwrite(s.c_str(), sizeof(char), size, fp);
+    };
+
+    write_swapped((uint32_t) tag_int("version", 1));
+    write_string(tag_string("comment", "tttrlib"));
+    write_string(tag_string("simple", ""));
+    write_swapped((uint32_t) tag_int("pointer1", 0));
+    write_string(tag_string("file_section_type", ""));
+    write_swapped((uint32_t) tag_int("magic1", 0));
+    write_swapped((uint32_t) tag_int("magic2", 0));
+
+    double global_res = tag_double(TTTRTagGlobRes, 1.0);
+    write_string(tag_string("col1_name", ""));
+    write_swapped(tag_double("col1_resolution", 1.0));
+    write_swapped(tag_double("col1_offset", 0.0));
+    write_swapped((uint32_t) tag_int("col1_bho", 0));
+    // The macro time resolution is stored as the column-2 resolution
+    write_string(tag_string("col2_name", ""));
+    write_swapped(tag_double("col2_resolution", global_res));
+    write_swapped(tag_double("col2_offset", 0.0));
+    write_swapped((uint32_t) tag_int("col2_bho", 0));
+    write_string(tag_string("col3_name", ""));
+    write_swapped(tag_double("col3_resolution", 1.0));
+    write_swapped(tag_double("col3_offset", 0.0));
+
+    // Channel labels are skipped on reading and hence not retained;
+    // write zero channel labels to keep the header self-consistent.
+    write_swapped((int32_t) 0);
+    fclose(fp);
+}
+
+
+void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, std::string modes){
+if (is_verbose()) {
+    std::clog << "-- WRITE_CZ_CONFOCOR3_HEADER" << std::endl;
+}
+    nlohmann::json &json = header->json_data;
+    auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_number() ? (int32_t) v.get<double>() : d;
+    };
+    auto tag_double = [&json](const std::string &name, double d) -> double {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_number() ? v.get<double>() : d;
+    };
+    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
+        if (TTTRHeader::find_tag(json, name) < 0) return d;
+        auto v = TTTRHeader::get_tag(json, name)["value"];
+        return v.is_string() ? v.get<std::string>() : d;
+    };
+
+    cz_confocor3_settings_t settings;
+    std::memset(&settings, 0, sizeof(settings));
+    const char* ident = "Carl Zeiss ConfoCor3 - raw data";
+    std::strncpy(settings.bits.Ident, ident, sizeof(settings.bits.Ident) - 1);
+    // channel number is stored as an ASCII digit (see read_cz_confocor3_header)
+    settings.bits.channel = '0' + (tag_int("channel", 1) & 0xFF);
+    // measure_id is stored as a 32-character hex string tag
+    std::string measure_id = tag_string("measure_id", "");
+    for (int i = 0; i < 4; i++) {
+        if (measure_id.size() >= (size_t)(i + 1) * 8) {
+            settings.bits.measure_id[i] = (uint32_t) std::stoul(
+                    measure_id.substr(i * 8, 8), nullptr, 16);
+        }
+    }
+    // the reader reports these one-based
+    settings.bits.measurement_position = (uint32_t) std::max(0, tag_int("measurement_position", 1) - 1);
+    settings.bits.kinetic_index = (uint32_t) std::max(0, tag_int("kinetic_index", 1) - 1);
+    settings.bits.repetition_number = (uint32_t) std::max(0, tag_int("repetition_number", 1) - 1);
+    // the macro time clock is stored as a frequency
+    double mt_clk = tag_double(TTTRTagGlobRes, 1.0);
+    settings.bits.frequency = (uint32_t) std::llround(1.0 / mt_clk);
+
+    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    if (fp == nullptr) {
+        std::cerr << "ERROR: Cannot write CZ header to file: " << fn << std::endl;
+        return;
+    }
+    fwrite(&settings, sizeof(settings), 1, fp);
+    fclose(fp);
 }
 
 

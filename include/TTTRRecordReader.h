@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <cstring>
 #include "TTTRRecordTypes.h"
 #include "TTTRHeaderTypes.h"
 #include "info.h"
@@ -238,6 +239,43 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT2v2> {
     }
 };
 
+// Specialization for SF-compressed HT3 (Suren Felekyan's HT3 conversion).
+// Photon/marker records are identical to HydraHarp T3; the overflow record
+// (special=1, channel=0x3F) carries the number of ADDITIONAL overflows in
+// its lowest 24 bits, i.e. it advances the sync counter by
+// (1 + count) * 1024. A count of 0 decodes identically to a plain HHT3v1
+// overflow record.
+template<>
+struct RecordProcessor<PQ_RECORD_TYPE_SF_HT3> {
+    static inline bool process(
+        uint32_t& TTTRRecord,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time_or_marker,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        const uint64_t T3WRAPAROUND = 1024;
+        pq_hh_t3_record_t rec;
+        rec.allbits = TTTRRecord;
+
+        if ((rec.bits.channel == 0x3F) && (rec.bits.special == 1)) {
+            overflow_counter += T3WRAPAROUND * (1 + (TTTRRecord & 0xFFFFFF));
+            return false;
+        }
+
+        if (rec.bits.special == 1) {
+            record_type = RECORD_MARKER;
+        } else {
+            record_type = RECORD_PHOTON;
+        }
+        channel = static_cast<int16_t>(rec.bits.channel);
+        true_nsync = overflow_counter + rec.bits.n_sync;
+        micro_time_or_marker = rec.bits.dtime;
+        return true;
+    }
+};
+
 // Specialization for MultiHarp 150 / PicoHarp 330 T3 (Generic T3)
 // Bit layout: [special:1][channel:6][dtime:15][n_sync:10]
 // Identical to HHT3v2 but identified as a distinct record type
@@ -378,33 +416,36 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC600_256> {
         int16_t& channel,
         int16_t& record_type
     ) {
+        // The macro time field is 17 bit wide; every overflow accounts for
+        // 2**17 = 131072 macro time units.
+        const uint64_t MT_WRAP = 131072;
         bh_spc600_256_record_t rec;
         rec.allbits = TTTRRecord;
-        
+
         if (!rec.bits.mtov && !rec.bits.invalid) {
-            true_nsync = rec.bits.mt + overflow_counter * 4096;
+            true_nsync = rec.bits.mt + overflow_counter * MT_WRAP;
             micro_time = static_cast<uint16_t>(255 - rec.bits.adc);
             channel = static_cast<int16_t>(rec.bits.rout);
             record_type = RECORD_PHOTON;
             return true;
         }
-        
+
         if (!rec.bits.invalid && rec.bits.mtov) {
             overflow_counter += 1;
-            true_nsync = rec.bits.mt + overflow_counter * 65536;
+            true_nsync = rec.bits.mt + overflow_counter * MT_WRAP;
             micro_time = static_cast<uint16_t>(255 - rec.bits.adc);
             channel = static_cast<int16_t>(rec.bits.rout);
             record_type = RECORD_PHOTON;
             return true;
         }
-        
+
         if (rec.bits.invalid && rec.bits.mtov) {
             bh_overflow_t ovf;
             ovf.allbits = TTTRRecord;
             overflow_counter += ovf.bits.cnt;
             return false;
         }
-        
+
         return false;
     }
 };
@@ -412,6 +453,39 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC600_256> {
 // Specialization for Becker & Hickl SPC-600 with 4096 channels
 template<>
 struct RecordProcessor<BH_RECORD_TYPE_SPC600_4096> {
+    // SPC-600/630 4096-channel records are 6 bytes wide; the macro time bytes
+    // mt1/mt2 live in bytes 4-5, beyond a 32-bit load. Decode from the raw
+    // record bytes (process_bytes) instead of a truncated 32-bit word.
+    static inline bool process_bytes(
+        const signed char* record_ptr,
+        size_t bytes_per_record,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        bh_spc600_4096_record_t rec;
+        std::memset(&rec, 0, sizeof(rec));
+        std::memcpy(&rec, record_ptr,
+                    bytes_per_record < sizeof(rec) ? bytes_per_record : sizeof(rec));
+
+        if (!rec.bits.invalid) {
+            uint32_t mt = rec.bits.mt1 +
+                         (rec.bits.mt2 << 8) +
+                         (rec.bits.mt3 << 16);
+            true_nsync = mt + overflow_counter * 16777216;
+            channel = static_cast<int16_t>(255 - rec.bits.rout);
+            micro_time = static_cast<uint16_t>(4095 - rec.bits.adc);
+            record_type = RECORD_PHOTON;
+            return true;
+        }
+
+        overflow_counter += rec.bits.mtov;
+        return false;
+    }
+
+    // 32-bit entry point kept for interface compatibility; loses mt1/mt2.
     static inline bool process(
         uint32_t& TTTRRecord,
         uint64_t& overflow_counter,
@@ -420,22 +494,9 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC600_4096> {
         int16_t& channel,
         int16_t& record_type
     ) {
-        bh_spc600_4096_record_t rec;
-        rec.allbits = TTTRRecord;
-        
-        if (!rec.bits.invalid) {
-            uint32_t mt = rec.bits.mt1 + 
-                         (rec.bits.mt2 << 8) + 
-                         (rec.bits.mt3 << 16);
-            true_nsync = mt + overflow_counter * 16777216;
-            channel = static_cast<int16_t>(255 - rec.bits.rout);
-            micro_time = static_cast<uint16_t>(4095 - rec.bits.adc);
-            record_type = RECORD_PHOTON;
-            return true;
-        }
-        
-        overflow_counter += rec.bits.mtov;
-        return false;
+        return process_bytes(
+            reinterpret_cast<const signed char*>(&TTTRRecord), 4,
+            overflow_counter, true_nsync, micro_time, channel, record_type);
     }
 };
 
@@ -478,60 +539,28 @@ inline void process_records_batch(
     size_t& valid_count
 ) {
     const signed char* record_ptr = buffer;
-    
-    // Process in blocks of 4 for better pipeline utilization
-    size_t num_blocks = num_records / 4;
-    size_t remainder = num_records % 4;
-    
-    // Unrolled loop for main processing
-    for (size_t block = 0; block < num_blocks; block++) {
-        // Process 4 records per iteration
-        for (int i = 0; i < 4; i++) {
-            uint32_t record = *(uint32_t*)record_ptr;
-            uint64_t true_nsync;
-            uint32_t micro_time;
-            int16_t channel;
-            int16_t record_type;
-            
-            bool is_valid = RecordProcessor<RecordType>::process(
-                record,
-                overflow_counter,
-                true_nsync,
-                micro_time,
-                channel,
-                record_type
-            );
-            
-            // Branch hint: most records are valid
-            if (is_valid) [[likely]] {
-                macro_times[valid_count] = true_nsync;
-                micro_times[valid_count] = static_cast<unsigned short>(micro_time);
-                routing_channels[valid_count] = static_cast<signed char>(channel);
-                event_types[valid_count] = static_cast<signed char>(record_type);
-                valid_count++;
-            }
-            
-            record_ptr += bytes_per_record;
-        }
-    }
-    
-    // Handle remaining records
-    for (size_t j = 0; j < remainder; j++) {
-        uint32_t record = *(uint32_t*)record_ptr;
+
+    // Per-record body, inlined into the unrolled loop below
+    auto process_one = [&](const signed char* ptr) {
         uint64_t true_nsync;
         uint32_t micro_time;
         int16_t channel;
         int16_t record_type;
-        
-        bool is_valid = RecordProcessor<RecordType>::process(
-            record,
-            overflow_counter,
-            true_nsync,
-            micro_time,
-            channel,
-            record_type
-        );
-        
+        bool is_valid;
+
+        if constexpr (RecordType == BH_RECORD_TYPE_SPC600_4096) {
+            // 6-byte records: decode from raw bytes (mt1/mt2 sit past 32 bit)
+            is_valid = RecordProcessor<RecordType>::process_bytes(
+                ptr, bytes_per_record, overflow_counter,
+                true_nsync, micro_time, channel, record_type);
+        } else {
+            uint32_t record = *(uint32_t*)ptr;
+            is_valid = RecordProcessor<RecordType>::process(
+                record, overflow_counter,
+                true_nsync, micro_time, channel, record_type);
+        }
+
+        // Branch hint: most records are valid
         if (is_valid) [[likely]] {
             macro_times[valid_count] = true_nsync;
             micro_times[valid_count] = static_cast<unsigned short>(micro_time);
@@ -539,7 +568,23 @@ inline void process_records_batch(
             event_types[valid_count] = static_cast<signed char>(record_type);
             valid_count++;
         }
-        
+    };
+
+    // Process in blocks of 4 for better pipeline utilization
+    size_t num_blocks = num_records / 4;
+    size_t remainder = num_records % 4;
+
+    // Unrolled loop for main processing
+    for (size_t block = 0; block < num_blocks; block++) {
+        process_one(record_ptr); record_ptr += bytes_per_record;
+        process_one(record_ptr); record_ptr += bytes_per_record;
+        process_one(record_ptr); record_ptr += bytes_per_record;
+        process_one(record_ptr); record_ptr += bytes_per_record;
+    }
+
+    // Handle remaining records
+    for (size_t j = 0; j < remainder; j++) {
+        process_one(record_ptr);
         record_ptr += bytes_per_record;
     }
 }

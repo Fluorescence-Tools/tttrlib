@@ -6,6 +6,8 @@
 #include "Verbose.h"
 
 #include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <algorithm>
 
 // Static member definition outside the class
@@ -389,6 +391,183 @@ int TTTR::read_hdf_file(const char *fn) {
 }
 
 
+#ifdef BUILD_PHOTON_HDF
+
+bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
+    // Layout follows the Photon-HDF5 specification (v0.5), see
+    // https://photon-hdf5.org/ and the phconvert reference implementation.
+    if(header == nullptr) header = this->header;
+
+    hid_t file = H5Fcreate(fn.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file < 0) {
+        std::cerr << "ERROR: Cannot create HDF5 file: " << fn << std::endl;
+        return false;
+    }
+
+    // Helper: write a 1D dataset
+    auto write_dataset = [](hid_t loc, const char* name, hid_t file_type,
+                            hid_t mem_type, hsize_t n, const void* data) {
+        hid_t space = H5Screate_simple(1, &n, nullptr);
+        hid_t ds = H5Dcreate2(loc, name, file_type, space,
+                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if (n > 0) H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+        H5Dclose(ds);
+        H5Sclose(space);
+    };
+    // Helper: write a scalar dataset
+    auto write_scalar = [](hid_t loc, const char* name, hid_t file_type,
+                           hid_t mem_type, const void* data) {
+        hid_t space = H5Screate(H5S_SCALAR);
+        hid_t ds = H5Dcreate2(loc, name, file_type, space,
+                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+        H5Dclose(ds);
+        H5Sclose(space);
+    };
+    auto write_scalar_int = [&write_scalar](hid_t loc, const char* name, int v) {
+        write_scalar(loc, name, H5T_STD_I32LE, H5T_NATIVE_INT32, &v);
+    };
+    // Helper: write a scalar string dataset (fixed-length ASCII)
+    auto write_string = [](hid_t loc, const char* name, const std::string &s) {
+        hid_t str_type = H5Tcopy(H5T_C_S1);
+        H5Tset_size(str_type, std::max<size_t>(1, s.size()));
+        H5Tset_strpad(str_type, H5T_STR_NULLPAD);
+        hid_t space = H5Screate(H5S_SCALAR);
+        hid_t ds = H5Dcreate2(loc, name, str_type, space,
+                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Dwrite(ds, str_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, s.c_str());
+        H5Dclose(ds);
+        H5Sclose(space);
+        H5Tclose(str_type);
+    };
+    // Helper: attach a string attribute to the root node
+    auto write_root_attribute = [&file](const char* name, const std::string &s) {
+        hid_t str_type = H5Tcopy(H5T_C_S1);
+        H5Tset_size(str_type, std::max<size_t>(1, s.size()));
+        hid_t space = H5Screate(H5S_SCALAR);
+        hid_t attr = H5Acreate2(file, name, str_type, space,
+                                H5P_DEFAULT, H5P_DEFAULT);
+        H5Awrite(attr, str_type, s.c_str());
+        H5Aclose(attr);
+        H5Sclose(space);
+        H5Tclose(str_type);
+    };
+
+    const std::string format_name = "Photon-HDF5";
+    const std::string format_version = "0.5";
+    const std::string format_url = "http://photon-hdf5.org/";
+    write_root_attribute("format_name", format_name);
+    write_root_attribute("format_version", format_version);
+    write_root_attribute("format_url", format_url);
+
+    hid_t g_photon_data = H5Gcreate2(
+            file, "/photon_data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    // Photon arrays: timestamps (uint64), detectors (int8), nanotimes (uint16)
+    hsize_t n = (hsize_t) n_valid_events;
+    std::vector<unsigned long long> timestamps(n_valid_events);
+    for (size_t i = 0; i < n_valid_events; i++) {
+        timestamps[i] = get_macro_time_at(i);
+    }
+    write_dataset(g_photon_data, "timestamps", H5T_STD_U64LE,
+                  H5T_NATIVE_UINT64, n, timestamps.data());
+    write_dataset(g_photon_data, "detectors", H5T_STD_I8LE,
+                  H5T_NATIVE_INT8, n, routing_channels);
+    write_dataset(g_photon_data, "nanotimes", H5T_STD_U16LE,
+                  H5T_NATIVE_UINT16, n, micro_times);
+
+    // Specs groups so the header (resolutions, number of micro time
+    // channels) can be reconstructed on reading
+    hid_t g_ts_specs = H5Gcreate2(
+            g_photon_data, "timestamps_specs",
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    double timestamps_unit = header->get_macro_time_resolution();
+    write_scalar(g_ts_specs, "timestamps_unit", H5T_IEEE_F64LE,
+                 H5T_NATIVE_DOUBLE, &timestamps_unit);
+    H5Gclose(g_ts_specs);
+
+    hid_t g_nt_specs = H5Gcreate2(
+            g_photon_data, "nanotimes_specs",
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    double tcspc_unit = header->get_micro_time_resolution();
+    int tcspc_num_bins = (int) header->get_number_of_micro_time_channels();
+    write_scalar(g_nt_specs, "tcspc_unit", H5T_IEEE_F64LE,
+                 H5T_NATIVE_DOUBLE, &tcspc_unit);
+    write_scalar_int(g_nt_specs, "tcspc_num_bins", tcspc_num_bins);
+    H5Gclose(g_nt_specs);
+
+    H5Gclose(g_photon_data);
+
+    // ---- mandatory root fields ----------------------------------------
+    write_string(file, "description", "TTTR data written by tttrlib");
+    double acquisition_duration = 0.0;
+    if (n_valid_events > 0) {
+        acquisition_duration = (double) (
+                timestamps[n_valid_events - 1] - timestamps[0]) * timestamps_unit;
+    }
+    write_scalar(file, "acquisition_duration", H5T_IEEE_F64LE,
+                 H5T_NATIVE_DOUBLE, &acquisition_duration);
+
+    // ---- /setup (mandatory fields) --------------------------------------
+    // Values read from a source Photon-HDF5 file are preserved (the header
+    // reader stores them as "setup.<name>" tags); single-spot defaults are
+    // used otherwise.
+    auto setup_tag_int = [&header](const char* name, int d) -> int {
+        std::string tag_name = std::string("setup.") + name;
+        if (TTTRHeader::find_tag(header->json_data, tag_name, 0) < 0) return d;
+        auto v = TTTRHeader::get_tag(header->json_data, tag_name, 0)["value"];
+        if (v.is_boolean()) return (int) v.get<bool>();
+        if (v.is_number()) return (int) v.get<double>();
+        return d;
+    };
+    hid_t g_setup = H5Gcreate2(file, "/setup", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    std::unordered_set<signed char> channels(
+            routing_channels, routing_channels + n_valid_events);
+    write_scalar_int(g_setup, "num_pixels",
+                     setup_tag_int("num_pixels", std::max<int>(1, (int) channels.size())));
+    write_scalar_int(g_setup, "num_spots", setup_tag_int("num_spots", 1));
+    write_scalar_int(g_setup, "num_spectral_ch", setup_tag_int("num_spectral_ch", 1));
+    write_scalar_int(g_setup, "num_polarization_ch", setup_tag_int("num_polarization_ch", 1));
+    write_scalar_int(g_setup, "num_split_ch", setup_tag_int("num_split_ch", 1));
+    signed char modulated = (signed char) setup_tag_int("modulated_excitation", 0);
+    signed char lifetime = (signed char) setup_tag_int("lifetime", 1);
+    signed char alternated = (signed char) setup_tag_int("excitation_alternated", 0);
+    write_scalar(g_setup, "modulated_excitation", H5T_STD_I8LE,
+                 H5T_NATIVE_INT8, &modulated);
+    write_scalar(g_setup, "lifetime", H5T_STD_I8LE, H5T_NATIVE_INT8, &lifetime);
+    write_dataset(g_setup, "excitation_alternated", H5T_STD_I8LE,
+                  H5T_NATIVE_INT8, 1, &alternated);
+    H5Gclose(g_setup);
+
+    // ---- /identity ------------------------------------------------------
+    hid_t g_identity = H5Gcreate2(file, "/identity", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    write_string(g_identity, "format_name", format_name);
+    write_string(g_identity, "format_version", format_version);
+    write_string(g_identity, "format_url", format_url);
+    write_string(g_identity, "software", "tttrlib");
+    write_string(g_identity, "software_version", "");
+    std::time_t now = std::time(nullptr);
+    char time_buffer[32];
+    std::strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S",
+                  std::localtime(&now));
+    write_string(g_identity, "creation_time", time_buffer);
+    H5Gclose(g_identity);
+
+    H5Fclose(file);
+    return true;
+}
+
+#else
+
+bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
+    (void) fn; (void) header;
+    std::cerr << "Not built with Photon HDF interface." << std::endl;
+    return false;
+}
+
+#endif
+
+
 int TTTR::read_sm_file(const char *filename){
     // Function to read a 64-bit big-endian value
 
@@ -491,6 +670,134 @@ void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
     }
 }
 
+void TTTR::read_bh_set_sidecar() {
+    // Try to find a .set file with the same base name as the .spc file
+    std::string set_filename;
+    if (filename.size() >= 4) {
+        std::string ext = filename.substr(filename.size() - 4);
+        // Safe ASCII-only lowercase transformation (avoids UB with signed char)
+        auto to_lower_ascii = [](unsigned char c) -> char {
+            return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : static_cast<char>(c);
+        };
+        std::transform(ext.begin(), ext.end(), ext.begin(), to_lower_ascii);
+        if (ext == ".spc") {
+            set_filename = filename.substr(0, filename.size() - 4) + ".set";
+        }
+    }
+    if (set_filename.empty()) return;
+
+    // Use filesystem to check if file exists (UTF-8 safe)
+    std::filesystem::path set_path = std::filesystem::u8path(set_filename);
+    if (std::filesystem::exists(set_path)) {
+        if (header->read_bh_set_file(set_filename)) {
+            if (is_verbose()) {
+                std::clog << "-- Parsed BH .set file: " << set_filename << std::endl;
+            }
+        }
+    } else {
+        if (is_verbose()) {
+            std::clog << "-- BH .set file not found: " << set_filename << std::endl;
+        }
+    }
+}
+
+void TTTR::backfill_cz_routing_channels() {
+    // Confocor raw data has no channel number in events
+    auto tag = header->get_tag(header->json_data, "channel");
+    int channel = tag["value"];
+if (is_verbose()) {
+    std::clog << "-- Confocor3 channel: " << channel << std::endl;
+}
+    for(size_t i = 0; i < n_records_in_file; i++) {
+        routing_channels[i] = channel;
+    }
+}
+
+/*!
+ * Detects SF-compressed HT3 record streams (Suren Felekyan's HT3
+ * conversion). SF files are HT3 files whose overflow records carry the
+ * number of additional overflows in their lowest 24 bits; plain HHT3v1
+ * overflow records have an all-zero payload. Scans a prefix of the record
+ * stream for an overflow record with a non-zero payload. When no such
+ * record exists, both interpretations decode identically, so a negative
+ * result is always safe.
+ *
+ * @param fp open file positioned anywhere (position is restored)
+ * @param records_begin file offset of the first record
+ * @return true if the stream is SF-compressed
+ */
+static bool detect_sf_ht3_records(std::FILE* fp, size_t records_begin) {
+    // SF files carry counted overflow records from the very start of the
+    // stream (observed: within the first 3 records); 64k records (256 KB)
+    // is a generous margin while keeping the extra read small
+    const size_t MAX_SCAN_RECORDS = 65536;
+    const size_t CHUNK = 16384;
+
+    int64_t previous_pos = ftell64(fp);
+    fseek64(fp, (int64_t) records_begin, SEEK_SET);
+
+    std::vector<uint32_t> buffer(CHUNK);
+    size_t scanned = 0;
+    bool is_sf = false;
+    while (scanned < MAX_SCAN_RECORDS && !is_sf) {
+        size_t n = fread(buffer.data(), sizeof(uint32_t), CHUNK, fp);
+        if (n == 0) break;
+        for (size_t i = 0; i < n; i++) {
+            uint32_t rec = buffer[i];
+            // overflow record (special=1, channel=0x3F) with non-zero payload
+            if (((rec >> 25) == 0x7F) && ((rec & 0xFFFFFF) != 0)) {
+                is_sf = true;
+                break;
+            }
+        }
+        scanned += n;
+    }
+    fseek64(fp, previous_pos, SEEK_SET);
+    return is_sf;
+}
+
+int TTTR::read_records_file(const char *fn, int container_type) {
+    fp = open_file(std::string(fn), "rb");
+    if (fp == nullptr) return 0;
+    header = new TTTRHeader(fp, container_type);
+
+    // BH SPC files may come with a .set sidecar file that holds the settings
+    if (container_type == BH_SPC130_CONTAINER) {
+        read_bh_set_sidecar();
+    }
+
+    fp_records_begin = header->end();
+    tttr_record_type = header->get_tttr_record_type();
+
+    // HT3 files converted with SF compression are indistinguishable from
+    // plain HydraHarp v1 HT3 files by their header; detect them from the
+    // record stream (see detect_sf_ht3_records)
+    if ((container_type == PQ_HT3_CONTAINER) &&
+        (tttr_record_type == PQ_RECORD_TYPE_HHT3v1)) {
+        if (detect_sf_ht3_records(fp, fp_records_begin)) {
+if (is_verbose()) {
+            std::clog << "-- SF-compressed HT3 records detected" << std::endl;
+}
+            tttr_record_type = PQ_RECORD_TYPE_SF_HT3;
+            header->set_tttr_record_type(tttr_record_type);
+        }
+    }
+    n_records_in_file = get_number_of_records_by_file_size(
+            fp, header->header_end, header->get_bytes_per_record());
+if (is_verbose()) {
+    std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
+    std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
+}
+    allocate_memory_for_records(n_records_in_file);
+    read_records();
+    fclose(fp);
+
+    if (container_type == CZ_CONFOCOR3_CONTAINER) {
+        backfill_cz_routing_channels();
+    }
+    return 1;
+}
+
 int TTTR::read_file(const char *fn, int container_type) {
 if (is_verbose()) {
     std::clog << "READING TTTR FILE" << std::endl;
@@ -504,102 +811,34 @@ if (is_verbose()) {
 
     // check if file exists (UTF-8 safe)
     std::filesystem::path p = std::filesystem::u8path(fn ? fn : "");
-    if (std::filesystem::exists(p)) {
-if (is_verbose()) {
-        std::clog << "-- Filename: " << std::filesystem::path(p).u8string() << std::endl;
-}
-        // store canonical UTF-8 string version (optional)
-        this->filename = p.u8string();
-
-        fn = this->filename.c_str();
-        
-        // Auto-detect container type if not specified
-        if (container_type < 0) {
-            // Default to trying to read as a standard TTTR file
-            // The header will determine the actual container type
-            if (is_verbose()) {
-                std::clog << "-- Using standard TTTR file detection" << std::endl;
-            }
-        }
-        
-        if (container_type == PHOTON_HDF_CONTAINER) {
-            read_hdf_file(fn);
-        } else if (container_type == SM_CONTAINER) {
-            read_sm_file(fn);
-
-        } else {  
-            fp = open_file(this->filename, "rb");
-            header = new TTTRHeader(fp, container_type);
-
-            // After header is read for BH_SPC130_CONTAINER, try to find and parse .set file
-            if (container_type == BH_SPC130_CONTAINER) {
-                // Try to find .set file with same base name
-                std::string set_filename;
-                if (filename.size() >= 4) {
-                    std::string ext = filename.substr(filename.size() - 4);
-                    // Safe ASCII-only lowercase transformation (avoids UB with signed char)
-                    auto to_lower_ascii = [](unsigned char c) -> char {
-                        return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : static_cast<char>(c);
-                    };
-                    std::transform(ext.begin(), ext.end(), ext.begin(), to_lower_ascii);
-                    if (ext == ".spc") {
-                        set_filename = filename.substr(0, filename.size() - 4) + ".set";
-                    }
-                }
-
-                if (!set_filename.empty()) {
-                    // Use filesystem to check if file exists (UTF-8 safe)
-                    std::filesystem::path set_path = std::filesystem::u8path(set_filename);
-                    if (std::filesystem::exists(set_path)) {
-                        if (header->read_bh_set_file(set_filename)) {
-                            if (is_verbose()) {
-                                std::clog << "-- Parsed BH .set file: " << set_filename << std::endl;
-                            }
-                        }
-                    } else {
-                        if (is_verbose()) {
-                            std::clog << "-- BH .set file not found: " << set_filename << std::endl;
-                        }
-                    }
-                }
-            }
-            fp_records_begin = header->end();
-            tttr_record_type = header->get_tttr_record_type();
-if (is_verbose()) {
-            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
-}
-            n_records_in_file = get_number_of_records_by_file_size(fp, header->header_end, header->get_bytes_per_record());
-if (is_verbose()) {
-            std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
-            std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
-}
-            allocate_memory_for_records(n_records_in_file);
-            read_records();
-            fclose(fp);
-        }
-
-        if (container_type == CZ_CONFOCOR3_CONTAINER) {
-            // Confocor raw data has no channel number in events
-            auto tag = header->get_tag(header->json_data, "channel");
-            int channel = tag["value"];
-if (is_verbose()) {
-            std::clog << "-- Confocor3 channel: " << channel << std::endl;
-}
-            for(int i = 0; i < n_records_in_file; i++) {
-                routing_channels[i] = channel;
-            }
-        }
-if (is_verbose()) {
-            std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
-            if (macro_time_compression_enabled) {
-                std::clog << "-- Macro times compressed during read with " << n_keyframes << " keyframes" << std::endl;
-            }
-}
-            return 1;
-    } else {
-        std::clog << "-- WARNING: File " << std::filesystem::path(p).u8string() << " does not exist" << std::endl;
+    if (!std::filesystem::exists(p)) {
+        std::clog << "-- WARNING: File " << p.u8string() << " does not exist" << std::endl;
         return 0;
     }
+if (is_verbose()) {
+    std::clog << "-- Filename: " << p.u8string() << std::endl;
+}
+    // store canonical UTF-8 string version
+    this->filename = p.u8string();
+    fn = this->filename.c_str();
+
+    // Dispatch to the container-specific reader. Photon-HDF5 and SM files
+    // have their own file layout; everything else is a header followed by
+    // a stream of fixed-size records.
+    if (container_type == PHOTON_HDF_CONTAINER) {
+        read_hdf_file(fn);
+    } else if (container_type == SM_CONTAINER) {
+        read_sm_file(fn);
+    } else {
+        read_records_file(fn, container_type);
+    }
+if (is_verbose()) {
+    std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
+    if (macro_time_compression_enabled) {
+        std::clog << "-- Macro times compressed during read with " << n_keyframes << " keyframes" << std::endl;
+    }
+}
+    return 1;
 }
 
 
@@ -792,6 +1031,49 @@ if (is_verbose()) {
     capacity = new_capacity;
 }
 
+/*!
+ * Runtime-to-compile-time dispatch for record decoding: selects the
+ * process_records_batch specialization for a record type.
+ * @return false if the record type is unknown
+ */
+static bool dispatch_process_records_batch(
+        int record_type,
+        const signed char* buffer,
+        size_t num_records,
+        size_t bytes_per_record,
+        uint64_t& overflow_counter,
+        unsigned long long* macro_times,
+        unsigned short* micro_times,
+        signed char* routing_channels,
+        signed char* event_types,
+        size_t& valid_count
+) {
+    #define TTTRLIB_CASE_PROCESS(RT) \
+        case RT: process_records_batch<RT>( \
+            buffer, num_records, bytes_per_record, overflow_counter, \
+            macro_times, micro_times, routing_channels, event_types, \
+            valid_count); return true;
+    switch(record_type) {
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT3)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v1)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v1)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T3)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_SF_HT3)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC130)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_256)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_4096)
+        TTTRLIB_CASE_PROCESS(CZ_RECORD_TYPE_CONFOCOR3)
+        default:
+            std::cerr << "ERROR: Unsupported TTTR record type: " << record_type << std::endl;
+            return false;
+    }
+    #undef TTTRLIB_CASE_PROCESS
+}
+
 // Optimized template-dispatched record reading
 void TTTR::read_records(
         size_t n_rec,
@@ -854,72 +1136,12 @@ void TTTR::read_records(
             unsigned long long* temp_ptr = temp_macro_buffer - events_before;
             
             // Template dispatch based on record type for compile-time optimization
-            switch(tttr_record_type) {
-            case PQ_RECORD_TYPE_PHT3:
-                process_records_batch<PQ_RECORD_TYPE_PHT3>(
+            if (!dispatch_process_records_batch(
+                    tttr_record_type,
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_PHT2:
-                process_records_batch<PQ_RECORD_TYPE_PHT2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT3v1:
-                process_records_batch<PQ_RECORD_TYPE_HHT3v1>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT3v2:
-                process_records_batch<PQ_RECORD_TYPE_HHT3v2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT2v1:
-                process_records_batch<PQ_RECORD_TYPE_HHT2v1>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT2v2:
-                process_records_batch<PQ_RECORD_TYPE_HHT2v2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_GENERIC_T3:
-                process_records_batch<PQ_RECORD_TYPE_GENERIC_T3>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_GENERIC_T2:
-                process_records_batch<PQ_RECORD_TYPE_GENERIC_T2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC130:
-                process_records_batch<BH_RECORD_TYPE_SPC130>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC600_256:
-                process_records_batch<BH_RECORD_TYPE_SPC600_256>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC600_4096:
-                process_records_batch<BH_RECORD_TYPE_SPC600_4096>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case CZ_RECORD_TYPE_CONFOCOR3:
-                process_records_batch<CZ_RECORD_TYPE_CONFOCOR3>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            default:
-                // This should never happen - all record types have template specializations
-                std::cerr << "ERROR: Unsupported TTTR record type: " << tttr_record_type << std::endl;
-                std::cerr << "This is a bug - please report it!" << std::endl;
+                    temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events)) {
                 free(tmp);
+                free(temp_macro_buffer);
                 return;
             }
             
@@ -960,69 +1182,10 @@ void TTTR::read_records(
             number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
             
             // Template dispatch based on record type for compile-time optimization
-            switch(tttr_record_type) {
-            case PQ_RECORD_TYPE_PHT3:
-                process_records_batch<PQ_RECORD_TYPE_PHT3>(
+            if (!dispatch_process_records_batch(
+                    tttr_record_type,
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_PHT2:
-                process_records_batch<PQ_RECORD_TYPE_PHT2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT3v1:
-                process_records_batch<PQ_RECORD_TYPE_HHT3v1>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT3v2:
-                process_records_batch<PQ_RECORD_TYPE_HHT3v2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT2v1:
-                process_records_batch<PQ_RECORD_TYPE_HHT2v1>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_HHT2v2:
-                process_records_batch<PQ_RECORD_TYPE_HHT2v2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_GENERIC_T3:
-                process_records_batch<PQ_RECORD_TYPE_GENERIC_T3>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case PQ_RECORD_TYPE_GENERIC_T2:
-                process_records_batch<PQ_RECORD_TYPE_GENERIC_T2>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC130:
-                process_records_batch<BH_RECORD_TYPE_SPC130>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC600_256:
-                process_records_batch<BH_RECORD_TYPE_SPC600_256>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case BH_RECORD_TYPE_SPC600_4096:
-                process_records_batch<BH_RECORD_TYPE_SPC600_4096>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            case CZ_RECORD_TYPE_CONFOCOR3:
-                process_records_batch<CZ_RECORD_TYPE_CONFOCOR3>(
-                    tmp, number_of_objects, bytes_per_record, overflow_counter,
-                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events);
-                break;
-            default:
-                std::cerr << "ERROR: Unsupported TTTR record type: " << tttr_record_type << std::endl;
+                    macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events)) {
                 free(tmp);
                 return;
             }
@@ -1870,79 +2033,344 @@ void compute_intensity_trace(
 //}
 
 
+// ============================================================================
+// EVENT-STREAM WRITERS
+// One writer per record type; each is the inverse of the corresponding
+// RecordProcessor<> specialization in TTTRRecordReader.h. Round-trip fidelity
+// is defined on the decoded event stream (macro time, micro time, channel,
+// event type), not on the raw byte stream.
+// ============================================================================
+
 void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     bh_overflow_t overflow;
-    overflow.bits.empty = 0;
+    overflow.allbits = 0;
     overflow.bits.mtov = 1;
     overflow.bits.invalid = 1;
 
-    bh_spc130_record_t record;
-    unsigned dMT;
-    unsigned long long MT_ov_last;
-    unsigned long long MT_ov = 0;
+    const uint64_t MT_WRAP = 4096;
+    uint64_t MT_ov = 0; // cumulative macro time overflow counter
     for (size_t n = 0; n < tttr->size(); n++) {
-        // time since last macro_time record
-        dMT = static_cast<unsigned>(tttr->get_macro_time_at(n) - MT_ov * 4096ULL);
-        // Count the number of MT overflows
-        MT_ov_last = dMT / 4096;
-        // Subtract MT overflows from dMT
-        dMT -= static_cast<unsigned>(MT_ov_last * 4096ULL);
-        // increment the global overflow counter
-        MT_ov += MT_ov_last;
-        // write overflows
-        while (MT_ov_last > 1) {
-            // we fit 65536 = 2**16 in each overflow record
-            overflow.bits.cnt = std::min(65536ull, MT_ov_last);
+        uint64_t MT = tttr->get_macro_time_at(n);
+        // overflows needed before this event and remaining in-record time
+        uint64_t MT_target = MT / MT_WRAP;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        uint64_t dMT = MT % MT_WRAP;
+        // write overflow records; each can carry up to 2**28 - 1 overflows
+        while (MT_ov_needed > 1) {
+            overflow.bits.cnt = (unsigned) std::min((uint64_t) 0x0FFFFFFF, MT_ov_needed);
             fwrite(&overflow, 4, 1, fp);
-            MT_ov_last -= overflow.bits.cnt;
+            MT_ov += overflow.bits.cnt;
+            MT_ov_needed -= overflow.bits.cnt;
         }
-        {
-            // we wrote all macro time overflows that do not fit
-            // in the record. Thus, we have a valid photon
-            record.bits.mt = dMT;
-            record.bits.adc = 4095 - micro_times[n];
-            record.bits.rout = routing_channels[n];
-            // If there is a overflow set mtov
-            record.bits.mtov = (MT_ov_last == 1);
-            record.bits.invalid = 0;
-            fwrite(&record, 4, 1, fp);
+        bh_spc130_record_t record;
+        record.allbits = 0;
+        record.bits.mt = (unsigned) dMT;
+        record.bits.rout = tttr->routing_channels[n];
+        // a single pending overflow is carried by the record's mtov bit
+        record.bits.mtov = (MT_ov_needed == 1);
+        MT_ov += MT_ov_needed;
+        if (tttr->event_types[n] == RECORD_MARKER) {
+            // markers: invalid=1, mark=1, marker bits in rout
+            record.bits.invalid = 1;
+            record.bits.mark = 1;
+        } else {
+            record.bits.adc = 4095 - std::min<unsigned short>(tttr->micro_times[n], 4095);
         }
+        fwrite(&record, 4, 1, fp);
+    }
+}
+
+void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr){
+    bh_overflow_t overflow;
+    overflow.allbits = 0;
+    overflow.bits.mtov = 1;
+    overflow.bits.invalid = 1;
+
+    // 17-bit macro time field; overflows account for 2**17 units each
+    const uint64_t MT_WRAP = 131072;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / MT_WRAP;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        while (MT_ov_needed > 0) {
+            overflow.bits.cnt = (unsigned) std::min((uint64_t) 0x0FFFFFFF, MT_ov_needed);
+            fwrite(&overflow, 4, 1, fp);
+            MT_ov += overflow.bits.cnt;
+            MT_ov_needed -= overflow.bits.cnt;
+        }
+        bh_spc600_256_record_t record;
+        record.allbits = 0;
+        record.bits.mt = (unsigned) (MT % MT_WRAP);
+        record.bits.adc = 255 - std::min<unsigned short>(tttr->micro_times[n], 255);
+        record.bits.rout = tttr->routing_channels[n] & 0x7;
+        fwrite(&record, 4, 1, fp);
+    }
+}
+
+void TTTR::write_spc600_4096_events(FILE* fp, TTTR* tttr){
+    // 6 bytes per record; each overflow record advances the macro time by 2**24
+    const uint64_t MT_WRAP = 16777216;
+    const size_t RECORD_SIZE = 6;
+    uint64_t MT_ov = 0;
+    unsigned char buffer[RECORD_SIZE];
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / MT_WRAP;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        bh_spc600_4096_record_t record;
+        std::memset(&record, 0, sizeof(record));
+        record.bits.invalid = 1;
+        record.bits.mtov = 1;
+        while (MT_ov_needed > 0) {
+            std::memcpy(buffer, &record, RECORD_SIZE);
+            fwrite(buffer, RECORD_SIZE, 1, fp);
+            MT_ov += 1;
+            MT_ov_needed -= 1;
+        }
+        uint64_t dMT = MT % MT_WRAP;
+        std::memset(&record, 0, sizeof(record));
+        record.bits.mt1 = (dMT >> 0) & 0xFF;
+        record.bits.mt2 = (dMT >> 8) & 0xFF;
+        record.bits.mt3 = (dMT >> 16) & 0xFF;
+        record.bits.adc = 4095 - std::min<unsigned short>(tttr->micro_times[n], 4095);
+        record.bits.rout = 255 - tttr->routing_channels[n];
+        std::memcpy(buffer, &record, RECORD_SIZE);
+        fwrite(buffer, RECORD_SIZE, 1, fp);
     }
 }
 
 void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr){
-    pq_hh_t3_record_t rec;
-
-    unsigned dMT;
-    unsigned int MT_ov_last;
-    unsigned int MT_ov = 0;
-    const unsigned int T3WRAPAROUND = 1024;
-
+    const uint64_t T3WRAPAROUND = 1024;
+    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
-        // time since last macro_time record
-        dMT = static_cast<unsigned>(tttr->get_macro_time_at(n) - static_cast<unsigned long long>(MT_ov) * T3WRAPAROUND);
-        // Count the number of MT overflows
-        MT_ov_last = dMT / T3WRAPAROUND;
-        // Subtract MT overflows from dMT
-        dMT -= static_cast<unsigned>(static_cast<unsigned long long>(MT_ov_last) * T3WRAPAROUND);
-        // increment the global overflow counter
-        MT_ov += MT_ov_last;
-        // write overflows
-        while (MT_ov_last > 0) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T3WRAPAROUND;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        // overflow records carry the overflow count in n_sync (10 bit)
+        while (MT_ov_needed > 0) {
+            pq_hh_t3_record_t rec;
+            rec.allbits = 0;
             rec.bits.special = 1;
             rec.bits.channel = 0x3F;
-            rec.bits.n_sync = std::min(T3WRAPAROUND - 1, MT_ov_last);
+            rec.bits.n_sync = (unsigned) std::min((uint64_t) 1023, MT_ov_needed);
             fwrite(&rec, 4, 1, fp);
-            MT_ov_last -= rec.bits.n_sync;
+            MT_ov += rec.bits.n_sync;
+            MT_ov_needed -= rec.bits.n_sync;
         }
-        {
-            rec.bits.special = tttr->event_types[n];
-            rec.bits.channel = tttr->routing_channels[n];
-            rec.bits.n_sync = dMT;
-            rec.bits.dtime = micro_times[n];
-            fwrite(&rec, 4, 1, fp);
-        }
+        pq_hh_t3_record_t rec;
+        rec.allbits = 0;
+        rec.bits.special = tttr->event_types[n];
+        rec.bits.channel = tttr->routing_channels[n];
+        rec.bits.n_sync = (unsigned) (MT % T3WRAPAROUND);
+        rec.bits.dtime = tttr->micro_times[n];
+        fwrite(&rec, 4, 1, fp);
     }
+}
+
+void TTTR::write_hht3v1_events(FILE* fp, TTTR* tttr){
+    // HHT3v1: every overflow record advances the macro time by exactly 1024
+    const uint64_t T3WRAPAROUND = 1024;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T3WRAPAROUND;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        while (MT_ov_needed > 0) {
+            pq_hh_t3_record_t rec;
+            rec.allbits = 0;
+            rec.bits.special = 1;
+            rec.bits.channel = 0x3F;
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += 1;
+            MT_ov_needed -= 1;
+        }
+        pq_hh_t3_record_t rec;
+        rec.allbits = 0;
+        rec.bits.special = tttr->event_types[n];
+        rec.bits.channel = tttr->routing_channels[n];
+        rec.bits.n_sync = (unsigned) (MT % T3WRAPAROUND);
+        rec.bits.dtime = tttr->micro_times[n];
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_sf_ht3_events(FILE* fp, TTTR* tttr){
+    // SF-compressed HT3 (Suren Felekyan's HT3 conversion): photon and
+    // marker records as HydraHarp T3; a run of macro time overflows is
+    // collapsed into a single overflow record whose lowest 24 bits hold
+    // the number of ADDITIONAL overflows (record advances the sync counter
+    // by (1 + count) * 1024).
+    const uint64_t T3WRAPAROUND = 1024;
+    const uint64_t MAX_PER_RECORD = 0x1000000; // 1 + 24-bit count
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T3WRAPAROUND;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        while (MT_ov_needed > 0) {
+            uint64_t count = std::min(MAX_PER_RECORD, MT_ov_needed);
+            // special=1, channel=0x3F, payload = count - 1
+            uint32_t rec = 0xFE000000u | (uint32_t) (count - 1);
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += count;
+            MT_ov_needed -= count;
+        }
+        pq_hh_t3_record_t rec;
+        rec.allbits = 0;
+        rec.bits.special = tttr->event_types[n];
+        rec.bits.channel = tttr->routing_channels[n];
+        rec.bits.n_sync = (unsigned) (MT % T3WRAPAROUND);
+        rec.bits.dtime = tttr->micro_times[n];
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_hht2v2_events(FILE* fp, TTTR* tttr){
+    // T2 records carry no micro time; micro times are dropped
+    const uint64_t T2WRAPAROUND_V2 = 33554432;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T2WRAPAROUND_V2;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        // overflow records carry the overflow count in timetag (25 bit)
+        while (MT_ov_needed > 0) {
+            pq_hh_t2_record_t rec;
+            rec.allbits = 0;
+            rec.bits.special = 1;
+            rec.bits.channel = 0x3F;
+            rec.bits.timetag = (unsigned) std::min((uint64_t) 0x1FFFFFF, MT_ov_needed);
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += rec.bits.timetag;
+            MT_ov_needed -= rec.bits.timetag;
+        }
+        pq_hh_t2_record_t rec;
+        rec.allbits = 0;
+        rec.bits.special = tttr->event_types[n];
+        rec.bits.channel = tttr->routing_channels[n];
+        rec.bits.timetag = (unsigned) (MT % T2WRAPAROUND_V2);
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_hht2v1_events(FILE* fp, TTTR* tttr){
+    // HHT2v1: every overflow record advances the time tag by exactly 33552000
+    const uint64_t T2WRAPAROUND_V1 = 33552000;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T2WRAPAROUND_V1;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        while (MT_ov_needed > 0) {
+            pq_hh_t2_record_t rec;
+            rec.allbits = 0;
+            rec.bits.special = 1;
+            rec.bits.channel = 0x3F;
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += 1;
+            MT_ov_needed -= 1;
+        }
+        pq_hh_t2_record_t rec;
+        rec.allbits = 0;
+        rec.bits.special = tttr->event_types[n];
+        rec.bits.channel = tttr->routing_channels[n];
+        rec.bits.timetag = (unsigned) (MT % T2WRAPAROUND_V1);
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_pht3_events(FILE* fp, TTTR* tttr){
+    // PicoHarp T3. Markers are encoded with dtime = 0 (PicoHarp convention);
+    // photons therefore need dtime >= 1: micro time 0 is clipped to 1.
+    const uint64_t T3WRAPAROUND = 65536;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T3WRAPAROUND;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        // overflow record: channel 0xF and dtime 0, advances by 65536
+        while (MT_ov_needed > 0) {
+            pq_ph_t3_record_t rec;
+            rec.allbits = 0;
+            rec.bits.channel = 0xF;
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += 1;
+            MT_ov_needed -= 1;
+        }
+        pq_ph_t3_record_t rec;
+        rec.allbits = 0;
+        rec.bits.channel = tttr->routing_channels[n] & 0xF;
+        rec.bits.n_sync = (unsigned) (MT % T3WRAPAROUND);
+        if (tttr->event_types[n] == RECORD_MARKER) {
+            rec.bits.dtime = 0;
+        } else {
+            rec.bits.dtime = std::max<unsigned short>(
+                    1, std::min<unsigned short>(tttr->micro_times[n], 4095));
+        }
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_pht2_events(FILE* fp, TTTR* tttr){
+    // PicoHarp T2; no micro time. Markers use channel 0xF with the marker
+    // bits in the lowest 4 bits of the time tag (time tag loses 4 bits).
+    const uint64_t T2WRAPAROUND = 210698240;
+    uint64_t MT_ov = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / T2WRAPAROUND;
+        uint64_t MT_ov_needed = MT_target > MT_ov ? MT_target - MT_ov : 0;
+        // overflow record: channel 0xF, marker bits zero
+        while (MT_ov_needed > 0) {
+            pq_ph_t2_record_t rec;
+            rec.allbits = 0;
+            rec.bits.channel = 0xF;
+            fwrite(&rec, 4, 1, fp);
+            MT_ov += 1;
+            MT_ov_needed -= 1;
+        }
+        pq_ph_t2_record_t rec;
+        rec.allbits = 0;
+        uint64_t dMT = MT % T2WRAPAROUND;
+        if (tttr->event_types[n] == RECORD_MARKER) {
+            rec.bits.channel = 0xF;
+            rec.bits.time = (unsigned) ((dMT & ~0xFULL) | (tttr->routing_channels[n] & 0xF));
+        } else {
+            rec.bits.channel = tttr->routing_channels[n] & 0xF;
+            rec.bits.time = (unsigned) dMT;
+        }
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_cz_events(FILE* fp, TTTR* tttr){
+    // CZ ConfoCor3 raw records store 32-bit macro time deltas; micro times,
+    // channel numbers (header carries a single channel) and event types drop.
+    uint64_t previous = 0;
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        cz_confocor3_raw_record_t rec;
+        rec.allbits = (uint32_t) (MT - previous);
+        previous = MT;
+        fwrite(&rec, 4, 1, fp);
+    }
+}
+
+void TTTR::write_sm_events(FILE* fp, TTTR* tttr){
+    // SM records: 8-byte big-endian macro time + 4-byte big-endian channel.
+    // Micro times drop. The file ends with a 26-byte trailer.
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        unsigned char rec[12];
+        for (int b = 0; b < 8; b++) rec[b] = (MT >> (8 * (7 - b))) & 0xFF;
+        uint32_t channel = (uint32_t) tttr->routing_channels[n];
+        for (int b = 0; b < 4; b++) rec[8 + b] = (channel >> (8 * (3 - b))) & 0xFF;
+        fwrite(rec, sizeof(rec), 1, fp);
+    }
+    unsigned char trailer[26];
+    std::memset(trailer, 0, sizeof(trailer));
+    fwrite(trailer, sizeof(trailer), 1, fp);
 }
 
 void update_ptu_header(FILE* fpin, char Ident[32], uint64_t TagValue){
@@ -1968,7 +2396,17 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
         TTTRHeader::write_ptu_header(fn, header);
     } else if(container_type == PQ_HT3_CONTAINER){
         TTTRHeader::write_ht3_header(fn, header);
-    }else{
+    } else if(container_type == SM_CONTAINER){
+        TTTRHeader::write_sm_header(fn, header);
+    } else if(container_type == CZ_CONFOCOR3_CONTAINER){
+        TTTRHeader::write_cz_confocor3_header(fn, header);
+    } else if(
+            (container_type == BH_SPC600_256_CONTAINER) ||
+            (container_type == BH_SPC600_4096_CONTAINER)){
+        // SPC-600 files have no on-disk header; create/truncate the file
+        FILE* f = fopen(fn.c_str(), "wb");
+        if (f != nullptr) fclose(f);
+    } else{
         std::cerr << "Error in TTTR::write, writing of headers not implemented" << std::endl;
     }
 }
@@ -1994,52 +2432,154 @@ bool valid_container_record_pair(int container_type, int record_type){
             case PQ_RECORD_TYPE_GENERIC_T3:
             case PQ_RECORD_TYPE_GENERIC_T2:
                 return true;
+            case PQ_RECORD_TYPE_SF_HT3:
+                // SF compression exists only for HT3 containers
+                return container_type == PQ_HT3_CONTAINER;
             default:
                 return false;
         }
     } else if(container_type == BH_SPC130_CONTAINER){
-        if(record_type == BH_RECORD_TYPE_SPC130){
-            return true;
-        } else{
-            return false;
-        }
+        return record_type == BH_RECORD_TYPE_SPC130;
     } else if(container_type == BH_SPC600_256_CONTAINER){
-        if(record_type == BH_RECORD_TYPE_SPC600_256)
-            return true;
-        else
-            return false;
+        return record_type == BH_RECORD_TYPE_SPC600_256;
     } else if(container_type == BH_SPC600_4096_CONTAINER){
-        if(record_type == BH_RECORD_TYPE_SPC600_4096)
-            return true;
-        else
-            return false;
+        return record_type == BH_RECORD_TYPE_SPC600_4096;
+    } else if(container_type == CZ_CONFOCOR3_CONTAINER){
+        return record_type == CZ_RECORD_TYPE_CONFOCOR3;
+    } else if(container_type == SM_CONTAINER){
+        return record_type == SM_RECORD_TYPE;
+    } else if(container_type == PHOTON_HDF_CONTAINER){
+        // Photon-HDF5 stores decoded arrays; any record type is acceptable
+        return true;
     }
     return false;
 }
 
+/*!
+ * Canonical record type used when transcoding into a container whose header
+ * does not carry a (valid) record type for it.
+ */
+static int default_record_type_for_container(int container_type){
+    switch (container_type) {
+        case PQ_PTU_CONTAINER:
+        case PQ_HT3_CONTAINER:
+            return PQ_RECORD_TYPE_HHT3v2;
+        case BH_SPC130_CONTAINER:
+            return BH_RECORD_TYPE_SPC130;
+        case BH_SPC600_256_CONTAINER:
+            return BH_RECORD_TYPE_SPC600_256;
+        case BH_SPC600_4096_CONTAINER:
+            return BH_RECORD_TYPE_SPC600_4096;
+        case CZ_CONFOCOR3_CONTAINER:
+            return CZ_RECORD_TYPE_CONFOCOR3;
+        case SM_CONTAINER:
+            return SM_RECORD_TYPE;
+        default:
+            return -1;
+    }
+}
+
+/*!
+ * Maps a tttrlib record type to the PicoQuant TTResultFormat_TTTRRecType
+ * identifier written into PTU headers.
+ */
+static int pq_ptu_record_type_identifier(int record_type){
+    switch (record_type) {
+        case PQ_RECORD_TYPE_PHT3:       return rtPicoHarpT3;
+        case PQ_RECORD_TYPE_PHT2:       return rtPicoHarpT2;
+        case PQ_RECORD_TYPE_HHT3v1:     return rtHydraHarpT3;
+        case PQ_RECORD_TYPE_HHT2v1:     return rtHydraHarpT2;
+        case PQ_RECORD_TYPE_HHT3v2:     return rtHydraHarp2T3;
+        case PQ_RECORD_TYPE_HHT2v2:     return rtHydraHarp2T2;
+        case PQ_RECORD_TYPE_GENERIC_T3: return rtMultiHarpT3;
+        case PQ_RECORD_TYPE_GENERIC_T2: return rtMultiHarpT2;
+        default: return -1;
+    }
+}
+
 bool TTTR::write(std::string filename, TTTRHeader* header){
-    if(header == nullptr) header=this->header;
-    int record_type =header->get_tttr_record_type();
+    if(header == nullptr) header = this->header;
     int container_type = header->get_tttr_container_type();
+    if(container_type < 0) container_type = this->tttr_container_type;
+    int record_type = header->get_tttr_record_type();
+    // Transcoding: fall back to the container's canonical record type when
+    // the header's record type does not fit the target container.
+    if(!valid_container_record_pair(container_type, record_type)){
+        record_type = default_record_type_for_container(container_type);
+    }
     if(!valid_container_record_pair(container_type, record_type)){
         std::cerr << "ERROR in TTTR::write: invalid container record combination." << std::endl;
         return false;
     }
+
+    // Photon-HDF5 has its own file layout (no header + record stream)
+    if(container_type == PHOTON_HDF_CONTAINER){
+        return write_hdf_file(filename, header);
+    }
+
+    // Keep the header metadata consistent with the records actually written,
+    // so the file reads back with the correct record decoder.
+    header->set_tttr_container_type(container_type);
+    header->set_tttr_record_type(record_type);
+    if(container_type == PQ_PTU_CONTAINER){
+        TTTRHeader::add_tag(
+                header->json_data, "TTResultFormat_TTTRRecType",
+                pq_ptu_record_type_identifier(record_type), tyInt8);
+        if(TTTRHeader::find_tag(header->json_data, TTTRTagBits) < 0){
+            TTTRHeader::add_tag(header->json_data, TTTRTagBits, 32, tyInt8);
+        }
+    }
+
     write_header(filename, header);
     fp = open_file(filename, "ab");
-    if (fp != nullptr) {
-        // append records
-        if (record_type == BH_RECORD_TYPE_SPC130) {
-            write_spc132_events(fp, this);
-        } else if(record_type == PQ_RECORD_TYPE_HHT3v2 || record_type == PQ_RECORD_TYPE_GENERIC_T3){
-            write_hht3v2_events(fp, this);
-        } else{
-            std::cerr << "ERROR: Record type " << record_type << " not supported" << std::endl;
-        }
-    } else {
-        std::cerr << "ERROR: Cannot write to file: "
-        << filename <<  std::endl;
+    if (fp == nullptr) {
+        std::cerr << "ERROR: Cannot write to file: " << filename << std::endl;
         return false;
+    }
+    // append records
+    switch (record_type) {
+        case BH_RECORD_TYPE_SPC130:
+            write_spc132_events(fp, this);
+            break;
+        case BH_RECORD_TYPE_SPC600_256:
+            write_spc600_256_events(fp, this);
+            break;
+        case BH_RECORD_TYPE_SPC600_4096:
+            write_spc600_4096_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_HHT3v2:
+        case PQ_RECORD_TYPE_GENERIC_T3:
+            write_hht3v2_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_HHT3v1:
+            write_hht3v1_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_SF_HT3:
+            write_sf_ht3_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_HHT2v2:
+        case PQ_RECORD_TYPE_GENERIC_T2:
+            write_hht2v2_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_HHT2v1:
+            write_hht2v1_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_PHT3:
+            write_pht3_events(fp, this);
+            break;
+        case PQ_RECORD_TYPE_PHT2:
+            write_pht2_events(fp, this);
+            break;
+        case CZ_RECORD_TYPE_CONFOCOR3:
+            write_cz_events(fp, this);
+            break;
+        case SM_RECORD_TYPE:
+            write_sm_events(fp, this);
+            break;
+        default:
+            std::cerr << "ERROR: Record type " << record_type << " not supported" << std::endl;
+            fclose(fp);
+            return false;
     }
     fclose(fp);
     return true;

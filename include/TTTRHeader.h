@@ -434,6 +434,36 @@ public:
     );
 
     /*!
+     * Write a SM header to a file
+     *
+     * WARNING: If the default write mode is "wb". Existing files are overwritten.
+     *
+     * @param fn filename
+     * @param header pointer to the TTTRHeader object that is written to the file
+     * @param modes the writing modes (default 'wb')
+     */
+    static void write_sm_header(
+            std::string fn,
+            TTTRHeader* header,
+            std::string modes = "wb"
+    );
+
+    /*!
+     * Write a Carl Zeiss ConfoCor3 raw-data header to a file
+     *
+     * WARNING: If the default write mode is "wb". Existing files are overwritten.
+     *
+     * @param fn filename
+     * @param header pointer to the TTTRHeader object that is written to the file
+     * @param modes the writing modes (default 'wb')
+     */
+    static void write_cz_confocor3_header(
+            std::string fn,
+            TTTRHeader* header,
+            std::string modes = "wb"
+    );
+
+    /*!
      * Get a representation of the TTTRHeader meta data as a JSON string
      *
      * @param tag_name name of requested tag (if no name is provided) the entire
