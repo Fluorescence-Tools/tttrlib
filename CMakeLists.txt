@@ -316,6 +316,13 @@ IF(BUILD_LIBRARY)
   # cmake needs unique target name, thus place shared in front of project
   ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
   ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
+  IF(NOT MSVC)
+    # The static archive is consumed outside this build (e.g. R CMD INSTALL
+    # links it into the R package). If it holds slim LTO bitcode, an ar/linker
+    # without the LTO plugin drops vague-linkage symbols (typeinfo/vtables,
+    # e.g. _ZTI9TTTRRange) and the consumer fails at load. Archive real code.
+    TARGET_COMPILE_OPTIONS(${PROJECT_NAME}Static PRIVATE -fno-lto)
+  ENDIF()
 
   # Link libraries (Boost removed - using C++17 standard library)
 

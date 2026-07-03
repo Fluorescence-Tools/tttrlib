@@ -15,17 +15,23 @@ MESSAGE(STATUS "SWIG_VERSION: ${SWIG_VERSION}")
 INCLUDE(${SWIG_USE_FILE})
 INCLUDE_DIRECTORIES(.)
 
-# glibc on LP64 Linux defines int64_t as 'long', but SWIG >= 4.4 eagerly
-# resolves the stdint.i typedefs and picks 'long long' unless SWIGWORDSIZE64
-# is defined. Without this flag the generated wrappers mix
+# glibc on LP64 Linux defines int64_t as 'long', but SWIG's stdint.i (pulled
+# in by Sim.i) typedefs it to 'long long' unless SWIGWORDSIZE64 is defined,
+# and depending on the SWIG build the generated Python wrappers then mix
 # std::vector<long long> with the library's std::vector<long> and do not
-# compile on Linux. Only define it for SWIG >= 4.4: older SWIG keeps int64_t
-# literal in generated code (so the flag is unnecessary), and SWIG 4.2's R
-# backend mishandles 'long long' returns under SWIGWORDSIZE64 (the C side
-# returns a native vector while the R proxy expects an external pointer).
-IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT SWIG_VERSION VERSION_LESS "4.4")
+# compile (seen with conda-forge swig 4.2.1 and 4.4.1). With the flag the
+# typedef says 'long', which is correct on Linux whether SWIG resolves it or
+# keeps int64_t literal, so pass it unconditionally for the Python and Java
+# modules. The R module is the exception: it never includes stdint.i, and
+# SWIG 4.2's R backend mishandles 'long long' returns under SWIGWORDSIZE64
+# (the C side returns a native vector while the R proxy expects an external
+# pointer), so R only gets the flag for SWIG >= 4.4 where it is verified fine.
+IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     SET(TTTRLIB_SWIG_INT64_FLAG "-DSWIGWORDSIZE64")
     LIST(APPEND CMAKE_SWIG_FLAGS ${TTTRLIB_SWIG_INT64_FLAG})
+    IF(NOT SWIG_VERSION VERSION_LESS "4.4")
+        SET(TTTRLIB_SWIG_INT64_FLAG_R "-DSWIGWORDSIZE64")
+    ENDIF()
 ENDIF()
 
 IF(BUILD_PYTHON_INTERFACE)
@@ -212,7 +218,7 @@ IF(BUILD_R_INTERFACE)
             SWIG_MODULE_NAME tttrlib)
 
     # r/tttrlib.i re-includes the shared fragments that live in ext/python.
-    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG})
+    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG_R})
 
     # Rerun SWIG when any shared fragment, the R module, or the R array library changes.
     file(GLOB R_SWIG_DEPS
