@@ -13,9 +13,41 @@
 #include "CLSMImage.h"
 #include "TTTR.h"
 #include "TTTRHeader.h"
+#include "Pda.h"
 #include <vector>
 #include <set>
 %}
+
+%extend Pda {
+  // Fill a preallocated double[] (length >= (nmax+1)^2) with the flattened,
+  // row-major S1S2 probability matrix (PDA's 2-D histogram), evaluating first if
+  // needed. Returns the number of cells written. Java-friendly accessor for the
+  // native get_S1S2_matrix output-pointer method.
+  int get_S1S2_matrix_into(double* INPLACE_ARRAY1, int DIM1) {
+    double* out = 0; int n1 = 0, n2 = 0;
+    $self->get_S1S2_matrix(&out, &n1, &n2);
+    int n = n1 * n2;
+    int m = (DIM1 < n) ? DIM1 : n;
+    for (int i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    if (out) free(out);
+    return n;
+  }
+
+  // Fill a preallocated double[] (length >= n_bins) with the y-values of the PDA
+  // 1-D histogram (over the current S1S2 model). Returns the number of bins.
+  // Java-friendly accessor for the native get_1dhistogram output-pointer method.
+  int get_1dhistogram_y_into(double* INPLACE_ARRAY1, int DIM1,
+                             double x_max = 1000.0, double x_min = 0.01,
+                             int n_bins = 81, bool log_x = true) {
+    double* hx = 0; int nx = 0; double* hy = 0; int ny = 0;
+    $self->get_1dhistogram(&hx, &nx, &hy, &ny, x_max, x_min, n_bins, log_x);
+    int m = (DIM1 < ny) ? DIM1 : ny;
+    for (int i = 0; i < m; ++i) INPLACE_ARRAY1[i] = hy[i];
+    if (hx) free(hx);
+    if (hy) free(hy);
+    return ny;
+  }
+}
 
 // ── PRD-002: generalized 1-D output-array marshalling for Java ──────────────
 // SWIG-Java cannot bind a void "output-pointer" getter

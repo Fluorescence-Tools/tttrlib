@@ -72,6 +72,29 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
 
 %extend CLSMImage {
 
+    // Cross-language phasor accessor. The native get_phasor() has a pointer-typed
+    // default argument (TTTR* tttr_irf = nullptr) that R's SWIG overload dispatch
+    // cannot resolve, so R could not call it. This wrapper takes only scalar
+    // arguments and returns the phasor image flattened as [frame, line, pixel, 2]
+    // (g and s interleaved per pixel), which every binding marshals as a plain
+    // numeric vector. Length = n_frames*n_lines*n_pixel*2 (or n_lines*n_pixel*2
+    // when stack_frames = true). The native get_phasor() is retained unchanged.
+    std::vector<double> get_phasor_v(TTTR* tttr_data,
+                                     double frequency = -1,
+                                     int minimum_number_of_photons = 2,
+                                     bool stack_frames = false,
+                                     bool correct_irf_offset = false) {
+        float* out = 0; int d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+        $self->get_phasor(&out, &d1, &d2, &d3, &d4, tttr_data, nullptr,
+                          frequency, minimum_number_of_photons,
+                          stack_frames, correct_irf_offset);
+        size_t n = (size_t) d1 * d2 * d3 * d4;
+        std::vector<double> v(n);
+        for (size_t i = 0; i < n; ++i) v[i] = out[i];
+        if (out) free(out);
+        return v;
+    }
+
     CLSMFrame* __getitem__(int i) {
         if (i >= $self->size()){
             myErr = 1;
@@ -99,6 +122,7 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
         return $self->size();
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
         @property
         def tttr_indices(self):
@@ -121,6 +145,7 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
     %}
 
     %pythoncode "./ext/python/CLSMImage.py"
+#endif
 }
 
 %exception CLSMFrame::__getitem__ {
@@ -154,6 +179,7 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
         return new CLSMFrame(*$self, fill);
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
         @property
         def tttr_indices(self):
@@ -165,6 +191,7 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
     %}
 
     %pythoncode "./ext/python/CLSMFrame.py"
+#endif
 }
 
 %exception CLSMLine::__getitem__ {
@@ -193,6 +220,7 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
         return $self->size();
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
         @property
         def tttr_indices(self):
@@ -202,9 +230,11 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
             """
             return self.get_tttr_indices()
     %}
+#endif
 }
 
 %extend CLSMPixel {
+#ifdef SWIGPYTHON
     %pythoncode %{
         @property
         def tttr_indices(self):
@@ -214,5 +244,6 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
             """
             return self.get_tttr_indices()
     %}
+#endif
 }
 

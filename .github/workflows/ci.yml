@@ -43,6 +43,236 @@ jobs:
             echo 'py_matrix={"python":["3.10"]}' >> $GITHUB_OUTPUT
           fi
 
+  # ── Multi-language SWIG generation guard (Python + R + Java) ──────────────
+
+  swig_multilang:
+    name: SWIG multi-language check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install SWIG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swig
+      - name: Generate Python, R and Java wrappers
+        run: ./tools/check_swig_multilang.sh
+
+  # ── Build & test the R interface (FindR.cmake + rarrays.i marshalling) ────
+
+  build_test_r_lnx:
+    name: Build & test R interface (lnx)
+    needs: swig_multilang
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # Pin R to a version compatible with the SWIG release on the runner.
+      # SWIG's R runtime lags new R internals (e.g. R 4.6 made CHARACTER_POINTER
+      # read-only and changed S4 macros), so avoid bleeding-edge "release".
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.3'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+      - name: Configure and build R module
+        run: |
+          cmake -S . -B build-r -G Ninja \
+            -DBUILD_PYTHON_INTERFACE=OFF \
+            -DBUILD_R_INTERFACE=ON \
+            -DBUILD_LIBRARY=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-r --target tttrlibR
+      - name: Download reference test data
+        run: |
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3
+          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+            https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+      - name: Run R tests
+        env:
+          TTTRLIB_R_SO: ${{ github.workspace }}/build-r/ext/tttrlib.so
+          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build-r/ext/tttrlib.R
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+        run: |
+          Rscript test/r/test_tttr.R
+          Rscript test/r/test_clsm.R
+          Rscript test/r/test_decayfit.R
+          Rscript test/r/test_pda.R
+
+  # ── Build & test the Java interface (FindJNI + jarrays.i + JNI) ───────────
+
+  build_test_java_lnx:
+    name: Build & test Java interface (lnx)
+    needs: swig_multilang
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+      - name: Configure and build JNI module
+        run: |
+          cmake -S . -B build-java -G Ninja \
+            -DBUILD_PYTHON_INTERFACE=OFF \
+            -DBUILD_JAVA_INTERFACE=ON \
+            -DBUILD_LIBRARY=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-java --target tttrlibJava
+      - name: Compile Java proxies + tests
+        run: |
+          cp ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java \
+             build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/
+          javac -d build-java/java-classes \
+            build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java
+          javac -cp build-java/java-classes -d build-java/test-classes \
+            test/java/TTTRSmokeTest.java test/java/CLSMTest.java test/java/LifetimeTest.java test/java/DecayFitTest.java test/java/PdaTest.java
+      - name: Download reference test data
+        run: |
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3
+          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+            https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+      - name: Run Java tests
+        env:
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+        run: |
+          CP=build-java/java-classes:build-java/test-classes
+          NATIVE=build-java/java-pkg/native
+          java -cp $CP -Djava.library.path=$NATIVE TTTRSmokeTest
+          java -cp $CP -Djava.library.path=$NATIVE CLSMTest
+          java -cp $CP -Djava.library.path=$NATIVE LifetimeTest
+          java -cp $CP -Djava.library.path=$NATIVE DecayFitTest
+          java -cp $CP -Djava.library.path=$NATIVE PdaTest
+
+  # ── ImageJ/Fiji plugin: build per-OS JNI native, assemble & release the JAR ──
+
+  imagej_native:
+    name: ImageJ native (${{ matrix.dir }})
+    needs: [setup, swig_multilang]
+    if: >-
+      needs.setup.outputs.is_main == 'true' ||
+      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  dir: linux-x86-64 }
+          - { os: macos-13,       dir: darwin-x86-64 }
+          - { os: macos-14,       dir: darwin-aarch64 }
+          - { os: windows-2022,   dir: win32-x86-64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install SWIG (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build
+      - name: Install SWIG (macOS)
+        if: runner.os == 'macOS'
+        run: brew install swig ninja
+      - name: Install SWIG (Windows)
+        if: runner.os == 'Windows'
+        run: choco install swig ninja -y
+      - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
+        run: |
+          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-java --target tttrlibJava
+        shell: bash
+      - name: Collect native + proxies
+        shell: bash
+        run: |
+          mkdir -p stage/native/${{ matrix.dir }}
+          # Name the native exactly as NativeLoader (System.mapLibraryName) expects,
+          # so the bundled file is found on every platform (macOS wants .dylib, not .jnilib).
+          case "${{ matrix.dir }}" in
+            linux-*)  name=libtttrlibjni.so ;;
+            darwin-*) name=libtttrlibjni.dylib ;;
+            win32-*)  name=tttrlibjni.dll ;;
+          esac
+          src=$(find build-java \( -name 'libtttrlibjni*' -o -name 'tttrlibjni.dll' \) | head -1)
+          cp "$src" "stage/native/${{ matrix.dir }}/$name"
+          # the SWIG-generated .java proxies are identical across platforms; upload once (from Linux)
+          if [ "${{ matrix.dir }}" = "linux-x86-64" ]; then
+            mkdir -p stage/proxies
+            cp build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java stage/proxies/
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imagej-${{ matrix.dir }}
+          path: stage
+
+  imagej_assemble:
+    name: Assemble ImageJ plugin JAR (all platforms)
+    needs: [setup, imagej_native]
+    if: >-
+      needs.setup.outputs.is_main == 'true' ||
+      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: imagej-*
+          path: dl
+          merge-multiple: true
+      - name: Assemble cross-platform fat JAR
+        run: |
+          # Version from pyproject; append short SHA for non-release builds.
+          VER=$(python3 -c "import re;print(re.search(r'version\s*=\s*\"([^\"]+)\"',open('pyproject.toml').read()).group(1))")
+          if [ "${{ github.event_name }}" != "release" ]; then VER="${VER}+$(git rev-parse --short HEAD)"; fi
+          curl -sSL -o ij.jar https://repo1.maven.org/maven2/net/imagej/ij/1.54f/ij-1.54f.jar
+          mkdir -p jarroot classes
+          javac -cp ij.jar -d classes \
+            dl/proxies/*.java \
+            ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java \
+            ext/java/imagej/src/main/java/io/github/fluorescencetools/tttrlib/imagej/*.java
+          cp -r classes/* jarroot/
+          cp ext/java/imagej/src/main/resources/plugins.config jarroot/
+          cp -r dl/native jarroot/native            # native/{linux-x86-64,darwin-x86-64,darwin-aarch64,win32-x86-64}/
+          ( cd jarroot && jar cf ../tttrlib_imagej-${VER}.jar . )
+          echo "Bundled natives:"; ( cd jarroot && find native -type f )
+          ls -la tttrlib_imagej-*.jar
+      # Downloadable from any qualifying CI run (Actions ▸ run ▸ Artifacts).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tttrlib-imagej-plugin
+          path: tttrlib_imagej-*.jar
+      # On a GitHub release, also attach the JAR as a release asset.
+      - name: Upload JAR to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" tttrlib_imagej-*.jar --clobber
+
   # ── Quick smoke test for feature branches (no artifact builds) ────────────
 
   test_quick:
@@ -375,11 +605,18 @@ jobs:
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe rattler-recipe \
+            rattler-build build --recipe recipes/py \
               --variant "python=$VER" \
               --output-dir ./conda-bld \
               -c conda-forge
           done
+      - name: Build R Conda package (rattler)
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          rattler-build build --recipe recipes/r \
+            --output-dir ./conda-bld \
+            -c conda-forge
       - uses: actions/upload-artifact@v4
         with:
           name: conda-packages-ubuntu-latest
@@ -411,7 +648,7 @@ jobs:
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe rattler-recipe \
+            rattler-build build --recipe recipes/py \
               --variant "python=$VER" \
               --output-dir ./conda-bld \
               -c conda-forge
@@ -447,7 +684,7 @@ jobs:
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
           for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe rattler-recipe \
+            rattler-build build --recipe recipes/py \
               --variant "python=$VER" \
               --variant "c_compiler=vs2022" \
               --variant "cxx_compiler=vs2022" \
@@ -457,6 +694,57 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: conda-packages-windows-latest
+          path: ./conda-bld
+
+  # ── Documentation build via rattler (recipes/docs) ───────────────────────
+  # Builds the Sphinx+Doxygen HTML through the rattler recipe and uploads the
+  # resulting conda package. The gh-pages deploy is handled by build_docs.
+
+  build_conda_docs:
+    name: Docs Build (rattler)
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
+      - name: Build documentation package (rattler)
+        shell: bash -l {0}
+        run: |
+          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
+          rattler-build build --recipe recipes/docs \
+            --output-dir ./conda-bld \
+            -c conda-forge
+      # PRD-003 M1: extract the built HTML from the docs package (install it into a
+      # throwaway prefix, then copy) so the gh-pages deploy job can consume the
+      # rattler-built docs instead of re-running Sphinx.
+      - name: Extract built HTML
+        shell: bash -l {0}
+        run: |
+          mamba create -y -p ./docsenv -c ./conda-bld -c conda-forge tttrlib-docs
+          mkdir -p docs-html
+          cp -r ./docsenv/share/doc/tttrlib/html/. docs-html/
+          ls docs-html | head
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs-html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-docs-package
           path: ./conda-bld
 
   # ── Conda tests: one job per platform×python-version ─────────────────────
@@ -638,17 +926,23 @@ jobs:
     needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
     if: |
       always() &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
-      needs.test_pip_lnx.result == 'success' &&
-      needs.test_conda_lnx.result == 'success' &&
-      needs.test_pip_osx.result == 'success' &&
-      needs.test_pip_win.result == 'success' &&
-      needs.test_conda_osx.result == 'success' &&
-      needs.test_conda_win.result == 'success'
+      (
+        github.event_name == 'release' ||
+        (
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
+          needs.test_pip_lnx.result == 'success' &&
+          needs.test_conda_lnx.result == 'success' &&
+          needs.test_pip_osx.result == 'success' &&
+          needs.test_pip_win.result == 'success' &&
+          needs.test_conda_osx.result == 'success' &&
+          needs.test_conda_win.result == 'success'
+        )
+      )
     runs-on: ubuntu-latest
     env:
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
       BUILD_TIER: 4
+      TTTRLIB_DOCS_EXECUTE_EXAMPLES: "0"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -667,41 +961,98 @@ jobs:
           python -m pip install scikit-build-core numpy swig
           python -m pip install sphinx sphinx-copybutton sphinx-design sphinxext-opengraph numpydoc nbsphinx matplotlib ipython sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme scikit-image phconvert numba imagecodecs
           python -m pip install .[examples]
-      - uses: actions/download-artifact@v4
+      - name: Cache documentation test data
+        id: docs-data-cache
+        uses: actions/cache@v4
         with:
-          name: tttr-test-data
           path: ./tttr-data
+          key: tttr-doc-data-${{ hashFiles('test/settings.json') }}
+      - name: Download documentation test data
+        if: steps.docs-data-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install pooch tqdm
+          python test/download_test_data.py --output-dir ./tttr-data --quiet
+      - name: Set documentation version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            echo "DOCS_VERSION=${VERSION}" >> "$GITHUB_ENV"
+            echo "DOCS_LABEL=tttrlib ${VERSION}" >> "$GITHUB_ENV"
+            echo "DOCS_IS_STABLE=true" >> "$GITHUB_ENV"
+            echo "DOCS_DEPLOY_STABLE=true" >> "$GITHUB_ENV"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "DOCS_VERSION=stable" >> "$GITHUB_ENV"
+            echo "DOCS_LABEL=stable" >> "$GITHUB_ENV"
+            echo "DOCS_IS_STABLE=true" >> "$GITHUB_ENV"
+            echo "DOCS_DEPLOY_STABLE=true" >> "$GITHUB_ENV"
+          else
+            echo "DOCS_VERSION=dev" >> "$GITHUB_ENV"
+            echo "DOCS_LABEL=development" >> "$GITHUB_ENV"
+            echo "DOCS_IS_STABLE=false" >> "$GITHUB_ENV"
+            echo "DOCS_DEPLOY_STABLE=false" >> "$GITHUB_ENV"
+          fi
       - name: Build Documentation
         run: |
           cd doc
           mkdir -p _build/api
           doxygen
           BUILD_TIER=4 sphinx-build -v -b html -T -d _build/doctrees . _build/html/stable 2>&1 | tee sphinx_build.log
+          python ../tools/check_docs_pages.py _build/html/stable
+          python ../tools/check_docs_coverage.py api-coverage.yml . _build/html/stable
           ls -la _build/html/stable/
           ls -la _build/html/stable/auto_examples 2>/dev/null || echo "No auto_examples directory"
           rm -rf _build/html/stable/api
           cp -r _build/api _build/html/stable/
+      - name: Prepare documentation version selector
+        shell: bash
+        run: |
+          mkdir -p doc/_build/pages-root
+          cp -r doc/static_root/. doc/_build/pages-root/
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          if git show origin/gh-pages:versions.json > /tmp/tttrlib-versions.json 2>/dev/null; then
+            EXISTING=/tmp/tttrlib-versions.json
+          else
+            EXISTING=
+          fi
+          STABLE_FLAG=
+          if [ "$DOCS_IS_STABLE" = "true" ]; then
+            STABLE_FLAG=--stable
+          fi
+          VERSION_ARGS=()
+          if [ -n "$EXISTING" ]; then
+            VERSION_ARGS+=(--existing "$EXISTING")
+          fi
+          if [ -n "$STABLE_FLAG" ]; then
+            VERSION_ARGS+=("$STABLE_FLAG")
+          fi
+          python tools/update_docs_versions.py \
+            "${VERSION_ARGS[@]}" \
+            --output doc/_build/pages-root/versions.json \
+            --version "$DOCS_VERSION" \
+            --label "$DOCS_LABEL" \
+            --url "$DOCS_VERSION/index.html"
       - uses: actions/upload-artifact@v4
         with:
           name: html-docs
           path: doc/_build/html/stable
-      - name: Deploy to GitHub Pages (main/stable)
-        if: github.ref == 'refs/heads/main'
+      - name: Deploy release documentation version
+        if: github.event_name == 'release'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/_build/html/stable
+          keep_files: true
+          destination_dir: ${{ env.DOCS_VERSION }}
+      - name: Deploy stable documentation
+        if: env.DOCS_DEPLOY_STABLE == 'true'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./doc/_build/html/stable
           keep_files: true
           destination_dir: stable
-      - name: Deploy Root Redirect (main)
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc/static_root
-          keep_files: true
-          destination_dir: .
-      - name: Deploy to GitHub Pages (development/dev)
+      - name: Deploy development documentation
         if: github.ref == 'refs/heads/development'
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -709,12 +1060,11 @@ jobs:
           publish_dir: ./doc/_build/html/stable
           keep_files: true
           destination_dir: dev
-      - name: Deploy Root Redirect (development)
-        if: github.ref == 'refs/heads/development'
+      - name: Deploy documentation version selector
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc/static_root
+          publish_dir: ./doc/_build/pages-root
           keep_files: true
           destination_dir: .
 
