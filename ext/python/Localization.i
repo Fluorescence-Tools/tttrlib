@@ -7,8 +7,9 @@ struct LocalizationAccess : localization {
 %}
 
 %extend localization{
+#ifdef SWIGPYTHON
     // Python-friendly wrapper for fit2DGaussian that accepts nested lists
-    static int fit2DGaussian_array(std::vector<double> vars, PyObject* input) {
+    static int fit2DGaussian_array(std::vector<double> &vars, PyObject* input) {
         // Convert Python nested list to std::vector<std::vector<double>>
         if (!PyList_Check(input)) {
             PyErr_SetString(PyExc_ValueError, "Expected a list of lists");
@@ -49,10 +50,11 @@ struct LocalizationAccess : localization {
         // Call the original method
         return localization::fit2DGaussian(vars, cpp_data);
     }
+#endif
 
     // NumPy-friendly overload using existing global typemaps from misc_types.i
     // Accepts a contiguous 2D double array (numpy) via (double* input, int n_input1, int n_input2)
-    static int fit2DGaussian_numpy(std::vector<double> vars, double *input, int n_input1, int n_input2) {
+    static int fit2DGaussian_numpy(std::vector<double> &vars, double *input, int n_input1, int n_input2) {
         // Build a view into the flat buffer without Python APIs
         const int rows = n_input1;
         const int cols = n_input2;
@@ -67,6 +69,7 @@ struct LocalizationAccess : localization {
         return localization::fit2DGaussian(vars, cpp_data);
     }
 
+#ifdef SWIGPYTHON
     // Python-friendly wrapper for model2DGaussian that returns nested lists
     static PyObject* model2DGaussian_array(std::vector<double> vars, int rows, int cols) {
         if (rows <= 0 || cols <= 0) {
@@ -94,6 +97,7 @@ struct LocalizationAccess : localization {
 
         return result;
     }
+#endif
 
     // NumPy-friendly output (matches CLSMImage::get_intensity style)
     // Typemaps from misc_types.i:
@@ -114,7 +118,9 @@ struct LocalizationAccess : localization {
         if (!buf) {
             *output = nullptr;
             *dim1 = *dim2 = 0;
+#ifdef SWIGPYTHON
             PyErr_NoMemory();
+#endif
             return;
         }
 
@@ -128,4 +134,6 @@ struct LocalizationAccess : localization {
 
 %include "ImageLocalization.h"
 
+#ifdef SWIGPYTHON
 %pythoncode "./ext/python/ImageLocalizer.py"
+#endif

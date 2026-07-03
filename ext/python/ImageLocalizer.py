@@ -20,18 +20,17 @@ __all__ = ["GaussianFitResult", "ImageLocalizer"]
 def _get_swig_symbol(name: str):
     """Return a SWIG generated symbol from the compiled backend."""
 
-    if _backend is None:
-        raise RuntimeError(
-            "The tttrlib extension module is not available. "
-            "Ensure tttrlib is built before importing ImageLocalizer."
-        )
-
-    try:
+    if _backend is not None and hasattr(_backend, name):
         return getattr(_backend, name)
-    except AttributeError as exc:  # pragma: no cover - defensive guard
-        raise RuntimeError(
-            f"The SWIG symbol '{name}' is not available in the tttrlib backend."
-        ) from exc
+
+    symbol = globals().get(name)
+    if symbol is not None:
+        return symbol
+
+    raise RuntimeError(
+        f"The SWIG symbol '{name}' is not available in the tttrlib backend. "
+        "Ensure tttrlib is built before importing ImageLocalizer."
+    )
 
 
 def _vector_double_from_sequence(values: Sequence[float]):
@@ -372,12 +371,7 @@ class ImageLocalizer:
         sub_image_contiguous = np.ascontiguousarray(sub_image, dtype=np.float64)
         
         # Use the NumPy-friendly fit method
-        status = self._impl.fit2DGaussian_numpy(
-            param_vec, 
-            sub_image_contiguous, 
-            sub_image_contiguous.shape[0], 
-            sub_image_contiguous.shape[1]
-        )
+        status = self._impl.fit2DGaussian_numpy(param_vec, sub_image_contiguous)
 
         # Extract fitted parameters from the modified vector
         fitted = np.fromiter(
@@ -419,7 +413,7 @@ class ImageLocalizer:
         rows, cols = map(int, shape)
         
         # Use the NumPy-friendly model generation method
-        model_array = self._impl.model2DGaussian_numpy(params_vec, rows, cols)
+        model_array = self._impl.model2DGaussian_array(params_vec, rows, cols)
         return np.asarray(model_array, dtype=np.float64)
     
     def fit_numpy(
@@ -500,12 +494,7 @@ class ImageLocalizer:
         param_vec = _vector_double_from_sequence(params)
         sub_image_contiguous = np.ascontiguousarray(sub_image, dtype=np.float64)
         
-        status = self._impl.fit2DGaussian_numpy(
-            param_vec,
-            sub_image_contiguous,
-            sub_image_contiguous.shape[0],
-            sub_image_contiguous.shape[1]
-        )
+        status = self._impl.fit2DGaussian_numpy(param_vec, sub_image_contiguous)
         
         # Extract fitted parameters
         fitted = np.fromiter(
@@ -520,4 +509,3 @@ class ImageLocalizer:
             model_array = self.model_image(fitted, sub_image.shape)
             
         return status, fitted, model_array
-

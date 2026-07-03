@@ -147,7 +147,7 @@ public:
     * @param ylen
     * @return
     */
-    static int fit2DGaussian(std::vector<double> vars, std::vector<std::vector<double>> &data);
+    static int fit2DGaussian(std::vector<double> &vars, std::vector<std::vector<double>> &data);
 
     // Note: Gauss2D_analysis_Ani method temporarily disabled due to signature complexity
     // The core fit2DGaussian method provides the main localization functionality

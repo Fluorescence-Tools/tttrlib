@@ -144,10 +144,21 @@ int localization::modelThree2DGaussian(double *vars, double *model, int xlen, in
     return 0;
 }
 
-int localization::fit2DGaussian(std::vector<double> vars, std::vector<std::vector<double>> &data) {
+int localization::fit2DGaussian(std::vector<double> &vars, std::vector<std::vector<double>> &data) {
     int xlen, ylen;
-    xlen = static_cast<int>(data.size());
-    ylen = static_cast<int>(data[0].size());
+    ylen = static_cast<int>(data.size());
+    if (ylen <= 0) {
+        return -1;
+    }
+    xlen = static_cast<int>(data[0].size());
+    if (xlen <= 0) {
+        return -1;
+    }
+    for (const auto &row: data) {
+        if (static_cast<int>(row.size()) != xlen) {
+            return -1;
+        }
+    }
 
     //bfgs.minimize needs to take a void * as argument type
     //Therefore a pointer type is supplied
@@ -159,10 +170,15 @@ int localization::fit2DGaussian(std::vector<double> vars, std::vector<std::vecto
     //reserve space for model
     std::vector<double> model;
     model.resize(osize);
+    std::vector<double> flat_data;
+    flat_data.reserve(osize);
+    for (const auto &row: data) {
+        flat_data.insert(flat_data.end(), row.begin(), row.end());
+    }
 
     //fill gdata struct
     //gdata = { 0 };//compiler needs struct to be initialised
-    gdata.data = &data[0][0];
+    gdata.data = flat_data.data();
     gdata.model = &model[0];
     gdata.xlen = xlen;
     gdata.ylen = ylen;
