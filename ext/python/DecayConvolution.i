@@ -3,6 +3,25 @@
 #include "DecayConvolution.h"
 %}
 
+// The %inline validation helpers below use Python's PyErr_Format. Provide a
+// portable stderr shim for non-Python targets (R, Java) so the SAME %inline
+// bodies compile unchanged; the Python build is unaffected (this block is
+// excluded at SWIG-generation time when SWIGPYTHON is defined).
+#ifndef SWIGPYTHON
+%{
+#include <cstdarg>
+#include <cstdio>
+#ifndef PyExc_ValueError
+#define PyExc_ValueError 0
+#endif
+static inline void PyErr_Format(int, const char* fmt, ...) {
+    va_list args; va_start(args, fmt);
+    vfprintf(stderr, fmt, args); fputc('\n', stderr);
+    va_end(args);
+}
+%}
+#endif
+
 
 // manually added instead of including header file as all other functions
 %apply (double* INPLACE_ARRAY1, int DIM1) {

@@ -38,6 +38,7 @@ using json = nlohmann::json;
         return j.dump();
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def json(self) -> str:
@@ -108,4 +109,5 @@ using json = nlohmann::json;
         # Convert to plain Python lists (ragged structure)
         return {str(k): [[int(idx) for idx in burst_indices] for burst_indices in v] for k, v in ch.items()} if ch else {}
     %}
+#endif
 }

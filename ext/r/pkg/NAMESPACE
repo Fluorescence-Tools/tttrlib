@@ -1,0 +1,4 @@
+# SWIG-R emits S4 classes and generics; export them all and load the native lib.
+useDynLib(tttrlib)
+import(methods)
+exportPattern(".")

@@ -19,4 +19,6 @@
 
 %include "CLSMISM.h"
 
+#ifdef SWIGPYTHON
 %pythoncode "./ext/python/CLSMISM.py"
+#endif

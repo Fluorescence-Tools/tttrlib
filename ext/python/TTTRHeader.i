@@ -17,4 +17,6 @@
 
 %include "TTTRHeader.h"
 
+#ifdef SWIGPYTHON
 %extend TTTRHeader{%pythoncode "./ext/python/TTTRHeader.py"}
+#endif

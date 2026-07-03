@@ -188,21 +188,51 @@ ENDIF(BUILD_PYTHON_INTERFACE)
 
 IF(BUILD_R_INTERFACE)
     MESSAGE(STATUS "Building R interface")
-    MESSAGE("!!!WARNING THE R INTERFACE IS NOT IMPLEMENTED!!!")
     FIND_PACKAGE(R REQUIRED)
     INCLUDE_DIRECTORIES(${R_INCLUDE_DIR})
-    INCLUDE(${SWIG_USE_FILE})
-    SWIG_ADD_LIBRARY(
-            ${MODULE_NAME}
-            LANGUAGE r
-            SOURCES python/tttrlib.i ${SRC_files}
-    )
-    TARGET_LINK_LIBRARIES(
-            ${MODULE_NAME}
-            ${HDF5_LIBRARIES}
-            ${R_LIBRARIES}
-            ${CMAKE_THREAD_LIBS_INIT}
-            OpenMP::OpenMP_CXX
-    )
-ENDIF()
 
+    # Distinct target name so it never collides with the Python "tttrlib" target,
+    # but keep the SWIG module (and generated wrapper) named "tttrlib".
+    SET(R_MODULE_NAME tttrlibR)
+    SET_SOURCE_FILES_PROPERTIES(r/tttrlib.i PROPERTIES
+            CPLUSPLUS ON
+            SWIG_MODULE_NAME tttrlib)
+
+    # r/tttrlib.i re-includes the shared fragments that live in ext/python.
+    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python)
+
+    # Rerun SWIG when any shared fragment, the R module, or the R array library changes.
+    file(GLOB R_SWIG_DEPS
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
+            "${CMAKE_CURRENT_SOURCE_DIR}/r/*.i")
+    set_property(SOURCE r/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${R_SWIG_DEPS}")
+
+    SWIG_ADD_LIBRARY(
+            ${R_MODULE_NAME}
+            TYPE MODULE
+            LANGUAGE r
+            SOURCES r/tttrlib.i ${SRC_files}
+    )
+    # R expects the loadable object to be named "tttrlib.so" (no "lib" prefix).
+    SET_TARGET_PROPERTIES(${R_MODULE_NAME} PROPERTIES
+            OUTPUT_NAME tttrlib
+            PREFIX "")
+    TARGET_LINK_LIBRARIES(
+            ${R_MODULE_NAME}
+            ${R_LIBRARIES}
+            ${HDF5_LIBRARIES}
+            ${CMAKE_THREAD_LIBS_INIT}
+    )
+    IF(OpenMP_CXX_FOUND)
+        TARGET_LINK_LIBRARIES(${R_MODULE_NAME} OpenMP::OpenMP_CXX)
+    ENDIF()
+
+    # Stage the SWIG-generated R wrapper (tttrlib.R) into the package source tree.
+    get_property(WRAPPER_R_FILE TARGET ${R_MODULE_NAME} PROPERTY SWIG_SUPPORT_FILES)
+    add_custom_target(${R_MODULE_NAME}_wrapper
+            DEPENDS ${WRAPPER_R_FILE}
+            COMMENT "Regenerate SWIG-generated R wrapper ${WRAPPER_R_FILE}")
+
+    # Reset for any subsequent language.
+    UNSET(CMAKE_SWIG_FLAGS)
+ENDIF()

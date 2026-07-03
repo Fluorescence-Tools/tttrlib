@@ -1,0 +1,6 @@
+# Build the SWIG-generated R wrapper (tttrlib_wrap.cpp) against the tttrlib C++
+# core. @VAR@ placeholders are substituted by the package `configure` script (or
+# by CMake when staging the package). OpenMP uses R's own flags for ABI safety.
+PKG_CPPFLAGS = -I@TTTRLIB_INCLUDE@ @HDF5_CFLAGS@ -std=c++17
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS = @TTTRLIB_LIBS@ @HDF5_LIBS@ $(SHLIB_OPENMP_CXXFLAGS)

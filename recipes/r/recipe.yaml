@@ -1,0 +1,59 @@
+# rattler-build recipe for the R bindings of tttrlib (r-tttrlib).
+# The Python package is built by conda-recipe/py/recipe.yaml; this recipe builds
+# the SWIG-generated R interface (via build.sh) and installs it with R CMD INSTALL.
+context:
+  version: ${{ env.get("PKG_VERSION", default="0.27.0") }}
+
+package:
+  name: r-tttrlib
+  version: ${{ version }}
+
+source:
+  path: ../..
+
+build:
+  number: 0
+  skip: ${{ win }}
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - cmake
+    - ninja
+    - if: not win
+      then: make
+    - swig >=4.1
+  host:
+    # SWIG's R runtime uses pre-4.5 internals (SET_S4_OBJECT, writable
+    # CHARACTER_POINTER); pin to R 4.4.x, matching the CI R test.
+    - r-base >=4.4,<4.5
+    - hdf5
+    - highfive
+    - nlohmann_json
+    - if: osx
+      then: llvm-openmp
+    - if: linux
+      then: libgomp
+  run:
+    - r-base >=4.4,<4.5   # keep in sync with the host pin above
+    - hdf5
+    - if: osx
+      then: llvm-openmp
+    - if: linux
+      then: libgomp
+
+tests:
+  - script:
+      - R -e "library(tttrlib)"
+
+about:
+  homepage: https://github.com/fluorescence-tools/tttrlib
+  summary: R bindings for tttrlib, a library for time-resolved imaging and spectroscopic data.
+  license: BSD-3-Clause
+  license_file: LICENSE.txt
+  repository: https://github.com/fluorescence-tools/tttrlib
+
+extra:
+  recipe-maintainers:
+    - tpeulen

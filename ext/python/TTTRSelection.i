@@ -37,6 +37,7 @@
 %include "TTTRSelection.h"
 
 %extend TTTRSelection {
+#ifdef SWIGPYTHON
     %pythoncode %{
         @property
         def tttr_indices(self):
@@ -69,5 +70,6 @@
                 # Normal initialization
                 self.__old_init(start, stop, None)
     %}
+#endif
 }
 

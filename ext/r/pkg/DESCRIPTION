@@ -1,0 +1,15 @@
+Package: tttrlib
+Type: Package
+Title: Time-Tagged Time-Resolved (TTTR) Photon Data Processing
+Version: 0.27.0
+Authors@R: person("Thomas-Otavio", "Peulen", role = c("aut", "cre"),
+    email = "thomas.otavio.peulen@gmail.com")
+Description: R bindings (generated with SWIG) for tttrlib, a C++ library for
+    reading, processing and analysing time-tagged time-resolved single-molecule
+    and imaging fluorescence spectroscopy data.
+License: BSD_3_clause + file LICENSE
+Encoding: UTF-8
+SystemRequirements: C++17, SWIG (>= 4.1), HDF5
+Depends: R (>= 3.5.0), methods
+Suggests: testthat (>= 3.0.0)
+NeedsCompilation: yes

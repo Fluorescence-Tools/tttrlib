@@ -54,9 +54,23 @@ using json = nlohmann::json;
 %include "DecayFit.h"
 
 /* Python-side helper (pure Python) */
+#ifdef SWIGPYTHON
 %pythoncode "./ext/python/Fit2x.py"
+#endif
 
 /* Individual fit implementations */
+#ifdef SWIGR
+// SWIG-R names the wrapper's return value "result"; these native overloads take
+// a parameter also named "result" which shadows it and breaks compilation
+// (REAL(result) on a std::string). Suppress the native overloads for R; the
+// %extend versions below (parameter renamed to "chi2") provide the same API.
+%ignore DecayFit23::to_json(double const*, short const*, DecayFitData const*, double);
+%ignore DecayFit23::fit_to_json(double const*, short const*, DecayFitData const*, double);
+%ignore DecayFit23::modelf_to_json;
+%ignore DecayFit24::to_json(double const*, short const*, DecayFitData const*, double);
+%ignore DecayFit25::to_json(double const*, short const*, DecayFitData const*, double);
+%ignore DecayFit26::to_json(double const*, short const*, DecayFitData const*, double);
+#endif
 %include "DecayFit23.i"
 %include "DecayFit24.i"
 %include "DecayFit25.i"
@@ -137,11 +151,22 @@ using json = nlohmann::json;
  * 7) Extend the DecayFit23–26 families for JSON serialization
  * ------------------------------------------------------------------ */
 %extend DecayFit23 {
+    // NOTE: the last parameter is named "result" for Python/Java (unchanged API)
+    // but "chi2" under -r: SWIG-R names the wrapper's return value "result", and a
+    // C++ parameter of the same name shadows it (REAL(result) then fails to compile).
+#ifndef SWIGR
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
                                DecayFitData* p, double result) {
         return DecayFit23::to_json(x, fixed, p, result);
     }
+#else
+    static std::string to_json(double* x, int n_x,
+                               short* fixed, int n_fixed,
+                               DecayFitData* p, double chi2) {
+        return DecayFit23::to_json(x, fixed, p, chi2);
+    }
+#endif
 
     static void from_json(const std::string& payload,
                           double* x, int n_x,
@@ -150,19 +175,35 @@ using json = nlohmann::json;
         DecayFit23::from_json(j, x, fixed);
     }
 
+#ifndef SWIGR
     static std::string fit_to_json(double* x, int n_x,
                                    short* fixed, int n_fixed,
                                    DecayFitData* p, double result) {
         return DecayFit23::fit_to_json(x, fixed, p, result);
     }
+#else
+    static std::string fit_to_json(double* x, int n_x,
+                                   short* fixed, int n_fixed,
+                                   DecayFitData* p, double chi2) {
+        return DecayFit23::fit_to_json(x, fixed, p, chi2);
+    }
+#endif
 };
 
 %extend DecayFit24 {
+#ifndef SWIGR
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
                                DecayFitData* p, double result) {
         return DecayFit24::to_json(x, fixed, p, result);
     }
+#else
+    static std::string to_json(double* x, int n_x,
+                               short* fixed, int n_fixed,
+                               DecayFitData* p, double chi2) {
+        return DecayFit24::to_json(x, fixed, p, chi2);
+    }
+#endif
 
     static void from_json(const std::string& payload,
                           double* x, int n_x,
@@ -173,11 +214,19 @@ using json = nlohmann::json;
 };
 
 %extend DecayFit25 {
+#ifndef SWIGR
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
                                DecayFitData* p, double result) {
         return DecayFit25::to_json(x, fixed, p, result);
     }
+#else
+    static std::string to_json(double* x, int n_x,
+                               short* fixed, int n_fixed,
+                               DecayFitData* p, double chi2) {
+        return DecayFit25::to_json(x, fixed, p, chi2);
+    }
+#endif
 
     static void from_json(const std::string& payload,
                           double* x, int n_x,
@@ -188,11 +237,19 @@ using json = nlohmann::json;
 };
 
 %extend DecayFit26 {
+#ifndef SWIGR
     static std::string to_json(double* x, int n_x,
                                short* fixed, int n_fixed,
                                DecayFitData* p, double result) {
         return DecayFit26::to_json(x, fixed, p, result);
     }
+#else
+    static std::string to_json(double* x, int n_x,
+                               short* fixed, int n_fixed,
+                               DecayFitData* p, double chi2) {
+        return DecayFit26::to_json(x, fixed, p, chi2);
+    }
+#endif
 
     static void from_json(const std::string& payload,
                           double* x, int n_x,

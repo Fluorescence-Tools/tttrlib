@@ -18,6 +18,7 @@ using json = nlohmann::json;
         $self->from_json(j);
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
     
     def __repr__(self):
@@ -50,6 +51,7 @@ using json = nlohmann::json;
         return components
     
     %}
+#endif
 }
 
 %include "Channel.h"

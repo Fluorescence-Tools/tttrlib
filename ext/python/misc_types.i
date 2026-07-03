@@ -2,10 +2,14 @@
 %include "stl.i";
 %include "typemaps.i";
 %include "std_string.i";
-%include "std_wstring.i";
+#ifndef SWIGR
+%include "std_wstring.i";  // SWIG's R library ships no std_wstring.i
+#endif
 %include "std_map.i";
 %include "std_vector.i";
-%include "std_set.i";
+#ifndef SWIGR
+%include "std_set.i";      // SWIG's R library ships no std_set.i
+#endif
 %include "std_list.i";
 %include "std_pair.i"; // tttrlib.Correlator.get_tttr
 %include "std_shared_ptr.i";
@@ -14,14 +18,25 @@
 %include "attribute.i"
 %include "exception.i"
 
+// Array marshalling library: chosen per target language. Each library defines
+// the SAME typemap names (IN_ARRAY1/2/3, INPLACE_ARRAY*, ARGOUTVIEW[M]_ARRAY*)
+// so the %apply(...) directives below are reused unchanged across languages.
+#if defined(SWIGPYTHON)
 %include "numpy.i"
 
 %init %{
 import_array();
 %}
+#elif defined(SWIGR)
+%include "rarrays.i"
+#elif defined(SWIGJAVA)
+%include "jarrays.i"
+#endif
 
 // Templates
-%template(SetInt32) std::set<int>;
+#ifndef SWIGR
+%template(SetInt32) std::set<int>;  // std::set unsupported by SWIG's R library
+#endif
 
 // Vector templates
 %template(VectorBool) std::vector<bool>;
@@ -44,6 +59,9 @@ import_array();
 
 
 
+// swig::from is provided by the Python and R std_vector runtimes but not by Java;
+// exclude these overrides for Java so it uses the default std::vector wrapping.
+#ifndef SWIGJAVA
 %typemap(out) std::vector< long long,std::allocator< long long > > * {
 $result = swig::from(static_cast<std::vector< long long,std::allocator< long long > > >(*($1)));
 }
@@ -51,6 +69,7 @@ $result = swig::from(static_cast<std::vector< long long,std::allocator< long lon
 %typemap(out) std::vector< long long > {
 $result = swig::from($1);
 }
+#endif
 
 // Pair templates
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
@@ -92,7 +111,9 @@ $result = swig::from($1);
 // numpy.i does not instantiate bool typemaps by default (see numpy.i:3164);
 // without this line the %apply below silently matches nothing and the
 // micro_time_bitmap parameter is not callable from Python.
+#ifdef SWIGPYTHON
 %numpy_typemaps(bool, NPY_BOOL, int)
+#endif
 %apply(bool* IN_ARRAY1, int DIM1) {(bool* micro_time_bitmap, int n_micro_time_bitmap)}
 
 // Output arrays views

@@ -50,8 +50,10 @@ TTTRLIB_NOGIL(TTTR::read_hdf_file)  // src/TTTR.cpp:282
 TTTRLIB_NOGIL(TTTR::read_sm_file)   // src/TTTR.cpp:392
 TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
 
-%include "TTTR.h" 
+%include "TTTR.h"
 
+#ifdef SWIGPYTHON
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}
+#endif
 
 

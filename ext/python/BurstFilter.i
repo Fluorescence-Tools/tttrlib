@@ -9,10 +9,13 @@ using json = nlohmann::json;
 // Use shared_ptr for BurstFilter to pass it around
 %shared_ptr(tttrlib::BurstFilter)
 
-// Type mapping for int64_t parameters
+// Type mapping for int64_t parameters (Python-only: uses the Python C-API).
+// R and Java rely on SWIG's built-in int64_t handling instead.
+#ifdef SWIGPYTHON
 %typemap(in) int64_t {
     $1 = (int64_t)PyLong_AsLongLong($input);
 }
+#endif
 
 %extend tttrlib::BurstFilter {
     std::string to_json_string() const {
@@ -24,6 +27,7 @@ using json = nlohmann::json;
         $self->from_json(j);
     }
 
+#ifdef SWIGPYTHON
     %pythoncode %{
     
     @property
@@ -205,15 +209,19 @@ using json = nlohmann::json;
                 result[key] = []
         return result
     %}
+#endif
 }
 
 // Use shared_ptr for BurstFilter to pass it around
 %shared_ptr(tttrlib::BurstFilter)
 
-// Type mapping for int64_t parameters
+// Type mapping for int64_t parameters (Python-only: uses the Python C-API).
+// R and Java rely on SWIG's built-in int64_t handling instead.
+#ifdef SWIGPYTHON
 %typemap(in) int64_t {
     $1 = (int64_t)PyLong_AsLongLong($input);
 }
+#endif
 
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)};
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **find_output, int *find_n_output)};
