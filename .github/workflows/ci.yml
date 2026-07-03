@@ -176,8 +176,8 @@ jobs:
       matrix:
         include:
           - { os: ubuntu-latest,  dir: linux-x86-64 }
-          - { os: macos-13,       dir: darwin-x86-64 }
-          - { os: macos-14,       dir: darwin-aarch64 }
+          - { os: macos-15,       dir: darwin-x86-64 }
+          - { os: macos-15,       dir: darwin-aarch64 }
           - { os: windows-2022,   dir: win32-x86-64 }
     runs-on: ${{ matrix.os }}
     steps:
