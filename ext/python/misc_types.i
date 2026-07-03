@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-%include "stdint.i";
+// NOTE: do NOT %include "stdint.i" here. Making the int64_t -> long long
+// typedef visible before the API declarations makes SWIG < 4.4 (e.g. the
+// Ubuntu 24.04 swig 4.2.0 used by the R/Java CI jobs) resolve int64_t in the
+// generated wrappers, which then do not compile against glibc's
+// int64_t == long. Sim.i includes stdint.i after all other modules for its
+// uint64_t parameters; SWIG >= 4.4 has the stdint types built in and gets
+// -DSWIGWORDSIZE64 on Linux instead (see ext/CMakeLists.txt).
 %include "stl.i";
 %include "typemaps.i";
 %include "std_string.i";
