@@ -37,6 +37,7 @@ requirements:
     - pip
     - numpy
     - hdf5
+    - libtiff
     - highfive
     - nlohmann_json
   run:
@@ -47,6 +48,7 @@ requirements:
       then: libgomp
     - numpy
     - hdf5
+    - libtiff
   run_exports:
     - ${{ pin_subpackage("tttrlib", upper_bound="x.x") }}
 

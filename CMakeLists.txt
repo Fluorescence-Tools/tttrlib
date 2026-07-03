@@ -27,6 +27,10 @@ OPTION(BUILD_PHOTON_HDF "Build photon hdf5 reader" ON)
 # Deflate/"ZIP" codec, which requires a zlib to link against.
 OPTION(WITH_TIFF "Build bundled libtiff-based TIFF I/O (no external runtime dependency)" ON)
 OPTION(WITH_TIFF_ZLIB "Also enable libtiff Deflate/ZIP codec (requires zlib to link against)" OFF)
+# Linkage mode for TIFF: OFF (default) bundles thirdparty/libtiff as a STATIC lib
+# (pip wheels carry no external tiff dependency); ON links the system/conda-forge
+# shared libtiff dynamically (used for the conda package, like HDF5).
+OPTION(WITH_TIFF_SYSTEM "Link the system/conda libtiff (dynamic) instead of the bundled static one" OFF)
 
 OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
@@ -220,10 +224,18 @@ IF(BUILD_PHOTON_HDF)
 ENDIF()
 
 
-# libtiff (bundled) - TIFF I/O for 2D/3D arrays
+# TIFF I/O for 2D/3D arrays - bundled static (pip) or system shared (conda)
 #############################
 IF(WITH_TIFF)
-  IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libtiff/CMakeLists.txt")
+  IF(WITH_TIFF_SYSTEM)
+    # conda / distro build: dynamically link the system libtiff, exactly like
+    # HDF5. Adds a shared-library runtime dependency resolved by the package
+    # manager - nothing from thirdparty/libtiff is compiled.
+    FIND_PACKAGE(TIFF REQUIRED)
+    LINK_LIBRARIES(TIFF::TIFF)
+    ADD_COMPILE_DEFINITIONS(BUILD_TIFF)
+    MESSAGE(STATUS "TIFF support: system libtiff (dynamic link), version ${TIFF_VERSION}")
+  ELSEIF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libtiff/CMakeLists.txt")
     # Build libtiff as a STATIC, position-independent library with only its
     # built-in codecs so it can be bundled directly into the tttrlib module
     # without adding a runtime dependency. External codec libraries (jpeg, zstd,
@@ -255,7 +267,7 @@ IF(WITH_TIFF)
     ADD_COMPILE_DEFINITIONS(BUILD_TIFF)
     MESSAGE(STATUS "TIFF support: bundled libtiff 4.7.0 (static, built-in codecs; Deflate/ZIP=${WITH_TIFF_ZLIB})")
   ELSE()
-    MESSAGE(WARNING "WITH_TIFF=ON but thirdparty/libtiff not found; disabling TIFF support")
+    MESSAGE(WARNING "WITH_TIFF=ON but thirdparty/libtiff not found and WITH_TIFF_SYSTEM=OFF; disabling TIFF support")
   ENDIF()
 ENDIF()
 

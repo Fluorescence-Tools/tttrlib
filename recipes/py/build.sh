@@ -12,6 +12,8 @@ cmake -S .. -B . \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_LIBRARY=OFF \
   -DWITH_AVX=OFF \
+  -DWITH_TIFF=ON \
+  -DWITH_TIFF_SYSTEM=ON \
   -DPython_ROOT_DIR="${PREFIX}/bin" \
   -DBUILD_PYTHON_DOCS=OFF \
   -G Ninja \
