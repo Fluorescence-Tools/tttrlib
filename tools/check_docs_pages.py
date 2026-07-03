@@ -74,7 +74,12 @@ def main() -> int:
         print(f"HTML root does not exist: {root}", file=sys.stderr)
         return 2
 
-    pages = sorted(root.rglob("*.html"))
+    # Skip theme/static assets (e.g. pydata-sphinx-theme's _static/webpack-macros.html)
+    # which are Jinja/HTML fragments, not standalone documentation pages.
+    pages = sorted(
+        p for p in root.rglob("*.html")
+        if "_static" not in p.relative_to(root).parts
+    )
     if not pages:
         print(f"No HTML pages found under {root}", file=sys.stderr)
         return 2
