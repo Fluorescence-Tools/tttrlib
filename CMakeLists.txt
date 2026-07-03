@@ -51,6 +51,7 @@ OPTION(BUILD_LIBRARY "Build the library and the include files" ON)
 OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
+OPTION(BUILD_JAVA_INTERFACE "Build Java interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
 ## System-specific adjustments

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Standard Fiji/ImageJ plugin parent. -->
+  <parent>
+    <groupId>org.scijava</groupId>
+    <artifactId>pom-scijava</artifactId>
+    <version>42.0.0</version>
+    <relativePath />
+  </parent>
+
+  <groupId>io.github.fluorescencetools</groupId>
+  <artifactId>tttrlib_ImageJ</artifactId>
+  <version>0.27.0-SNAPSHOT</version>
+
+  <name>tttrlib ImageJ</name>
+  <description>ImageJ/Fiji plugin reading time-tagged time-resolved (TTTR) confocal images
+    (PicoQuant PTU/HT3, Becker &amp; Hickl SPC, Leica SP5/SP8) via the tttrlib C++ engine.
+    Reconstructs Intensity and FastLifetime (mean arrival time) image stacks.</description>
+  <url>https://github.com/fluorescence-tools/tttrlib</url>
+  <inceptionYear>2026</inceptionYear>
+
+  <organization>
+    <name>Fluorescence Tools</name>
+    <url>https://github.com/fluorescence-tools</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>BSD-3-Clause</name>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>tpeulen</id>
+      <name>Thomas-Otavio Peulen</name>
+    </developer>
+  </developers>
+  <contributors><contributor><name>None</name></contributor></contributors>
+  <mailingLists><mailingList><name>Image.sc Forum</name><archive>https://forum.image.sc/</archive></mailingList></mailingLists>
+  <scm>
+    <connection>scm:git:https://github.com/fluorescence-tools/tttrlib</connection>
+    <developerConnection>scm:git:git@github.com:fluorescence-tools/tttrlib</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/fluorescence-tools/tttrlib</url>
+  </scm>
+  <issueManagement><system>GitHub</system><url>https://github.com/fluorescence-tools/tttrlib/issues</url></issueManagement>
+  <ciManagement><system>GitHub Actions</system></ciManagement>
+
+  <properties>
+    <package-name>io.github.fluorescencetools.tttrlib.imagej</package-name>
+    <license.licenseName>bsd_3</license.licenseName>
+    <license.copyrightOwners>Thomas-Otavio Peulen</license.copyrightOwners>
+    <!--
+      The tttrlib SWIG Java proxies and the JNI native are produced by the CMake
+      build (-DBUILD_JAVA_INTERFACE=ON). CI copies:
+        * the generated *.java proxies -> src/main/java/io/github/.../tttrlib/
+        * the native libtttrlibjni.*   -> src/main/resources/native/<os-arch>/
+      before 'mvn package', so they are compiled and bundled into the plugin JAR.
+      NativeLoader extracts the platform native from the JAR at runtime.
+    -->
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>net.imagej</groupId>
+      <artifactId>ij</artifactId>
+    </dependency>
+  </dependencies>
+</project>

@@ -236,3 +236,48 @@ IF(BUILD_R_INTERFACE)
     # Reset for any subsequent language.
     UNSET(CMAKE_SWIG_FLAGS)
 ENDIF()
+
+IF(BUILD_JAVA_INTERFACE)
+    MESSAGE(STATUS "Building Java interface")
+    FIND_PACKAGE(JNI REQUIRED)
+    INCLUDE_DIRECTORIES(${JNI_INCLUDE_DIRS})
+
+    SET(J_MODULE_NAME tttrlibJava)
+    SET(J_PACKAGE io.github.fluorescencetools.tttrlib)
+    SET(J_OUTDIR ${CMAKE_BINARY_DIR}/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib)
+    FILE(MAKE_DIRECTORY ${J_OUTDIR})
+
+    SET_SOURCE_FILES_PROPERTIES(java/tttrlib.i PROPERTIES
+            CPLUSPLUS ON
+            SWIG_MODULE_NAME tttrlib)
+    SET(CMAKE_SWIG_FLAGS -package ${J_PACKAGE} -I${CMAKE_CURRENT_SOURCE_DIR}/python)
+    SET(CMAKE_SWIG_OUTDIR ${J_OUTDIR})
+
+    file(GLOB J_SWIG_DEPS
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
+            "${CMAKE_CURRENT_SOURCE_DIR}/java/*.i")
+    set_property(SOURCE java/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${J_SWIG_DEPS}")
+
+    SWIG_ADD_LIBRARY(
+            ${J_MODULE_NAME}
+            TYPE MODULE
+            LANGUAGE java
+            SOURCES java/tttrlib.i ${SRC_files}
+    )
+    # System.loadLibrary("tttrlibjni") -> libtttrlibjni.so / tttrlibjni.dll / libtttrlibjni.dylib
+    SET_TARGET_PROPERTIES(${J_MODULE_NAME} PROPERTIES
+            OUTPUT_NAME tttrlibjni
+            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/java-pkg/native)
+    TARGET_LINK_LIBRARIES(
+            ${J_MODULE_NAME}
+            ${JNI_LIBRARIES}
+            ${HDF5_LIBRARIES}
+            ${CMAKE_THREAD_LIBS_INIT}
+    )
+    IF(OpenMP_CXX_FOUND)
+        TARGET_LINK_LIBRARIES(${J_MODULE_NAME} OpenMP::OpenMP_CXX)
+    ENDIF()
+
+    UNSET(CMAKE_SWIG_FLAGS)
+    UNSET(CMAKE_SWIG_OUTDIR)
+ENDIF()

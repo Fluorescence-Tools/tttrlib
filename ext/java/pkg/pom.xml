@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.fluorescencetools</groupId>
+  <artifactId>tttrlib</artifactId>
+  <version>0.27.0</version>
+  <packaging>jar</packaging>
+
+  <name>tttrlib</name>
+  <description>Java bindings (SWIG/JNI) for the tttrlib TTTR photon-data library</description>
+
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <!--
+    Build steps:
+      1. Generate the SWIG Java proxies into src/main/java/... and build the JNI
+         native (libtttrlibjni.*) via CMake -DBUILD_JAVA_INTERFACE=ON.
+      2. Copy the native into src/main/resources/native/<os>-<arch>/ so it is
+         bundled in the JAR and loaded by NativeLoader.
+      3. mvn package -> tttrlib-<version>.jar
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+  </build>
+</project>

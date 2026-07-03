@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: BSD-3-Clause
+//
+// Java top-level SWIG module for tttrlib.
+//
+// Java counterpart of ext/python/tttrlib.i. Re-uses the SAME language-neutral
+// fragments in ext/python/ (resolved via -I ext/python); misc_types.i pulls in
+// jarrays.i (instead of numpy.i) when SWIGJAVA is defined. Java supports both
+// std::shared_ptr and directors, so PdaCallback can be subclassed from Java.
+
+%module(directors="1") tttrlib
+
+// Load the native JNI library when the wrapper class is initialised.
+%pragma(java) jniclasscode=%{
+  static {
+    try {
+      System.loadLibrary("tttrlibjni");
+    } catch (UnsatisfiedLinkError e) {
+      // Fall back to extracting a bundled native from the JAR (see NativeLoader).
+      io.github.fluorescencetools.tttrlib.NativeLoader.load();
+    }
+  }
+%}
+
+%feature("autodoc", "2");
+
+// Keep SWIG output quiet by default (same suppressions as Python).
+#pragma SWIG nowarn=302,389,401,453,501,505,511
+
+// Python-only helper macros used by shared fragments -> no-op for Java.
+// (Java has no GIL; the heavy calls run without any global lock anyway.)
+%define TTTRLIB_NOGIL(Method) %enddef
+
+// Java supports shared_ptr and directors.
+%include <std_shared_ptr.i>
+
+// Shared C++ core -- identical %include list to ext/python/tttrlib.i.
+%include "info.h"
+%include "misc_types.i"
+%include "FileCheck.i"
+%include "TTTRHeader.i"
+%include "TTTRRange.i"
+%include "TTTRSelection.i"
+%include "TTTR.i"
+%include "TTTRMask.i"
+%include "Channel.i"
+%include "BurstFilter.i"
+%include "BurstFeatureExtractor.i"
+%include "MicrotimeLinearization.i"
+
+%include "Histogram.i"
+
+/* Correlation of data */
+%include "Correlator.i"
+
+/* Microscopy */
+%include "CLSM.i"
+%include "CLSMISM.i"
+%include "Localization.i"
+
+// TIFF I/O for 2D/3D arrays
+%include "Tiff.i"
+
+/* Phasor analysis */
+%include "DecayPhasor.i"
+
+/* Photon distribution analysis */
+%include "Pda.i"
+
+/* convolution */
+%include "DecayConvolution.i"
+
+/* DecayFit(s) */
+%include "DecayFit.i"
+
+/* Java-only convenience helpers (bulk array accessors) */
+%include "helpers.i"
