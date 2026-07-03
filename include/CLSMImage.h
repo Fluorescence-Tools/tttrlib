@@ -668,13 +668,19 @@ public:
      *                          channels.
      * @param tac_coarsening    Constant used to coarsen the micro times.
      * @param stack_frames      If true, the frames are stacked.
+     * @param channels          Optional routing channels. If non-empty, the output
+     *                          holds one decay per channel (frames stacked),
+     *                          vstacked as [n_channels][n_tac] with dim1 = n_channels;
+     *                          photons on channels not listed are ignored. Empty
+     *                          (default) keeps the per-frame behaviour above.
      */
     void get_decay_of_pixels(
         TTTR *tttr_data,
         uint8_t* mask, int dmask1, int dmask2, int dmask3,
         unsigned int **output, int *dim1, int *dim2,
         int tac_coarsening,
-        bool stack_frames
+        bool stack_frames,
+        std::vector<int> channels = std::vector<int>()
     );
 
 
@@ -705,8 +711,25 @@ public:
         double **output, int *dim1, int *dim2, int *dim3,
         double microtime_resolution = -1.0,
         int minimum_number_of_photons = 2,
-        bool stack_frames = false
+        bool stack_frames = false,
+        bool correct_irf_offset = false
     );
+
+    /*!
+     * \brief Estimate the instrument-response (IRF) offset from the decay rise.
+     *
+     * Returns the position of the maximum (the rise) of the aggregate micro-time
+     * decay histogram, converted to a time via microtime_resolution. Subtracting
+     * this offset from a mean-arrival-time image yields an IRF-referenced
+     * FastLifetime image.
+     *
+     * @param tttr_data            TTTR stream (uses the stored one when nullptr).
+     * @param microtime_resolution Micro-time resolution; if < 0 the header value
+     *                             is used. The returned offset is in the same unit
+     *                             as get_mean_micro_time (channel * resolution).
+     */
+    double get_decay_irf_offset(TTTR *tttr_data = nullptr,
+                                double microtime_resolution = -1.0);
 
 
     /*!
@@ -741,7 +764,8 @@ public:
         TTTR *tttr_irf = nullptr,
         double frequency = -1,
         int minimum_number_of_photons = 2,
-        bool stack_frames = false
+        bool stack_frames = false,
+        bool correct_irf_offset = false
     );
 
 

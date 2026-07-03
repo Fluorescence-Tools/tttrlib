@@ -592,6 +592,70 @@ CLSMImage::CLSMImage(
             return;
         }
 
+        // Auto-configure CLSM markers and dimensions from PicoQuant PTU/HT3 header
+        // tags. Ported from the Python-only CLSMImage.read_clsm_settings so that R,
+        // Java and native C++ reconstruct identically to Python. Runs only for the
+        // default reading routine and only when the caller has not already supplied
+        // pixel dimensions (n_pixel_per_line == 0), so callers that pass explicit
+        // settings -- including the Python __init__, which resolves these itself --
+        // are unaffected.
+        if (this->settings.reading_routine == CLSM_DEFAULT &&
+            this->settings.n_pixel_per_line == 0) {
+            auto pq_header = tttr_data->get_header();
+            if (pq_header != nullptr) {
+                try {
+                    auto pq_json = nlohmann::json::parse(pq_header->get_json());
+                    auto tag_int = [&](const char* name, int fallback) -> int {
+                        auto t = TTTRHeader::get_tag(pq_json, name);
+                        if (!t.is_null() && t.contains("value") && !t["value"].is_null())
+                            return t["value"].get<int>();
+                        return fallback;
+                    };
+                    int container = pq_header->get_tttr_container_type();
+                    if (container == PQ_HT3_CONTAINER) {
+                        int ls = tag_int("ImgHdr_LineStart", -1);
+                        int le = tag_int("ImgHdr_LineStop", -1);
+                        if (ls >= 0 && le >= 0) {
+                            this->settings.marker_line_start  = ls;
+                            this->settings.marker_line_stop   = le;
+                            this->settings.n_pixel_per_line   = tag_int("ImgHdr_PixX", 0);
+                            this->settings.n_lines            = tag_int("ImgHdr_PixY", 0);
+                            this->settings.marker_frame_start = { tag_int("ImgHdr_Frame", 0) };
+                            this->settings.marker_event_type  = 1;
+                            this->n_pixel = this->settings.n_pixel_per_line;
+                        }
+                    } else if (container == PQ_PTU_CONTAINER) {
+                        int ls = tag_int("ImgHdr_LineStart", -1);
+                        int le = tag_int("ImgHdr_LineStop", -1);
+                        if (ls >= 0 && le >= 0) {
+                            int frame_raw = tag_int("ImgHdr_Frame", -1);
+                            if (ls == 0) {
+                                // ImgHdr_LineStart == 0 uses 2^index marker encoding
+                                this->settings.marker_line_start  = 1 << ls;
+                                this->settings.marker_line_stop   = 1 << le;
+                                this->settings.marker_frame_start =
+                                    { frame_raw >= 0 ? (1 << frame_raw) : 4 };
+                            } else {
+                                this->settings.marker_line_start  = 1 << (ls - 1);
+                                this->settings.marker_line_stop   = 1 << (le - 1);
+                                this->settings.marker_frame_start =
+                                    frame_raw > 0 ? std::vector<int>{ 1 << (frame_raw - 1) }
+                                                  : std::vector<int>{};
+                            }
+                            this->settings.n_pixel_per_line = tag_int("ImgHdr_PixX", 0);
+                            this->settings.n_lines          = tag_int("ImgHdr_PixY", 0);
+                            this->settings.marker_event_type = 1;
+                            this->n_pixel = this->settings.n_pixel_per_line;
+                        }
+                    }
+                    this->settings.bidirectional_scan = (tag_int("ImgHdr_BiDirect", 0) != 0);
+                } catch (...) {
+                    if (is_verbose())
+                        std::clog << "-- CLSM: could not read PQ header settings" << std::endl;
+                }
+            }
+        }
+
         // “No frame marker” case ===
         if (this->settings.marker_frame_start.empty()) {
             std::clog << "WARNING: No frame marker provided - creating a single full-span frame" << std::endl;
@@ -619,6 +683,22 @@ CLSMImage::CLSMImage(
         } else {
             // “frame marker provided” path ===
             create_frames(true);
+
+            // PRD-004: a frame marker is configured but the stream contains none
+            // (a single-frame FLIM acquisition, e.g. some PicoHarp/SymPhoTime PTU
+            // files). Fall back to one full-span frame so the line markers still
+            // reconstruct an image instead of an empty 0-frame stack.
+            if (n_frames == 0) {
+                std::clog << "WARNING: frame marker configured but none found in "
+                             "the stream - reconstructing a single full-span frame"
+                          << std::endl;
+                int n_events = static_cast<int>(tttr_data->get_n_valid_events());
+                auto singleFrame = new CLSMFrame(0, n_events, tttr);
+                singleFrame->set_tttr(tttr);
+                frames.emplace_back(singleFrame);
+                n_frames = 1;
+            }
+
             create_lines();
 
             if (is_verbose()) {
@@ -1288,7 +1368,7 @@ void CLSMImage::remove_incomplete_frames() {
     if (is_verbose()) {
         std::clog << "-- Removing incomplete frames..." << std::endl;
     }
-    std::vector<CLSMFrame *> complete_frames;
+    std::vector<CLSMFrame *> complete_frames, incomplete_frames;
     n_frames = frames.size();
     size_t i_frame = 0;
     for (auto frame: frames) {
@@ -1299,10 +1379,36 @@ void CLSMImage::remove_incomplete_frames() {
                 std::cerr << "WARNING: Frame " << i_frame + 1 << " / " << frames.size() <<
                         " incomplete only " << frame->lines.size() << " / " << n_lines << " lines." << std::endl;
             }
-            delete(frame);
+            incomplete_frames.push_back(frame);
         }
         i_frame++;
     }
+
+    // PRD-004: if NOTHING is complete (e.g. a single-frame FLIM acquisition whose
+    // only frame has fewer line markers than the header-declared n_lines), don't
+    // throw the whole image away. Salvage the frame(s) with the most lines and
+    // adopt that count as n_lines, reconstructing a (possibly partial) image
+    // instead of an empty 0-frame stack. Normal multi-frame stacks are unaffected
+    // because complete_frames is non-empty there.
+    if (complete_frames.empty() && !incomplete_frames.empty()) {
+        size_t best = 0;
+        for (auto f: incomplete_frames) best = std::max(best, f->lines.size());
+        if (best > 0) {
+            for (auto f: incomplete_frames) {
+                if (f->lines.size() == best) complete_frames.push_back(f);
+                else delete f;
+            }
+            n_lines = best;
+            std::clog << "WARNING: no complete frames; salvaging "
+                      << complete_frames.size() << " frame(s) with " << best
+                      << " line(s) as n_lines" << std::endl;
+        } else {
+            for (auto f: incomplete_frames) delete f;
+        }
+    } else {
+        for (auto f: incomplete_frames) delete f;
+    }
+
     frames = complete_frames;
     n_frames = complete_frames.size();
     if (is_verbose()) {
@@ -2743,8 +2849,62 @@ void CLSMImage::get_decay_of_pixels(
     uint8_t *mask, int dmask1, int dmask2, int dmask3,
     unsigned int **output, int *dim1, int *dim2,
     int tac_coarsening,
-    bool stack_frames
+    bool stack_frames,
+    std::vector<int> channels
 ) {
+    // Channel-split extension: one decay per routing channel (frames stacked),
+    // vstacked as [n_channels][n_tac]. Photons on unlisted channels are ignored.
+    if (!channels.empty()) {
+        std::map<int,int> col;
+        for (size_t c = 0; c < channels.size(); ++c) col[channels[c]] = static_cast<int>(c);
+        int n_ch = static_cast<int>(channels.size());
+        size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / tac_coarsening;
+        *dim1 = n_ch;
+        *dim2 = static_cast<int>(n_tac);
+        auto *t = (unsigned int *) calloc(std::max(static_cast<size_t>(n_ch) * n_tac, size_t(1)),
+                                          sizeof(unsigned int));
+        if (n_tac == 0) { *output = t; return; }
+        if ((dmask1 != (int) n_frames) || (dmask2 != (int) n_lines) || (dmask3 != (int) n_pixel)) {
+            std::cerr << "Error: the dimensions of the selection ("
+                      << n_frames << ", " << n_lines << ", " << n_pixel
+                      << ") does not match the CLSM image dimensions.";
+            *output = t; return;
+        }
+        const unsigned short* mts = tttr_data->micro_times;
+        const signed char* rc = tttr_data->routing_channels;
+        if (!pixels_materialized_ && !stream_masks_.empty()) {
+            for_each_mask_photon(false,
+                [&](int f, size_t l, CLSMLine*, int p, int i) {
+                    if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                    if (!mask[static_cast<size_t>(f) * (n_lines * n_pixel) + l * n_pixel + p]) return;
+                    std::map<int,int>::const_iterator it = col.find((int) rc[i]);
+                    if (it == col.end()) return;
+                    size_t q = static_cast<size_t>(mts[i]) / tac_coarsening;
+                    if (q < n_tac) t[static_cast<size_t>(it->second) * n_tac + q] += 1;
+                });
+        } else {
+            for (size_t i_frame = 0; i_frame < n_frames; i_frame++) {
+                auto frame = frames[i_frame];
+                for (size_t i_line = 0; i_line < n_lines; i_line++) {
+                    auto line = frame->lines[i_line];
+                    for (size_t i_pixel = 0; i_pixel < n_pixel; i_pixel++) {
+                        if (mask[i_frame * (n_lines * n_pixel) + i_line * n_pixel + i_pixel]) {
+                            const auto& indices = line->pixels[i_pixel].get_tttr_indices();
+                            for (auto i: indices) {
+                                std::map<int,int>::const_iterator it = col.find((int) rc[i]);
+                                if (it == col.end()) continue;
+                                size_t q = static_cast<size_t>(mts[i]) / tac_coarsening;
+                                if (q < n_tac) t[static_cast<size_t>(it->second) * n_tac + q] += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        *output = t;
+        return;
+    }
+
     size_t n_decays = stack_frames ? 1 : n_frames;
     size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / tac_coarsening;
     if (is_verbose()) {
@@ -2808,12 +2968,37 @@ void CLSMImage::get_decay_of_pixels(
     *output = t;
 }
 
+double CLSMImage::get_decay_irf_offset(TTTR *tttr_data, double microtime_resolution) {
+    if (tttr_data == nullptr) tttr_data = tttr.get();
+    if (tttr_data == nullptr) return 0.0;
+    if (microtime_resolution < 0)
+        microtime_resolution = tttr_data->header->get_micro_time_resolution();
+    double *hist = nullptr; int nh = 0; double *tax = nullptr; int nt = 0;
+    tttr_data->get_microtime_histogram(&hist, &nh, &tax, &nt, 1);
+    double offset = 0.0;
+    if (hist != nullptr && nh > 1) {
+        // The micro_time == 0 bin holds a marker/zero-arrival-time spike that is
+        // NOT the fluorescence rise, so ignore it when locating the decay peak.
+        double peak = 0.0;
+        for (int i = 1; i < nh; ++i) if (hist[i] > peak) peak = hist[i];
+        // IRF offset = leading edge (rise): first bin reaching half the peak.
+        double half = 0.5 * peak;
+        int rise = 0;
+        for (int i = 1; i < nh; ++i) if (hist[i] >= half) { rise = i; break; }
+        offset = static_cast<double>(rise) * microtime_resolution;
+    }
+    if (hist != nullptr) free(hist);
+    if (tax != nullptr) free(tax);
+    return offset;
+}
+
 void CLSMImage::get_mean_micro_time(
     TTTR *tttr_data,
     double **output, int *dim1, int *dim2, int *dim3,
     double microtime_resolution,
     int minimum_number_of_photons,
-    bool stack_frames
+    bool stack_frames,
+    bool correct_irf_offset
 ) {
     if (is_verbose()) {
         std::clog << "Get mean micro time image" << std::endl;
@@ -2823,6 +3008,17 @@ void CLSMImage::get_mean_micro_time(
     }
     if (microtime_resolution < 0)
         microtime_resolution = tttr_data->header->get_micro_time_resolution();
+
+    // Instrument-response offset (from the decay rise), subtracted from valid
+    // pixels so the mean arrival time becomes an IRF-referenced FastLifetime.
+    // Invalid pixels keep their -1.0 sentinel; corrected values clamp at 0.
+    double irf_offset = correct_irf_offset
+        ? get_decay_irf_offset(tttr_data, microtime_resolution) : 0.0;
+    auto apply_irf = [&](double *arr, size_t count) {
+        if (irf_offset == 0.0) return;
+        for (size_t i = 0; i < count; ++i)
+            if (arr[i] >= 0.0) { arr[i] -= irf_offset; if (arr[i] < 0.0) arr[i] = 0.0; }
+    };
 
     // Fused path: per-pixel running means straight from the stream masks.
     // TTTR::compute_mean_microtime uses an order-dependent iterative mean;
@@ -2851,6 +3047,7 @@ void CLSMImage::get_mean_micro_time(
             if (nph[idx] < minimum_number_of_photons) v = -1.0;
             t[idx] = v;
         }
+        apply_irf(t, n_total);
         *dim1 = static_cast<int>(o_frames);
         *dim2 = static_cast<int>(n_lines);
         *dim3 = static_cast<int>(n_pixel);
@@ -2879,6 +3076,7 @@ void CLSMImage::get_mean_micro_time(
                 }
             }
         }
+        apply_irf(t, (size_t) n_frames * n_lines * n_pixel);
         *dim1 = static_cast<int>(n_frames);
         *dim2 = static_cast<int>(n_lines);
         *dim3 = static_cast<int>(n_pixel);
@@ -2899,6 +3097,7 @@ void CLSMImage::get_mean_micro_time(
                 r[pixel_nbr] = tttr_data->get_mean_microtime(&tr, microtime_resolution, minimum_number_of_photons);
             }
         }
+        apply_irf(r, (size_t) w_frame * n_lines * n_pixel);
         *dim1 = static_cast<int>(w_frame);
         *dim2 = static_cast<int>(n_lines);
         *dim3 = static_cast<int>(n_pixel);
@@ -2912,7 +3111,8 @@ void CLSMImage::get_phasor(
     TTTR *tttr_irf,
     double frequency,
     int minimum_number_of_photons,
-    bool stack_frames
+    bool stack_frames,
+    bool correct_irf_offset
 ) {
     double g_irf = 1.0, s_irf = 0.0;
     if (frequency < 0) {
@@ -2931,6 +3131,16 @@ void CLSMImage::get_phasor(
     }
     int o_frames = stack_frames ? 1 : static_cast<int>(n_frames);
     double factor = (2. * frequency * M_PI);
+
+    // Rising-edge (IRF) correction: with no explicit IRF file, treat the decay
+    // rise as a delta-function IRF at that micro-time channel. Its phasor is
+    // (cos theta, sin theta) with theta = rise_channel * factor; DecayPhasor::g/s
+    // then rotate every pixel phasor by -theta (both output paths use g_irf/s_irf).
+    if (correct_irf_offset && tttr_irf == nullptr) {
+        double rise_channels = get_decay_irf_offset(tttr_data, 1.0);
+        g_irf = std::cos(rise_channels * factor);
+        s_irf = std::sin(rise_channels * factor);
+    }
     // Use malloc + memset for large arrays - faster than calloc
     auto *t = (float *) malloc(o_frames * n_lines * n_pixel * 2 * sizeof(float));
     memset(t, 0, o_frames * n_lines * n_pixel * 2 * sizeof(float));
