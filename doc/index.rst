@@ -108,6 +108,8 @@ Documentation
    pda-guide
    fcs-correlation
    clsm-flim-guide
+   simulator-guide
+   localization-guide
    fit-guide
    user_guide
    modules/index

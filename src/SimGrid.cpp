@@ -7,8 +7,46 @@
 
 namespace tttrlib {
 
+void SimGrid::build_bbox(double threshold_frac) {
+    clear_bbox();
+    if (nx <= 0 || ny <= 0 || nz <= 0 || data.empty() || threshold_frac >= 1.0) return;
+    double peak = 0.0;
+    for (double v : data) { double a = std::fabs(v); if (a > peak) peak = a; }
+    if (peak <= 0.0) return;
+    const double thr = (threshold_frac > 0.0) ? threshold_frac * peak : 0.0;
+    int ix0 = nx, iy0 = ny, iz0 = nz, ix1 = -1, iy1 = -1, iz1 = -1;
+    for (int iz = 0; iz < nz; ++iz)
+        for (int iy = 0; iy < ny; ++iy)
+            for (int ix = 0; ix < nx; ++ix)
+                if (std::fabs(data[index(ix, iy, iz)]) > thr) {
+                    if (ix < ix0) ix0 = ix; if (ix > ix1) ix1 = ix;
+                    if (iy < iy0) iy0 = iy; if (iy > iy1) iy1 = iy;
+                    if (iz < iz0) iz0 = iz; if (iz > iz1) iz1 = iz;
+                }
+    if (ix1 < 0) return;                       // no voxel above threshold
+    // Pad by one voxel so trilinear interpolation just inside the box edge is unaffected.
+    bb_x0_ = x0 + (ix0 - 1) * dx; bb_x1_ = x0 + (ix1 + 1) * dx;
+    bb_y0_ = y0 + (iy0 - 1) * dy; bb_y1_ = y0 + (iy1 + 1) * dy;
+    bb_z0_ = z0 + (iz0 - 1) * dz; bb_z1_ = z0 + (iz1 + 1) * dz;
+}
+
+SimGrid SimGrid::analytic_gaussian3d(double w0, double z0v, double amplitude) {
+    SimGrid g;
+    g.analytic_ = true;
+    g.an_amp_ = amplitude;
+    g.an_cxy_ = (w0  > 0.0) ? -2.0 / (w0  * w0)  : 0.0;
+    g.an_cz_  = (z0v > 0.0) ? -2.0 / (z0v * z0v) : 0.0;
+    return g;
+}
+
 double SimGrid::at(double x, double y, double z) const {
+    if (analytic_) return an_amp_ * std::exp(an_cxy_ * (x * x + y * y) + an_cz_ * z * z);
     if (nx <= 0 || ny <= 0 || nz <= 0) return 0.0;
+
+    // Two-step lookup: cheap bounding-box reject before the trilinear (when active).
+    if (bb_x1_ >= bb_x0_ &&
+        (x < bb_x0_ || x > bb_x1_ || y < bb_y0_ || y > bb_y1_ || z < bb_z0_ || z > bb_z1_))
+        return 0.0;
 
     // Continuous grid coordinates (voxel-centre convention).
     double fx = (x - x0) / dx;
@@ -64,6 +102,67 @@ SimGrid SimGrid::gaussian3d(double w0, double z0v,
                 double v = amplitude *
                     std::exp(-2.0 * ((x*x + y*y) / (w0 * w0) + z*z / (z0v * z0v)));
                 g.set_voxel(ix, iy, iz, v);
+            }
+        }
+    }
+    return g;
+}
+
+SimGrid SimGrid::gaussian_lorentzian(double w0, double zR,
+                                     double extent_xy, double extent_z,
+                                     double spacing, double amplitude) {
+    int nxy = int(std::floor(2.0 * extent_xy / spacing)) + 1;
+    int nz  = int(std::floor(2.0 * extent_z  / spacing)) + 1;
+    SimGrid g(nxy, nxy, nz, spacing, spacing, spacing,
+              -extent_xy, -extent_xy, -extent_z);
+    const double w0sq = w0 * w0;
+    for (int iz = 0; iz < nz; ++iz) {
+        double z = g.z0 + iz * g.dz;
+        // Beam waist expands along z (Lorentzian): w(z)² = w0²·(1 + (z/zR)²).
+        double wz2 = (zR > 0.0) ? w0sq * (1.0 + (z / zR) * (z / zR)) : w0sq;
+        double pref = amplitude * w0sq / wz2;               // (w0/w(z))²
+        for (int iy = 0; iy < nxy; ++iy) {
+            double y = g.y0 + iy * g.dy;
+            for (int ix = 0; ix < nxy; ++ix) {
+                double x = g.x0 + ix * g.dx;
+                g.set_voxel(ix, iy, iz, pref * std::exp(-2.0 * (x*x + y*y) / wz2));
+            }
+        }
+    }
+    return g;
+}
+
+SimGrid SimGrid::from_radial(const std::vector<double>& rz, int nr, int nz_in,
+                             double r_step, double z_step,
+                             double extent_xy, double extent_z,
+                             double spacing, double amplitude) {
+    int nxy = int(std::floor(2.0 * extent_xy / spacing)) + 1;
+    int nz  = int(std::floor(2.0 * extent_z  / spacing)) + 1;
+    SimGrid g(nxy, nxy, nz, spacing, spacing, spacing,
+              -extent_xy, -extent_xy, -extent_z);
+    if (nr < 2 || nz_in < 2 || r_step <= 0.0 || z_step <= 0.0 ||
+        rz.size() < size_t(nr) * nz_in)
+        return g;                                            // ill-formed table ⇒ empty grid
+    const double z_lo = -0.5 * (nz_in - 1) * z_step;         // radial table is z-centred
+    // Bilinear interpolation of the (r,z) half-plane; clamp outside the table to 0.
+    auto sample = [&](double r, double z) -> double {
+        double fr = r / r_step, fz = (z - z_lo) / z_step;
+        if (fr < 0.0 || fz < 0.0 || fr > nr - 1 || fz > nz_in - 1) return 0.0;
+        int ir = int(fr), iz2 = int(fz);
+        int ir1 = (ir < nr - 1) ? ir + 1 : ir, iz1 = (iz2 < nz_in - 1) ? iz2 + 1 : iz2;
+        double tr = fr - ir, tz = fz - iz2;
+        double v00 = rz[size_t(iz2) * nr + ir],  v10 = rz[size_t(iz2) * nr + ir1];
+        double v01 = rz[size_t(iz1) * nr + ir],  v11 = rz[size_t(iz1) * nr + ir1];
+        double v0 = v00 * (1 - tr) + v10 * tr, v1 = v01 * (1 - tr) + v11 * tr;
+        return v0 * (1 - tz) + v1 * tz;
+    };
+    for (int iz = 0; iz < nz; ++iz) {
+        double z = g.z0 + iz * g.dz;
+        for (int iy = 0; iy < nxy; ++iy) {
+            double y = g.y0 + iy * g.dy;
+            for (int ix = 0; ix < nxy; ++ix) {
+                double x = g.x0 + ix * g.dx;
+                g.set_voxel(ix, iy, iz, amplitude * sample(std::sqrt(x*x + y*y), z));
             }
         }
     }

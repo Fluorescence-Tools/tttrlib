@@ -1,0 +1,13 @@
+{
+  "_comment": "Single-molecule / FCS baseline (PRD-008). One freely diffusing species in an open volume; correlate the photon stream to recover the diffusion time tau_D = w0^2/(4D) and N in the focus. Raising population (or shrinking box) increases the count rate but lowers the FCS amplitude G(0) ~ 1/N.",
+  "settings": {"dt": 0.01, "n_ph_max": 1000000, "n_channels": 2,
+               "fast_grid_bbox": true, "active_margin": 1.0},
+  "box": {"xy": 2.0, "z": 4.0},
+  "species": [{"D": 3.0, "q": [50.0, 50.0]}],
+  "k_rad": [0.0],
+  "k_nrad": [0.0],
+  "background": [0.05, 0.05],
+  "population": [1.5],
+  "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 2.0,
+                 "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1}
+}

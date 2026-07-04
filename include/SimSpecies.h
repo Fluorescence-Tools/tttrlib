@@ -4,7 +4,7 @@
  *
  * In the diffusion-photon model a molecule occupies one of N species/states; it
  * emits with a per-channel brightness and may transition between states (the
- * transition-rate matrices live on `SimSample`, being N×N across all species).
+ * transition-rate matrices live on `SimSystem`, being N×N across all species).
  * Optional anisotropy parameters revive the legacy rotational-diffusion model.
  * Additive; does not modify any existing tttrlib class.
  */
@@ -18,7 +18,9 @@ namespace tttrlib {
 
 /// Photophysical properties of one species/state.
 struct SimSpecies {
-    double D = 0.0;                 ///< translational diffusion coefficient (µm²/s); 0 = immobile
+    double D = 0.0;                 ///< translational diffusion coefficient, length²/macro-time
+                                    ///< (µm² per SimIntegrator::dt unit; the ms convention ⇒ µm²/ms).
+                                    ///< 0 = immobile. See the unit contract (macro vs micro-time).
     std::vector<double> q;          ///< brightness per detection channel (photons/molecule/time)
     SimDecay decay;                 ///< micro-time (FLIM) decay pattern; empty = no micro-time
 

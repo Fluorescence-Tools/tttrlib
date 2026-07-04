@@ -30,7 +30,7 @@ measured_r = np.zeros_like(D_rot_values)
 for k, D_rot in enumerate(D_rot_values):
     # A sample of many immobile fluorophores with random dipole orientations. Two
     # detection channels: 0 = parallel, 1 = perpendicular.
-    sample = tttrlib.SimSample()
+    sample = tttrlib.SimSystem()
     species = tttrlib.SimSpecies()
     species.D = 0.0                                 # no translational diffusion
     species.q = tttrlib.VectorDouble([100.0, 100.0])
@@ -44,7 +44,7 @@ for k, D_rot in enumerate(D_rot_values):
     for _ in range(1500):
         sample.add_fluorophore(0.0, 0.0, 0.0, 0, False)
 
-    settings = tttrlib.SimSettings()
+    settings = tttrlib.SimIntegrator()
     settings.dt = 0.01
     settings.n_channels = 2
     settings.n_ph_max = 700000

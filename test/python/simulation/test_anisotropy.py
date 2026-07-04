@@ -14,7 +14,7 @@ def _vd(x):
 def _steady_state_r(r0, D_rot, tau=4.0, n=1024, dt=0.032, nmol=1500):
     pattern = np.exp(-np.arange(n) * dt / tau)          # mono-exponential lifetime
     dec = tttrlib.SimDecay.from_pattern(_vd(pattern), dt, 0.0)
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([100.0, 100.0])
     sp.r0 = r0; sp.l1 = 0.0; sp.l2 = 0.0; sp.D_rot = D_rot; sp.decay = dec
     s.add_species(sp)
@@ -22,7 +22,7 @@ def _steady_state_r(r0, D_rot, tau=4.0, n=1024, dt=0.032, nmol=1500):
     for _ in range(nmol):
         s.add_fluorophore(0.0, 0.0, 0.0, 0, False)
     exc = tttrlib.SimGrid.gaussian3d(0.5, 1.0, 1.0, 2.0, 0.05, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
     st.n_ph_max = 700000; st.max_windows = 10 ** 9
     st.n_microtime_channels = n; st.microtime_resolution = dt; st.laser_period = n * dt
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()

@@ -43,8 +43,22 @@ double qnorm(double x) {
     return nf ? f : 1. - f;
 }
 
+// Draw from Poisson(mean): Knuth for small mean, normal approximation for large.
+template <class Rng>
+long poisson_draw(double mean, Rng& rng) {
+    if (mean <= 0.0) return 0;
+    if (mean < 30.0) {
+        double L = std::exp(-mean), p = 1.0; long k = 0;
+        do { ++k; p *= rng.random0i1e(); } while (p > L);
+        return k - 1;
+    }
+    long n = long(std::llround(mean + std::sqrt(mean) * sim_randn(rng)));
+    return n < 0 ? 0 : n;
+}
+
 // Random number with p(x) ~ erf(x/sqrt(2)); the legacy surface penetration depth.
-double random_erfc(SimRandom& rng) {
+template <class Rng>
+double random_erfc(Rng& rng) {
     const double sqrt_pi_half = 1.2533141373155;
     double v, x, yv;
     do {
@@ -56,8 +70,8 @@ double random_erfc(SimRandom& rng) {
 }
 } // namespace
 
-SimEngine::SimEngine(SimSample sample, SimGrid excitation,
-                     std::vector<SimGrid> detection, SimSettings settings)
+SimEngine::SimEngine(SimSystem sample, SimGrid excitation,
+                     std::vector<SimGrid> detection, SimIntegrator settings)
     : sample_(std::move(sample)), exc_(std::move(excitation)),
       det_(std::move(detection)), set_(std::move(settings)),
       rng_diff_(settings.seed_diffusion), rng_emit_(settings.seed_emission) {
@@ -107,6 +121,30 @@ SimEngine::SimEngine(SimSample sample, SimGrid excitation,
     for (int i = 0; i < nsp; ++i) if (koff_nrad_[i] > kEps) { any_knrad_ = true; break; }
     compute_focus_aabb();
 
+    // Two-step field lookup: precompute a cheap reject box per grid (opt-in).
+    if (set_.fast_grid_bbox) {
+        exc_.build_bbox(set_.focus_threshold);
+        for (auto& d : det_) d.build_bbox(set_.focus_threshold);
+    }
+
+    // Active-domain clipping: shrink the open-volume box to focus+margin, holding concentration
+    // fixed, so far-from-focus molecules (which emit nothing) are never simulated. Exact once
+    // the margin exceeds a few diffusion lengths. Applied before seeding so all downstream
+    // seeding/injection/killing uses the smaller box.
+    if (set_.active_margin > 0.0 && open_volume_ && focus_aabb_valid_) {
+        const double obxy = sample_.box_xy(), obz = sample_.box_z();
+        double axy = std::max(std::max(std::fabs(fx0_), std::fabs(fx1_)),
+                              std::max(std::fabs(fy0_), std::fabs(fy1_))) + set_.active_margin;
+        double az  = std::max(std::fabs(fz0_), std::fabs(fz1_)) + set_.active_margin;
+        if (axy < obxy && az < obz && axy > 0.0 && az > 0.0) {
+            const double vol_ratio = (axy * axy * az) / (obxy * obxy * obz);  // ∝ ellipsoid volume
+            sample_.set_box(axy, az);
+            const auto pop = sample_.population();                            // copy before rescale
+            for (size_t i = 0; i < pop.size(); ++i)
+                sample_.set_population(int(i), pop[i] * vol_ratio);           // preserve concentration
+        }
+    }
+
     seed_population();
 }
 
@@ -115,6 +153,17 @@ void SimEngine::compute_focus_aabb() {
     // independent of the (possibly box-spanning) grid extent, so a coasting molecule's
     // distance to the focus is measured against where excitation is actually significant.
     focus_aabb_valid_ = false;
+    if (exc_.analytic_) {
+        // A·exp(-2(r²/w0² + z²/z0²)) > thr·A  ⇔  r²/w0² + z²/z0² < -ln(thr)/2.
+        const double thr = (set_.focus_threshold > 0.0) ? set_.focus_threshold : 1e-3;
+        const double L = -0.5 * std::log(thr);                 // >0
+        if (L <= 0.0 || exc_.an_cxy_ >= 0.0 || exc_.an_cz_ >= 0.0) return;
+        const double w0 = std::sqrt(-2.0 / exc_.an_cxy_), z0 = std::sqrt(-2.0 / exc_.an_cz_);
+        const double rxy = w0 * std::sqrt(L), rz = z0 * std::sqrt(L);
+        fx0_ = -rxy; fx1_ = rxy; fy0_ = -rxy; fy1_ = rxy; fz0_ = -rz; fz1_ = rz;
+        focus_aabb_valid_ = true;
+        return;
+    }
     if (exc_.nx <= 0 || exc_.data.empty()) return;
     double vmax = 0.0;
     for (double v : exc_.data) if (v > vmax) vmax = v;
@@ -352,6 +401,21 @@ void SimEngine::step(uint64_t n_windows) {
     for (uint64_t k = 0; k < n_windows; ++k) emit_window();
 }
 
+SimState SimEngine::get_state() const {
+    SimState s;
+    s.window = T0_;
+    s.n_photons = T_.size();
+    s.id.reserve(mol_alive_); s.species.reserve(mol_alive_);
+    s.x.reserve(mol_alive_); s.y.reserve(mol_alive_); s.z.reserve(mol_alive_);
+    for (const auto& m : mols_) {
+        if (!m.alive) continue;
+        s.id.push_back(int32_t(m.id)); s.species.push_back(int16_t(m.state));
+        s.x.push_back(m.x); s.y.push_back(m.y); s.z.push_back(m.z);
+    }
+    s.n_molecules = int(s.id.size());
+    return s;
+}
+
 void SimEngine::batch_background(uint64_t n_windows) {
     // Emit background over a fast-forwarded gap of n_windows, placing each photon at its
     // correct macro-window (identical statistics to per-window emission, just batched).
@@ -394,6 +458,10 @@ void SimEngine::batch_background(uint64_t n_windows) {
 }
 
 void SimEngine::run() {
+    if (set_.independent_molecules && set_.max_windows > 0) {
+        run_independent(set_.max_windows);
+        return;
+    }
     const bool coast = set_.per_molecule_skip;
     while (n_photons() < set_.n_ph_max) {
         // Fast-forward when every alive molecule is asleep and not yet due to wake: nothing
@@ -422,6 +490,148 @@ void SimEngine::run() {
         }
         emit_window();
         if (set_.max_windows && T0_ >= set_.max_windows) break;
+    }
+}
+
+// One photon record in independent mode (carries its absolute macro-window).
+namespace { struct IndPh { uint32_t w; double t; int16_t N, sp; int32_t mol; uint16_t micro;
+    typedef IndPh value_type; }; }
+
+template <class Rng>
+void SimEngine::run_independent_impl(uint64_t W) {
+    const bool coast = set_.per_molecule_skip;
+    const int nchan = set_.n_channels, nsp = sample_.n_species();
+
+    // --- 1) Molecule count. Initial population (present at t=0) + open-volume injections. ----
+    // Over [0,W) the number of injections of species i is Poisson(rate_in·W), and — by the
+    // Poisson conditional-uniformity property — each injection's start time is i.i.d. uniform
+    // on [0,W). So every molecule (its random start time, entry point, orientation and whole
+    // trajectory) is a fully independent, id-keyed work unit: no coordinated birth phase, no
+    // shared clock. Photon streams are merged afterwards, each shifted by its start window.
+    const double box_xy = sample_.box_xy(), box_z = sample_.box_z();
+    const double box_r_sq = (box_xy * box_xy) / (box_z * box_z);
+    const double ell_f = box_z / box_xy;
+    const double ell_Pzmax = (ell_f <= 0.999999) ? 1. / ell_f : 1.;
+    const bool aniso = any_aniso_;
+
+    const size_t init = mols_.size();
+    std::vector<uint32_t> sp_off(nsp + 1, 0);     // injected-molecule index ranges per species
+    if (open_volume_)
+        for (int i = 0; i < nsp; ++i)
+            sp_off[i + 1] = sp_off[i] +
+                uint32_t((rate_in_[i] > kEps) ? poisson_draw(rate_in_[i] * double(W), rng_diff_) : 0);
+    const size_t M = sp_off[nsp];
+    const size_t nmol = init + M;
+
+    bool parallel = nmol > parallel_threshold_;
+    if (parallel) { if (!pool_) pool_.reset(new SimThreadPool(num_threads_)); if (pool_->size() < 2) parallel = false; }
+    const unsigned nbuf = (parallel && pool_) ? pool_->size() : 1u;
+    std::vector<std::vector<IndPh>> perbuf(nbuf);
+
+    auto cmp = [](const IndPh& a, const IndPh& b) {
+        if (a.w != b.w) return a.w < b.w;
+        if (a.t != b.t) return a.t < b.t;
+        if (a.mol != b.mol) return a.mol < b.mol;
+        return a.N < b.N;
+    };
+    auto species_of = [&](size_t j) { int i = 0; while (i + 1 < nsp && sp_off[i + 1] <= j) ++i; return i; };
+
+    // --- 2) Simulate every molecule's whole timeline; each worker sorts its own buffer. ------
+    auto do_range = [&](size_t b, size_t e, unsigned wi) {
+        std::vector<double> wv(nchan, 0.0); LocalBuf lb;
+        std::vector<IndPh>& out = perbuf[wi];
+        for (size_t k = b; k < e; ++k) {
+            Mol m; uint32_t w_birth;
+            if (k < init) { m = mols_[k]; w_birth = 0; }                 // present at t=0
+            else {                                                        // injected: self-derived
+                Rng br; br.reset(mol_base_seed_ ^ kBirthSalt, uint32_t(k), 0);
+                int i = species_of(k - init);
+                w_birth = uint32_t(br.random0i1e() * double(W));          // uniform start time
+                double ze, r;
+                do { ze = 2. * br.random0i1e() - 1.; r = br.random0i1e() * ell_Pzmax; }
+                while (r * r > 1. - ze * ze * (1. - box_r_sq));
+                double r_xy = std::sqrt(1. - ze * ze) * box_xy; ze *= box_z;
+                double phi = br.random0i1e() * 2. * kPi;
+                double xe = std::cos(phi) * r_xy, ye = std::sin(phi) * r_xy;
+                double step_in = step_[i] * random_erfc(br);
+                double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
+                m = Mol{xe * (1. - step_in * rnnorm), ye * (1. - step_in * rnnorm),
+                        ze * (1. - step_in * rnnorm * box_r_sq), i, true, int(k), true};
+                if (aniso) {
+                    double z = 2. * br.random0i1e() - 1., ph = 2. * kPi * br.random0i1e();
+                    double rr = std::sqrt(std::max(0., 1. - z * z));
+                    m.ox = std::cos(ph) * rr; m.oy = std::sin(ph) * rr; m.oz = z;
+                }
+            }
+            simulate_timeline<Rng>(m, w_birth, uint32_t(W), coast, wv, lb, out);
+        }
+        std::sort(out.begin(), out.end(), cmp);   // per-worker sort — parallel across workers
+    };
+    if (parallel) pool_->parallel_for(nmol, do_range);
+    else do_range(0, nmol, 0);
+
+    // --- 3) Background (serial) into its own sorted run. ------------------------------------
+    std::vector<IndPh> bg;
+    const auto& qbg = sample_.background();
+    const auto& bgd = sample_.background_decays();
+    if (!t_bg_setup_) { t_bg_.assign(nchan, 0.0); t_bg_setup_ = true; }
+    const double gap = double(W) * set_.dt;
+    for (int j = 0; j < nchan; ++j) {
+        double rate = (j < int(qbg.size())) ? qbg[j] : 0.0;
+        if (rate < kEps) continue;
+        const SimDecay* dec = (bgd.size() == 1) ? &bgd[0] : (j < int(bgd.size()) ? &bgd[j] : nullptr);
+        while (t_bg_[j] < gap) {
+            uint64_t w = uint64_t(t_bg_[j] / set_.dt);
+            double arr = t_bg_[j] - double(w) * set_.dt;
+            uint16_t micro = 0;
+            if (dec && !dec->empty()) {
+                double mns = std::fmod(dec->sample_ns(rng_emit_), set_.laser_period);
+                if (mns < 0.0) mns += set_.laser_period;
+                int ch = int(mns / set_.microtime_resolution);
+                if (ch < 0) ch = 0; else if (ch >= set_.n_microtime_channels) ch = set_.n_microtime_channels - 1;
+                micro = uint16_t(ch);
+            }
+            bg.push_back(IndPh{uint32_t(w), arr, int16_t(j), int16_t(nsp), 0, micro});
+            t_bg_[j] -= std::log(rng_emit_.random0e1e()) / rate;
+        }
+    }
+    if (!bg.empty()) std::sort(bg.begin(), bg.end(), cmp);
+
+    // --- 4) k-way merge of the pre-sorted per-worker runs + background (O(P log R), R small). -
+    struct Cur { const std::vector<IndPh>* run; size_t pos; };
+    std::vector<Cur> runs;
+    for (auto& b : perbuf) if (!b.empty()) runs.push_back({&b, 0});
+    if (!bg.empty()) runs.push_back({&bg, 0});
+    size_t total = 0; for (auto& c : runs) total += c.run->size();
+    T_.reserve(T_.size() + total); t_.reserve(t_.size() + total); N_.reserve(N_.size() + total);
+    sp_.reserve(sp_.size() + total); mol_.reserve(mol_.size() + total);
+    et_.reserve(et_.size() + total); micro_.reserve(micro_.size() + total);
+
+    auto hgt = [&](int a, int b) {   // min-heap on the runs' current fronts
+        return cmp((*runs[b].run)[runs[b].pos], (*runs[a].run)[runs[a].pos]);
+    };
+    std::vector<int> heap;
+    for (int i = 0; i < int(runs.size()); ++i) heap.push_back(i);
+    std::make_heap(heap.begin(), heap.end(), hgt);
+    while (!heap.empty()) {
+        std::pop_heap(heap.begin(), heap.end(), hgt);
+        int r = heap.back(); heap.pop_back();
+        const IndPh& p = (*runs[r].run)[runs[r].pos++];
+        T_.push_back(p.w); t_.push_back(p.t); N_.push_back(p.N);
+        sp_.push_back(p.sp); mol_.push_back(p.mol); et_.push_back(0); micro_.push_back(p.micro);
+        if (runs[r].pos < runs[r].run->size()) { heap.push_back(r); std::push_heap(heap.begin(), heap.end(), hgt); }
+    }
+    T0_ = uint32_t(W);
+    mol_alive_ = 0;   // independent mode does not maintain a live-molecule pool
+}
+
+void SimEngine::run_independent(uint64_t n_windows) {
+    switch (set_.rng_kind) {
+        case SimRngKind::Pcg:     run_independent_impl<SimPcgRandom>(n_windows); break;
+        case SimRngKind::Philox:  run_independent_impl<SimCounterRandom>(n_windows); break;
+        case SimRngKind::Mt19937: run_independent_impl<SimRandom>(n_windows); break;
+        case SimRngKind::Xoshiro:
+        default:                  run_independent_impl<SimXoshiroRandom>(n_windows); break;
     }
 }
 
@@ -481,15 +691,32 @@ SimRngScope rng_scope_from(const std::string& s) {
     return (s == "per_thread") ? SimRngScope::PerThread : SimRngScope::PerMolecule;
 }
 
-// Build a SimGrid from a {"type": "gaussian3d"|"uniform", ...} spec.
+// Build a SimGrid excitation/detection field from a JSON spec. Supported "type"s:
+//   "gaussian3d"           — separable 3D Gaussian (w0, z0); "analytic":true ⇒ grid-free eval.
+//   "analytic_gaussian3d"  — same, always grid-free.
+//   "gaussian_lorentzian"  — confocal MDF with z-expanding waist (w0, zR).
+//   "radial"               — numeric/measured radially-symmetric PSF: inline "rz" array
+//                            (row-major [iz*nr+ir]) with nr, nz, r_step, z_step.
+//   "uniform"              — constant "value" (default; e.g. a flat detection/CEF grid).
 SimGrid grid_from(const json& g) {
     double ext_xy = g.value("extent_xy", 2.0);
     double ext_z  = g.value("extent_z", 4.0);
     double sp     = g.value("spacing", 0.1);
     std::string t = g.value("type", std::string("uniform"));
+    if (t == "analytic_gaussian3d" || (t == "gaussian3d" && g.value("analytic", false)))
+        return SimGrid::analytic_gaussian3d(g.value("w0", 0.3), g.value("z0", 2.0),
+                                            g.value("amplitude", 1.0));
     if (t == "gaussian3d")
         return SimGrid::gaussian3d(g.value("w0", 0.3), g.value("z0", 2.0),
                                    ext_xy, ext_z, sp, g.value("amplitude", 1.0));
+    if (t == "gaussian_lorentzian")
+        return SimGrid::gaussian_lorentzian(g.value("w0", 0.3), g.value("zR", 1.0),
+                                            ext_xy, ext_z, sp, g.value("amplitude", 1.0));
+    if (t == "radial" && g.contains("rz"))
+        return SimGrid::from_radial(g["rz"].get<std::vector<double>>(),
+                                    g.value("nr", 0), g.value("nz", 0),
+                                    g.value("r_step", 0.05), g.value("z_step", 0.05),
+                                    ext_xy, ext_z, sp, g.value("amplitude", 1.0));
     return SimGrid::uniform(g.value("value", 1.0), ext_xy, ext_z, sp);
 }
 } // namespace
@@ -497,7 +724,7 @@ SimGrid grid_from(const json& g) {
 SimEngine* SimEngine::from_json(const std::string& json_config) {
     json cfg = json::parse(json_config);
 
-    SimSettings st;
+    SimIntegrator st;
     if (cfg.contains("settings")) {
         const json& s = cfg["settings"];
         st.dt = s.value("dt", st.dt);
@@ -511,9 +738,16 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
         st.laser_period = s.value("laser_period", st.laser_period);
         st.rng_kind = rng_kind_from(s.value("rng_kind", std::string("xoshiro")));
         st.rng_scope = rng_scope_from(s.value("rng_scope", std::string("per_molecule")));
+        st.fast_grid_bbox = s.value("fast_grid_bbox", st.fast_grid_bbox);
+        st.focus_threshold = s.value("focus_threshold", st.focus_threshold);
+        st.per_molecule_skip = s.value("per_molecule_skip", st.per_molecule_skip);
+        st.coast_safety = s.value("coast_safety", st.coast_safety);
+        st.min_coast_windows = s.value("min_coast_windows", st.min_coast_windows);
+        st.independent_molecules = s.value("independent_molecules", st.independent_molecules);
+        st.active_margin = s.value("active_margin", st.active_margin);
     }
 
-    SimSample sample;
+    SimSystem sample;
     if (cfg.contains("species")) {
         for (const json& sp : cfg["species"]) {
             SimSpecies s;
@@ -578,7 +812,10 @@ std::string SimEngine::default_json() {
   "settings": {
     "dt": 0.01, "n_ph_max": 1000000, "max_windows": 0,
     "seed_diffusion": 12345, "seed_emission": 54321, "n_channels": 2,
-    "rng_kind": "xoshiro", "rng_scope": "per_molecule"
+    "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0,
+    "rng_kind": "xoshiro", "rng_scope": "per_molecule",
+    "per_molecule_skip": false, "fast_grid_bbox": false,
+    "independent_molecules": false, "active_margin": 0.0
   },
   "box": {"xy": 2.0, "z": 4.0},
   "species": [{"D": 3.0, "q": [50.0, 50.0], "r0": 0.0, "l1": 0.0, "l2": 0.0, "D_rot": 0.0}],

@@ -13,7 +13,7 @@ def _vd(x):
 
 
 def _point_sample(q=(50.0, 50.0), D=0.0, mobile=False, n=1):
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = D; sp.q = _vd(q)
     s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0]))
@@ -26,7 +26,7 @@ def _point_sample(q=(50.0, 50.0), D=0.0, mobile=False, n=1):
 def test_immobile_count_rate_and_channel_split():
     s = _point_sample(q=(50.0, 50.0))
     exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.5, 3.0, 0.05, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
     st.n_ph_max = 40000; st.max_windows = 10 ** 8
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st)
     eng.run()
@@ -42,7 +42,7 @@ def test_immobile_count_rate_and_channel_split():
 def test_within_window_time_sorted():
     s = _point_sample()
     exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.5, 3.0, 0.05, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2; st.n_ph_max = 20000
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2; st.n_ph_max = 20000
     st.max_windows = 10 ** 8
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()
     T = np.asarray(eng.macro_window()); t = np.asarray(eng.arrival_time())
@@ -53,12 +53,12 @@ def test_within_window_time_sorted():
 
 def test_diffusion_msd_recovers_D():
     D, dt = 3.0, 0.01
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = D; sp.q = _vd([0.0, 0.0]); s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
     s.set_box(1e6, 1e6); s.add_fluorophore(0.0, 0.0, 0.0, 0, True)
     exc = tttrlib.SimGrid.uniform(0.0, 1.0, 2.0, 0.5)  # no photons, pure diffusion
-    st = tttrlib.SimSettings(); st.dt = dt; st.n_channels = 2
+    st = tttrlib.SimIntegrator(); st.dt = dt; st.n_channels = 2
     st.n_ph_max = 10 ** 9; st.max_windows = 100000
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st)
     eng.set_trajectory_reporter(1); eng.run()
@@ -69,28 +69,58 @@ def test_diffusion_msd_recovers_D():
 
 
 def test_open_volume_equilibrates_population():
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 3.0; sp.q = _vd([50.0, 50.0]); s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
     s.set_box(2.0, 4.0); s.set_population(0, 5.0)
     exc = tttrlib.SimGrid.gaussian3d(0.3, 2.0, 2.0, 4.0, 0.1, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
     st.n_ph_max = 20000; st.max_windows = 10 ** 7
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()
     assert 0 < eng.n_molecules() < 50   # bounded around the set population of ~5
 
 
+def test_per_molecule_skip_preserves_statistics():
+    """PRD-007 G2: per-molecule coasting keeps count-rate and open-volume population.
+
+    Far molecules sleep and catch up exactly on wake; the coast is bounded by the
+    distance to the nearest boundary (focus or box surface), so a sleeper reaches
+    neither the focus (no missed photons) nor the surface (no missed deaths).
+    """
+    def run(skip, n_ph_max, max_windows):
+        s = tttrlib.SimSystem()
+        sp = tttrlib.SimSpecies(); sp.D = 3.0; sp.q = _vd([200.0, 20.0]); s.add_species(sp)
+        s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([2.0, 2.0]))
+        s.set_box(5.0, 5.0); s.set_population(0, 5.0)
+        exc = tttrlib.SimGrid.gaussian3d(0.3, 2.0, 5.0, 5.0, 0.1, 1.0)
+        st = tttrlib.SimIntegrator(); st.dt = 0.001; st.n_channels = 2
+        st.n_ph_max = n_ph_max; st.max_windows = max_windows
+        st.per_molecule_skip = skip
+        eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()
+        return eng
+
+    # count rate preserved vs fixed-dt
+    r_off = run(False, 6000, 0); r_on = run(True, 6000, 0)
+    rate_off = r_off.n_photons() / r_off.current_window()
+    rate_on = r_on.n_photons() / r_on.current_window()
+    assert abs(rate_on / rate_off - 1.0) < 0.08
+
+    # open-volume population stays bounded (does not grow with window count)
+    for mw in (100000, 400000):
+        assert 0 < run(True, 10 ** 9, mw).n_molecules() < 40
+
+
 @pytest.mark.parametrize("kind", ["Xoshiro", "Pcg", "Philox", "Mt19937"])
 def test_rng_thread_count_independent(kind):
     def run(threads):
-        s = tttrlib.SimSample()
+        s = tttrlib.SimSystem()
         sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([50.0, 50.0]); s.add_species(sp)
         s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
         rng = np.random.RandomState(3)
         for _ in range(4000):
             s.add_fluorophore(*rng.uniform(-0.8, 0.8, 3).tolist(), 0, False)
         exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.0, 2.0, 0.05, 1.0)
-        st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2
+        st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
         st.n_ph_max = 60000; st.max_windows = 10 ** 8
         st.rng_kind = getattr(tttrlib, "SimRngKind_" + kind)
         eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st)
@@ -106,7 +136,7 @@ def test_rng_thread_count_independent(kind):
 def test_spc132_encoder_roundtrip(tmp_path):
     s = _point_sample()
     exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.5, 3.0, 0.05, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2; st.n_ph_max = 50000
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2; st.n_ph_max = 50000
     st.max_windows = 10 ** 8
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st); eng.run()
     enc = tttrlib.SimMicrotimeEncoder()

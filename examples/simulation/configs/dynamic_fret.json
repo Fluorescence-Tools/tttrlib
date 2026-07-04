@@ -1,0 +1,17 @@
+{
+  "_comment": "Dynamic two-state smFRET with conformational exchange (PRD-008). Same two FRET states as proximity_ratio.json, now interconverting via the SPONTANEOUS rate matrix k_nrad (row-major i->j, per macro-time/ms unit): 0->1 and 1->0 both at 2 ms^-1. Exchange on the timescale of a burst (~0.1-1 ms) shifts each burst toward the time-averaged ratio, bridging the two static peaks. Compare the histogram against proximity_ratio.json.",
+  "settings": {"dt": 0.01, "n_ph_max": 400000, "n_channels": 2, "laser_period": 32.0,
+               "active_margin": 1.0, "fast_grid_bbox": true},
+  "box": {"xy": 2.0, "z": 4.0},
+  "species": [
+    {"D": 0.05, "q": [225.0, 75.0]},
+    {"D": 0.05, "q": [75.0, 225.0]}
+  ],
+  "k_rad": [0, 0, 0, 0],
+  "k_nrad": [0.0, 2.0,
+             2.0, 0.0],
+  "background": [0.02, 0.02],
+  "population": [0.18, 0.18],
+  "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 2.0,
+                 "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1}
+}

@@ -1,19 +1,19 @@
 /*!
- * \file SimSample.cpp
- * \brief SimSample implementation — population helpers and emitter-grid expansion
- *        (see SimSample.h, PRD-005).
+ * \file SimSystem.cpp
+ * \brief SimSystem implementation — population helpers and emitter-grid expansion
+ *        (see SimSystem.h, PRD-005).
  */
-#include "SimSample.h"
+#include "SimSystem.h"
 
 namespace tttrlib {
 
-void SimSample::set_population(int species, double expected_count) {
+void SimSystem::set_population(int species, double expected_count) {
     if (species < 0) return;
     if (int(population_.size()) <= species) population_.resize(species + 1, 0.0);
     population_[species] = expected_count;
 }
 
-void SimSample::set_positions(const double* xyz, int n,
+void SimSystem::set_positions(const double* xyz, int n,
                               const int* species, const uint8_t* mobile) {
     emitters_.reserve(emitters_.size() + size_t(n));
     for (int i = 0; i < n; ++i) {
@@ -24,7 +24,7 @@ void SimSample::set_positions(const double* xyz, int n,
     }
 }
 
-void SimSample::set_emitter_grid(const int* data, int nch, int nz, int ny, int nx,
+void SimSystem::set_emitter_grid(const int* data, int nch, int nz, int ny, int nx,
                                  double dx, double dy, double dz,
                                  double x0, double y0, double z0) {
     const size_t plane = size_t(ny) * nx;

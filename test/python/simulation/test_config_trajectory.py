@@ -57,13 +57,13 @@ def test_json_decay_pattern_gives_microtimes():
 
 
 def test_trajectory_reporter_and_hdf5(tmp_path):
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 3.0; sp.q = _vd([20.0, 20.0]); s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
     s.set_box(50.0, 50.0)
     for _ in range(20):
         s.add_fluorophore(0.0, 0.0, 0.0, 0, True)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 2
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
     st.n_ph_max = 10 ** 9; st.max_windows = 1000
     eng = tttrlib.SimEngine(s, tttrlib.SimGrid.gaussian3d(0.3, 2.0, 4.0, 8.0, 0.2, 1.0),
                             tttrlib.VectorSimGrid([]), st)

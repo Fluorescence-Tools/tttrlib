@@ -15,7 +15,7 @@ def test_clsm_scan_reconstructs_shape():
     N, px = 16, 0.5
     yy, xx = np.mgrid[0:N, 0:N]
     mask = (((xx - (N - 1) / 2) ** 2 + (yy - (N - 1) / 2) ** 2) <= 5 ** 2).astype(int)
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([2000.0]); s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0]))
     for iy in range(N):
@@ -23,7 +23,7 @@ def test_clsm_scan_reconstructs_shape():
             if mask[iy, ix]:
                 s.add_fluorophore(ix * px, iy * px, 0.0, 0, False)
     exc = tttrlib.SimGrid.gaussian3d(0.2, 1.0, 0.8, 1.0, 0.04, 1.0)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 10 ** 9
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 10 ** 9
     eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st)
     eng.run_scan(tttrlib.SimScanner.uniform(N, N, 0.05, px, px, 0.0, 0.0,
                                             tttrlib.SimMarkerConfig(), False))
@@ -50,12 +50,12 @@ def test_flim_recovers_arbitrary_decay_pattern():
     pattern = np.array(tttrlib.SimDecay.convolve(_vd(decay), _vd(irf)))
     dec = tttrlib.SimDecay.from_pattern(_vd(pattern), dt, 0.0)
 
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([1000.0]); sp.decay = dec
     s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0]))
     s.add_fluorophore(0.0, 0.0, 0.0, 0, False)
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 200000
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 200000
     st.n_microtime_channels = n; st.microtime_resolution = dt; st.laser_period = n * dt
     eng = tttrlib.SimEngine(s, tttrlib.SimGrid.gaussian3d(0.3, 1.0, 0.8, 1.0, 0.04, 1.0),
                             tttrlib.VectorSimGrid([]), st)
@@ -70,13 +70,13 @@ def test_background_micro_time_follows_pattern():
     """PRD-007 G1: background photons carry a configurable micro-time distribution."""
     n, dt = 512, 0.032
     bg_pat = np.exp(-np.arange(n) * dt / 0.5); bg_pat[:3] = 0.0   # scatter-like
-    s = tttrlib.SimSample()
+    s = tttrlib.SimSystem()
     sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([1.0]); s.add_species(sp)
     s.set_rate_matrices(_vd([0.0]), _vd([0.0]))
     s.set_background(_vd([1.0]))
     s.set_background_decay(tttrlib.SimDecay.from_pattern(_vd(bg_pat), dt, 0.0))
     s.add_fluorophore(100.0, 100.0, 100.0, 0, False)   # far from focus -> mostly background
-    st = tttrlib.SimSettings(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 60000
+    st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 1; st.n_ph_max = 60000
     st.n_microtime_channels = n; st.microtime_resolution = dt; st.laser_period = n * dt
     eng = tttrlib.SimEngine(s, tttrlib.SimGrid.gaussian3d(0.3, 1.0, 0.8, 1.0, 0.04, 1.0),
                             tttrlib.VectorSimGrid([]), st)

@@ -1,5 +1,5 @@
 /*!
- * \file SimSample.h
+ * \file SimSystem.h
  * \brief The simulated sample: species/states, transition kinetics, background, box
  *        geometry, and the fluorophore population (PRD-005).
  *
@@ -9,8 +9,8 @@
  * across the box surface). Per-particle static/mobile is a flag; the species D
  * governs the step size when mobile. Additive; does not modify existing tttrlib.
  */
-#ifndef TTTRLIB_SIMSAMPLE_H
-#define TTTRLIB_SIMSAMPLE_H
+#ifndef TTTRLIB_SIMSYSTEM_H
+#define TTTRLIB_SIMSYSTEM_H
 
 #include <cstdint>
 #include <vector>
@@ -32,7 +32,7 @@ struct SimEmitter {
  * intensity-dependent (scaled by excitation at runtime — FRET/photo-induced) and
  * `k_nrad` is spontaneous. `n_species()` must equal the matrix dimension.
  */
-class SimSample {
+class SimSystem {
 public:
     // --- species / kinetics -----------------------------------------------------
     int add_species(const SimSpecies& s) { species_.push_back(s); return int(species_.size()) - 1; }
@@ -107,4 +107,4 @@ private:
 
 } // namespace tttrlib
 
-#endif // TTTRLIB_SIMSAMPLE_H
+#endif // TTTRLIB_SIMSYSTEM_H

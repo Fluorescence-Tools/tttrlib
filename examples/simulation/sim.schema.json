@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tttrlib.readthedocs.io/sim.schema.json",
+  "title": "tttrlib photon-simulation config",
+  "description": "Configuration accepted by tttrlib.SimEngine.from_json(...) — the single entry point for the photon simulator. Diffusion, rate, and brightness quantities share ONE abstract macro-time unit (the ms convention is common); the micro-time / TAC axis is a separate axis in nanoseconds. See the simulator manual for the full physics and the routing-channel configuration model (FRET, PIE, MFD, anisotropy).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "_comment": {"type": "string", "description": "Free-text description of the configuration (ignored by the engine)."},
+    "settings": {
+      "type": "object",
+      "description": "Time base, RNG, micro-time axis, stop conditions, and opt-in throughput knobs (SimIntegrator).",
+      "additionalProperties": false,
+      "properties": {
+        "dt": {"type": "number", "default": 0.01, "exclusiveMinimum": 0,
+          "description": "Diffusion/integration time-window in the macro-time unit (ms convention: 0.001 = 1 µs). Sets diffusion resolution; do not enlarge for speed (sub-stepped internally)."},
+        "n_ph_max": {"type": "integer", "default": 1000000, "minimum": 1,
+          "description": "Stop after this many photons (fixed-count mode). Use max_windows for a fixed duration."},
+        "max_windows": {"type": "integer", "default": 0, "minimum": 0,
+          "description": "Fixed-DURATION stop: duration = max_windows × dt (0 = unlimited). Required by independent_molecules; then n_ph_max is ignored."},
+        "n_channels": {"type": "integer", "default": 2, "minimum": 1,
+          "description": "Number of detection (routing) channels = product of the physical routings (spectral × polarization × PIE window)."},
+        "seed_diffusion": {"type": "integer", "default": 12345, "minimum": 0,
+          "description": "RNG seed for diffusion, geometry and state transitions."},
+        "seed_emission": {"type": "integer", "default": 54321, "minimum": 0,
+          "description": "RNG seed for emission, channel choice and background."},
+        "n_microtime_channels": {"type": "integer", "default": 4096, "minimum": 1,
+          "description": "Number of micro-time (TCSPC/TAC) channels on the fluorescence-decay axis."},
+        "microtime_resolution": {"type": "number", "default": 0.008, "minimum": 0,
+          "description": "Micro-time channel width in NANOSECONDS (TAC resolution)."},
+        "laser_period": {"type": "number", "default": 32.0, "minimum": 0,
+          "description": "Pulsed-excitation period in NANOSECONDS; micro-times wrap modulo this. Its sub-windows carry PIE prompt/delay."},
+        "rng_kind": {"type": "string", "enum": ["xoshiro", "pcg", "philox", "mt19937", "mt"], "default": "xoshiro",
+          "description": "RNG backend. All are thread-count-independent; xoshiro is the fast default."},
+        "rng_scope": {"type": "string", "enum": ["per_molecule", "per_thread"], "default": "per_molecule",
+          "description": "RNG stream granularity. per_molecule is reproducible regardless of thread count."},
+        "per_molecule_skip": {"type": "boolean", "default": false,
+          "description": "Coasting: skip per-window work for molecules far from the focus; exact catch-up on wake. Big speedup for dilute samples."},
+        "coast_safety": {"type": "number", "default": 3.0, "minimum": 1.0,
+          "description": "Coast bound: step std ≤ distance-to-boundary / coast_safety. Only used with coasting."},
+        "min_coast_windows": {"type": "integer", "default": 8, "minimum": 1,
+          "description": "Minimum sleep length in windows. Only used with coasting."},
+        "focus_threshold": {"type": "number", "default": 0.001, "minimum": 0, "maximum": 1,
+          "description": "Fraction of peak excitation defining the effective-focus box used by coasting, the two-step lookup and active_margin."},
+        "fast_grid_bbox": {"type": "boolean", "default": false,
+          "description": "Two-step field lookup: reject far-from-focus queries with a bounding box before the trilinear interpolation."},
+        "independent_molecules": {"type": "boolean", "default": false,
+          "description": "Simulate each molecule's whole timeline independently and merge — parallel across molecules. Requires max_windows > 0; ignores n_ph_max."},
+        "active_margin": {"type": "number", "default": 0.0, "minimum": 0,
+          "description": "Open-volume: shrink the box to focus+margin (µm), holding concentration, so far molecules are skipped. Exact for diffusion; for kinetics use margin ≳ √(2·D/k). 0 = off."}
+      }
+    },
+    "box": {
+      "type": "object", "additionalProperties": false,
+      "description": "Ellipsoidal open-volume box (µm). With population, sets the concentration = M / box volume.",
+      "properties": {
+        "xy": {"type": "number", "default": 2.0, "minimum": 0, "description": "Lateral half-extent (µm)."},
+        "z": {"type": "number", "default": 4.0, "minimum": 0, "description": "Axial half-extent (µm)."}
+      }
+    },
+    "species": {
+      "type": "array",
+      "description": "Photophysical / conformational states. Model each emitting state (donor-excited, acceptor-via-FRET, dark, directly-excited-acceptor for PIE, …) as a species; FRET E, PIE window and per-channel lifetime are encoded via q + decay, not new physics.",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "D": {"type": "number", "default": 0.0, "minimum": 0,
+            "description": "Translational diffusion coefficient, µm² per macro-time unit (ms ⇒ µm²/ms). 0 = immobile."},
+          "q": {"type": "array", "items": {"type": "number", "minimum": 0},
+            "description": "Peak brightness per channel (photons per macro-time unit at the focus centre). The channel split encodes FRET color routing / anisotropy; q_green ∝ (1−E), q_red ∝ E."},
+          "r0": {"type": "number", "default": 0.0, "minimum": -0.2, "maximum": 0.4,
+            "description": "Fundamental anisotropy. >0 enables photoselection + depolarization (needs a decay)."},
+          "l1": {"type": "number", "default": 0.0, "description": "Detection polarization mixing, parallel channel."},
+          "l2": {"type": "number", "default": 0.0, "description": "Detection polarization mixing, perpendicular channel."},
+          "D_rot": {"type": "number", "default": 0.0, "minimum": 0,
+            "description": "Rotational diffusion coefficient, rad²/ns; depolarizes over the lifetime (Perrin)."},
+          "decay": {"$ref": "#/definitions/decay"}
+        }
+      }
+    },
+    "k_rad": {"type": "array", "items": {"type": "number"},
+      "description": "N×N row-major (i→j) transition rates SCALED by local excitation intensity (photo-induced / FRET-type), per macro-time unit. Length N_species²."},
+    "k_nrad": {"type": "array", "items": {"type": "number"},
+      "description": "N×N row-major (i→j) SPONTANEOUS transition rates (blinking, conformational exchange), per macro-time unit. Length N_species²."},
+    "background": {"type": "array", "items": {"type": "number", "minimum": 0},
+      "description": "Uncorrelated background rate per channel (photons per macro-time unit)."},
+    "background_decay": {"$ref": "#/definitions/decay",
+      "description": "Optional micro-time pattern for background photons (scatter/IRF or flat); broadcast to all channels."},
+    "population": {"type": "array", "items": {"type": "number", "minimum": 0},
+      "description": "Open-volume expected molecule count per species in the box (index = species)."},
+    "emitters": {
+      "type": "array",
+      "description": "Explicit discrete fluorophores (e.g. immobile emitters for CLSM). Alternative to open-volume population.",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "properties": {
+          "x": {"type": "number", "default": 0.0}, "y": {"type": "number", "default": 0.0}, "z": {"type": "number", "default": 0.0},
+          "species": {"type": "integer", "default": 0}, "mobile": {"type": "boolean", "default": false}
+        }
+      }
+    },
+    "excitation": {"$ref": "#/definitions/field", "description": "Excitation intensity field (one field)."},
+    "detection": {"type": "array", "items": {"$ref": "#/definitions/field"},
+      "description": "Detection-efficiency field per channel (size == n_channels). Empty = uniform efficiency 1. Lateral x0/y0 offsets between channels give ISM."}
+  },
+  "definitions": {
+    "field": {
+      "type": "object",
+      "description": "Excitation/detection field. Either an analytic/parametric focus or a numeric/measured PSF filling a voxel grid.",
+      "properties": {
+        "type": {"type": "string", "enum": ["gaussian3d", "analytic_gaussian3d", "gaussian_lorentzian", "radial", "uniform"], "default": "uniform"},
+        "w0": {"type": "number", "default": 0.3, "description": "Lateral 1/e² radius (µm)."},
+        "z0": {"type": "number", "default": 2.0, "description": "Axial 1/e² radius (µm) for gaussian3d."},
+        "zR": {"type": "number", "default": 1.0, "description": "Rayleigh range (µm) for gaussian_lorentzian (w(z)² = w0²(1+(z/zR)²))."},
+        "analytic": {"type": "boolean", "default": false, "description": "gaussian3d only: evaluate analytically (no voxels)."},
+        "amplitude": {"type": "number", "default": 1.0},
+        "value": {"type": "number", "default": 1.0, "description": "uniform only: the constant value."},
+        "extent_xy": {"type": "number", "default": 2.0, "description": "Grid half-extent XY (µm); size to the focus, not the box, for cheap construction."},
+        "extent_z": {"type": "number", "default": 4.0, "description": "Grid half-extent Z (µm)."},
+        "spacing": {"type": "number", "default": 0.1, "description": "Voxel spacing (µm)."},
+        "rz": {"type": "array", "items": {"type": "number"}, "description": "radial only: PSF on the (r,z) half-plane, row-major [iz*nr+ir]."},
+        "nr": {"type": "integer", "description": "radial only: number of r samples."},
+        "nz": {"type": "integer", "description": "radial only: number of z samples (z-centred)."},
+        "r_step": {"type": "number", "default": 0.05, "description": "radial only: r spacing (µm)."},
+        "z_step": {"type": "number", "default": 0.05, "description": "radial only: z spacing (µm)."}
+      }
+    },
+    "decay": {
+      "type": "object",
+      "description": "Micro-time (FLIM/lifetime) pattern for a species or the background. Either a raw 'pattern' array or a multi-exponential built from 'lifetimes' (+ 'amplitudes', optional 'irf'). 't0' shifts the pattern within the laser period — used to place PIE prompt vs delayed emission.",
+      "properties": {
+        "dt": {"type": "number", "default": 0.008, "description": "Pattern bin width (ns)."},
+        "t0": {"type": "number", "default": 0.0, "description": "Micro-time of bin 0 (ns); offset within the laser period for PIE."},
+        "pattern": {"type": "array", "items": {"type": "number", "minimum": 0}, "description": "Arbitrary (unnormalised) decay density over micro-time bins."},
+        "lifetimes": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}, "description": "Fluorescence lifetimes (ns) for a multi-exponential decay."},
+        "amplitudes": {"type": "array", "items": {"type": "number"}, "default": [1.0], "description": "Amplitudes per lifetime."},
+        "n_bins": {"type": "integer", "default": 4096, "description": "Number of bins for the multi-exponential build."},
+        "irf": {"type": "array", "items": {"type": "number", "minimum": 0}, "description": "Optional IRF pattern to convolve with the multi-exponential decay."}
+      }
+    }
+  }
+}

@@ -21,18 +21,36 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "SimSample.h"
+#include "SimSystem.h"
 #include "SimGrid.h"
 #include "SimScanner.h"
-#include "SimSettings.h"
+#include "SimIntegrator.h"
 #include "SimRandom.h"
 #include "SimCounterRandom.h"
 #include "SimXoshiroRandom.h"
 #include "SimPcgRandom.h"
 #include "SimThreadPool.h"
+#include "SimZiggurat.h"
 #include "SimMicrotimeEncoder.h"
 
 namespace tttrlib {
+
+/*!
+ * \brief An immutable snapshot of the live simulation (OpenMM-style `State`).
+ *
+ * Captures the current macro-window, the photon count so far, and the position/state of every
+ * alive molecule (parallel arrays, one entry per molecule). Obtained from
+ * `SimEngine::get_state()`; useful for inspection, plotting the instantaneous configuration, or
+ * checkpointing alongside the RNG state (`diffusion_state()`/`emission_state()`).
+ */
+struct SimState {
+    uint32_t window = 0;                ///< current macro-window index (T0)
+    uint64_t n_photons = 0;             ///< photons generated so far
+    int n_molecules = 0;                ///< number of alive molecules (== id.size())
+    std::vector<int32_t> id;            ///< molecule id per alive molecule
+    std::vector<int16_t> species;       ///< current species/state index per molecule
+    std::vector<double> x, y, z;        ///< positions (µm), one per alive molecule
+};
 
 /*!
  * \brief Assembles a sample, an excitation grid and per-channel detection grids,
@@ -47,8 +65,8 @@ public:
      *                   empty ⇒ uniform detection (efficiency 1 everywhere).
      * \param settings   time-step, seeds, stopping condition.
      */
-    SimEngine(SimSample sample, SimGrid excitation,
-              std::vector<SimGrid> detection, SimSettings settings);
+    SimEngine(SimSystem sample, SimGrid excitation,
+              std::vector<SimGrid> detection, SimIntegrator settings);
 
     /// Build a fully-configured engine from a JSON config string. Seeds, RNG backend
     /// and scope, species, kinetics, background, box, population, excitation and
@@ -65,6 +83,12 @@ public:
 
     /// Advance exactly `n_windows` time windows (streaming/stepwise use).
     void step(uint64_t n_windows);
+
+    /// Independent single-molecule execution over a fixed horizon of `n_windows`: each
+    /// molecule's whole timeline is simulated on its own (coasting far from the focus,
+    /// fine-stepping near it) and the photon streams are merged. Embarrassingly parallel
+    /// across molecules. `run()` dispatches here when `independent_molecules` is set.
+    void run_independent(uint64_t n_windows);
 
     /// Run a CLSM raster scan: for each pixel, position the fields and dwell, emitting
     /// photons + frame/line/pixel markers into the record stream (event_type 1 = marker).
@@ -101,6 +125,10 @@ public:
     uint64_t n_photons() const { return T_.size(); }
     uint64_t current_window() const { return T0_; }
     int n_molecules() const { return int(mol_alive_); }
+
+    /// Immutable snapshot of the live molecules + counters (OpenMM-style `State`). Not meaningful
+    /// in independent-molecule mode (which keeps no live pool).
+    SimState get_state() const;
 
     /*!
      * \brief Encode the accumulated records with `enc` (no array marshalling needed
@@ -145,6 +173,7 @@ private:
     double detection_eff(int ch, double x, double y, double z) const;
     void push_marker(int routing_channel);  ///< append a marker event at the current window
     void emit_window();                   ///< one time window: photophysics + emission + diffusion
+    template <class Rng> void run_independent_impl(uint64_t W);  ///< independent-mode driver
 
     // --- per-molecule coasting (opt-in) ----------------------------------------
     void compute_focus_aabb();            ///< effective-focus AABB + uniform_D_/any_knrad_ (once)
@@ -228,15 +257,16 @@ private:
         m.coasting = true; m.w_sleep = T0 + 1; m.w_wake = uint32_t(T0 + 1 + n);
     }
 
-    /// Wake a coasting molecule at window `T0`: one exact Gaussian catch-up over the elapsed
-    /// coast (variance accumulated along the spontaneous-state path) + spontaneous-state jump.
+    /// Exact catch-up of a molecule over a coast of `n` windows starting at window `w_start`:
+    /// one Gaussian displacement whose variance is accumulated along the spontaneous-state
+    /// (k_nrad-only) path, plus the state jump. Shared by window-mode wake and independent
+    /// mode; the coast RNG is keyed by (id, w_start) so it is thread-count-independent.
     template <class Rng>
-    void wake_molecule(Mol& m, uint32_t T0) {
-        const double tau = double(T0 - m.w_sleep) * set_.dt;
-        m.coasting = false;
+    void coast_over(Mol& m, uint32_t w_start, uint64_t n) const {
+        const double tau = double(n) * set_.dt;
         if (tau <= 0.0) return;
         Rng crng; crng.reset(mol_base_seed_ ^ kCoastSalt, uint32_t(m.id),
-                             uint64_t(m.w_sleep) * kWindowStride);
+                             uint64_t(w_start) * kWindowStride);
         const int nsp = sample_.n_species();
         const auto& kn = sample_.k_nrad();
         int i = m.state; double t = 0.0, var = 0.0;
@@ -258,12 +288,60 @@ private:
             i = j;
         }
         const double s = std::sqrt(var);
-        m.x += s * crng.randomNorm(); m.y += s * crng.randomNorm(); m.z += s * crng.randomNorm();
+        double g0, g1, g2; norm3(crng, g0, g1, g2);          // ziggurat catch-up displacement
+        m.x += s * g0; m.y += s * g1; m.z += s * g2;
         m.state = i;
         const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
         const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
         if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
             m.alive = false;
+    }
+
+    /// Wake a coasting molecule at window `T0`: exact catch-up over the elapsed coast.
+    template <class Rng>
+    void wake_molecule(Mol& m, uint32_t T0) const {
+        m.coasting = false;
+        coast_over<Rng>(m, m.w_sleep, uint64_t(T0 - m.w_sleep));
+    }
+
+    /// Simulate one molecule's whole timeline independently over [w_birth, W): coast far from
+    /// the focus, fine-step (via process_molecule) near it. Photons appended to `ph`, tagged
+    /// with their absolute macro-window. Reuses the per-(molecule,window) RNG keying so an
+    /// awake window yields the same photons as the window engine.
+    template <class Rng, class PhVec>
+    void simulate_timeline(Mol m, uint32_t w_birth, uint32_t W, bool coast,
+                           std::vector<double>& wv, LocalBuf& buf, PhVec& ph) const {
+        const int nchan = set_.n_channels; (void)nchan;
+        const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
+        uint32_t w = w_birth;
+        while (w < W && m.alive) {
+            if (coast && m.mobile) {
+                const double gap = focus_gap(m.x, m.y, m.z);
+                if (gap > 0.0) {
+                    double d = std::min(gap, surface_margin(m.x, m.y, m.z));
+                    const double D = sample_.species()[m.state].D;
+                    if (d > 0.0 && D > kEps) {
+                        const double sigma = d / safety;
+                        uint64_t n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+                        if (n >= set_.min_coast_windows) {
+                            if (uint64_t(w) + n > W) n = W - w;   // clamp to horizon
+                            if (n > 0) {
+                                coast_over<Rng>(m, w, n);
+                                w += uint32_t(n);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            Rng rng; rng.reset(mol_base_seed_, uint32_t(m.id), uint64_t(w) * kWindowStride);
+            buf.clear();
+            process_molecule(m, rng, wv, buf);
+            for (size_t k = 0; k < buf.t.size(); ++k)
+                ph.push_back(typename PhVec::value_type{
+                    w, buf.t[k], buf.N[k], buf.sp[k], buf.mol[k], buf.micro[k]});
+            ++w;
+        }
     }
 
     /// Process one molecule for the current window into `buf` using RNG backend `Rng`.
@@ -407,20 +485,14 @@ private:
         }
     }
 
-    /// Draw three independent standard normals (the per-step diffusion displacement).
-    /// Marsaglia polar: each accepted (u,v) in the unit disc yields two normals, so two
-    /// rejection loops cover three draws. Stateless (no cached spare), so a molecule's
-    /// stream stays a pure function of (id, window) and results remain thread-independent.
+    /// Draw three independent standard normals (the per-step diffusion displacement)
+    /// with the ziggurat sampler — the hottest RNG path, ~2.5x cheaper than randomNorm
+    /// and ~2x cheaper than Marsaglia polar (no per-draw log/sqrt on the common path).
+    /// Stateless, so a molecule's stream stays a pure function of (id, window) and
+    /// results remain thread-count-independent.
     template <class Rng>
     static inline void norm3(Rng& rng, double& a, double& b, double& c) {
-        double u, v, s;
-        do { u = 2.0 * rng.random0i1e() - 1.0; v = 2.0 * rng.random0i1e() - 1.0; s = u*u + v*v; }
-        while (s >= 1.0 || s <= 0.0);
-        double f = std::sqrt(-2.0 * std::log(s) / s);
-        a = u * f; b = v * f;
-        do { u = 2.0 * rng.random0i1e() - 1.0; v = 2.0 * rng.random0i1e() - 1.0; s = u*u + v*v; }
-        while (s >= 1.0 || s <= 0.0);
-        c = u * std::sqrt(-2.0 * std::log(s) / s);
+        a = sim_randn(rng); b = sim_randn(rng); c = sim_randn(rng);
     }
 
     /// Run all molecules for the current window into bufs_ (serial or thread-pool),
@@ -465,10 +537,10 @@ private:
         }
     }
 
-    SimSample sample_;
+    SimSystem sample_;
     SimGrid exc_;
     std::vector<SimGrid> det_;
-    SimSettings set_;
+    SimIntegrator set_;
     SimRandom rng_diff_, rng_emit_;
 
     std::vector<Mol> mols_;
@@ -490,6 +562,7 @@ private:
     bool uniform_D_ = false;      ///< all species share D within kEps
     bool any_knrad_ = false;      ///< any spontaneous (k_nrad) transition possible
     static constexpr uint32_t kCoastSalt = 0x00C0A57u;  ///< salt for the per-molecule coast RNG
+    static constexpr uint32_t kBirthSalt = 0x0B1A7Du;   ///< salt for the independent-mode birth RNG
 
     // open-volume injection bookkeeping
     std::vector<double> step_, rate_in_, t_in_;

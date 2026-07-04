@@ -21,7 +21,7 @@ rad = np.hypot(xx - cx, yy - cy)
 mask = (rad <= 4 + 6 * np.abs(np.cos(2.5 * ang))).astype(int)
 
 # --- sample: one immobile, bright fluorophore per 'on' pixel ---
-sample = tttrlib.SimSample()
+sample = tttrlib.SimSystem()
 sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = tttrlib.VectorDouble([2000.0])
 sample.add_species(sp)
 sample.set_rate_matrices(tttrlib.VectorDouble([0.0]), tttrlib.VectorDouble([0.0]))
@@ -33,7 +33,7 @@ for iy in range(N):
 
 # --- sharp excitation PSF (grid); uniform detection (single channel) ---
 excitation = tttrlib.SimGrid.gaussian3d(0.2, 1.0, 0.8, 1.0, 0.04, 1.0)
-settings = tttrlib.SimSettings()
+settings = tttrlib.SimIntegrator()
 settings.dt = 0.01
 settings.n_channels = 1
 settings.n_ph_max = 10 ** 9  # run_scan runs the full raster regardless

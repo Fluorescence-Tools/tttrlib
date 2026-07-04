@@ -12,7 +12,7 @@ import RMF
 import tttrlib
 
 # A sample of 30 freely diffusing molecules, all starting at the origin.
-sample = tttrlib.SimSample()
+sample = tttrlib.SimSystem()
 species = tttrlib.SimSpecies()
 species.D = 3.0                                    # µm^2/s
 species.q = tttrlib.VectorDouble([20.0, 20.0])
@@ -23,7 +23,7 @@ sample.set_box(20.0, 20.0)
 for _ in range(30):
     sample.add_fluorophore(0.0, 0.0, 0.0, 0, True)  # mobile=True -> diffuses
 
-settings = tttrlib.SimSettings()
+settings = tttrlib.SimIntegrator()
 settings.dt = 0.01
 settings.n_channels = 2
 settings.n_ph_max = 10 ** 9

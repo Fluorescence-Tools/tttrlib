@@ -25,7 +25,7 @@ pattern = np.array(tttrlib.SimDecay.convolve(
 species_decay = tttrlib.SimDecay.from_pattern(
     tttrlib.VectorDouble(pattern.tolist()), dt, 0.0)
 
-sample = tttrlib.SimSample()
+sample = tttrlib.SimSystem()
 sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = tttrlib.VectorDouble([1000.0])
 sp.decay = species_decay
 sample.add_species(sp)
@@ -33,7 +33,7 @@ sample.set_rate_matrices(tttrlib.VectorDouble([0.0]), tttrlib.VectorDouble([0.0]
 sample.set_background(tttrlib.VectorDouble([0.0]))
 sample.add_fluorophore(0.0, 0.0, 0.0, 0, False)
 
-settings = tttrlib.SimSettings()
+settings = tttrlib.SimIntegrator()
 settings.dt = 0.01; settings.n_channels = 1; settings.n_ph_max = 300000
 settings.n_microtime_channels = n
 settings.microtime_resolution = dt
