@@ -83,6 +83,7 @@ class TestBurstSearchCUSUM(unittest.TestCase):
         
         # All indices should be valid
         if len(bursts) > 0:
+            bursts = np.asarray(bursts)          # burst_search returns a plain sequence
             self.assertTrue(np.all(bursts >= 0))
             self.assertTrue(np.all(bursts < len(self.data)))
 

@@ -589,7 +589,7 @@ void BurstFilter::get_bursts(long long** output, int* n_output) {
         *output = (long long*)malloc(*n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *output);
     } else {
-        *output = nullptr;
+        *output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
@@ -625,7 +625,7 @@ void BurstFilter::find_bursts(long long** find_output, int* find_n_output) {
         *find_output = (long long*)malloc(*find_n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *find_output);
     } else {
-        *find_output = nullptr;
+        *find_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
@@ -657,7 +657,7 @@ void BurstFilter::filter_by_size(int min_size, int max_size, long long** size_ou
         *size_output = (long long*)malloc(*size_n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *size_output);
     } else {
-        *size_output = nullptr;
+        *size_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
@@ -666,7 +666,7 @@ void BurstFilter::filter_by_duration(double min_duration, double max_duration, l
     
     if (!tttr_data) {
         *duration_n_output = 0;
-        *duration_output = nullptr;
+        *duration_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
         return;
     }
     
@@ -697,7 +697,7 @@ void BurstFilter::filter_by_duration(double min_duration, double max_duration, l
         *duration_output = (long long*)malloc(*duration_n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *duration_output);
     } else {
-        *duration_output = nullptr;
+        *duration_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
@@ -711,7 +711,7 @@ void BurstFilter::filter_by_background(double max_background_ratio, long long** 
     
     if (!tttr_data || background_rates.empty()) {
         *background_n_output = 0;
-        *background_output = nullptr;
+        *background_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
         return;
     }
     
@@ -754,7 +754,7 @@ void BurstFilter::filter_by_background(double max_background_ratio, long long** 
         *background_output = (long long*)malloc(*background_n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *background_output);
     } else {
-        *background_output = nullptr;
+        *background_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
@@ -765,7 +765,7 @@ void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge
             *merge_output = (long long*)malloc(*merge_n_output * sizeof(long long));
             std::copy(bursts.begin(), bursts.end(), *merge_output);
         } else {
-            *merge_output = nullptr;
+            *merge_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
         }
         return;
     }
@@ -808,7 +808,7 @@ void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge
         *merge_output = (long long*)malloc(*merge_n_output * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *merge_output);
     } else {
-        *merge_output = nullptr;
+        *merge_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 

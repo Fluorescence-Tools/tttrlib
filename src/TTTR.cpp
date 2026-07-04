@@ -1838,8 +1838,12 @@ std::vector<long long> TTTR::burst_search_cusum_sprt(
         I1 = I0 / exp(2.0) + IB;
         signal_to_background_ratio = (I0 + IB) / IB;
     } else {
+        // Signal (in-burst) intensity hypothesis for the SPRT: total rate during a burst is
+        // background + excess signal = (S/B) * IB. (The earlier `I0/exp(2) + IB` left I1 ~ IB,
+        // so the SPRT could not discriminate signal from background — bursts were missed and the
+        // S/B dependence was inverted.)
         I0 = (signal_to_background_ratio - 1.0) * IB;
-        I1 = I0 / exp(2.0) + IB;
+        I1 = I0 + IB;
     }
     
     double KL_disc = (IB - I1) / I1 + log(I1 / IB);
