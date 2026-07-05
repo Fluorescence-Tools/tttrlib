@@ -38,6 +38,9 @@ struct SimEncodedRecords {
  * Fields mirror the legacy `data2spc_tac` parameters. The CW path (`pulsed_exc==0`)
  * derives the micro-time (TAC) deterministically from the sub-period phase and uses
  * no RNG; the pulsed path samples the TAC from an inverse-CDF (`F`/`lookup`).
+ *
+ * `reverse_tac` selects whether the TAC is written in B&H reverse start-stop order;
+ * set it to `true` to reproduce the legacy `data2spc_tac` output byte-for-byte.
  */
 class SimMicrotimeEncoder {
 public:
@@ -50,6 +53,7 @@ public:
     int n_microtime_channels = 4096;        ///< number of micro-time channels
     double microtime_resolution = 0.004069; ///< ns per micro-time channel
     double laser_period = 13.596;           ///< ns
+    bool reverse_tac = false;               ///< false (default) = write the physical micro-time directly. true = write reversed TAC (B&H reverse start-stop: raw ADC = n_microtime_channels-1 - micro_time); the SPC reader un-reverses, so a to_tttr round-trip needs true (SimEngine.to_tttr passes it by default).
     std::vector<double> F;                  ///< pulsed: integrated p(t) (inverse-CDF), else empty
     std::vector<int> lookup;                ///< pulsed: start-index lookup, else empty
     uint32_t macro_time_clock = 100;        ///< value written into the file header

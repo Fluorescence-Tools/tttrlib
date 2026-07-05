@@ -92,9 +92,11 @@ SimEncodedRecords SimMicrotimeEncoder::encode_becker_hickl(
             double r = rng.random0i1e();
             tac = lookup[i_shift + size_t(std::floor(r * n_microtime_channels))];
             while (F[i_shift + tac] < r) ++tac;
-            tac = n_microtime_channels - tac - 1;
+            // tac now holds the physical micro-time channel (delay after the pulse).
+            if (reverse_tac) tac = n_microtime_channels - tac - 1;
         } else {
-            tac = int(std::floor((SYNC_DT - std::fmod(t, SYNC_DT)) / MT_CALIB));
+            double phase = std::fmod(t, SYNC_DT);  // physical sub-period delay
+            tac = int(std::floor((reverse_tac ? (SYNC_DT - phase) : phase) / MT_CALIB));
         }
 
         int N_spc = ch_conversion[data_N[n]];

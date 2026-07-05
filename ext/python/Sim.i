@@ -132,13 +132,19 @@
 
         def to_tttr(self, dt, n_channels, ch_conversion=None, n_microtime_channels=4096,
                     microtime_resolution=0.004069, laser_period=13.596, pulsed=False,
-                    seed=1, container="SPC-130"):
+                    seed=1, container="SPC-130", reverse_tac=True):
             """Encode the photon stream and return it as a ``tttrlib.TTTR`` (PRD-007 G7).
 
             One-call export: builds a Becker&Hickl SPC-132 record stream with a
             ``SimMicrotimeEncoder`` and reads it back as a ``TTTR``. ``dt``/``n_channels``
             must match the simulation. ``ch_conversion`` maps a routing channel to a hardware
             channel (default: the 6-detector B&H map). ``pulsed=True`` uses the pulsed TAC path.
+
+            ``reverse_tac=True`` (default) writes the TAC in B&H *reverse start-stop* order
+            (raw ADC = ``n_microtime_channels - 1 - micro_time``); the SPC reader un-reverses
+            it, so the read-back ``micro_time`` matches the simulation. Set ``reverse_tac=False``
+            only to emit the physical micro-time directly (e.g. for external tools that do not
+            reverse) — a ``to_tttr`` round-trip is then inverted on read-back.
             """
             import tempfile, os
             enc = SimMicrotimeEncoder()
@@ -148,6 +154,7 @@
             enc.n_microtime_channels = int(n_microtime_channels)
             enc.microtime_resolution = float(microtime_resolution)
             enc.laser_period = float(laser_period)
+            enc.reverse_tac = bool(reverse_tac)
             if ch_conversion is None:
                 # sim channel i -> hardware routing channel i, so the read-back TTTR's
                 # routing_channels equal the simulation channels (0..n_channels-1).
