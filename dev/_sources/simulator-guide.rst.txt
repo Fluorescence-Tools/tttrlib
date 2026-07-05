@@ -270,6 +270,16 @@ states it yields two peaks and for fast exchange a single bridged peak.
    configs use a slow, bright fluorophore (``D ≈ 0.05`` µm²/ms, ``b ≈ 300`` kcps)
    and a dilute population — see the config files for the exact values.
 
+.. note:: **TAC reversal on export.**
+   Becker & Hickl SPC hardware records the micro-time in *reverse start-stop* order
+   (the raw ADC value is ``n_microtime_channels - 1 - micro_time``), and the SPC
+   reader un-reverses it on read-back. :meth:`SimEngine.to_tttr` therefore encodes
+   with ``reverse_tac=True`` by default, so the read-back ``micro_time`` matches the
+   simulated one. The low-level :class:`SimMicrotimeEncoder.reverse_tac` field
+   defaults to ``False`` (write the physical micro-time verbatim); pass
+   ``reverse_tac=False`` to :meth:`~SimEngine.to_tttr` only when you want the raw
+   physical TAC in the file (its read-back micro-time is then inverted).
+
 Anisotropy
 ----------
 
