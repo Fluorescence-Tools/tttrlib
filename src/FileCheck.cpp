@@ -234,3 +234,39 @@ int inferTTTRFileType(const char* fn) {
     // Unknown/unsupported
     return -1;
 }
+
+int inferTTTRContainerTypeFromExtension(const std::string& fn) {
+    auto to_lowercase = [](std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return s;
+    };
+
+    auto dot = fn.rfind('.');
+    if (dot == std::string::npos) return -1;
+    std::string extension = to_lowercase(fn.substr(dot + 1));
+
+    if (extension == "ptu")  return PQ_PTU_CONTAINER;
+    if (extension == "ht3")  return PQ_HT3_CONTAINER;
+    if (extension == "spc")  return BH_SPC130_CONTAINER;
+    if (extension == "hdf5" || extension == "h5") return PHOTON_HDF_CONTAINER;
+    if (extension == "raw")  return CZ_CONFOCOR3_CONTAINER;
+    if (extension == "sm")   return SM_CONTAINER;
+
+    // Unknown/unsupported extension
+    return -1;
+}
+
+std::string tttrContainerCanonicalExtension(int container_type) {
+    switch (container_type) {
+        case PQ_PTU_CONTAINER:           return "ptu";
+        case PQ_HT3_CONTAINER:           return "ht3";
+        case BH_SPC130_CONTAINER:
+        case BH_SPC600_256_CONTAINER:
+        case BH_SPC600_4096_CONTAINER:   return "spc";
+        case PHOTON_HDF_CONTAINER:       return "hdf5";
+        case CZ_CONFOCOR3_CONTAINER:     return "raw";
+        case SM_CONTAINER:               return "sm";
+        default:                         return "";
+    }
+}

@@ -387,6 +387,17 @@ def __init__(
         'default': getattr(tttrlib, 'CLSM_DEFAULT', 0)
     }
 
+    # When the caller did not pick a reading routine, honor a routine hint left
+    # in the header (e.g. a BH SPC image transcoded to PTU keeps its frame/line
+    # markers, so BH_SPC130 reconstructs it exactly regardless of container).
+    if reading_routine == 'default' and tttr_data is not None:
+        try:
+            hint = tttr_data.header.tag('BH_SPC_ReadingRoutine').get('value', None)
+            if hint in rt:
+                reading_routine = hint
+        except Exception:
+            pass
+
     # Always include bidirectional_scan=False by default
     settings_kwargs = {
         "skip_before_first_frame_marker": bool(skip_before_first_frame_marker),

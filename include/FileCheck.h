@@ -136,6 +136,43 @@ int inferTTTRFileType(const char* fn);
 
 
 /**
+ * @brief Infers a TTTR container type from a filename extension only.
+ *
+ * Unlike @ref inferTTTRFileType, this function does not inspect the file
+ * content (magic bytes) and therefore works for files that do not exist yet.
+ * It is intended for the write path, where the target container is chosen from
+ * the requested output filename. The extension is matched case-insensitively:
+ *
+ *  - `.ptu`         -> PQ_PTU_CONTAINER
+ *  - `.ht3`         -> PQ_HT3_CONTAINER
+ *  - `.spc`         -> BH_SPC130_CONTAINER (default SPC flavour)
+ *  - `.hdf5`, `.h5` -> PHOTON_HDF_CONTAINER
+ *  - `.raw`         -> CZ_CONFOCOR3_CONTAINER
+ *  - `.sm`          -> SM_CONTAINER
+ *
+ * @param fn The output filename to inspect.
+ * @return The inferred container type, or -1 if the extension is unknown.
+ */
+int inferTTTRContainerTypeFromExtension(const std::string& fn);
+
+
+/**
+ * @brief Returns the canonical filename extension for a container type.
+ *
+ * Used on the write path to decide whether a requested output extension is
+ * consistent with an existing container type. All Becker & Hickl SPC flavours
+ * (SPC-130, SPC-600/256, SPC-600/4096) share the extension `spc`, so this map
+ * groups them into one family and lets a `.spc` round trip preserve the more
+ * specific source container instead of collapsing it to SPC-130.
+ *
+ * @param container_type A `*_CONTAINER` container id.
+ * @return The canonical extension without a leading dot (e.g. "ptu", "spc"),
+ *         or an empty string if the container type is unknown.
+ */
+std::string tttrContainerCanonicalExtension(int container_type);
+
+
+/**
  * @brief Determines if the given file is a Carl Zeiss Confocor3 (CZ Confocor3) raw data file.
  *
  * This function reads the header of the file and checks for specific patterns

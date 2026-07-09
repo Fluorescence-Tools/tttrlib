@@ -33,6 +33,25 @@ data = tttrlib.TTTR(str(source), "PTU")
 print(f"Source: {len(data):,} events (HydraHarp T3 PTU)")
 
 
+# %%
+# Choosing the output format
+# ---------------------------------------------------------------------------
+# ``TTTR.write`` picks the container from the output filename extension, so the
+# common case needs no extra arguments — ``write("out.spc")`` writes a Becker &
+# Hickl SPC file and ``write("out.ptu")`` a PicoQuant PTU file. The format can
+# also be forced explicitly, either by name or by container id, which is handy
+# for unusual extensions:
+#
+# .. code-block:: python
+#
+#     data.write("out.ptu")           # inferred from the ".ptu" extension
+#     data.write("out.dat", "PTU")     # forced by container name
+#     data.write("out.dat", None, 0)   # forced by container id (see TTTRHeaderTypes.h)
+#
+# The ``convert`` helper below instead edits the header's record type as well,
+# so it can also select the record encoding (e.g. T2 vs T3) within a container.
+
+
 def convert(data, container_type, record_type, out_name, read_as):
     """Write ``data`` as another container format and read it back."""
     header = data.header

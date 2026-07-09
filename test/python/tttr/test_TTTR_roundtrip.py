@@ -11,6 +11,7 @@ doc/file_formats.rst.
 """
 from __future__ import division
 
+import json
 import os
 import tempfile
 import unittest
@@ -340,6 +341,270 @@ class TranscodeTests(unittest.TestCase):
         finally:
             if os.path.isfile(fn_out):
                 os.unlink(fn_out)
+
+
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping write-inference tests")
+class WriteTypeInferenceTests(unittest.TestCase):
+    """write() selects the output container from the filename extension, with an
+    optional explicit override (by container id or by name)."""
+
+    def read(self, settings_key, container):
+        fn = settings[settings_key]
+        if not os.path.isfile(fn):
+            self.skipTest("missing data file: %s" % fn)
+        return tttrlib.TTTR(fn, container)
+
+    def test_extension_infers_cross_family_container(self):
+        # SPC-130 source written to a .ptu file must become a PTU file, without
+        # touching the header container type beforehand.
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".ptu")
+        try:
+            self.assertTrue(d.write(fn_out))
+            d2 = tttrlib.TTTR(fn_out)  # auto-detect on read
+            self.assertEqual(d2.header.tttr_container_type, 0)  # PQ_PTU_CONTAINER
+            self.assertEqual(len(d.macro_times), len(d2.macro_times))
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_generic_spc_extension_preserves_source_flavour(self):
+        # The .spc extension is shared by all Becker & Hickl SPC flavours, so a
+        # SPC-600/256 round trip must not collapse to SPC-130.
+        d = self.read("spc630_filename", "SPC-600_256")
+        fn_out = tmp_filename(".spc")
+        try:
+            self.assertTrue(d.write(fn_out))
+            d2 = tttrlib.TTTR(fn_out, "SPC-600_256")
+            self.assertEqual(d2.header.tttr_container_type, 3)  # BH_SPC600_256
+            np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+            np.testing.assert_array_equal(d.micro_times, d2.micro_times)
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_explicit_container_name_overrides_extension(self):
+        # An unknown extension is fine when the container name is given.
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".dat")
+        try:
+            self.assertTrue(d.write(fn_out, "PTU"))
+            d2 = tttrlib.TTTR(fn_out, "PTU")
+            self.assertEqual(d2.header.tttr_container_type, 0)
+            self.assertEqual(len(d.macro_times), len(d2.macro_times))
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_explicit_container_id_beats_extension(self):
+        # The numeric container argument wins over the filename extension.
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".ptu")
+        try:
+            self.assertTrue(d.write(fn_out, None, 2))  # 2 == BH_SPC130_CONTAINER
+            d2 = tttrlib.TTTR(fn_out, "SPC-130")
+            self.assertEqual(d2.header.tttr_container_type, 2)
+            np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_unknown_container_name_returns_false(self):
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".spc")
+        try:
+            self.assertFalse(d.write(fn_out, "NOT-A-FORMAT"))
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+
+def _tag_names(tttr):
+    import json
+    return [t.get("name") for t in json.loads(tttr.header.json).get("tags", [])]
+
+
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping metadata tests")
+class WriteMetadataFidelityTests(unittest.TestCase):
+    """write() must transfer header metadata as faithfully as the target format
+    allows, and always emit the minimal metadata that makes a file valid."""
+
+    def read(self, settings_key, container):
+        fn = settings[settings_key]
+        if not os.path.isfile(fn):
+            self.skipTest("missing data file: %s" % fn)
+        return tttrlib.TTTR(fn, container)
+
+    def test_resolution_survives_same_format_roundtrip(self):
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".spc")
+        try:
+            self.assertTrue(d.write(fn_out))
+            d2 = tttrlib.TTTR(fn_out, "SPC-130")
+            self.assertAlmostEqual(
+                d.header.macro_time_resolution,
+                d2.header.macro_time_resolution)
+            self.assertEqual(
+                d.header.number_of_micro_time_channels,
+                d2.header.number_of_micro_time_channels)
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_source_resolution_carried_into_ptu(self):
+        # The source resolution tags must survive a cross-format transcode.
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".ptu")
+        try:
+            self.assertTrue(d.write(fn_out))
+            d2 = tttrlib.TTTR(fn_out)
+            self.assertAlmostEqual(
+                d.header.macro_time_resolution,
+                d2.header.macro_time_resolution)
+            self.assertAlmostEqual(
+                d.header.micro_time_resolution,
+                d2.header.micro_time_resolution)
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_ptu_gets_minimal_mandatory_tags(self):
+        # A PTU file is only valid with the record encoding and record count.
+        d = self.read("spc132_filename", "SPC-130")
+        fn_out = tmp_filename(".ptu")
+        try:
+            self.assertTrue(d.write(fn_out))
+            d2 = tttrlib.TTTR(fn_out)
+            names = _tag_names(d2)
+            for mandatory in (
+                "TTResultFormat_TTTRRecType",
+                "TTResultFormat_BitsPerRecord",
+                "TTResult_NumberOfRecords",
+                "MeasDesc_GlobalResolution",
+            ):
+                self.assertIn(mandatory, names)
+            # The record count tag must match the number of events written.
+            tags = json.loads(d2.header.json)["tags"]
+            n_records = next(t["value"] for t in tags
+                             if t["name"] == "TTResult_NumberOfRecords")
+            self.assertEqual(n_records, len(d.macro_times))
+            self.assertEqual(len(d2.macro_times), len(d.macro_times))
+        finally:
+            if os.path.isfile(fn_out):
+                os.unlink(fn_out)
+
+    def test_fresh_container_writes_valid_files(self):
+        # A TTTR built from bare arrays (no source header) must still produce
+        # valid, readable files thanks to the injected minimal metadata.
+        src = self.read("spc132_filename", "SPC-130")
+        d = tttrlib.TTTR()
+        d.append_events(
+            macro_times=np.asarray(src.macro_times).copy(),
+            micro_times=np.asarray(src.micro_times).copy(),
+            routing_channels=np.asarray(src.routing_channels).copy(),
+            event_types=np.asarray(src.event_types).copy(),
+        )
+        for suffix, container in ((".ptu", "PTU"), (".ht3", "HT3"),
+                                  (".spc", "SPC-130")):
+            fn_out = tmp_filename(suffix)
+            try:
+                self.assertTrue(d.write(fn_out), "write failed for %s" % suffix)
+                d2 = tttrlib.TTTR(fn_out, container)
+                self.assertEqual(len(d2.macro_times), len(d.macro_times),
+                                 "event count changed for %s" % suffix)
+                np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+            finally:
+                if os.path.isfile(fn_out):
+                    os.unlink(fn_out)
+
+
+@unittest.skipIf(not DATA_AVAILABLE, "Data directory not found, skipping .set tests")
+class BHSetSidecarRoundTripTests(unittest.TestCase):
+    """Becker & Hickl .set sidecar files carry the CLSM imaging settings that
+    the .spc record stream cannot. Writing an .spc emits a companion .set, and
+    the settings survive a full .spc+.set -> .ptu -> .spc+.set round trip."""
+
+    def setUp(self):
+        self.spc = settings.get("bh_spcm_clsm_m1_filename")
+        self.set = settings.get("bh_spcm_set_m1_filename")
+        if not self.spc or not os.path.isfile(self.spc):
+            self.skipTest("missing BH SPC imaging data")
+        if not self.set or not os.path.isfile(self.set):
+            self.skipTest("missing BH .set sidecar")
+        self.work = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        if getattr(self, "work", None) and os.path.isdir(self.work):
+            shutil.rmtree(self.work)
+
+    def test_reading_spc_captures_set_sidecar(self):
+        d = tttrlib.TTTR(self.spc, "SPC-130")
+        names = _tag_names(d)
+        # imaging geometry parsed, plus the raw .set preserved
+        self.assertIn("ImgHdr_PixX", names)
+        self.assertIn("ImgHdr_PixY", names)
+        self.assertIn("BH_SPC_SetFile", names)
+
+    def test_writing_spc_emits_set_sidecar(self):
+        d = tttrlib.TTTR(self.spc, "SPC-130")
+        out_spc = os.path.join(self.work, "out.spc")
+        out_set = os.path.join(self.work, "out.set")
+        self.assertTrue(d.write(out_spc))
+        self.assertTrue(os.path.isfile(out_set), "no .set sidecar written")
+        # Byte-identical to the original .set (verbatim preservation).
+        with open(self.set, "rb") as f:
+            original = f.read()
+        with open(out_set, "rb") as f:
+            written = f.read()
+        self.assertEqual(written, original)
+
+    def test_full_roundtrip_through_ptu(self):
+        d = tttrlib.TTTR(self.spc, "SPC-130")
+
+        ptu = os.path.join(self.work, "conv.ptu")
+        self.assertTrue(d.write(ptu))
+        d2 = tttrlib.TTTR(ptu)
+        # The raw .set rides along inside the PTU header.
+        self.assertIn("BH_SPC_SetFile", _tag_names(d2))
+
+        back_spc = os.path.join(self.work, "back.spc")
+        back_set = os.path.join(self.work, "back.set")
+        self.assertTrue(d2.write(back_spc))
+        self.assertTrue(os.path.isfile(back_set))
+
+        with open(self.set, "rb") as f:
+            original = f.read()
+        with open(back_set, "rb") as f:
+            regenerated = f.read()
+        self.assertEqual(regenerated, original,
+                         "the .set was not preserved through the PTU round trip")
+
+        # And the regenerated pair still reconstructs the imaging geometry.
+        d3 = tttrlib.TTTR(back_spc, "SPC-130")
+        t0 = {t["name"]: t.get("value")
+              for t in json.loads(d.header.json)["tags"]}
+        t3 = {t["name"]: t.get("value")
+              for t in json.loads(d3.header.json)["tags"]}
+        self.assertEqual(t3.get("ImgHdr_PixX"), t0.get("ImgHdr_PixX"))
+        self.assertEqual(t3.get("ImgHdr_PixY"), t0.get("ImgHdr_PixY"))
+
+    def test_imaging_ptu_auto_opens_as_clsm_image(self):
+        # A BH SPC image converted to PTU keeps its frame/line markers, and the
+        # reading-routine hint makes it auto-open as the identical CLSM image.
+        d = tttrlib.TTTR(self.spc, "SPC-130")
+        ref = tttrlib.CLSMImage(tttr_data=d, reading_routine="BH_SPC130")
+        self.assertGreater(ref.n_frames, 0)
+
+        ptu = os.path.join(self.work, "img.ptu")
+        self.assertTrue(d.write(ptu))
+        d2 = tttrlib.TTTR(ptu)
+        self.assertIn("BH_SPC_ReadingRoutine", _tag_names(d2))
+
+        # No reading_routine specified: the header hint selects BH_SPC130.
+        clsm = tttrlib.CLSMImage(tttr_data=d2)
+        self.assertEqual(clsm.intensity.shape, ref.intensity.shape)
+        np.testing.assert_array_equal(clsm.intensity, ref.intensity)
 
 
 if __name__ == '__main__':

@@ -155,14 +155,85 @@ if (is_verbose()) {
 }
 
 
+// Minimal, dependency-free base64 codec used to carry the raw (largely binary)
+// BH .set file through text-only header tags such as a PTU ANSI-string tag.
+static std::string bh_base64_encode(const std::string& in){
+    static const char* T =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve(((in.size() + 2) / 3) * 4);
+    size_t i = 0;
+    while (i + 2 < in.size()){
+        unsigned n = ((unsigned char)in[i] << 16) |
+                     ((unsigned char)in[i+1] << 8) |
+                     ((unsigned char)in[i+2]);
+        out.push_back(T[(n >> 18) & 0x3F]);
+        out.push_back(T[(n >> 12) & 0x3F]);
+        out.push_back(T[(n >> 6) & 0x3F]);
+        out.push_back(T[n & 0x3F]);
+        i += 3;
+    }
+    if (i < in.size()){
+        unsigned n = ((unsigned char)in[i] << 16);
+        bool two = (i + 1 < in.size());
+        if (two) n |= ((unsigned char)in[i+1] << 8);
+        out.push_back(T[(n >> 18) & 0x3F]);
+        out.push_back(T[(n >> 12) & 0x3F]);
+        out.push_back(two ? T[(n >> 6) & 0x3F] : '=');
+        out.push_back('=');
+    }
+    return out;
+}
+
+static std::string bh_base64_decode(const std::string& in){
+    auto val = [](unsigned char c) -> int {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+        if (c >= '0' && c <= '9') return c - '0' + 52;
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        return -1; // padding or whitespace
+    };
+    std::string out;
+    out.reserve((in.size() / 4) * 3);
+    int buf = 0, bits = 0;
+    for (unsigned char c : in){
+        int v = val(c);
+        if (v < 0) continue; // skip '=' and any stray whitespace
+        buf = (buf << 6) | v;
+        bits += 6;
+        if (bits >= 8){
+            bits -= 8;
+            out.push_back((char)((buf >> bits) & 0xFF));
+        }
+    }
+    return out;
+}
+
 bool TTTRHeader::read_bh_set_file(const std::string& filename) {
-    std::ifstream f(filename);
+    std::ifstream f(filename, std::ios::binary);
     if (!f.is_open()) {
         return false;
     }
 
+    // Preserve the full .set verbatim so a .spc+.set -> .ptu -> .spc+.set
+    // conversion keeps every BH setting, not just the imaging keys tttrlib
+    // interprets below. Real .set files are mostly binary (a binary preamble
+    // plus text blocks), so the bytes are base64-encoded to ride safely through
+    // text-only header tags (e.g. a PTU ANSI string) and are decoded back by
+    // write_bh_set_file.
+    std::stringstream buffer;
+    buffer << f.rdbuf();
+    std::string raw = buffer.str();
+    if (!raw.empty()) {
+        std::string b64 = bh_base64_encode(raw);
+        add_tag(json_data, "BH_SPC_SetFile",
+                const_cast<char*>(b64.c_str()), tyAnsiString);
+    }
+
+    std::istringstream text(raw);
     std::string line;
-    while (std::getline(f, line)) {
+    while (std::getline(text, line)) {
         // Remove leading/trailing whitespace
         size_t start = line.find_first_not_of(" \t\r\n");
         if (start == std::string::npos) continue;
@@ -212,6 +283,62 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
             }
         }
     }
+
+    // Record that this is a BH SPC CLSM image so the reconstruction routine can
+    // be picked automatically even after the data is transcoded to another
+    // container (e.g. PTU). The frame/line markers are byte-preserved by the
+    // record writers, so the BH_SPC130 routine reconstructs the image exactly
+    // from any container. The hint rides along as a normal header tag.
+    if(find_tag(json_data, "ImgHdr_PixX") >= 0){
+        add_tag(json_data, "BH_SPC_ReadingRoutine",
+                const_cast<char*>("BH_SPC130"), tyAnsiString);
+    }
+    return true;
+}
+
+
+bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* header){
+    nlohmann::json &json = header->json_data;
+
+    // Preferred path: an original .set was captured on read (directly or via a
+    // PTU round trip). Re-emit it byte-for-byte so all BH settings are
+    // preserved. The content is stored base64-encoded (see read_bh_set_file).
+    if(find_tag(json, "BH_SPC_SetFile") >= 0){
+        std::string b64 = get_tag(json, "BH_SPC_SetFile")["value"];
+        std::string raw = bh_base64_decode(b64);
+        if(!raw.empty()){
+            std::ofstream f(filename, std::ios::binary);
+            if(!f.is_open()) return false;
+            f.write(raw.data(), (std::streamsize) raw.size());
+            return true;
+        }
+    }
+
+    // Fallback: synthesize a minimal .set from the imaging geometry when no
+    // original was preserved (e.g. imaging tags set programmatically).
+    bool has_x = find_tag(json, "ImgHdr_PixX") >= 0;
+    bool has_y = find_tag(json, "ImgHdr_PixY") >= 0;
+    if(!has_x && !has_y) return false;
+
+    std::ofstream f(filename);
+    if(!f.is_open()) return false;
+
+    // Header block; lines starting with '*' are comments to the reader.
+    f << "*SET_FILE created by tttrlib\n";
+    f << "*BLOCK 1 SYS_PARA\n";
+    if(has_x){
+        int v = get_tag(json, "ImgHdr_PixX")["value"];
+        f << "#SP [SP_IMG_X,I," << v << "]\n";
+    }
+    if(has_y){
+        int v = get_tag(json, "ImgHdr_PixY")["value"];
+        f << "#SP [SP_IMG_Y,I," << v << "]\n";
+    }
+    if(find_tag(json, "BH_UsePixelClock") >= 0){
+        int v = get_tag(json, "BH_UsePixelClock")["value"];
+        f << "#SP [SP_PIX_CLK,I," << (v ? 1 : 0) << "]\n";
+    }
+    f << "*END\n";
     return true;
 }
 
@@ -745,6 +872,43 @@ if (is_verbose()) {
         std::cerr << "ERROR: MeasDesc_BinningFactor not found." << std::endl;
 }
     return static_cast<size_t>(ftell64(fpin));
+}
+
+void TTTRHeader::ensure_minimal_tags(
+        TTTRHeader* header, int container_type, size_t n_records){
+    nlohmann::json &json = header->json_data;
+
+    // Macro time resolution (seconds). Several writers (SPC-132, HT3, SM, CZ)
+    // read this directly; a missing value makes them emit a garbage clock, so
+    // always guarantee a positive value.
+    if(find_tag(json, TTTRTagGlobRes) < 0){
+        double v = header->get_macro_time_resolution();
+        if(!(v > 0.0)) v = 1.0;
+        add_tag(json, TTTRTagGlobRes, v, tyFloat8);
+    }
+
+    // Micro time (Dtime) resolution (seconds).
+    if(find_tag(json, TTTRTagRes) < 0){
+        double v = header->get_micro_time_resolution();
+        if(!(v > 0.0)) v = 1.0;
+        add_tag(json, TTTRTagRes, v, tyFloat8);
+    }
+
+    // Number of micro time channels.
+    if(find_tag(json, TTTRNMicroTimes) < 0){
+        int n = (int) header->get_number_of_micro_time_channels();
+        if(n <= 0) n = 1;
+        add_tag(json, TTTRNMicroTimes, n, tyInt8);
+    }
+
+    // PTU carries the record encoding and count explicitly; without these a
+    // conforming PTU reader cannot parse the record stream.
+    if(container_type == PQ_PTU_CONTAINER){
+        if(find_tag(json, TTTRTagBits) < 0)
+            add_tag(json, TTTRTagBits, 32, tyInt8);
+        if(find_tag(json, TTTRTagNumRecords) < 0)
+            add_tag(json, TTTRTagNumRecords, (int) n_records, tyInt8);
+    }
 }
 
 void TTTRHeader::write_spc132_header(

@@ -48,6 +48,7 @@ const std::string TTTRRecordType = "MeasDesc_RecordType";         // Internal re
 const std::string TTTRContainerType = "MeasDesc_ContainerType";   // Internal container type (see tttrlib record type identifier definitions)
 const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
 const std::string TTTRTagBits = "TTResultFormat_BitsPerRecord";    // Bits per TTTR record
+const std::string TTTRTagNumRecords = "TTResult_NumberOfRecords";  // Number of TTTR records in the file
 const std::string FileTagEnd = "Header_End";                       // Always appended as last tag (BLOCKEND)
 
 
@@ -375,6 +376,28 @@ public:
     bool read_bh_set_file(const std::string& filename);
 
     /*!
+     * @brief Writes a Becker & Hickl .set sidecar file with imaging parameters.
+     *
+     * The BH SPC record file cannot store the CLSM imaging geometry, which BH
+     * software keeps in a companion `.set` file next to the `.spc`. This method
+     * writes such a file from the imaging tags in @p header, i.e. the inverse of
+     * @ref read_bh_set_file:
+     *   - ImgHdr_PixX      -> SP_IMG_X
+     *   - ImgHdr_PixY      -> SP_IMG_Y
+     *   - BH_UsePixelClock -> SP_PIX_CLK
+     *
+     * Only the parameters present in the header are written. If the header
+     * carries no imaging geometry (no ImgHdr_PixX/PixY), nothing is written and
+     * the method returns false, so non-imaging measurements do not get a
+     * meaningless sidecar.
+     *
+     * @param filename Path to the .set file to write.
+     * @param header Header providing the imaging tags.
+     * @return true if a .set file was written, false otherwise.
+     */
+    static bool write_bh_set_file(const std::string& filename, TTTRHeader* header);
+
+    /*!
      * @brief Reads the header of a Carl Zeiss (CZ) Confocor3 file and sets the reading routing.
      *
      * @param fpin File pointer to the Confocor3 file.
@@ -401,6 +424,30 @@ public:
             std::string fn,
             TTTRHeader* header,
             std::string modes = "w"
+    );
+
+    /*!
+     * @brief Ensure the header carries the minimal metadata a container needs.
+     *
+     * When a TTTR object is transcoded into a different container (or was built
+     * from scratch) its header may lack tags that the target format's writer or
+     * downstream readers require. This method fills in the essential metadata --
+     * macro/micro time resolution, micro-time channel count, record encoding and
+     * the record count -- from the best information already available in the
+     * header, deriving sane fallbacks only when a value is genuinely missing.
+     *
+     * Existing tags are never overwritten, so metadata that survives a transcode
+     * is preserved verbatim; only gaps are filled. This keeps written files
+     * valid regardless of the source container.
+     *
+     * @param header The header to complete in place.
+     * @param container_type The target container type (`*_CONTAINER`).
+     * @param n_records The number of records that will be written.
+     */
+    static void ensure_minimal_tags(
+            TTTRHeader* header,
+            int container_type,
+            size_t n_records
     );
 
     /*!

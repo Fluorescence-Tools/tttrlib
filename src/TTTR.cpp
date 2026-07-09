@@ -2501,10 +2501,46 @@ static int pq_ptu_record_type_identifier(int record_type){
     }
 }
 
-bool TTTR::write(std::string filename, TTTRHeader* header){
+bool TTTR::write(std::string filename, const char* container_type, TTTRHeader* header){
+    int ct = -1;
+    if(container_type != nullptr){
+        std::string name(container_type);
+        if(container_names.count_left(name)){
+            ct = container_names.left.at(name);
+        } else {
+            std::cerr << "ERROR in TTTR::write: unknown container type '"
+                      << name << "'." << std::endl;
+            return false;
+        }
+    }
+    return write(filename, header, ct);
+}
+
+bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     if(header == nullptr) header = this->header;
-    int container_type = header->get_tttr_container_type();
-    if(container_type < 0) container_type = this->tttr_container_type;
+    // Determine the container type already associated with the data.
+    int source_type = header->get_tttr_container_type();
+    if(source_type < 0) source_type = this->tttr_container_type;
+    // Choose the output container:
+    //  1. An explicit container_type argument always wins.
+    //  2. Otherwise the filename extension selects the format, but only when
+    //     it names a different format family than the source. A generic
+    //     extension (e.g. ".spc", shared by all Becker & Hickl SPC flavours)
+    //     that matches the source family keeps the more specific source type,
+    //     so same-format round trips preserve SPC-600 vs SPC-130 etc.
+    //  3. Unknown extensions fall back to the source container type.
+    if(container_type < 0){
+        int ext_type = inferTTTRContainerTypeFromExtension(filename);
+        if(ext_type < 0){
+            container_type = source_type;
+        } else if(source_type >= 0 &&
+                  tttrContainerCanonicalExtension(source_type) ==
+                  tttrContainerCanonicalExtension(ext_type)){
+            container_type = source_type;
+        } else {
+            container_type = ext_type;
+        }
+    }
     int record_type = header->get_tttr_record_type();
     // Transcoding: fall back to the container's canonical record type when
     // the header's record type does not fit the target container.
@@ -2525,13 +2561,14 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
     // so the file reads back with the correct record decoder.
     header->set_tttr_container_type(container_type);
     header->set_tttr_record_type(record_type);
+    // Fill in any metadata the target container needs but the (possibly
+    // transcoded or freshly built) header is missing, without clobbering
+    // metadata that already survived from the source.
+    TTTRHeader::ensure_minimal_tags(header, container_type, get_n_valid_events());
     if(container_type == PQ_PTU_CONTAINER){
         TTTRHeader::add_tag(
-                header->json_data, "TTResultFormat_TTTRRecType",
+                header->json_data, TTTRTagTTTRRecType,
                 pq_ptu_record_type_identifier(record_type), tyInt8);
-        if(TTTRHeader::find_tag(header->json_data, TTTRTagBits) < 0){
-            TTTRHeader::add_tag(header->json_data, TTTRTagBits, 32, tyInt8);
-        }
     }
 
     write_header(filename, header);
@@ -2586,6 +2623,18 @@ bool TTTR::write(std::string filename, TTTRHeader* header){
             return false;
     }
     fclose(fp);
+    // For Becker & Hickl SPC files, write the companion .set sidecar carrying
+    // the CLSM imaging geometry that the .spc record stream cannot hold, so a
+    // PTU -> SPC conversion of imaging data stays reconstructable (the reader
+    // picks up the .set automatically, see read_bh_set_sidecar).
+    if(container_type == BH_SPC130_CONTAINER ||
+       container_type == BH_SPC600_256_CONTAINER ||
+       container_type == BH_SPC600_4096_CONTAINER){
+        auto dot = filename.rfind('.');
+        std::string set_fn =
+            (dot == std::string::npos ? filename : filename.substr(0, dot)) + ".set";
+        TTTRHeader::write_bh_set_file(set_fn, header);
+    }
     return true;
 }
 

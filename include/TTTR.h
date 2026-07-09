@@ -1405,11 +1405,44 @@ public:
     /*!
      * @brief Writes the contents of an opened TTTR file to a new TTTR file.
      *
+     * The output container (file format) is chosen with the following priority:
+     *   1. An explicit @p container_type argument (>= 0).
+     *   2. The extension of @p filename (e.g. `.ptu`, `.spc`, `.ht3`,
+     *      `.hdf5`/`.h5`, `.raw`, `.sm`) via
+     *      @ref inferTTTRContainerTypeFromExtension.
+     *   3. The container type stored in @p header.
+     *   4. The container type of this TTTR object.
+     *
+     * This mirrors the read side, where the container type is inferred from the
+     * filename, so `tttr.write("out.spc")` writes a Becker & Hickl SPC file and
+     * `tttr.write("out.ptu")` writes a PicoQuant PTU file without any further
+     * arguments. When records need to be transcoded to fit the target container,
+     * the container's canonical record type is used.
+     *
      * @param filename The filename for the new TTTR file.
-     * @param header Optional TTTRHeader to be written. If set to nullptr, no header is written (default is nullptr).
+     * @param header Optional TTTRHeader to be written. If set to nullptr, the
+     *        object's own header is used (default is nullptr).
+     * @param container_type Optional container type to force the output format.
+     *        Use one of the `*_CONTAINER` constants; -1 (default) infers the
+     *        type from @p filename / @p header.
      * @return True if the write operation is successful, false otherwise.
      */
-    bool write(std::string filename, TTTRHeader* header = nullptr);
+    bool write(std::string filename, TTTRHeader* header = nullptr, int container_type = -1);
+
+    /*!
+     * @brief Writes the TTTR data to a new file, selecting the container by name.
+     *
+     * Convenience overload of @ref write that accepts a container-type name
+     * (e.g. "PTU", "HT3", "SPC-130", "PHOTON-HDF5", "CZ-RAW", "SM") instead of
+     * the numeric container id. The recognised names are those returned by
+     * @ref get_supported_container_names.
+     *
+     * @param filename The filename for the new TTTR file.
+     * @param container_type Container-type name selecting the output format.
+     * @param header Optional TTTRHeader to be written (default is nullptr).
+     * @return True if the write operation is successful, false otherwise.
+     */
+    bool write(std::string filename, const char* container_type, TTTRHeader* header = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SPC-132.
