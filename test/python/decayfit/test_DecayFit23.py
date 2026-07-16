@@ -251,3 +251,89 @@ class Tests(unittest.TestCase):
             decimal=1
         )
         self.assertEqual(((data - model)**2.0).sum() < 40, True)
+
+    def test_fit_many_matches_scalar_unpolarized_mle(self):
+        n_channels = 64
+        dt = 0.25
+        period = n_channels * dt
+        irf_single = np.zeros(n_channels, dtype=np.float64)
+        irf_single[8] = 1.0
+        irf = np.concatenate((irf_single, irf_single))
+        background = np.zeros(2 * n_channels, dtype=np.float64)
+        corrections = np.array([period, 1.0, 0.0, 0.0, n_channels - 1])
+        fixed = np.array([0, 1, 1, 1], dtype=np.int16)
+        x0 = np.array([2.5, 0.0, 0.0, 1.0])
+
+        probability = np.zeros(2 * n_channels, dtype=np.float64)
+        tttrlib.DecayFit23.modelf(
+            np.array([2.2, 0.0, 0.0, 1.0]),
+            irf,
+            background,
+            dt,
+            corrections,
+            probability,
+        )
+        rng = np.random.default_rng(20260716)
+        rows = rng.poisson(800.0 * probability, size=(12, 2 * n_channels))
+        rows = np.ascontiguousarray(rows, dtype=np.float64)
+
+        fitter = tttrlib.Fit23(
+            dt=dt,
+            irf=irf,
+            background=background,
+            period=period,
+            g_factor=1.0,
+            l1=0.0,
+            l2=0.0,
+            convolution_stop=n_channels - 1,
+            soft_bifl_scatter_flag=False,
+        )
+        batch = fitter.fit_many(
+            rows, x0, fixed=fixed, include_anisotropy=True
+        )
+
+        scalar = np.empty_like(batch)
+        for row_index, row in enumerate(rows):
+            fit_data = tttrlib.DecayFitData(
+                dt=dt,
+                corrections=corrections,
+                irf=irf,
+                background=background,
+                data=row.astype(np.int32),
+            )
+            x = np.zeros(8, dtype=np.float64)
+            x[:4] = x0
+            x[4] = 0.0
+            two_istar = tttrlib.DecayFit23.fit(x, fixed, fit_data)
+            scalar[row_index] = [*x[:4], two_istar, x[6], x[7]]
+
+        np.testing.assert_allclose(batch, scalar, rtol=2e-11, atol=2e-11)
+
+    def test_fit_map_masks_low_count_pixels(self):
+        n_channels = 16
+        irf_single = np.zeros(n_channels, dtype=np.float64)
+        irf_single[2] = 1.0
+        irf = np.concatenate((irf_single, irf_single))
+        fitter = tttrlib.Fit23(
+            dt=0.5,
+            irf=irf,
+            background=np.zeros_like(irf),
+            period=8.0,
+            convolution_stop=n_channels - 1,
+            soft_bifl_scatter_flag=False,
+        )
+        cube = np.zeros((2, 3, 2 * n_channels), dtype=np.float64)
+        cube[0, 0, 2:8] = [20, 15, 10, 8, 4, 2]
+        cube[0, 0, n_channels + 2:n_channels + 8] = [10, 8, 5, 4, 2, 1]
+        result = fitter.fit_map(
+            cube,
+            initial_values=np.array([2.0, 0.0, 0.0, 1.0]),
+            minimum_photons=10,
+        )
+
+        self.assertEqual(result["tau"].shape, (2, 3))
+        self.assertTrue(result["valid"][0, 0])
+        self.assertFalse(result["valid"][1, 2])
+        self.assertTrue(np.isfinite(result["tau"][0, 0]))
+        self.assertTrue(np.isnan(result["tau"][1, 2]))
+        self.assertEqual(result["intensity"][0, 0], cube[0, 0].sum())

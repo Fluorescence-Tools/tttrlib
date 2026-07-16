@@ -3,8 +3,12 @@
 #include "include/Verbose.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdlib>
 #include <limits>
+#include <thread>
+#include <vector>
 
 
 static thread_local DecayFitIntegrateSignals fit_signals;
@@ -46,21 +50,53 @@ inline void apply_corrections(double *corrections) {
     fit_corrections.convolution_stop = static_cast<int>(corrections[4]);
 }
 
+unsigned int fit23_batch_threads(int n_rows) {
+    if (n_rows < 1024) return 1;
+
+    const char *enabled = std::getenv("TTTRLIB_USE_OPENMP");
+    if (enabled != nullptr &&
+        (enabled[0] == '0' || enabled[0] == 'f' || enabled[0] == 'F' ||
+         enabled[0] == 'n' || enabled[0] == 'N')) {
+        return 1;
+    }
+
+    unsigned int requested = 0;
+    const char *thread_variables[] = {"TTTRLIB_NUM_THREADS", "OMP_NUM_THREADS"};
+    for (const char *name : thread_variables) {
+        const char *value = std::getenv(name);
+        if (value != nullptr) {
+            const int parsed = std::atoi(value);
+            if (parsed > 0) {
+                requested = static_cast<unsigned int>(parsed);
+                break;
+            }
+        }
+    }
+    if (requested == 0) requested = 4;
+    return std::max(1u, std::min(requested,
+                                static_cast<unsigned int>(n_rows / 512)));
+}
+
+inline double count_entropy(int count) {
+    static const std::array<double, 4096> table = [] {
+        std::array<double, 4096> values{};
+        for (size_t i = 1; i < values.size(); ++i)
+            values[i] = static_cast<double>(i) * std::log(static_cast<double>(i));
+        return values;
+    }();
+    if (count >= 0 && count < static_cast<int>(table.size()))
+        return table[static_cast<size_t>(count)];
+    return count > 0 ? count * std::log(static_cast<double>(count)) : 0.0;
+}
+
 // Bounded derivative-free 1-D minimiser (Brent 1973 / Forsythe-Malcolm-Moler).
-// Minimises the fit23 target over the lifetime tau on [a, b] with the other
-// parameters held at their values in ``xtmpl``. Used for the common case where
-// only tau is free (gamma/r0/rho fixed): it converges in far fewer objective
-// evaluations than the general BFGS path with numerical gradients, and — being
-// a proper 1-D minimiser — lands on the same MLE minimum. Leaves the model
-// array of ``p`` evaluated at the returned tau.
-inline double brent_minimize_tau(double a, double b, double *xtmpl,
-                                 DecayFitData *p, double tol, int max_iter) {
+// Keeping the evaluator generic lets the public fit use the full Fit23 target
+// while the exact unpolarized batch specialization uses its fused target.
+template <typename Feval>
+inline double brent_minimize_tau(double a, double b, Feval &&feval,
+                                 double tol, int max_iter) {
     const double gc = 0.5 * (3.0 - std::sqrt(5.0));  // golden-section fraction
     const double eps = std::sqrt(std::numeric_limits<double>::epsilon());
-    auto feval = [&](double t) -> double {
-        xtmpl[0] = t;
-        return DecayFit23::targetf(xtmpl, p);
-    };
     double x = a + gc * (b - a), w = x, v = x;
     double fx = feval(x), fw = fx, fv = fx;
     double d = 0.0, e = 0.0;
@@ -105,7 +141,6 @@ inline double brent_minimize_tau(double a, double b, double *xtmpl,
             else if (fu <= fv || v == x || v == w) { v = u; fv = fu; }
         }
     }
-    feval(x);  // leave the model array evaluated at the minimiser
     return x;
 }
 
@@ -300,7 +335,12 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
         const double hi = corrections[0] > 0.0
                               ? corrections[0]                      // excitation period
                               : std::max(1.0, Nchannels * p->dt);   // else TAC range
-        x[0] = brent_minimize_tau(kMinTau, hi, xloc, p, 1.0e-4, 100);
+        auto feval = [&](double tau) {
+            xloc[0] = tau;
+            return DecayFit23::targetf(xloc, p);
+        };
+        x[0] = brent_minimize_tau(kMinTau, hi, feval, 1.0e-4, 100);
+        feval(x[0]);  // leave p->model evaluated at the minimizer
         info = 1;
     } else {
         bfgs bfgs_o(DecayFit23::targetf, 4);
@@ -348,6 +388,356 @@ if (is_verbose()) {
     std::cout << "-- r Experimental (output only): " << x[7] << std::endl;
 }
     return tIstar;
+}
+
+
+bool DecayFit23::fit_tau_only_unpolarized_row(
+        const double *data,
+        int n_cols,
+        const double *x0,
+        int n_x0,
+        const short *fixed,
+        int n_fixed,
+        double bifl_scatter,
+        double p2s_flag,
+        DecayFitData *p,
+        double *out,
+        int n_out_cols,
+        bool retain_model) {
+    (void)bifl_scatter;  // gamma == 0 makes the soft-BIFL term identically zero
+
+    if (data == nullptr || x0 == nullptr || fixed == nullptr || p == nullptr ||
+        out == nullptr || n_x0 < 4 || n_fixed < 4 || n_out_cols < 5 ||
+        n_cols <= 0 || (n_cols & 1) != 0 ||
+        fixed[0] || !fixed[1] || !fixed[2] || !fixed[3] ||
+        p2s_flag > 0.0 || !std::isfinite(x0[1]) || x0[1] > 0.0 ||
+        !std::isfinite(x0[2]) || x0[2] != 0.0 ||
+        static_cast<int>(p->irf.size()) != n_cols ||
+        static_cast<int>(p->background.size()) != n_cols ||
+        p->corrections.size() < 5) {
+        return false;
+    }
+
+    const int n_channels = n_cols / 2;
+    const double *corrections = p->corrections.data();
+    const double g = corrections[1];
+    if (!std::isfinite(g) || g <= 0.0 ||
+        !std::equal(p->irf.begin(), p->irf.begin() + n_channels,
+                    p->irf.begin() + n_channels)) {
+        return false;
+    }
+    // The generic model evaluates bg[i] * gamma even for gamma == 0. Avoid
+    // changing its NaN semantics for non-finite background inputs.
+    for (double value : p->background) {
+        if (!std::isfinite(value)) return false;
+    }
+
+    p->data.resize(static_cast<size_t>(n_cols));
+    p->model.resize(static_cast<size_t>(n_cols), 0.0);
+
+    // During minimization the first half stores Cp+Cs and the second half Cp.
+    // This avoids an allocation for combined counts. The original Jordi row is
+    // restored when the caller asks to retain the final model; batch workers
+    // can skip that work for all non-final rows.
+    double sp = 0.0;
+    double ss = 0.0;
+    double data_entropy = 0.0;
+    for (int i = 0; i < n_channels; ++i) {
+        const int cp = static_cast<int>(data[i]);
+        const int cs = static_cast<int>(data[i + n_channels]);
+        if (cp < 0 || cs < 0) return false;
+        p->data[i] = cp + cs;
+        p->data[i + n_channels] = cp;
+        sp += cp;
+        ss += cs;
+        data_entropy += count_entropy(cp) + count_entropy(cs);
+    }
+    const double total = sp + ss;
+    const double perpendicular_scale = 1.0 / g;
+    const double log_total = total > 0.0 ? std::log(total) : 0.0;
+    const double log_perpendicular = std::log(perpendicular_scale);
+    const double log_channel_scale = std::log1p(perpendicular_scale);
+    double *model = p->model.data();
+    const double *irf = p->irf.data();
+
+    // A one-bin IRF over one complete TAC period has a piecewise geometric
+    // convolution. Its Poisson score therefore depends on only five row
+    // sufficient statistics. This keeps Brent a true continuous MLE while
+    // reducing its intermediate objective evaluations from O(n_channels) to
+    // O(1). Any case where the generic Wcm threshold could matter falls back
+    // to the convolution below.
+    int delta_bin = -1;
+    bool delta_irf = g > 0.0 && p->dt > 0.0 &&
+                     static_cast<int>(corrections[4]) == n_channels - 1 &&
+                     corrections[0] == n_channels * p->dt;
+    if (delta_irf) {
+        for (int i = 0; i < n_channels; ++i) {
+            if (irf[i] != 0.0) {
+                if (delta_bin >= 0 || !std::isfinite(irf[i]) || irf[i] <= 0.0) {
+                    delta_irf = false;
+                    break;
+                }
+                delta_bin = i;
+            }
+        }
+        // The last-bin pulse has a different finite-convolution boundary
+        // term; keep that rare case on the generic exact path.
+        delta_irf = delta_irf && delta_bin > 0 &&
+                    delta_bin < n_channels - 1;
+    }
+
+    double prefix_counts = 0.0;
+    double prefix_index = 0.0;
+    double pulse_counts = 0.0;
+    double suffix_counts = 0.0;
+    double suffix_distance = 0.0;
+    bool used_sufficient_statistics = false;
+    if (delta_irf) {
+        for (int i = 0; i < delta_bin; ++i) {
+            const double counts = p->data[i];
+            prefix_counts += counts;
+            prefix_index += counts * i;
+        }
+        pulse_counts = p->data[delta_bin];
+        for (int i = delta_bin + 1; i < n_channels; ++i) {
+            const double counts = p->data[i];
+            suffix_counts += counts;
+            suffix_distance += counts * (i - delta_bin);
+        }
+    }
+
+    auto evaluate = [&](double tau, bool keep_model) {
+        used_sufficient_statistics = false;
+        tau = std::max(tau, kMinTau);
+        if (delta_irf && !keep_model && total > 0.0) {
+            const double log_e = -p->dt / tau;
+            const double e = std::exp(log_e);
+            const double period_tail = std::exp(n_channels * log_e);
+            const double tail_denominator = 1.0 - period_tail;
+            const int suffix_length = n_channels - 1 - delta_bin;
+            const double e_to_pulse = std::exp(delta_bin * log_e);
+            const double e_to_suffix = std::exp(suffix_length * log_e);
+            const double wrap = period_tail * e / tail_denominator;
+
+            // The common factor dt*IRF_amplitude cancels between q and its
+            // normalization. Work with the dimensionless shape to avoid two
+            // transcendental operations per objective evaluation.
+            const double log_t = std::log(wrap) -
+                                 std::log(e_to_pulse);
+            const double log_pulse = std::log(0.5 + wrap);
+            const double log_suffix_base = std::log1p(wrap);
+            const double geometric_denominator = 1.0 - e;
+            const double prefix_sum = (wrap / e_to_pulse) *
+                    (1.0 - e_to_pulse) / geometric_denominator;
+            const double suffix_sum = (1.0 + wrap) * e *
+                    (1.0 - e_to_suffix) / geometric_denominator;
+            const double sum_q = prefix_sum + (0.5 + wrap) + suffix_sum;
+            const double log_common = log_total - std::log(sum_q) -
+                                      log_channel_scale;
+
+            // Wcm ignores model bins <= 1e-12. Use the sufficient-statistic
+            // score only when every bin in both channels clears that exact
+            // threshold; otherwise the generic loop below preserves behavior.
+            const double min_prefix_log = log_t +
+                    (delta_bin - 1) * log_e + log_common;
+            const double min_suffix_log = log_suffix_base +
+                    suffix_length * log_e + log_common;
+            const double min_parallel_log = std::min(
+                    log_pulse + log_common,
+                    std::min(min_prefix_log, min_suffix_log));
+            const double min_model_log = std::min(
+                    min_parallel_log, min_parallel_log + log_perpendicular);
+            if (std::isfinite(min_model_log) &&
+                min_model_log > std::log(1.0e-12)) {
+                const double counts_log_q =
+                        prefix_counts * log_t + prefix_index * log_e +
+                        pulse_counts * log_pulse +
+                        suffix_counts * log_suffix_base +
+                        suffix_distance * log_e;
+                const double w = counts_log_q + total * log_common +
+                                 ss * log_perpendicular;
+                used_sufficient_statistics = true;
+                return -w / n_channels;
+            }
+        }
+
+        double spectrum[2] = {1.0, std::max(tau, kMinTau)};
+        fconv_per_cs(model, spectrum, const_cast<double *>(irf),
+                     1, n_channels - 1, n_channels,
+                     corrections[0], static_cast<int>(corrections[4]), p->dt);
+
+        double sum_q = 0.0;
+        for (int i = 0; i < n_channels; ++i) sum_q += model[i];
+        const double sum_model = sum_q * (1.0 + perpendicular_scale);
+        if (sum_model <= 0.0) {
+            if (keep_model)
+                std::fill(model, model + n_cols, 0.0);
+            return 0.0;
+        }
+
+        if (total <= 0.0) {
+            if (keep_model)
+                std::fill(model, model + n_cols, 0.0);
+            return 0.0;
+        }
+
+        // Match the generic path's two scaling operations: modelf first
+        // normalizes to unit area, then normM multiplies by total counts.
+        const double probability_scale = 1.0 / sum_model;
+        const double log_parallel_scale = log_total - std::log(sum_model);
+        const double log_perpendicular_scale = log_parallel_scale +
+                                               log_perpendicular;
+        constexpr double log_model_threshold = -27.631021115928547;
+        double w = 0.0;
+        for (int i = 0; i < n_channels; ++i) {
+            const int cp = p->data[i + n_channels];
+            const int cs = p->data[i] - cp;
+            if (model[i] > 0.0) {
+                const double log_q = std::log(model[i]);
+                const double log_mp = log_q + log_parallel_scale;
+                const double log_ms = log_q + log_perpendicular_scale;
+                if (log_mp > log_model_threshold) w += cp * log_mp;
+                if (log_ms > log_model_threshold) w += cs * log_ms;
+            }
+            if (keep_model) {
+                model[i + n_channels] = ((model[i] * perpendicular_scale) *
+                                         probability_scale) * total;
+                model[i] = (model[i] * probability_scale) * total;
+            }
+        }
+        return -w / n_channels;
+    };
+
+    const double hi = corrections[0] > 0.0
+                          ? corrections[0]
+                          : std::max(1.0, n_channels * p->dt);
+    auto objective = [&](double tau) { return evaluate(tau, false); };
+    const double tau = brent_minimize_tau(kMinTau, hi, objective, 1.0e-4, 100);
+    const double target_at_tau = objective(tau);
+    const bool entropy_identity_is_exact = used_sufficient_statistics;
+    double two_istar;
+    if (entropy_identity_is_exact) {
+        two_istar = target_at_tau + data_entropy / n_channels;
+        if (retain_model) evaluate(tau, true);
+    } else {
+        // Wcm skips bins whose model is <= 1e-12 whereas twoIstar does not.
+        // Materialize the final model when that threshold is active so the
+        // generic Fit23 reporting semantics remain exact.
+        evaluate(tau, true);
+        double two_istar_sum = 0.0;
+        for (int i = 0; i < n_channels; ++i) {
+            const int cp = p->data[i + n_channels];
+            const int cs = p->data[i] - cp;
+            if (cp > 0)
+                two_istar_sum += cp * std::log(model[i] / cp);
+            if (cs > 0)
+                two_istar_sum += cs * std::log(model[i + n_channels] / cs);
+        }
+        two_istar = -two_istar_sum / n_channels;
+    }
+    if (retain_model) {
+        for (int i = 0; i < n_channels; ++i) {
+            const int cp = p->data[i + n_channels];
+            const int cs = p->data[i] - cp;
+            p->data[i] = cp;
+            p->data[i + n_channels] = cs;
+        }
+    }
+
+    const double anisotropy_denominator =
+            sp * (1.0 - 3.0 * corrections[3]) +
+            (2.0 - 3.0 * corrections[2]) * g * ss;
+    const double anisotropy = (sp - g * ss) / anisotropy_denominator;
+
+    out[0] = tau;
+    out[1] = 0.0;
+    out[2] = 0.0;
+    out[3] = x0[3];
+    out[4] = two_istar;
+    if (n_out_cols > 5) out[5] = anisotropy;
+    if (n_out_cols > 6) out[6] = anisotropy;
+    return true;
+}
+
+
+void DecayFit23::fit_matrix(
+        double *data_in,
+        int n_rows,
+        int n_cols,
+        double *x0,
+        int n_x0,
+        short *fixed_in,
+        int n_fixed,
+        double bifl_scatter,
+        double p2s_flag,
+        DecayFitData *p,
+        double *out,
+        int n_out_rows,
+        int n_out_cols) {
+    if (data_in == nullptr || x0 == nullptr || fixed_in == nullptr ||
+        p == nullptr || out == nullptr || n_rows < 0 || n_cols <= 0 ||
+        n_x0 < 4 || n_fixed < 4 || n_out_rows != n_rows || n_out_cols < 5) {
+        return;
+    }
+
+    std::vector<short> fixed(fixed_in, fixed_in + n_fixed);
+    if (fixed.size() < 6) fixed.resize(6, 0);
+
+    const unsigned int n_threads = fit23_batch_threads(n_rows);
+    std::vector<DecayFitData> workspaces(n_threads, *p);
+    for (DecayFitData &workspace : workspaces) {
+        workspace.data.resize(static_cast<size_t>(n_cols));
+        workspace.model.resize(static_cast<size_t>(n_cols), 0.0);
+    }
+
+    auto fit_range = [&](unsigned int worker, int begin, int end) {
+        DecayFitData *workspace = &workspaces[worker];
+        for (int i = begin; i < end; ++i) {
+            const double *row = data_in + static_cast<size_t>(i) * n_cols;
+            double *result = out + static_cast<size_t>(i) * n_out_cols;
+            if (fit_tau_only_unpolarized_row(
+                    row, n_cols, x0, n_x0, fixed.data(),
+                    static_cast<int>(fixed.size()), bifl_scatter, p2s_flag,
+                    workspace, result, n_out_cols, i == n_rows - 1)) {
+                continue;
+            }
+
+            for (int channel = 0; channel < n_cols; ++channel)
+                workspace->data[channel] = static_cast<int>(row[channel]);
+            double x[8] = {x0[0], x0[1], x0[2], x0[3],
+                           bifl_scatter, p2s_flag, 0.0, 0.0};
+            const double two_istar = fit(x, fixed.data(), workspace);
+            result[0] = x[0];
+            result[1] = x[1];
+            result[2] = x[2];
+            result[3] = x[3];
+            result[4] = two_istar;
+            if (n_out_cols > 5) result[5] = x[6];
+            if (n_out_cols > 6) result[6] = x[7];
+        }
+    };
+
+    if (n_threads == 1) {
+        fit_range(0, 0, n_rows);
+    } else {
+        std::vector<std::thread> workers;
+        workers.reserve(n_threads);
+        const int block = (n_rows + static_cast<int>(n_threads) - 1) /
+                          static_cast<int>(n_threads);
+        for (unsigned int worker = 0; worker < n_threads; ++worker) {
+            const int begin = static_cast<int>(worker) * block;
+            const int end = std::min(n_rows, begin + block);
+            workers.emplace_back(fit_range, worker, begin, end);
+        }
+        for (std::thread &worker : workers) worker.join();
+    }
+
+    // Preserve the historical postcondition that the caller's container holds
+    // the final row and model after a batch fit.
+    if (n_rows > 0) {
+        p->data = workspaces.back().data;
+        p->model = workspaces.back().model;
+    }
 }
 
 
@@ -472,4 +862,3 @@ std::string DecayFit23::modelf_to_json(const double *param,
 
     return j.dump();
 }
-

@@ -2,12 +2,15 @@
 #include "DecayStatistics.h"
 #include "include/Verbose.h"
 
+#include <mutex>
+
 const double twopi = 6.2831853071795865;
 const double logtwopi = log(twopi);
 
 // init factorial
 
 static double logfact[150];
+static std::once_flag logfact_once;
 
 
 // overall log-likelihood w(C,M)
@@ -62,12 +65,14 @@ if (is_verbose()) {
 
 void init_fact()
 {
-  double f = 1.;
-  logfact[0] = 0.;
-  for(int i = 1; i<150; i++) {
-    f *= (double)i;
-    logfact[i] = log(f);
-  }
+  std::call_once(logfact_once, [] {
+    double f = 1.;
+    logfact[0] = 0.;
+    for(int i = 1; i<150; i++) {
+      f *= (double)i;
+      logfact[i] = log(f);
+    }
+  });
 }
 
 double loggammaf(double t)

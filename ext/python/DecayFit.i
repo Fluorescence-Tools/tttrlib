@@ -75,6 +75,7 @@ using json = nlohmann::json;
 %include "DecayFit24.i"
 %include "DecayFit25.i"
 %include "DecayFit26.i"
+%include "DecayFitNExp.i"
 
 /* ------------------------------------------------------------------
  * 5) Extend blocks — these now benefit from the typemaps above

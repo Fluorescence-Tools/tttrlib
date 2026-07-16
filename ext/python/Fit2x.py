@@ -153,6 +153,389 @@ class Fit23(Fit2x):
             r['model'] = self.model
         return r
 
+    def fit_many(
+            self,
+            data,
+            initial_values,
+            fixed=None,
+            include_anisotropy=False
+    ):
+        """Fit a matrix of decays with the Poisson maximum likelihood model.
+
+        The shared IRF, background, correction factors, starting values, and
+        fixed-parameter mask are prepared once. The native batch kernel then
+        fits rows in parallel without Python callback or per-row wrapper
+        overhead. For the common unpolarized single-lifetime case
+        (``gamma=r0=0`` and only ``tau`` free), an algebraically equivalent
+        fused one-channel objective is selected automatically.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            ``(n_decays, 2*n_channels)`` VV/VH histograms in Jordi format.
+        initial_values : array-like
+            Shared ``[tau, gamma, r0, rho]`` starting values.
+        fixed : array-like, optional
+            Four fixed-parameter flags. The default fits only ``tau``.
+        include_anisotropy : bool, optional
+            Append experimental and scatter-corrected anisotropy columns.
+
+        Returns
+        -------
+        numpy.ndarray
+            Columns are ``tau, gamma, r0, rho, 2I*`` and, when requested,
+            ``r_scatter, r_experimental``.
+        """
+        data_arr = np.ascontiguousarray(data, dtype=np.float64)
+        if data_arr.ndim != 2:
+            raise ValueError("data must be a 2-D matrix of Jordi histograms")
+        if data_arr.shape[1] != len(self._irf):
+            raise ValueError(
+                "each data row must have the same length as the Jordi IRF"
+            )
+
+        x0 = np.ascontiguousarray(initial_values, dtype=np.float64)
+        if x0.ndim != 1 or x0.size < 4:
+            raise ValueError("initial_values must contain tau, gamma, r0, rho")
+        if fixed is None:
+            fixed_arr = np.array([0, 1, 1, 1], dtype=np.int16)
+        else:
+            fixed_arr = np.ascontiguousarray(fixed, dtype=np.int16)
+            if fixed_arr.ndim != 1 or fixed_arr.size < 4:
+                raise ValueError("fixed must contain four parameter flags")
+
+        n_columns = 7 if include_anisotropy else 5
+        out = np.empty((data_arr.shape[0], n_columns), dtype=np.float64)
+        DecayFit23.fit_matrix(
+            data_arr,
+            x0,
+            fixed_arr,
+            float(self._bifl_scatter),
+            float(self._p_2s_flag),
+            self._m_param,
+            out,
+        )
+        return out
+
+    def fit_map(
+            self,
+            data,
+            initial_values,
+            fixed=None,
+            minimum_photons=1,
+            include_anisotropy=True
+    ):
+        """Fit a polarization-resolved FLIM image with native Poisson MLE.
+
+        ``data`` is a ``(rows, columns, 2*n_channels)`` Jordi decay cube.
+        Pixels below ``minimum_photons`` are left as NaN. The returned mapping
+        contains intensity, validity, fitted parameters, and fit quality maps.
+        """
+        cube = np.ascontiguousarray(data, dtype=np.float64)
+        if cube.ndim != 3:
+            raise ValueError(
+                "data must be a (rows, columns, 2*n_channels) decay cube"
+            )
+        if cube.shape[2] != len(self._irf):
+            raise ValueError(
+                "the decay axis must have the same length as the Jordi IRF"
+            )
+        if minimum_photons < 0:
+            raise ValueError("minimum_photons must be non-negative")
+
+        image_shape = cube.shape[:2]
+        flat = cube.reshape(-1, cube.shape[2])
+        intensity = flat.sum(axis=1)
+        valid = intensity >= minimum_photons
+        n_columns = 7 if include_anisotropy else 5
+        values = np.full((flat.shape[0], n_columns), np.nan, dtype=np.float64)
+        if np.any(valid):
+            values[valid] = self.fit_many(
+                flat[valid],
+                initial_values,
+                fixed=fixed,
+                include_anisotropy=include_anisotropy,
+            )
+
+        result = {
+            "intensity": intensity.reshape(image_shape),
+            "valid": valid.reshape(image_shape),
+            "tau": values[:, 0].reshape(image_shape),
+            "gamma": values[:, 1].reshape(image_shape),
+            "r0": values[:, 2].reshape(image_shape),
+            "rho": values[:, 3].reshape(image_shape),
+            "twoIstar": values[:, 4].reshape(image_shape),
+        }
+        if include_anisotropy:
+            result["r_scatter"] = values[:, 5].reshape(image_shape)
+            result["r_experimental"] = values[:, 6].reshape(image_shape)
+        return result
+
+
+class FitNExp(Fit2x):
+    """General one- or multi-exponential Poisson reconvolution fitter.
+
+    Unlike the polarization/anisotropy-specific Fit23 model, this class uses a
+    shared temporal shape with any number of exponential components. Input may
+    be a single decay or Jordi VV/VH data; Jordi channels are pooled as exact
+    sufficient statistics while their independently profiled totals are
+    retained in the returned model. All optimization runs in native C++.
+    """
+
+    def __init__(
+            self,
+            dt,
+            irf,
+            background=None,
+            period=0.0,
+            convolution_stop=-1,
+            tau_min=1.0e-3,
+            tau_max=100.0,
+            lifetime_tolerance=1.0e-4,
+            likelihood_tolerance=1.0e-9,
+            em_tolerance=1.0e-10,
+            max_outer_iterations=20,
+            max_em_iterations=500,
+            initial_background_fraction=0.01,
+    ):
+        self._irf = np.ascontiguousarray(irf, dtype=np.float64)
+        if self._irf.ndim != 1 or self._irf.size == 0:
+            raise ValueError("irf must be a non-empty one-dimensional array")
+        if background is None:
+            self._background = np.empty(0, dtype=np.float64)
+        else:
+            self._background = np.ascontiguousarray(
+                background, dtype=np.float64
+            )
+            if self._background.ndim != 1:
+                raise ValueError("background must be one-dimensional")
+            if self._background.size not in (0, self._irf.size):
+                raise ValueError("background and irf lengths must match")
+
+        self._options = DecayFitNExpOptions()
+        self._options.dt = float(dt)
+        self._options.period = float(period)
+        self._options.convolution_stop = int(convolution_stop)
+        self._options.tau_min = float(tau_min)
+        self._options.tau_max = float(tau_max)
+        self._options.lifetime_tolerance = float(lifetime_tolerance)
+        self._options.likelihood_tolerance = float(likelihood_tolerance)
+        self._options.em_tolerance = float(em_tolerance)
+        self._options.max_outer_iterations = int(max_outer_iterations)
+        self._options.max_em_iterations = int(max_em_iterations)
+        self._options.initial_background_fraction = float(
+            initial_background_fraction
+        )
+        self._last_data = np.empty(0, dtype=np.float64)
+        self._last_model = np.empty(0, dtype=np.float64)
+
+    def _call_options(self, include_model):
+        """Return an isolated native options object for one fit call."""
+        options = DecayFitNExpOptions()
+        for name in (
+                "dt", "period", "convolution_stop", "tau_min", "tau_max",
+                "lifetime_tolerance", "likelihood_tolerance",
+                "em_tolerance", "max_outer_iterations", "max_em_iterations",
+                "initial_background_fraction",
+        ):
+            setattr(options, name, getattr(self._options, name))
+        options.include_model = bool(include_model)
+        return options
+
+    @property
+    def data(self):
+        return self._last_data.copy()
+
+    @property
+    def model(self):
+        return self._last_model.copy()
+
+    @property
+    def irf(self):
+        return self._irf.copy()
+
+    @property
+    def background(self):
+        return self._background.copy()
+
+    @staticmethod
+    def _component_inputs(initial_lifetimes, initial_amplitudes, fixed):
+        lifetimes = np.ascontiguousarray(
+            initial_lifetimes, dtype=np.float64
+        )
+        if lifetimes.ndim != 1 or lifetimes.size == 0:
+            raise ValueError("initial_lifetimes must contain at least one value")
+        if initial_amplitudes is None:
+            amplitudes = np.ones(lifetimes.size, dtype=np.float64)
+        else:
+            amplitudes = np.ascontiguousarray(
+                initial_amplitudes, dtype=np.float64
+            )
+        if amplitudes.ndim != 1 or amplitudes.size != lifetimes.size:
+            raise ValueError("amplitudes and lifetimes must have equal length")
+        if fixed is None:
+            fixed_arr = np.zeros(lifetimes.size, dtype=np.int32)
+        else:
+            fixed_arr = np.ascontiguousarray(fixed, dtype=np.int32)
+        if fixed_arr.ndim != 1 or fixed_arr.size != lifetimes.size:
+            raise ValueError("fixed and lifetimes must have equal length")
+        return lifetimes, amplitudes, fixed_arr
+
+    @staticmethod
+    def _result_dict(result, include_model):
+        output = {
+            "lifetimes": np.asarray(result.lifetimes, dtype=np.float64),
+            "amplitudes": np.asarray(result.amplitudes, dtype=np.float64),
+            "background_amplitude": float(result.background_amplitude),
+            "negative_log_likelihood": float(
+                result.negative_log_likelihood
+            ),
+            "photon_count": float(result.photon_count),
+            "converged": bool(result.converged),
+            "outer_iterations": int(result.outer_iterations),
+            "em_iterations": int(result.em_iterations),
+        }
+        if include_model:
+            output["model"] = np.asarray(result.model, dtype=np.float64)
+        return output
+
+    def __call__(
+            self,
+            data,
+            initial_lifetimes,
+            initial_amplitudes=None,
+            fixed=None,
+            include_model=False,
+    ):
+        """Fit one decay with arbitrary component count."""
+        data_arr = np.ascontiguousarray(data, dtype=np.float64)
+        if data_arr.ndim != 1 or data_arr.size not in (
+                self._irf.size, 2 * self._irf.size):
+            raise ValueError("data must contain one decay or Jordi VV/VH data")
+        lifetimes, amplitudes, fixed_arr = self._component_inputs(
+            initial_lifetimes, initial_amplitudes, fixed
+        )
+        result = DecayFitNExp.fit(
+            data_arr.tolist(),
+            self._irf.tolist(),
+            self._background.tolist(),
+            lifetimes.tolist(),
+            amplitudes.tolist(),
+            fixed_arr.tolist(),
+            self._call_options(include_model),
+        )
+        self._last_data = data_arr.copy()
+        self._last_model = np.asarray(result.model, dtype=np.float64)
+        return self._result_dict(result, include_model)
+
+    def fit_fixed_lifetimes(
+            self,
+            data,
+            lifetimes,
+            initial_amplitudes=None,
+            include_model=False,
+    ):
+        """Profile nonnegative amplitudes by EM without lifetime searches."""
+        data_arr = np.ascontiguousarray(data, dtype=np.float64)
+        if data_arr.ndim != 1 or data_arr.size not in (
+                self._irf.size, 2 * self._irf.size):
+            raise ValueError("data must contain one decay or Jordi VV/VH data")
+        lifetimes, amplitudes, _ = self._component_inputs(
+            lifetimes, initial_amplitudes,
+            np.ones(len(lifetimes), dtype=np.int32),
+        )
+        result = DecayFitNExp.fit_fixed_lifetimes(
+            data_arr.tolist(),
+            self._irf.tolist(),
+            self._background.tolist(),
+            lifetimes.tolist(),
+            amplitudes.tolist(),
+            self._call_options(include_model),
+        )
+        self._last_data = data_arr.copy()
+        self._last_model = np.asarray(result.model, dtype=np.float64)
+        return self._result_dict(result, include_model)
+
+    def fit_many(
+            self,
+            data,
+            initial_lifetimes,
+            initial_amplitudes=None,
+            fixed=None,
+    ):
+        """Fit a matrix in the native threaded C++ batch engine.
+
+        Output columns are ``nll, background_amplitude, converged,
+        outer_iterations, lifetimes..., amplitudes...``.
+        """
+        matrix = np.ascontiguousarray(data, dtype=np.float64)
+        if matrix.ndim != 2 or matrix.shape[1] not in (
+                self._irf.size, 2 * self._irf.size):
+            raise ValueError(
+                "data must be a matrix of single-channel or Jordi decays"
+            )
+        lifetimes, amplitudes, fixed_arr = self._component_inputs(
+            initial_lifetimes, initial_amplitudes, fixed
+        )
+        flat_output = DecayFitNExp.fit_batch_flat(
+            matrix.ravel().tolist(),
+            matrix.shape[0],
+            matrix.shape[1],
+            self._irf.tolist(),
+            self._background.tolist(),
+            lifetimes.tolist(),
+            amplitudes.tolist(),
+            fixed_arr.tolist(),
+            self._options,
+        )
+        width = 4 + 2 * lifetimes.size
+        return np.asarray(flat_output, dtype=np.float64).reshape(-1, width)
+
+    def fit_map(
+            self,
+            data,
+            initial_lifetimes,
+            initial_amplitudes=None,
+            fixed=None,
+            minimum_photons=1,
+    ):
+        """Fit an image of decays with arbitrary exponential count."""
+        cube = np.ascontiguousarray(data, dtype=np.float64)
+        if cube.ndim != 3 or cube.shape[2] not in (
+                self._irf.size, 2 * self._irf.size):
+            raise ValueError(
+                "data must be a (rows, columns, decay_channels) cube"
+            )
+        if minimum_photons < 0:
+            raise ValueError("minimum_photons must be non-negative")
+        lifetimes, amplitudes, fixed_arr = self._component_inputs(
+            initial_lifetimes, initial_amplitudes, fixed
+        )
+        shape = cube.shape[:2]
+        flat = cube.reshape(-1, cube.shape[2])
+        intensity = flat.sum(axis=1)
+        valid = intensity >= minimum_photons
+        values = np.full(
+            (flat.shape[0], 4 + 2 * lifetimes.size),
+            np.nan,
+            dtype=np.float64,
+        )
+        if np.any(valid):
+            values[valid] = self.fit_many(
+                flat[valid], lifetimes, amplitudes, fixed_arr
+            )
+        n_exp = lifetimes.size
+        return {
+            "intensity": intensity.reshape(shape),
+            "valid": valid.reshape(shape),
+            "negative_log_likelihood": values[:, 0].reshape(shape),
+            "background_amplitude": values[:, 1].reshape(shape),
+            "converged": (values[:, 2] == 1.0).reshape(shape),
+            "outer_iterations": values[:, 3].reshape(shape),
+            "lifetimes": values[:, 4:4 + n_exp].reshape(*shape, n_exp),
+            "amplitudes": values[:, 4 + n_exp:].reshape(*shape, n_exp),
+        }
+
 
 class Fit24(Fit2x):
 

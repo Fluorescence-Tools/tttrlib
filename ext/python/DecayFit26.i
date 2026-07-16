@@ -58,10 +58,12 @@
 
 // Release the Python GIL around the (pure C++, callback-free) fit so that
 // per-pixel / per-burst fits can be parallelised across Python threads.
+#ifdef SWIGPYTHON
 %exception DecayFit26::fit {
   Py_BEGIN_ALLOW_THREADS
   $action
   Py_END_ALLOW_THREADS
 }
+#endif
 %include "DecayFit26.h"
 %exception;
