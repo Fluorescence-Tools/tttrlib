@@ -106,3 +106,6 @@ test/diagnostics/*.png
 /SIM_INTEGRATION_NOTES.md
 # Scratch data written by examples/tests
 examples/tttr/conv1.spc
+
+# Local benchmarking harness (virtualenvs, logs, generated data)
+/benchmarks/
