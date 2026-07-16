@@ -42,6 +42,14 @@ struct SimIntegrator {
     double microtime_resolution = 0.008; ///< ns per micro-time channel
     double laser_period = 32.0;          ///< pulsed excitation period (ns); micro-time wraps modulo this
 
+    // ALEX (alternating laser excitation) — a MACRO-time laser alternation, orthogonal to
+    // laser_period (the ns TCSPC pulse). With >= 2 excitation grids and alex_period > 0 each
+    // macro-window is assigned to laser floor(fmod(T0*dt, alex_period)/(alex_period/n_lasers)),
+    // an equal-duty round-robin. 0 = ALEX off (single laser, index always 0 = current behavior).
+    double alex_period = 0.0;            ///< ALEX alternation period in macro-time units (same as dt)
+    bool alex_markers = false;           ///< emit a marker event at each laser switch (ground truth)
+    int alex_marker_event_type = 2;      ///< event_type written for ALEX laser-switch markers (scan uses 1)
+
     SimRngKind rng_kind = SimRngKind::Xoshiro;  ///< RNG backend
     /// RNG stream granularity. PerMolecule (default): reproducible regardless of thread
     /// count (each molecule keyed by id+window). PerThread: one stream per worker, seeded

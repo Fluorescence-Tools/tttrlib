@@ -18,13 +18,14 @@ SimEncodedRecords SimMicrotimeEncoder::encode(
     const double* data_t,
     const int16_t* data_N,
     const int16_t* data_species,
+    const uint16_t* data_micro,
     uint64_t n_photons,
     SimRandom& rng,
     uint64_t mt_overflow_in) const {
 
     switch (format) {
         case SimRecordFormat::BeckerHicklSpc:
-            return encode_becker_hickl(data_T, data_t, data_N, data_species,
+            return encode_becker_hickl(data_T, data_t, data_N, data_species, data_micro,
                                        n_photons, rng, mt_overflow_in);
         case SimRecordFormat::PicoQuantHt3:
         case SimRecordFormat::PicoQuantPtu:
@@ -40,6 +41,7 @@ SimEncodedRecords SimMicrotimeEncoder::encode_becker_hickl(
     const double* data_t,
     const int16_t* data_N,
     const int16_t* data_species,
+    const uint16_t* data_micro,
     uint64_t n_photons,
     SimRandom& rng,
     uint64_t mt_overflow_in) const {
@@ -87,7 +89,14 @@ SimEncodedRecords SimMicrotimeEncoder::encode_becker_hickl(
         }
 
         int tac;
-        if (pulsed_exc) {
+        if (data_micro) {
+            // Faithful path: carry the already-simulated micro-time (FLIM) channel, so the
+            // read-back TAC — and any micro-time filter — matches the simulation exactly.
+            tac = int(data_micro[n]);
+            if (reverse_tac) tac = n_microtime_channels - tac - 1;
+        } else if (pulsed_exc && data_species[n] >= 0 &&
+                   data_species[n] * n_channels + data_N[n] >= 0 &&
+                   size_t((data_species[n] * n_channels + data_N[n] + 1) * n_microtime_channels) <= F.size()) {
             size_t i_shift = size_t((data_species[n] * n_channels + data_N[n]) * n_microtime_channels);
             double r = rng.random0i1e();
             tac = lookup[i_shift + size_t(std::floor(r * n_microtime_channels))];
@@ -98,8 +107,10 @@ SimEncodedRecords SimMicrotimeEncoder::encode_becker_hickl(
             double phase = std::fmod(t, SYNC_DT);  // physical sub-period delay
             tac = int(std::floor((reverse_tac ? (SYNC_DT - phase) : phase) / MT_CALIB));
         }
+        if (tac < 0) tac = 0; else if (tac >= n_microtime_channels) tac = n_microtime_channels - 1;
 
-        int N_spc = ch_conversion[data_N[n]];
+        const int nn = int(data_N[n]);
+        int N_spc = (nn >= 0 && nn < int(ch_conversion.size())) ? int(ch_conversion[nn]) : (nn & 0x3f);
         b.push_back(uint8_t(MT & BYTEMASK));
         b.push_back(uint8_t((N_spc << 4) + (MT >> 8)));
         b.push_back(uint8_t(tac & BYTEMASK));

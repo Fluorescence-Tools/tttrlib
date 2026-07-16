@@ -63,11 +63,15 @@ public:
      * \param mt_overflow_in initial overflow counter (for streaming continuation).
      * \throws std::invalid_argument for formats produced via `TTTR::write` (PTU/HT3).
      */
+    /// \param data_micro optional simulated micro-time channel per photon. When non-null the TAC
+    ///        is taken directly from it (faithfully preserving the FLIM/lifetime axis and any
+    ///        micro-time filters); when null the TAC is derived (pulsed inverse-CDF or CW phase).
     SimEncodedRecords encode(
         const uint32_t* data_T,
         const double* data_t,
         const int16_t* data_N,
         const int16_t* data_species,
+        const uint16_t* data_micro,
         uint64_t n_photons,
         SimRandom& rng,
         uint64_t mt_overflow_in = 0) const;
@@ -78,7 +82,7 @@ public:
 private:
     SimEncodedRecords encode_becker_hickl(
         const uint32_t* data_T, const double* data_t,
-        const int16_t* data_N, const int16_t* data_species,
+        const int16_t* data_N, const int16_t* data_species, const uint16_t* data_micro,
         uint64_t n_photons, SimRandom& rng, uint64_t mt_overflow_in) const;
 };
 

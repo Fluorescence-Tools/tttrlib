@@ -177,4 +177,19 @@
 }
 
 %newobject tttrlib::SimEngine::from_json;   // Python owns the returned engine
+
+// Translate C++ exceptions from the engine (e.g. from_json / constructor config validation such
+// as a q_alex row-count mismatch) into Python exceptions instead of terminating the interpreter.
+%exception {
+    try {
+        $action
+    } catch (const std::invalid_argument& e) {
+        SWIG_exception(SWIG_ValueError, e.what());
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    } catch (...) {
+        SWIG_exception(SWIG_UnknownError, "Unknown exception");
+    }
+}
 %include "SimEngine.h"
+%exception;   // reset to the previous global handler

@@ -1,0 +1,23 @@
+{
+  "_comment": "Micro-second ALEX (alternating laser excitation) smFRET. Real ALEX alternates the green (donor) and red (acceptor) laser on the MACRO-time/diffusion timescale (unlike PIE, which separates excitation by micro-time). Two excitation grids = two lasers; each doubly-labelled species carries per-laser brightness rows q_alex = [[ (1-E)*b, E*b ], [ 0, b_A ]] so under the green laser it emits DD (ch0) + DA (ch1) and under the red laser only AA (ch1). settings.alex_period = 0.1 macro units = 10 windows/cycle = 5 windows per laser; the alternation is encoded in macro-time and recovered by TTTR.alex_to_microtime. Two diffusing populations (E=0.2 and E=0.8) give two E-S clusters at common S. Markers are off here (a laser-switch marker every 5 windows over a long dilute run is impractical; the macro-time encoding is the ISS-faithful mechanism) — see alex_01_simulation_basics.ipynb for the explicit-marker ground-truth demo. See examples/simulation/alex_02_smfret_es.ipynb.",
+  "settings": {"dt": 0.01, "n_ph_max": 600000, "n_channels": 2,
+               "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0,
+               "alex_period": 0.1, "alex_markers": false,
+               "active_margin": 1.0, "fast_grid_bbox": true,
+               "seed_diffusion": 12345, "seed_emission": 54321},
+  "box": {"xy": 2.0, "z": 4.0},
+  "species": [
+    {"D": 0.05, "q_alex": [[240.0, 60.0], [0.0, 300.0]],
+     "decay": {"lifetimes": [3.8], "amplitudes": [1.0], "dt": 0.008}},
+    {"D": 0.05, "q_alex": [[60.0, 240.0], [0.0, 300.0]],
+     "decay": {"lifetimes": [1.6], "amplitudes": [1.0], "dt": 0.008}}
+  ],
+  "k_rad": [0, 0, 0, 0],
+  "k_nrad": [0, 0, 0, 0],
+  "background": [0.02, 0.02],
+  "population": [0.15, 0.15],
+  "excitation": [
+    {"type": "gaussian3d", "w0": 0.3, "z0": 2.0, "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1},
+    {"type": "gaussian3d", "w0": 0.32, "z0": 2.1, "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1}
+  ]
+}

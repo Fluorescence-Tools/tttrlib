@@ -22,6 +22,13 @@ struct SimSpecies {
                                     ///< (µm² per SimIntegrator::dt unit; the ms convention ⇒ µm²/ms).
                                     ///< 0 = immobile. See the unit contract (macro vs micro-time).
     std::vector<double> q;          ///< brightness per detection channel (photons/molecule/time)
+
+    /// Per-laser brightness rows for ALEX: q_alex[laser][channel]. Empty (default) => the scalar
+    /// `q` row is broadcast to every laser (back-compat). When non-empty it must have exactly
+    /// n_lasers rows (each row per-detection-channel like `q`). Lets one doubly-labelled FRET
+    /// molecule emit DD+DA under the green laser (row 0) and AA under the red laser (row 1).
+    std::vector<std::vector<double>> q_alex;
+
     SimDecay decay;                 ///< micro-time (FLIM) decay pattern; empty = no micro-time
 
     // Optional anisotropy (rotational-diffusion) model; ignored when D_rot == 0.

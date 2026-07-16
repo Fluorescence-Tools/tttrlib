@@ -70,11 +70,14 @@ double random_erfc(Rng& rng) {
 }
 } // namespace
 
-SimEngine::SimEngine(SimSystem sample, SimGrid excitation,
+SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
                      std::vector<SimGrid> detection, SimIntegrator settings)
     : sample_(std::move(sample)), exc_(std::move(excitation)),
       det_(std::move(detection)), set_(std::move(settings)),
       rng_diff_(settings.seed_diffusion), rng_emit_(settings.seed_emission) {
+
+    if (exc_.empty()) exc_.push_back(SimGrid::uniform(1.0, 2.0, 4.0, 0.1));
+    const int n_lasers = int(exc_.size());
 
     int nsp = sample_.n_species();
     const auto& kr = sample_.k_rad();
@@ -107,6 +110,25 @@ SimEngine::SimEngine(SimSystem sample, SimGrid excitation,
         rot_step_[i] = std::sqrt(2.0 * s.D_rot * set_.dt);
     }
 
+    // Per-laser emission weights for ALEX. Each species' per-laser row is its q_alex[L] if
+    // provided (must be exactly n_lasers rows), else the scalar q broadcast to every laser. With
+    // one laser and no q_alex this reproduces the scalar q / qtot_ path exactly.
+    q_by_laser_.assign(n_lasers, {});
+    qtot_by_laser_.assign(n_lasers, std::vector<double>(nsp, 0.0));
+    for (int L = 0; L < n_lasers; ++L) {
+        q_by_laser_[L].assign(nsp, {});
+        for (int i = 0; i < nsp; ++i) {
+            const SimSpecies& s = sample_.species()[i];
+            if (!s.q_alex.empty() && int(s.q_alex.size()) != n_lasers)
+                throw std::invalid_argument(
+                    "SimSpecies.q_alex must have exactly n_lasers rows (one per excitation grid)");
+            const std::vector<double>& row = s.q_alex.empty() ? s.q : s.q_alex[L];
+            q_by_laser_[L][i] = row;
+            double qsum = 0.0; for (double v : row) qsum += v;
+            qtot_by_laser_[L][i] = qsum;
+        }
+    }
+
     const auto& pop = sample_.population();
     for (double m : pop) if (m > kEps) open_volume_ = true;
 
@@ -123,7 +145,7 @@ SimEngine::SimEngine(SimSystem sample, SimGrid excitation,
 
     // Two-step field lookup: precompute a cheap reject box per grid (opt-in).
     if (set_.fast_grid_bbox) {
-        exc_.build_bbox(set_.focus_threshold);
+        for (auto& g : exc_) g.build_bbox(set_.focus_threshold);
         for (auto& d : det_) d.build_bbox(set_.focus_threshold);
     }
 
@@ -148,41 +170,58 @@ SimEngine::SimEngine(SimSystem sample, SimGrid excitation,
     seed_population();
 }
 
-void SimEngine::compute_focus_aabb() {
-    // Effective focus = tight AABB over excitation voxels exceeding focus_threshold·peak,
-    // independent of the (possibly box-spanning) grid extent, so a coasting molecule's
-    // distance to the focus is measured against where excitation is actually significant.
-    focus_aabb_valid_ = false;
-    if (exc_.analytic_) {
+// Effective-focus AABB of one excitation grid (voxels exceeding focus_threshold·peak), independent
+// of the (possibly box-spanning) grid extent. Returns false if the grid has no significant support.
+static bool grid_focus_aabb(const SimGrid& g, double focus_threshold,
+                            double& x0, double& y0, double& z0,
+                            double& x1, double& y1, double& z1) {
+    if (g.analytic_) {
         // A·exp(-2(r²/w0² + z²/z0²)) > thr·A  ⇔  r²/w0² + z²/z0² < -ln(thr)/2.
-        const double thr = (set_.focus_threshold > 0.0) ? set_.focus_threshold : 1e-3;
+        const double thr = (focus_threshold > 0.0) ? focus_threshold : 1e-3;
         const double L = -0.5 * std::log(thr);                 // >0
-        if (L <= 0.0 || exc_.an_cxy_ >= 0.0 || exc_.an_cz_ >= 0.0) return;
-        const double w0 = std::sqrt(-2.0 / exc_.an_cxy_), z0 = std::sqrt(-2.0 / exc_.an_cz_);
-        const double rxy = w0 * std::sqrt(L), rz = z0 * std::sqrt(L);
-        fx0_ = -rxy; fx1_ = rxy; fy0_ = -rxy; fy1_ = rxy; fz0_ = -rz; fz1_ = rz;
-        focus_aabb_valid_ = true;
-        return;
+        if (L <= 0.0 || g.an_cxy_ >= 0.0 || g.an_cz_ >= 0.0) return false;
+        const double w0 = std::sqrt(-2.0 / g.an_cxy_), z0w = std::sqrt(-2.0 / g.an_cz_);
+        const double rxy = w0 * std::sqrt(L), rz = z0w * std::sqrt(L);
+        x0 = -rxy; x1 = rxy; y0 = -rxy; y1 = rxy; z0 = -rz; z1 = rz;
+        return true;
     }
-    if (exc_.nx <= 0 || exc_.data.empty()) return;
+    if (g.nx <= 0 || g.data.empty()) return false;
     double vmax = 0.0;
-    for (double v : exc_.data) if (v > vmax) vmax = v;
-    if (vmax <= 0.0) return;
-    const double thr = ((set_.focus_threshold > 0.0) ? set_.focus_threshold : 1e-3) * vmax;
-    int ix0 = exc_.nx, iy0 = exc_.ny, iz0 = exc_.nz, ix1 = -1, iy1 = -1, iz1 = -1;
-    for (int iz = 0; iz < exc_.nz; ++iz)
-        for (int iy = 0; iy < exc_.ny; ++iy)
-            for (int ix = 0; ix < exc_.nx; ++ix)
-                if (exc_.data[exc_.index(ix, iy, iz)] > thr) {
+    for (double v : g.data) if (v > vmax) vmax = v;
+    if (vmax <= 0.0) return false;
+    const double thr = ((focus_threshold > 0.0) ? focus_threshold : 1e-3) * vmax;
+    int ix0 = g.nx, iy0 = g.ny, iz0 = g.nz, ix1 = -1, iy1 = -1, iz1 = -1;
+    for (int iz = 0; iz < g.nz; ++iz)
+        for (int iy = 0; iy < g.ny; ++iy)
+            for (int ix = 0; ix < g.nx; ++ix)
+                if (g.data[g.index(ix, iy, iz)] > thr) {
                     if (ix < ix0) ix0 = ix; if (ix > ix1) ix1 = ix;
                     if (iy < iy0) iy0 = iy; if (iy > iy1) iy1 = iy;
                     if (iz < iz0) iz0 = iz; if (iz > iz1) iz1 = iz;
                 }
-    if (ix1 < 0) return;
-    fx0_ = exc_.x0 + (ix0 - 1) * exc_.dx; fx1_ = exc_.x0 + (ix1 + 1) * exc_.dx;
-    fy0_ = exc_.y0 + (iy0 - 1) * exc_.dy; fy1_ = exc_.y0 + (iy1 + 1) * exc_.dy;
-    fz0_ = exc_.z0 + (iz0 - 1) * exc_.dz; fz1_ = exc_.z0 + (iz1 + 1) * exc_.dz;
-    focus_aabb_valid_ = true;
+    if (ix1 < 0) return false;
+    x0 = g.x0 + (ix0 - 1) * g.dx; x1 = g.x0 + (ix1 + 1) * g.dx;
+    y0 = g.y0 + (iy0 - 1) * g.dy; y1 = g.y0 + (iy1 + 1) * g.dy;
+    z0 = g.z0 + (iz0 - 1) * g.dz; z1 = g.z0 + (iz1 + 1) * g.dz;
+    return true;
+}
+
+void SimEngine::compute_focus_aabb() {
+    // Union the per-laser focus AABBs so a coasting molecule near ANY laser's focus stays awake
+    // (no missed photons in that laser's excitation windows). Distance is measured against where
+    // excitation is actually significant, independent of the grid extent.
+    focus_aabb_valid_ = false;
+    for (const SimGrid& g : exc_) {
+        double gx0, gy0, gz0, gx1, gy1, gz1;
+        if (!grid_focus_aabb(g, set_.focus_threshold, gx0, gy0, gz0, gx1, gy1, gz1)) continue;
+        if (!focus_aabb_valid_) {
+            fx0_ = gx0; fy0_ = gy0; fz0_ = gz0; fx1_ = gx1; fy1_ = gy1; fz1_ = gz1;
+            focus_aabb_valid_ = true;
+        } else {
+            fx0_ = std::min(fx0_, gx0); fy0_ = std::min(fy0_, gy0); fz0_ = std::min(fz0_, gz0);
+            fx1_ = std::max(fx1_, gx1); fy1_ = std::max(fy1_, gy1); fz1_ = std::max(fz1_, gz1);
+        }
+    }
 }
 
 void SimEngine::init_orientation(Mol& m) {
@@ -206,6 +245,18 @@ void SimEngine::push_marker(int routing_channel) {
     sp_.push_back(int16_t(-1)); mol_.push_back(int32_t(-1));
     et_.push_back(int8_t(marker_event_type_));
     micro_.push_back(0);
+    ++n_markers_;
+}
+
+void SimEngine::push_alex_marker(int laser) {
+    // Laser-switch marker: routing channel = laser index, event_type = alex_marker_event_type,
+    // placed at the start (t=0) of the current window. Distinct from scan markers (type 1).
+    T_.push_back(T0_); t_.push_back(0.0);
+    N_.push_back(int16_t(laser));
+    sp_.push_back(int16_t(-1)); mol_.push_back(int32_t(-1));
+    et_.push_back(int8_t(set_.alex_marker_event_type));
+    micro_.push_back(0);
+    ++n_markers_;
 }
 
 void SimEngine::seed_population() {
@@ -303,6 +354,12 @@ void SimEngine::emit_window() {
     const auto& qbg = sample_.background();
     if (!t_bg_setup_) { t_bg_.assign(nchan, 0.0); t_bg_setup_ = true; }
     const uint64_t counter_start = uint64_t(T0_) * kWindowStride;
+
+    // ALEX laser-switch marker: emit at the first window of each laser segment (ground truth).
+    if (set_.alex_markers && exc_.size() > 1 && set_.alex_period > 0.0) {
+        const int laser = laser_for_window(T0_);
+        if (T0_ == 0 || laser_for_window(T0_ - 1) != laser) push_alex_marker(laser);
+    }
 
     // Trajectory snapshot at this window's start positions.
     if (traj_stride_ && (T0_ % traj_stride_) == 0) {
@@ -463,7 +520,9 @@ void SimEngine::run() {
         return;
     }
     const bool coast = set_.per_molecule_skip;
-    while (n_photons() < set_.n_ph_max) {
+    // Stop on the PHOTON count, not the total record count — markers (CLSM scan or ALEX
+    // laser-switch) must not consume the photon budget.
+    while (n_photons() - n_markers_ < set_.n_ph_max) {
         // Fast-forward when every alive molecule is asleep and not yet due to wake: nothing
         // can enter the focus during the gap, so only background is emitted. Surface flux
         // injection still runs over the whole gap, so the open-volume population stays balanced.
@@ -493,9 +552,10 @@ void SimEngine::run() {
     }
 }
 
-// One photon record in independent mode (carries its absolute macro-window).
+// One photon record in independent mode (carries its absolute macro-window). `et` defaults to 0
+// (photon); ALEX laser-switch markers reuse the same record with et = alex_marker_event_type.
 namespace { struct IndPh { uint32_t w; double t; int16_t N, sp; int32_t mol; uint16_t micro;
-    typedef IndPh value_type; }; }
+    int8_t et = 0; typedef IndPh value_type; }; }
 
 template <class Rng>
 void SimEngine::run_independent_impl(uint64_t W) {
@@ -597,11 +657,23 @@ void SimEngine::run_independent_impl(uint64_t W) {
     }
     if (!bg.empty()) std::sort(bg.begin(), bg.end(), cmp);
 
-    // --- 4) k-way merge of the pre-sorted per-worker runs + background (O(P log R), R small). -
+    // --- 3b) ALEX laser-switch markers (deterministic per window), as their own sorted run. ---
+    std::vector<IndPh> alexm;
+    if (set_.alex_markers && exc_.size() > 1 && set_.alex_period > 0.0) {
+        for (uint32_t w = 0; w < uint32_t(W); ++w) {
+            int laser = laser_for_window(w);
+            if (w == 0 || laser_for_window(w - 1) != laser)
+                alexm.push_back(IndPh{w, 0.0, int16_t(laser), int16_t(-1), int32_t(-1), 0,
+                                      int8_t(set_.alex_marker_event_type)});
+        }
+    }
+
+    // --- 4) k-way merge of the pre-sorted per-worker runs + background + markers. -------------
     struct Cur { const std::vector<IndPh>* run; size_t pos; };
     std::vector<Cur> runs;
     for (auto& b : perbuf) if (!b.empty()) runs.push_back({&b, 0});
     if (!bg.empty()) runs.push_back({&bg, 0});
+    if (!alexm.empty()) runs.push_back({&alexm, 0});
     size_t total = 0; for (auto& c : runs) total += c.run->size();
     T_.reserve(T_.size() + total); t_.reserve(t_.size() + total); N_.reserve(N_.size() + total);
     sp_.reserve(sp_.size() + total); mol_.reserve(mol_.size() + total);
@@ -618,7 +690,7 @@ void SimEngine::run_independent_impl(uint64_t W) {
         int r = heap.back(); heap.pop_back();
         const IndPh& p = (*runs[r].run)[runs[r].pos++];
         T_.push_back(p.w); t_.push_back(p.t); N_.push_back(p.N);
-        sp_.push_back(p.sp); mol_.push_back(p.mol); et_.push_back(0); micro_.push_back(p.micro);
+        sp_.push_back(p.sp); mol_.push_back(p.mol); et_.push_back(p.et); micro_.push_back(p.micro);
         if (runs[r].pos < runs[r].run->size()) { heap.push_back(r); std::push_heap(heap.begin(), heap.end(), hgt); }
     }
     T0_ = uint32_t(W);
@@ -736,6 +808,9 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
         st.n_microtime_channels = s.value("n_microtime_channels", st.n_microtime_channels);
         st.microtime_resolution = s.value("microtime_resolution", st.microtime_resolution);
         st.laser_period = s.value("laser_period", st.laser_period);
+        st.alex_period = s.value("alex_period", st.alex_period);
+        st.alex_markers = s.value("alex_markers", st.alex_markers);
+        st.alex_marker_event_type = s.value("alex_marker_event_type", st.alex_marker_event_type);
         st.rng_kind = rng_kind_from(s.value("rng_kind", std::string("xoshiro")));
         st.rng_scope = rng_scope_from(s.value("rng_scope", std::string("per_molecule")));
         st.fast_grid_bbox = s.value("fast_grid_bbox", st.fast_grid_bbox);
@@ -753,6 +828,8 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
             SimSpecies s;
             s.D = sp.value("D", 0.0);
             if (sp.contains("q")) s.q = sp["q"].get<std::vector<double>>();
+            if (sp.contains("q_alex"))   // per-laser brightness rows (ALEX)
+                s.q_alex = sp["q_alex"].get<std::vector<std::vector<double>>>();
             s.r0 = sp.value("r0", 0.0); s.l1 = sp.value("l1", 0.0);
             s.l2 = sp.value("l2", 0.0); s.D_rot = sp.value("D_rot", 0.0);
             if (sp.contains("decay")) {   // micro-time decay: arbitrary pattern (primary) or a model helper
@@ -798,8 +875,16 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
                                    e.value("species", 0), e.value("mobile", false));
     }
 
-    SimGrid excitation = cfg.contains("excitation") ? grid_from(cfg["excitation"])
-                                                    : SimGrid::uniform(1.0, 2.0, 4.0, 0.1);
+    // Excitation: a single field object (one laser, current behavior) or an array of fields
+    // (one per ALEX laser).
+    std::vector<SimGrid> excitation;
+    if (cfg.contains("excitation")) {
+        const json& ex = cfg["excitation"];
+        if (ex.is_array()) for (const json& e : ex) excitation.push_back(grid_from(e));
+        else excitation.push_back(grid_from(ex));
+    } else {
+        excitation.push_back(SimGrid::uniform(1.0, 2.0, 4.0, 0.1));
+    }
     std::vector<SimGrid> detection;
     if (cfg.contains("detection"))
         for (const json& d : cfg["detection"]) detection.push_back(grid_from(d));

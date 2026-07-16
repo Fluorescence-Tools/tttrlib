@@ -30,6 +30,12 @@
           "description": "Micro-time channel width in NANOSECONDS (TAC resolution)."},
         "laser_period": {"type": "number", "default": 32.0, "minimum": 0,
           "description": "Pulsed-excitation period in NANOSECONDS; micro-times wrap modulo this. Its sub-windows carry PIE prompt/delay."},
+        "alex_period": {"type": "number", "default": 0.0, "minimum": 0,
+          "description": "ALEX (alternating laser excitation) period in MACRO-time units (same as dt). With >= 2 excitation grids each macro-window is assigned to laser floor(fmod(T0*dt, alex_period)/(alex_period/n_lasers)) — a macro-time laser alternation (unlike laser_period, the ns TCSPC pulse). 0 = off (single laser)."},
+        "alex_markers": {"type": "boolean", "default": false,
+          "description": "Emit a marker event (event_type = alex_marker_event_type, routing channel = laser index) at each ALEX laser switch, as explicit ground truth. Preserved by lossless containers; dropped by SM."},
+        "alex_marker_event_type": {"type": "integer", "default": 2,
+          "description": "event_type written for ALEX laser-switch markers (scan markers use 1)."},
         "rng_kind": {"type": "string", "enum": ["xoshiro", "pcg", "philox", "mt19937", "mt"], "default": "xoshiro",
           "description": "RNG backend. All are thread-count-independent; xoshiro is the fast default."},
         "rng_scope": {"type": "string", "enum": ["per_molecule", "per_thread"], "default": "per_molecule",
@@ -68,6 +74,8 @@
             "description": "Translational diffusion coefficient, µm² per macro-time unit (ms ⇒ µm²/ms). 0 = immobile."},
           "q": {"type": "array", "items": {"type": "number", "minimum": 0},
             "description": "Peak brightness per channel (photons per macro-time unit at the focus centre). The channel split encodes FRET color routing / anisotropy; q_green ∝ (1−E), q_red ∝ E."},
+          "q_alex": {"type": "array", "items": {"type": "array", "items": {"type": "number", "minimum": 0}},
+            "description": "ALEX per-laser brightness rows q_alex[laser][channel] (one row per excitation grid). Empty ⇒ q broadcast to all lasers. A doubly-labelled FRET species uses [[(1-E)b, E·b], [0, b_A]] so it emits DD+DA under the green laser and AA under the red laser."},
           "r0": {"type": "number", "default": 0.0, "minimum": -0.2, "maximum": 0.4,
             "description": "Fundamental anisotropy. >0 enables photoselection + depolarization (needs a decay)."},
           "l1": {"type": "number", "default": 0.0, "description": "Detection polarization mixing, parallel channel."},
@@ -99,7 +107,13 @@
         }
       }
     },
-    "excitation": {"$ref": "#/definitions/field", "description": "Excitation intensity field (one field)."},
+    "excitation": {
+      "description": "Excitation intensity field. A single field object = one laser (current behavior); an array of field objects = one per ALEX laser (with settings.alex_period > 0).",
+      "oneOf": [
+        {"$ref": "#/definitions/field"},
+        {"type": "array", "items": {"$ref": "#/definitions/field"}}
+      ]
+    },
     "detection": {"type": "array", "items": {"$ref": "#/definitions/field"},
       "description": "Detection-efficiency field per channel (size == n_channels). Empty = uniform efficiency 1. Lateral x0/y0 offsets between channels give ISM."}
   },

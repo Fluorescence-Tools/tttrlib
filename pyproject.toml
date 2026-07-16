@@ -90,7 +90,10 @@ version.write-to = "tttrlib/_version.py"
 [tool.pytest.ini_options]
 testpaths = ["test/python"]
 norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
-markers = ["integration: marks tests as integration tests requiring external resources"]
+markers = [
+  "integration: marks tests as integration tests requiring external resources",
+  "slow: marks tests that take a while (diffusing single-molecule simulations)",
+]
 
 [tool.cibuildwheel]
 build-verbosity = 2

@@ -60,13 +60,20 @@ class SimEngine {
 public:
     /*!
      * \param sample     species/kinetics/background/box + fluorophore population.
-     * \param excitation excitation intensity field (one grid).
+     * \param excitation excitation intensity fields, one per ALEX laser (size == n_lasers).
+     *                   A single grid ⇒ one laser (no alternation, current behavior).
      * \param detection  detection efficiency grid per channel (size == n_channels);
      *                   empty ⇒ uniform detection (efficiency 1 everywhere).
      * \param settings   time-step, seeds, stopping condition.
      */
-    SimEngine(SimSystem sample, SimGrid excitation,
+    SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
               std::vector<SimGrid> detection, SimIntegrator settings);
+
+    /// Back-compat single-excitation-grid constructor (delegates to the vector form).
+    SimEngine(SimSystem sample, SimGrid excitation,
+              std::vector<SimGrid> detection, SimIntegrator settings)
+        : SimEngine(std::move(sample), std::vector<SimGrid>{std::move(excitation)},
+                    std::move(detection), std::move(settings)) {}
 
     /// Build a fully-configured engine from a JSON config string. Seeds, RNG backend
     /// and scope, species, kinetics, background, box, population, excitation and
@@ -126,6 +133,10 @@ public:
     uint64_t current_window() const { return T0_; }
     int n_molecules() const { return int(mol_alive_); }
 
+    // --- ALEX (alternating laser excitation) -------------------------------------
+    double alex_period() const { return set_.alex_period; }   ///< macro-time units (0 = off)
+    int n_lasers() const { return int(exc_.size()); }         ///< number of excitation lasers
+
     /// Immutable snapshot of the live molecules + counters (OpenMM-style `State`). Not meaningful
     /// in independent-molecule mode (which keeps no live pool).
     SimState get_state() const;
@@ -136,8 +147,27 @@ public:
      */
     SimEncodedRecords encode(const SimMicrotimeEncoder& enc, SimRandom& rng,
                              uint64_t mt_overflow_in = 0) const {
-        return enc.encode(T_.data(), t_.data(), N_.data(), sp_.data(),
-                          T_.size(), rng, mt_overflow_in);
+        // Only photon events are encodable as SPC photon records; marker events (event_type != 0,
+        // e.g. CLSM scan or ALEX laser-switch markers) carry a routing channel / species that is
+        // not a real detector and would index out of ch_conversion / the TAC lookup (a segfault)
+        // and pollute the photon stream. Skip them here; the micro-time array is passed through so
+        // the encoded TAC preserves the simulated FLIM axis (usable by micro-time filters). Callers
+        // needing markers should use the array->TTTR path or a lossless container.
+        const size_t n = T_.size();
+        bool has_marker = false;
+        for (size_t i = 0; i < n; ++i) if (et_[i] != 0) { has_marker = true; break; }
+        if (!has_marker)
+            return enc.encode(T_.data(), t_.data(), N_.data(), sp_.data(), micro_.data(),
+                              n, rng, mt_overflow_in);
+        std::vector<uint32_t> T; std::vector<double> t;
+        std::vector<int16_t> N, sp; std::vector<uint16_t> mi;
+        T.reserve(n); t.reserve(n); N.reserve(n); sp.reserve(n); mi.reserve(n);
+        for (size_t i = 0; i < n; ++i) if (et_[i] == 0) {
+            T.push_back(T_[i]); t.push_back(t_[i]); N.push_back(N_[i]);
+            sp.push_back(sp_[i]); mi.push_back(micro_[i]);
+        }
+        return enc.encode(T.data(), t.data(), N.data(), sp.data(), mi.data(),
+                          T.size(), rng, mt_overflow_in);
     }
 
     // --- reproducible continuation ---------------------------------------------
@@ -172,6 +202,7 @@ private:
     void init_orientation(Mol& m);        ///< random dipole orientation (anisotropy)
     double detection_eff(int ch, double x, double y, double z) const;
     void push_marker(int routing_channel);  ///< append a marker event at the current window
+    void push_alex_marker(int laser);       ///< append an ALEX laser-switch marker at the current window
     void emit_window();                   ///< one time window: photophysics + emission + diffusion
     template <class Rng> void run_independent_impl(uint64_t W);  ///< independent-mode driver
 
@@ -179,16 +210,35 @@ private:
     void compute_focus_aabb();            ///< effective-focus AABB + uniform_D_/any_knrad_ (once)
     void batch_background(uint64_t n_windows);  ///< emit background over a fast-forwarded gap
 
+    /// Active excitation laser for macro-window T0. Pure function of T0 (no RNG). ALEX is active
+    /// only with >= 2 grids and a positive period; otherwise laser 0 (current behavior).
+    ///
+    /// The alternation is defined in whole macro-windows (exact integer arithmetic — no
+    /// floating-point macro-time modulo, which drifts at window boundaries). The ALEX period is
+    /// rounded to `windows_per_cycle = round(alex_period/dt)` windows, split into `n` equal-duty
+    /// segments of `windows_per_cycle/n` windows each. For clean alternation choose an
+    /// alex_period that is an integer multiple of dt and of n.
+    inline int laser_for_window(uint32_t T0) const {
+        const int n = int(exc_.size());
+        if (n <= 1 || set_.alex_period <= 0.0 || set_.dt <= 0.0) return 0;
+        long long wpc = (long long)std::llround(set_.alex_period / set_.dt);  // windows per cycle
+        if (wpc < n) wpc = n;
+        long long wpl = wpc / n;                                              // windows per laser
+        if (wpl < 1) wpl = 1;
+        return int((T0 / (unsigned long long)wpl) % (unsigned long long)n);
+    }
+
     /// Distance from (x,y,z) to the effective-focus AABB (0 inside; grid extent if AABB invalid).
     inline double focus_gap(double x, double y, double z) const {
         double lx0, ly0, lz0, lx1, ly1, lz1;
         if (focus_aabb_valid_) {
             lx0 = fx0_; ly0 = fy0_; lz0 = fz0_; lx1 = fx1_; ly1 = fy1_; lz1 = fz1_;
-        } else if (exc_.nx > 0) {
-            lx0 = exc_.x0; ly0 = exc_.y0; lz0 = exc_.z0;
-            lx1 = exc_.x0 + (exc_.nx - 1) * exc_.dx;
-            ly1 = exc_.y0 + (exc_.ny - 1) * exc_.dy;
-            lz1 = exc_.z0 + (exc_.nz - 1) * exc_.dz;
+        } else if (!exc_.empty() && exc_[0].nx > 0) {
+            const SimGrid& g = exc_[0];
+            lx0 = g.x0; ly0 = g.y0; lz0 = g.z0;
+            lx1 = g.x0 + (g.nx - 1) * g.dx;
+            ly1 = g.y0 + (g.ny - 1) * g.dy;
+            lz1 = g.z0 + (g.nz - 1) * g.dz;
         } else {
             return 0.0;
         }
@@ -336,7 +386,7 @@ private:
             }
             Rng rng; rng.reset(mol_base_seed_, uint32_t(m.id), uint64_t(w) * kWindowStride);
             buf.clear();
-            process_molecule(m, rng, wv, buf);
+            process_molecule(m, rng, wv, buf, laser_for_window(w));
             for (size_t k = 0; k < buf.t.size(); ++k)
                 ph.push_back(typename PhVec::value_type{
                     w, buf.t[k], buf.N[k], buf.sp[k], buf.mol[k], buf.micro[k]});
@@ -348,7 +398,8 @@ private:
     /// The per-molecule stream is (re)positioned from (mol_base_seed_, id, counter_start),
     /// so results are independent of the number of worker threads.
     template <class Rng>
-    void process_molecule(Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf) const {
+    void process_molecule(Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf,
+                          int laser) const {
         const double dt = set_.dt;
         const int nsp = sample_.n_species();
         const int nchan = set_.n_channels;
@@ -358,7 +409,7 @@ private:
         const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
 
         int i = m.state;
-        const double Iex = exc_.at(m.x - beam_x_, m.y - beam_y_, m.z);  // beam-scan offset
+        const double Iex = exc_[laser].at(m.x - beam_x_, m.y - beam_y_, m.z);  // active ALEX laser
 
         // Micro-time (FLIM) draw from a state's decay pattern, wrapped + quantised.
         auto sample_micro = [&](int st) -> uint16_t {
@@ -386,7 +437,7 @@ private:
                 // anisotropy depolarises with the fluorescence lifetime (Perrin). The l1/l2
                 // factors give the parallel(ch0)/perp(ch1) split. D_rot is in rad²/ns.
                 const double pf = 3.0 * m.ox * m.ox;
-                const double lambda = Iex * qtot_[i] * pf;
+                const double lambda = Iex * qtot_by_laser_[laser][i] * pf;
                 if (lambda > kEps) {
                     const double l1 = sample_.species()[i].l1, l2 = sample_.species()[i].l2;
                     const double f = l1l2f_[i], tg = tg_th0_[i];
@@ -440,7 +491,7 @@ private:
                 // outside the focus/grid) no photon can be produced, so skip the lookups.
                 double sumw = 0.0;
                 if (Iex > 0.0) {
-                    const auto& qi = sample_.species()[i].q;
+                    const auto& qi = q_by_laser_[laser][i];
                     for (int j = 0; j < nchan; ++j) {
                         double qij = (j < int(qi.size())) ? qi[j] : 0.0;
                         w[j] = qij * detection_eff(j, m.x, m.y, m.z);
@@ -504,6 +555,7 @@ private:
         const bool per_thread = (set_.rng_scope == SimRngScope::PerThread);
         const bool coast = set_.per_molecule_skip;
         const uint32_t T0 = uint32_t(counter_start / kWindowStride);
+        const int laser = laser_for_window(T0);
         auto handle = [&](Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf) {
             if (coast && m.coasting) {
                 if (T0 < m.w_wake) return;               // still asleep: skip entirely
@@ -511,7 +563,7 @@ private:
                 if (!m.alive) return;                    // left the box on wake
             }
             if (!per_thread) rng.reset(mol_base_seed_, uint32_t(m.id), counter_start);
-            process_molecule(m, rng, w, buf);
+            process_molecule(m, rng, w, buf, laser);
             if (coast) maybe_sleep<Rng>(m, T0, rng);
         };
         if (parallel) {
@@ -538,7 +590,7 @@ private:
     }
 
     SimSystem sample_;
-    SimGrid exc_;
+    std::vector<SimGrid> exc_;                         ///< one excitation grid per ALEX laser
     std::vector<SimGrid> det_;
     SimIntegrator set_;
     SimRandom rng_diff_, rng_emit_;
@@ -547,6 +599,7 @@ private:
     size_t mol_alive_ = 0;
     int next_id_ = 0;
     uint32_t T0_ = 0;
+    uint64_t n_markers_ = 0;   ///< marker events pushed (excluded from the n_ph_max photon budget)
 
     // precomputed per-species row sums of the rate matrices
     std::vector<double> koff_rad_, koff_nrad_;
@@ -554,6 +607,11 @@ private:
     std::vector<char> aniso_;                         // 1 if species has anisotropy
     std::vector<double> qtot_, tg_th0_, l1l2f_, rot_step_;
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
+    // Per-laser emission weights for ALEX: q_by_laser_[laser][species] is the per-channel row
+    // used under that laser (species' q_alex row, or the scalar q broadcast). qtot_by_laser_ is
+    // its row-sum (used by the anisotropy rate). One laser => identical to qtot_/species q.
+    std::vector<std::vector<std::vector<double>>> q_by_laser_;   // [laser][species][channel]
+    std::vector<std::vector<double>> qtot_by_laser_;             // [laser][species]
     bool any_aniso_ = false;
 
     // effective-focus AABB (voxels where Iex > focus_threshold·peak) + coasting precompute
