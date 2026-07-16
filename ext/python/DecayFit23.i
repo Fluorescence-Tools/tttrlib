@@ -88,4 +88,12 @@
         }
 }
 
+// Release the Python GIL around the (pure C++, callback-free) fit so that
+// per-pixel / per-burst fits can be parallelised across Python threads.
+%exception DecayFit23::fit {
+  Py_BEGIN_ALLOW_THREADS
+  $action
+  Py_END_ALLOW_THREADS
+}
 %include "DecayFit23.h"
+%exception;
