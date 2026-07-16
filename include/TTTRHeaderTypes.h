@@ -40,6 +40,7 @@
 #define PHOTON_HDF_CONTAINER      5
 #define CZ_CONFOCOR3_CONTAINER    6
 #define SM_CONTAINER              7
+#define PS_PHOTONS_CONTAINER      8  // Photonscore LINCam ".photons" (D7)
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1

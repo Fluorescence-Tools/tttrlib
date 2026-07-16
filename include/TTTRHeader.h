@@ -236,6 +236,21 @@ public:
         TTTRHeader::add_tag(json_data, TTTRTagRes, resolution, tyFloat8, -1);
     }
 
+    /// Set the macro (global) time resolution in seconds
+    void set_macro_time_resolution(double resolution){
+        TTTRHeader::add_tag(json_data, TTTRTagGlobRes, resolution, tyFloat8, -1);
+    }
+
+    /// Set the total number of micro time channels
+    void set_number_of_micro_time_channels(int n_channels){
+        TTTRHeader::add_tag(json_data, TTTRNMicroTimes, n_channels, tyInt8, -1);
+    }
+
+    /// Set an arbitrary floating-point metadata tag by name
+    void set_float_tag(const std::string& name, double value){
+        TTTRHeader::add_tag(json_data, name, value, tyFloat8, -1);
+    }
+
     /// Duration of a pixel in LSM in units of macro time clock
     int get_pixel_duration(){
         double pixel_duration_d = TTTRHeader::get_tag(

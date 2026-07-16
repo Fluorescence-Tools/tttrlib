@@ -68,8 +68,23 @@ std::vector<std::string> get_supported_filetypes() {
         "sm",    // Single Molecule format
         "h5",    // HDF5 format
         "hdf5",  // HDF5 format (alternative extension)
-        "raw"    // Carl Zeiss Confocor3 raw data
+        "raw",   // Carl Zeiss Confocor3 raw data
+        "photons" // Photonscore LINCam D7 container
     };
+}
+
+// Function to check if the file is a Photonscore ".photons" (D7) file
+bool isPhotonsFile(const std::string& filename) {
+    char buf[64] = {};
+    FILE* file = open_file(filename, "rb");
+    if (!file) return false;
+    std::rewind(file);
+    size_t read_size = std::fread(buf, 1, sizeof(buf), file);
+    std::fclose(file);
+    // The "D7 Photons Data" signature appears at the start of the header, after
+    // the 2-byte block header of the first page.
+    std::string head(buf, read_size);
+    return head.find("D7 Photons Data") != std::string::npos;
 }
 
 // HDF5 file signature: "\x89HDF\r\n\x1A\n"
@@ -204,6 +219,11 @@ int inferTTTRFileType(const char* fn) {
         if (extension == "sm") {
             return SM_CONTAINER;
 
+        } else if (extension == "photons") {
+            if (isPhotonsFile(filename)) {
+                return PS_PHOTONS_CONTAINER;
+            }
+
         } else if (extension == "spc") {
             if (isBH132File(filename)) {
                 return BH_SPC130_CONTAINER;
@@ -252,6 +272,7 @@ int inferTTTRContainerTypeFromExtension(const std::string& fn) {
     if (extension == "hdf5" || extension == "h5") return PHOTON_HDF_CONTAINER;
     if (extension == "raw")  return CZ_CONFOCOR3_CONTAINER;
     if (extension == "sm")   return SM_CONTAINER;
+    if (extension == "photons") return PS_PHOTONS_CONTAINER;
 
     // Unknown/unsupported extension
     return -1;
@@ -267,6 +288,7 @@ std::string tttrContainerCanonicalExtension(int container_type) {
         case PHOTON_HDF_CONTAINER:       return "hdf5";
         case CZ_CONFOCOR3_CONTAINER:     return "raw";
         case SM_CONTAINER:               return "sm";
+        case PS_PHOTONS_CONTAINER:       return "photons";
         default:                         return "";
     }
 }

@@ -99,6 +99,17 @@ bool isSMFile(const std::string& filename);
 bool isPTUFile(const std::string& filename);
 
 /**
+ * @brief Checks if the given file is a Photonscore ".photons" (D7) file.
+ *
+ * Reads the first bytes and looks for the "D7 Photons Data" signature that
+ * begins a Photonscore LINCam file.
+ *
+ * @param filename The name of the file to check.
+ * @return true if the file is a Photonscore ".photons" file, false otherwise.
+ */
+bool isPhotonsFile(const std::string& filename);
+
+/**
  * @brief Checks if the given file is an HT3 file.
  *
  * This function opens the specified file and reads the header to check if the

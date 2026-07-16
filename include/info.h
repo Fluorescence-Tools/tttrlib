@@ -13,6 +13,15 @@
 #define RECORD_PHOTON               0
 #define RECORD_MARKER               1
 
+// Routing-channel identifiers for position markers. Position-sensitive photon
+// streams (e.g. Photonscore LINCam) store each photon's (x, y) location as two
+// marker events (event_type == RECORD_MARKER) that precede the photon; the
+// coordinate value is carried in the marker's micro time. These constants tag
+// which coordinate a marker carries. They are only meaningful on marker events,
+// so they do not collide with photon routing channels.
+#define MARKER_POSITION_X           0
+#define MARKER_POSITION_Y           1
+
 // Maximum number of routing channels (can be overridden via CMake)
 #ifndef TTTRLIB_MAX_ROUTING_CHANNELS
 #define TTTRLIB_MAX_ROUTING_CHANNELS 256

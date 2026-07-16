@@ -3,12 +3,14 @@
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "FileCheck.h"
+#include "PhotonscoreD7.h"
 #include "Verbose.h"
 
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <algorithm>
+#include <array>
 
 // Static member definition outside the class
 tttrlib::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
@@ -663,6 +665,270 @@ int TTTR::read_sm_file(const char *filename){
 
 }
 
+int TTTR::read_ps_file(const char *fn) {
+    std::string path(fn ? fn : "");
+
+    std::map<std::string, std::vector<int64_t>> streams;
+    std::map<std::string, std::string> attrs;
+    try {
+        streams = photonscore::read_photons(
+                path, {"x", "y", "dt", "ms", "channel"});
+        attrs = photonscore::read_attributes(path);
+    } catch (const std::exception &e) {
+        std::cerr << "Error reading .photons file: " << e.what() << std::endl;
+        return 0;
+    }
+
+    auto attr_long = [&](const char *key, long fallback) -> long {
+        auto it = attrs.find(key);
+        if (it == attrs.end()) return fallback;
+        try { return std::stol(it->second); } catch (...) { return fallback; }
+    };
+    auto attr_double = [&](const char *key, double fallback) -> double {
+        auto it = attrs.find(key);
+        if (it == attrs.end()) return fallback;
+        try { return std::stod(it->second); } catch (...) { return fallback; }
+    };
+
+    int tac_bits = static_cast<int>(attr_long("/photons/TacBits", 12));
+    int position_bits = static_cast<int>(attr_long("/photons/PositionBits", 12));
+    double tac_channel_ps = attr_double("/photons/TacChannel", 0.0);
+
+    static const std::vector<int64_t> empty;
+    const std::vector<int64_t> &xs = streams.count("x") ? streams["x"] : empty;
+    const std::vector<int64_t> &ys = streams.count("y") ? streams["y"] : empty;
+    const std::vector<int64_t> &dt = streams.count("dt") ? streams["dt"] : empty;
+    const std::vector<int64_t> &ms = streams.count("ms") ? streams["ms"] : empty;
+    const std::vector<int64_t> &ch = streams.count("channel") ? streams["channel"] : empty;
+
+    // Number of photons: the smallest length among the present core datasets.
+    size_t n_photons = SIZE_MAX;
+    if (!xs.empty()) n_photons = std::min(n_photons, xs.size());
+    if (!ys.empty()) n_photons = std::min(n_photons, ys.size());
+    if (!dt.empty()) n_photons = std::min(n_photons, dt.size());
+    if (n_photons == SIZE_MAX) n_photons = ms.size();
+
+    // When positions are present, each photon is preceded by two position
+    // markers (x, y). This keeps the (x, y) location inside the standard TTTR
+    // stream so the existing marker machinery can reconstruct an image without
+    // any photonscore-specific code path.
+    bool have_positions = !xs.empty() && !ys.empty();
+    size_t events_per_photon = have_positions ? 3 : 1;
+    size_t n_events = n_photons * events_per_photon;
+
+    n_valid_events = n_events;
+    n_records_in_file = n_events;
+    n_records_read = n_events;
+    allocate_memory_for_records(n_events);
+
+    // Clamp helpers: micro times are 16-bit, routing channels are signed 8-bit.
+    auto clamp_u16 = [](int64_t v) -> unsigned short {
+        if (v < 0) v = 0;
+        if (v > 65535) v = 65535;
+        return static_cast<unsigned short>(v);
+    };
+    auto clamp_i8 = [](int64_t v) -> signed char {
+        if (v < -128) v = -128;
+        if (v > 127) v = 127;
+        return static_cast<signed char>(v);
+    };
+
+    size_t e = 0;
+    for (size_t i = 0; i < n_photons; ++i) {
+        unsigned long long mt =
+                (i < ms.size()) ? static_cast<unsigned long long>(std::max<int64_t>(0, ms[i])) : 0ULL;
+        if (have_positions) {
+            // Position marker X (coordinate carried in the micro time)
+            set_macro_time_at(e, mt);
+            micro_times[e] = clamp_u16(xs[i]);
+            routing_channels[e] = MARKER_POSITION_X;
+            event_types[e] = RECORD_MARKER;
+            ++e;
+            // Position marker Y
+            set_macro_time_at(e, mt);
+            micro_times[e] = clamp_u16(ys[i]);
+            routing_channels[e] = MARKER_POSITION_Y;
+            event_types[e] = RECORD_MARKER;
+            ++e;
+        }
+        // Photon event
+        set_macro_time_at(e, mt);
+        micro_times[e] = (i < dt.size()) ? clamp_u16(dt[i]) : 0;
+        routing_channels[e] = (i < ch.size()) ? clamp_i8(ch[i]) : 0;
+        event_types[e] = RECORD_PHOTON;
+        ++e;
+    }
+
+    // Header: micro time from the TAC channel calibration, macro time in
+    // milliseconds (the /photons/ms marker unit).
+    header = new TTTRHeader(PS_PHOTONS_CONTAINER);
+    double micro_res_s = (tac_channel_ps > 0.0) ? tac_channel_ps * 1e-12 : 1.0;
+    header->set_micro_time_resolution(micro_res_s);
+    header->set_macro_time_resolution(1e-3);
+    header->set_number_of_micro_time_channels(1 << tac_bits);
+    // Record the position range so consumers can bin (x, y) into pixels.
+    header->set_float_tag("Photons_PositionBits", position_bits);
+    header->set_float_tag("Photons_PositionRange", static_cast<double>(1 << position_bits));
+
+    return 1;
+}
+
+bool TTTR::write_ps_file(const std::string& filename, TTTRHeader* hdr) {
+    if (hdr == nullptr) hdr = this->header;
+
+    // Reconstruct the datasets from the marker/photon stream. Each photon is
+    // preceded by up to two position markers (x, y); the coordinate rides in
+    // the marker's micro time (see read_ps_file).
+    std::vector<int64_t> xs, ys, dt, ms, ch;
+    int64_t cur_x = 0, cur_y = 0;
+    bool has_x = false, has_y = false;
+    bool any_channel = false;
+
+    for (size_t i = 0; i < n_valid_events; ++i) {
+        if (event_types[i] == RECORD_MARKER) {
+            if (routing_channels[i] == MARKER_POSITION_X) {
+                cur_x = micro_times[i];
+                has_x = true;
+            } else if (routing_channels[i] == MARKER_POSITION_Y) {
+                cur_y = micro_times[i];
+                has_y = true;
+            }
+            continue;
+        }
+        // Photon event
+        dt.push_back(micro_times[i]);
+        ms.push_back(static_cast<int64_t>(get_macro_time_at(i)));
+        ch.push_back(routing_channels[i]);
+        if (routing_channels[i] != 0) any_channel = true;
+        if (has_x) xs.push_back(cur_x);
+        if (has_y) ys.push_back(cur_y);
+        has_x = has_y = false;
+        cur_x = cur_y = 0;
+    }
+
+    // Positions are written only when every photon carried them.
+    bool have_positions = !xs.empty() && xs.size() == dt.size() &&
+                          ys.size() == dt.size();
+
+    std::vector<photonscore::D7WriteDataset> datasets;
+    if (have_positions) {
+        datasets.push_back({"/photons/x", 3, std::move(xs)});
+        datasets.push_back({"/photons/y", 3, std::move(ys)});
+    }
+    datasets.push_back({"/photons/dt", 3, std::move(dt)});
+    datasets.push_back({"/photons/ms", 3, std::move(ms)});
+    if (any_channel) datasets.push_back({"/photons/channel", 3, std::move(ch)});
+
+    // Attributes: reconstruct the calibration from the header.
+    std::map<std::string, std::string> attributes;
+    double micro_res_s = hdr ? hdr->get_micro_time_resolution() : 0.0;
+    if (micro_res_s > 0.0) {
+        attributes["/photons/TacChannel"] =
+                std::to_string(micro_res_s * 1e12); // seconds -> picoseconds
+    }
+    int n_micro = hdr ? static_cast<int>(hdr->get_number_of_micro_time_channels()) : 0;
+    if (n_micro > 1) {
+        int tac_bits = 0;
+        while ((1 << tac_bits) < n_micro) ++tac_bits;
+        attributes["/photons/TacBits"] = std::to_string(tac_bits);
+    }
+    if (have_positions) {
+        // Position range from the largest coordinate actually stored.
+        int64_t max_pos = 0;
+        for (const auto& d : datasets) {
+            if (d.name == "/photons/x" || d.name == "/photons/y") {
+                for (int64_t v : d.values) if (v > max_pos) max_pos = v;
+            }
+        }
+        int pos_bits = 1;
+        while ((int64_t(1) << pos_bits) <= max_pos) ++pos_bits;
+        if (pos_bits < 12) pos_bits = 12;
+        attributes["/photons/PositionBits"] = std::to_string(pos_bits);
+    }
+
+    try {
+        photonscore::write_photons(filename, datasets, attributes);
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR in TTTR::write_ps_file: " << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}
+
+std::shared_ptr<TTTR> TTTR::t2_to_t3(double sync_rate, long sync_period) {
+    // Determine the sync period in macro-time (time-tag) units.
+    long P = sync_period;
+    if (P <= 0) {
+        double macro_res = (header != nullptr) ? header->get_macro_time_resolution() : 0.0;
+        if (sync_rate > 0.0 && macro_res > 0.0) {
+            P = static_cast<long>(std::llround((1.0 / sync_rate) / macro_res));
+        }
+    }
+    if (P <= 0) {
+        std::cerr << "ERROR in TTTR::t2_to_t3: could not determine the sync "
+                     "period; pass sync_rate (Hz) or sync_period (macro-time units)."
+                  << std::endl;
+        return nullptr;
+    }
+
+    auto out = std::make_shared<TTTR>(*this);
+    bool clamped = false;
+    for (size_t i = 0; i < out->n_valid_events; ++i) {
+        unsigned long long time_tag = out->get_macro_time_at(i);
+        unsigned long long n_sync = time_tag / static_cast<unsigned long long>(P);
+        unsigned long long dtime = time_tag % static_cast<unsigned long long>(P);
+        out->set_macro_time_at(i, n_sync);
+        if (dtime > 65535ULL) { dtime = 65535ULL; clamped = true; }
+        out->micro_times[i] = static_cast<unsigned short>(dtime);
+    }
+    if (clamped) {
+        std::cerr << "WARNING in TTTR::t2_to_t3: sync period exceeds the micro "
+                     "time range; some dtime values were clamped to 65535."
+                  << std::endl;
+    }
+
+    if (out->header != nullptr) {
+        double macro_res = (header != nullptr) ? header->get_macro_time_resolution() : 1.0;
+        // T3 micro resolution = old T2 base resolution; global res = sync period.
+        out->header->set_micro_time_resolution(macro_res);
+        out->header->set_macro_time_resolution(macro_res * static_cast<double>(P));
+        out->header->set_number_of_micro_time_channels(
+                static_cast<int>(std::min<long>(P, 65536)));
+        out->header->set_tttr_record_type(PQ_RECORD_TYPE_HHT3v2);
+    }
+    out->tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
+    return out;
+}
+
+std::shared_ptr<TTTR> TTTR::t3_to_t2() {
+    // Effective number of micro time channels per sync period.
+    long n_micro = 1;
+    if (header != nullptr) {
+        long eff = static_cast<long>(header->get_effective_number_of_micro_time_channels());
+        if (eff > 0) n_micro = eff;
+    }
+
+    auto out = std::make_shared<TTTR>(*this);
+    for (size_t i = 0; i < out->n_valid_events; ++i) {
+        unsigned long long n_sync = out->get_macro_time_at(i);
+        unsigned long long dtime = out->micro_times[i];
+        unsigned long long time_tag =
+                n_sync * static_cast<unsigned long long>(n_micro) + dtime;
+        out->set_macro_time_at(i, time_tag);
+        out->micro_times[i] = 0;
+    }
+
+    if (out->header != nullptr) {
+        // T2 macro (time-tag) resolution = old T3 micro (TAC) resolution.
+        double micro_res = (header != nullptr) ? header->get_micro_time_resolution() : 0.0;
+        if (micro_res > 0.0) out->header->set_macro_time_resolution(micro_res);
+        out->header->set_number_of_micro_time_channels(1);
+        out->header->set_tttr_record_type(PQ_RECORD_TYPE_HHT2v2);
+    }
+    out->tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
+    return out;
+}
+
 void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
     for (size_t i = 0; i < n_valid_events; ++i) {
         int64_t m = get_macro_time_at(i) - period_shift;
@@ -829,6 +1095,8 @@ if (is_verbose()) {
         read_hdf_file(fn);
     } else if (container_type == SM_CONTAINER) {
         read_sm_file(fn);
+    } else if (container_type == PS_PHOTONS_CONTAINER) {
+        read_ps_file(fn);
     } else {
         read_records_file(fn, container_type);
     }
@@ -2541,6 +2809,13 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
             container_type = ext_type;
         }
     }
+    // Photonscore ".photons" (D7) has its own file layout (no header + record
+    // stream) and no per-record-type writer; reconstruct the position/photon
+    // datasets from the marker stream and write a D7 container.
+    if(container_type == PS_PHOTONS_CONTAINER){
+        return write_ps_file(filename, header);
+    }
+
     int record_type = header->get_tttr_record_type();
     // Transcoding: fall back to the container's canonical record type when
     // the header's record type does not fit the target container.

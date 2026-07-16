@@ -1,5 +1,28 @@
 .. currentmodule:: tttrlib
 
+.. _changes_0_27:
+
+Version 0.27
+============
+* **Photonscore LINCam ".photons" (D7) support**: New reader and writer for the
+  position-sensitive photon-counting format written by Photonscore LINCam
+  systems. ``tttrlib.TTTR("file.photons")`` decodes the paged, protobuf-style D7
+  container (seed plus zigzag-varint delta streams) with no external protobuf
+  dependency. Each photon's ``(x, y)`` position is stored in the flat TTTR
+  stream as two marker events (``MARKER_POSITION_X`` / ``MARKER_POSITION_Y``,
+  the coordinate carried in the marker micro time) that precede the photon, so
+  no photonscore-specific code path is needed downstream: positions, decay and
+  an image are recovered with standard accessors and, e.g., ``numpy.histogram2d``.
+  ``TTTR.write("out.photons")`` writes a byte-exact D7 container. Both reader and
+  writer are implemented in C++ and exposed through SWIG to Python, R and Java.
+* **T2 <-> T3 record-mode conversion**: New ``TTTR.t2_to_t3(sync_rate= | sync_period=)``
+  and ``TTTR.t3_to_t2()``. ``t2_to_t3`` re-derives the sync-period index (macro
+  time) and dtime (micro time) from the single T2 time tag; ``t3_to_t2`` merges
+  macro and micro into one fine time tag. ``T2 -> T3 -> T2`` is lossless for a
+  fixed sync period; ``T3 -> T2`` preserves absolute arrival times at TAC
+  resolution but drops the dtime/sync split. The converted objects carry the
+  matching PicoQuant record type and can be written to any compatible container.
+
 .. _changes_0_26:
 
 Version 0.26
