@@ -1,0 +1,231 @@
+"""
+==========================================
+Lifetime-filtered correlation (lifetime-FCS)
+==========================================
+
+Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates
+species that overlap spatially and spectrally but differ in their **fluorescence
+lifetime**. Each photon is weighted by a *statistical filter* built from the
+species' micro-time (TCSPC) decay patterns, and the weighted photon stream is
+auto-/cross-correlated. The result is one correlation curve *per species*,
+recovered from a single measurement.
+
+This example simulates the full experiment with :class:`tttrlib.SimEngine` and
+analyses it with :class:`tttrlib.Correlator`:
+
+1. Two species **freely diffusing** through the confocal volume with different
+   diffusion coefficients *and* different fluorescence lifetimes (1 ns and 4 ns).
+   Lifetime filtering pulls the fast- and slow-diffusing species apart into two
+   clean auto-correlations.
+2. The same two lifetime states now **interconverting** while they diffuse
+   (a spontaneous exchange rate matrix). The species *cross*-correlation grows a
+   characteristic rise-and-decay — the kinetic signature of the exchange — even
+   though both states diffuse identically.
+
+Only the micro-times are used to build the filters; no photon is discarded.
+
+References: Kapusta, Wahl, Benda, Hof, Enderlein, *J. Fluoresc.* **17**, 43 (2007);
+Böhmer, Wahl, Rahn, Erdmann, Enderlein, *Chem. Phys. Lett.* **353**, 439 (2002).
+"""
+import matplotlib.pylab as plt
+import numpy as np
+import tttrlib
+
+# %%
+# Simulation set-up
+# -----------------
+# The simulator advances the sample on an abstract macro-time step ``DT`` (ms) and
+# draws a micro-time per photon from each species' decay on a separate TAC axis of
+# ``N_MT`` channels at ``MT_RES`` ns/channel. We reconstruct the *absolute* macro
+# time from the window index and the within-window arrival offset, and read the
+# micro-times straight from the engine (the ``to_tttr`` hardware encoding is not
+# needed here and would fold the clean decay onto the TAC).
+DT = 0.005            # macro-time step (ms)
+N_MT = 2048           # micro-time (TAC) channels
+MT_RES = 0.016        # micro-time resolution (ns / channel)
+LASER = N_MT * MT_RES  # laser period (ns)
+RES_S = 1e-7          # macro-time tick used for correlation (s)
+W0 = 0.3              # 1/e^2 lateral beam waist (um), for tau_D = w0^2 / (4 D)
+
+
+def simulate(lifetimes_ns, diffusion, k_exchange=0.0, n_photons=1_200_000, seed=1):
+    """Simulate two diffusing lifetime species and return the photon stream.
+
+    Parameters
+    ----------
+    lifetimes_ns : (2,) sequence
+        Fluorescence lifetime of each species (ns).
+    diffusion : (2,) sequence
+        Translational diffusion coefficient of each species (um^2/ms).
+    k_exchange : float
+        Spontaneous 0<->1 interconversion rate (1/ms); 0 keeps the species static.
+    n_photons : int
+        Photon budget (stops the simulation once reached).
+    seed : int
+        RNG seed.
+
+    Returns
+    -------
+    macro_ticks : (n,) uint64
+        Absolute macro time in units of ``RES_S`` (ascending).
+    micro : (n,) int
+        Micro-time (TAC) channel per photon.
+    species : (n,) int
+        Ground-truth emitting species (0 or 1) per photon.
+    """
+    cfg = {
+        "settings": {
+            "dt": DT, "n_ph_max": int(n_photons), "n_channels": 1,
+            "n_microtime_channels": N_MT, "microtime_resolution": MT_RES,
+            "laser_period": LASER, "fast_grid_bbox": True, "active_margin": 1.0,
+            "seed": int(seed),
+        },
+        "box": {"xy": 1.5, "z": 3.0},
+        "species": [
+            {"D": float(diffusion[0]), "q": [120.0], "decay": {"lifetimes": [float(lifetimes_ns[0])]}},
+            {"D": float(diffusion[1]), "q": [120.0], "decay": {"lifetimes": [float(lifetimes_ns[1])]}},
+        ],
+        "k_rad": [0, 0, 0, 0],
+        "k_nrad": [0.0, float(k_exchange), float(k_exchange), 0.0],
+        "background": [0.002],
+        "population": [1.5, 1.5],
+        "excitation": {"type": "gaussian3d", "w0": W0, "z0": 2.0,
+                       "extent_xy": 1.5, "extent_z": 3.0, "spacing": 0.1},
+    }
+    engine = tttrlib.SimEngine.from_dict(cfg)
+    engine.run()
+    species = np.asarray(engine.emitting_species())
+    micro = np.asarray(engine.micro_time()).astype(int)
+    # Absolute macro time = window index * step + within-window arrival offset.
+    t_ms = np.asarray(engine.macro_window()).astype(np.float64) * DT + np.asarray(engine.arrival_time())
+    macro_ticks = np.maximum.accumulate(np.round(t_ms * 1e-3 / RES_S).astype(np.uint64))
+    return macro_ticks, micro, species
+
+
+# %%
+# Lifetime filters
+# ----------------
+# The statistical filters follow the weighted least-squares scheme of Enderlein and
+# co-workers. With the column-normalised species decay patterns ``D`` and the diagonal
+# weight ``W = diag(1/I)`` (``I`` = total decay), the filters are
+# ``F = (D^T W D)^{-1} D^T W`` and obey ``sum_t F_i(t) p_j(t) = delta_ij``. Photon *i*
+# then contributes weight ``F[s, micro_i]`` to species *s*.
+def lifetime_filters(species_decays, total_decay):
+    """Return the ``(n_species, n_bins)`` fFCS lifetime-filter matrix."""
+    d = np.column_stack([np.asarray(p, float) for p in species_decays])
+    d = d / d.sum(0)
+    y = np.asarray(total_decay, float).copy()
+    y[y == 0] = 1.0
+    dw = d.T / y
+    g = dw @ d
+    return np.linalg.pinv(g) @ dw
+
+
+def species_decays(micro, species, n_bins=N_MT):
+    """Per-species reference micro-time decays and the total decay.
+
+    In simulation the emitting species is known exactly; experimentally these
+    reference patterns are measured on pure-species calibration samples.
+    """
+    d0 = np.bincount(micro[species == 0], minlength=n_bins)[:n_bins].astype(float)
+    d1 = np.bincount(micro[species == 1], minlength=n_bins)[:n_bins].astype(float)
+    return [d0, d1], d0 + d1
+
+
+def correlate(macro_ticks, weights_a, weights_b, n_bins=8, n_casc=25):
+    """Weighted multi-tau correlation; returns lag (s) and normalised G(tau)."""
+    macro = np.ascontiguousarray(macro_ticks, np.uint64)
+    corr = tttrlib.Correlator()
+    corr.n_bins = n_bins
+    corr.n_casc = n_casc
+    corr.set_macrotimes(macro, macro)
+    corr.set_weights(np.ascontiguousarray(weights_a, float),
+                     np.ascontiguousarray(weights_b, float))
+    corr.run()
+    return np.asarray(corr.get_x_axis(), float) * RES_S, np.asarray(corr.get_corr_normalized(), float)
+
+
+# %%
+# 1. Static species — lifetime separates the diffusion times
+# ----------------------------------------------------------
+# A fast, short-lifetime species (D = 8 um^2/ms, tau = 1 ns) and a slow,
+# long-lifetime species (D = 0.5 um^2/ms, tau = 4 ns) diffuse independently. The raw
+# auto-correlation mixes both diffusion times; the lifetime-filtered curves recover
+# each species on its own.
+macro, micro, species = simulate(lifetimes_ns=(1.0, 4.0), diffusion=(8.0, 0.5))
+
+decays, total = species_decays(micro, species)
+filters = lifetime_filters(decays, total)
+w_fast = filters[0, micro]
+w_slow = filters[1, micro]
+
+lag, g_raw = correlate(macro, np.ones_like(micro, float), np.ones_like(micro, float))
+_, g_fast = correlate(macro, w_fast, w_fast)
+_, g_slow = correlate(macro, w_slow, w_slow)
+_, g_cross_static = correlate(macro, w_fast, w_slow)
+
+td_fast = W0 ** 2 / (4 * 8.0) * 1e-3   # expected diffusion times (s)
+td_slow = W0 ** 2 / (4 * 0.5) * 1e-3
+
+# %%
+# The micro-time histogram shows the two lifetime components the filters are built
+# from, and the filter functions that weight each photon by its arrival time.
+t_ns = np.arange(N_MT) * MT_RES
+fig, (ax_d, ax_f) = plt.subplots(1, 2, figsize=(10, 4))
+ax_d.semilogy(t_ns, decays[0] / decays[0].max(), color="tab:blue", label="species 0 (tau=1 ns)")
+ax_d.semilogy(t_ns, decays[1] / decays[1].max(), color="tab:red", label="species 1 (tau=4 ns)")
+ax_d.set(xlabel="micro-time (ns)", ylabel="norm. counts", xlim=(0, 20), ylim=(1e-3, 2),
+         title="Reference decays")
+ax_d.legend(frameon=False)
+ax_f.plot(t_ns, filters[0], color="tab:blue", label="filter, species 0")
+ax_f.plot(t_ns, filters[1], color="tab:red", label="filter, species 1")
+ax_f.axhline(0, color="0.7", lw=0.8)
+ax_f.set(xlabel="micro-time (ns)", ylabel="filter weight", xlim=(0, 20),
+         title="Lifetime filters")
+ax_f.legend(frameon=False)
+fig.tight_layout()
+
+# %%
+# The raw correlation sits between the two diffusion times; the filtered species
+# auto-correlations separate cleanly, and their cross-correlation is flat (the
+# static species are statistically independent).
+fig, ax = plt.subplots(figsize=(6.5, 4.5))
+ax.semilogx(lag, g_raw, color="0.5", lw=1.5, label="raw (unfiltered)")
+ax.semilogx(lag, g_fast, color="tab:blue", label="filtered species 0 (fast)")
+ax.semilogx(lag, g_slow, color="tab:red", label="filtered species 1 (slow)")
+ax.semilogx(lag, g_cross_static, color="tab:green", label="species 0 x 1 (cross)")
+for td, c in [(td_fast, "tab:blue"), (td_slow, "tab:red")]:
+    ax.axvline(td, color=c, ls=":", lw=1)
+ax.set(xlabel="lag time (s)", ylabel="G(tau)", xlim=(1e-6, 1e-2),
+       title="Lifetime-FCS: static two-species mixture")
+ax.legend(frameon=False)
+fig.tight_layout()
+
+# %%
+# 2. Interconverting states — the cross-correlation reveals the kinetics
+# ---------------------------------------------------------------------
+# Now both states diffuse identically (D = 0.15 um^2/ms) but interconvert at
+# k = 3 ms^-1 while they cross the focus. The auto-correlations coincide (same
+# diffusion), yet the species cross-correlation rises from below one (a photon is
+# either state 0 or 1 at any instant) to a peak on the exchange timescale before
+# decaying with the diffusion time — the kinetic fingerprint of the reaction.
+macro_k, micro_k, species_k = simulate(lifetimes_ns=(1.0, 4.0), diffusion=(0.15, 0.15),
+                                       k_exchange=3.0)
+decays_k, total_k = species_decays(micro_k, species_k)
+filters_k = lifetime_filters(decays_k, total_k)
+wk0, wk1 = filters_k[0, micro_k], filters_k[1, micro_k]
+lag_k, gk0 = correlate(macro_k, wk0, wk0)
+_, gk1 = correlate(macro_k, wk1, wk1)
+_, gk_cross = correlate(macro_k, wk0, wk1)
+
+fig, ax = plt.subplots(figsize=(6.5, 4.5))
+ax.semilogx(lag_k, gk0, color="tab:blue", label="filtered state 0 (auto)")
+ax.semilogx(lag_k, gk1, color="tab:red", label="filtered state 1 (auto)")
+ax.semilogx(lag_k, gk_cross, color="tab:green", lw=2, label="state 0 x 1 (cross)")
+ax.axhline(1.0, color="0.7", lw=0.8)
+ax.set(xlabel="lag time (s)", ylabel="G(tau)", xlim=(1e-6, 1e-2),
+       title="Lifetime-FCS: two states exchanging at 3 ms$^{-1}$")
+ax.legend(frameon=False)
+fig.tight_layout()
+
+plt.show()
