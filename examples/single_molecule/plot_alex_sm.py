@@ -1,5 +1,5 @@
 """
-ALEX analysis of ISS ``.sm`` files
+ALEX analysis of Shimon Weiss lab ``.sm`` files
 ==================================
 
 Micro-second **ALEX** (alternating laser excitation) rapidly switches a green
@@ -15,7 +15,7 @@ From those the FRET efficiency ``E = DA / (DD + DA)`` and the stoichiometry
 from labelling stoichiometry (donor-only / acceptor-only species at the ``S``
 extremes).
 
-ISS single-molecule ``.sm`` files store only a macro-time and a routing channel
+Shimon Weiss lab single-molecule ``.sm`` files store only a macro-time and a routing channel
 per photon – there is no TCSPC micro-time. In micro-second ALEX the alternation
 is encoded in the macro-time clock, so :meth:`TTTR.alex_to_microtime` folds the
 macro-time into a synthetic micro-time (``micro = (macro - shift) % period``).
@@ -271,9 +271,9 @@ print(f"  high-E : {E[E >= 0.5].mean():.3f} (injected 0.80)")
 print(f"  S mean : {S.mean():.3f} (injected 0.55)")
 
 # %%
-# The reference ISS ``sm/data.sm`` file (optional)
+# The reference ``sm/data.sm`` file (optional)
 # ------------------------------------------------
-# When the ``tttr-data`` reference set is available, load the real ISS file to
+# When the ``tttr-data`` reference set is available, load the real Weiss-lab .sm file to
 # show that ``.sm`` reading and burst search work on instrument data. That file
 # is a continuous-wave, donor-dominated two-colour measurement (no alternation),
 # so it is used here only to demonstrate loading and an intensity trace.

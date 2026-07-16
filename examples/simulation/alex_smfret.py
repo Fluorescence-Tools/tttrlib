@@ -9,7 +9,7 @@ per laser and a per-laser brightness matrix ``q_alex`` on each species, so a dou
 molecule emits DD + DA under the green laser and AA under the red laser.
 
 This example simulates two diffusing FRET populations (``E`` ≈ 0.2 and 0.8), exports the stream
-to the ISS ``SM`` container, folds the macro-time to recover the excitation windows
+to the ``SM`` container, folds the macro-time to recover the excitation windows
 (:meth:`TTTR.alex_to_microtime` + an auto-split on the donor detector), burst-searches, and
 builds the 2D E-S histogram. See the companion notebooks ``alex_01_simulation_basics.ipynb`` and
 ``alex_02_smfret_es.ipynb`` for a step-by-step walk-through.
@@ -28,7 +28,7 @@ import tttrlib
 # Build a TTTR from the simulator's ``photons()`` arrays
 # ------------------------------------------------------
 # The macro-time resolution is chosen so the ALEX period is an integer number of ticks. SM keeps
-# macro + routing (micro-time dropped, as for a real ISS file); markers are engine-level ground
+# macro + routing (micro-time dropped, as for a real .sm file); markers are engine-level ground
 # truth and are not written as photon records.
 SM_CONTAINER, SM_RECORD, TY_F8 = 7, 11, 536870920
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""ALEX (alternating laser excitation) analysis with ISS ``.sm`` files.
+"""ALEX (alternating laser excitation) analysis with Shimon Weiss lab ``.sm`` files.
 
-ISS single-molecule ``.sm`` files store a macro-time and a routing channel per
+Shimon Weiss lab single-molecule ``.sm`` files store a macro-time and a routing channel per
 photon but no micro-time. Micro-second ALEX encodes the excitation alternation
 in the macro-time clock: within each alternation period the green laser is on
 for one interior window and the red laser for another, separated by rise/fall
@@ -25,7 +25,7 @@ import tttrlib
 # Centralized test settings
 from test_settings import settings, DATA_AVAILABLE  # type: ignore
 
-# ISS .sm container/record ids and macro-time clock (12.5 ns).
+# .sm container/record ids and macro-time clock (12.5 ns).
 SM_CONTAINER = 7
 SM_RECORD_TYPE = 11
 MACRO_RESOLUTION = 1.25e-8
@@ -368,7 +368,7 @@ class TestAlexEsRecovery(unittest.TestCase):
 
 @unittest.skipIf(not DATA_AVAILABLE, "Data directory not found")
 class TestRealSmFile(unittest.TestCase):
-    """The reference ISS sm/data.sm file loads and burst-searches."""
+    """The reference sm/data.sm file loads, round-trips, and burst-searches."""
 
     def test_load_and_burst_search(self):
         import os
@@ -379,7 +379,7 @@ class TestRealSmFile(unittest.TestCase):
         data = tttrlib.TTTR(fn, "SM")
         self.assertEqual(data.get_tttr_container_type(), "SM")
         self.assertGreater(len(data), 0)
-        # ISS .sm carries macro time + routing channel, no micro time.
+        # .sm carries macro time + routing channel, no micro time.
         self.assertEqual(int(np.asarray(data.micro_times).max()), 0)
         self.assertAlmostEqual(data.header.macro_time_resolution,
                                MACRO_RESOLUTION, places=12)
@@ -389,6 +389,27 @@ class TestRealSmFile(unittest.TestCase):
             data.burst_search(L=40, m=10, T=1.0e-3, mode="sliding_window")
         ).reshape(-1, 2)
         self.assertGreaterEqual(len(bursts), 0)
+
+    def test_sm_roundtrip_lossless(self):
+        """Read -> write -> read the real .sm file: macro time + routing preserved exactly."""
+        import os
+        import tempfile
+
+        fn = settings["sm_filename"]
+        if not os.path.isfile(fn):
+            self.skipTest("missing data file: %s" % fn)
+        d = tttrlib.TTTR(fn, "SM")
+        out = tempfile.mktemp(suffix=".sm")
+        try:
+            self.assertTrue(d.write(out))
+            d2 = tttrlib.TTTR(out, "SM")
+            np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+            np.testing.assert_array_equal(d.routing_channels, d2.routing_channels)
+            self.assertAlmostEqual(d2.header.macro_time_resolution,
+                                   MACRO_RESOLUTION, places=12)
+        finally:
+            if os.path.isfile(out):
+                os.unlink(out)
 
 
 if __name__ == "__main__":

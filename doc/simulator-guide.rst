@@ -392,7 +392,7 @@ the macro-time. The engine models this directly:
 Set ``alex_markers: true`` to additionally write an explicit laser-switch marker
 (``event_type`` = ``alex_marker_event_type``, routing channel = laser index) at
 each switch — useful as ground truth in tests, but impractical over long dilute
-runs (a marker every few windows), so the macro-time encoding is the ISS-faithful
+runs (a marker every few windows), so the macro-time encoding is the format-faithful
 mechanism.
 
 *Implication:* the alternation lives in the macro-time. Fold it back with
@@ -405,8 +405,8 @@ E-S plot. See ``examples/simulation/alex_smfret.py`` and the notebooks
 .. note::
    Export the simulated stream to a ``TTTR`` by building it from ``photons()``
    (macro-time from ``macro_window``/``arrival_time``, plus ``micro_time``,
-   ``channel``) — the ISS ``SM`` container keeps macro-time + routing (micro-time
-   dropped, as for a real ISS file), while ``PTU`` / ``Photon-HDF5`` additionally
+   ``channel``) — the ``SM`` container keeps macro-time + routing (micro-time
+   dropped, as for a real .sm file), while ``PTU`` / ``Photon-HDF5`` additionally
    preserve the micro-time. :meth:`SimEngine.to_tttr` also works (it emits SPC-130
    and now carries the simulated micro-time faithfully and skips markers).
 
