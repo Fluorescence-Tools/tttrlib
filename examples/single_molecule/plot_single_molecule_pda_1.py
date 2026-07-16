@@ -1,4 +1,4 @@
-"""
+r"""
 ================================
 Photon distribution analysis - 1
 ================================
@@ -178,7 +178,7 @@ potential division by zero need to be handled.
     )
 
 
-Histograms with a logarithmic scale are computed by setting `log_x` to True.
+Histograms with a logarithmic scale are computed by setting ``log_x`` to True.
 When the option ``skip_zero_photon`` is set to False the first column and row of
 the s1s2 matrix (zero photons in ch1 or ch2) is used. In this case potential division
 by zeros in the histogram function need to be handled. The default value for

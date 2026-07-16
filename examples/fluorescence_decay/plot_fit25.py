@@ -1,34 +1,75 @@
+r"""
+==================================
+Fit25: select from fixed lifetimes
+==================================
+
+``Fit25`` compares four candidate lifetimes and returns the lifetime that best
+describes a polarization-resolved Jordi-format decay. Use it when candidate
+lifetimes are known from calibration or a model grid and the question is which
+candidate explains the measured photons best.
+
+The input parameter vector is:
+
+``[tau1, tau2, tau3, tau4, gamma, r0]``
+   The four ``tau`` entries are candidates. ``gamma`` is the scattered fraction
+   and ``r0`` is the fundamental anisotropy. The selected lifetime is returned
+   in ``result["x"][0]``.
 """
-==================
-Lifetime selection
-==================
 
-fit25
------
-Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data.
-Works with polarization resolved Jordi stacks, computes rotational correlation time
-by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime
-that fits best the data.
+import matplotlib.pyplot as plt
+import numpy as np
+
+import tttrlib
 
 
-fit25
------
-Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data.
-Works with polarization resolved Jordi stacks, computes rotational correlation time
-by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime
-that fits best the data.
-
-fit26
------
-Pattern fit. Determines the fraction :math:`f` of two mixed patterns.
-
-.. :math:
-
-    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}
-
-(No convolution of patterns, area of pattern is normalized by fit)
+def make_jordi_irf(n_channels=32, period=32.0):
+    time_axis = np.linspace(0.0, period, n_channels * 2)
+    irf = (
+        np.exp(-0.5 * ((time_axis - 2.0) / 0.25) ** 2)
+        + np.exp(-0.5 * ((time_axis - 18.0) / 0.25) ** 2)
+    )
+    return irf.astype(np.float64), time_axis
 
 
+irf, time_axis = make_jordi_irf()
+background = np.zeros_like(irf)
+dt = time_axis[1] - time_axis[0]
 
+data = np.array(
+    [
+        0, 0, 0, 1, 9, 7, 5, 5, 5, 2, 2, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 3, 2, 2, 2, 2, 3, 0, 1, 0, 1, 1, 1, 2,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ],
+    dtype=np.int32,
+)
 
-"""
+fit25 = tttrlib.Fit25(
+    dt=dt,
+    irf=irf,
+    background=background,
+    period=32.0,
+    g_factor=1.0,
+    l1=0.1,
+    l2=0.1,
+    convolution_stop=len(irf) // 2 - 1,
+)
+
+candidate_lifetimes = np.array([0.5, 1.0, 2.0, 4.0])
+initial = np.array([*candidate_lifetimes, 0.02, 0.38])
+fixed = np.array([0, 0, 0, 0, 1, 1], dtype=np.int16)
+result = fit25(data=data, initial_values=initial, fixed=fixed, include_model=True)
+
+plt.plot(data, label="data")
+plt.plot(result["model"], label="best Fit25 model")
+plt.xlabel("microtime channel")
+plt.ylabel("counts")
+plt.legend()
+plt.show()
+
+print("Fit25 lifetime selection")
+print("========================")
+print(f"candidates: {candidate_lifetimes}")
+print(f"selected tau: {result['x'][0]:.1f} ns")
+print(f"twoIstar: {result['twoIstar']:.3f}")

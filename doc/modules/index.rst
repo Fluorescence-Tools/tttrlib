@@ -1,6 +1,8 @@
 Modules
 =======
 
+Notebook-style topic pages for the main tttrlib analysis domains.
+
 .. toctree::
    :maxdepth: 2
 
@@ -13,7 +15,4 @@ Modules
    single-molecule
    pda
    features
-   workflow_alex_analysis
-   workflow_burst_analysis
-   workflow_pie_analysis
    ics

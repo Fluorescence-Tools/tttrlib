@@ -20,13 +20,20 @@ Previous releases are available through the read-the-docs `page <https://tttrlib
    :numbered:
    :maxdepth: 3
 
+   workflows
+   tttr-core
    file-formats
+   burst-analysis
+   pda-guide
+   fcs-correlation
+   clsm-flim-guide
+   localization-guide
+   fit-guide
    tttr.rst
    single_molecule.rst
    imaging.rst
-   tools.rst
+   tools
    verbosity.rst
-   api.rst
    zreferences
 
 Example Gallery
@@ -47,5 +54,3 @@ Indices and tables
 * :ref:`search`
 
 .. Places parent toc into the sidebar
-
-

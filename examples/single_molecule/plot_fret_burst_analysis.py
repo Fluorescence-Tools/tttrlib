@@ -1,6 +1,6 @@
 """
 FRET Burst Analysis with BurstFilter Class
-=========================================
+==========================================
 
 This example demonstrates FRET burst analysis using the new BurstFilter class in tttrlib.
 The BurstFilter class provides a cleaner interface for burst analysis similar to FRETBursts,
@@ -107,7 +107,7 @@ print(f"Found {len(bursts_np)} bursts")
 
 # %%
 # Compute FRET efficiency for each burst
-# -------------------------------------
+# --------------------------------------
 # Calculate FRET efficiency for each detected burst
 E_values = []
 burst_sizes = []
@@ -136,7 +136,7 @@ print(f"Calculated FRET efficiency for {len(E_values)} bursts")
 
 # %%
 # Filter bursts based on FRET efficiency
-# -------------------------------------
+# --------------------------------------
 # Filter bursts to select only those with reasonable FRET efficiency
 valid_e_indices = [i for i, e in enumerate(E_values) if 0.0 <= e <= 1.0 and burst_sizes[i] > 0]
 # Create a Python list of (start, stop) tuples from the NumPy array
@@ -197,7 +197,7 @@ if len(filtered_E_values) > 0:
 
 # %%
 # Extract burst photons for further analysis
-# -----------------------------------------
+# ------------------------------------------
 # Create a TTTR object containing only photons from selected bursts
 if len(filtered_bursts) > 0:
     # Select first 10 bursts for demonstration

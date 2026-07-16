@@ -181,52 +181,55 @@ The configuration is defined in `pyproject.toml`:
 
 See `[tool.cibuildwheel]` section in `pyproject.toml` for details.
 
-## 🐍 Mamba Package Building (Recommended)
+## 🐍 Conda Package Building with rattler-build (Recommended)
 
-**Note:** We recommend using Mamba instead of Conda due to license issues and faster dependency resolution.
+All conda recipes use [rattler-build](https://prefix.dev/docs/rattler-build)
+(the modern, fast recipe builder) with the v1 `recipe.yaml` format. Both the
+Python, R and docs recipes live under `recipes/`:
 
-### Install mamba and conda-build
+| Package        | Recipe                        | Platforms       |
+|----------------|-------------------------------|-----------------|
+| `tttrlib`      | `recipes/py/recipe.yaml`      | linux/osx/win   |
+| `r-tttrlib`    | `recipes/r/recipe.yaml`       | linux/osx       |
+| `tttrlib-docs` | `recipes/docs/recipe.yaml`    | linux           |
+
+### Install rattler-build
 
 ```bash
-# Install mamba (recommended)
-conda install -y -n base -c conda-forge mamba
-mamba install -y conda-build conda-verify boa
+conda install -y -n base -c conda-forge rattler-build
 ```
 
-### Build Package with Mamba
+### Build the Python package
 
 ```bash
-# Build for specific Python version
-mamba build conda-recipe --python 3.10 --output-folder ./conda-bld -c conda-forge
-```
+export PKG_VERSION=$(python -c "import re;print(re.search(r'version\s*=\s*\"([^\"]+)\"',open('pyproject.toml').read()).group(1))")
 
-### Build Multiple Python Versions
+# one Python version
+rattler-build build --recipe recipes/py --variant "python=3.11" \
+  --output-dir ./conda-bld -c conda-forge
 
-```bash
+# multiple versions
 for VER in 3.9 3.10 3.11 3.12 3.13; do
-    echo "Building for Python $VER"
-    mamba build conda-recipe --python $VER --output-folder ./conda-bld -c conda-forge
+  rattler-build build --recipe recipes/py --variant "python=$VER" \
+    --output-dir ./conda-bld -c conda-forge
 done
 ```
 
-### Mamba Recipe Details
+### Build the R package
 
-The recipe is in `conda-recipe/meta.yaml`:
+```bash
+rattler-build build --recipe recipes/r --output-dir ./conda-bld -c conda-forge
+```
 
-- **Channels:** Uses conda-forge only (no defaults channel)
-- **Build requirements:** C/C++ compilers, cmake, ninja, hdf5
-- **Host requirements:** swig<4.2, doxygen, python, numpy, hdf5
-- **Run requirements:** python, numpy, hdf5, OpenMP libraries
+### Recipe details
 
-**Key differences from conda:**
-- Uses `-c conda-forge` explicitly
-- Avoids defaults channel (license issues)
-- Faster dependency resolution
-- More reliable builds
+- **Channels:** conda-forge only (no defaults channel — license/speed).
+- **Build:** C/C++ compilers, cmake, ninja, swig.
+- **Host/run:** hdf5, OpenMP; python+numpy (py) or r-base (r).
 
-Platform-specific build scripts:
-- `conda-recipe/build.sh` (Unix/macOS)
-- `conda-recipe/bld.bat` (Windows)
+Platform build scripts (invoked by the recipes):
+- Python: `recipes/py/build.sh` (Unix/macOS), `recipes/py/build.bat` (Windows)
+- R: `recipes/r/build.sh` (Unix/macOS; Windows is skipped)
 
 ### Troubleshooting Mamba Builds
 
@@ -535,8 +538,9 @@ When preparing a release:
 
 ### Conda Release
 
-1. Build packages: `conda build conda-recipe --output-folder dist`
-2. Upload to Anaconda: `anaconda upload dist/*`
+1. Build packages: `rattler-build build --recipe recipes/py --output-dir dist -c conda-forge`
+   (and `--recipe recipes/r` for the R package)
+2. Upload to Anaconda: `rattler-build upload anaconda dist/**/*.conda`
 
 ### Documentation Release
 

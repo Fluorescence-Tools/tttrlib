@@ -1,84 +1,106 @@
 Quickstart
 ==========
 
-This page gets you up and running with `tttrlib` quickly. Install the package, load data, compute basic analyses, and see where to go next.
+This page collects the smallest useful snippets for loading TTTR data and
+running common analyses.
 
-Installation
-------------
+Install
+-------
 
-- Conda (recommended):
+With pip:
 
-  .. code-block:: console
+.. code-block:: console
 
-     conda install -c tpeulen tttrlib
+   pip install tttrlib
 
-- Pip:
+With Conda or Mamba on macOS and Linux:
 
-  .. code-block:: console
+.. code-block:: console
 
-     pip install tttrlib
+   mamba install -c conda-forge -c bioconda tttrlib
 
-Minimal Examples
-----------------
+With Conda or Mamba on Windows:
 
-Load TTTR data and access arrays:
+.. code-block:: console
+
+   mamba install -c tpeulen tttrlib
+
+Load data
+---------
 
 .. code-block:: python
 
    import tttrlib
-   data = tttrlib.TTTR('photon_stream.ptu')
+
+   data = tttrlib.TTTR("photon_stream.ptu")
+   print(len(data))
+
+Access photon arrays
+--------------------
+
+.. code-block:: python
+
    macro_times = data.macro_times
    micro_times = data.micro_times
    routing_channels = data.routing_channels
 
-Print header information:
+Inspect metadata
+----------------
 
 .. code-block:: python
 
-   import tttrlib
-   data = tttrlib.TTTR('photon_stream.ptu')
-   print(data.json)
+   print(data.header.json)
+   print(data.header.to_csv())
 
-Compute a correlation:
+Select photons
+--------------
 
 .. code-block:: python
 
-   import tttrlib
-   data = tttrlib.TTTR('photon_stream.ptu')
-   correlator = tttrlib.Correlator(channels=([1], [2]), tttr=data)
+   green = data[data.get_selection_by_channel([0])]
+   red = data[data.get_selection_by_channel([1])]
+
+Compute a correlation
+---------------------
+
+.. code-block:: python
+
+   correlator = tttrlib.Correlator(channels=([0], [1]), tttr=data)
    taus = correlator.x_axis
-   correlation_amplitude = correlator.correlation
+   correlation = correlator.correlation
 
-Create a simple FLIM image from CLSM data:
+Build a decay histogram
+-----------------------
 
 .. code-block:: python
 
-   import tttrlib
-   data = tttrlib.TTTR('image.ptu')
-   clsm = tttrlib.CLSM(data)
-   channels = [0, 1]
-   prompt_range = [0, 16000]
-   clsm.fill(channels=channels, micro_time_ranges=[prompt_range])
+   import numpy as np
+
+   counts, edges = np.histogram(data.micro_times, bins=256)
+
+Create a CLSM intensity image
+-----------------------------
+
+.. code-block:: python
+
+   image_data = tttrlib.TTTR("image.ptu")
+   clsm = tttrlib.CLSMImage(image_data)
+   clsm.fill(channels=[0, 1], micro_time_ranges=[[0, 16000]])
    intensity_image = clsm.intensity
 
-Next Steps
+Run a burst search
+------------------
+
+.. code-block:: python
+
+   L, m, T = 30, 10, 1e-3
+   ranges = data.burst_search(L=L, m=m, T=T)
+   bursts = list(zip(ranges[0::2], ranges[1::2]))
+
+Next steps
 ----------
 
-Explore the :doc:`Example Gallery <auto_examples/index>` for hands-on tutorials covering everything from basic I/O to advanced analysis workflows.
-
-.. button-ref:: auto_examples/index
-   :color: primary
-   :shadow:
-   
-   📚 Browse Example Gallery
-
-Additional resources:
-
-- Learn key concepts in the :doc:`user_guide`
-- See domain topics: :doc:`topics/lifetime_analysis` and :doc:`topics/correlation_analysis`
-
-Notes
------
-
-- Verbose diagnostics can be enabled with the environment variable ``TTTRLIB_VERBOSE``.
-- For installation details and platform-specific guidance, see :doc:`getting_started_detailed`.
+* :doc:`getting-started` explains the first workflow in more detail.
+* :doc:`auto_examples/index` contains executable examples and plots.
+* :doc:`user_guide` groups the documentation by analysis domain.
+* :doc:`troubleshooting` covers common loading and selection problems.

@@ -19,10 +19,8 @@ Welcome to tttrlib
 .. toctree::
     :maxdepth: 2
 
-    install
     faq
     support
-    related_projects
     about
     whats_new
 

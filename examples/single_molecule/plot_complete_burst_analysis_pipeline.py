@@ -1,6 +1,6 @@
 """
 Complete Burst Analysis Pipeline
-===============================
+================================
 
 This example demonstrates a complete end-to-end burst analysis pipeline using the 
 BurstFilter class with JSON parameter serialization support. It covers:

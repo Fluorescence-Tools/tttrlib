@@ -104,10 +104,10 @@ ax_micro.set_ylabel("Line index")
 fig_micro.tight_layout()
 
 # %%
-# Summary ---------------------------------------------------------------------
-# - The Zeiss LSM 980 TTTR file is converted into a CLSM image using the same
-#   parameters as the unit tests (default reader).
-# - The intensity volume can be projected to obtain a quick overview of the
-#   recorded structure.
-# - ``get_mean_micro_time`` yields a pseudo-lifetime map which highlights regions
-#   with different fluorescence decay characteristics.
+# Summary
+# -------
+#
+# The Zeiss LSM 980 TTTR file is converted into a CLSM image using the same
+# parameters as the unit tests. The intensity volume can be projected to obtain
+# a quick overview, while ``get_mean_micro_time`` yields a pseudo-lifetime map
+# that highlights regions with different fluorescence decay characteristics.

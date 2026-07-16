@@ -7,8 +7,8 @@ Release Highlights for tttrlib 0.23
 
 We are pleased to announce the release of tttrlib 0.20, which comes
 with many bug fixes and new features! We detail below a few of the major
-features of this release. For an exhaustive list of all the changes, please
-refer to the :ref:`release notes <changes_0_20>`.
+features of this release. For an exhaustive list of all changes, see the release
+notes in the documentation.
 
 To install the latest version with conda::
 
@@ -56,7 +56,7 @@ print("Better Header support")
 # :class:`neighbors.RadiusNeighborsTransformer`. The precomputation
 # can also be performed by custom estimators to use alternative
 # implementations, such as approximate nearest neighbors methods.
-# See more details in the :ref:`User Guide <neighbors_transformer>`.
+# See the nearest-neighbor transformer documentation for more details.
 
 from tempfile import TemporaryDirectory
 import tttrlib
@@ -73,4 +73,3 @@ import tttrlib
 #     # recomputed.
 #     estimator.set_params(isomap__n_neighbors=5)
 #     estimator.fit(X)
-

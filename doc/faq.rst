@@ -71,11 +71,13 @@ Legacy 32-bit and Python 2.7 are not supported.
 How can I load my own datasets?
 -------------------------------
 ``tttrlib`` supports:
-- **PicoQuant:** PicoHarp, TimeHarp, HydraHarp (`.ptu`, `.ht3`, T2/T3)
-- **Becker & Hickl:** `spc132`, `spc630` (256 & 4096 mode)
+
+- **PicoQuant:** PicoHarp, TimeHarp, HydraHarp (``.ptu``, ``.ht3``, T2/T3)
+- **Becker & Hickl:** ``spc132``, ``spc630`` (256 & 4096 mode)
 - **Photon-HDF5:** open standard format
 
 If your instrument or file type is not supported:
+
 1. Open a GitHub issue describing the format and instrument.
 2. Provide a **small sample dataset** (<100 MB) and expected results.
 3. Optionally describe your workflow or analysis steps.
@@ -85,12 +87,15 @@ This allows us to integrate and test the new format automatically.
 How can I get help using tttrlib?
 ---------------------------------
 Before asking for help:
+
 1. **Check the documentation** and examples first.
 2. If you still encounter issues, prepare a **minimal reproducible example** (under 10 lines) using:
+
    - Demo data shipped with ``tttrlib``, or
    - Synthetic data from ``numpy.random`` (with a fixed seed).
 
 Include in your report:
+
 - Import statements and test code
 - Full traceback and error message
 - ``tttrlib`` version and system details
@@ -125,6 +130,7 @@ To explore them locally, see the ``examples`` directory and run:
     python plot_01_reading_files.py
 
 Each example demonstrates a fundamental operation:
+
 - Reading TTTR files
 - Basic manipulations and selections
 - Burst searches and intensity traces
@@ -149,18 +155,18 @@ Where can I cite tttrlib?
 -------------------------
 If you use ``tttrlib`` in your work, please cite:
 
-> **Thomas-Otavio Peulen**, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb,
-> Suren Felekyan, Andrej Sali, Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze.
-> *“tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling.”*
-> **Bioinformatics** 41 (2): btaf025 (2025).
-> https://doi.org/10.1093/bioinformatics/btaf025
+   **Thomas-Otavio Peulen**, Katherina Hemmen, Annemarie Greife, Benjamin M. Webb,
+   Suren Felekyan, Andrej Sali, Claus A. M. Seidel, Hugo Sanabria, Katrin G. Heinze.
+   *“tttrlib: modular software for integrating fluorescence spectroscopy, imaging, and molecular modeling.”*
+   **Bioinformatics** 41 (2): btaf025 (2025).
+   https://doi.org/10.1093/bioinformatics/btaf025
 
 What license does tttrlib use?
 ------------------------------
 ``tttrlib`` is released under the **BSD-3-Clause** license.
 Copyright © 2007–2025, *tttrlib developers*.
 
----
+----
 
 .. image:: https://github.com/Fluorescence-Tools/tttrlib/blob/main/doc/logos/mashup.png?raw=true
    :alt: tttrlib FLIM overview

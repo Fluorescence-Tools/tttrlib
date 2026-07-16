@@ -71,9 +71,9 @@ joined_unshifted.append(first_100, shift_macro_time=False)
 macro_joined_unshifted = np.asarray(joined_unshifted.macro_times, dtype=np.int64)
 print("Appended (shift=False):", len(joined_unshifted))
 
-# ------------------------------------------------------------
+# -------------------------------------------------------------
 # Plot A: Macro times on small sequences so effects are obvious
-# ------------------------------------------------------------
+# -------------------------------------------------------------
 # Entire small sequences for direct comparison
 figA, axA = plt.subplots(figsize=(4, 2.8))
 axA.plot(np.arange(len(macro_base)), macro_base, label="base (300)")
@@ -85,9 +85,9 @@ axA.set_title("Macro times on small slices (visible differences)")
 axA.legend()
 figA.tight_layout()
 
-# ------------------------------------------------------------
+# --------------------------------------------------------------
 # Plot B: Zoom around the join index (base end vs appended tail)
-# ------------------------------------------------------------
+# --------------------------------------------------------------
 # The join happens at index len(base). We visualize a narrow window around it.
 join_idx = len(base)
 window = 40  # show +/- 40 events

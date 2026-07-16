@@ -40,11 +40,18 @@ Version 0.26
 * Added multimolecule correction in PDA
 * Improved DecayFit interface (JSON in/output)
 * Add support for channel specific microtime LUTs (correct non-linearities in TAC) and shifts
-* **Becker & Hickl SPCM Support**: New support for BH SPC-130/140/150 detectors with pixel-marker binning, automatic `.set` file parsing, dimension inference, and Frame 1 adjustment. Integrated truncated recording recovery.
-* **CLSM Bug Fixes**: Fixed `get_fluorescence_decay` stack_frames bug where only the last frame was processed. Fixed `get_phasor` precision loss by using float instead of int calculation.
+* **Becker & Hickl SPCM Support**: New support for BH SPC-130/140/150 detectors
+  with pixel-marker binning, automatic ``.set`` file parsing, dimension
+  inference, and Frame 1 adjustment. Integrated truncated recording recovery.
+* **CLSM Bug Fixes**: Fixed ``get_fluorescence_decay`` stack_frames bug where
+  only the last frame was processed. Fixed ``get_phasor`` precision loss by
+  using float instead of int calculation.
 
 .. _changes_0_25:
-------------
+
+Version 0.25
+============
+
 * Add simpler option for burst search
 * Added get_supported_container_names
 * Added ttrlib to bioconda

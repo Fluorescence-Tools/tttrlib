@@ -1,6 +1,6 @@
 """
 Microtime Range Selection Example (Fixed Version)
-===============================================
+=================================================
 
 This example demonstrates how to implement microtime range selection for burst analysis.
 While the BurstFilter class doesn't currently have built-in microtime selection,
@@ -40,7 +40,7 @@ print(f"Most common microtime: {np.argmax(n)} (count: {n.max()})")
 
 # %%
 # Define microtime ranges for selection
-# ------------------------------------
+# -------------------------------------
 # Define ranges of interest (min, max) in microtime channels
 microtime_ranges = [
     (0, 1000),      # Early photons
@@ -54,7 +54,7 @@ for i, (min_mt, max_mt) in enumerate(microtime_ranges):
 
 # %%
 # Select photons within microtime ranges
-# -------------------------------------
+# --------------------------------------
 def select_photons_by_microtime(tttr_data, ranges):
     """Select photons that fall within specified microtime ranges."""
     micro_times = tttr_data.get_micro_times()

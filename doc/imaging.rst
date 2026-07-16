@@ -12,7 +12,6 @@ Fluorescence imaging
 .. toctree::
     :maxdepth: 2
 
-    modules/flim_intro
-    modules/flim_formats
-    modules/flim
+    modules/imaging
+    modules/imaging_mle
     modules/ics
