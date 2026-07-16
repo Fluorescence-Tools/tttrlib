@@ -183,7 +183,10 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT2v1> {
         }
         
         if (rec.bits.special == 1) {
-            record_type = RECORD_MARKER;
+            // channel 0 is the sync input: a genuine photon on channel 0
+            // (matches PicoQuant ptudemo/ptufile). channels 1..15 are markers;
+            // the 0x3F overflow record was already handled above.
+            record_type = (rec.bits.channel == 0) ? RECORD_PHOTON : RECORD_MARKER;
             channel = static_cast<int16_t>(rec.bits.channel);
             true_nsync = overflow_counter + rec.bits.timetag;
             micro_time = 0;
@@ -224,7 +227,10 @@ struct RecordProcessor<PQ_RECORD_TYPE_HHT2v2> {
         }
         
         if (rec.bits.special == 1) {
-            record_type = RECORD_MARKER;
+            // channel 0 is the sync input: a genuine photon on channel 0
+            // (matches PicoQuant ptudemo/ptufile). channels 1..15 are markers;
+            // the 0x3F overflow record was already handled above.
+            record_type = (rec.bits.channel == 0) ? RECORD_PHOTON : RECORD_MARKER;
             channel = static_cast<int16_t>(rec.bits.channel);
             true_nsync = overflow_counter + rec.bits.timetag;
             micro_time = 0;
@@ -339,7 +345,10 @@ struct RecordProcessor<PQ_RECORD_TYPE_GENERIC_T2> {
         }
         
         if (rec.bits.special == 1) {
-            record_type = RECORD_MARKER;
+            // channel 0 is the sync input: a genuine photon on channel 0
+            // (matches PicoQuant ptudemo/ptufile). channels 1..15 are markers;
+            // the 0x3F overflow record was already handled above.
+            record_type = (rec.bits.channel == 0) ? RECORD_PHOTON : RECORD_MARKER;
             channel = static_cast<int16_t>(rec.bits.channel);
             true_nsync = overflow_counter + rec.bits.timetag;
             micro_time = 0;
