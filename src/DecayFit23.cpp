@@ -176,7 +176,6 @@ int DecayFit23::modelf(
     (void)dt; // parameter kept for API compatibility
     fit_signals.corrections = &fit_corrections;
 
-    double x[4]; // amplitude, relaxation time array
     const Decay23Parameters safe_param = sanitise_parameters(param);
     const double tau = safe_param.tau;
     const double gamma = safe_param.gamma;
@@ -188,22 +187,22 @@ int DecayFit23::modelf(
 
     const double taurho = safe_harmonic_mean(tau, rho);
 
-    /// vv
-    x[0] = 1.;
-    x[1] = tau;
-    x[2] = r0 * (2. - 3. * fit_corrections.l1);
-    x[3] = taurho;
-    fconv_per_cs(
-            mfunction, x, irf,
+    // The parallel (vv) and perpendicular (vh) channels share the two
+    // lifetimes (tau, taurho) and differ only in amplitude and IRF, so both
+    // are convolved together (NEON 2-lane on AArch64).
+    double x_vv[4], x_vh[4];
+    x_vv[0] = 1.;
+    x_vv[1] = tau;
+    x_vv[2] = r0 * (2. - 3. * fit_corrections.l1);
+    x_vv[3] = taurho;
+    x_vh[0] = 1. / fit_corrections.g;
+    x_vh[1] = tau;
+    x_vh[2] = x_vh[0] * r0 * (-1. + 3. * fit_corrections.l2);
+    x_vh[3] = taurho;
+    fconv_per_cs_2ch(
+            mfunction, mfunction + Nchannels, x_vv, x_vh, irf, irf + Nchannels,
             2, Nchannels - 1, Nchannels,
             fit_corrections.period, fit_corrections.convolution_stop, dt);
-
-    /// vh
-    x[0] = 1. / fit_corrections.g;
-    x[2] = x[0] * r0 * (-1. + 3. * fit_corrections.l2);
-    fconv_per_cs(mfunction + Nchannels, x, irf + Nchannels,
-                 2, Nchannels - 1, Nchannels,
-                 fit_corrections.period, fit_corrections.convolution_stop, dt);
 
     /// add background
     double sum_m = 0.;

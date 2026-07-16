@@ -194,6 +194,24 @@ void fconv_per_cs(double *fit, double *x, double *lamp, int numexp, int stop,
 
 
 /*!
+ * @brief Two-channel periodic convolution (as fconv_per_cs) for a pair of
+ * detection channels that share the same set of lifetimes (e.g. the parallel
+ * and perpendicular channels of a polarisation-resolved decay).
+ *
+ * Equivalent to calling fconv_per_cs twice, but on AArch64 the two channels are
+ * evaluated together in NEON float64x2 lanes. The per-channel recurrence is
+ * latency-bound, so packing the two channels into one register advances both
+ * per FMA-latency and roughly doubles convolution throughput. ``x0[2k+1]`` must
+ * equal ``x1[2k+1]`` for every lifetime k (only the amplitudes and IRF differ).
+ */
+void fconv_per_cs_2ch(double *fit0, double *fit1,
+                      const double *x0, const double *x1,
+                      const double *lamp0, const double *lamp1,
+                      int numexp, int stop, int n_points,
+                      double period, int conv_stop, double dt);
+
+
+/*!
  * @brief Convolve lifetime spectrum - fast convolution with reference compound
  * decay
  *

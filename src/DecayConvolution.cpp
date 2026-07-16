@@ -450,6 +450,84 @@ void fconv_per_cs(double *fit, double *x, double *lamp, int numexp, int stop,
 }
 
 
+#if TTTRLIB_COMPILE_NEON
+// Two channels (lane 0 = channel 0, lane 1 = channel 1) of the periodic
+// convolution in NEON float64x2. The channels share the lifetimes (so expcurr
+// is a broadcast scalar); only the amplitudes and IRF differ per lane. FMA is
+// used (as in fconv_neon_impl), so results match the scalar path to rounding.
+static void fconv_per_cs_2ch_neon(
+        double *fit0, double *fit1,
+        const double *x0, const double *x1,
+        const double *lamp0, const double *lamp1,
+        int numexp, int stop, int n_points,
+        double period, int conv_stop, double dt) {
+    const int period_n = (int)ceil(period / dt - 0.5);
+    const double dh = dt * 0.5;
+    for (int i = 0; i <= stop; i++) { fit0[i] = 0.0; fit1[i] = 0.0; }
+    const int stop1 = (period_n > n_points - 1) ? n_points - 1 : period_n;
+    const float64x2_t vdh = vdupq_n_f64(dh);
+    const float64x2_t vone = vdupq_n_f64(1.0);
+    for (int ne = 0; ne < numexp; ne++) {
+        const double lifetime = x0[2 * ne + 1];  // shared with x1[2*ne+1]
+        const double expcurr = exp(-dt / lifetime);
+        const double tail_a = 1.0 / (1.0 - exp(-period / lifetime));
+        const float64x2_t ve = vdupq_n_f64(expcurr);
+        const float64x2_t vamp = float64x2_t{x0[2 * ne], x1[2 * ne]};
+        // fit[0] += dh*lamp[0]*(expcurr + 1)*amp
+        float64x2_t vf = float64x2_t{fit0[0], fit1[0]};
+        float64x2_t vl = float64x2_t{lamp0[0], lamp1[0]};
+        vf = vfmaq_f64(vf, vmulq_f64(vmulq_f64(vdh, vl), vaddq_f64(ve, vone)), vamp);
+        fit0[0] = vgetq_lane_f64(vf, 0); fit1[0] = vgetq_lane_f64(vf, 1);
+        float64x2_t vfc = vdupq_n_f64(0.0);
+        int i;
+        for (i = 1; i <= conv_stop; i++) {
+            const float64x2_t vlm1 = float64x2_t{lamp0[i - 1], lamp1[i - 1]};
+            const float64x2_t vli = float64x2_t{lamp0[i], lamp1[i]};
+            vfc = vaddq_f64(vfc, vmulq_f64(vdh, vlm1));   // fitcurr + dh*lamp[i-1]
+            vfc = vfmaq_f64(vmulq_f64(vdh, vli), vfc, ve); // *expcurr + dh*lamp[i]
+            vf = float64x2_t{fit0[i], fit1[i]};
+            vf = vfmaq_f64(vf, vfc, vamp);
+            fit0[i] = vgetq_lane_f64(vf, 0); fit1[i] = vgetq_lane_f64(vf, 1);
+        }
+        for (; i <= stop1; i++) {
+            vfc = vmulq_f64(vfc, ve);
+            vf = float64x2_t{fit0[i], fit1[i]};
+            vf = vfmaq_f64(vf, vfc, vamp);
+            fit0[i] = vgetq_lane_f64(vf, 0); fit1[i] = vgetq_lane_f64(vf, 1);
+        }
+        vfc = vmulq_f64(vfc, vdupq_n_f64(exp(-(period_n - stop1) * dt / lifetime)));
+        const float64x2_t vtail = vdupq_n_f64(tail_a);
+        for (i = 0; i <= stop; i++) {
+            vfc = vmulq_f64(vfc, ve);
+            vf = float64x2_t{fit0[i], fit1[i]};
+            vf = vfmaq_f64(vf, vmulq_f64(vfc, vamp), vtail);
+            fit0[i] = vgetq_lane_f64(vf, 0); fit1[i] = vgetq_lane_f64(vf, 1);
+        }
+    }
+}
+#endif // TTTRLIB_COMPILE_NEON
+
+
+void fconv_per_cs_2ch(double *fit0, double *fit1,
+                      const double *x0, const double *x1,
+                      const double *lamp0, const double *lamp1,
+                      int numexp, int stop, int n_points,
+                      double period, int conv_stop, double dt) {
+#if TTTRLIB_COMPILE_NEON
+    if (tttrlib::cpu_features::get_neon_enabled()) {
+        fconv_per_cs_2ch_neon(fit0, fit1, x0, x1, lamp0, lamp1,
+                              numexp, stop, n_points, period, conv_stop, dt);
+        return;
+    }
+#endif
+    // Scalar fallback: two independent single-channel convolutions.
+    fconv_per_cs(fit0, const_cast<double *>(x0), const_cast<double *>(lamp0),
+                 numexp, stop, n_points, period, conv_stop, dt);
+    fconv_per_cs(fit1, const_cast<double *>(x1), const_cast<double *>(lamp1),
+                 numexp, stop, n_points, period, conv_stop, dt);
+}
+
+
 /* fast convolution with reference compound decay */
 void fconv_ref(double *fit, double *x, double *lamp, int numexp, int start, int stop, double tauref, double dt) {
     double deltathalf = dt * 0.5, sum_a = 0;
