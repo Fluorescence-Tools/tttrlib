@@ -3,6 +3,7 @@
 #include "include/Verbose.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 
@@ -43,6 +44,69 @@ inline void apply_corrections(double *corrections) {
     fit_corrections.l1 = corrections[2];
     fit_corrections.l2 = corrections[3];
     fit_corrections.convolution_stop = static_cast<int>(corrections[4]);
+}
+
+// Bounded derivative-free 1-D minimiser (Brent 1973 / Forsythe-Malcolm-Moler).
+// Minimises the fit23 target over the lifetime tau on [a, b] with the other
+// parameters held at their values in ``xtmpl``. Used for the common case where
+// only tau is free (gamma/r0/rho fixed): it converges in far fewer objective
+// evaluations than the general BFGS path with numerical gradients, and — being
+// a proper 1-D minimiser — lands on the same MLE minimum. Leaves the model
+// array of ``p`` evaluated at the returned tau.
+inline double brent_minimize_tau(double a, double b, double *xtmpl,
+                                 DecayFitData *p, double tol, int max_iter) {
+    const double gc = 0.5 * (3.0 - std::sqrt(5.0));  // golden-section fraction
+    const double eps = std::sqrt(std::numeric_limits<double>::epsilon());
+    auto feval = [&](double t) -> double {
+        xtmpl[0] = t;
+        return DecayFit23::targetf(xtmpl, p);
+    };
+    double x = a + gc * (b - a), w = x, v = x;
+    double fx = feval(x), fw = fx, fv = fx;
+    double d = 0.0, e = 0.0;
+    for (int iter = 0; iter < max_iter; ++iter) {
+        double m = 0.5 * (a + b);
+        double tol1 = eps * std::fabs(x) + tol;
+        double tol2 = 2.0 * tol1;
+        if (std::fabs(x - m) <= tol2 - 0.5 * (b - a)) break;
+        double pp = 0.0, q = 0.0, r = 0.0;
+        bool golden = true;
+        if (std::fabs(e) > tol1) {  // try a parabolic interpolation step
+            r = (x - w) * (fx - fv);
+            q = (x - v) * (fx - fw);
+            pp = (x - v) * q - (x - w) * r;
+            q = 2.0 * (q - r);
+            if (q > 0.0) pp = -pp;
+            q = std::fabs(q);
+            double etemp = e;
+            e = d;
+            if (std::fabs(pp) < std::fabs(0.5 * q * etemp) &&
+                pp > q * (a - x) && pp < q * (b - x)) {
+                d = pp / q;
+                double u = x + d;
+                if (u - a < tol2 || b - u < tol2)
+                    d = (m > x) ? tol1 : -tol1;
+                golden = false;
+            }
+        }
+        if (golden) {  // fall back to a golden-section step
+            e = (x < m) ? (b - x) : (a - x);
+            d = gc * e;
+        }
+        double u = (std::fabs(d) >= tol1) ? (x + d)
+                                          : (x + ((d > 0.0) ? tol1 : -tol1));
+        double fu = feval(u);
+        if (fu <= fx) {
+            if (u < x) b = x; else a = x;
+            v = w; fv = fw; w = x; fw = fx; x = u; fx = fu;
+        } else {
+            if (u < x) a = u; else b = u;
+            if (fu <= fw || w == x) { v = w; fv = fw; w = u; fw = fu; }
+            else if (fu <= fv || v == x || v == w) { v = u; fv = fu; }
+        }
+    }
+    feval(x);  // leave the model array evaluated at the minimiser
+    return x;
 }
 
 inline double safe_harmonic_mean(double a, double b) {
@@ -227,25 +291,39 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
     int *expdata = p->data.data();
     int Nchannels = p->n_channels();
 
-    bfgs bfgs_o(DecayFit23::targetf, 4);
+    // Fast path: when only the lifetime tau is free (gamma/r0/rho fixed) the
+    // fit is a 1-D minimisation, so use the bounded Brent minimiser instead of
+    // the general BFGS engine — far fewer objective evaluations, same minimum.
+    const bool tau_only = (!fixed[0]) && fixed[1] && fixed[2] && fixed[3];
+    if (tau_only) {
+        double xloc[8];
+        for (int k = 0; k < 8; ++k) xloc[k] = x[k];
+        const double hi = corrections[0] > 0.0
+                              ? corrections[0]                      // excitation period
+                              : std::max(1.0, Nchannels * p->dt);   // else TAC range
+        x[0] = brent_minimize_tau(kMinTau, hi, xloc, p, 1.0e-4, 100);
+        info = 1;
+    } else {
+        bfgs bfgs_o(DecayFit23::targetf, 4);
 
-    bfgs_o.fix(1);    // gamma
-    bfgs_o.fix(2);    // r0
-    bfgs_o.fix(3);    // rho is set in targetf23
+        bfgs_o.fix(1);    // gamma
+        bfgs_o.fix(2);    // r0
+        bfgs_o.fix(3);    // rho is set in targetf23
 
-    // pre-fit with fixed gamma
-    //  bfgs_o.maxiter = 20;
-    if(!fixed[0]){
-        info = bfgs_o.minimize(x, p);
-    }else {
-        bfgs_o.fix(0);
-    }
+        // pre-fit with fixed gamma
+        //  bfgs_o.maxiter = 20;
+        if(!fixed[0]){
+            info = bfgs_o.minimize(x, p);
+        }else {
+            bfgs_o.fix(0);
+        }
 
-    // fit with free gamma
-    // bfgs_o.maxiter = 100;
-    if (!fixed[1] && (x[4] <= 0.)) {
-        bfgs_o.free(1);
-        info = bfgs_o.minimize(x, p);
+        // fit with free gamma
+        // bfgs_o.maxiter = 100;
+        if (!fixed[1] && (x[4] <= 0.)) {
+            bfgs_o.free(1);
+            info = bfgs_o.minimize(x, p);
+        }
     }
 
     // use return_r to get the anisotropy in x
