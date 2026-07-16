@@ -144,7 +144,7 @@ public:
      * @return
      */
     static nlohmann::json get_tag(
-            nlohmann::json json_data,
+            const nlohmann::json &json_data,
             const std::string &name,
             int idx = -1
     );

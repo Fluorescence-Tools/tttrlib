@@ -1385,15 +1385,15 @@ if (is_verbose()) {
 
 
 nlohmann::json TTTRHeader::get_tag(
-        nlohmann::json json_data,
+        const nlohmann::json &json_data,
         const std::string &name,
         int idx
 ){
-    for (auto& it : json_data["tags"].items()) {
+    for (const auto& it : json_data["tags"].items()) {
         if(it.value()["name"] == name){
             if((idx < 0) || (idx == it.value()["idx"])){
 if (is_verbose()) {
-                std::clog << "-- GET_TAG:" << name << ":" << it << std::endl;
+                std::clog << "-- GET_TAG:" << name << ":" << it.value() << std::endl;
 }
                 return it.value();
             }

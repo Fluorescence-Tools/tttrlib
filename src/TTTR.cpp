@@ -275,9 +275,15 @@ void TTTR::shift_macro_time(int shift) {
 
 void TTTR::find_used_routing_channels() {
     used_routing_channels.clear();
+    // A routing channel is one byte, so a fixed lookup table avoids scanning
+    // the growing result vector for every event.  Keep the first-seen order
+    // for API compatibility.
+    std::array<bool, 256> seen{};
     for (size_t i = 0; i < n_valid_events; i++) {
         signed char channel = routing_channels[i];
-        if (std::find(used_routing_channels.begin(), used_routing_channels.end(), channel) == used_routing_channels.end()) {
+        const auto key = static_cast<unsigned char>(channel);
+        if (!seen[key]) {
+            seen[key] = true;
             used_routing_channels.push_back(channel);
         }
     }
