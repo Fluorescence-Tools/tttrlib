@@ -1,0 +1,296 @@
+"""
+ALEX analysis of ISS ``.sm`` files
+==================================
+
+Micro-second **ALEX** (alternating laser excitation) rapidly switches a green
+(donor) and a red (acceptor) laser. Combined with two detectors this yields
+three photon streams per burst:
+
+* ``DD`` – donor emission during green (donor) excitation,
+* ``DA`` – acceptor emission during green excitation (sensitized / FRET),
+* ``AA`` – acceptor emission during red (acceptor) excitation.
+
+From those the FRET efficiency ``E = DA / (DD + DA)`` and the stoichiometry
+``S = (DD + DA) / (DD + DA + AA)`` separate FRET populations (varying ``E``)
+from labelling stoichiometry (donor-only / acceptor-only species at the ``S``
+extremes).
+
+ISS single-molecule ``.sm`` files store only a macro-time and a routing channel
+per photon – there is no TCSPC micro-time. In micro-second ALEX the alternation
+is encoded in the macro-time clock, so :meth:`TTTR.alex_to_microtime` folds the
+macro-time into a synthetic micro-time (``micro = (macro - shift) % period``).
+The excitation window is then recovered by micro-time gating, exactly as for
+pulsed-interleaved (PIE) data.
+
+Because the two lasers do not perfectly fill the period, the folded-phase
+histogram shows **two occupied plateaus separated by rise/fall gaps**. This
+example detects those plateaus automatically and guard-bands their edges so the
+laser-transition photons are dropped (some photon loss is expected). It builds a
+ground-truth ALEX stream, round-trips it through the ``.sm`` container, and
+recovers the injected ``E`` and ``S``; if the reference data set is available
+(``TTTRLIB_DATA``) the real ``sm/data.sm`` file is loaded as well.
+"""
+# %%
+# Imports
+import os
+import tempfile
+from pathlib import Path
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+import tttrlib
+
+# %%
+# ALEX / detector configuration
+# -----------------------------
+# The alternation period is in macro-time units. The green laser is on for an
+# interior window and the red laser for another, with rise/fall gaps between
+# them; keep the period below 65535 because ``alex_to_microtime`` stores the
+# phase as an unsigned short. Donor detector = routing channel 0, acceptor
+# detector = routing channel 1.
+SM_CONTAINER, SM_RECORD_TYPE = 7, 11
+MACRO_RESOLUTION = 1.25e-8            # 12.5 ns macro-time clock
+TY_FLOAT8 = 536870920                # tttrlib tag type for an 8-byte float
+ALEX_PERIOD = 8000
+GREEN_WINDOW = (300, 3700)
+RED_WINDOW = (4300, 7700)
+CH_DONOR, CH_ACCEPTOR = 0, 1
+
+
+# %%
+# Simulate a two-population ALEX stream and write it as ``.sm``
+# ------------------------------------------------------------
+# Each burst is drawn with a known efficiency ``E`` and stoichiometry ``S``.
+# Photons are placed inside the correct laser window, with a small fraction
+# smeared across the window edges to mimic the laser rise/fall.
+def simulate_alex_sm(path, populations, seed=1, smear=0.08):
+    rng = np.random.RandomState(seed)
+    macro, chan = [], []
+    t = np.uint64(0)
+
+    def place(cnt, det, window):
+        lo, hi = window
+        base = t + rng.randint(0, 12000, cnt).astype(np.uint64)
+        ph = lo + rng.randint(0, hi - lo, cnt)
+        n_smear = int(smear * cnt)
+        if n_smear:
+            idx = rng.choice(cnt, n_smear, replace=False)
+            edge = rng.choice([lo, hi], n_smear)
+            ph[idx] = (edge + rng.randint(-150, 150, n_smear)) % ALEX_PERIOD
+        ph = ph.astype(np.uint64)
+        cycle = (base // np.uint64(ALEX_PERIOD)) * np.uint64(ALEX_PERIOD)
+        return cycle + ph, np.full(cnt, det, np.int8)
+
+    for pop in populations:
+        E, S = pop["E"], pop["S"]
+        for _ in range(pop["n"]):
+            t = t + np.uint64(rng.randint(120_000, 260_000))
+            size = 40 + rng.poisson(120)
+            n_green = rng.binomial(size, S)
+            n_red = size - n_green
+            n_da = rng.binomial(n_green, E)
+            n_dd = n_green - n_da
+            for cnt, det, window in [
+                (n_dd, CH_DONOR, GREEN_WINDOW),
+                (n_da, CH_ACCEPTOR, GREEN_WINDOW),
+                (n_red, CH_ACCEPTOR, RED_WINDOW),
+            ]:
+                if cnt == 0:
+                    continue
+                m, c = place(cnt, det, window)
+                macro.append(m)
+                chan.append(c)
+            t = t + np.uint64(12000)
+    macro = np.concatenate(macro)
+    chan = np.concatenate(chan)
+    order = np.argsort(macro, kind="stable")
+    macro = macro[order].astype(np.uint64)
+    chan = chan[order].astype(np.int8)
+
+    d = tttrlib.TTTR()
+    d.append_events(macro, np.zeros(len(macro), np.uint16), chan,
+                    np.zeros(len(macro), np.int8))
+    d.header.tttr_container_type = SM_CONTAINER
+    d.header.tttr_record_type = SM_RECORD_TYPE
+    d.header.set_tag("MeasDesc_GlobalResolution", MACRO_RESOLUTION, TY_FLOAT8)
+    d.write(path)
+
+
+# %%
+# Automatic window detection from the folded-phase distribution
+# -------------------------------------------------------------
+# The two laser-on periods are the two largest occupied plateaus in the phase
+# histogram. ``auto_alex_windows`` finds them, trims a ``guard`` fraction off
+# each edge (dropping the rise/fall transition photons), and labels the
+# donor-brighter window "green".
+def _contiguous_runs(mask):
+    """(start, stop_inclusive) True-runs on a circular boolean array."""
+    mask = np.asarray(mask, dtype=bool)
+    n = len(mask)
+    if n == 0 or not mask.any():
+        return []
+    if mask.all():
+        return [(0, n - 1)]
+    offset = int(np.argmin(mask))
+    rolled = np.roll(mask, -offset)
+    runs, i = [], 0
+    while i < n:
+        if rolled[i]:
+            j = i
+            while j < n and rolled[j]:
+                j += 1
+            runs.append(((i + offset) % n, (j - 1 + offset) % n))
+            i = j
+        else:
+            i += 1
+    return runs
+
+
+def auto_alex_windows(phase, rc, donor_ch, acceptor_ch, period,
+                      n_bins=200, guard=0.06, occupancy=0.35):
+    phase = np.asarray(phase)
+    rc = np.asarray(rc)
+    edges = np.linspace(0, period, n_bins + 1)
+    counts, _ = np.histogram(phase, bins=edges)
+    plateau = np.percentile(counts[counts > 0], 75)
+    runs = _contiguous_runs(counts > occupancy * plateau)
+
+    def run_counts(run):
+        s, e = run
+        return (counts[s:e + 1].sum() if s <= e
+                else counts[s:].sum() + counts[:e + 1].sum())
+
+    runs = sorted(runs, key=run_counts, reverse=True)
+    if len(runs) < 2:
+        raise ValueError("could not find two ALEX laser windows")
+    windows = []
+    for s, e in runs[:2]:
+        lo = float(edges[s])
+        hi = float(edges[e + 1]) if e + 1 < len(edges) else float(period)
+        margin = guard * (hi - lo)
+        windows.append((lo + margin, hi - margin))
+
+    def donor_density(win):
+        lo, hi = win
+        sel = (phase >= lo) & (phase < hi) & np.isin(rc, donor_ch)
+        return sel.sum() / max(hi - lo, 1.0)
+
+    windows.sort(key=donor_density, reverse=True)
+    return {"green": windows[0], "red": windows[1],
+            "phase_hist": counts, "phase_edges": edges}
+
+
+populations = [dict(E=0.20, S=0.55, n=300), dict(E=0.80, S=0.55, n=300)]
+sm_path = os.path.join(tempfile.mkdtemp(), "alex_demo.sm")
+simulate_alex_sm(sm_path, populations)
+
+# %%
+# Load the ``.sm`` file, fold the alternation, and auto-detect the windows
+# ------------------------------------------------------------------------
+data = tttrlib.TTTR(sm_path, "SM")
+print(f"Loaded {len(data)} photons, "
+      f"macro resolution {data.header.macro_time_resolution:.3e} s")
+
+assert int(np.asarray(data.micro_times).max()) == 0  # no micro-time until folded
+data.alex_to_microtime(ALEX_PERIOD, 0)
+mt = np.asarray(data.micro_times)
+rc = np.asarray(data.routing_channels)
+
+win = auto_alex_windows(mt, rc, [CH_DONOR], [CH_ACCEPTOR], ALEX_PERIOD)
+g_lo, g_hi = win["green"]
+r_lo, r_hi = win["red"]
+print(f"Auto windows: green ({g_lo:.0f}, {g_hi:.0f}) true {GREEN_WINDOW}, "
+      f"red ({r_lo:.0f}, {r_hi:.0f}) true {RED_WINDOW}")
+
+# The folded phase distribution with the detected windows shaded.
+centers = 0.5 * (win["phase_edges"][:-1] + win["phase_edges"][1:])
+fig, ax = plt.subplots(figsize=(7, 3.2))
+ax.hist(mt[rc == CH_DONOR], bins=win["phase_edges"],
+        histtype="step", label="donor detector", color="tab:green")
+ax.hist(mt[rc == CH_ACCEPTOR], bins=win["phase_edges"],
+        histtype="step", label="acceptor detector", color="tab:red")
+ax.axvspan(g_lo, g_hi, color="tab:green", alpha=0.10, label="green window")
+ax.axvspan(r_lo, r_hi, color="tab:red", alpha=0.10, label="red window")
+ax.set_xlabel("ALEX phase (macro units)")
+ax.set_ylabel("photons")
+ax.set_title("Folded phase with auto-detected windows")
+ax.legend(frameon=False, fontsize=8)
+plt.tight_layout()
+plt.show()
+
+# %%
+# Burst search and per-burst ALEX streams
+# ---------------------------------------
+# An all-photon sliding-window burst search finds single-molecule events; for
+# each burst the DD / DA / AA photons are counted using the detector channel and
+# the auto-detected excitation windows. Photons in the guard bands are dropped.
+green = (mt >= g_lo) & (mt < g_hi)
+red = (mt >= r_lo) & (mt < r_hi)
+print(f"Photon retention after guard bands: {(green | red).mean():.3f}")
+
+bursts = np.asarray(
+    data.burst_search(L=40, m=10, T=1.0e-3, mode="sliding_window")
+).reshape(-1, 2)
+print(f"Found {len(bursts)} bursts")
+
+i_dd = np.zeros(len(bursts))
+i_da = np.zeros(len(bursts))
+i_aa = np.zeros(len(bursts))
+for k, (s, e) in enumerate(bursts):
+    sl = slice(int(s), int(e) + 1)
+    g, r, c = green[sl], red[sl], rc[sl]
+    i_dd[k] = np.count_nonzero(g & (c == CH_DONOR))
+    i_da[k] = np.count_nonzero(g & (c == CH_ACCEPTOR))
+    i_aa[k] = np.count_nonzero(r & (c == CH_ACCEPTOR))
+
+green_tot = i_dd + i_da
+E = np.divide(i_da, green_tot, out=np.zeros_like(i_da), where=green_tot > 0)
+S = np.divide(green_tot, green_tot + i_aa, out=np.zeros_like(green_tot),
+              where=(green_tot + i_aa) > 0)
+
+# %%
+# The E-S ALEX histogram
+# ----------------------
+# FRET populations separate along ``E`` at a common ``S`` (both are
+# doubly-labelled).
+fig, (axm, axc) = plt.subplots(
+    1, 2, figsize=(9, 4), gridspec_kw=dict(width_ratios=[3, 1]), sharey=True)
+axm.hist2d(E, S, bins=40, range=[[0, 1], [0, 1]], cmap="viridis", cmin=1)
+axm.set_xlabel("FRET efficiency  E")
+axm.set_ylabel("Stoichiometry  S")
+axm.set_title("ALEX E-S histogram")
+axc.hist(S, bins=40, range=(0, 1), orientation="horizontal", color="0.5")
+axc.set_xlabel("bursts")
+plt.tight_layout()
+plt.show()
+
+print("Recovered populations:")
+print(f"  low-E  : {E[E < 0.5].mean():.3f} (injected 0.20)")
+print(f"  high-E : {E[E >= 0.5].mean():.3f} (injected 0.80)")
+print(f"  S mean : {S.mean():.3f} (injected 0.55)")
+
+# %%
+# The reference ISS ``sm/data.sm`` file (optional)
+# ------------------------------------------------
+# When the ``tttr-data`` reference set is available, load the real ISS file to
+# show that ``.sm`` reading and burst search work on instrument data. That file
+# is a continuous-wave, donor-dominated two-colour measurement (no alternation),
+# so it is used here only to demonstrate loading and an intensity trace.
+data_root = os.environ.get("TTTRLIB_DATA")
+real_sm = Path(data_root) / "sm" / "data.sm" if data_root else None
+if real_sm and real_sm.is_file():
+    ref = tttrlib.TTTR(str(real_sm), "SM")
+    dur = float(ref.macro_times.max()) * ref.header.macro_time_resolution
+    print(f"\nsm/data.sm: {len(ref)} photons over {dur:.1f} s, "
+          f"channels {np.unique(ref.routing_channels)}")
+    trace = ref.get_intensity_trace(0.01)  # 10 ms bins
+    fig, ax = plt.subplots(figsize=(7, 2.6))
+    ax.plot(np.arange(len(trace)) * 0.01, trace, lw=0.6, color="tab:green")
+    ax.set_xlabel("time (s)")
+    ax.set_ylabel("counts / 10 ms")
+    ax.set_title("sm/data.sm intensity trace")
+    plt.tight_layout()
+    plt.show()
+else:
+    print("\nTTTRLIB_DATA not set or sm/data.sm missing; skipping real file.")
