@@ -179,7 +179,13 @@ double DecayFit23::targetf(double *x, void *pv) {
     double *irf = p->irf.data(), *bg = p->background.data(),
             *corrections = p->corrections.data(), *M = p->model.data();
     DecayFit23::correct_input(x, xm, corrections, 0);
-    fit_signals.compute_signal_and_background(p);
+    // Sp/Ss/B are data-only and constant during a fit (fit() computes them once
+    // before the optimiser runs); only Bexpected, used by the soft-BIFL term
+    // below, depends on the parameters. So recompute the signal integrals here
+    // only when soft-BIFL is active — otherwise reuse the cached values and save
+    // an O(2*Nchannels) pass on every objective evaluation.
+    if (fit_settings.softbifl)
+        fit_signals.compute_signal_and_background(p);
 
     DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM(M, 1., Nchannels);
