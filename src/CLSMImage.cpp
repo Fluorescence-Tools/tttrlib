@@ -658,7 +658,10 @@ CLSMImage::CLSMImage(
 
         // “No frame marker” case ===
         if (this->settings.marker_frame_start.empty()) {
-            std::clog << "WARNING: No frame marker provided - creating a single full-span frame" << std::endl;
+            if (is_verbose()) {
+                std::clog << "-- CLSM: no frame marker; creating one full-span frame"
+                          << std::endl;
+            }
 
             // Determine total number of valid events
             int n_events = static_cast<int>(tttr_data->get_n_valid_events()); // or tttr_data->n_valid_events
@@ -2655,13 +2658,17 @@ void CLSMImage::get_fluorescence_decay(
     TTTR *tttr_data,
     unsigned char **output, int *dim1, int *dim2, int *dim3, int *dim4,
     int micro_time_coarsening,
-    bool stack_frames
+    bool stack_frames,
+    int max_micro_time_channels
 ) {
     if (is_verbose()) {
         std::clog << "Get decay image" << std::endl;
     }
     size_t nf = (stack_frames) ? 1 : n_frames;
     size_t n_tac = tttr_data->header->get_number_of_micro_time_channels() / micro_time_coarsening;
+    if (max_micro_time_channels > 0) {
+        n_tac = std::min(n_tac, static_cast<size_t>(max_micro_time_channels));
+    }
     *dim1 = static_cast<int>(nf);
     *dim2 = static_cast<int>(n_lines);
     *dim3 = static_cast<int>(n_pixel);
@@ -2683,6 +2690,34 @@ void CLSMImage::get_fluorescence_decay(
     // frame loop serially; non-stacked frames are independent and parallel.
     if (!pixels_materialized_ && !stream_masks_.empty()) {
         const unsigned short* mt = tttr_data->micro_times;
+        if (micro_time_coarsening == 1) {
+            // The overwhelmingly common uncoarsened case needs neither a
+            // 65,536-entry division LUT nor an indirect lookup per photon.
+            if (stack_frames) {
+                // Keep the stacked hot loop branch-free: all frames share the
+                // same output plane, so no frame-stride multiply is needed.
+                for_each_mask_photon(false,
+                    [&](int, size_t l, CLSMLine*, int p, int i) {
+                        if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                        const size_t q = mt[i];
+                        if (q >= n_tac) return;
+                        t[(l * n_pixel + static_cast<size_t>(p)) * n_tac + q] += 1;
+                    });
+            } else {
+                const size_t frame_stride = n_lines * n_pixel * n_tac;
+                for_each_mask_photon(true,
+                    [&](int f, size_t l, CLSMLine*, int p, int i) {
+                        if (l >= n_lines || static_cast<size_t>(p) >= n_pixel) return;
+                        const size_t q = mt[i];
+                        if (q >= n_tac) return;
+                        const size_t base = static_cast<size_t>(f) * frame_stride +
+                                            (l * n_pixel + static_cast<size_t>(p)) * n_tac;
+                        t[base + q] += 1;
+                    });
+            }
+            *output = t;
+            return;
+        }
         // Micro time -> histogram bin lookup (identical to the division,
         // computed once per possible micro time; -1 marks out-of-range bins)
         std::vector<int32_t> tac_lut(65536);
@@ -4038,4 +4073,3 @@ std::vector<double> CLSMImage::get_cumulative_durations(int frame_idx, int line_
     const std::vector<double>* c = line_cumsum(static_cast<size_t>(line_idx));
     return c ? *c : std::vector<double>{};
 }
-

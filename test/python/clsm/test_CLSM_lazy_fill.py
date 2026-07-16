@@ -37,7 +37,9 @@ def make_clsm_tttr(n_frames, n_lines, n_pixel, photons_per_line, seed=1):
     chan = np.concatenate([np.asarray(x, dtype=np.int8) for x in chans])
     etyp = np.concatenate([np.asarray(x, dtype=np.int8) for x in types])
     micro = np.concatenate([np.asarray(x, dtype=np.uint16) for x in micros])
-    return tttrlib.TTTR(macro, micro, chan, etyp)
+    tttr = tttrlib.TTTR(macro, micro, chan, etyp)
+    tttr.header.set_number_of_micro_time_channels(4096)
+    return tttr
 
 
 def make_img(tttr, n_lines, n_pixel, **kw):
@@ -85,6 +87,48 @@ class TestCLSMLazyFill(unittest.TestCase):
         _ = img2[0]  # force materialization
         i_mat = np.asarray(img2.intensity)
         np.testing.assert_array_equal(i_lazy, i_mat)
+
+    def test_uncoarsened_decay_fast_path_matches_materialized(self):
+        """The direct coarsening=1 histogram matches the legacy pixel path."""
+        tttr = make_clsm_tttr(3, 16, 16, 120)
+        img = make_img(tttr, 16, 16)
+        img.fill(tttr_data=tttr, channels=[1, 2])
+        decay_lazy = np.asarray(
+            img.get_fluorescence_decay(
+                tttr, micro_time_coarsening=1, stack_frames=False
+            )
+        )
+
+        img2 = make_img(tttr, 16, 16)
+        img2.fill(tttr_data=tttr, channels=[1, 2])
+        _ = img2[0]  # force materialization and the legacy traversal
+        decay_materialized = np.asarray(
+            img2.get_fluorescence_decay(
+                tttr, micro_time_coarsening=1, stack_frames=False
+            )
+        )
+        np.testing.assert_array_equal(decay_lazy, decay_materialized)
+
+    def test_decay_micro_time_axis_can_be_capped(self):
+        """An explicit TAC cap is the prefix of the full decay cube."""
+        tttr = make_clsm_tttr(2, 8, 8, 80)
+        img = make_img(tttr, 8, 8)
+        img.fill(tttr_data=tttr, channels=[1, 2])
+        full = np.asarray(
+            img.get_fluorescence_decay(
+                tttr, micro_time_coarsening=1, stack_frames=True
+            )
+        )
+        capped = np.asarray(
+            img.get_fluorescence_decay(
+                tttr,
+                micro_time_coarsening=1,
+                stack_frames=True,
+                max_micro_time_channels=1024,
+            )
+        )
+        self.assertEqual(capped.shape[-1], 1024)
+        np.testing.assert_array_equal(capped, full[..., :1024])
 
     def test_stale_handle_survives_refill(self):
         """A line handle obtained before a refill sees the new fill's photons."""

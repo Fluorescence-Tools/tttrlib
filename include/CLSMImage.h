@@ -637,12 +637,18 @@ public:
      *                            value is 1, and the micro times are binned without
      *                            coarsening.
      * @param stack_frames        If true, the frames are stacked.
+     * @param max_micro_time_channels If positive, cap the returned micro-time
+     *                            axis at this many channels. This avoids
+     *                            allocating unused bins beyond one excitation
+     *                            period while the default (-1) preserves the
+     *                            full hardware TAC axis.
      */
     void get_fluorescence_decay(
         TTTR *tttr_data,
         unsigned char **output, int *dim1, int *dim2, int *dim3, int *dim4,
         int micro_time_coarsening = 1,
-        bool stack_frames = false
+        bool stack_frames = false,
+        int max_micro_time_channels = -1
     );
 
 
