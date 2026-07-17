@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="performance_guide.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This page summarizes tips for fast and memory-efficient use of tttrlib. Selections and Slicing: Prefer sequential selections when possible; they are faster and more memory-friendly., Slice early to..." />
+<meta property="og:description" content="This page summarizes tips for fast and memory-efficient use of tttrlib and tracks how performance and memory consumption evolve across releases. Cross-version performance &amp; memory (0.27.0 vs 0...." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_performance_guide_cda972ce.png" />
-<meta property="og:image:alt" content="This page summarizes tips for fast and memory-efficient use of tttrlib. Selections and Slicing: Prefer sequential selections when possible; they are faster and more memory-friendly., Slice early to..." />
-<meta name="description" content="This page summarizes tips for fast and memory-efficient use of tttrlib. Selections and Slicing: Prefer sequential selections when possible; they are faster and more memory-friendly., Slice early to..." />
+<meta property="og:image" content="_images/social_previews/summary_performance_guide_33499d7f.png" />
+<meta property="og:image:alt" content="This page summarizes tips for fast and memory-efficient use of tttrlib and tracks how performance and memory consumption evolve across releases. Cross-version performance &amp; memory (0.27.0 vs 0...." />
+<meta name="description" content="This page summarizes tips for fast and memory-efficient use of tttrlib and tracks how performance and memory consumption evolve across releases. Cross-version performance &amp; memory (0.27.0 vs 0...." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Performance Guide &#8212; tttrlib v0.27.0</title>
@@ -69,8 +69,8 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Roadmap" href="roadmap.html" />
-    <link rel="prev" title="About us" href="about.html" />
+    <link rel="next" title="User Guide" href="user_guide.html" />
+    <link rel="prev" title="9. Fluorescence Decay Fitting" href="fit-guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -280,6 +280,13 @@
 </li>
 
 
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Performance Guide
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
     User Guide
@@ -360,13 +367,6 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="contents.html">
     Table Of Contents
-  </a>
-</li>
-
-
-<li class=" current active">
-  <a class="nav-link dropdown-item nav-internal" href="#">
-    Performance Guide
   </a>
 </li>
 
@@ -579,6 +579,13 @@
 </li>
 
 
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Performance Guide
+  </a>
+</li>
+
+
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="user_guide.html">
     User Guide
@@ -659,13 +666,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="contents.html">
     Table Of Contents
-  </a>
-</li>
-
-
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    Performance Guide
   </a>
 </li>
 
@@ -800,7 +800,110 @@
                   
   <section id="performance-guide">
 <h1>Performance Guide<a class="headerlink" href="#performance-guide" title="Link to this heading">#</a></h1>
-<p>This page summarizes tips for fast and memory-efficient use of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.</p>
+<p>This page summarizes tips for fast and memory-efficient use of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> and
+tracks how performance and memory consumption evolve across releases.</p>
+<section id="cross-version-performance-memory-0-27-0-vs-0-26-2">
+<h2>Cross-version performance &amp; memory (0.27.0 vs 0.26.2)<a class="headerlink" href="#cross-version-performance-memory-0-27-0-vs-0-26-2" title="Link to this heading">#</a></h2>
+<p>Release 0.27.0 is a performance <strong>and</strong> memory release. Confocal (CLSM/FLIM)
+image reconstruction moved to a lazy, per-event stream-mask fill: instead of
+eagerly materializing a <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> of photon indices per pixel, <code class="docutils literal notranslate"><span class="pre">fill()</span></code>
+stores a one-bit-per-event acceptance mask and builds per-pixel containers only
+when a pixel handle is actually requested. Intensity, lifetime, phasor and
+tttr-index queries run straight off the mask. The new
+<code class="docutils literal notranslate"><span class="pre">CLSMImage(...,</span> <span class="pre">build_pixels=False)</span></code> “virtual fill” skips per-pixel allocation
+entirely for intensity-only work.</p>
+<p>The numbers below are produced by the cross-version monitor in
+<code class="docutils literal notranslate"><span class="pre">benchmarks/</span></code> (<code class="docutils literal notranslate"><span class="pre">bench_versions.py</span></code> + <code class="docutils literal notranslate"><span class="pre">make_version_plots.py</span></code>), which runs
+each released version in its own isolated environment and the working-tree build
+in the base environment, one task per subprocess. Wall time is the best of
+several repeats; <strong>memory is the task footprint — peak process RSS minus the
+post-import baseline</strong> — measured with <code class="docutils literal notranslate"><span class="pre">getrusage</span></code> because the wins live in the
+C++ heap, which <code class="docutils literal notranslate"><span class="pre">tracemalloc</span></code> cannot see. Machine: Apple M1 Pro, CPU only.</p>
+<a class="reference internal image-reference" href="_images/summary_versions.png"><img alt="Peak-memory change of tttrlib 0.27.0 vs 0.26.2 per task" src="_images/summary_versions.png" style="width: 90%;" />
+</a>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">tttrlib 0.27.0 vs 0.26.2 (same machine, same inputs; negative Δ is better)</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 38.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 10.0%" />
+<col style="width: 12.0%" />
+<col style="width: 10.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Task</p></th>
+<th class="head"><p>0.26.2 time</p></th>
+<th class="head"><p>0.27.0 time</p></th>
+<th class="head"><p>Δ time</p></th>
+<th class="head"><p>Δ memory</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CLSM fill+structure (512×512 PTU)</p></td>
+<td><p>125 ms</p></td>
+<td><p>46 ms</p></td>
+<td><p><strong>−63%</strong></p></td>
+<td><p><strong>−12%</strong></p></td>
+<td><p>lazy stream-mask fill</p></td>
+</tr>
+<tr class="row-odd"><td><p>CLSM fill, 2.6 M-pixel FLIM image (40×256×256 HT3)</p></td>
+<td><p>1484 ms</p></td>
+<td><p>279 ms</p></td>
+<td><p><strong>−81%</strong></p></td>
+<td><p><strong>−40%</strong></p></td>
+<td><p>largest memory win</p></td>
+</tr>
+<tr class="row-even"><td><p>Correlation / FCS (3.5 M photons)</p></td>
+<td><p>438 ms</p></td>
+<td><p>279 ms</p></td>
+<td><p>−36%</p></td>
+<td><p>−7%</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>TTTR file reading (3.5 M-photon PTU)</p></td>
+<td><p>31 ms</p></td>
+<td><p>30 ms</p></td>
+<td><p>−4%</p></td>
+<td><p>≈0</p></td>
+<td><p>I/O bound</p></td>
+</tr>
+<tr class="row-even"><td><p>Burst search (3.5 M photons)</p></td>
+<td><p>2.7 ms</p></td>
+<td><p>2.8 ms</p></td>
+<td><p>≈0</p></td>
+<td><p>≈0</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>CLSM intensity, virtual fill (512×512 PTU)</p></td>
+<td><p>—</p></td>
+<td><p>22 ms</p></td>
+<td><p>new</p></td>
+<td><p>new</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">build_pixels=False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Per-pixel reconvolution-MLE map (256×256)</p></td>
+<td><p>—</p></td>
+<td><p>900 ms</p></td>
+<td><p>new</p></td>
+<td><p>new</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">FitNExp.fit_map</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>To reproduce or extend to a future version:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">benchmarks</span>
+<span class="n">python</span> <span class="n">bench_versions</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">versions</span> <span class="mf">0.26.2</span> <span class="mf">0.27.0</span><span class="o">=</span><span class="n">local</span>
+<span class="n">python</span> <span class="n">make_version_plots</span><span class="o">.</span><span class="n">py</span>     <span class="c1"># -&gt; plots/versions/*.png + summary.md</span>
+</pre></div>
+</div>
+<p>Honest caveat: the warm mean-lifetime / phasor caches trade a little resident
+memory (a few tens of bytes per pixel) for large speed-ups when the IRF,
+background or modulation frequency is re-tuned on an already-built map — the
+opposite direction from the fill wins above, and only paid once a cache is warm.</p>
+</section>
 <section id="selections-and-slicing">
 <h2>Selections and Slicing<a class="headerlink" href="#selections-and-slicing" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -870,20 +973,20 @@ and I/O stages.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="about.html"
+       href="fit-guide.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">About us</p>
+        <p class="prev-next-title"><span class="section-number">9. </span>Fluorescence Decay Fitting</p>
       </div>
     </a>
     <a class="right-next"
-       href="roadmap.html"
+       href="user_guide.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Roadmap</p>
+        <p class="prev-next-title">User Guide</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -906,6 +1009,7 @@ and I/O stages.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-version-performance-memory-0-27-0-vs-0-26-2">Cross-version performance &amp; memory (0.27.0 vs 0.26.2)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#selections-and-slicing">Selections and Slicing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#correlation">Correlation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-histogramming">Lifetime/Histogramming</a></li>

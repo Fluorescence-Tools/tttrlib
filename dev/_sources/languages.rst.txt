@@ -68,11 +68,13 @@ Install
    .. tab-item:: Java
       :sync: java
 
-      Download ``tttrlib-imagej-plugin.jar`` from the
-      `GitHub releases <https://github.com/Fluorescence-Tools/tttrlib/releases>`__
-      page. It bundles the native library for Linux, macOS (Intel + Apple
-      Silicon), and Windows — drop it on the class path, or into ``Fiji.app/plugins``
-      to use it as an ImageJ plugin. Details in :doc:`imagej-plugin`.
+      The easiest install is to download the ready-built plugin JAR
+      ``tttrlib_imagej-<version>.jar`` from the latest
+      `GitHub release <https://github.com/Fluorescence-Tools/tttrlib/releases>`__
+      (under *Assets*). It bundles the native library for Linux, macOS (Intel +
+      Apple Silicon), and Windows — drop it on the class path, or into
+      ``Fiji.app/plugins`` to use it as an ImageJ plugin. Details in
+      :doc:`imagej-plugin`.
 
 
 Load a file and inspect the photon stream
