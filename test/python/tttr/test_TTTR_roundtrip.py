@@ -250,6 +250,36 @@ class TranscodeTests(unittest.TestCase):
         np.testing.assert_array_equal(d.event_types, d2.event_types)
         self.assertEqual(d2.micro_times.max(initial=0), 0)
 
+    def test_ptu_t3_to_ptu_hht2v1(self):
+        # HydraHarp T2 v1 (record type 2): same 6-bit channel field as v2,
+        # so the full photon stream survives; micro times are dropped.
+        d = self.read("ptu_hh_t3_filename", "PTU")
+        d2 = self.transcode(d, 0, 2, ".ptu", "PTU")  # PTU / HHT2v1
+        np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+        np.testing.assert_array_equal(d.routing_channels, d2.routing_channels)
+        np.testing.assert_array_equal(d.event_types, d2.event_types)
+        self.assertEqual(d2.micro_times.max(initial=0), 0)
+
+    def test_ptu_t3_to_generic_t2(self):
+        # MultiHarp / PicoHarp 330 generic T2 (record type 13)
+        d = self.read("ptu_hh_t3_filename", "PTU")
+        d2 = self.transcode(d, 0, 13, ".ptu", "PTU")  # PTU / GENERIC_T2
+        np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+        np.testing.assert_array_equal(d.routing_channels, d2.routing_channels)
+        np.testing.assert_array_equal(d.event_types, d2.event_types)
+        self.assertEqual(d2.micro_times.max(initial=0), 0)
+
+    def test_ptu_t3_to_ptu_pht2(self):
+        # PicoHarp T2 (record type 6): 4-bit channel field. The source photons
+        # live on channels 0 and 2, which fit; micro times are dropped.
+        d = self.read("ptu_hh_t3_filename", "PTU")
+        self.assertLessEqual(int(np.asarray(d.routing_channels).max()), 14)
+        d2 = self.transcode(d, 0, 6, ".ptu", "PTU")  # PTU / PHT2
+        np.testing.assert_array_equal(d.macro_times, d2.macro_times)
+        np.testing.assert_array_equal(d.routing_channels, d2.routing_channels)
+        np.testing.assert_array_equal(d.event_types, d2.event_types)
+        self.assertEqual(d2.micro_times.max(initial=0), 0)
+
     def test_ptu_t3_to_generic_t3(self):
         # MultiHarp / PicoHarp 330 generic T3
         d = self.read("ptu_hh_t3_filename", "PTU")
