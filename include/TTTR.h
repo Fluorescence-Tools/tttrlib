@@ -1386,48 +1386,6 @@ public:
         return get_tttr_by_selection(sel, nsel);
     }
 
-    /*!
-     * @brief Convert a T2 stream into a T3 stream.
-     *
-     * In T2 mode every event carries a single fine time tag (the macro time)
-     * and no micro time. T3 mode instead references each photon to a sync
-     * period: the macro time counts sync periods and the micro time is the
-     * delay within a period. This function re-derives both from the T2 time
-     * tag using a sync period P (in macro-time units):
-     *   n_sync = time_tag / P,   dtime = time_tag % P.
-     *
-     * The returned object has a T3 record type (PQ_RECORD_TYPE_HHT3v2) and can
-     * be written to any T3-capable container. The conversion is lossless as
-     * long as P does not exceed the micro time range (dtime < 65536); larger
-     * dtime values are clamped and a warning is emitted.
-     *
-     * @param sync_rate   Laser sync rate in Hz. When > 0 the sync period is
-     *                    computed as round((1 / sync_rate) / macro_time_resolution).
-     * @param sync_period Sync period directly in macro-time (time-tag) units.
-     *                    Takes precedence over @p sync_rate when > 0.
-     * @return A new T3 TTTR, or nullptr if the sync period cannot be determined.
-     */
-    std::shared_ptr<TTTR> t2_to_t3(double sync_rate = -1, long sync_period = -1);
-
-    /*!
-     * @brief Convert a T3 stream into a T2 stream.
-     *
-     * Merges the macro time (sync-period index) and micro time (dtime) of each
-     * photon into a single fine T2 time tag:
-     *   time_tag = n_sync * n_micro_channels + dtime,   micro_time = 0,
-     * where n_micro_channels is the effective number of micro time channels per
-     * sync period (floor(macro_time_resolution / micro_time_resolution)).
-     *
-     * The returned object has a T2 record type (PQ_RECORD_TYPE_HHT2v2) whose
-     * macro time resolution equals the source micro time resolution, so the
-     * absolute photon arrival times are preserved at TAC resolution. The
-     * conversion is lossy: the dtime/sync split cannot be recovered, and the
-     * routing information of events that share a fine time tag may collide.
-     *
-     * @return A new T2 TTTR.
-     */
-    std::shared_ptr<TTTR> t3_to_t2();
-
      /*!
       * @brief Get time windows (tw) based on specified criteria
       *
