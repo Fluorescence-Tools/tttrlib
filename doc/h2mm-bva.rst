@@ -43,11 +43,11 @@ sits above it.
    bva = tttrlib.BVA(bf)                     # reuse the filter's bursts + TTTR
    bva.set_donor([0])                        # donor routing channel(s)
    bva.set_acceptor([1])                     # acceptor routing channel(s)
-   bva.compute(number_of_photons_per_slice=5)
+   bva.compute(bf.get_bursts(), 5)           # burst bounds, photons per slice
 
-   mean = bva.proximity_ratio_mean           # per-burst mean PR
-   std = bva.proximity_ratio_std             # per-burst std of PR
-   # shot-noise-limited reference line
+   mean = bva.proximity_ratio_mean           # per-burst mean PR (NumPy array)
+   std = bva.proximity_ratio_std             # per-burst std of PR (NumPy array)
+   # shot-noise-limited reference: proximity-ratio bins and the std line
    bins, line = tttrlib.BVA.compute_static_bva_line([0.1, 0.5, 0.9], 5)
 
 Photon-by-photon HMM (H2MM)

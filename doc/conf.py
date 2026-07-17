@@ -93,7 +93,11 @@ def _try_import(modname: str) -> bool:
         print(f"[conf] Skipping '{modname}' (not importable in this env).")
         return False
 
-BUILD_TIER = int(os.environ.get("BUILD_TIER", "0"))
+# On Read the Docs default to the full build (tier 4: style, numpydoc,
+# notebooks, citations + gallery) so the hosted site matches the GitHub Pages
+# build. Locally the default stays at the safest tier 0 unless BUILD_TIER is set.
+_DEFAULT_BUILD_TIER = "4" if os.environ.get("READTHEDOCS") else "0"
+BUILD_TIER = int(os.environ.get("BUILD_TIER", _DEFAULT_BUILD_TIER))
 
 CORE_EXTS = [
     "sphinx.ext.autodoc",
