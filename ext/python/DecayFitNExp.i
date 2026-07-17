@@ -11,6 +11,8 @@
 #ifdef SWIGPYTHON
 TTTRLIB_NOGIL(DecayFitNExp::fit)
 TTTRLIB_NOGIL(DecayFitNExp::fit_fixed_lifetimes)
+TTTRLIB_NOGIL(DecayFitNExp::fit_buffers)
+TTTRLIB_NOGIL(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NOGIL(DecayFitNExp::fit_batch_flat)
 #elif defined(SWIGJAVA)
 %define TTTRLIB_NEXP_JAVA_EXCEPTION(Method)
@@ -28,6 +30,8 @@ TTTRLIB_NOGIL(DecayFitNExp::fit_batch_flat)
 %enddef
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit)
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes)
+TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_buffers)
+TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_batch_flat)
 #elif defined(SWIGR)
 %define TTTRLIB_NEXP_R_EXCEPTION(Method)
@@ -43,11 +47,29 @@ TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_batch_flat)
 %enddef
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit)
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes)
+TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_buffers)
+TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_batch_flat)
 #endif
 
 // VectorDouble and VectorInt32 are declared by misc_types.i before this file is
-// included from DecayFit.i.  Keeping the interface vector-based avoids custom
-// NumPy ownership or lifetime rules and is also suitable for the R/Java SWIG
-// surfaces if they opt into this core later.
+// included from DecayFit.i.  Keeping the vector-based fit()/fit_fixed_lifetimes()
+// avoids custom NumPy ownership rules and stays suitable for R/Java.
+//
+// The *_buffers() overloads take raw array buffers so Python can pass NumPy
+// arrays directly (one copy each) instead of boxing every element through a
+// Python list, which dominates the cost of a single small fit.
+%apply (double* IN_ARRAY1, int DIM1) {
+    (double* data, int n_data),
+    (double* irf, int n_irf),
+    (double* background, int n_background),
+    (double* initial_lifetimes, int n_lifetimes),
+    (double* initial_amplitudes, int n_amplitudes),
+    (double* fdata, int n_fdata),
+    (double* firf, int n_firf),
+    (double* fbackground, int n_fbackground),
+    (double* flifetimes, int n_flifetimes),
+    (double* famplitudes, int n_famplitudes)
+};
+%apply (int* IN_ARRAY1, int DIM1) {(int* lifetime_fixed, int n_fixed)};
 %include "DecayFitNExp.h"

@@ -297,6 +297,7 @@ class FitNExp(Fit2x):
             max_outer_iterations=20,
             max_em_iterations=500,
             initial_background_fraction=0.01,
+            coordinate_grid_intervals=24,
     ):
         self._irf = np.ascontiguousarray(irf, dtype=np.float64)
         if self._irf.ndim != 1 or self._irf.size == 0:
@@ -323,6 +324,7 @@ class FitNExp(Fit2x):
         self._options.em_tolerance = float(em_tolerance)
         self._options.max_outer_iterations = int(max_outer_iterations)
         self._options.max_em_iterations = int(max_em_iterations)
+        self._options.coordinate_grid_intervals = int(coordinate_grid_intervals)
         self._options.initial_background_fraction = float(
             initial_background_fraction
         )
@@ -336,7 +338,7 @@ class FitNExp(Fit2x):
                 "dt", "period", "convolution_stop", "tau_min", "tau_max",
                 "lifetime_tolerance", "likelihood_tolerance",
                 "em_tolerance", "max_outer_iterations", "max_em_iterations",
-                "initial_background_fraction",
+                "coordinate_grid_intervals", "initial_background_fraction",
         ):
             setattr(options, name, getattr(self._options, name))
         options.include_model = bool(include_model)
@@ -415,16 +417,16 @@ class FitNExp(Fit2x):
         lifetimes, amplitudes, fixed_arr = self._component_inputs(
             initial_lifetimes, initial_amplitudes, fixed
         )
-        result = DecayFitNExp.fit(
-            data_arr.tolist(),
-            self._irf.tolist(),
-            self._background.tolist(),
-            lifetimes.tolist(),
-            amplitudes.tolist(),
-            fixed_arr.tolist(),
+        result = DecayFitNExp.fit_buffers(
+            data_arr,
+            self._irf,
+            self._background,
+            lifetimes,
+            amplitudes,
+            fixed_arr,
             self._call_options(include_model),
         )
-        self._last_data = data_arr.copy()
+        self._last_data = data_arr
         self._last_model = np.asarray(result.model, dtype=np.float64)
         return self._result_dict(result, include_model)
 
@@ -444,15 +446,15 @@ class FitNExp(Fit2x):
             lifetimes, initial_amplitudes,
             np.ones(len(lifetimes), dtype=np.int32),
         )
-        result = DecayFitNExp.fit_fixed_lifetimes(
-            data_arr.tolist(),
-            self._irf.tolist(),
-            self._background.tolist(),
-            lifetimes.tolist(),
-            amplitudes.tolist(),
+        result = DecayFitNExp.fit_fixed_lifetimes_buffers(
+            data_arr,
+            self._irf,
+            self._background,
+            lifetimes,
+            amplitudes,
             self._call_options(include_model),
         )
-        self._last_data = data_arr.copy()
+        self._last_data = data_arr
         self._last_model = np.asarray(result.model, dtype=np.float64)
         return self._result_dict(result, include_model)
 

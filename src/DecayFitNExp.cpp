@@ -312,14 +312,15 @@ template <typename Function>
 CoordinateMinimum multistart_coordinate_minimize(
         double lower, double upper, double current_lifetime,
         double current_nll, Function&& function, double tolerance,
-        int max_iterations) {
+        int max_iterations, int grid_intervals) {
+    if (grid_intervals < 1) grid_intervals = 1;
     std::vector<double> lifetimes;
-    lifetimes.reserve(kCoordinateGridIntervals + 2);
+    lifetimes.reserve(grid_intervals + 2);
     const double log_lower = std::log(lower);
     const double log_span = std::log(upper) - log_lower;
-    for (int i = 0; i <= kCoordinateGridIntervals; ++i) {
+    for (int i = 0; i <= grid_intervals; ++i) {
         const double fraction = static_cast<double>(i) /
-                                static_cast<double>(kCoordinateGridIntervals);
+                                static_cast<double>(grid_intervals);
         lifetimes.push_back(std::exp(log_lower + fraction * log_span));
     }
     lifetimes.push_back(current_lifetime);
@@ -376,6 +377,40 @@ void validate_options(const DecayFitNExpOptions& options) {
 
 } // namespace
 
+
+DecayFitNExpResult DecayFitNExp::fit_buffers(
+        double* data, int n_data,
+        double* irf, int n_irf,
+        double* background, int n_background,
+        double* initial_lifetimes, int n_lifetimes,
+        double* initial_amplitudes, int n_amplitudes,
+        int* lifetime_fixed, int n_fixed,
+        const DecayFitNExpOptions& options) {
+    return fit(
+            std::vector<double>(data, data + n_data),
+            std::vector<double>(irf, irf + n_irf),
+            std::vector<double>(background, background + n_background),
+            std::vector<double>(initial_lifetimes, initial_lifetimes + n_lifetimes),
+            std::vector<double>(initial_amplitudes, initial_amplitudes + n_amplitudes),
+            std::vector<int>(lifetime_fixed, lifetime_fixed + n_fixed),
+            options);
+}
+
+DecayFitNExpResult DecayFitNExp::fit_fixed_lifetimes_buffers(
+        double* fdata, int n_fdata,
+        double* firf, int n_firf,
+        double* fbackground, int n_fbackground,
+        double* flifetimes, int n_flifetimes,
+        double* famplitudes, int n_famplitudes,
+        const DecayFitNExpOptions& options) {
+    return fit_fixed_lifetimes(
+            std::vector<double>(fdata, fdata + n_fdata),
+            std::vector<double>(firf, firf + n_firf),
+            std::vector<double>(fbackground, fbackground + n_fbackground),
+            std::vector<double>(flifetimes, flifetimes + n_flifetimes),
+            std::vector<double>(famplitudes, famplitudes + n_famplitudes),
+            options);
+}
 
 DecayFitNExpResult DecayFitNExp::fit(
         const std::vector<double>& data,
@@ -451,7 +486,8 @@ DecayFitNExpResult DecayFitNExp::fit(
                         multistart_coordinate_minimize(
                                 options.tau_min, options.tau_max, lifetimes[k],
                                 profile.nll, objective,
-                                options.lifetime_tolerance, 100);
+                                options.lifetime_tolerance, 100,
+                                options.coordinate_grid_intervals);
                 const double threshold = options.likelihood_tolerance *
                                          (1.0 + std::fabs(profile.nll));
                 if (profile.nll - candidate.nll <= threshold) continue;

@@ -28,6 +28,13 @@ struct DecayFitNExpOptions {
     int max_em_iterations = 500;
     double initial_background_fraction = 0.01;
     bool include_model = true;
+
+    /// Number of log-spaced starting points for the per-lifetime global search.
+    /// Higher is more robust against local minima but linearly slower; each
+    /// visible basin is still Brent-refined. 24 is the robust default; a
+    /// well-conditioned 1-2 exponential fit with a decent initial guess is
+    /// typically fine at 8 (about 1.7x faster).
+    int coordinate_grid_intervals = 24;
 };
 
 
@@ -78,6 +85,27 @@ public:
             const std::vector<double>& initial_lifetimes,
             const std::vector<double>& initial_amplitudes,
             const std::vector<int>& lifetime_fixed,
+            const DecayFitNExpOptions& options);
+
+    /// numpy-buffer overload of fit(): the language binding passes array buffers
+    /// directly (single copy each), avoiding the per-element Python list <->
+    /// std::vector marshalling that dominates a single small fit.
+    static DecayFitNExpResult fit_buffers(
+            double* data, int n_data,
+            double* irf, int n_irf,
+            double* background, int n_background,
+            double* initial_lifetimes, int n_lifetimes,
+            double* initial_amplitudes, int n_amplitudes,
+            int* lifetime_fixed, int n_fixed,
+            const DecayFitNExpOptions& options);
+
+    /// numpy-buffer overload of fit_fixed_lifetimes().
+    static DecayFitNExpResult fit_fixed_lifetimes_buffers(
+            double* fdata, int n_fdata,
+            double* firf, int n_firf,
+            double* fbackground, int n_fbackground,
+            double* flifetimes, int n_flifetimes,
+            double* famplitudes, int n_famplitudes,
             const DecayFitNExpOptions& options);
 
     /**
