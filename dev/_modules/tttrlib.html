@@ -10207,7 +10207,14 @@
 <span class="sd">        beta: double</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">burst_search_sliding_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -10220,7 +10227,14 @@
 <span class="sd">        T: double</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search_sliding_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search_sliding_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">burst_search_cusum_sprt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_photons</span><span class="p">,</span> <span class="n">background_cps</span><span class="p">,</span> <span class="n">signal_to_background_ratio</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -10235,7 +10249,14 @@
 <span class="sd">        beta: double</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search_cusum_sprt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_photons</span><span class="p">,</span> <span class="n">background_cps</span><span class="p">,</span> <span class="n">signal_to_background_ratio</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">TTTR_burst_search_cusum_sprt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_photons</span><span class="p">,</span> <span class="n">background_cps</span><span class="p">,</span> <span class="n">signal_to_background_ratio</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">offset_macro_time</span><span class="p">,</span> <span class="n">channel_offset</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -12117,11 +12138,25 @@
 <span class="sd">        burst_index: size_t</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BurstFilter_get_burst_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">burst_index</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BurstFilter_get_burst_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">burst_index</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_burst_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;get_all_burst_properties(self) -&gt; VectorDouble_2D&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BurstFilter_get_all_burst_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BurstFilter_get_all_burst_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_row</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="k">for</span> <span class="n">_row</span> <span class="ow">in</span> <span class="n">val</span><span class="p">])</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_burst_photons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_bursts</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -12129,7 +12164,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        selected_bursts: std::vector&lt; int64_t,std::allocator&lt; int64_t &gt; &gt; const &amp;</span>
+<span class="sd">        selected_bursts: long long *</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BurstFilter_get_burst_photons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_bursts</span><span class="p">)</span>
@@ -12449,7 +12484,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all burst properties as a structured NumPy array.&quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
         <span class="n">props</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_all_burst_properties</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">props</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># ndarray: no truthiness</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span>
                 <span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
                 <span class="p">(</span><span class="s1">&#39;duration&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;count_rate&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
@@ -12659,7 +12694,7 @@
             <span class="p">(</span><span class="s1">&#39;duration&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
             <span class="p">(</span><span class="s1">&#39;count_rate&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
         <span class="p">])</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">props</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">props</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># works for both sequences and ndarrays</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">props</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
@@ -12791,7 +12826,14 @@
 <span class="sd">        number_of_photons_per_slice: int</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BVA_compute_static_bva_line</span><span class="p">(</span><span class="n">prox_mean_bins</span><span class="p">,</span> <span class="n">number_of_photons_per_slice</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">BVA_compute_static_bva_line</span><span class="p">(</span><span class="n">prox_mean_bins</span><span class="p">,</span> <span class="n">number_of_photons_per_slice</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+               <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">proximity_ratio_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -13920,7 +13962,14 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_unique_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;get_unique_dt(self) -&gt; VectorInt64&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">H2MM_get_unique_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">H2MM_get_unique_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">min_trans</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">accelerate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">single_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
