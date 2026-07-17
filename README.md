@@ -62,6 +62,27 @@ same machine** (reproducible suite in [`benchmarks/`](benchmarks/)):
 
 ![tttrlib speedup vs competitors](benchmarks/plots/summary_speedup.png)
 
+### 0.27.0 — a performance & memory release
+
+0.27.0 makes confocal (CLSM/FLIM) reconstruction both faster and much lighter on
+memory. `fill()` now uses a lazy per-event stream-mask (one bit per event)
+instead of eagerly materializing a per-pixel photon-index vector, and the new
+`CLSMImage(..., build_pixels=False)` virtual fill skips per-pixel allocation
+entirely for intensity-only work. Measured against the previous release **0.26.2**
+on the same machine and inputs (task memory = peak RSS minus the post-import
+baseline; full method and per-task charts in the
+[performance guide](https://tttrlib.readthedocs.io/en/latest/performance_guide.html)
+and [`benchmarks/`](benchmarks/)):
+
+| Task | 0.26.2 | 0.27.0 | Faster | Less memory |
+|------|-------:|-------:|:------:|:-----------:|
+| CLSM fill + structure (512×512 PTU) | 125 ms | 46 ms | **2.7×** | **−12%** |
+| CLSM fill, 2.6 M-pixel FLIM image (HT3) | 1484 ms | 279 ms | **5.3×** | **−40%** |
+| Correlation / FCS (3.5 M photons) | 438 ms | 279 ms | 1.6× | −7% |
+
+<sub>Apple M1 Pro, CPU only. Regenerate with `python benchmarks/bench_versions.py
+--versions 0.26.2 0.27.0=local && python benchmarks/make_version_plots.py`.</sub>
+
 ### What tttrlib now wins
 
 CPU only, no GPU, identical data.

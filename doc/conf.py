@@ -38,6 +38,20 @@ sys.path.insert(0, str(PROJECT_ROOT / "examples"))
 # Ensure static dir exists
 (HERE / "_static").mkdir(exist_ok=True)
 
+# Copy the cross-version benchmark charts (rendered by
+# benchmarks/make_version_plots.py) into _static so performance_guide.rst can
+# embed them. Best-effort: absent charts just leave the page without images.
+try:
+    import shutil as _shutil
+    _bench_src = PROJECT_ROOT / "benchmarks" / "plots" / "versions"
+    if _bench_src.is_dir():
+        _bench_dst = HERE / "_static" / "benchmarks"
+        _bench_dst.mkdir(parents=True, exist_ok=True)
+        for _f in _bench_src.glob("*.png"):
+            _shutil.copy2(_f, _bench_dst / _f.name)
+except Exception as _e:  # never fail the docs build on asset copy
+    print("[conf] benchmark chart copy skipped:", _e)
+
 # ---------------------------------------------------------------------------
 # Project info
 # ---------------------------------------------------------------------------

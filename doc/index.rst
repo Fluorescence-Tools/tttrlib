@@ -112,6 +112,7 @@ Documentation
    simulator-guide
    localization-guide
    fit-guide
+   performance_guide
    user_guide
    modules/index
    auto_examples/index
@@ -128,7 +129,6 @@ Documentation
    install
    configuration
    contents
-   performance_guide
    roadmap
    changes
 

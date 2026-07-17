@@ -110,6 +110,27 @@ python bench_h2mm.py                   # tttrlib H2MM (plain EM + SQUAREM + Vite
 python make_plots.py                  # -> plots/*.png
 ```
 
+## Cross-version tracking (perf + peak memory)
+
+`bench_versions.py` measures the same workloads across tttrlib releases, recording
+wall time **and** peak resident memory so regressions/improvements show up over
+time. Peak memory is process RSS (`getrusage`), not `tracemalloc`, because the
+wins live in the C++ heap; each task runs in its own subprocess so the high-water
+mark isolates. The working-tree build runs in the base env; each released version
+runs in its own `uv` venv.
+
+```bash
+cd benchmarks
+python bench_versions.py --versions 0.26.2 0.27.0=local   # LABEL=local -> base env
+python make_version_plots.py          # -> plots/versions/*.png + summary.md
+```
+
+Result rows gain `version`, `peak_rss_mb`, `rss_baseline_mb` and `status` fields
+(legacy timing-only rows leave them null). The memory column in the summary is the
+**task footprint** = peak RSS − post-import baseline, which cancels the difference
+between an old version's isolated venv and the base env. See the
+[performance guide](../doc/performance_guide.rst) for the 0.27.0 vs 0.26.2 table.
+
 ## Reference environment
 
 - **Apple M1 Pro** (6 performance + 2 efficiency cores), 16 GB, macOS 26.5.
