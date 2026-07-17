@@ -836,11 +836,11 @@ sits above it.</p>
 <span class="n">bva</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span>                     <span class="c1"># reuse the filter&#39;s bursts + TTTR</span>
 <span class="n">bva</span><span class="o">.</span><span class="n">set_donor</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>                        <span class="c1"># donor routing channel(s)</span>
 <span class="n">bva</span><span class="o">.</span><span class="n">set_acceptor</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>                     <span class="c1"># acceptor routing channel(s)</span>
-<span class="n">bva</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">number_of_photons_per_slice</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">bf</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">(),</span> <span class="mi">5</span><span class="p">)</span>           <span class="c1"># burst bounds, photons per slice</span>
 
-<span class="n">mean</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_mean</span>           <span class="c1"># per-burst mean PR</span>
-<span class="n">std</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_std</span>             <span class="c1"># per-burst std of PR</span>
-<span class="c1"># shot-noise-limited reference line</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_mean</span>           <span class="c1"># per-burst mean PR (NumPy array)</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_std</span>             <span class="c1"># per-burst std of PR (NumPy array)</span>
+<span class="c1"># shot-noise-limited reference: proximity-ratio bins and the std line</span>
 <span class="n">bins</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="o">.</span><span class="n">compute_static_bva_line</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>

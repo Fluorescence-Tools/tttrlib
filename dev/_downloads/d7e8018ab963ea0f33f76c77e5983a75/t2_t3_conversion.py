@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
-"""Convert PicoQuant T2 <-> T3 record modes by rebuilding a ``TTTR``.
+"""
+Convert PicoQuant T2 <-> T3 record modes
+========================================
+
+Rebuild a ``TTTR`` in the other record mode.
 
 tttrlib intentionally has no T2<->T3 conversion in C++: the transform is a small
 NumPy operation on the bulk arrays, so it lives here as a reusable helper.

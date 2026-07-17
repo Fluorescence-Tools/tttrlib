@@ -108,7 +108,7 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it lives here as a reusable helper.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Rebuild a TTTR in the other record mode.">
 
 .. only:: html
 
@@ -119,7 +119,7 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Convert PicoQuant T2 <-> T3 record modes by rebuilding a TTTR.</div>
+      <div class="sphx-glr-thumbnail-title">Convert PicoQuant T2 <-> T3 record modes</div>
     </div>
 
 

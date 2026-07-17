@@ -1,6 +1,6 @@
 """
 ALEX analysis of Shimon Weiss lab ``.sm`` files
-==================================
+===============================================
 
 Micro-second **ALEX** (alternating laser excitation) rapidly switches a green
 (donor) and a red (acceptor) laser. Combined with two detectors this yields
@@ -60,7 +60,7 @@ CH_DONOR, CH_ACCEPTOR = 0, 1
 
 # %%
 # Simulate a two-population ALEX stream and write it as ``.sm``
-# ------------------------------------------------------------
+# -------------------------------------------------------------
 # Each burst is drawn with a known efficiency ``E`` and stoichiometry ``S``.
 # Photons are placed inside the correct laser window, with a small fraction
 # smeared across the window edges to mimic the laser rise/fall.

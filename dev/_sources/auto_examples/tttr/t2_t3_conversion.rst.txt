@@ -17,7 +17,11 @@
 
 .. _sphx_glr_auto_examples_tttr_t2_t3_conversion.py:
 
-Convert PicoQuant T2 <-> T3 record modes by rebuilding a ``TTTR``.
+
+Convert PicoQuant T2 <-> T3 record modes
+========================================
+
+Rebuild a ``TTTR`` in the other record mode.
 
 tttrlib intentionally has no T2<->T3 conversion in C++: the transform is a small
 NumPy operation on the bulk arrays, so it lives here as a reusable helper.
@@ -37,7 +41,7 @@ The HydraHarp/MultiHarp T3 ``dtime`` field is only 15 bits (0..32767). When the
 sync period ``P`` exceeds that, ``dtime`` is *binned* (not clamped) so the whole
 period stays representable; the micro-time resolution is scaled accordingly.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-133
+.. GENERATED FROM PYTHON SOURCE LINES 26-137
 
 .. code-block:: Python
 

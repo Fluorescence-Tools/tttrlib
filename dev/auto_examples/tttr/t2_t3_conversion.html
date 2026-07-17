@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="<no title>" />
+<meta property="og:title" content="10.6.6. Convert PicoQuant T2 <-> T3 record modes" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/tttr/t2_t3_conversion.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="Convert PicoQuant T2 &lt;-&gt; T3 record modes by rebuilding a TTTR. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it..." />
+<meta property="og:description" content="Rebuild a TTTR in the other record mode. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it lives here as a reusable he..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_t2_t3_conversion_778d7d5b.png" />
-<meta property="og:image:alt" content="Convert PicoQuant T2 &lt;-&gt; T3 record modes by rebuilding a TTTR. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it..." />
-<meta name="description" content="Convert PicoQuant T2 &lt;-&gt; T3 record modes by rebuilding a TTTR. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it..." />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_t2_t3_conversion_c18a9ece.png" />
+<meta property="og:image:alt" content="Rebuild a TTTR in the other record mode. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it lives here as a reusable he..." />
+<meta name="description" content="Rebuild a TTTR in the other record mode. tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it lives here as a reusable he..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>&lt;no title&gt; &#8212; tttrlib v0.27.0</title>
+    <title>10.6.6. Convert PicoQuant T2 &lt;-&gt; T3 record modes &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -69,7 +69,7 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="10.6.6. TTTR reading benchmark" href="plot_tttr_read_benchmark.html" />
+    <link rel="next" title="10.6.7. TTTR reading benchmark" href="plot_tttr_read_benchmark.html" />
     <link rel="prev" title="10.6.5. TTTR file conversion between formats" href="plot_tttr_file_conversion.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -734,7 +734,7 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../workflows.html">1. Workflow Index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">3. TTTR File Formats and Conversion</a></li>
@@ -744,21 +744,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
 
 
 
 
-<li class="toctree-l2 has-children"><a class="reference internal" href="index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">10.6. Working with TTTR objects</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="compression_example.html">10.6.8. TTTR compression examples</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">10.6.6. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_tttr_read_benchmark.html">10.6.7. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_tttr_files.html">10.6.8. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compression_example.html">10.6.9. TTTR compression examples</a></li>
 </ul>
 </details></li>
 </ul>
@@ -820,8 +821,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../beginner/index.html">python plot_01_read_tttr.py</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
 
@@ -927,15 +928,16 @@
 <li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">10.6. Working with TTTR objects</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="compression_example.html">10.6.8. TTTR compression examples</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">10.6.6. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_tttr_read_benchmark.html">10.6.7. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_tttr_files.html">10.6.8. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compression_example.html">10.6.9. TTTR compression examples</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
@@ -1000,7 +1002,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link"><span class="section-number">10.6. </span>Working with TTTR objects</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">&lt;no title&gt;</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">10.6.6. </span>Convert PicoQuant T2 &lt;-&gt; T3 record modes</span></li>
   </ul>
 </nav>
 </div>
@@ -1022,7 +1024,9 @@
 <p><a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-t2-t3-conversion-py"><span class="std std-ref">Go to the end</span></a>
 to download the full example code.</p>
 </div>
-<p class="sphx-glr-example-title" id="sphx-glr-auto-examples-tttr-t2-t3-conversion-py">Convert PicoQuant T2 &lt;-&gt; T3 record modes by rebuilding a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>.</p>
+<section class="sphx-glr-example-title" id="convert-picoquant-t2-t3-record-modes">
+<span id="sphx-glr-auto-examples-tttr-t2-t3-conversion-py"></span><h1><span class="section-number">10.6.6. </span>Convert PicoQuant T2 &lt;-&gt; T3 record modes<a class="headerlink" href="#convert-picoquant-t2-t3-record-modes" title="Link to this heading">#</a></h1>
+<p>Rebuild a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> in the other record mode.</p>
 <p>tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small
 NumPy operation on the bulk arrays, so it lives here as a reusable helper.</p>
 <ul class="simple">
@@ -1164,6 +1168,7 @@ period stays representable; the micro-time resolution is scaled accordingly.</p>
 </div>
 </div>
 <p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
 
 
                 </article>
@@ -1189,7 +1194,7 @@ period stays representable; the micro-time resolution is scaled accordingly.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><span class="section-number">10.6.6. </span>TTTR reading benchmark</p>
+        <p class="prev-next-title"><span class="section-number">10.6.7. </span>TTTR reading benchmark</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1203,18 +1208,6 @@ period stays representable; the micro-time resolution is scaled accordingly.</p>
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="simple pst-show_toc_level nav section-nav flex-column">
-</ul>
-
-  </nav></div>
 
   <div class="sidebar-secondary-item">
 
