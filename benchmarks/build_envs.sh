@@ -47,4 +47,11 @@ build h2mm_numba 3.10 numpy numba
 # 8. pycorrelate — reference NumPy photon-timestamp FCS correlator
 build pycorrelate 3.10 pycorrelate numpy
 
+# --- Cross-version tracking (bench_versions.py) -----------------------------
+# One env per *released* tttrlib version to compare against the working-tree
+# build. psutil is only for the post-import RSS baseline. The current version is
+# measured in the base env directly (bench_versions.py --versions ... 0.27.0=local),
+# so no venv is built for it here. bench_versions.py also builds these on demand.
+build tttrlib-0.26.2 3.10 "tttrlib==0.26.2" numpy psutil
+
 echo "ALL ENV BUILDS ATTEMPTED"
