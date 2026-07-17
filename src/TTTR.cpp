@@ -727,15 +727,18 @@ int TTTR::read_ps_file(const char *fn) {
     n_records_read = n_events;
     allocate_memory_for_records(n_events);
 
-    // Clamp helpers: micro times are 16-bit, routing channels are signed 8-bit.
-    auto clamp_u16 = [](int64_t v) -> unsigned short {
-        if (v < 0) v = 0;
-        if (v > 65535) v = 65535;
+    // Clamp helpers: micro times / positions are 16-bit, routing channels are
+    // signed 8-bit. The `flag` is raised only when a value is actually out of
+    // range, so callers can warn about real data loss (wide LINCam configs).
+    bool clamped_micro = false, clamped_pos = false, clamped_channel = false;
+    auto clamp_u16 = [](int64_t v, bool& flag) -> unsigned short {
+        if (v < 0) { v = 0; flag = true; }
+        else if (v > 65535) { v = 65535; flag = true; }
         return static_cast<unsigned short>(v);
     };
-    auto clamp_i8 = [](int64_t v) -> signed char {
-        if (v < -128) v = -128;
-        if (v > 127) v = 127;
+    auto clamp_i8 = [](int64_t v, bool& flag) -> signed char {
+        if (v < -128) { v = -128; flag = true; }
+        else if (v > 127) { v = 127; flag = true; }
         return static_cast<signed char>(v);
     };
 
@@ -746,23 +749,32 @@ int TTTR::read_ps_file(const char *fn) {
         if (have_positions) {
             // Position marker X (coordinate carried in the micro time)
             set_macro_time_at(e, mt);
-            micro_times[e] = clamp_u16(xs[i]);
+            micro_times[e] = clamp_u16(xs[i], clamped_pos);
             routing_channels[e] = MARKER_POSITION_X;
             event_types[e] = RECORD_MARKER;
             ++e;
             // Position marker Y
             set_macro_time_at(e, mt);
-            micro_times[e] = clamp_u16(ys[i]);
+            micro_times[e] = clamp_u16(ys[i], clamped_pos);
             routing_channels[e] = MARKER_POSITION_Y;
             event_types[e] = RECORD_MARKER;
             ++e;
         }
         // Photon event
         set_macro_time_at(e, mt);
-        micro_times[e] = (i < dt.size()) ? clamp_u16(dt[i]) : 0;
-        routing_channels[e] = (i < ch.size()) ? clamp_i8(ch[i]) : 0;
+        micro_times[e] = (i < dt.size()) ? clamp_u16(dt[i], clamped_micro) : 0;
+        routing_channels[e] = (i < ch.size()) ? clamp_i8(ch[i], clamped_channel) : 0;
         event_types[e] = RECORD_PHOTON;
         ++e;
+    }
+
+    if (clamped_micro || clamped_pos || clamped_channel) {
+        std::cerr << "WARNING in TTTR::read_ps_file: values exceeded the TTTR "
+                     "field ranges and were clamped (data loss):";
+        if (clamped_micro)   std::cerr << " micro time (dt) > 16 bit;";
+        if (clamped_pos)     std::cerr << " position (x/y) > 16 bit;";
+        if (clamped_channel) std::cerr << " channel outside [-128, 127];";
+        std::cerr << std::endl;
     }
 
     // Header: micro time from the TAC channel calibration, macro time in
@@ -789,6 +801,7 @@ bool TTTR::write_ps_file(const std::string& filename, TTTRHeader* hdr) {
     int64_t cur_x = 0, cur_y = 0;
     bool has_x = false, has_y = false;
     bool any_channel = false;
+    bool any_position = false;
 
     for (size_t i = 0; i < n_valid_events; ++i) {
         if (event_types[i] == RECORD_MARKER) {
@@ -806,14 +819,19 @@ bool TTTR::write_ps_file(const std::string& filename, TTTRHeader* hdr) {
         ms.push_back(static_cast<int64_t>(get_macro_time_at(i)));
         ch.push_back(routing_channels[i]);
         if (routing_channels[i] != 0) any_channel = true;
-        if (has_x) xs.push_back(cur_x);
-        if (has_y) ys.push_back(cur_y);
+        // Keep positions aligned one-per-photon; a photon without preceding
+        // markers gets a 0 fill so a partially-imaged stream still keeps the
+        // positions it does carry (instead of dropping all of them).
+        xs.push_back(has_x ? cur_x : 0);
+        ys.push_back(has_y ? cur_y : 0);
+        if (has_x || has_y) any_position = true;
         has_x = has_y = false;
         cur_x = cur_y = 0;
     }
 
-    // Positions are written only when every photon carried them.
-    bool have_positions = !xs.empty() && xs.size() == dt.size() &&
+    // Write positions when at least one photon carried them. xs/ys are aligned
+    // one-per-photon, so the length check is always satisfied here.
+    bool have_positions = any_position && xs.size() == dt.size() &&
                           ys.size() == dt.size();
 
     std::vector<photonscore::D7WriteDataset> datasets;
