@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Version 0.26" />
+<meta property="og:title" content="Version 0.27" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="changes.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="TIFF I/O for 2D/3D arrays: New tttrlib.imread(path)/ imwrite(path, array) read and write 2-D images and 3-D (multi-page) stacks as TIFF. imread auto-detects the pixel type (uint8/16/32, int32, floa..." />
+<meta property="og:description" content="H2MM and BVA for dynamic FRET: Two new C++ modules for sub-burst FRET dynamics, exposed through SWIG. BVA(Burst Variance Analysis) reports per-burst proximity-ratio mean/std against the shot-noise ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_changes_d65a7aaa.png" />
-<meta property="og:image:alt" content="TIFF I/O for 2D/3D arrays: New tttrlib.imread(path)/ imwrite(path, array) read and write 2-D images and 3-D (multi-page) stacks as TIFF. imread auto-detects the pixel type (uint8/16/32, int32, floa..." />
-<meta name="description" content="TIFF I/O for 2D/3D arrays: New tttrlib.imread(path)/ imwrite(path, array) read and write 2-D images and 3-D (multi-page) stacks as TIFF. imread auto-detects the pixel type (uint8/16/32, int32, floa..." />
+<meta property="og:image" content="_images/social_previews/summary_changes_4df9fb09.png" />
+<meta property="og:image:alt" content="H2MM and BVA for dynamic FRET: Two new C++ modules for sub-burst FRET dynamics, exposed through SWIG. BVA(Burst Variance Analysis) reports per-burst proximity-ratio mean/std against the shot-noise ..." />
+<meta name="description" content="H2MM and BVA for dynamic FRET: Two new C++ modules for sub-burst FRET dynamics, exposed through SWIG. BVA(Burst Variance Analysis) reports per-burst proximity-ratio mean/std against the shot-noise ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Version 0.26 &#8212; tttrlib v0.27.0</title>
+    <title>Version 0.27 &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -162,7 +162,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -226,6 +226,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -372,7 +379,7 @@
 
 <li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="#">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -461,7 +468,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -518,6 +525,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -664,7 +678,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -766,7 +780,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Version 0.26</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Version 0.27</span></li>
   </ul>
 </nav>
 </div>
@@ -783,7 +797,47 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="version-0-26">
+  <section id="version-0-27">
+<span id="changes-0-27"></span><h1>Version 0.27<a class="headerlink" href="#version-0-27" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p><strong>H2MM and BVA for dynamic FRET</strong>: Two new C++ modules for sub-burst FRET
+dynamics, exposed through SWIG. <code class="xref py py-class docutils literal notranslate"><span class="pre">BVA</span></code> (Burst Variance Analysis) reports
+per-burst proximity-ratio mean/std against the shot-noise line. <code class="xref py py-class docutils literal notranslate"><span class="pre">H2MM</span></code>
+is a photon-by-photon Hidden Markov Model engine (Baum-Welch EM + Viterbi)
+ported from the ChiSurf numba engine; it reaches the same optimum as the
+reference <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> library <strong>2.4× faster</strong> with plain EM and <strong>8.2× faster</strong>
+with SQUAREM acceleration (see <a class="reference internal" href="h2mm-bva.html#h2mm-performance"><span class="std std-ref">Why the tttrlib H2MM engine is fast</span></a>), using sparse
+unique-Δt caches, a deferred ρ contraction, and an allocation-free,
+persistently-threaded (<code class="docutils literal notranslate"><span class="pre">std::thread</span></code>) kernel. Both consume bursts directly
+from <code class="xref py py-class docutils literal notranslate"><span class="pre">BurstFilter</span></code>. New guide: <a class="reference internal" href="h2mm-bva.html#h2mm-bva-guide"><span class="std std-ref">Dynamic FRET: H2MM and BVA</span></a>.</p></li>
+<li><p><strong>Photonscore LINCam “.photons” (D7) support</strong>: New reader and writer for the
+position-sensitive photon-counting format written by Photonscore LINCam
+systems. <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(&quot;file.photons&quot;)</span></code> decodes the paged, protobuf-style D7
+container (seed plus zigzag-varint delta streams) with no external protobuf
+dependency. Each photon’s <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> position is stored in the flat TTTR
+stream as two marker events (<code class="docutils literal notranslate"><span class="pre">MARKER_POSITION_X</span></code> / <code class="docutils literal notranslate"><span class="pre">MARKER_POSITION_Y</span></code>,
+the coordinate carried in the marker micro time) that precede the photon, so
+no photonscore-specific code path is needed downstream: positions, decay and
+an image are recovered with standard accessors and, e.g., <code class="docutils literal notranslate"><span class="pre">numpy.histogram2d</span></code>.
+<code class="docutils literal notranslate"><span class="pre">TTTR.write(&quot;out.photons&quot;)</span></code> writes a byte-exact D7 container. Both reader and
+writer are implemented in C++ and exposed through SWIG to Python, R and Java.</p></li>
+<li><p><strong>PicoQuant T2 sync decoding fixed</strong>: In HydraHarp/MultiHarp/TimeHarp260 T2
+data (record types HHT2v1, HHT2v2 and generic T2) a <code class="docutils literal notranslate"><span class="pre">special</span></code> record with
+<code class="docutils literal notranslate"><span class="pre">channel</span> <span class="pre">==</span> <span class="pre">0</span></code> is the sync input. It is now decoded as a photon on channel 0,
+matching PicoQuant’s reference decoder and <code class="docutils literal notranslate"><span class="pre">ptufile</span></code>; previously it was
+mislabelled as a marker, which under-counted photons on files that record the
+sync. A cross-check against <code class="docutils literal notranslate"><span class="pre">ptufile</span></code> was added to the test suite.</p></li>
+<li><p><strong>T2 &lt;-&gt; T3 record-mode conversion</strong> is now a small NumPy helper,
+<code class="docutils literal notranslate"><span class="pre">examples/tttr/t2_t3_conversion.py</span></code> (<code class="docutils literal notranslate"><span class="pre">t2_to_t3</span></code> / <code class="docutils literal notranslate"><span class="pre">t3_to_t2</span></code>), rather than
+a C++ method: it rebuilds a second <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> from the bulk arrays. <code class="docutils literal notranslate"><span class="pre">t2_to_t3</span></code>
+re-derives the sync-period index and dtime from the single T2 time tag, binning
+dtime when the sync period exceeds the 15-bit T3 field so the full period stays
+representable; <code class="docutils literal notranslate"><span class="pre">t3_to_t2</span></code> merges macro and micro into one fine time tag.
+<code class="docutils literal notranslate"><span class="pre">T2</span> <span class="pre">-&gt;</span> <span class="pre">T3</span> <span class="pre">-&gt;</span> <span class="pre">T2</span></code> is lossless for a fixed sync period; <code class="docutils literal notranslate"><span class="pre">T3</span> <span class="pre">-&gt;</span> <span class="pre">T2</span></code> preserves
+absolute arrival times at TAC resolution but drops the dtime/sync split.</p></li>
+</ul>
+</section>
+<section id="version-0-26">
 <span id="changes-0-26"></span><h1>Version 0.26<a class="headerlink" href="#version-0-26" title="Link to this heading">#</a></h1>
 <ul class="simple">
 <li><p><strong>TIFF I/O for 2D/3D arrays</strong>: New <code class="docutils literal notranslate"><span class="pre">tttrlib.imread(path)</span></code> / <code class="docutils literal notranslate"><span class="pre">imwrite(path,</span>
@@ -799,10 +853,19 @@ dependency is added (built-in codecs only; <code class="docutils literal notrans
 <li><p>Added multimolecule correction in PDA</p></li>
 <li><p>Improved DecayFit interface (JSON in/output)</p></li>
 <li><p>Add support for channel specific microtime LUTs (correct non-linearities in TAC) and shifts</p></li>
-<li><p><strong>Becker &amp; Hickl SPCM Support</strong>: New support for BH SPC-130/140/150 detectors with pixel-marker binning, automatic <code class="xref any docutils literal notranslate"><span class="pre">.set</span></code> file parsing, dimension inference, and Frame 1 adjustment. Integrated truncated recording recovery.</p></li>
-<li><p><strong>CLSM Bug Fixes</strong>: Fixed <code class="xref any docutils literal notranslate"><span class="pre">get_fluorescence_decay</span></code> stack_frames bug where only the last frame was processed. Fixed <code class="xref any docutils literal notranslate"><span class="pre">get_phasor</span></code> precision loss by using float instead of int calculation.</p></li>
+<li><p><strong>Becker &amp; Hickl SPCM Support</strong>: New support for BH SPC-130/140/150 detectors
+with pixel-marker binning, automatic <code class="docutils literal notranslate"><span class="pre">.set</span></code> file parsing, dimension
+inference, and Frame 1 adjustment. Integrated truncated recording recovery.</p></li>
+<li><p><strong>CLSM Bug Fixes</strong>: Fixed <code class="docutils literal notranslate"><span class="pre">get_fluorescence_decay</span></code> stack_frames bug where
+only the last frame was processed. Fixed <code class="docutils literal notranslate"><span class="pre">get_phasor</span></code> precision loss by
+using float instead of int calculation.</p></li>
 </ul>
-<ul class="simple" id="changes-0-25">
+</section>
+<section id="version-0-25">
+<span id="changes-0-25"></span><h1>Version 0.25<a class="headerlink" href="#version-0-25" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p>Add simpler option for burst search</p></li>
+<li><p>Added get_supported_container_names</p></li>
 <li><p>Added ttrlib to bioconda</p></li>
 </ul>
 <section id="version-0-24">
@@ -892,11 +955,17 @@ to compute histograms on TTTRRange (0.21.9)</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Version 0.27</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-26">Version 0.26</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-25">Version 0.25</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-24">Version 0.24</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-23">Version 0.23</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-22">Version 0.22</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-21">Version 0.21</a></li>
 </ul>
+</li>
+</ul>
+
   </nav></div>
 
   <div class="sidebar-secondary-item">

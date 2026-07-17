@@ -77,7 +77,7 @@ burst_filter.set_burst_parameters(
 
 # %%
 # Perform burst search on masked photons
-# ------------------------------------
+# --------------------------------------
 # Find bursts in the data using only the masked (selected) photons
 bursts_np = burst_filter.find_bursts()
 print(f"Burst search completed on masked data: {len(bursts_np)} bursts")
@@ -118,7 +118,7 @@ print(f"Current burst count after filtering: {len(burst_filter.get_bursts())}")
 
 # %%
 # Change filter parameters and see bursts "reappear"
-# -------------------------------------------------
+# --------------------------------------------------
 print("\nChanging filter parameters to demonstrate burst reappearance:")
 
 # Relax the size filter - should bring back smaller bursts
@@ -133,7 +133,7 @@ print(f"  Burst count after duration filter change: {len(burst_filter.get_bursts
 
 # %%
 # Reapply entire filtering pipeline with different parameters
-# ----------------------------------------------------------
+# -----------------------------------------------------------
 print("\nReapplying entire filter pipeline with updated parameters:")
 
 # Change background filter to be more permissive

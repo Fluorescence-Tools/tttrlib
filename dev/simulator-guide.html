@@ -71,8 +71,8 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Image Localization" href="localization-guide.html" />
-    <link rel="prev" title="CLSM, FLIM, and Image Workflows" href="clsm-flim-guide.html" />
+    <link rel="next" title="8. Image Localization" href="localization-guide.html" />
+    <link rel="prev" title="7. CLSM, FLIM, and Image Workflows" href="clsm-flim-guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -165,7 +165,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -229,6 +229,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -375,7 +382,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -464,7 +471,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -521,6 +528,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -667,7 +681,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -816,12 +830,13 @@ engine modes.</p>
 <li><p><a class="reference internal" href="#anisotropy" id="id11">Anisotropy</a></p></li>
 <li><p><a class="reference internal" href="#point-spread-functions-psf-gallery" id="id12">Point-spread functions (PSF gallery)</a></p></li>
 <li><p><a class="reference internal" href="#pie-pulsed-interleaved-excitation" id="id13">PIE (pulsed interleaved excitation)</a></p></li>
-<li><p><a class="reference internal" href="#mfd-multiparameter-dual-colour" id="id14">MFD (multiparameter, dual-colour)</a></p></li>
-<li><p><a class="reference internal" href="#clsm-flim-imaging" id="id15">CLSM / FLIM imaging</a></p></li>
+<li><p><a class="reference internal" href="#alex-alternating-laser-excitation" id="id14">ALEX (alternating laser excitation)</a></p></li>
+<li><p><a class="reference internal" href="#mfd-multiparameter-dual-colour" id="id15">MFD (multiparameter, dual-colour)</a></p></li>
+<li><p><a class="reference internal" href="#clsm-flim-imaging" id="id16">CLSM / FLIM imaging</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#performance-knobs" id="id16">Performance knobs</a></p></li>
-<li><p><a class="reference internal" href="#api-reference" id="id17">API reference</a></p></li>
+<li><p><a class="reference internal" href="#performance-knobs" id="id17">Performance knobs</a></p></li>
+<li><p><a class="reference internal" href="#api-reference" id="id18">API reference</a></p></li>
 </ul>
 </nav>
 <section id="the-openmm-analogy">
@@ -1149,8 +1164,58 @@ whose decay is shifted into the second half of the <code class="docutils literal
 <p><em>Implication:</em> gating the micro-time on the prompt vs delayed window recovers the
 FRET signal vs the acceptor-directly-excited signal (the basis of ALEX/PIE stoichiometry).</p>
 </section>
+<section id="alex-alternating-laser-excitation">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">ALEX (alternating laser excitation)</a><a class="headerlink" href="#alex-alternating-laser-excitation" title="Link to this heading">#</a></h3>
+<p>Where PIE separates the two excitation sources on the <strong>micro-time</strong> axis (both
+lasers pulse every <code class="docutils literal notranslate"><span class="pre">laser_period</span></code>), <strong>micro-second ALEX</strong> alternates the green
+(donor) and red (acceptor) laser on the <strong>macro-time / diffusion timescale</strong> — so
+the excitation source cannot be recovered from the micro-time; it is encoded in
+the macro-time. The engine models this directly:</p>
+<ul class="simple">
+<li><p>pass <strong>one excitation grid per laser</strong> (<code class="docutils literal notranslate"><span class="pre">excitation</span></code> becomes an array),</p></li>
+<li><p>set <code class="docutils literal notranslate"><span class="pre">settings.alex_period</span></code> (in macro-time units, <code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">dt</span></code>); each macro-window
+is assigned to a laser by an equal-duty round-robin
+<code class="docutils literal notranslate"><span class="pre">floor(fmod(T0·dt,</span> <span class="pre">alex_period)/(alex_period/n_lasers))</span></code>,</p></li>
+<li><p>give each species a <strong>per-laser brightness matrix</strong> <code class="docutils literal notranslate"><span class="pre">q_alex</span></code> (one row per
+laser). A doubly-labelled FRET pair uses <code class="docutils literal notranslate"><span class="pre">q_alex</span> <span class="pre">=</span> <span class="pre">[[(1-E)·b,</span> <span class="pre">E·b],</span> <span class="pre">[0,</span> <span class="pre">b_A]]</span></code>
+so it emits DD (ch0) + DA (ch1) under the green laser and AA (ch1) under the red
+laser. An empty <code class="docutils literal notranslate"><span class="pre">q_alex</span></code> broadcasts the scalar <code class="docutils literal notranslate"><span class="pre">q</span></code> to every laser.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_channels&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;alex_period&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>   <span class="c1"># 10 windows/cycle</span>
+                       <span class="s2">&quot;n_ph_max&quot;</span><span class="p">:</span> <span class="mi">600000</span><span class="p">,</span> <span class="s2">&quot;alex_markers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+          <span class="s2">&quot;species&quot;</span><span class="p">:</span> <span class="p">[</span>                                                     <span class="c1"># two FRET populations</span>
+              <span class="p">{</span><span class="s2">&quot;D&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;q_alex&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mf">240.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">]]},</span>        <span class="c1"># E = 0.2</span>
+              <span class="p">{</span><span class="s2">&quot;D&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;q_alex&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mf">60.0</span><span class="p">,</span> <span class="mf">240.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">]]},</span>        <span class="c1"># E = 0.8</span>
+          <span class="p">],</span>
+          <span class="s2">&quot;population&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span>
+          <span class="s2">&quot;excitation&quot;</span><span class="p">:</span> <span class="p">[</span>                                                  <span class="c1"># one grid per laser</span>
+              <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian3d&quot;</span><span class="p">,</span> <span class="s2">&quot;w0&quot;</span><span class="p">:</span> <span class="mf">0.30</span><span class="p">,</span> <span class="s2">&quot;z0&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;extent_xy&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;extent_z&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+              <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian3d&quot;</span><span class="p">,</span> <span class="s2">&quot;w0&quot;</span><span class="p">:</span> <span class="mf">0.32</span><span class="p">,</span> <span class="s2">&quot;z0&quot;</span><span class="p">:</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;extent_xy&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;extent_z&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}]}</span>
+</pre></div>
+</div>
+<p>Set <code class="docutils literal notranslate"><span class="pre">alex_markers:</span> <span class="pre">true</span></code> to additionally write an explicit laser-switch marker
+(<code class="docutils literal notranslate"><span class="pre">event_type</span></code> = <code class="docutils literal notranslate"><span class="pre">alex_marker_event_type</span></code>, routing channel = laser index) at
+each switch — useful as ground truth in tests, but impractical over long dilute
+runs (a marker every few windows), so the macro-time encoding is the format-faithful
+mechanism.</p>
+<p><em>Implication:</em> the alternation lives in the macro-time. Fold it back with
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">TTTR.alex_to_microtime()</span></code> (period in macro-clock ticks) and gate on the
+resulting ALEX phase — the donor detector marks the green window, the acceptor the
+red — then histogram per-burst <code class="docutils literal notranslate"><span class="pre">E</span></code> and stoichiometry <code class="docutils literal notranslate"><span class="pre">S</span></code> into the 2D ALEX
+E-S plot. See <code class="docutils literal notranslate"><span class="pre">examples/simulation/alex_smfret.py</span></code> and the notebooks
+<code class="docutils literal notranslate"><span class="pre">alex_01_simulation_basics.ipynb</span></code> / <code class="docutils literal notranslate"><span class="pre">alex_02_smfret_es.ipynb</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Export the simulated stream to a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> by building it from <code class="docutils literal notranslate"><span class="pre">photons()</span></code>
+(macro-time from <code class="docutils literal notranslate"><span class="pre">macro_window</span></code>/<code class="docutils literal notranslate"><span class="pre">arrival_time</span></code>, plus <code class="docutils literal notranslate"><span class="pre">micro_time</span></code>,
+<code class="docutils literal notranslate"><span class="pre">channel</span></code>) — the <code class="docutils literal notranslate"><span class="pre">SM</span></code> container keeps macro-time + routing (micro-time
+dropped, as for a real .sm file), while <code class="docutils literal notranslate"><span class="pre">PTU</span></code> / <code class="docutils literal notranslate"><span class="pre">Photon-HDF5</span></code> additionally
+preserve the micro-time. <code class="xref py py-meth docutils literal notranslate"><span class="pre">SimEngine.to_tttr()</span></code> also works (it emits SPC-130
+and now carries the simulated micro-time faithfully and skips markers).</p>
+</div>
+</section>
 <section id="mfd-multiparameter-dual-colour">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">MFD (multiparameter, dual-colour)</a><a class="headerlink" href="#mfd-multiparameter-dual-colour" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">MFD (multiparameter, dual-colour)</a><a class="headerlink" href="#mfd-multiparameter-dual-colour" title="Link to this heading">#</a></h3>
 <p>MFD combines colour, polarization, lifetime and intensity. Build the channel
 axis as <code class="docutils literal notranslate"><span class="pre">spectral</span> <span class="pre">×</span> <span class="pre">polarization</span></code> (e.g. 4 channels: green∥, green⊥, red∥,
 red⊥), give each emitting state its own <code class="docutils literal notranslate"><span class="pre">SimDecay</span></code> (its lifetime) and route it
@@ -1163,7 +1228,7 @@ colour+polarization, micro-time → lifetime, macro-time → burst/intensity), s
 <code class="docutils literal notranslate"><span class="pre">sim.photons()</span></code>.</p>
 </section>
 <section id="clsm-flim-imaging">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">CLSM / FLIM imaging</a><a class="headerlink" href="#clsm-flim-imaging" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">CLSM / FLIM imaging</a><a class="headerlink" href="#clsm-flim-imaging" title="Link to this heading">#</a></h3>
 <p>Use discrete <code class="docutils literal notranslate"><span class="pre">emitters</span></code> for the sample and drive a raster scan with
 <a class="reference internal" href="#tttrlib.SimScanner" title="tttrlib.SimScanner"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimScanner</span></code></a>; the output is a marker-annotated stream that
 <code class="xref py py-class docutils literal notranslate"><span class="pre">CLSMImage</span></code> reconstructs, with per-species decays giving FLIM
@@ -1171,7 +1236,7 @@ contrast. See <span class="xref std std-ref">clsm-flim-guide</span> and <code cl
 </section>
 </section>
 <section id="performance-knobs">
-<span id="sim-performance"></span><h2><a class="toc-backref" href="#id16" role="doc-backlink">Performance knobs</a><a class="headerlink" href="#performance-knobs" title="Link to this heading">#</a></h2>
+<span id="sim-performance"></span><h2><a class="toc-backref" href="#id17" role="doc-backlink">Performance knobs</a><a class="headerlink" href="#performance-knobs" title="Link to this heading">#</a></h2>
 <p>For dilute single-molecule work the sim is <em>photon-starved</em> (most windows emit
 nothing). Opt-in throughput knobs on <code class="docutils literal notranslate"><span class="pre">settings</span></code> — all statistically validated,
 default off (exact):</p>
@@ -1187,12 +1252,17 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 <p>See <code class="docutils literal notranslate"><span class="pre">performance_guide</span></code> for the trade-offs and measured speedups.</p>
 </section>
 <section id="api-reference">
-<h2><a class="toc-backref" href="#id17" role="doc-backlink">API reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">API reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="tttrlib.SimEngine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tttrlib.</span></span><span class="sig-name descname"><span class="pre">SimEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excitation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tttrlib.</span></span><span class="sig-name descname"><span class="pre">SimEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Proxy of C++ tttrlib::SimEngine class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.alex_period">
+<span class="sig-name descname"><span class="pre">alex_period</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.alex_period"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.alex_period" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.arrival_time">
 <span class="sig-name descname"><span class="pre">arrival_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorDouble</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.arrival_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.arrival_time" title="Link to this definition">#</a></dt>
@@ -1285,6 +1355,11 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.micro_time">
 <span class="sig-name descname"><span class="pre">micro_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorUint16</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.micro_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.micro_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.n_lasers">
+<span class="sig-name descname"><span class="pre">n_lasers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.n_lasers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.n_lasers" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1654,6 +1729,21 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dd></dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimIntegrator.alex_marker_event_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alex_marker_event_type</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.alex_marker_event_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimIntegrator.alex_markers">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alex_markers</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.alex_markers" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimIntegrator.alex_period">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alex_period</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.alex_period" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimIntegrator.coast_safety">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coast_safety</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.coast_safety" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1779,6 +1869,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimSpecies.q">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">q</span></span><a class="headerlink" href="#tttrlib.SimSpecies.q" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimSpecies.q_alex">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">q_alex</span></span><a class="headerlink" href="#tttrlib.SimSpecies.q_alex" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -2389,7 +2484,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">CLSM, FLIM, and Image Workflows</p>
+        <p class="prev-next-title"><span class="section-number">7. </span>CLSM, FLIM, and Image Workflows</p>
       </div>
     </a>
     <a class="right-next"
@@ -2397,7 +2492,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Image Localization</p>
+        <p class="prev-next-title"><span class="section-number">8. </span>Image Localization</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -2433,6 +2528,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropy">Anisotropy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#point-spread-functions-psf-gallery">Point-spread functions (PSF gallery)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pie-pulsed-interleaved-excitation">PIE (pulsed interleaved excitation)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alex-alternating-laser-excitation">ALEX (alternating laser excitation)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mfd-multiparameter-dual-colour">MFD (multiparameter, dual-colour)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clsm-flim-imaging">CLSM / FLIM imaging</a></li>
 </ul>
@@ -2440,6 +2536,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-knobs">Performance knobs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference">API reference</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine"><code class="docutils literal notranslate"><span class="pre">SimEngine</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.alex_period"><code class="docutils literal notranslate"><span class="pre">SimEngine.alex_period()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.arrival_time"><code class="docutils literal notranslate"><span class="pre">SimEngine.arrival_time()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.channel"><code class="docutils literal notranslate"><span class="pre">SimEngine.channel()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.current_window"><code class="docutils literal notranslate"><span class="pre">SimEngine.current_window()</span></code></a></li>
@@ -2455,6 +2552,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.get_state"><code class="docutils literal notranslate"><span class="pre">SimEngine.get_state()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.macro_window"><code class="docutils literal notranslate"><span class="pre">SimEngine.macro_window()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.micro_time"><code class="docutils literal notranslate"><span class="pre">SimEngine.micro_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_lasers"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_lasers()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_molecules"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_molecules()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_photons"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_photons()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.photons"><code class="docutils literal notranslate"><span class="pre">SimEngine.photons()</span></code></a></li>
@@ -2502,6 +2600,9 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator"><code class="docutils literal notranslate"><span class="pre">SimIntegrator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.active_margin"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.active_margin</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.alex_marker_event_type"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.alex_marker_event_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.alex_markers"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.alex_markers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.alex_period"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.alex_period</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.coast_safety"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.coast_safety</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.dt"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.dt</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.fast_grid_bbox"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.fast_grid_bbox</span></code></a></li>
@@ -2529,6 +2630,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.l1"><code class="docutils literal notranslate"><span class="pre">SimSpecies.l1</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.l2"><code class="docutils literal notranslate"><span class="pre">SimSpecies.l2</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.q"><code class="docutils literal notranslate"><span class="pre">SimSpecies.q</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.q_alex"><code class="docutils literal notranslate"><span class="pre">SimSpecies.q_alex</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.r0"><code class="docutils literal notranslate"><span class="pre">SimSpecies.r0</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.thisown"><code class="docutils literal notranslate"><span class="pre">SimSpecies.thisown</span></code></a></li>
 </ul>

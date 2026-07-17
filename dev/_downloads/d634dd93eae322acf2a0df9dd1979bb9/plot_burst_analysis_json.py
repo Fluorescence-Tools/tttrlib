@@ -37,7 +37,7 @@ bf = tttrlib.BurstFilter(data)
 
 # %%
 # Set and save burst parameters to JSON
-# ------------------------------------
+# -------------------------------------
 # Configure burst search parameters
 bf.set_burst_parameters(
     min_photons=30,      # L: minimum photons per burst
@@ -75,7 +75,7 @@ print(json.dumps(params_dict, indent=2))
 
 # %%
 # Perform burst search with loaded parameters
-# ------------------------------------------
+# -------------------------------------------
 bursts_np = bf2.find_bursts()
 print(f"\nFound {len(bursts_np)} bursts using loaded parameters")
 

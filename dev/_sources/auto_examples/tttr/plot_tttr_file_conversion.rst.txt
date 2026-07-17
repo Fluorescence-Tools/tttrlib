@@ -34,7 +34,7 @@ conversion-fidelity table in the :ref:`file format guide <file_formats>`.
 The conversions below are also covered by the unit tests in
 ``test/python/tttr/test_TTTR_roundtrip.py``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-47
+.. GENERATED FROM PYTHON SOURCE LINES 20-36
 
 .. code-block:: Python
 
@@ -54,6 +54,32 @@ The conversions below are also covered by the unit tests in
     print(f"Source: {len(data):,} events (HydraHarp T3 PTU)")
 
 
+
+.. GENERATED FROM PYTHON SOURCE LINES 37-53
+
+Choosing the output format
+---------------------------------------------------------------------------
+``TTTR.write`` picks the container from the output filename extension, so the
+common case needs no extra arguments — ``write("out.spc")`` writes a Becker &
+Hickl SPC file and ``write("out.ptu")`` a PicoQuant PTU file. The format can
+also be forced explicitly, either by name or by container id, which is handy
+for unusual extensions:
+
+.. code-block:: python
+
+    data.write("out.ptu")           # inferred from the ".ptu" extension
+    data.write("out.dat", "PTU")     # forced by container name
+    data.write("out.dat", None, 0)   # forced by container id (see TTTRHeaderTypes.h)
+
+The ``convert`` helper below instead edits the header's record type as well,
+so it can also select the record encoding (e.g. T2 vs T3) within a container.
+
+.. GENERATED FROM PYTHON SOURCE LINES 53-66
+
+.. code-block:: Python
+
+
+
     def convert(data, container_type, record_type, out_name, read_as):
         """Write ``data`` as another container format and read it back."""
         header = data.header
@@ -66,12 +92,12 @@ The conversions below are also covered by the unit tests in
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-50
+.. GENERATED FROM PYTHON SOURCE LINES 67-69
 
 PTU (T3) → Photon-HDF5 — the open interchange format; lossless
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-56
+.. GENERATED FROM PYTHON SOURCE LINES 69-75
 
 .. code-block:: Python
 
@@ -82,12 +108,12 @@ PTU (T3) → Photon-HDF5 — the open interchange format; lossless
     print("→ Photon-HDF5: macro, micro and channels preserved exactly")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 57-59
+.. GENERATED FROM PYTHON SOURCE LINES 76-78
 
 PTU (T3) → Becker & Hickl SPC-130 — micro times clip to 12 bit
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-67
+.. GENERATED FROM PYTHON SOURCE LINES 78-86
 
 .. code-block:: Python
 
@@ -100,12 +126,12 @@ PTU (T3) → Becker & Hickl SPC-130 — micro times clip to 12 bit
     print("→ SPC-130: micro times clipped to 12 bit, macro times preserved")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-70
+.. GENERATED FROM PYTHON SOURCE LINES 87-89
 
 PTU (T3) → HT3 — the legacy HydraHarp container
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-75
+.. GENERATED FROM PYTHON SOURCE LINES 89-94
 
 .. code-block:: Python
 
@@ -115,12 +141,12 @@ PTU (T3) → HT3 — the legacy HydraHarp container
     print("→ HT3: lossless for HydraHarp T3 payloads")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-78
+.. GENERATED FROM PYTHON SOURCE LINES 95-97
 
 PTU T3 → PTU T2 — drops the micro times
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-83
+.. GENERATED FROM PYTHON SOURCE LINES 97-102
 
 .. code-block:: Python
 
@@ -130,12 +156,12 @@ PTU T3 → PTU T2 — drops the micro times
     print("→ PTU T2: micro times dropped, time tags and channels preserved")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-86
+.. GENERATED FROM PYTHON SOURCE LINES 103-105
 
 PTU (T3) → SM — macro times and channels only
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-91
+.. GENERATED FROM PYTHON SOURCE LINES 105-110
 
 .. code-block:: Python
 
@@ -145,12 +171,12 @@ PTU (T3) → SM — macro times and channels only
     print("→ SM: macro times and channels preserved, micro times dropped")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-94
+.. GENERATED FROM PYTHON SOURCE LINES 111-113
 
 Visual check: the micro time histogram survives the SPC-130 trip
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-104
+.. GENERATED FROM PYTHON SOURCE LINES 113-123
 
 .. code-block:: Python
 

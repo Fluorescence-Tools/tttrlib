@@ -38,7 +38,7 @@ t = macro * mt_res                              # arrival times (s)
 # ------------------------------------------------------------
 # 2) Choose LOW/HIGH thresholds from a quick 1 ms intensity trace
 #    Then use the tttrlib **count-rate filter** (Python API) to get selections.
-# ------------------------------------------------------------
+# --------------------------------------------------------------------------
 bin_width_s = 1e-3  # 1 ms
 t_min, t_max = float(t.min()), float(t.max())
 n_bins = int(np.ceil((t_max - t_min) / bin_width_s)) + 1
@@ -83,7 +83,7 @@ fig1.tight_layout()
 # ------------------------------------------------------------
 # 4) Burst selection (sliding-window) and burst vs all histograms
 #    Also build a PER-BIN BURST MASK by converting burst start/stop INDICES to bin indices.
-# ------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 L = 30        # minimum photons per burst
 m = 5         # photons in the sliding window
 T = 0.40e-3   # maximum duration (s) of the m-photon window
@@ -132,7 +132,7 @@ if n_bursts:
 # ------------------------------------------------------------
 # 5) Channel-resolved (green/red) intensity traces (first 3 s)
 #    Fill the area under the curves WHERE the per-bin burst mask is True.
-# ------------------------------------------------------------
+# --------------------------------------------------------------------
 used_channels = np.unique(np.asarray(tttr.routing_channels, dtype=np.int32))
 print(f"Used routing channels in this file: {used_channels.tolist()}")
 

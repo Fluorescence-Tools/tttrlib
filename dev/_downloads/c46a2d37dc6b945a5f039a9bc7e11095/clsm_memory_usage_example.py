@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Example: CLSM Image Memory Usage Reporting
+CLSM image memory usage reporting
+=================================
 
 This example demonstrates how to use the memory usage reporting methods
 to analyze and optimize memory consumption in CLSM images.

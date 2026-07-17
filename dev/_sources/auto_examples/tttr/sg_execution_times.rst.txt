@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 8 files **from auto_examples/tttr**:
+**00:00.000** total execution time for 9 files **from auto_examples/tttr**:
 
 .. container::
 
@@ -54,5 +54,8 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_write.py` (``plot_tttr_write.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_tttr_t2_t3_conversion.py` (``t2_t3_conversion.py``)
      - 00:00.000
      - 0.0

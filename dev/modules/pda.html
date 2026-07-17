@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="3.4. Photon distribution analysis" />
+<meta property="og:title" content="11.3. Photon distribution analysis" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="modules/pda.html" />
 <meta property="og:site_name" content="tttrlib" />
 <meta property="og:description" content="Basics: An analysis of photon count histograms can be used to determine FRET efficiencies, rate-constants and population fractions quantitatively. :cite: gopich2003single,gopich2005theory,zhang2005..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_modules_pda_8356a9ec.png" />
+<meta property="og:image" content="_images/social_previews/summary_modules_pda_3b718872.png" />
 <meta property="og:image:alt" content="Basics: An analysis of photon count histograms can be used to determine FRET efficiencies, rate-constants and population fractions quantitatively. :cite: gopich2003single,gopich2005theory,zhang2005..." />
 <meta name="description" content="Basics: An analysis of photon count histograms can be used to determine FRET efficiencies, rate-constants and population fractions quantitatively. :cite: gopich2003single,gopich2005theory,zhang2005..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>3.4. Photon distribution analysis &#8212; tttrlib v0.27.0</title>
+    <title>11.3. Photon distribution analysis &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -72,8 +72,8 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="4. Fluorescence imaging" href="../imaging.html" />
-    <link rel="prev" title="3.3. Fluorescence correlation spectroscopy" href="fcs.html" />
+    <link rel="next" title="11.4. Single-molecule" href="../auto_examples/single_molecule/index.html" />
+    <link rel="prev" title="11.2. Fluorescence intensity analysis" href="features.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -166,7 +166,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -230,6 +230,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -376,7 +383,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -465,7 +472,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -522,6 +529,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -668,7 +682,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -724,27 +738,211 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../file-formats.html">1. TTTR File Formats and Conversion</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tttr.html">2. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
-</ul>
-</details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../single_molecule.html">3. Single-molecule fluorescence</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="decay.html">3.1. Fluorescence decays</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="tttr.html">10.1. TTTR files</a></li>
 
-<li class="toctree-l2"><a class="reference internal" href="fcs.html">3.3. Fluorescence correlation spectroscopy</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">3.4. Photon distribution analysis</a></li>
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../imaging.html">4. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="ics.html">4.1. Image correlation spectroscopy</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../tools.html">5. Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../verbosity.html">6. Verbosity / Debug output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../zreferences.html">7. References</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../single_molecule.html">11. Single-molecule fluorescence</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zreferences.html">15. References</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/beginner/index.html">python plot_01_read_tttr.py</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit_helpers.html">One-call fit helper overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../auto_examples/tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../auto_examples/tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auto_examples/clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
 </ul>
 </details></li>
 
@@ -800,9 +998,9 @@
     <li class="breadcrumb-item"><a href="../user_guide.html" class="nav-link">User Guide</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../single_molecule.html" class="nav-link"><span class="section-number">3. </span>Single-molecule fluorescence</a></li>
+    <li class="breadcrumb-item"><a href="../single_molecule.html" class="nav-link"><span class="section-number">11. </span>Single-molecule fluorescence</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">3.4. </span>Photon distribution analysis</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">11.3. </span>Photon distribution analysis</span></li>
   </ul>
 </nav>
 </div>
@@ -820,9 +1018,9 @@
                 <article class="bd-article">
                   
   <section id="Photon-distribution-analysis">
-<h1><span class="section-number">3.4. </span>Photon distribution analysis<a class="headerlink" href="#Photon-distribution-analysis" title="Link to this heading">#</a></h1>
+<h1><span class="section-number">11.3. </span>Photon distribution analysis<a class="headerlink" href="#Photon-distribution-analysis" title="Link to this heading">#</a></h1>
 <section id="Basics">
-<h2><span class="section-number">3.4.1. </span>Basics<a class="headerlink" href="#Basics" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">11.3.1. </span>Basics<a class="headerlink" href="#Basics" title="Link to this heading">#</a></h2>
 <p>An analysis of photon count histograms can be used to determine FRET efficiencies, rate-constants and population fractions quantitatively. :cite:<code class="docutils literal notranslate"><span class="pre">gopich2003single,gopich2005theory,zhang2005photon,</span> <span class="pre">gopich2007single,sisamakis2010accurate</span></code> FRET histograms can be computed for multiple data sources (eg, TIRF-camera traces or data collected using a confocal setup). Intensity based observables are computed for binned data measured by two or more detection channels (eg, a “green”</p>
 <ol class="upperalpha simple" start="7">
 <li><p>and “red” (R) detection channel in a FRET experiment).</p></li>
@@ -845,7 +1043,7 @@ S_R = F_R + B_R\]</div>
 <p>Knowledge of <span class="math notranslate nohighlight">\(P(S_G, S_R)\)</span> is sufficient to generate theoretical 1D histograms of any FRET-related parameter, which can be expresses as a function of <span class="math notranslate nohighlight">\(S_G\)</span> and <span class="math notranslate nohighlight">\(S_R\)</span> (e.g., signal ratio <span class="math notranslate nohighlight">\(S_G/S_R\)</span> or FRET efficiency <span class="math notranslate nohighlight">\(E\)</span>) :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2007probability</span></code>. Fitting such histograms obtained for a single species requires only one floating parameter, <span class="math notranslate nohighlight">\(p_G\)</span>.</p>
 </section>
 <section id="Species-mixtures">
-<h2><span class="section-number">3.4.2. </span>Species mixtures<a class="headerlink" href="#Species-mixtures" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">11.3.2. </span>Species mixtures<a class="headerlink" href="#Species-mixtures" title="Link to this heading">#</a></h2>
 <p>In a mixture of fluorescence species the intensity distribution :math:<code class="docutils literal notranslate"><span class="pre">P(F)</span></code> is given by the sum of the individual species distributions :math:<code class="docutils literal notranslate"><span class="pre">P^{(j)}(F)</span></code> weighted by :math:<code class="docutils literal notranslate"><span class="pre">x_j</span></code>, the species fraction:</p>
 <div class="math notranslate nohighlight">
 \[p(F) = \sum_{j} x^{(j)}P^{(j)}(F) = \sum_{i} P(q^{(i)}) \sum_{j}x^{(j)} \frac{(q^{(i)}Q^{(j)})^F \exp{(-q^{(i)}Q^{(j)})}}{F!}\]</div>
@@ -865,7 +1063,7 @@ S_R = F_R + B_R\]</div>
 <p>Fluorescence intensities are averaged over the integration time (typically milliseconds). Thus, a distance derived from a FRET efficiency, :math:<code class="docutils literal notranslate"><span class="pre">E</span></code>, here addressed by :math:<code class="docutils literal notranslate"><span class="pre">R_E</span></code>, is for dynamic systems an average distance, that contains information on dynamics :cite:<code class="docutils literal notranslate"><span class="pre">gopich2003single</span></code>.</p>
 </section>
 <section id="Acceptor-induced-broadening">
-<h2><span class="section-number">3.4.3. </span>Acceptor induced broadening<a class="headerlink" href="#Acceptor-induced-broadening" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">11.3.3. </span>Acceptor induced broadening<a class="headerlink" href="#Acceptor-induced-broadening" title="Link to this heading">#</a></h2>
 <p>In addition to conformational dynamics, variations of the fluorescence quantum yield :math:<code class="docutils literal notranslate"><span class="pre">\Phi_{F,A}^{(A0)(j)}</span></code> result in a broadening of FRET efficiency distributions. For a single distance, :math:<code class="docutils literal notranslate"><span class="pre">R_{DA}^{(j)}</span></code>, the broadening caused by a variation of the acceptor fluorescence quantum yield can be approximated by a normal distance distribution with a mean distance :math:<code class="docutils literal notranslate"><span class="pre">\tilde{R}^{(j)}</span></code> and apparent width, :math:<code class="docutils literal notranslate"><span class="pre">\sigma_{app}</span></code> :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2010origin</span></code>.</p>
 <div class="math notranslate nohighlight">
 \[\tilde{R}^{(j)}=R_{RDA}^{(j)} \left ( \frac{\langle \Phi_{F,A}^{(A,0)} \rangle}{\Phi_{F,A}^{(A,0)(j)}} \right )^{1/6}
@@ -874,7 +1072,7 @@ S_R = F_R + B_R\]</div>
 :math:<code class="docutils literal notranslate"><span class="pre">\theta_{A}</span></code> can conveniently be estimated by :term:<code class="docutils literal notranslate"><span class="pre">TCSPC</span></code> experiments assuming :math:<code class="docutils literal notranslate"><span class="pre">\Phi_{F,A}^{(A,0)}</span></code> is proportional to the fluorescence lifetime. For example, if coupled Alexa 647 has two fluorescence lifetimes of 1.17 ns and 1.76 ns with corresponding amplitudes of 0.62 and 0.38, the proportionality factor is :math:<code class="docutils literal notranslate"><span class="pre">\theta_A</span> <span class="pre">\approx</span> <span class="pre">0.06</span></code>.</p>
 </section>
 <section id="Dynamic-PDA">
-<h2><span class="section-number">3.4.4. </span>Dynamic PDA<a class="headerlink" href="#Dynamic-PDA" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">11.3.4. </span>Dynamic PDA<a class="headerlink" href="#Dynamic-PDA" title="Link to this heading">#</a></h2>
 <p>In dynamic systems, the shape of the measured FRET-histograms depends on the length of the binning time (time window). This is exploited to characterize dynamic processes between multiple states :cite:<code class="docutils literal notranslate"><span class="pre">palo2006calculation,gopich2003single,gopich2007single</span></code>. To analyze dynamic processes quantitatively Kalinin et al. :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2010detection</span></code> developed a toolkit, referred to as dynamic PDA, that combines the mathematical formalism of Palo et al. :cite:<code class="docutils literal notranslate"><span class="pre">palo2006calculation</span></code> and Gopich et
 al. :cite:<code class="docutils literal notranslate"><span class="pre">gopich2007single</span></code> with all essential steps towards the complete description of experimental data (including brightness variations, shortening of the observation time due to diffusion and contribution of multimolecular events). Aforementioned authors laid the groundwork for dynamic PDA. It was applied to characterize exchange between two or more FRET states using global analysis of multiple time windows. Finally, the Kapanidis group combined dynamic PDA
 :cite:<code class="docutils literal notranslate"><span class="pre">santoso2010characterizing</span></code> with burst variance analysis (BVA) :cite:<code class="docutils literal notranslate"><span class="pre">torella2011identifying</span></code> to detect dynamics by comparing the standard deviation of FRET from individual molecules over time to that expected from theory.</p>
@@ -889,7 +1087,7 @@ al. :cite:<code class="docutils literal notranslate"><span class="pre">gopich200
     \right]
     \exp{(-k_{12} t_1 - k_{21} t_2)}\]</div>
 <p>where :math:<code class="docutils literal notranslate"><span class="pre">\delta</span></code> is the Dirac :math:<code class="docutils literal notranslate"><span class="pre">delta</span></code>-function, :math:<code class="docutils literal notranslate"><span class="pre">I_0</span></code> and :math:<code class="docutils literal notranslate"><span class="pre">I_1</span></code> are the Bessel functions of the order 0 and 1, :math:<code class="docutils literal notranslate"><span class="pre">k_{12}</span></code> and :math:<code class="docutils literal notranslate"><span class="pre">k_{21}</span></code> are rate constants. The probability :math:<code class="docutils literal notranslate"><span class="pre">p(t_1)</span></code> consists of three terms. The first two terms give the probability of a molecule spending the entirety of the time :math:<code class="docutils literal notranslate"><span class="pre">\Delta</span> <span class="pre">t</span></code> in :math:<code class="docutils literal notranslate"><span class="pre">S_1</span></code> and :math:<code class="docutils literal notranslate"><span class="pre">S_2</span></code>, respectively. The third term describes the probability of the molecule for spending a time
-:math:<code class="docutils literal notranslate"><span class="pre">t_1:</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">state</span> <span class="pre">:math:</span></code>S_1<code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">where</span> <span class="pre">:math:</span></code>0 &lt; t_1 &lt; <span class="math">\Delta `t\ `</span>. The probability :math:<a href="#id1"><span class="problematic" id="id2">``</span></a>P(S_G,S_R)` to observe a certain combination of photons is calculated the same way as described previously.</p>
+:math:<code class="docutils literal notranslate"><span class="pre">t_1</span></code> in the state :math:<code class="docutils literal notranslate"><span class="pre">S_1</span></code>, where :math:<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">t_1</span> <span class="pre">&lt;</span> <span class="pre">\Delta</span> <span class="pre">t</span></code>. The probability :math:<code class="docutils literal notranslate"><span class="pre">P(S_G,S_R)</span></code> to observe a certain combination of photons is calculated the same way as described previously.</p>
 <p>Gopich and Szabo derived an analytical alternative to dynamic PDA :cite:<code class="docutils literal notranslate"><span class="pre">gopich2010fret</span></code>. Here, FRET efficiency histograms (FEH) are approximated by a sum of normal distributions. Hence, experimental data can be conveniently fitted using any spreadsheet application without any programming. The parameters of the normal distributions are explicitly determined by the FRET efficiencies of the states and their exchange rate constants. This approach has been validated by simulations of systems with
 two, three and four conformational states and accurately describes how maxima in the histograms collapse as the binning time or the transition rate constants increases (for details see original publication :cite:<code class="docutils literal notranslate"><span class="pre">gopich2010fret</span></code>). In a two state system (as described above for PDA) the experimental FEH is given by:</p>
 <div class="math notranslate nohighlight">
@@ -927,7 +1125,7 @@ p_2 = \frac{k_{12}}{k_{12} + k_{21}}\]</div>
   \right]
 \right)\]</div>
 <p>In the Gopich Szabo theory corrected experimental data should be analyzed.</p>
-<p>In experiments on freely diffusing molecules the shape of experimental FEHs is influenced by the binning time :math:<code class="docutils literal notranslate"><span class="pre">\Delta</span> <span class="pre">t</span></code> and the actual time spend by the molecules within the observation volume. Neither dynamic PDA nor the analytical approach by Gopich et al.:cite:<code class="docutils literal notranslate"><span class="pre">gopich2010fret</span></code> take diffusion effects explicitly, causing incomplete averaging or variations of the count rate, into account. Resulting systematic deviation can be decreased either by</p>
+<p>In experiments on freely diffusing molecules the shape of experimental FEHs is influenced by the binning time :math:<code class="docutils literal notranslate"><span class="pre">\Delta</span> <span class="pre">t</span></code> and the actual time spend by the molecules within the observation volume. Neither dynamic PDA nor the analytical approach by Gopich et al. :cite:<code class="docutils literal notranslate"><span class="pre">gopich2010fret</span></code> take diffusion effects explicitly, causing incomplete averaging or variations of the count rate, into account. Resulting systematic deviation can be decreased either by</p>
 <ol class="lowerroman simple">
 <li><p>a preselection of single-molecule bursts for analysis or (ii) an application of an empirical approach suggested by Kalinin et al. (Eq. 11 in :cite:<code class="docutils literal notranslate"><span class="pre">kalinin2010detection</span></code>). The second approach uses the FCS diffusion time :math:<code class="docutils literal notranslate"><span class="pre">t_{diff}</span></code> to correct for incomplete averaging given the short diffusion time. Note that these procedures still produce systematic errors. Gopich et al. introduced an approach termed “recoloring method” in time bins that bypasses the diffusion problems at the cost
 of lack of an analytical solution :cite:<code class="docutils literal notranslate"><span class="pre">gopich2009decoding,chung2011extracting</span></code>. Although the analytical approach without applied corrections produces systematic deviations, it is a reliable quantitative method available to all researchers using smFRET.</p></li>
@@ -956,20 +1154,20 @@ an additional powerful tool that extends the possible range of kinetics studies 
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="fcs.html"
+       href="features.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><span class="section-number">3.3. </span>Fluorescence correlation spectroscopy</p>
+        <p class="prev-next-title"><span class="section-number">11.2. </span>Fluorescence intensity analysis</p>
       </div>
     </a>
     <a class="right-next"
-       href="../imaging.html"
+       href="../auto_examples/single_molecule/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><span class="section-number">4. </span>Fluorescence imaging</p>
+        <p class="prev-next-title"><span class="section-number">11.4. </span>Single-molecule</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -992,10 +1190,10 @@ an additional powerful tool that extends the possible range of kinetics studies 
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Basics">3.4.1. Basics</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Species-mixtures">3.4.2. Species mixtures</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Acceptor-induced-broadening">3.4.3. Acceptor induced broadening</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamic-PDA">3.4.4. Dynamic PDA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Basics">11.3.1. Basics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Species-mixtures">11.3.2. Species mixtures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Acceptor-induced-broadening">11.3.3. Acceptor induced broadening</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamic-PDA">11.3.4. Dynamic PDA</a></li>
 </ul>
   </nav></div>
 

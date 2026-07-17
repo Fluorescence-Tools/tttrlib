@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Example: Microtime Linearization with Channel-Specific LUTs and Shifts
+Microtime linearization with channel-specific LUTs and shifts
+=============================================================
 
 This example demonstrates the new MicrotimeLinearization API that allows per-channel
 correction of non-linearities in Time-to-Amplitude Converters (TAC).

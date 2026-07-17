@@ -36,7 +36,7 @@ a photon index ranges in the TTTR data stream. When a new CLSMImage container
 is created the markers for frames and lines contained in the data stream are read.
 There are usually no pixel markers. Markers are identified in the
 data stream by numbers. There are no default identifier for frames and lines
-(see :ref:`auto_examples/flim/plot_marker.py`). Nevertheless, if no identifier
+(see :ref:`sphx_glr_auto_examples_flim_plot_marker.py`). Nevertheless, if no identifier
 for markers are provided, either the default values for a particular setup are used,
 or meta-data contained in the TTTR file is read.
 

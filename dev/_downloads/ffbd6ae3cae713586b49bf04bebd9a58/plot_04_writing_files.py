@@ -1,6 +1,6 @@
 """
 Basic Example 4: Writing TTTR data and converting formats
---------------------------------------------------------
+------------------------------------------------------------
 This example demonstrates three common write operations:
 
 1. Writing a subset of events to a new PTU file.
@@ -20,9 +20,9 @@ import tttrlib
 from examples._example_data import get_data_path, get_output_path
 
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Locate source data and prepare writable paths in the temporary examples dir.
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 ptu_source = get_data_path("pq/ptu/pq_ptu_hh_t3.ptu")
 spc_source = get_data_path("bh/bh_spc132.spc")
 

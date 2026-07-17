@@ -31,37 +31,48 @@ fluorescence decay histograms. ``fit23`` makes use of a maximum likelihood estim
 (MLE) and thus can be applied to low photon count data as frequently encountered
 in time-resolved single-molecule spectroscopy or fluorescence lifetime imaging (FLIM).
 
-``fit23`` optimizes a single rotational correlation time :math:`ho` and a
-fluorescence lifetime :math:`   au` to a polarization resolved fluorescence decay
+``fit23`` optimizes a single rotational correlation time :math:`\rho` and a
+fluorescence lifetime :math:`\tau` to a polarization resolved fluorescence decay
 considering the fraction of scattered light and instrument response function in
 the two detection channels for the parallel and perpendicular fluorescence. Fit23
 operates on fluorescence decays in the :term:`Jordi-format`.
 
 ``fit23`` is intended to be used for data with very few photons, e.g. for pixel analysis
 in fluorescence lifetime image microscopy (FLIM) or for single-molecule spectroscopy.
-The fit implements a maximum likelihood estimator as previously described :cite:`maus_experimental_2001`.
+The fit implements a maximum likelihood estimator as previously described :cite:`maus2001experimental`.
 Briefly, the MLE fit quality parameter 2I* = :math:`-2\ln L(n,g)` (where :math:`L`
 is the likelihood function, :math:`n` are the experimental counts, and :math:`g`
 is the model function) is minimized. The model function :math:`g` under magic-angle
 is given by:
 
-:math:`g_i=N_g \left[ (1-\gamma) rac{irf_i st \exp(iT/k       au) + c}{\sum_{i=0}^{k}irf_i st \exp(iT/k      au) + c} + \gamma rac{bg_i}{\sum_i^{k} bg_i} ight]`
+.. math::
+
+   g_i = N_g \left[
+       (1-\gamma)
+       \frac{irf_i \ast \exp(iT/k\tau) + c}
+            {\sum_{i=0}^{k}irf_i \ast \exp(iT/k\tau) + c}
+       + \gamma \frac{bg_i}{\sum_i^{k} bg_i}
+   \right]
 
 :math:`N_e` is not a fitting parameter but set to the experimental number of
-photons :math:`N`, :math:`st` is the convolution operation, :math:`    au` is the
+photons :math:`N`, :math:`\ast` is the convolution operation, :math:`\tau` is the
 fluorescence lifetime, :math:`irf` is the instrument response function, :math:`i`
 is the channel number, :math:`bg_i` is the background count in the channel :math:`i`,
 
 The convolution by fit23 is computed recursively and accounts for high repetition
 rates:
 
-:math:`irf_i st \exp(iT/k      au) = \sum_{j=1}^{min(i,l)}irf_j\exp(-(i-j)T/k  au) + \sum_{j=i+1}^{k}irf_j\exp(-(i+k-j)T/k     au) `
+.. math::
+
+   irf_i \ast \exp(iT/k\tau) =
+       \sum_{j=1}^{min(i,l)} irf_j \exp(-(i-j)T/k\tau)
+       + \sum_{j=i+1}^{k} irf_j \exp(-(i+k-j)T/k\tau)
 
 The anisotropy treated as previously described :cite:`schaffer_identification_1999`.
 The correction factors needed for a correct anisotropy used by ``fit2x`` are
 defined in the glossary (:term:`Anisotropy`).
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-52
+.. GENERATED FROM PYTHON SOURCE LINES 58-63
 
 .. code-block:: Python
 
@@ -71,13 +82,13 @@ defined in the glossary (:term:`Anisotropy`).
     import tttrlib
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-56
+.. GENERATED FROM PYTHON SOURCE LINES 64-67
 
 First, we define our instrument response function (IRF) and the data array. Both,
 the IRF and the data are stacked arrays that contain the fluorescence decay histograms
 of the parallel and perpendicular detection channels.
 
-.. GENERATED FROM PYTHON SOURCE LINES 56-70
+.. GENERATED FROM PYTHON SOURCE LINES 67-81
 
 .. code-block:: Python
 
@@ -96,7 +107,7 @@ of the parallel and perpendicular detection channels.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-81
+.. GENERATED FROM PYTHON SOURCE LINES 82-92
 
 Second, a set of constant parameters needs to be specified that define instrumental
 parameters. To analyze the decay the time-resolution of the histogram bins (dt),
@@ -109,7 +120,7 @@ defines the convolution range is needed. The parameter ``background`` is an arra
 that defines a non-constant offset that gets scaled by :math:`\gamma` (the fraction
 of scattered light).
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-91
+.. GENERATED FROM PYTHON SOURCE LINES 92-102
 
 .. code-block:: Python
 
@@ -124,14 +135,14 @@ of scattered light).
     }
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-96
+.. GENERATED FROM PYTHON SOURCE LINES 103-107
 
 The settings are used to initialize a instance of the class ``Fit23``. A dataset
 is fitted by calling an instance of ``Fit23`` using the data, an array of the initial
 values of the fitting parameters, and an array that specifies which parameters are
 fixed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-108
+.. GENERATED FROM PYTHON SOURCE LINES 107-119
 
 .. code-block:: Python
 
@@ -148,13 +159,13 @@ fixed.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 109-112
+.. GENERATED FROM PYTHON SOURCE LINES 120-123
 
 Calling an ``Fit23`` instance returns a dictionary that contains an array with the
 fit results ``x``, an array that of the fixed values ``fixed``, and a floating
 point number ``twoIstar`` that quantifies the goodness of the optimized model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 112-122
+.. GENERATED FROM PYTHON SOURCE LINES 123-133
 
 .. code-block:: Python
 

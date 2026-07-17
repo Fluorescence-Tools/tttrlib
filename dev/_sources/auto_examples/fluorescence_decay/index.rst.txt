@@ -25,57 +25,6 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
-
-.. only:: html
-
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}">
-
-.. only:: html
-
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit26_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/fluorescence_decay/plot_fit26`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">fit26</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data. Works with polarization resolved Jordi stacks, computes rotational correlation time by the anisotropy. This function selects out of a set of 4 lifetimes tau the lifetime that fits best the data.">
-
-.. only:: html
-
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="fit23 -----">
 
 .. only:: html
@@ -93,6 +42,40 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Fit26 estimates the fraction of two known reference patterns in one measured histogram. Use it when the shapes are fixed, for example from calibration or reference compounds, and only the mixture fraction is unknown.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit26_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit26`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fit26: two-pattern mixture fitting</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fit25 compares four candidate lifetimes and returns the lifetime that best describes a polarization-resolved Jordi-format decay. Use it when candidate lifetimes are known from calibration or a model grid and the question is which candidate explains the measured photons best.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fit25: select from fixed lifetimes</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3">
 
 .. only:: html
@@ -105,6 +88,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Fluorescence decay analysis - 3</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fit24 fits a bi-exponential fluorescence decay model in Jordi format. Use it when the data contain two lifetime components and anisotropy is not part of the model.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit24`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fit24: bi-exponential decay model</div>
     </div>
 
 
@@ -203,11 +203,11 @@ routines, and demonstrations of different fit configurations and benchmarks.
 .. toctree::
    :hidden:
 
-   /auto_examples/fluorescence_decay/plot_fit24
+   /auto_examples/fluorescence_decay/plot_fit23
    /auto_examples/fluorescence_decay/plot_fit26
    /auto_examples/fluorescence_decay/plot_fit25
-   /auto_examples/fluorescence_decay/plot_fit23
    /auto_examples/fluorescence_decay/plot_decay_fit_irf_bg
+   /auto_examples/fluorescence_decay/plot_fit24
    /auto_examples/fluorescence_decay/plot_fit23_usage_2
    /auto_examples/fluorescence_decay/plot_pile_up
    /auto_examples/fluorescence_decay/plot_convolution_routines

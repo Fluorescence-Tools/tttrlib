@@ -1,5 +1,6 @@
 """
-TTTR Compression Examples
+TTTR compression examples
+=========================
 
 This script demonstrates the delta encoding compression feature for TTTR data,
 showing how to reduce memory usage for large photon event datasets.

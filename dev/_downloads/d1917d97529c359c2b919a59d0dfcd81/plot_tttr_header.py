@@ -95,8 +95,8 @@ data.get_number_of_micro_time_channels()
 # Creating and writing TTTRHeader
 # ===============================
 # Each TTTR object has an attribute that is an instance of the TTTRHeader class.
-#     This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader
-# objects can also be created independently of TTTR object.
+# This instance makes the meta-data contained in the TTTR file accessible.
+# TTTRHeader objects can also be created independently of TTTR objects.
 
 header = tttrlib.TTTRHeader()
 
@@ -110,7 +110,7 @@ header = tttrlib.TTTRHeader()
 header = tttrlib.TTTRHeader()
 
 #%%
-# The JSON string must contain a `tags` list. The `tags` list is a list of dictionarys
+# The JSON string must contain a ``tags`` list. The ``tags`` list is a list of dictionarys
 # in which each dictionary corresponds to a meta-data field in the header. For instance,
 
 print(header.json) # '{\n "tags": []\n}'

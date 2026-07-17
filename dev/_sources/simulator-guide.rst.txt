@@ -358,6 +358,58 @@ whose decay is shifted into the second half of the ``laser_period`` via
 *Implication:* gating the micro-time on the prompt vs delayed window recovers the
 FRET signal vs the acceptor-directly-excited signal (the basis of ALEX/PIE stoichiometry).
 
+ALEX (alternating laser excitation)
+-----------------------------------
+
+Where PIE separates the two excitation sources on the **micro-time** axis (both
+lasers pulse every ``laser_period``), **micro-second ALEX** alternates the green
+(donor) and red (acceptor) laser on the **macro-time / diffusion timescale** — so
+the excitation source cannot be recovered from the micro-time; it is encoded in
+the macro-time. The engine models this directly:
+
+* pass **one excitation grid per laser** (``excitation`` becomes an array),
+* set ``settings.alex_period`` (in macro-time units, ``= dt``); each macro-window
+  is assigned to a laser by an equal-duty round-robin
+  ``floor(fmod(T0·dt, alex_period)/(alex_period/n_lasers))``,
+* give each species a **per-laser brightness matrix** ``q_alex`` (one row per
+  laser). A doubly-labelled FRET pair uses ``q_alex = [[(1-E)·b, E·b], [0, b_A]]``
+  so it emits DD (ch0) + DA (ch1) under the green laser and AA (ch1) under the red
+  laser. An empty ``q_alex`` broadcasts the scalar ``q`` to every laser.
+
+.. code-block:: python
+
+    config = {"settings": {"n_channels": 2, "dt": 0.01, "alex_period": 0.1,   # 10 windows/cycle
+                           "n_ph_max": 600000, "alex_markers": False},
+              "species": [                                                     # two FRET populations
+                  {"D": 0.05, "q_alex": [[240.0, 60.0], [0.0, 300.0]]},        # E = 0.2
+                  {"D": 0.05, "q_alex": [[60.0, 240.0], [0.0, 300.0]]},        # E = 0.8
+              ],
+              "population": [0.15, 0.15],
+              "excitation": [                                                  # one grid per laser
+                  {"type": "gaussian3d", "w0": 0.30, "z0": 2.0, "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1},
+                  {"type": "gaussian3d", "w0": 0.32, "z0": 2.1, "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1}]}
+
+Set ``alex_markers: true`` to additionally write an explicit laser-switch marker
+(``event_type`` = ``alex_marker_event_type``, routing channel = laser index) at
+each switch — useful as ground truth in tests, but impractical over long dilute
+runs (a marker every few windows), so the macro-time encoding is the format-faithful
+mechanism.
+
+*Implication:* the alternation lives in the macro-time. Fold it back with
+:meth:`TTTR.alex_to_microtime` (period in macro-clock ticks) and gate on the
+resulting ALEX phase — the donor detector marks the green window, the acceptor the
+red — then histogram per-burst ``E`` and stoichiometry ``S`` into the 2D ALEX
+E-S plot. See ``examples/simulation/alex_smfret.py`` and the notebooks
+``alex_01_simulation_basics.ipynb`` / ``alex_02_smfret_es.ipynb``.
+
+.. note::
+   Export the simulated stream to a ``TTTR`` by building it from ``photons()``
+   (macro-time from ``macro_window``/``arrival_time``, plus ``micro_time``,
+   ``channel``) — the ``SM`` container keeps macro-time + routing (micro-time
+   dropped, as for a real .sm file), while ``PTU`` / ``Photon-HDF5`` additionally
+   preserve the micro-time. :meth:`SimEngine.to_tttr` also works (it emits SPC-130
+   and now carries the simulated micro-time faithfully and skips markers).
+
 MFD (multiparameter, dual-colour)
 ---------------------------------
 

@@ -158,6 +158,23 @@ including gated, sliced, and normalized correlation variants.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates species that overlap spatially and spectrally but differ in their fluorescence lifetime. Each photon is weighted by a statistical filter built from the species&#x27; micro-time (TCSPC) decay patterns, and the weighted photon stream is auto-/cross-correlated. The result is one correlation curve per species, recovered from a single measurement.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_lifetime_fcs_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_lifetime_fcs`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime-filtered correlation (lifetime-FCS)</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -176,4 +193,5 @@ including gated, sliced, and normalized correlation variants.
    /auto_examples/correlation/plot_normal_correlation
    /auto_examples/correlation/plot_correlation_cr_filter
    /auto_examples/correlation/plot_confocor3_two_ch_correlation_merge
+   /auto_examples/correlation/plot_lifetime_fcs
 

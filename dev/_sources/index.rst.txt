@@ -105,6 +105,7 @@ Documentation
    tttr-core
    file-formats
    burst-analysis
+   h2mm-bva
    pda-guide
    fcs-correlation
    clsm-flim-guide

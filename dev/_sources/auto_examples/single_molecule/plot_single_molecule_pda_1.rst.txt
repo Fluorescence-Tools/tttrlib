@@ -128,11 +128,11 @@ relates to the FRET efficiency by
 
 .. math::
 
-    p_G = \left( 1 + lpha + rac{\gamma E}{(1-E)} ight)^{-1}      ext{ with } \gamma = rac{g_R \Phi_A}{g_R \Phi_D}
+    p_G = \left( 1 + \alpha + \frac{\gamma E}{(1-E)} \right)^{-1} \text{ with } \gamma = \frac{g_R \Phi_A}{g_R \Phi_D}
 
 where :math:`g_G`, :math:`g_R` are the detection efficiencies in the green and
 red detection channel, respectively. :math:`\Phi_A`, :math:`\Phi_D` are the
-fluorescence quantum yield of the acceptor and the donor, respectively. :math:`lpha`
+fluorescence quantum yield of the acceptor and the donor, respectively. :math:`\alpha`
 is the cross-talk from the donor to the acceptor channel, and :math:`E` is the
 FRET efficiency.
 
@@ -197,7 +197,7 @@ potential division by zero need to be handled.
     )
 
 
-Histograms with a logarithmic scale are computed by setting `log_x` to True.
+Histograms with a logarithmic scale are computed by setting ``log_x`` to True.
 When the option ``skip_zero_photon`` is set to False the first column and row of
 the s1s2 matrix (zero photons in ch1 or ch2) is used. In this case potential division
 by zeros in the histogram function need to be handled. The default value for
@@ -397,7 +397,9 @@ using ``scipy`` whereas the parameters are bounded to a reasonable range.
 
     n_species = 3
     x0 = np.array(
-        initial_amplitudes +         initial_probabilities_ch1 +         [initial_background_ch1, initial_background_ch2]
+        initial_amplitudes + \
+        initial_probabilities_ch1 + \
+        [initial_background_ch1, initial_background_ch2]
     )
     bounds = [(-np.inf, np.inf)] * (2 * n_species) + [(0, 10), (0, 10)]
     fit = scipy.optimize.minimize(

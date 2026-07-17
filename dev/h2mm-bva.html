@@ -1,0 +1,1095 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Dynamic FRET: H2MM and BVA" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="h2mm-bva.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_h2mm-bva_e5657f02.png" />
+<meta property="og:image:alt" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta name="description" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Dynamic FRET: H2MM and BVA &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'h2mm-bva';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Photon Distribution Analysis (PDA)" href="pda-guide.html" />
+    <link rel="prev" title="4. Burst Analysis" href="burst-analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Dynamic FRET: H2MM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Dynamic FRET: H2MM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/h2mm-bva.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Dynamic FRET: H2MM and BVA</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="dynamic-fret-h2mm-and-bva">
+<span id="h2mm-bva-guide"></span><h1>Dynamic FRET: H2MM and BVA<a class="headerlink" href="#dynamic-fret-h2mm-and-bva" title="Link to this heading">#</a></h1>
+<p>tttrlib ships two photon-level tools for detecting and modelling <strong>sub-burst
+FRET dynamics</strong> — conformational changes that happen while a single molecule is
+inside the confocal volume:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">BVA</span></code> (Burst Variance Analysis)</dt><dd><p>A fast model-free test for dynamics. It compares the measured per-burst
+spread of the FRET proximity ratio against the shot-noise limit.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">H2MM</span></code> (photon-by-photon Hidden Markov Model)</dt><dd><p>A generative model that infers the number of hidden FRET states, their
+emission (FRET) values, and the transition rates between them — directly
+from photon arrival times, with no time binning.</p>
+</dd>
+</dl>
+<p>Both start from a burst search (<code class="xref py py-class docutils literal notranslate"><span class="pre">BurstFilter</span></code>) and photon streams
+defined by <code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code> (routing channel + micro-time windows), so they
+compose with the rest of the tttrlib burst pipeline.</p>
+<section id="burst-variance-analysis">
+<h2>Burst Variance Analysis<a class="headerlink" href="#burst-variance-analysis" title="Link to this heading">#</a></h2>
+<p>Each burst is split into slices — either a fixed number of photons per slice or
+fixed-duration time windows. For every slice the proximity ratio
+<span class="math notranslate nohighlight">\(PR = n_A / (n_A + n_D)\)</span> is computed from the donor/acceptor photon
+counts, and the burst’s BVA statistic is the standard deviation of <span class="math notranslate nohighlight">\(PR\)</span>
+across its slices. A <em>static</em> species sits on the shot-noise line
+<span class="math notranslate nohighlight">\(\sigma = \sqrt{p(1-p)/n}\)</span>; a species that interconverts within the burst
+sits above it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;example.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+<span class="n">bf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">bf</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span><span class="n">min_photons</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">window_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">window_time_max</span><span class="o">=</span><span class="mf">0.5e-3</span><span class="p">)</span>
+<span class="n">bf</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
+
+<span class="n">bva</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span>                     <span class="c1"># reuse the filter&#39;s bursts + TTTR</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">set_donor</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>                        <span class="c1"># donor routing channel(s)</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">set_acceptor</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>                     <span class="c1"># acceptor routing channel(s)</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">number_of_photons_per_slice</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">mean</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_mean</span>           <span class="c1"># per-burst mean PR</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_std</span>             <span class="c1"># per-burst std of PR</span>
+<span class="c1"># shot-noise-limited reference line</span>
+<span class="n">bins</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="o">.</span><span class="n">compute_static_bva_line</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="photon-by-photon-hmm-h2mm">
+<h2>Photon-by-photon HMM (H2MM)<a class="headerlink" href="#photon-by-photon-hmm-h2mm" title="Link to this heading">#</a></h2>
+<p>H2MM (Pirchi <em>et al.</em>, J. Phys. Chem. B 2016) models the photon stream as a
+hidden Markov chain observed one photon at a time. The model
+<span class="math notranslate nohighlight">\(\lambda = \{\pi, A, B\}\)</span> has an initial-state vector <span class="math notranslate nohighlight">\(\pi\)</span>, a
+one-tick transition matrix <span class="math notranslate nohighlight">\(A\)</span>, and an emission matrix <span class="math notranslate nohighlight">\(B\)</span>
+(<span class="math notranslate nohighlight">\(B_{ik} = P(\text{stream } k \mid \text{state } i)\)</span>). Because photons
+arrive at irregular macro-times, propagating the chain across a gap of
+<span class="math notranslate nohighlight">\(\Delta t\)</span> ticks uses <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">);</span> <span class="n">green</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+<span class="n">red</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">);</span>    <span class="n">red</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+
+<span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">H2MM</span><span class="p">()</span>
+<span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_from_filter</span><span class="p">(</span><span class="n">bf</span><span class="p">,</span> <span class="p">[</span><span class="n">green</span><span class="p">,</span> <span class="n">red</span><span class="p">],</span> <span class="n">min_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># fit 1..3 states, pick the best by BIC</span>
+<span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">eng</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n_restarts</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">bic</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">n_states</span><span class="p">(),</span> <span class="n">best</span><span class="o">.</span><span class="n">obs_np</span><span class="p">)</span>     <span class="c1"># emission (FRET) per state</span>
+
+<span class="n">path</span><span class="p">,</span> <span class="n">icl</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">viterbi_path</span><span class="p">(</span><span class="n">best</span><span class="p">)</span>      <span class="c1"># most-likely state per photon</span>
+</pre></div>
+</div>
+<p>The engine also provides <code class="xref py py-func docutils literal notranslate"><span class="pre">H2MM.factory_model()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">H2MM.simulate_bursts()</span></code> for generating test data, and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">H2MM.set_bursts()</span></code> to load pre-extracted per-burst photon streams directly.</p>
+</section>
+<section id="why-the-tttrlib-h2mm-engine-is-fast">
+<span id="h2mm-performance"></span><h2>Why the tttrlib H2MM engine is fast<a class="headerlink" href="#why-the-tttrlib-h2mm-engine-is-fast" title="Link to this heading">#</a></h2>
+<p>The reference implementation of H2MM is Harris’s <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> (a pthreads C
+library). The tttrlib engine implements the same Baum-Welch EM and Viterbi
+decoding but reaches the <strong>identical</strong> optimum several-fold faster. On a
+simulated 3-state, 200k-photon dataset (macOS, Apple silicon, CPU only):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Engine</p></th>
+<th class="head"><p>EM to tol</p></th>
+<th class="head"><p>vs. tttrlib</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> (reference C)</p></td>
+<td><p>842 ms</p></td>
+<td><p>1.0× (baseline C)</p></td>
+</tr>
+<tr class="row-odd"><td><p>ChiSurf numba</p></td>
+<td><p>402 ms</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>tttrlib (plain EM)</strong></p></td>
+<td><p>345 ms</p></td>
+<td><p><strong>2.4× vs H2MM_C</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>tttrlib (SQUAREM)</strong></p></td>
+<td><p>103 ms</p></td>
+<td><p><strong>8.2× vs H2MM_C</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Viterbi decoding runs at ~150 M photons/s. The speed comes from four
+algorithmic choices, not from micro-optimising the reference’s inner loops:</p>
+<dl class="simple">
+<dt><strong>1. Sparse unique-Δt caches.</strong></dt><dd><p>Between two consecutive photons the chain performs <span class="math notranslate nohighlight">\(\Delta t\)</span>
+unobserved transitions, so the E-step needs <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> and the
+expected-transition tensor <span class="math notranslate nohighlight">\(\rho(\Delta t)\)</span>. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> builds a
+<strong>dense</strong> cache for <em>every</em> tick from 1 to the largest inter-photon gap in
+the dataset — so a single long dark gap forces an
+<span class="math notranslate nohighlight">\(n_{states}^4 \times \Delta t_{max}\)</span> allocation and that many tensor
+builds. tttrlib builds the caches only for the <strong>observed unique</strong> gaps
+(typically a few dozen), keyed by a per-photon slot index. Cost scales with
+the number of <em>distinct</em> gaps, not the clock range.</p>
+</dd>
+<dt><strong>2. Deferred ρ contraction (O(N·n²) hot loop).</strong></dt><dd><p>The naive E-step contracts the full <span class="math notranslate nohighlight">\(\rho\)</span> tensor against the
+forward/backward messages at <em>every photon</em>, costing
+<span class="math notranslate nohighlight">\(O(N \cdot n_{states}^4)\)</span> and streaming the large tensor from memory
+once per gap. tttrlib instead accumulates a small per-slot transition weight
+<code class="docutils literal notranslate"><span class="pre">W[slot,k,m]</span></code> in an <span class="math notranslate nohighlight">\(O(N \cdot n_{states}^2)\)</span> hot loop, and performs
+the single expensive contraction
+<span class="math notranslate nohighlight">\(\xi = \sum_{slot} W \cdot \rho\)</span> <strong>once</strong> in the serial reduction
+(<span class="math notranslate nohighlight">\(O(n_{slots} \cdot n_{states}^4)\)</span> with <span class="math notranslate nohighlight">\(n_{slots} \ll N\)</span>).
+Mathematically identical, but the per-photon work drops from <span class="math notranslate nohighlight">\(n^4\)</span> to
+<span class="math notranslate nohighlight">\(n^2\)</span> and the <span class="math notranslate nohighlight">\(\rho\)</span> cache is read only <span class="math notranslate nohighlight">\(n_{slots}\)</span> times.</p>
+</dd>
+<dt><strong>3. SQUAREM acceleration.</strong></dt><dd><p>Plain Baum-Welch converges linearly. tttrlib wraps the EM map in SQUAREM
+(Varadhan &amp; Roland 2008, scheme S3), a squared-extrapolation accelerator with
+a monotonicity safeguard. It reaches the <em>same</em> EM fixed point in far fewer
+maps — 54 vs. 172 on the benchmark above — which is the difference between
+the 345 ms and 103 ms rows. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> has no equivalent.</p>
+</dd>
+<dt><strong>4. Allocation-free, persistently-threaded kernels.</strong></dt><dd><p>The <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> / <span class="math notranslate nohighlight">\(\rho\)</span> caches are rebuilt every EM map, so
+the pair-power (binary-exponentiation) build reuses per-thread scratch
+buffers instead of allocating on each call — this alone cut the cache-build
+time ~4×. Bursts are processed in parallel over a <strong>persistent</strong> fork-join
+thread pool (<code class="docutils literal notranslate"><span class="pre">std::thread</span></code>, no OpenMP dependency) created once per
+optimisation, with thread-local Baum-Welch accumulators to avoid false
+sharing. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> spawns and joins its pthreads <em>every</em> EM iteration.</p>
+</dd>
+</dl>
+<p>The engine is a direct C++ port of the ChiSurf numba engine and reproduces its
+single-EM-iteration log-likelihood and full-convergence Viterbi path to
+~1e-9, so results are numerically interchangeable.</p>
+<p><strong>Approximate float32 fast mode.</strong> <code class="docutils literal notranslate"><span class="pre">optimize(...,</span> <span class="pre">single_precision=True)</span></code> runs
+the <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> / <span class="math notranslate nohighlight">\(\rho\)</span> caches and the forward-backward hot loop
+in float32 (model parameters and Baum-Welch reductions stay double), roughly
+halving the memory bandwidth of the caches. Because the log-likelihood then
+carries float32 round-off (~1e-2), the convergence threshold is floored at 1e-3.
+The benefit grows with the cache size (more states, more distinct gaps), so it is
+intended for exploratory fits on very large datasets, not for final numbers.
+(ChiSurf’s other approximate estimator — a neural <em>surrogate</em> that predicts a
+model in one forward pass — is not ported: it needs a trained network and so
+falls outside tttrlib’s dependency-free C++ core.)</p>
+</section>
+<section id="reproducing-the-benchmark">
+<h2>Reproducing the benchmark<a class="headerlink" href="#reproducing-the-benchmark" title="Link to this heading">#</a></h2>
+<p>The comparison lives under <code class="docutils literal notranslate"><span class="pre">benchmarks/</span></code>. It writes one shared simulated
+dataset and a fixed initial model, then optimises the identical problem in each
+engine’s isolated environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">benchmarks</span>
+<span class="n">python</span> <span class="n">bench_h2mm</span><span class="o">.</span><span class="n">py</span>                                   <span class="c1"># tttrlib (base env)</span>
+<span class="o">.</span><span class="n">venvs</span><span class="o">/</span><span class="n">h2mm_c</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span> <span class="n">competitors</span><span class="o">/</span><span class="n">bench_h2mm_c</span><span class="o">.</span><span class="n">py</span>       <span class="c1"># reference C</span>
+<span class="o">.</span><span class="n">venvs</span><span class="o">/</span><span class="n">h2mm_numba</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span> <span class="n">competitors</span><span class="o">/</span><span class="n">bench_h2mm_numba</span><span class="o">.</span><span class="n">py</span>  <span class="c1"># numba</span>
+</pre></div>
+</div>
+<p>(Build the competitor venvs first with <code class="docutils literal notranslate"><span class="pre">benchmarks/build_envs.sh</span></code>.)</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="burst-analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">4. </span>Burst Analysis</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pda-guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><span class="section-number">5. </span>Photon Distribution Analysis (PDA)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#burst-variance-analysis">Burst Variance Analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#photon-by-photon-hmm-h2mm">Photon-by-photon HMM (H2MM)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-tttrlib-h2mm-engine-is-fast">Why the tttrlib H2MM engine is fast</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-the-benchmark">Reproducing the benchmark</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/h2mm-bva.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

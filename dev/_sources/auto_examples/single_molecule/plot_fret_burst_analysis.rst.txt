@@ -19,7 +19,7 @@
 
 
 FRET Burst Analysis with BurstFilter Class
-=========================================
+==========================================
 
 This example demonstrates FRET burst analysis using the new BurstFilter class in tttrlib.
 The BurstFilter class provides a cleaner interface for burst analysis similar to FRETBursts,
@@ -176,7 +176,7 @@ Find bursts in the data using NumPy-friendly API to avoid SWIG STL proxies
 .. GENERATED FROM PYTHON SOURCE LINES 109-112
 
 Compute FRET efficiency for each burst
--------------------------------------
+--------------------------------------
 Calculate FRET efficiency for each detected burst
 
 .. GENERATED FROM PYTHON SOURCE LINES 112-137
@@ -212,7 +212,7 @@ Calculate FRET efficiency for each detected burst
 .. GENERATED FROM PYTHON SOURCE LINES 138-141
 
 Filter bursts based on FRET efficiency
--------------------------------------
+--------------------------------------
 Filter bursts to select only those with reasonable FRET efficiency
 
 .. GENERATED FROM PYTHON SOURCE LINES 141-150
@@ -294,7 +294,7 @@ Summary statistics
 .. GENERATED FROM PYTHON SOURCE LINES 199-202
 
 Extract burst photons for further analysis
------------------------------------------
+------------------------------------------
 Create a TTTR object containing only photons from selected bursts
 
 .. GENERATED FROM PYTHON SOURCE LINES 202-208

@@ -1,0 +1,1388 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Lifetime-filtered correlation (lifetime-FCS)" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/correlation/plot_lifetime_fcs.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates species that overlap spatially and spectrally but differ in their fluorescence lifetime. Each photon is weighted by a ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_correlation_plot_lifetime_fcs_709fb3bd.png" />
+<meta property="og:image:alt" content="Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates species that overlap spatially and spectrally but differ in their fluorescence lifetime. Each photon is weighted by a ..." />
+<meta name="description" content="Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates species that overlap spatially and spectrally but differ in their fluorescence lifetime. Each photon is weighted by a ..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Lifetime-filtered correlation (lifetime-FCS) &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/correlation/plot_lifetime_fcs';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fluorescence lifetime imaging" href="../flim/index.html" />
+    <link rel="prev" title="Confocor3 two channel cross-correlation (using merge method)" href="plot_confocor3_two_ch_correlation_merge.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
+
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">11. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../beginner/index.html">python plot_01_read_tttr.py</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit_helpers.html">One-call fit helper overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
+</ul>
+</details></li>
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/correlation/plot_lifetime_fcs.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">&lt;no title&gt;</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Lifetime-filtered correlation (lifetime-FCS)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-lifetime-fcs-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="lifetime-filtered-correlation-lifetime-fcs">
+<span id="sphx-glr-auto-examples-correlation-plot-lifetime-fcs-py"></span><h1>Lifetime-filtered correlation (lifetime-FCS)<a class="headerlink" href="#lifetime-filtered-correlation-lifetime-fcs" title="Link to this heading">#</a></h1>
+<p>Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates
+species that overlap spatially and spectrally but differ in their <strong>fluorescence
+lifetime</strong>. Each photon is weighted by a <em>statistical filter</em> built from the
+species’ micro-time (TCSPC) decay patterns, and the weighted photon stream is
+auto-/cross-correlated. The result is one correlation curve <em>per species</em>,
+recovered from a single measurement.</p>
+<p>This example simulates the full experiment with <a class="reference internal" href="../../simulator-guide.html#tttrlib.SimEngine" title="tttrlib.SimEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.SimEngine</span></code></a> and
+analyses it with <code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.Correlator</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Two species <strong>freely diffusing</strong> through the confocal volume with different
+diffusion coefficients <em>and</em> different fluorescence lifetimes (1 ns and 4 ns).
+Lifetime filtering pulls the fast- and slow-diffusing species apart into two
+clean auto-correlations.</p></li>
+<li><p>The same two lifetime states now <strong>interconverting</strong> while they diffuse
+(a spontaneous exchange rate matrix). The species <em>cross</em>-correlation grows a
+characteristic rise-and-decay — the kinetic signature of the exchange — even
+though both states diffuse identically.</p></li>
+</ol>
+<p>Only the micro-times are used to build the filters; no photon is discarded.</p>
+<p>References: Kapusta, Wahl, Benda, Hof, Enderlein, <em>J. Fluoresc.</em> <strong>17</strong>, 43 (2007);
+Böhmer, Wahl, Rahn, Erdmann, Enderlein, <em>Chem. Phys. Lett.</em> <strong>353</strong>, 439 (2002).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+</pre></div>
+</div>
+<section id="simulation-set-up">
+<h2>Simulation set-up<a class="headerlink" href="#simulation-set-up" title="Link to this heading">#</a></h2>
+<p>The simulator advances the sample on an abstract macro-time step <code class="docutils literal notranslate"><span class="pre">DT</span></code> (ms) and
+draws a micro-time per photon from each species’ decay on a separate TAC axis of
+<code class="docutils literal notranslate"><span class="pre">N_MT</span></code> channels at <code class="docutils literal notranslate"><span class="pre">MT_RES</span></code> ns/channel. We reconstruct the <em>absolute</em> macro
+time from the window index and the within-window arrival offset, and read the
+micro-times straight from the engine (the <code class="docutils literal notranslate"><span class="pre">to_tttr</span></code> hardware encoding is not
+needed here and would fold the clean decay onto the TAC).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">DT</span> <span class="o">=</span> <span class="mf">0.005</span>            <span class="c1"># macro-time step (ms)</span>
+<span class="n">N_MT</span> <span class="o">=</span> <span class="mi">2048</span>           <span class="c1"># micro-time (TAC) channels</span>
+<span class="n">MT_RES</span> <span class="o">=</span> <span class="mf">0.016</span>        <span class="c1"># micro-time resolution (ns / channel)</span>
+<span class="n">LASER</span> <span class="o">=</span> <span class="n">N_MT</span> <span class="o">*</span> <span class="n">MT_RES</span>  <span class="c1"># laser period (ns)</span>
+<span class="n">RES_S</span> <span class="o">=</span> <span class="mf">1e-7</span>          <span class="c1"># macro-time tick used for correlation (s)</span>
+<span class="n">W0</span> <span class="o">=</span> <span class="mf">0.3</span>              <span class="c1"># 1/e^2 lateral beam waist (um), for tau_D = w0^2 / (4 D)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">lifetimes_ns</span><span class="p">,</span> <span class="n">diffusion</span><span class="p">,</span> <span class="n">k_exchange</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mi">1_200_000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulate two diffusing lifetime species and return the photon stream.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lifetimes_ns : (2,) sequence</span>
+<span class="sd">        Fluorescence lifetime of each species (ns).</span>
+<span class="sd">    diffusion : (2,) sequence</span>
+<span class="sd">        Translational diffusion coefficient of each species (um^2/ms).</span>
+<span class="sd">    k_exchange : float</span>
+<span class="sd">        Spontaneous 0&lt;-&gt;1 interconversion rate (1/ms); 0 keeps the species static.</span>
+<span class="sd">    n_photons : int</span>
+<span class="sd">        Photon budget (stops the simulation once reached).</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        RNG seed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    macro_ticks : (n,) uint64</span>
+<span class="sd">        Absolute macro time in units of ``RES_S`` (ascending).</span>
+<span class="sd">    micro : (n,) int</span>
+<span class="sd">        Micro-time (TAC) channel per photon.</span>
+<span class="sd">    species : (n,) int</span>
+<span class="sd">        Ground-truth emitting species (0 or 1) per photon.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="n">DT</span><span class="p">,</span> <span class="s2">&quot;n_ph_max&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_photons</span><span class="p">),</span> <span class="s2">&quot;n_channels&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;n_microtime_channels&quot;</span><span class="p">:</span> <span class="n">N_MT</span><span class="p">,</span> <span class="s2">&quot;microtime_resolution&quot;</span><span class="p">:</span> <span class="n">MT_RES</span><span class="p">,</span>
+            <span class="s2">&quot;laser_period&quot;</span><span class="p">:</span> <span class="n">LASER</span><span class="p">,</span> <span class="s2">&quot;fast_grid_bbox&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;active_margin&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;box&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;xy&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">},</span>
+        <span class="s2">&quot;species&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;D&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">diffusion</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">120.0</span><span class="p">],</span> <span class="s2">&quot;decay&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;lifetimes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">lifetimes_ns</span><span class="p">[</span><span class="mi">0</span><span class="p">])]}},</span>
+            <span class="p">{</span><span class="s2">&quot;D&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">diffusion</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">120.0</span><span class="p">],</span> <span class="s2">&quot;decay&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;lifetimes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">lifetimes_ns</span><span class="p">[</span><span class="mi">1</span><span class="p">])]}},</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;k_rad&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="s2">&quot;k_nrad&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">k_exchange</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">k_exchange</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="s2">&quot;background&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.002</span><span class="p">],</span>
+        <span class="s2">&quot;population&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span>
+        <span class="s2">&quot;excitation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian3d&quot;</span><span class="p">,</span> <span class="s2">&quot;w0&quot;</span><span class="p">:</span> <span class="n">W0</span><span class="p">,</span> <span class="s2">&quot;z0&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+                       <span class="s2">&quot;extent_xy&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;extent_z&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span> <span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+    <span class="p">}</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">SimEngine</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+    <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">species</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">emitting_species</span><span class="p">())</span>
+    <span class="n">micro</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">micro_time</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="c1"># Absolute macro time = window index * step + within-window arrival offset.</span>
+    <span class="n">t_ms</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">macro_window</span><span class="p">())</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">float64</span></a><span class="p">)</span> <span class="o">*</span> <span class="n">DT</span> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">arrival_time</span><span class="p">())</span>
+    <span class="n">macro_ticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">t_ms</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">/</span> <span class="n">RES_S</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint64" title="numpy.uint64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint64</span></a><span class="p">))</span>
+    <span class="k">return</span> <span class="n">macro_ticks</span><span class="p">,</span> <span class="n">micro</span><span class="p">,</span> <span class="n">species</span>
+</pre></div>
+</div>
+</section>
+<section id="lifetime-filters">
+<h2>Lifetime filters<a class="headerlink" href="#lifetime-filters" title="Link to this heading">#</a></h2>
+<p>The statistical filters follow the weighted least-squares scheme of Enderlein and
+co-workers. With the column-normalised species decay patterns <code class="docutils literal notranslate"><span class="pre">D</span></code> and the diagonal
+weight <code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">=</span> <span class="pre">diag(1/I)</span></code> (<code class="docutils literal notranslate"><span class="pre">I</span></code> = total decay), the filters are
+<code class="docutils literal notranslate"><span class="pre">F</span> <span class="pre">=</span> <span class="pre">(D^T</span> <span class="pre">W</span> <span class="pre">D)^{-1}</span> <span class="pre">D^T</span> <span class="pre">W</span></code> and obey <code class="docutils literal notranslate"><span class="pre">sum_t</span> <span class="pre">F_i(t)</span> <span class="pre">p_j(t)</span> <span class="pre">=</span> <span class="pre">delta_ij</span></code>. Photon <em>i</em>
+then contributes weight <code class="docutils literal notranslate"><span class="pre">F[s,</span> <span class="pre">micro_i]</span></code> to species <em>s</em>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">lifetime_filters</span><span class="p">(</span><span class="n">species_decays</span><span class="p">,</span> <span class="n">total_decay</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the ``(n_species, n_bins)`` fFCS lifetime-filter matrix.&quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.column_stack.html#numpy.column_stack" title="numpy.column_stack" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span></a><span class="p">([</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">species_decays</span><span class="p">])</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="n">d</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">total_decay</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">dw</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">y</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">dw</span> <span class="o">@</span> <span class="n">d</span>
+    <span class="k">return</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linalg.pinv.html#numpy.linalg.pinv" title="numpy.linalg.pinv" class="sphx-glr-backref-module-numpy-linalg sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span></a><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">@</span> <span class="n">dw</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">species_decays</span><span class="p">(</span><span class="n">micro</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="n">N_MT</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-species reference micro-time decays and the total decay.</span>
+
+<span class="sd">    In simulation the emitting species is known exactly; experimentally these</span>
+<span class="sd">    reference patterns are measured on pure-species calibration samples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d0</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.bincount.html#numpy.bincount" title="numpy.bincount" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">bincount</span></a><span class="p">(</span><span class="n">micro</span><span class="p">[</span><span class="n">species</span> <span class="o">==</span> <span class="mi">0</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="n">n_bins</span><span class="p">)[:</span><span class="n">n_bins</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">d1</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.bincount.html#numpy.bincount" title="numpy.bincount" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">bincount</span></a><span class="p">(</span><span class="n">micro</span><span class="p">[</span><span class="n">species</span> <span class="o">==</span> <span class="mi">1</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="n">n_bins</span><span class="p">)[:</span><span class="n">n_bins</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">d0</span><span class="p">,</span> <span class="n">d1</span><span class="p">],</span> <span class="n">d0</span> <span class="o">+</span> <span class="n">d1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">correlate</span><span class="p">(</span><span class="n">macro_ticks</span><span class="p">,</span> <span class="n">weights_a</span><span class="p">,</span> <span class="n">weights_b</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">n_casc</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Weighted multi-tau correlation; returns lag (s) and normalised G(tau).&quot;&quot;&quot;</span>
+    <span class="n">macro</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ascontiguousarray.html#numpy.ascontiguousarray" title="numpy.ascontiguousarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span></a><span class="p">(</span><span class="n">macro_ticks</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint64" title="numpy.uint64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint64</span></a><span class="p">)</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">()</span>
+    <span class="n">corr</span><span class="o">.</span><span class="n">n_bins</span> <span class="o">=</span> <span class="n">n_bins</span>
+    <span class="n">corr</span><span class="o">.</span><span class="n">n_casc</span> <span class="o">=</span> <span class="n">n_casc</span>
+    <span class="n">corr</span><span class="o">.</span><span class="n">set_macrotimes</span><span class="p">(</span><span class="n">macro</span><span class="p">,</span> <span class="n">macro</span><span class="p">)</span>
+    <span class="n">corr</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ascontiguousarray.html#numpy.ascontiguousarray" title="numpy.ascontiguousarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span></a><span class="p">(</span><span class="n">weights_a</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+                     <a href="https://numpy.org/doc/stable/reference/generated/numpy.ascontiguousarray.html#numpy.ascontiguousarray" title="numpy.ascontiguousarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span></a><span class="p">(</span><span class="n">weights_b</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+    <span class="n">corr</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">return</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">get_x_axis</span><span class="p">(),</span> <span class="nb">float</span><span class="p">)</span> <span class="o">*</span> <span class="n">RES_S</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">get_corr_normalized</span><span class="p">(),</span> <span class="nb">float</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="static-species-lifetime-separates-the-diffusion-times">
+<h2>1. Static species — lifetime separates the diffusion times<a class="headerlink" href="#static-species-lifetime-separates-the-diffusion-times" title="Link to this heading">#</a></h2>
+<p>A fast, short-lifetime species (D = 8 um^2/ms, tau = 1 ns) and a slow,
+long-lifetime species (D = 0.5 um^2/ms, tau = 4 ns) diffuse independently. The raw
+auto-correlation mixes both diffusion times; the lifetime-filtered curves recover
+each species on its own.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro</span><span class="p">,</span> <span class="n">micro</span><span class="p">,</span> <span class="n">species</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">lifetimes_ns</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">diffusion</span><span class="o">=</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+
+<span class="n">decays</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">species_decays</span><span class="p">(</span><span class="n">micro</span><span class="p">,</span> <span class="n">species</span><span class="p">)</span>
+<span class="n">filters</span> <span class="o">=</span> <span class="n">lifetime_filters</span><span class="p">(</span><span class="n">decays</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+<span class="n">w_fast</span> <span class="o">=</span> <span class="n">filters</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">micro</span><span class="p">]</span>
+<span class="n">w_slow</span> <span class="o">=</span> <span class="n">filters</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">micro</span><span class="p">]</span>
+
+<span class="n">lag</span><span class="p">,</span> <span class="n">g_raw</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html#numpy.ones_like" title="numpy.ones_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span></a><span class="p">(</span><span class="n">micro</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html#numpy.ones_like" title="numpy.ones_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span></a><span class="p">(</span><span class="n">micro</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">g_fast</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro</span><span class="p">,</span> <span class="n">w_fast</span><span class="p">,</span> <span class="n">w_fast</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">g_slow</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro</span><span class="p">,</span> <span class="n">w_slow</span><span class="p">,</span> <span class="n">w_slow</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">g_cross_static</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro</span><span class="p">,</span> <span class="n">w_fast</span><span class="p">,</span> <span class="n">w_slow</span><span class="p">)</span>
+
+<span class="n">td_fast</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="mf">8.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>   <span class="c1"># expected diffusion times (s)</span>
+<span class="n">td_slow</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>
+</pre></div>
+</div>
+<p>The micro-time histogram shows the two lifetime components the filters are built
+from, and the filter functions that weight each photon by its arrival time.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">t_ns</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="n">N_MT</span><span class="p">)</span> <span class="o">*</span> <span class="n">MT_RES</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax_d</span><span class="p">,</span> <span class="n">ax_f</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">ax_d</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">t_ns</span><span class="p">,</span> <span class="n">decays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">decays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;species 0 (tau=1 ns)&quot;</span><span class="p">)</span>
+<span class="n">ax_d</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">t_ns</span><span class="p">,</span> <span class="n">decays</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">decays</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;species 1 (tau=4 ns)&quot;</span><span class="p">)</span>
+<span class="n">ax_d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;micro-time (ns)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;norm. counts&quot;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Reference decays&quot;</span><span class="p">)</span>
+<span class="n">ax_d</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax_f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_ns</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filter, species 0&quot;</span><span class="p">)</span>
+<span class="n">ax_f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_ns</span><span class="p">,</span> <span class="n">filters</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filter, species 1&quot;</span><span class="p">)</span>
+<span class="n">ax_f</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.7&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax_f</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;micro-time (ns)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;filter weight&quot;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+         <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Lifetime filters&quot;</span><span class="p">)</span>
+<span class="n">ax_f</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The raw correlation sits between the two diffusion times; the filtered species
+auto-correlations separate cleanly, and their cross-correlation is flat (the
+static species are statistically independent).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag</span><span class="p">,</span> <span class="n">g_raw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;raw (unfiltered)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag</span><span class="p">,</span> <span class="n">g_fast</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filtered species 0 (fast)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag</span><span class="p">,</span> <span class="n">g_slow</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filtered species 1 (slow)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag</span><span class="p">,</span> <span class="n">g_cross_static</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;species 0 x 1 (cross)&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">td</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">td_fast</span><span class="p">,</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">td_slow</span><span class="p">,</span> <span class="s2">&quot;tab:red&quot;</span><span class="p">)]:</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">td</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;lag time (s)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;G(tau)&quot;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>
+       <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Lifetime-FCS: static two-species mixture&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="interconverting-states-the-cross-correlation-reveals-the-kinetics">
+<h2>2. Interconverting states — the cross-correlation reveals the kinetics<a class="headerlink" href="#interconverting-states-the-cross-correlation-reveals-the-kinetics" title="Link to this heading">#</a></h2>
+<p>Now both states diffuse identically (D = 0.15 um^2/ms) but interconvert at
+k = 3 ms^-1 while they cross the focus. The auto-correlations coincide (same
+diffusion), yet the species cross-correlation rises from below one (a photon is
+either state 0 or 1 at any instant) to a peak on the exchange timescale before
+decaying with the diffusion time — the kinetic fingerprint of the reaction.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_k</span><span class="p">,</span> <span class="n">micro_k</span><span class="p">,</span> <span class="n">species_k</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">lifetimes_ns</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">diffusion</span><span class="o">=</span><span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span>
+                                       <span class="n">k_exchange</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+<span class="n">decays_k</span><span class="p">,</span> <span class="n">total_k</span> <span class="o">=</span> <span class="n">species_decays</span><span class="p">(</span><span class="n">micro_k</span><span class="p">,</span> <span class="n">species_k</span><span class="p">)</span>
+<span class="n">filters_k</span> <span class="o">=</span> <span class="n">lifetime_filters</span><span class="p">(</span><span class="n">decays_k</span><span class="p">,</span> <span class="n">total_k</span><span class="p">)</span>
+<span class="n">wk0</span><span class="p">,</span> <span class="n">wk1</span> <span class="o">=</span> <span class="n">filters_k</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">micro_k</span><span class="p">],</span> <span class="n">filters_k</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">micro_k</span><span class="p">]</span>
+<span class="n">lag_k</span><span class="p">,</span> <span class="n">gk0</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro_k</span><span class="p">,</span> <span class="n">wk0</span><span class="p">,</span> <span class="n">wk0</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">gk1</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro_k</span><span class="p">,</span> <span class="n">wk1</span><span class="p">,</span> <span class="n">wk1</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">gk_cross</span> <span class="o">=</span> <span class="n">correlate</span><span class="p">(</span><span class="n">macro_k</span><span class="p">,</span> <span class="n">wk0</span><span class="p">,</span> <span class="n">wk1</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag_k</span><span class="p">,</span> <span class="n">gk0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filtered state 0 (auto)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag_k</span><span class="p">,</span> <span class="n">gk1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:red&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;filtered state 1 (auto)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">lag_k</span><span class="p">,</span> <span class="n">gk_cross</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;tab:green&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;state 0 x 1 (cross)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.7&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;lag time (s)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;G(tau)&quot;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span>
+       <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Lifetime-FCS: two states exchanging at 3 ms$^{-1}$&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-lifetime-fcs-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1fadf2112bfd5518f8072c5fdafcd804/plot_lifetime_fcs.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_lifetime_fcs.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/77cb1fe5a202dedbe2d476bc5fc48f4d/plot_lifetime_fcs.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_lifetime_fcs.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/dc7ee0c33cbd89811c77190631411da1/plot_lifetime_fcs.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_lifetime_fcs.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_confocor3_two_ch_correlation_merge.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Confocor3 two channel cross-correlation (using merge method)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../flim/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fluorescence lifetime imaging</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-set-up">Simulation set-up</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-filters">Lifetime filters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-species-lifetime-separates-the-diffusion-times">1. Static species — lifetime separates the diffusion times</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interconverting-states-the-cross-correlation-reveals-the-kinetics">2. Interconverting states — the cross-correlation reveals the kinetics</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/correlation/plot_lifetime_fcs.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -18,12 +18,13 @@
 .. _sphx_glr_auto_examples_clsm_memory_usage_example.py:
 
 
-Example: CLSM Image Memory Usage Reporting
+CLSM image memory usage reporting
+=================================
 
 This example demonstrates how to use the memory usage reporting methods
 to analyze and optimize memory consumption in CLSM images.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-243
+.. GENERATED FROM PYTHON SOURCE LINES 9-244
 
 .. code-block:: Python
 

@@ -19,7 +19,7 @@
 
 
 Microtime Range Selection Example
-===============================
+=================================
 
 This example demonstrates how to implement microtime range selection for burst analysis.
 While the BurstFilter class doesn't currently have built-in microtime selection,
@@ -85,7 +85,7 @@ First, let's look at the microtime distribution to understand the data
 .. GENERATED FROM PYTHON SOURCE LINES 46-50
 
 Define microtime ranges for selection
-------------------------------------
+-------------------------------------
 Define ranges of interest (min, max) in microtime channels
 For example, select photons within specific time windows
 
@@ -107,7 +107,7 @@ For example, select photons within specific time windows
 .. GENERATED FROM PYTHON SOURCE LINES 61-63
 
 Select photons within microtime ranges
--------------------------------------
+--------------------------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 63-81
 

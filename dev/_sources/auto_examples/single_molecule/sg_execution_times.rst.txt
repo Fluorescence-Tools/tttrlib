@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 17 files **from auto_examples/single_molecule**:
+**00:00.000** total execution time for 18 files **from auto_examples/single_molecule**:
 
 .. container::
 
@@ -33,6 +33,9 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_01_burst_analysis.py` (``plot_01_burst_analysis.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_alex_sm.py` (``plot_alex_sm.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_json.py` (``plot_burst_analysis_json.py``)

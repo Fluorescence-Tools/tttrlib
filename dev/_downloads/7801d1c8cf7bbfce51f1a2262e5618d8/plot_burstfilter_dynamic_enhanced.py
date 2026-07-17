@@ -157,7 +157,7 @@ print(code_example)
 
 # %%
 # Testing the Enhanced Functionality
-# =================================
+# ==================================
 
 print("\n" + "="*50)
 print("TESTING ENHANCED FUNCTIONALITY")

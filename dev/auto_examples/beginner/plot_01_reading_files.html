@@ -163,7 +163,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -227,6 +227,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -373,7 +380,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -462,7 +469,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -519,6 +526,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -665,7 +679,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -721,27 +735,211 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">1. TTTR File Formats and Conversion</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">2. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">3. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/decay.html">3.1. Fluorescence decays</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
 
-<li class="toctree-l2"><a class="reference internal" href="../../modules/fcs.html">3.3. Fluorescence correlation spectroscopy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">3.4. Photon distribution analysis</a></li>
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">4. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">4.1. Image correlation spectroscopy</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tools.html">5. Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">6. Verbosity / Debug output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">7. References</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">11. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">python plot_01_read_tttr.py</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit_helpers.html">One-call fit helper overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
 </ul>
 </details></li>
 
@@ -800,7 +998,7 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
     
     
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">&lt;no title&gt;</a></li>
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">python plot_01_read_tttr.py</a></li>
     
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Basic Example 1: Reading TTTR data</span></li>
   </ul>

@@ -78,7 +78,7 @@ Create BurstFilter instance
 .. GENERATED FROM PYTHON SOURCE LINES 39-42
 
 Set and save burst parameters to JSON
-------------------------------------
+-------------------------------------
 Configure burst search parameters
 
 .. GENERATED FROM PYTHON SOURCE LINES 42-58
@@ -137,7 +137,7 @@ Convert to dict and print for verification
 .. GENERATED FROM PYTHON SOURCE LINES 77-79
 
 Perform burst search with loaded parameters
-------------------------------------------
+-------------------------------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 79-82
 

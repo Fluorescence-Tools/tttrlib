@@ -163,7 +163,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -227,6 +227,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -373,7 +380,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -462,7 +469,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -519,6 +526,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -665,7 +679,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -786,7 +800,7 @@
                   
   <section id="performance-guide">
 <h1>Performance Guide<a class="headerlink" href="#performance-guide" title="Link to this heading">#</a></h1>
-<p>This page summarizes tips for fast and memory-efficient use of <code class="xref any docutils literal notranslate"><span class="pre">tttrlib</span></code>.</p>
+<p>This page summarizes tips for fast and memory-efficient use of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.</p>
 <section id="selections-and-slicing">
 <h2>Selections and Slicing<a class="headerlink" href="#selections-and-slicing" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -797,7 +811,7 @@
 <section id="correlation">
 <h2>Correlation<a class="headerlink" href="#correlation" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Use <code class="xref any docutils literal notranslate"><span class="pre">:class:`tttrlib.Correlator`</span></code> for efficient multi-tau correlation.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">tttrlib.Correlator</span></code> for efficient multi-tau correlation.</p></li>
 <li><p>Precompute and reuse selections for channels and time windows to avoid repeated filtering.</p></li>
 </ul>
 </section>
@@ -813,20 +827,24 @@
 <ul class="simple">
 <li><p>Reading uses compression by default for sequential selections.</p></li>
 <li><p>For non-sequential selections, internal logic avoids compression to keep correctness.</p></li>
-<li><p>Control compression-on-read via the environment variable <code class="xref any docutils literal notranslate"><span class="pre">TTTR_COMPRESS_ON_READ</span></code> (set to <code class="xref any docutils literal notranslate"><span class="pre">0</span></code>/<code class="xref any docutils literal notranslate"><span class="pre">false</span></code>/<code class="xref any docutils literal notranslate"><span class="pre">off</span></code> to disable).</p></li>
+<li><p>Control compression-on-read via the environment variable
+<code class="docutils literal notranslate"><span class="pre">TTTR_COMPRESS_ON_READ</span></code>. Set it to <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>, or <code class="docutils literal notranslate"><span class="pre">off</span></code> to disable
+compression on read.</p></li>
 </ul>
 </section>
 <section id="memory">
 <h2>Memory<a class="headerlink" href="#memory" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Avoid unnecessary copies: use indices to reference subsets (<code class="xref any docutils literal notranslate"><span class="pre">tttr[idx]</span></code>).</p></li>
+<li><p>Avoid unnecessary copies: use indices to reference subsets such as
+<code class="docutils literal notranslate"><span class="pre">tttr[idx]</span></code>.</p></li>
 <li><p>Convert to smaller dtypes only if compatible with your device header and downstream code.</p></li>
 </ul>
 </section>
 <section id="diagnostics">
 <h2>Diagnostics<a class="headerlink" href="#diagnostics" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Enable verbose diagnostics with <code class="xref any docutils literal notranslate"><span class="pre">TTTRLIB_VERBOSE=1</span></code> to understand hotspots and I/O stages.</p></li>
+<li><p>Enable verbose diagnostics with <code class="docutils literal notranslate"><span class="pre">TTTRLIB_VERBOSE=1</span></code> to understand hotspots
+and I/O stages.</p></li>
 </ul>
 </section>
 <section id="example-checklist">
@@ -835,7 +853,8 @@
 <li><p><strong>[ ]</strong> Compute selections once and reuse</p></li>
 <li><p><strong>[ ]</strong> Use sequential selections where feasible</p></li>
 <li><p><strong>[ ]</strong> Keep windows narrow (prompt/decay ranges)</p></li>
-<li><p><strong>[ ]</strong> Avoid executing notebooks during CI builds (<code class="xref any docutils literal notranslate"><span class="pre">nbsphinx_execute</span> <span class="pre">=</span> <span class="pre">'never'</span></code>)</p></li>
+<li><p><strong>[ ]</strong> Avoid executing notebooks during CI builds
+(<code class="docutils literal notranslate"><span class="pre">nbsphinx_execute</span> <span class="pre">=</span> <span class="pre">'never'</span></code>)</p></li>
 </ul>
 </section>
 </section>

@@ -5,30 +5,13 @@
 .. _single_molecule_examples:
 
 Single-molecule
---------------
+---------------
 
 Application of ``tttrlib`` to single-molecule data.
 
-.. toctree::
-   :maxdepth: 1
-
-   plot_01_burst_analysis
-   plot_burst_analysis_json
-   plot_burst_analysis_with_filter
-   plot_burstfilter_dynamic_enhanced
-   plot_burstfilter_with_selection
-   plot_burst_selection_advanced
-   plot_complete_burst_analysis_pipeline
-   plot_fret_burst_analysis
-   plot_microtime_linearization
-   plot_microtime_selection_example
-   plot_microtime_selection_example_fixed
-   plot_microtime_selection_minimal
-   plot_single_molecule_burst_selection
-   plot_single_molecule_mcs
-   plot_single_molecule_pda_1
-   plot_single_molecule_pda_2
-
+The examples below cover burst search, FRET burst summaries, microtime
+selection, intensity traces, and PDA workflows. Sphinx-Gallery generates the
+example list automatically from the scripts in this directory.
 
 
 .. raw:: html
@@ -299,6 +282,23 @@ Application of ``tttrlib`` to single-molecule data.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Micro-second ALEX (alternating laser excitation) rapidly switches a green (donor) and a red (acceptor) laser. Combined with two detectors this yields three photon streams per burst:">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_alex_sm_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_alex_sm`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ALEX analysis of Shimon Weiss lab .sm files</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates a complete end-to-end burst analysis pipeline using the  BurstFilter class with JSON parameter serialization support. It covers:">
 
 .. only:: html
@@ -356,6 +356,7 @@ Application of ``tttrlib`` to single-molecule data.
    /auto_examples/single_molecule/plot_microtime_linearization
    /auto_examples/single_molecule/plot_01_burst_analysis
    /auto_examples/single_molecule/plot_single_molecule_pda_2
+   /auto_examples/single_molecule/plot_alex_sm
    /auto_examples/single_molecule/plot_complete_burst_analysis_pipeline
    /auto_examples/single_molecule/plot_burst_selection_advanced
 

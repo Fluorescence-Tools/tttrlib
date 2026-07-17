@@ -19,7 +19,7 @@
 
 
 BurstFilter with TTTRSelection Example
-====================================
+======================================
 
 This example demonstrates how to use TTTRSelection with BurstFilter for advanced
 photon selection and burst analysis.
@@ -73,7 +73,7 @@ Find a sample file using TTTRLIB_DATA
 .. GENERATED FROM PYTHON SOURCE LINES 41-44
 
 Create TTTRSelection with specific criteria
-------------------------------------------
+-------------------------------------------
 Create a selection object
 
 .. GENERATED FROM PYTHON SOURCE LINES 44-53
@@ -114,7 +114,7 @@ Export selection to JSON string
 .. GENERATED FROM PYTHON SOURCE LINES 68-71
 
 Apply selection to create filtered TTTR object
----------------------------------------------
+----------------------------------------------
 Get the indices from the selection
 
 .. GENERATED FROM PYTHON SOURCE LINES 71-78

@@ -108,6 +108,23 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib intentionally has no T2&lt;-&gt;T3 conversion in C++: the transform is a small NumPy operation on the bulk arrays, so it lives here as a reusable helper.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_t2_t3_conversion_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/t2_t3_conversion`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Convert PicoQuant T2 <-> T3 record modes by rebuilding a TTTR.</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark">
 
 .. only:: html
@@ -153,7 +170,7 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">TTTR Compression Examples</div>
+      <div class="sphx-glr-thumbnail-title">TTTR compression examples</div>
     </div>
 
 
@@ -172,6 +189,7 @@ microtime histograms, and I/O performance benchmarking.
    /auto_examples/tttr/plot_tttr_microtime_histogram
    /auto_examples/tttr/plot_tttr_write
    /auto_examples/tttr/plot_tttr_file_conversion
+   /auto_examples/tttr/t2_t3_conversion
    /auto_examples/tttr/plot_tttr_read_benchmark
    /auto_examples/tttr/plot_tttr_files
    /auto_examples/tttr/compression_example

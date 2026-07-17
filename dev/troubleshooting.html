@@ -70,7 +70,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Documentation Warning Burn-Down" href="docs-warning-burndown.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="modules/features.html" />
+    <link rel="prev" title="Dynamic FRET: H2MM and BVA" href="modules/h2mm_bva.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -163,7 +163,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -227,6 +227,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -373,7 +380,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -462,7 +469,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -519,6 +526,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -665,7 +679,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -790,28 +804,34 @@
 <section id="type-inference-fails">
 <h2>Type Inference Fails<a class="headerlink" href="#type-inference-fails" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Symptom:</strong> <code class="xref any docutils literal notranslate"><span class="pre">tttrlib.TTTR(filename)</span></code> raises an error about unknown type.</p></li>
-<li><p><strong>Fix:</strong> Provide the explicit type: <code class="xref any docutils literal notranslate"><span class="pre">tttrlib.TTTR(filename,</span> <span class="pre">'PTU')</span></code> (or <code class="xref any docutils literal notranslate"><span class="pre">'HT3'</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">'SPC-130'</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">'PHOTON-HDF5'</span></code>). Check file extension and integrity.</p></li>
+<li><p><strong>Symptom:</strong> <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(filename)</span></code> raises an error about unknown type.</p></li>
+<li><p><strong>Fix:</strong> Provide the explicit type, for example
+<code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(filename,</span> <span class="pre">'PTU')</span></code>. Other common type names are <code class="docutils literal notranslate"><span class="pre">'HT3'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'SPC-130'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'PHOTON-HDF5'</span></code>. Check file extension and integrity.</p></li>
 </ul>
 </section>
 <section id="channel-mapping-mismatch">
 <h2>Channel Mapping Mismatch<a class="headerlink" href="#channel-mapping-mismatch" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Symptom:</strong> Donor/acceptor channels appear swapped or empty selections.</p></li>
-<li><p><strong>Fix:</strong> Verify acquisition channel assignment and update your channel lists, e.g., <code class="xref any docutils literal notranslate"><span class="pre">get_selection_by_channel([0])</span></code>.</p></li>
+<li><p><strong>Fix:</strong> Verify acquisition channel assignment and update your channel lists,
+for example <code class="docutils literal notranslate"><span class="pre">get_selection_by_channel([0])</span></code>.</p></li>
 </ul>
-<blockquote>
-<div><ul class="simple">
+</section>
+<section id="hdf5-routing-channels-differ-from-reference">
+<h2>HDF5 Routing Channels Differ From Reference<a class="headerlink" href="#hdf5-routing-channels-differ-from-reference" title="Link to this heading">#</a></h2>
+<ul class="simple">
 <li><p><strong>Symptom:</strong> Tests or analyses show different routing channels vs. an expected reference for HDF5 data.</p></li>
 <li><p><strong>Fix:</strong> Confirm dataset metadata (detector mapping) in the HDF5 file. Differences can be data-dependent; validate channel names/IDs and adjust selection lists accordingly.</p></li>
 </ul>
-</div></blockquote>
 </section>
 <section id="alternation-parameters-alex-pie">
 <h2>Alternation Parameters (ALEX/PIE)<a class="headerlink" href="#alternation-parameters-alex-pie" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Symptom:</strong> E-S plot looks wrong or bursts appear in unexpected regions.</p></li>
-<li><p><strong>Fix:</strong> Re-check <code class="xref any docutils literal notranslate"><span class="pre">alex_period</span></code>/<code class="xref any docutils literal notranslate"><span class="pre">pie_period</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">D_ON</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">A_ON</span></code>. Start from instrument defaults and refine using alternation histograms.</p></li>
+<li><p><strong>Fix:</strong> Re-check <code class="docutils literal notranslate"><span class="pre">alex_period</span></code>/<code class="docutils literal notranslate"><span class="pre">pie_period</span></code>, <code class="docutils literal notranslate"><span class="pre">offset</span></code>, <code class="docutils literal notranslate"><span class="pre">D_ON</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">A_ON</span></code>. Start from instrument defaults and refine using alternation
+histograms.</p></li>
 </ul>
 </section>
 <section id="performance-memory">
@@ -841,12 +861,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="modules/features.html"
+       href="modules/h2mm_bva.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">&lt;no title&gt;</p>
+        <p class="prev-next-title">Dynamic FRET: H2MM and BVA</p>
       </div>
     </a>
     <a class="right-next"
@@ -879,6 +899,7 @@
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-inference-fails">Type Inference Fails</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#channel-mapping-mismatch">Channel Mapping Mismatch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5-routing-channels-differ-from-reference">HDF5 Routing Channels Differ From Reference</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#alternation-parameters-alex-pie">Alternation Parameters (ALEX/PIE)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-memory">Performance / Memory</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-converting-files">Writing/Converting Files</a></li>

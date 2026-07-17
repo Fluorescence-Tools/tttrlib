@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="quickstart.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This page gets you up and running with tttrlib quickly. Install the package, load data, compute basic analyses, and see where to go next. Installation: Conda (recommended):, Pip:. Minimal Examples:..." />
+<meta property="og:description" content="This page collects the smallest useful snippets for loading TTTR data and running common analyses. Install: With pip: With Conda or Mamba on macOS and Linux: With Conda or Mamba on Windows: Load da..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_quickstart_5fc8c19c.png" />
-<meta property="og:image:alt" content="This page gets you up and running with tttrlib quickly. Install the package, load data, compute basic analyses, and see where to go next. Installation: Conda (recommended):, Pip:. Minimal Examples:..." />
-<meta name="description" content="This page gets you up and running with tttrlib quickly. Install the package, load data, compute basic analyses, and see where to go next. Installation: Conda (recommended):, Pip:. Minimal Examples:..." />
+<meta property="og:image" content="_images/social_previews/summary_quickstart_5cdd7434.png" />
+<meta property="og:image:alt" content="This page collects the smallest useful snippets for loading TTTR data and running common analyses. Install: With pip: With Conda or Mamba on macOS and Linux: With Conda or Mamba on Windows: Load da..." />
+<meta name="description" content="This page collects the smallest useful snippets for loading TTTR data and running common analyses. Install: With pip: With Conda or Mamba on macOS and Linux: With Conda or Mamba on Windows: Load da..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Quickstart &#8212; tttrlib v0.27.0</title>
@@ -70,7 +70,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="tttrlib in your language" href="languages.html" />
-    <link rel="prev" title="Getting Started with tttrlib" href="getting-started.html" />
+    <link rel="prev" title="Getting started" href="getting-started.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -163,7 +163,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -227,6 +227,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -373,7 +380,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -462,7 +469,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -519,6 +526,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -665,7 +679,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -786,72 +800,94 @@
                   
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h1>
-<p>This page gets you up and running with <code class="xref any docutils literal notranslate"><span class="pre">tttrlib</span></code> quickly. Install the package, load data, compute basic analyses, and see where to go next.</p>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<ul>
-<li><p>Conda (recommended):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda install -c tpeulen tttrlib</span>
-</pre></div>
-</div>
-</li>
-<li><p>Pip:</p>
+<p>This page collects the smallest useful snippets for loading TTTR data and
+running common analyses.</p>
+<section id="install">
+<h2>Install<a class="headerlink" href="#install" title="Link to this heading">#</a></h2>
+<p>With pip:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install tttrlib</span>
 </pre></div>
 </div>
-</li>
-</ul>
+<p>With Conda or Mamba on macOS and Linux:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba install -c conda-forge -c bioconda tttrlib</span>
+</pre></div>
+</div>
+<p>With Conda or Mamba on Windows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mamba install -c tpeulen tttrlib</span>
+</pre></div>
+</div>
 </section>
-<section id="minimal-examples">
-<h2>Minimal Examples<a class="headerlink" href="#minimal-examples" title="Link to this heading">#</a></h2>
-<p>Load TTTR data and access arrays:</p>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;photon_stream.ptu&#39;</span><span class="p">)</span>
-<span class="n">macro_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;photon_stream.ptu&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="access-photon-arrays">
+<h2>Access photon arrays<a class="headerlink" href="#access-photon-arrays" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span>
 <span class="n">micro_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">micro_times</span>
 <span class="n">routing_channels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">routing_channels</span>
 </pre></div>
 </div>
-<p>Print header information:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;photon_stream.ptu&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+</section>
+<section id="inspect-metadata">
+<h2>Inspect metadata<a class="headerlink" href="#inspect-metadata" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">to_csv</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>Compute a correlation:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;photon_stream.ptu&#39;</span><span class="p">)</span>
-<span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span><span class="n">channels</span><span class="o">=</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+</section>
+<section id="select-photons">
+<h2>Select photons<a class="headerlink" href="#select-photons" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span>
+<span class="n">red</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">])]</span>
+</pre></div>
+</div>
+</section>
+<section id="compute-a-correlation">
+<h2>Compute a correlation<a class="headerlink" href="#compute-a-correlation" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span><span class="n">channels</span><span class="o">=</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 <span class="n">taus</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">x_axis</span>
-<span class="n">correlation_amplitude</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">correlation</span>
+<span class="n">correlation</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">correlation</span>
 </pre></div>
 </div>
-<p>Create a simple FLIM image from CLSM data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;image.ptu&#39;</span><span class="p">)</span>
-<span class="n">clsm</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSM</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-<span class="n">prompt_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">]</span>
-<span class="n">clsm</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">channels</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[</span><span class="n">prompt_range</span><span class="p">])</span>
+</section>
+<section id="build-a-decay-histogram">
+<h2>Build a decay histogram<a class="headerlink" href="#build-a-decay-histogram" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">micro_times</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="create-a-clsm-intensity-image">
+<h2>Create a CLSM intensity image<a class="headerlink" href="#create-a-clsm-intensity-image" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">image_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;image.ptu&quot;</span><span class="p">)</span>
+<span class="n">clsm</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span>
+<span class="n">clsm</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">]])</span>
 <span class="n">intensity_image</span> <span class="o">=</span> <span class="n">clsm</span><span class="o">.</span><span class="n">intensity</span>
 </pre></div>
 </div>
 </section>
-<section id="next-steps">
-<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
-<p>Explore the <a class="reference internal" href="auto_examples/index.html"><span class="doc">Example Gallery</span></a> for hands-on tutorials covering everything from basic I/O to advanced analysis workflows.</p>
-<p><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm reference internal" href="auto_examples/index.html"><span class="doc">📚 Browse Example Gallery</span></a></p>
-<p>Additional resources:</p>
-<ul class="simple">
-<li><p>Learn key concepts in the <a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a></p></li>
-<li><p>See domain topics: <span class="xref std std-doc">topics/lifetime_analysis</span> and <span class="xref std std-doc">topics/correlation_analysis</span></p></li>
-</ul>
+<section id="run-a-burst-search">
+<h2>Run a burst search<a class="headerlink" href="#run-a-burst-search" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">1e-3</span>
+<span class="n">ranges</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">burst_search</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="n">L</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+<span class="n">bursts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]))</span>
+</pre></div>
+</div>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Verbose diagnostics can be enabled with the environment variable <code class="docutils literal notranslate"><span class="pre">TTTRLIB_VERBOSE</span></code>.</p></li>
-<li><p>For installation details and platform-specific guidance, see <span class="xref std std-doc">getting_started_detailed</span>.</p></li>
+<li><p><a class="reference internal" href="getting-started.html"><span class="doc">Getting started</span></a> explains the first workflow in more detail.</p></li>
+<li><p><a class="reference internal" href="auto_examples/index.html"><span class="doc">Example Gallery</span></a> contains executable examples and plots.</p></li>
+<li><p><a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a> groups the documentation by analysis domain.</p></li>
+<li><p><a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a> covers common loading and selection problems.</p></li>
 </ul>
 </section>
 </section>
@@ -872,7 +908,7 @@
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Getting Started with tttrlib</p>
+        <p class="prev-next-title">Getting started</p>
       </div>
     </a>
     <a class="right-next"
@@ -903,10 +939,16 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-examples">Minimal Examples</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install">Install</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#access-photon-arrays">Access photon arrays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-metadata">Inspect metadata</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#select-photons">Select photons</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-a-correlation">Compute a correlation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-a-decay-histogram">Build a decay histogram</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-clsm-intensity-image">Create a CLSM intensity image</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-burst-search">Run a burst search</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next steps</a></li>
 </ul>
   </nav></div>
 

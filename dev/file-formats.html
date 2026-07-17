@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="1. TTTR File Formats and Conversion" />
+<meta property="og:title" content="3. TTTR File Formats and Conversion" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="file-formats.html" />
 <meta property="og:site_name" content="tttrlib" />
 <meta property="og:description" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_file-formats_b6119906.png" />
+<meta property="og:image" content="_images/social_previews/summary_file-formats_c06633b7.png" />
 <meta property="og:image:alt" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
 <meta name="description" content="tttrlib reads and writes all common time-tagged time-resolved (TTTR) container formats. This page explains each supported file type, the read/write support matrix, and what information survives a c..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>1. TTTR File Formats and Conversion &#8212; tttrlib v0.27.0</title>
+    <title>3. TTTR File Formats and Conversion &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -69,8 +69,8 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Burst Analysis" href="burst-analysis.html" />
-    <link rel="prev" title="TTTR Core, Selections, Masks, and I/O" href="tttr-core.html" />
+    <link rel="next" title="4. Burst Analysis" href="burst-analysis.html" />
+    <link rel="prev" title="2. TTTR Core, Selections, Masks, and I/O" href="tttr-core.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -163,7 +163,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -227,6 +227,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -373,7 +380,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -462,7 +469,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="getting-started.html">
-    Getting Started with tttrlib
+    Getting started
   </a>
 </li>
 
@@ -519,6 +526,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="h2mm-bva.html">
+    Dynamic FRET: H2MM and BVA
   </a>
 </li>
 
@@ -665,7 +679,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="changes.html">
-    Version 0.26
+    Version 0.27
   </a>
 </li>
 
@@ -721,27 +735,211 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">1. TTTR File Formats and Conversion</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="tttr.html">2. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="single_molecule.html">3. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="modules/decay.html">3.1. Fluorescence decays</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html">10.1. TTTR files</a></li>
 
-<li class="toctree-l2"><a class="reference internal" href="modules/fcs.html">3.3. Fluorescence correlation spectroscopy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">3.4. Photon distribution analysis</a></li>
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="imaging.html">4. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">4.1. Image correlation spectroscopy</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="tools.html">5. Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="verbosity.html">6. Verbosity / Debug output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="zreferences.html">7. References</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="single_molecule.html">11. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">15. References</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/beginner/index.html">python plot_01_read_tttr.py</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit_helpers.html">One-call fit helper overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.6. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.7. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.8. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
 </ul>
 </details></li>
 
@@ -793,7 +991,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">1. </span>TTTR File Formats and Conversion</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">3. </span>TTTR File Formats and Conversion</span></li>
   </ul>
 </nav>
 </div>
@@ -811,7 +1009,7 @@
                 <article class="bd-article">
                   
   <section id="tttr-file-formats-and-conversion">
-<span id="file-formats"></span><h1><span class="section-number">1. </span>TTTR File Formats and Conversion<a class="headerlink" href="#tttr-file-formats-and-conversion" title="Link to this heading">#</a></h1>
+<span id="file-formats"></span><h1><span class="section-number">3. </span>TTTR File Formats and Conversion<a class="headerlink" href="#tttr-file-formats-and-conversion" title="Link to this heading">#</a></h1>
 <p>tttrlib reads and writes all common time-tagged time-resolved (TTTR) container
 formats. This page explains each supported file type, the read/write support
 matrix, and what information survives a conversion between formats. All
@@ -831,7 +1029,7 @@ synchronization in imaging data.</p></li>
 raw byte stream: a written file may pack overflow records differently than the
 original, but reading it back yields identical arrays.</p>
 <section id="supported-file-types">
-<h2><span class="section-number">1.1. </span>Supported file types<a class="headerlink" href="#supported-file-types" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">3.1. </span>Supported file types<a class="headerlink" href="#supported-file-types" title="Link to this heading">#</a></h2>
 <dl class="simple">
 <dt>PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</dt><dd><p>The PicoQuant <em>unified</em> container. A tagged header (typed key/value tags)
 is followed by a stream of 32-bit records. The record layout depends on
@@ -866,7 +1064,8 @@ time), and flag bits. Macro time overflows are carried by dedicated
 overflow records (28-bit overflow count) or a per-record overflow bit.
 Markers (pixel/line/frame clock from a scanner) are encoded with the
 invalid+mark bits; an optional <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar file with instrument
-settings is parsed automatically when present.</p>
+settings is parsed automatically when present and re-emitted on write
+(see <a class="reference internal" href="#bh-set-sidecar"><span class="std std-ref">Becker &amp; Hickl .set sidecar and imaging round-trip</span></a>).</p>
 </dd>
 <dt>Becker &amp; Hickl SPC-600/630, 256-channel mode (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>, container <code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code>)</dt><dd><p>Headerless 32-bit records with 8-bit inverted ADC, 17-bit macro time and
 3-bit routing. Every macro time overflow accounts for 2<sup>17</sup> units.</p>
@@ -895,7 +1094,7 @@ channels — one file per detection channel.</p>
 </dl>
 </section>
 <section id="support-matrix">
-<h2><span class="section-number">1.2. </span>Support matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">3.2. </span>Support matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 18.0%" />
@@ -946,8 +1145,9 @@ per-channel inputs, sync rate, imaging (CLSM) block</p></td>
 <td><p>12 bit</p></td>
 <td><p>4 bit</p></td>
 <td><p>✓</p></td>
-<td><p><strong>Macro clock only</strong> (4-byte header); <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar settings are
-read but not written</p></td>
+<td><p><strong>Macro clock</strong> (4-byte header) plus a companion <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar file
+(written next to the <code class="docutils literal notranslate"><span class="pre">.spc</span></code>) carrying the imaging geometry — see
+<a class="reference internal" href="#bh-set-sidecar"><span class="std std-ref">Becker &amp; Hickl .set sidecar and imaging round-trip</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code></p></td>
 <td><p>SPC-600/630 (32 bit)</p></td>
@@ -1006,7 +1206,7 @@ files, old PTU files) is supported so v1 sources round-trip without record
 upgrades.</p>
 </section>
 <section id="metadata-preservation">
-<h2><span class="section-number">1.3. </span>Metadata preservation<a class="headerlink" href="#metadata-preservation" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">3.3. </span>Metadata preservation<a class="headerlink" href="#metadata-preservation" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TTTR.header</span></code> holds all metadata parsed from the source file as typed tags.
 On writing, each container writer re-emits as much of that metadata as the
 target format can physically store:</p>
@@ -1023,7 +1223,9 @@ mappings, hardware module list) are zeroed.</p></li>
 <code class="docutils literal notranslate"><span class="pre">timestamps_specs</span></code>/<code class="docutils literal notranslate"><span class="pre">nanotimes_specs</span></code> and preserves <code class="docutils literal notranslate"><span class="pre">/setup</span></code> values
 from a Photon-HDF5 source; other groups are regenerated.</p></li>
 <li><p><strong>SPC-130/SPC-600, CZ-RAW, SM</strong> headers are small fixed structures — only
-the fields listed in the table survive.</p></li>
+the fields listed in the table survive. SPC-130 imaging data is the
+exception: its instrument setup and scan geometry are preserved in the
+companion <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar (see <a class="reference internal" href="#bh-set-sidecar"><span class="std std-ref">Becker &amp; Hickl .set sidecar and imaging round-trip</span></a>).</p></li>
 </ul>
 <p>The essential calibration — macro time resolution and micro time
 resolution — is preserved by <em>every</em> writable container that has a header:
@@ -1036,14 +1238,36 @@ SPC-600 containers cannot carry calibration; check
 tooling compatibility) or <strong>Photon-HDF5</strong> (open interchange) as the target.</p>
 </section>
 <section id="conversion-between-formats">
-<h2><span class="section-number">1.4. </span>Conversion between formats<a class="headerlink" href="#conversion-between-formats" title="Link to this heading">#</a></h2>
-<p>To convert, read a file and write it with a header whose container (and
-optionally record) type points at the target format:</p>
+<h2><span class="section-number">3.4. </span>Conversion between formats<a class="headerlink" href="#conversion-between-formats" title="Link to this heading">#</a></h2>
+<p>Transcoding is just <em>read one format, write another</em>. <code class="docutils literal notranslate"><span class="pre">TTTR.write</span></code> selects
+the output container from the filename extension, so the common case needs no
+extra arguments:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;measurement.spc&quot;</span><span class="p">,</span> <span class="s2">&quot;SPC-130&quot;</span><span class="p">)</span>
 
-<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.ptu&quot;</span><span class="p">)</span>     <span class="c1"># → PicoQuant PTU  (inferred from .ptu)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.hdf5&quot;</span><span class="p">)</span>    <span class="c1"># → Photon-HDF5    (inferred from .h5/.hdf5)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.ht3&quot;</span><span class="p">)</span>     <span class="c1"># → HydraHarp HT3  (inferred from .ht3)</span>
+</pre></div>
+</div>
+<p>Recognised extensions are <code class="docutils literal notranslate"><span class="pre">.ptu</span></code>, <code class="docutils literal notranslate"><span class="pre">.ht3</span></code>, <code class="docutils literal notranslate"><span class="pre">.spc</span></code>, <code class="docutils literal notranslate"><span class="pre">.hdf5</span></code>/<code class="docutils literal notranslate"><span class="pre">.h5</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.raw</span></code> and <code class="docutils literal notranslate"><span class="pre">.sm</span></code>. Because all three Becker &amp; Hickl flavours share the
+<code class="docutils literal notranslate"><span class="pre">.spc</span></code> extension, writing an SPC source to <code class="docutils literal notranslate"><span class="pre">.spc</span></code> keeps its specific
+flavour (an <code class="docutils literal notranslate"><span class="pre">SPC-600_256</span></code> file is not silently downgraded to <code class="docutils literal notranslate"><span class="pre">SPC-130</span></code>);
+only a cross-family target (e.g. a PTU source written to <code class="docutils literal notranslate"><span class="pre">.spc</span></code>) switches
+container.</p>
+<p><strong>Forcing the format.</strong> When the extension is absent or unusual, pass the
+target explicitly — by container name or by numeric id:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>     <span class="c1"># by container name</span>
+<span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.dat&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>   <span class="c1"># by container id (PQ_PTU_CONTAINER)</span>
+</pre></div>
+</div>
+<p>An explicit argument always wins over the extension. The older style of
+setting <code class="docutils literal notranslate"><span class="pre">header.tttr_container_type</span></code> (and <code class="docutils literal notranslate"><span class="pre">header.tttr_record_type</span></code> to
+choose a specific record encoding such as T2 vs T3) before <code class="docutils literal notranslate"><span class="pre">write</span></code> still
+works and is the way to select the <em>record</em> type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
 <span class="n">header</span><span class="o">.</span><span class="n">tttr_container_type</span> <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># PQ_PTU_CONTAINER</span>
 <span class="n">header</span><span class="o">.</span><span class="n">tttr_record_type</span> <span class="o">=</span> <span class="mi">4</span>      <span class="c1"># PQ_RECORD_TYPE_HHT3v2</span>
 <span class="n">data</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;measurement.ptu&quot;</span><span class="p">)</span>
@@ -1051,7 +1275,13 @@ optionally record) type points at the target format:</p>
 </div>
 <p>If the header’s record type does not fit the target container, tttrlib
 falls back to the container’s canonical record type (HydraHarp v2 T3 for
-PTU/HT3). Container and record type identifiers:</p>
+PTU/HT3). tttrlib also fills in any mandatory metadata the target format
+needs but the (possibly transcoded or freshly built) header lacks — macro
+and micro time resolution, the micro-time channel count, and, for PTU, the
+records-per-file count and bits-per-record — without overwriting values that
+came from the source. This keeps written files valid regardless of the
+source container, including files assembled from bare arrays with
+<code class="docutils literal notranslate"><span class="pre">append_events</span></code>. Container and record type identifiers:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 33.3%" />
@@ -1116,7 +1346,7 @@ PTU/HT3). Container and record type identifiers:</p>
 </table>
 </div>
 <section id="what-survives-a-conversion">
-<h3><span class="section-number">1.4.1. </span>What survives a conversion<a class="headerlink" href="#what-survives-a-conversion" title="Link to this heading">#</a></h3>
+<h3><span class="section-number">3.4.1. </span>What survives a conversion<a class="headerlink" href="#what-survives-a-conversion" title="Link to this heading">#</a></h3>
 <p>Conversions are lossy when the target format cannot represent a field. The
 rules follow directly from the record layouts above:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1169,7 +1399,7 @@ default 1).</p></td>
 </div>
 </section>
 <section id="time-calibration-across-formats">
-<h3><span class="section-number">1.4.2. </span>Time calibration across formats<a class="headerlink" href="#time-calibration-across-formats" title="Link to this heading">#</a></h3>
+<h3><span class="section-number">3.4.2. </span>Time calibration across formats<a class="headerlink" href="#time-calibration-across-formats" title="Link to this heading">#</a></h3>
 <p>Conversion preserves the <em>raw counter values</em>. The macro and micro time
 resolutions travel in the header (<code class="docutils literal notranslate"><span class="pre">MeasDesc_GlobalResolution</span></code> /
 <code class="docutils literal notranslate"><span class="pre">MeasDesc_Resolution</span></code> tags, or the format’s native equivalent), so times
@@ -1178,8 +1408,49 @@ calibration. The headerless SPC-600 containers assume a fixed clock; verify
 <code class="docutils literal notranslate"><span class="pre">header.macro_time_resolution</span></code> after reading converted files.</p>
 </section>
 </section>
+<section id="becker-hickl-set-sidecar-and-imaging-round-trip">
+<span id="bh-set-sidecar"></span><h2><span class="section-number">3.5. </span>Becker &amp; Hickl <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar and imaging round-trip<a class="headerlink" href="#becker-hickl-set-sidecar-and-imaging-round-trip" title="Link to this heading">#</a></h2>
+<p>A Becker &amp; Hickl <code class="docutils literal notranslate"><span class="pre">.spc</span></code> file carries only photon and marker records; the
+CLSM imaging geometry and the full instrument setup live in a companion
+<code class="docutils literal notranslate"><span class="pre">.set</span></code> file with the same base name. tttrlib treats the two as a unit:</p>
+<ul class="simple">
+<li><p><strong>Reading</strong> a <code class="docutils literal notranslate"><span class="pre">.spc</span></code> automatically parses a neighbouring <code class="docutils literal notranslate"><span class="pre">.set</span></code> (same
+base name). The imaging geometry becomes <code class="docutils literal notranslate"><span class="pre">ImgHdr_PixX</span></code> / <code class="docutils literal notranslate"><span class="pre">ImgHdr_PixY</span></code>
+tags, and the <em>entire</em> <code class="docutils literal notranslate"><span class="pre">.set</span></code> — which is largely binary — is preserved
+verbatim inside the header (base64-encoded in the <code class="docutils literal notranslate"><span class="pre">BH_SPC_SetFile</span></code> tag).</p></li>
+<li><p><strong>Writing</strong> a <code class="docutils literal notranslate"><span class="pre">.spc</span></code> emits a companion <code class="docutils literal notranslate"><span class="pre">.set</span></code> next to it. When the
+header still holds a preserved <code class="docutils literal notranslate"><span class="pre">.set</span></code> (read directly, or carried through
+another container), it is restored <strong>byte-for-byte</strong>; otherwise a minimal
+<code class="docutils literal notranslate"><span class="pre">.set</span></code> is synthesised from the imaging tags.</p></li>
+</ul>
+<p>Because the preserved <code class="docutils literal notranslate"><span class="pre">.set</span></code> rides along in the header, and a PTU header
+stores arbitrary tags, the full setup survives a detour through PTU. The
+frame and line markers are ordinary marker events, preserved by the record
+writers, so a scanned image transcoded to PTU and back is identical:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="c1"># .spc + .set  →  .ptu   (the .set travels inside the PTU header)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;scan.spc&quot;</span><span class="p">,</span> <span class="s2">&quot;SPC-130&quot;</span><span class="p">)</span>
+<span class="n">img</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;scan.ptu&quot;</span><span class="p">)</span>
+
+<span class="c1"># .ptu  →  .spc + .set   (the original .set is written back byte-for-byte)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;scan.ptu&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;roundtrip.spc&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Opening the converted image.</strong> A BH SPC image transcoded to PTU keeps its
+markers, so it reconstructs <em>exactly</em> with the Becker &amp; Hickl reading
+routine. On read, tttrlib tags such files with a reading-routine hint
+(<code class="docutils literal notranslate"><span class="pre">BH_SPC_ReadingRoutine</span></code>) that survives the conversion, so the PTU opens as
+a CLSM image with no extra arguments:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clsm</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;scan.ptu&quot;</span><span class="p">)</span>   <span class="c1"># auto-selects BH_SPC130</span>
+<span class="n">clsm</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">shape</span>                             <span class="c1"># (frames, lines, pixels)</span>
+</pre></div>
+</div>
+<p>The hint only applies when the caller does not pass an explicit
+<code class="docutils literal notranslate"><span class="pre">reading_routine</span></code>; pass one to override it.</p>
+</section>
 <section id="tested-conversion-scripts">
-<h2><span class="section-number">1.5. </span>Tested conversion scripts<a class="headerlink" href="#tested-conversion-scripts" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">3.6. </span>Tested conversion scripts<a class="headerlink" href="#tested-conversion-scripts" title="Link to this heading">#</a></h2>
 <p>Ready-to-run conversion scripts (executed as part of the documentation
 build and mirrored by unit tests):</p>
 <ul class="simple">
@@ -1209,7 +1480,7 @@ transcoding with a header borrowed from another file.</p></li>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">TTTR Core, Selections, Masks, and I/O</p>
+        <p class="prev-next-title"><span class="section-number">2. </span>TTTR Core, Selections, Masks, and I/O</p>
       </div>
     </a>
     <a class="right-next"
@@ -1217,7 +1488,7 @@ transcoding with a header borrowed from another file.</p></li>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Burst Analysis</p>
+        <p class="prev-next-title"><span class="section-number">4. </span>Burst Analysis</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1240,15 +1511,16 @@ transcoding with a header borrowed from another file.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-file-types">1.1. Supported file types</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#support-matrix">1.2. Support matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metadata-preservation">1.3. Metadata preservation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conversion-between-formats">1.4. Conversion between formats</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-survives-a-conversion">1.4.1. What survives a conversion</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-calibration-across-formats">1.4.2. Time calibration across formats</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-file-types">3.1. Supported file types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#support-matrix">3.2. Support matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metadata-preservation">3.3. Metadata preservation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conversion-between-formats">3.4. Conversion between formats</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-survives-a-conversion">3.4.1. What survives a conversion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-calibration-across-formats">3.4.2. Time calibration across formats</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tested-conversion-scripts">1.5. Tested conversion scripts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#becker-hickl-set-sidecar-and-imaging-round-trip">3.5. Becker &amp; Hickl <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar and imaging round-trip</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tested-conversion-scripts">3.6. Tested conversion scripts</a></li>
 </ul>
   </nav></div>
 

@@ -139,7 +139,7 @@ Configure burst search parameters similar to FRETBursts
 .. GENERATED FROM PYTHON SOURCE LINES 79-82
 
 Perform burst search on masked photons
-------------------------------------
+--------------------------------------
 Find bursts in the data using only the masked (selected) photons
 
 .. GENERATED FROM PYTHON SOURCE LINES 82-85
@@ -208,7 +208,7 @@ Demonstrate the new dynamic filtering capabilities
 .. GENERATED FROM PYTHON SOURCE LINES 120-122
 
 Change filter parameters and see bursts "reappear"
--------------------------------------------------
+--------------------------------------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 122-134
 
@@ -230,7 +230,7 @@ Change filter parameters and see bursts "reappear"
 .. GENERATED FROM PYTHON SOURCE LINES 135-137
 
 Reapply entire filtering pipeline with different parameters
-----------------------------------------------------------
+-----------------------------------------------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 137-149
 

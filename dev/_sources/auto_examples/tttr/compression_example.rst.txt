@@ -18,12 +18,13 @@
 .. _sphx_glr_auto_examples_tttr_compression_example.py:
 
 
-TTTR Compression Examples
+TTTR compression examples
+=========================
 
 This script demonstrates the delta encoding compression feature for TTTR data,
 showing how to reduce memory usage for large photon event datasets.
 
-.. GENERATED FROM PYTHON SOURCE LINES 7-287
+.. GENERATED FROM PYTHON SOURCE LINES 8-288
 
 .. code-block:: Python
 

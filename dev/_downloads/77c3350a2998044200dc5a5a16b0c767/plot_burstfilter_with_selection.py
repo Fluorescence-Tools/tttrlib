@@ -1,6 +1,6 @@
 """
 BurstFilter with TTTRSelection Example
-====================================
+======================================
 
 This example demonstrates how to use TTTRSelection with BurstFilter for advanced
 photon selection and burst analysis.
@@ -39,7 +39,7 @@ print(f"Total events: {len(data)}")
 
 # %%
 # Create TTTRSelection with specific criteria
-# ------------------------------------------
+# -------------------------------------------
 # Create a selection object
 selection = tttrlib.TTTRSelection()
 
@@ -66,7 +66,7 @@ print(f"New selection is dense: {new_selection.is_dense()}")
 
 # %%
 # Apply selection to create filtered TTTR object
-# ---------------------------------------------
+# ----------------------------------------------
 # Get the indices from the selection
 indices = selection.get_tttr_indices()
 print(f"\nSelected {len(indices)} photon indices")

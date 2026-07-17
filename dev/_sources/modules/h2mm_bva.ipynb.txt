@@ -1,0 +1,218 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Dynamic FRET: H2MM and BVA\n",
+    "\n",
+    ".. _h2mm_bva_notebook:\n",
+    "\n",
+    "This notebook demonstrates the two tttrlib tools for **sub-burst FRET dynamics**\n",
+    "on *simulated* data (no data files needed):\n",
+    "\n",
+    "* :class:`~tttrlib.H2MM` \u2014 a photon-by-photon Hidden Markov Model that infers the\n",
+    "  number of hidden FRET states, their emission (FRET) values and the transition\n",
+    "  rates between them.\n",
+    "* :class:`~tttrlib.BVA` \u2014 Burst Variance Analysis, a model-free test that\n",
+    "  separates static from dynamic species by comparing the per-burst spread of the\n",
+    "  proximity ratio against the shot-noise limit.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import tttrlib\n",
+    "\n",
+    "rng = np.random.default_rng(0)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Simulate a two-state dynamic FRET dataset\n",
+    "\n",
+    "We build a ground-truth H2MM model with two hidden states (a low-FRET and a\n",
+    "high-FRET conformation) that slowly interconvert, then generate photon streams\n",
+    "along random burst time axes with :func:`H2MM.simulate_bursts`. Stream ``0`` is\n",
+    "the donor channel, stream ``1`` the acceptor.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ground-truth model: prior, one-tick transition matrix, emission (FRET) matrix\n",
+    "true = tttrlib.H2mmModel(\n",
+    "    [0.5, 0.5],\n",
+    "    [0.9995, 0.0005, 0.0008, 0.9992],      # slow switching\n",
+    "    [0.80, 0.20,  0.25, 0.75],             # state 0: E~0.2, state 1: E~0.75\n",
+    ")\n",
+    "\n",
+    "# random burst time axes (integer macro-times), ~400 photons/burst\n",
+    "n_bursts, burst_len = 80, 400\n",
+    "times = [np.cumsum(rng.integers(1, 60, size=burst_len)).astype(np.int64)\n",
+    "         for _ in range(n_bursts)]\n",
+    "streams = tttrlib.H2MM.simulate_bursts(true, [list(t) for t in times], seed=1)\n",
+    "\n",
+    "eng = tttrlib.H2MM()\n",
+    "eng.set_bursts([list(map(int, t)) for t in times],\n",
+    "               [list(map(int, s)) for s in streams], n_streams=2)\n",
+    "print(eng.get_n_bursts(), 'bursts', eng.get_n_photons(), 'photons',\n",
+    "      len(eng.get_unique_dt()), 'unique dt')\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Fit H2MM and select the number of states by BIC\n",
+    "\n",
+    "We fit 1, 2 and 3 state models (each with a few random restarts) and pick the\n",
+    "one with the lowest Bayesian Information Criterion. The two-state model should\n",
+    "win and recover the true emission matrix.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fits = {k: eng.fit(k, n_restarts=3, max_iter=500, tol=1e-7, seed=0) for k in (1, 2, 3)}\n",
+    "for k, f in fits.items():\n",
+    "    print(f'{k} state(s): logL={f.loglik:9.1f}  BIC={f.bic():9.1f}  '\n",
+    "          f'({f.n_iter} EM maps, converged={f.converged})')\n",
+    "\n",
+    "best = min(fits.values(), key=lambda m: m.bic())\n",
+    "print('\\nselected states:', best.n_states())\n",
+    "# order states by donor probability for a stable comparison with the truth\n",
+    "order = np.argsort(best.obs_np[:, 0])[::-1]\n",
+    "print('recovered emission (FRET) matrix:\\n', np.round(best.obs_np[order], 3))\n",
+    "print('true emission matrix:\\n', np.round(true.obs_np, 3))\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Per-photon state path (Viterbi)\n",
+    "\n",
+    "The Viterbi decoder assigns the most-likely hidden state to every photon. Here\n",
+    "we show the decoded state track for one burst.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "path, icl = eng.viterbi_path(best)\n",
+    "print('ICL =', round(icl, 1))\n",
+    "\n",
+    "# states of the photons in the first burst\n",
+    "b0, b1 = 0, len(times[0])\n",
+    "fig, ax = plt.subplots(figsize=(8, 2))\n",
+    "ax.step(np.arange(b1 - b0), path[b0:b1], where='mid')\n",
+    "ax.set(xlabel='photon index in burst', ylabel='state', yticks=[0, 1],\n",
+    "       title='Viterbi state path (burst 0)')\n",
+    "plt.tight_layout()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Burst Variance Analysis\n",
+    "\n",
+    "BVA needs a :class:`~tttrlib.TTTR` photon stream. We build one in memory with two\n",
+    "channels (0 = donor, 1 = acceptor): a set of **static** bursts at a constant\n",
+    "proximity ratio and a set of **dynamic** bursts that switch between low and high\n",
+    "FRET within the burst. BVA should place the static bursts on the shot-noise line\n",
+    "and the dynamic bursts above it.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def build_tttr(bursts):\n",
+    "    macro, chan, bounds = [], [], []\n",
+    "    t = 0\n",
+    "    for ch in bursts:\n",
+    "        start = len(macro)\n",
+    "        for c in ch:\n",
+    "            t += 1; macro.append(t); chan.append(int(c))\n",
+    "        t += 1_000_000  # dark gap between bursts\n",
+    "        bounds.append((start, len(macro)))\n",
+    "    d = tttrlib.TTTR()\n",
+    "    d.append_events(np.asarray(macro, np.uint64), np.zeros(len(macro), np.uint16),\n",
+    "                    np.asarray(chan, np.int8), np.zeros(len(macro), np.int8), False, 0)\n",
+    "    return d, np.asarray(bounds, np.int64).ravel()\n",
+    "\n",
+    "n_slice = 5\n",
+    "static = [(rng.random(400) < 0.5).astype(int) for _ in range(200)]\n",
+    "dynamic = [np.concatenate([(rng.random(50) < (0.15 if rng.random() < .5 else 0.85)).astype(int)\n",
+    "                           for _ in range(8)]) for _ in range(200)]\n",
+    "\n",
+    "res = {}\n",
+    "for name, b in [('static', static), ('dynamic', dynamic)]:\n",
+    "    d, bounds = build_tttr(b)\n",
+    "    bva = tttrlib.BVA(d); bva.set_donor([0]); bva.set_acceptor([1])\n",
+    "    bva.compute(list(map(int, bounds)), n_slice)   # positional: bursts, photons/slice\n",
+    "    res[name] = (bva.proximity_ratio_mean, bva.proximity_ratio_std)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "p = np.linspace(0.01, 0.99, 200)\n",
+    "line_p, line_s = tttrlib.BVA.compute_static_bva_line(list(p), n_slice)\n",
+    "\n",
+    "fig, ax = plt.subplots(figsize=(6, 5))\n",
+    "ax.plot(line_p, line_s, 'k-', lw=2, label='shot-noise (static) line')\n",
+    "ax.scatter(*res['static'], s=14, alpha=.5, label='static bursts')\n",
+    "ax.scatter(*res['dynamic'], s=14, alpha=.5, label='dynamic bursts')\n",
+    "ax.set(xlabel='proximity ratio mean', ylabel='proximity ratio std',\n",
+    "       xlim=(0, 1), ylim=(0, 0.5), title='Burst Variance Analysis')\n",
+    "ax.legend()\n",
+    "plt.tight_layout()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The dynamic bursts sit clearly above the shot-noise line, while the static\n",
+    "population hugs it \u2014 the signature BVA uses to flag conformational dynamics. See\n",
+    ":ref:`h2mm_bva_guide` for the full API and :ref:`h2mm_performance` for how the\n",
+    "H2MM engine compares to the reference ``H2MM_C`` library.\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "",
+   "name": ""
+  },
+  "language_info": {
+   "name": ""
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

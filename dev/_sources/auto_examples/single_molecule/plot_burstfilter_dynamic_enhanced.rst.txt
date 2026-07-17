@@ -211,7 +211,7 @@ Code Example for Dynamic Filtering
 .. GENERATED FROM PYTHON SOURCE LINES 159-161
 
 Testing the Enhanced Functionality
-=================================
+==================================
 
 .. GENERATED FROM PYTHON SOURCE LINES 161-210
 

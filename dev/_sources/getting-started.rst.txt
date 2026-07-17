@@ -1,180 +1,160 @@
 .. _getting_started_detailed:
 
-Getting Started with tttrlib
-============================
+Getting started
+===============
 
-The purpose of this guide is to illustrate some of the main features that **tttrlib** provides.
-It assumes a very basic working knowledge of fluorescence spectroscopy (e.g., decay analysis, correlation spectroscopy).
-Please refer to our :ref:`installation-instructions` for installing tttrlib.
+This guide gives a short path from installation to first analysis. It assumes
+basic familiarity with time-resolved fluorescence data, but it does not assume
+knowledge of tttrlib's API.
 
-**tttrlib** is an open-source library that supports a diverse set of experimental TTTR (Time-Tagged Time-Resolved) data.
-It provides efficient tools for reading, preprocessing, and analyzing photon streams recorded by PicoQuant, Becker & Hickl, and open Photon-HDF instruments.
+What tttrlib provides
+---------------------
+
+tttrlib works with photon-by-photon TTTR streams. A loaded
+``tttrlib.TTTR`` object exposes the core arrays used in most analyses:
+
+* ``macro_times``: experiment time or sync-pulse index.
+* ``micro_times``: delay after excitation.
+* ``routing_channels``: detector or routing channel identifiers.
+* ``event_types``: photon, marker, overflow, and related event classes.
+* ``header``: instrument and file metadata.
+
+From the same object you can select photons, build histograms, fit decays,
+compute correlations, run burst searches, or reconstruct images.
 
 Installation
 ------------
 
-We recommend using **Miniforge** (Conda-forge) for a robust, cross-platform Python environment.
+For a new environment, Miniforge with the ``mamba`` solver is recommended.
 
-1. **Install Miniforge**
-   - Download from https://github.com/conda-forge/miniforge
-   - Follow the installation instructions for your operating system (Linux, macOS, Windows).
+.. code-block:: bash
 
-2. **Create a new environment**
+   conda create -n tttrlib-env python=3.11
+   conda activate tttrlib-env
 
-   .. code-block:: bash
+On macOS and Linux, install from Bioconda:
 
-      conda create -n tttrlib-env python=3.10
-      conda activate tttrlib-env
+.. code-block:: bash
 
-3. **Install tttrlib**
-   - **Linux/macOS**: Use Bioconda (ensure `conda-forge` has higher priority than `defaults`):
+   mamba install -c conda-forge -c bioconda tttrlib
 
-     .. code-block:: bash
+On Windows, install from the ``tpeulen`` channel:
 
-        conda install -c conda-forge -c bioconda tttrlib
+.. code-block:: bash
 
-   - **Windows**: Use the custom channel:
+   mamba install -c tpeulen tttrlib
 
-     .. code-block:: bash
+You can also install from PyPI:
 
-        conda install -c tpeulen -c conda-forge tttrlib
+.. code-block:: bash
 
-4. **(Optional) Install Jupyter** to run example notebooks:
+   pip install tttrlib
 
-   .. code-block:: bash
+For a development checkout:
 
-      conda install jupyter
+.. code-block:: bash
 
-5. **Alternative: pip**
-   - For PyPI releases:
+   git clone https://github.com/fluorescence-tools/tttrlib.git
+   cd tttrlib
+   pip install -e .
 
-     .. code-block:: bash
+First file
+----------
 
-        pip install tttrlib
-
-   - For the latest development version:
-
-     .. code-block:: bash
-
-        git clone https://github.com/fluorescence-tools/tttrlib.git
-        cd tttrlib
-        pip install .
-
-Quick Start: Browse the Example Gallery
-----------------------------------------
-
-The fastest way to learn tttrlib is through our **executable examples**.
-
-.. button-ref:: auto_examples/index
-   :color: primary
-   :shadow:
-   
-   📚 Browse All Examples
-
-The gallery includes:
-
-* **Beginner tutorials** - Reading files, basic operations
-* **FLIM analysis** - Lifetime fitting, image reconstruction  
-* **FCS/FCCS** - Correlation analysis
-* **Burst analysis** - Single-molecule detection
-* **CLSM imaging** - Confocal microscopy workflows
-
-Each example is a complete, runnable Python script with explanations.
-
-Running Examples Locally
-------------------------
-
-- Download example TTTR files from https://www.peulen.xyz/downloads/tttr-data/ or use your own experimental data.
-- Open a Python shell or Jupyter notebook.
-- Try this minimal example:
-
-  .. code-block:: python
-
-      import tttrlib
-      # Use type inference (recommended)
-      tttr = tttrlib.TTTR("path/to/example.ptu")
-      print(f"Number of events: {len(tttr)}")
-
-      # If type inference fails:
-      # tttr = tttrlib.TTTR("path/to/example.ptu", "PTU")
-
-Opening TTTR Files and Accessing Data
--------------------------------------
-
-**tttrlib** provides a simple, unified interface for TTTR files via :term:`TTTR` objects.
-A :class:`~tttrlib.TTTR` object represents the photon stream contained in a file and provides direct access to:
-
-- Macro times (experiment time / sync pulse number)
-- Micro times (delay after excitation)
-- Routing channels (detector IDs)
-- Event types (photon, marker, etc.)
-
-Example:
+Load a TTTR file by filename. The file type is inferred when possible.
 
 .. code-block:: python
 
-    import tttrlib
-    tttr1 = tttrlib.TTTR()               # create an empty TTTR object
-    tttr2 = tttrlib.TTTR("filename.ptu") # load a TTTR file
-    micro_times = tttr2.micro_times
+   import tttrlib
 
-**TTTR objects** can be used to compute correlation curves, fluorescence decays, photon distribution histograms, or to generate images from time-resolved confocal laser scanning microscopy (CLSM) data.
+   tttr = tttrlib.TTTR("path/to/photon_stream.ptu")
+   print(len(tttr))
+   print(tttr.header.json)
 
-For example:
+If type inference is not sufficient for a file, pass the file type explicitly:
 
 .. code-block:: python
 
-    import tttrlib
-    data = tttrlib.TTTR("clsm_filename.ptu")
-    clsm = tttrlib.CLSMImage(data)
-    intensity_image = clsm.intensity
+   tttr = tttrlib.TTTR("path/to/photon_stream.ptu", "PTU")
 
-Understanding TTTR File Formats
--------------------------------
+Common first operations
+-----------------------
 
-TTTR files store photon-by-photon data streams. Supported formats include:
+Access the raw timing arrays:
 
-- PicoQuant: PTU, HT3
-- Becker & Hickl: SPC
-- Photon-HDF5: Open community standard
+.. code-block:: python
 
-Each file encodes photon arrival information as integer arrays of macro times, micro times, and routing channels.
-The file type can be inferred automatically or specified explicitly using the second argument of the constructor, e.g. `"PTU"`, `"SPC"`, or `"HDF5"`.
+   macro = tttr.macro_times
+   micro = tttr.micro_times
+   routing = tttr.routing_channels
 
-Basic Python and NumPy Concepts
--------------------------------
+Select photons from one or more routing channels:
 
-Some familiarity with NumPy array operations will help when working with tttrlib:
+.. code-block:: python
 
-- **Slicing:** `tttr[:100]` selects the first 100 events
-- **Boolean indexing:** `tttr[mask]` filters events
-- **NumPy arrays:** photon data is exposed as NumPy arrays for fast numerical processing
+   selection = tttr.get_selection_by_channel([0, 1])
+   selected = tttr[selection]
 
-Quick Reference
----------------
+Create a micro-time decay histogram:
 
-- **Read a file:**
-  ``tttrlib.TTTR(filename, file_type=None)``
+.. code-block:: python
 
-- **Get macro times:**
-  ``tttr.macro_times``
+   import numpy as np
 
-- **Get micro times:**
-  ``tttr.micro_times``
+   counts, edges = np.histogram(tttr.micro_times, bins=256)
 
-- **Select by channel:**
-  ``tttr.get_selection_by_channel([0, 1])``
+Compute a correlation curve:
 
-- **Slice events:**
-  ``tttr[100:200]``
+.. code-block:: python
 
-Next Steps
------------
+   correlator = tttrlib.Correlator(channels=([1], [2]), tttr=tttr)
+   taus = correlator.x_axis
+   amplitudes = correlator.correlation
 
-This section introduced how TTTR files are read and how photon data can be accessed.
-To learn more, see:
+Reconstruct a CLSM intensity image:
 
-- The :ref:`user_guide` for advanced tools and workflows
-- The :ref:`general_examples` for practical scripts
-- The :ref:`tutorial_menu` for step-by-step learning resources
-- The :ref:`api_ref` for a complete reference of all public classes and methods
+.. code-block:: python
+
+   image_data = tttrlib.TTTR("path/to/image.ptu")
+   clsm = tttrlib.CLSMImage(image_data)
+   clsm.fill(channels=[0, 1], micro_time_ranges=[[0, 16000]])
+   intensity = clsm.intensity
+
+Example-driven learning
+-----------------------
+
+The most useful documentation path is the executable example gallery. Each
+example is a complete script with the selections, parameters, and plotting code
+kept next to the result.
+
+* :doc:`auto_examples/tttr/index` covers file reading, headers, selections, and
+  transcoding.
+* :doc:`auto_examples/correlation/index` covers autocorrelation and
+  cross-correlation workflows.
+* :doc:`auto_examples/fluorescence_decay/index` covers decay fitting and
+  convolution.
+* :doc:`auto_examples/flim/index` covers CLSM and FLIM image workflows.
+* :doc:`auto_examples/single_molecule/index` covers burst selection, MCS, and
+  PDA-oriented examples.
+
+Supported file families
+-----------------------
+
+tttrlib currently supports:
+
+* PicoQuant PTU and HT3 data, including T2 and T3 records.
+* Becker & Hickl SPC data.
+* Photon-HDF5 files.
+
+When requesting support for another format, provide a small example file,
+expected metadata, and at least one expected analysis result. That makes it
+possible to add regression coverage.
+
+Where to go next
+----------------
+
+* :doc:`quickstart` for short copy-paste examples.
+* :doc:`user_guide` for the domain-oriented manual.
+* :doc:`modules/index` for notebook-style topic pages.
+* :doc:`auto_examples/index` for executable gallery scripts.
+* :doc:`troubleshooting` if a file does not load or an analysis looks empty.

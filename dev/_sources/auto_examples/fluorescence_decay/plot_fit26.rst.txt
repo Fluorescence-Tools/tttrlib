@@ -18,15 +18,63 @@
 .. _sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py:
 
 
-fit26
------
-Pattern fit. Determines the fraction :math:`f` of two mixed patterns.
+===================================
+Fit26: two-pattern mixture fitting
+===================================
 
-.. :math:
+``Fit26`` estimates the fraction of two known reference patterns in one measured
+histogram. Use it when the shapes are fixed, for example from calibration or
+reference compounds, and only the mixture fraction is unknown.
 
-    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}
+The optimized parameter is ``fraction_1``. ``Fit26`` also writes the complement,
+``1 - fraction_1``, to ``result["x"][1]``.
 
-(No convolution of patterns, area of pattern is normalized by fit)
+.. GENERATED FROM PYTHON SOURCE LINES 13-55
+
+.. code-block:: Python
+
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    import tttrlib
+
+
+    n_channels = 64
+    time_axis = np.linspace(0.0, 1.0, n_channels)
+    pattern_1 = np.exp(-0.5 * ((time_axis - 0.25) / 0.04) ** 2) + 0.001
+    pattern_2 = np.exp(-time_axis / 0.25) + 0.001
+
+    true_fraction_1 = 0.35
+    probability_model = (
+        true_fraction_1 * pattern_1 / pattern_1.sum()
+        + (1.0 - true_fraction_1) * pattern_2 / pattern_2.sum()
+    )
+    data = np.random.default_rng(1).poisson(probability_model * 5_000)
+
+    fit26 = tttrlib.Fit26(pattern_1=pattern_1, pattern_2=pattern_2)
+    result = fit26(
+        data=data.astype(np.int32),
+        initial_values=np.array([0.5, 0.0]),
+        fixed=np.array([0], dtype=np.int16),
+        include_model=True,
+    )
+
+    plt.plot(data, label="synthetic mixture")
+    plt.plot(result["model"], label="Fit26 model")
+    plt.plot(pattern_1 / pattern_1.max() * data.max(), "--", label="pattern 1")
+    plt.plot(pattern_2 / pattern_2.max() * data.max(), "--", label="pattern 2")
+    plt.xlabel("channel")
+    plt.ylabel("counts")
+    plt.legend()
+    plt.show()
+
+    print("Fit26 pattern mixture")
+    print("=====================")
+    print(f"true fraction 1: {true_fraction_1:.3f}")
+    print(f"fitted fraction 1: {result['x'][0]:.3f}")
+    print(f"fitted fraction 2: {result['x'][1]:.3f}")
+    print(f"twoIstar: {result['twoIstar']:.3f}")
 
 
 .. _sphx_glr_download_auto_examples_fluorescence_decay_plot_fit26.py:

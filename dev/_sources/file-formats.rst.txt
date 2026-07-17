@@ -63,7 +63,8 @@ Becker & Hickl SPC-130/150/830 (``.spc``, container ``SPC-130``)
    overflow records (28-bit overflow count) or a per-record overflow bit.
    Markers (pixel/line/frame clock from a scanner) are encoded with the
    invalid+mark bits; an optional ``.set`` sidecar file with instrument
-   settings is parsed automatically when present.
+   settings is parsed automatically when present and re-emitted on write
+   (see :ref:`bh_set_sidecar`).
 
 Becker & Hickl SPC-600/630, 256-channel mode (``.spc``, container ``SPC-600_256``)
    Headerless 32-bit records with 8-bit inverted ADC, 17-bit macro time and
@@ -135,8 +136,9 @@ Support matrix
      - 12 bit
      - 4 bit
      - ✓
-     - **Macro clock only** (4-byte header); ``.set`` sidecar settings are
-       read but not written
+     - **Macro clock** (4-byte header) plus a companion ``.set`` sidecar file
+       (written next to the ``.spc``) carrying the imaging geometry — see
+       :ref:`bh_set_sidecar`
    * - ``SPC-600_256``
      - SPC-600/630 (32 bit)
      - ✓
@@ -205,7 +207,9 @@ target format can physically store:
   ``timestamps_specs``/``nanotimes_specs`` and preserves ``/setup`` values
   from a Photon-HDF5 source; other groups are regenerated.
 - **SPC-130/SPC-600, CZ-RAW, SM** headers are small fixed structures — only
-  the fields listed in the table survive.
+  the fields listed in the table survive. SPC-130 imaging data is the
+  exception: its instrument setup and scan geometry are preserved in the
+  companion ``.set`` sidecar (see :ref:`bh_set_sidecar`).
 
 The essential calibration — macro time resolution and micro time
 resolution — is preserved by *every* writable container that has a header:
@@ -221,14 +225,41 @@ tooling compatibility) or **Photon-HDF5** (open interchange) as the target.
 Conversion between formats
 --------------------------
 
-To convert, read a file and write it with a header whose container (and
-optionally record) type points at the target format:
+Transcoding is just *read one format, write another*. ``TTTR.write`` selects
+the output container from the filename extension, so the common case needs no
+extra arguments:
 
 .. code-block:: python
 
    import tttrlib
 
    data = tttrlib.TTTR("measurement.spc", "SPC-130")
+
+   data.write("measurement.ptu")     # → PicoQuant PTU  (inferred from .ptu)
+   data.write("measurement.hdf5")    # → Photon-HDF5    (inferred from .h5/.hdf5)
+   data.write("measurement.ht3")     # → HydraHarp HT3  (inferred from .ht3)
+
+Recognised extensions are ``.ptu``, ``.ht3``, ``.spc``, ``.hdf5``/``.h5``,
+``.raw`` and ``.sm``. Because all three Becker & Hickl flavours share the
+``.spc`` extension, writing an SPC source to ``.spc`` keeps its specific
+flavour (an ``SPC-600_256`` file is not silently downgraded to ``SPC-130``);
+only a cross-family target (e.g. a PTU source written to ``.spc``) switches
+container.
+
+**Forcing the format.** When the extension is absent or unusual, pass the
+target explicitly — by container name or by numeric id:
+
+.. code-block:: python
+
+   data.write("measurement.dat", "PTU")     # by container name
+   data.write("measurement.dat", None, 0)   # by container id (PQ_PTU_CONTAINER)
+
+An explicit argument always wins over the extension. The older style of
+setting ``header.tttr_container_type`` (and ``header.tttr_record_type`` to
+choose a specific record encoding such as T2 vs T3) before ``write`` still
+works and is the way to select the *record* type:
+
+.. code-block:: python
 
    header = data.header
    header.tttr_container_type = 0   # PQ_PTU_CONTAINER
@@ -237,7 +268,13 @@ optionally record) type points at the target format:
 
 If the header's record type does not fit the target container, tttrlib
 falls back to the container's canonical record type (HydraHarp v2 T3 for
-PTU/HT3). Container and record type identifiers:
+PTU/HT3). tttrlib also fills in any mandatory metadata the target format
+needs but the (possibly transcoded or freshly built) header lacks — macro
+and micro time resolution, the micro-time channel count, and, for PTU, the
+records-per-file count and bits-per-record — without overwriting values that
+came from the source. This keeps written files valid regardless of the
+source container, including files assembled from bare arrays with
+``append_events``. Container and record type identifiers:
 
 .. list-table::
    :header-rows: 1
@@ -331,6 +368,54 @@ resolutions travel in the header (``MeasDesc_GlobalResolution`` /
 in seconds are preserved whenever the target header format can store the
 calibration. The headerless SPC-600 containers assume a fixed clock; verify
 ``header.macro_time_resolution`` after reading converted files.
+
+.. _bh_set_sidecar:
+
+Becker & Hickl ``.set`` sidecar and imaging round-trip
+------------------------------------------------------
+
+A Becker & Hickl ``.spc`` file carries only photon and marker records; the
+CLSM imaging geometry and the full instrument setup live in a companion
+``.set`` file with the same base name. tttrlib treats the two as a unit:
+
+- **Reading** a ``.spc`` automatically parses a neighbouring ``.set`` (same
+  base name). The imaging geometry becomes ``ImgHdr_PixX`` / ``ImgHdr_PixY``
+  tags, and the *entire* ``.set`` — which is largely binary — is preserved
+  verbatim inside the header (base64-encoded in the ``BH_SPC_SetFile`` tag).
+- **Writing** a ``.spc`` emits a companion ``.set`` next to it. When the
+  header still holds a preserved ``.set`` (read directly, or carried through
+  another container), it is restored **byte-for-byte**; otherwise a minimal
+  ``.set`` is synthesised from the imaging tags.
+
+Because the preserved ``.set`` rides along in the header, and a PTU header
+stores arbitrary tags, the full setup survives a detour through PTU. The
+frame and line markers are ordinary marker events, preserved by the record
+writers, so a scanned image transcoded to PTU and back is identical:
+
+.. code-block:: python
+
+   import tttrlib
+
+   # .spc + .set  →  .ptu   (the .set travels inside the PTU header)
+   img = tttrlib.TTTR("scan.spc", "SPC-130")
+   img.write("scan.ptu")
+
+   # .ptu  →  .spc + .set   (the original .set is written back byte-for-byte)
+   tttrlib.TTTR("scan.ptu").write("roundtrip.spc")
+
+**Opening the converted image.** A BH SPC image transcoded to PTU keeps its
+markers, so it reconstructs *exactly* with the Becker & Hickl reading
+routine. On read, tttrlib tags such files with a reading-routine hint
+(``BH_SPC_ReadingRoutine``) that survives the conversion, so the PTU opens as
+a CLSM image with no extra arguments:
+
+.. code-block:: python
+
+   clsm = tttrlib.CLSMImage(filename="scan.ptu")   # auto-selects BH_SPC130
+   clsm.intensity.shape                             # (frames, lines, pixels)
+
+The hint only applies when the caller does not pass an explicit
+``reading_routine``; pass one to override it.
 
 Tested conversion scripts
 -------------------------

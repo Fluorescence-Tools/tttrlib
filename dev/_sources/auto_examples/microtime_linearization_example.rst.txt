@@ -18,7 +18,8 @@
 .. _sphx_glr_auto_examples_microtime_linearization_example.py:
 
 
-Example: Microtime Linearization with Channel-Specific LUTs and Shifts
+Microtime linearization with channel-specific LUTs and shifts
+=============================================================
 
 This example demonstrates the new MicrotimeLinearization API that allows per-channel
 correction of non-linearities in Time-to-Amplitude Converters (TAC).
@@ -26,7 +27,7 @@ correction of non-linearities in Time-to-Amplitude Converters (TAC).
 The example generates synthetic TTTR data and applies channel-specific lookup tables
 and shifts to correct for TAC non-linearity, then verifies the results are reproducible.
 
-.. GENERATED FROM PYTHON SOURCE LINES 11-108
+.. GENERATED FROM PYTHON SOURCE LINES 12-109
 
 .. code-block:: Python
 

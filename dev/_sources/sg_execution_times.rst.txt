@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 78 files **from all galleries**:
+**00:00.000** total execution time for 81 files **from all galleries**:
 
 .. container::
 
@@ -69,6 +69,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py` (``../examples/correlation/plot_gated_correlation.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_lifetime_fcs.py` (``../examples/correlation/plot_lifetime_fcs.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_normal_correlation.py` (``../examples/correlation/plot_normal_correlation.py``)
@@ -194,6 +197,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_01_burst_analysis.py` (``../examples/single_molecule/plot_01_burst_analysis.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_alex_sm.py` (``../examples/single_molecule/plot_alex_sm.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_json.py` (``../examples/single_molecule/plot_burst_analysis_json.py``)
      - 00:00.000
      - 0.0
@@ -264,5 +270,8 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_write.py` (``../examples/tttr/plot_tttr_write.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_tttr_t2_t3_conversion.py` (``../examples/tttr/t2_t3_conversion.py``)
      - 00:00.000
      - 0.0
