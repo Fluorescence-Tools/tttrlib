@@ -447,7 +447,17 @@ jobs:
         shell: pwsh
         run: |
           $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
-          & $vcpkg install hdf5:x64-windows --no-print-usage
+          # The libaec source mirror (gitlab.dkrz.de) intermittently answers
+          # HTTP 429; vcpkg's own three quick retries all land inside the same
+          # rate-limit window, so back off and retry the install itself.
+          $attempts = 5
+          for ($i = 1; $i -le $attempts; $i++) {
+            & $vcpkg install hdf5:x64-windows --no-print-usage
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($i -eq $attempts) { exit 1 }
+            Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"
+            Start-Sleep -Seconds 90
+          }
           $hdf5root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
           echo "HDF5_ROOT=$hdf5root" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$hdf5root" >> $env:GITHUB_ENV
