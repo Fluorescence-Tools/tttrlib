@@ -232,14 +232,26 @@ intensity_image = clsm.intensity
 
 ### Run a minimal burst search
 
+The array-based APIs speak NumPy directly — burst boundaries come back as a
+flat `[start, stop, start, stop, ...]` array and feed straight into the
+burst-consuming analyses (BVA, H2MM) without any list conversion:
+
 ```python
+import numpy as np
 import tttrlib
 
 tttr = tttrlib.TTTR("photon_stream.ptu")
 
 L, m, T = 30, 10, 1e-3  # min photons, window photons, window time [s]
-ranges = tttr.burst_search(L=L, m=m, T=T)
-bursts = list(zip(ranges[0::2], ranges[1::2]))
+ranges = np.asarray(tttr.burst_search(L=L, m=m, T=T))
+bursts = ranges.reshape(-1, 2)  # one [start, stop) row per burst
+
+# Burst variance analysis on the same boundaries (NumPy array in/out)
+bva = tttrlib.BVA(tttr)
+bva.set_donor([0]); bva.set_acceptor([1])
+bva.compute(ranges, 5)  # 5 photons per slice
+pr_mean = bva.proximity_ratio_mean  # NumPy arrays
+pr_std = bva.proximity_ratio_std
 ```
 
 For PIE/ALEX data, add channel and micro-time gating before burst search. See
