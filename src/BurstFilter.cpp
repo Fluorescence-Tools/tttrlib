@@ -118,14 +118,15 @@ std::vector<std::vector<double>> BurstFilter::get_all_burst_properties() {
     return all_properties;
 }
 
-std::shared_ptr<TTTR> BurstFilter::get_burst_photons(const std::vector<int64_t>& selected_bursts) {
+std::shared_ptr<TTTR> BurstFilter::get_burst_photons(long long* selected_bursts, int n_selected_bursts) {
     if (!tttr_data) return nullptr;
+    if (selected_bursts == nullptr) n_selected_bursts = 0;
     
     // Collect all photon indices from selected bursts
     std::vector<int> photon_indices;
     
-    for (size_t i = 0; i < selected_bursts.size(); i += 2) {
-        if (i + 1 < selected_bursts.size()) {
+    for (size_t i = 0; i < static_cast<size_t>(n_selected_bursts); i += 2) {
+        if (i + 1 < static_cast<size_t>(n_selected_bursts)) {
             int64_t start = selected_bursts[i];
             int64_t stop = selected_bursts[i + 1];
             

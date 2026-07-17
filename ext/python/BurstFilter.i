@@ -234,4 +234,24 @@ using json = nlohmann::json;
 %rename(_reapply_filters) tttrlib::BurstFilter::reapply_filters;
 %rename(_clear_filters) tttrlib::BurstFilter::clear_filters;
 
+// Burst selections arrive as a NumPy int array (Python) / numeric vector (R) /
+// long[] (Java): std::vector<int64_t> inputs would reject Python lists and
+// arrays on LP64 Linux, where int64_t stays opaque to SWIG.
+%apply (long long* IN_ARRAY1, int DIM1) {(long long* selected_bursts, int n_selected_bursts)};
+
+#ifdef SWIGPYTHON
+// Array-out surface returns NumPy directly (no caller-side conversion):
+// per-burst properties as float64 (2D for the all-bursts variant, one row per
+// burst). Burst boundaries already come back as NumPy via get_bursts()
+// (ARGOUTVIEWM above); get_burst_indices stays the C++-facing accessor.
+%feature("pythonappend") tttrlib::BurstFilter::get_burst_properties %{
+    import numpy as _np
+    val = _np.asarray(val, dtype=_np.float64)
+%}
+%feature("pythonappend") tttrlib::BurstFilter::get_all_burst_properties %{
+    import numpy as _np
+    val = _np.asarray([_np.asarray(_row, dtype=_np.float64) for _row in val])
+%}
+#endif
+
 %include "BurstFilter.h"

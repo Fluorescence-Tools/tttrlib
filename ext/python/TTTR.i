@@ -50,6 +50,22 @@ TTTRLIB_NOGIL(TTTR::read_hdf_file)  // src/TTTR.cpp:282
 TTTRLIB_NOGIL(TTTR::read_sm_file)   // src/TTTR.cpp:392
 TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
 
+#ifdef SWIGPYTHON
+// Burst boundaries come back as a NumPy int64 array directly (the flat
+// [start, stop, start, stop, ...] layout) so callers reshape/slice without
+// converting a wrapped-vector proxy first. Python-only: the C++ (and R/Java)
+// surface keeps the released std::vector<long long> return.
+%define TTTRLIB_NUMPY_INT64_RETURN(Method)
+%feature("pythonappend") Method %{
+    import numpy as _np
+    val = _np.asarray(val, dtype=_np.int64)
+%}
+%enddef
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search)
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_sliding_window)
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_cusum_sprt)
+#endif
+
 %include "TTTR.h"
 
 #ifdef SWIGPYTHON

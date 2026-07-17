@@ -233,17 +233,16 @@ intensity_image = clsm.intensity
 ### Run a minimal burst search
 
 The array-based APIs speak NumPy directly — burst boundaries come back as a
-flat `[start, stop, start, stop, ...]` array and feed straight into the
-burst-consuming analyses (BVA, H2MM) without any list conversion:
+flat `[start, stop, start, stop, ...]` NumPy int64 array (no conversion
+needed) and feed straight into the burst-consuming analyses (BVA, H2MM):
 
 ```python
-import numpy as np
 import tttrlib
 
 tttr = tttrlib.TTTR("photon_stream.ptu")
 
 L, m, T = 30, 10, 1e-3  # min photons, window photons, window time [s]
-ranges = np.asarray(tttr.burst_search(L=L, m=m, T=T))
+ranges = tttr.burst_search(L=L, m=m, T=T)  # NumPy int64 array
 bursts = ranges.reshape(-1, 2)  # one [start, stop) row per burst
 
 # Burst variance analysis on the same boundaries (NumPy array in/out)

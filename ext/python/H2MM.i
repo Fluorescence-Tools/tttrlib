@@ -20,6 +20,14 @@ TTTRLIB_NOGIL(tttrlib::H2MM::optimize)
 TTTRLIB_NOGIL(tttrlib::H2MM::viterbi)
 TTTRLIB_NOGIL(tttrlib::H2MM::fit)
 
+#ifdef SWIGPYTHON
+// Array-out consistency: unique inter-photon dt values as a NumPy int64 array.
+%feature("pythonappend") tttrlib::H2MM::get_unique_dt %{
+    import numpy as _np
+    val = _np.asarray(val, dtype=_np.int64)
+%}
+#endif
+
 %include "H2MM.h"
 
 #ifdef SWIGPYTHON

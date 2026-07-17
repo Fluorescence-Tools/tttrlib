@@ -81,9 +81,9 @@ class TestBurstSearchCUSUM(unittest.TestCase):
         # Should have even number of elements
         self.assertEqual(len(bursts) % 2, 0)
         
-        # All indices should be valid
+        # All indices should be valid; burst_search returns a NumPy int64 array
         if len(bursts) > 0:
-            bursts = np.asarray(bursts)          # burst_search returns a plain sequence
+            self.assertIsInstance(bursts, np.ndarray)
             self.assertTrue(np.all(bursts >= 0))
             self.assertTrue(np.all(bursts < len(self.data)))
 

@@ -15,6 +15,16 @@
 // Release the GIL around the burst loop (embarrassingly parallel, OpenMP).
 TTTRLIB_NOGIL(tttrlib::BVA::compute)
 
+#ifdef SWIGPYTHON
+// Array-out consistency: the static BVA line comes back as a
+// (mean, std) tuple of NumPy float64 arrays.
+%feature("pythonappend") tttrlib::BVA::compute_static_bva_line %{
+    import numpy as _np
+    val = (_np.asarray(val[0], dtype=_np.float64),
+           _np.asarray(val[1], dtype=_np.float64))
+%}
+#endif
+
 %include "BVA.h"
 
 #ifdef SWIGPYTHON

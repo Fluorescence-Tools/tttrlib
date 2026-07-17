@@ -133,10 +133,14 @@ public:
     
     /**
      * @brief Create TTTR object containing only photons from selected bursts
-     * @param selected_bursts Interleaved vector of burst indices [s0,e0,s1,e1,...]
+     * @param selected_bursts Interleaved burst indices [s0,e0,s1,e1,...] as a
+     *        pointer/length pair (long long so the SWIG IN_ARRAY1 typemaps
+     *        apply: NumPy int array from Python, numeric vector from R,
+     *        long[] from Java).
+     * @param n_selected_bursts Length of the selected_bursts array.
      * @return TTTR object with photons from selected bursts
      */
-    std::shared_ptr<TTTR> get_burst_photons(const std::vector<int64_t>& selected_bursts);
+    std::shared_ptr<TTTR> get_burst_photons(long long* selected_bursts, int n_selected_bursts);
     
     /**
      * @brief Get the number of detected bursts
