@@ -90,13 +90,19 @@ public:
     /// numpy-buffer overload of fit(): the language binding passes array buffers
     /// directly (single copy each), avoiding the per-element Python list <->
     /// std::vector marshalling that dominates a single small fit.
+    ///
+    /// The `b`-prefixed parameter names are load-bearing for SWIG: earlier
+    /// interface files %apply INPLACE typemaps to patterns like
+    /// (double* data, int n_data) / (double* irf, int n_irf), and reusing those
+    /// names here would leave a stale argout typemap attached in the R wrapper
+    /// (referencing locals the IN_ARRAY typemap does not declare).
     static DecayFitNExpResult fit_buffers(
-            double* data, int n_data,
-            double* irf, int n_irf,
-            double* background, int n_background,
-            double* initial_lifetimes, int n_lifetimes,
-            double* initial_amplitudes, int n_amplitudes,
-            int* lifetime_fixed, int n_fixed,
+            double* bdata, int n_bdata,
+            double* birf, int n_birf,
+            double* bbackground, int n_bbackground,
+            double* blifetimes, int n_blifetimes,
+            double* bamplitudes, int n_bamplitudes,
+            int* blifetime_fixed, int n_bfixed,
             const DecayFitNExpOptions& options);
 
     /// numpy-buffer overload of fit_fixed_lifetimes().

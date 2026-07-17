@@ -379,20 +379,20 @@ void validate_options(const DecayFitNExpOptions& options) {
 
 
 DecayFitNExpResult DecayFitNExp::fit_buffers(
-        double* data, int n_data,
-        double* irf, int n_irf,
-        double* background, int n_background,
-        double* initial_lifetimes, int n_lifetimes,
-        double* initial_amplitudes, int n_amplitudes,
-        int* lifetime_fixed, int n_fixed,
+        double* bdata, int n_bdata,
+        double* birf, int n_birf,
+        double* bbackground, int n_bbackground,
+        double* blifetimes, int n_blifetimes,
+        double* bamplitudes, int n_bamplitudes,
+        int* blifetime_fixed, int n_bfixed,
         const DecayFitNExpOptions& options) {
     return fit(
-            std::vector<double>(data, data + n_data),
-            std::vector<double>(irf, irf + n_irf),
-            std::vector<double>(background, background + n_background),
-            std::vector<double>(initial_lifetimes, initial_lifetimes + n_lifetimes),
-            std::vector<double>(initial_amplitudes, initial_amplitudes + n_amplitudes),
-            std::vector<int>(lifetime_fixed, lifetime_fixed + n_fixed),
+            std::vector<double>(bdata, bdata + n_bdata),
+            std::vector<double>(birf, birf + n_birf),
+            std::vector<double>(bbackground, bbackground + n_bbackground),
+            std::vector<double>(blifetimes, blifetimes + n_blifetimes),
+            std::vector<double>(bamplitudes, bamplitudes + n_bamplitudes),
+            std::vector<int>(blifetime_fixed, blifetime_fixed + n_bfixed),
             options);
 }
 
