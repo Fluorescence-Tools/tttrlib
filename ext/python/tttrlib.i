@@ -139,6 +139,8 @@ if 'CLSMISM' in dir():
 %include "Channel.i"
 %include "BurstFilter.i"
 %include "BurstFeatureExtractor.i"
+%include "BVA.i"
+%include "H2MM.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"

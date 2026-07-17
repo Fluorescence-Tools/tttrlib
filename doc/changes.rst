@@ -4,6 +4,16 @@
 
 Version 0.27
 ============
+* **H2MM and BVA for dynamic FRET**: Two new C++ modules for sub-burst FRET
+  dynamics, exposed through SWIG. :class:`BVA` (Burst Variance Analysis) reports
+  per-burst proximity-ratio mean/std against the shot-noise line. :class:`H2MM`
+  is a photon-by-photon Hidden Markov Model engine (Baum-Welch EM + Viterbi)
+  ported from the ChiSurf numba engine; it reaches the same optimum as the
+  reference ``H2MM_C`` library **2.4× faster** with plain EM and **8.2× faster**
+  with SQUAREM acceleration (see :ref:`h2mm_performance`), using sparse
+  unique-Δt caches, a deferred ρ contraction, and an allocation-free,
+  persistently-threaded (``std::thread``) kernel. Both consume bursts directly
+  from :class:`BurstFilter`. New guide: :ref:`h2mm_bva_guide`.
 * **Photonscore LINCam ".photons" (D7) support**: New reader and writer for the
   position-sensitive photon-counting format written by Photonscore LINCam
   systems. ``tttrlib.TTTR("file.photons")`` decodes the paged, protobuf-style D7
@@ -15,13 +25,20 @@ Version 0.27
   an image are recovered with standard accessors and, e.g., ``numpy.histogram2d``.
   ``TTTR.write("out.photons")`` writes a byte-exact D7 container. Both reader and
   writer are implemented in C++ and exposed through SWIG to Python, R and Java.
-* **T2 <-> T3 record-mode conversion**: New ``TTTR.t2_to_t3(sync_rate= | sync_period=)``
-  and ``TTTR.t3_to_t2()``. ``t2_to_t3`` re-derives the sync-period index (macro
-  time) and dtime (micro time) from the single T2 time tag; ``t3_to_t2`` merges
-  macro and micro into one fine time tag. ``T2 -> T3 -> T2`` is lossless for a
-  fixed sync period; ``T3 -> T2`` preserves absolute arrival times at TAC
-  resolution but drops the dtime/sync split. The converted objects carry the
-  matching PicoQuant record type and can be written to any compatible container.
+* **PicoQuant T2 sync decoding fixed**: In HydraHarp/MultiHarp/TimeHarp260 T2
+  data (record types HHT2v1, HHT2v2 and generic T2) a ``special`` record with
+  ``channel == 0`` is the sync input. It is now decoded as a photon on channel 0,
+  matching PicoQuant's reference decoder and ``ptufile``; previously it was
+  mislabelled as a marker, which under-counted photons on files that record the
+  sync. A cross-check against ``ptufile`` was added to the test suite.
+* **T2 <-> T3 record-mode conversion** is now a small NumPy helper,
+  ``examples/tttr/t2_t3_conversion.py`` (``t2_to_t3`` / ``t3_to_t2``), rather than
+  a C++ method: it rebuilds a second ``TTTR`` from the bulk arrays. ``t2_to_t3``
+  re-derives the sync-period index and dtime from the single T2 time tag, binning
+  dtime when the sync period exceeds the 15-bit T3 field so the full period stays
+  representable; ``t3_to_t2`` merges macro and micro into one fine time tag.
+  ``T2 -> T3 -> T2`` is lossless for a fixed sync period; ``T3 -> T2`` preserves
+  absolute arrival times at TAC resolution but drops the dtime/sync split.
 
 .. _changes_0_26:
 

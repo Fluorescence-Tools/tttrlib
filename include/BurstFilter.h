@@ -143,6 +143,17 @@ public:
      * @return Number of bursts
      */
     size_t get_burst_count() const;
+
+    /**
+     * @brief Get the current (filtered) bursts as an interleaved index vector
+     *        ``[s0,e0,s1,e1,...]`` for use by BVA / H2MM and other C++ callers.
+     */
+    const std::vector<int64_t>& get_burst_indices() const { return bursts; }
+
+    /**
+     * @brief Get the TTTR data the bursts refer to.
+     */
+    std::shared_ptr<TTTR> get_tttr() const { return tttr_data; }
     
     /**
      * @brief Reset to raw (unfiltered) bursts
