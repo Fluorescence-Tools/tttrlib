@@ -447,12 +447,16 @@ jobs:
         shell: pwsh
         run: |
           $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
-          # The libaec source mirror (gitlab.dkrz.de) intermittently answers
-          # HTTP 429; vcpkg's own three quick retries all land inside the same
-          # rate-limit window, so back off and retry the install itself.
-          $attempts = 5
+          # hdf5[core,zlib]: skip the default szip feature. szip pulls libaec,
+          # whose only source mirror (gitlab.dkrz.de) rate-limits GitHub's
+          # runner IPs with HTTP 429 for minutes at a time (observed: 5
+          # spaced retries over 7 min all 429) - the wheel build cannot depend
+          # on it. tttrlib reads photon-HDF5 (gzip-compressed); szip-encoded
+          # HDF5 stays readable via the conda packages, which ship libaec.
+          # The retry loop guards the remaining downloads (hdf5/zlib mirrors).
+          $attempts = 3
           for ($i = 1; $i -le $attempts; $i++) {
-            & $vcpkg install hdf5:x64-windows --no-print-usage
+            & $vcpkg install hdf5[core,zlib]:x64-windows --recurse --no-print-usage
             if ($LASTEXITCODE -eq 0) { break }
             if ($i -eq $attempts) { exit 1 }
             Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"
