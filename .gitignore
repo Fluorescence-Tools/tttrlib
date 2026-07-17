@@ -107,5 +107,8 @@ test/diagnostics/*.png
 # Scratch data written by examples/tests
 examples/tttr/conv1.spc
 
-# Local benchmarking harness (virtualenvs, logs, generated data)
-/benchmarks/
+# Benchmark suite: scripts + rendered plots are tracked; the local venvs, logs,
+# and regenerable result data are excluded by benchmarks/.gitignore.
+/benchmarks/.venvs/
+/benchmarks/logs/
+/benchmarks/results/

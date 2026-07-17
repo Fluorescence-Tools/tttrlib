@@ -1,0 +1,5 @@
+# benchmark envs, logs, and regenerable result data are not committed;
+# only the scripts and the rendered plots/ are tracked.
+.venvs/
+logs/
+results/
