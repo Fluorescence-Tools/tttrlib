@@ -115,7 +115,11 @@ public:
      * ``extract_burst_photons`` step so H2MM runs straight off a burst search.
      *
      * @param tttr Photon stream.
-     * @param bursts Interleaved half-open index ranges ``[s0,e0,...]``.
+     * @param bursts Interleaved half-open index ranges ``[s0,e0,...]`` as a
+     *        pointer/length pair (long long so the SWIG IN_ARRAY1 typemaps
+     *        apply: NumPy int array from Python, numeric vector from R,
+     *        long[] from Java).
+     * @param n_bursts Length of the bursts array (2x the number of bursts).
      * @param stream_channels Stream definitions; the stream index is the entry
      *        position (``n_streams = stream_channels.size()``).
      * @param min_photons Minimum matched photons for a burst to be kept.
@@ -123,7 +127,7 @@ public:
      */
     void set_bursts_from_tttr(
         std::shared_ptr<TTTR> tttr,
-        const std::vector<long long>& bursts,
+        long long* bursts, int n_bursts,
         const std::vector<std::shared_ptr<Channel>>& stream_channels,
         int min_photons = 3,
         long long time_scale = 1

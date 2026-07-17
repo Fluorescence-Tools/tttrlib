@@ -43,9 +43,9 @@ class TestBVA(unittest.TestCase):
     def test_static_line_analytic(self):
         bins = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
         n = 7
-        mean, std = tttrlib.BVA.compute_static_bva_line(list(bins), n)
-        np.testing.assert_allclose(list(mean), bins, atol=1e-12)
-        np.testing.assert_allclose(list(std), np.sqrt(bins * (1 - bins) / n), atol=1e-12)
+        mean, std = tttrlib.BVA.compute_static_bva_line(bins, n)
+        np.testing.assert_allclose(np.asarray(mean), bins, atol=1e-12)
+        np.testing.assert_allclose(np.asarray(std), np.sqrt(bins * (1 - bins) / n), atol=1e-12)
 
     def test_static_vs_dynamic(self):
         rng = np.random.default_rng(0)
@@ -68,11 +68,11 @@ class TestBVA(unittest.TestCase):
 
         bva_s = tttrlib.BVA(d_s)
         bva_s.set_donor([0]); bva_s.set_acceptor([1])
-        bva_s.compute(list(map(int, b_s)), n_slice, 0.01)
+        bva_s.compute(np.asarray(b_s, dtype=np.int64), n_slice, 0.01)
 
         bva_d = tttrlib.BVA(d_d)
         bva_d.set_donor([0]); bva_d.set_acceptor([1])
-        bva_d.compute(list(map(int, b_d)), n_slice, 0.01)
+        bva_d.compute(np.asarray(b_d, dtype=np.int64), n_slice, 0.01)
 
         std_s = np.nanmean(bva_s.proximity_ratio_std)
         std_d = np.nanmean(bva_d.proximity_ratio_std)
@@ -93,7 +93,7 @@ class TestBVA(unittest.TestCase):
         # explicit bounds through the array API (constructor path uses filter).
         bva = tttrlib.BVA(d)
         bva.set_donor([0]); bva.set_acceptor([1])
-        bva.compute(list(map(int, bounds)), 4, 0.01)
+        bva.compute(np.asarray(bounds, dtype=np.int64), 4, 0.01)
         self.assertEqual(len(bva.proximity_ratio_mean), len(static))
 
 

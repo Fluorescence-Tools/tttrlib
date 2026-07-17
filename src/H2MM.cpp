@@ -550,7 +550,7 @@ std::vector<long long> H2MM::get_unique_dt() const {
 
 void H2MM::set_bursts_from_tttr(
     std::shared_ptr<TTTR> tttr,
-    const std::vector<long long>& bursts,
+    long long* bursts, int n_bursts,
     const std::vector<std::shared_ptr<Channel>>& stream_channels,
     int min_photons,
     long long time_scale
@@ -579,8 +579,9 @@ void H2MM::set_bursts_from_tttr(
 
     std::vector<std::vector<long long>> times;
     std::vector<std::vector<int>> strms;
-    const size_t n_bursts = bursts.size() / 2;
-    for (size_t b = 0; b < n_bursts; ++b) {
+    const size_t n_pairs = (bursts == nullptr || n_bursts < 2)
+        ? 0 : static_cast<size_t>(n_bursts) / 2;
+    for (size_t b = 0; b < n_pairs; ++b) {
         int64_t s = bursts[2 * b], e = bursts[2 * b + 1];
         if (s < 0) s = 0;
         if (e > n_total) e = n_total;
@@ -613,8 +614,12 @@ void H2MM::set_bursts_from_filter(
     long long time_scale
 ) {
     if (!burst_filter) throw std::invalid_argument("set_bursts_from_filter: null BurstFilter");
+    // get_burst_indices() is vector<int64_t>; on LP64 Linux that is a distinct
+    // type from long long, so copy into the public pointer/length signature.
+    std::vector<long long> b(burst_filter->get_burst_indices().begin(),
+                             burst_filter->get_burst_indices().end());
     set_bursts_from_tttr(burst_filter->get_tttr(),
-                         burst_filter->get_burst_indices(),
+                         b.data(), static_cast<int>(b.size()),
                          stream_channels, min_photons, time_scale);
 }
 

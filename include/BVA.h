@@ -74,12 +74,13 @@ public:
      *        fixed-duration time windows of ``minimum_window_length`` seconds.
      * @param minimum_window_length Slice duration in seconds (time-window mode).
      *
-     * The burst vector is spelled std::vector<long long> (not int64_t): SWIG
-     * treats int64_t elements as opaque in std_vector on LP64 Linux, so a
-     * Python list would not convert. Same convention as TTTR::burst_search.
+     * The bursts are a pointer/length pair (spelled long long, not int64_t)
+     * so the SWIG IN_ARRAY1 typemaps apply: Python passes a NumPy int array
+     * directly (single buffer conversion, no per-element list boxing), R a
+     * numeric vector, Java a long[].
      */
     void compute(
-        const std::vector<long long>& bursts,
+        long long* bursts, int n_bursts,
         int number_of_photons_per_slice = -1,
         double minimum_window_length = 0.01
     );

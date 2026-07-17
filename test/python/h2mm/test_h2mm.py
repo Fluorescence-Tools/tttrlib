@@ -149,7 +149,7 @@ class TestH2MM(unittest.TestCase):
         g = tttrlib.Channel('g'); g.add_component(0, 0, 65535)
         r = tttrlib.Channel('r'); r.add_component(1, 0, 65535)
         eng = tttrlib.H2MM()
-        eng.set_bursts_from_tttr(d, list(map(int, bursts)), [g, r], 3, 1)
+        eng.set_bursts_from_tttr(d, np.asarray(bursts, dtype=np.int64), [g, r], 3, 1)
 
         # NumPy reference
         chan_np = np.asarray(d.routing_channels)

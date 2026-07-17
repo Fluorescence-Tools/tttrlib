@@ -45,7 +45,11 @@ void BVA::compute(int number_of_photons_per_slice, double minimum_window_length)
     if (!burst_filter_)
         throw std::runtime_error(
             "BVA::compute(): no BurstFilter — construct BVA(BurstFilter) or pass bursts explicitly");
-    compute(burst_filter_->get_burst_indices(),
+    // get_burst_indices() is vector<int64_t>; on LP64 Linux that is a distinct
+    // type from long long, so copy into the public pointer/length signature.
+    std::vector<long long> b(burst_filter_->get_burst_indices().begin(),
+                             burst_filter_->get_burst_indices().end());
+    compute(b.data(), static_cast<int>(b.size()),
             number_of_photons_per_slice, minimum_window_length);
 }
 
@@ -87,16 +91,17 @@ inline bool in_micro_ranges(
 }  // namespace
 
 void BVA::compute(
-    const std::vector<long long>& bursts,
+    long long* bursts, int n_bursts,
     int number_of_photons_per_slice,
     double minimum_window_length
 ) {
-    const size_t n_bursts = bursts.size() / 2;
-    prox_mean_.assign(n_bursts, std::nan(""));
-    prox_std_.assign(n_bursts, std::nan(""));
-    mean_slice_size_.assign(n_bursts, 0.0);
+    const size_t n_pairs = (bursts == nullptr || n_bursts < 2)
+        ? 0 : static_cast<size_t>(n_bursts) / 2;
+    prox_mean_.assign(n_pairs, std::nan(""));
+    prox_std_.assign(n_pairs, std::nan(""));
+    mean_slice_size_.assign(n_pairs, 0.0);
 
-    if (n_bursts == 0 || !tttr_) return;
+    if (n_pairs == 0 || !tttr_) return;
 
     const int64_t n_total = static_cast<int64_t>(tttr_->size());
     // Macro-time resolution in seconds (MeasDesc_GlobalResolution).
@@ -109,7 +114,7 @@ void BVA::compute(
         (macro_res > 0.0) ? (minimum_window_length / macro_res) : 0.0;
     const bool by_time = number_of_photons_per_slice <= 0;
 
-    parallel_for(static_cast<int>(n_bursts), [&](int b) {
+    parallel_for(static_cast<int>(n_pairs), [&](int b) {
         int64_t s = bursts[2 * b];
         int64_t e = bursts[2 * b + 1];  // half-open
         // Clamp to valid range.

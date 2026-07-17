@@ -7,6 +7,11 @@
 // std::pair<std::vector<double>,std::vector<double>> templates come from
 // misc_types.i (VectorInt32, VectorPairInt, VectorInt64T, PairVectorDouble).
 
+// Burst boundaries arrive as a NumPy int array (Python) / numeric vector (R) /
+// long[] (Java) — one buffer conversion, no per-element list boxing. Also used
+// by H2MM.i (included right after this file).
+%apply (long long* IN_ARRAY1, int DIM1) {(long long* bursts, int n_bursts)};
+
 // Release the GIL around the burst loop (embarrassingly parallel, OpenMP).
 TTTRLIB_NOGIL(tttrlib::BVA::compute)
 
