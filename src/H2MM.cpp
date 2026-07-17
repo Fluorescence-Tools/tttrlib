@@ -550,7 +550,7 @@ std::vector<long long> H2MM::get_unique_dt() const {
 
 void H2MM::set_bursts_from_tttr(
     std::shared_ptr<TTTR> tttr,
-    const std::vector<int64_t>& bursts,
+    const std::vector<long long>& bursts,
     const std::vector<std::shared_ptr<Channel>>& stream_channels,
     int min_photons,
     long long time_scale

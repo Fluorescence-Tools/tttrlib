@@ -73,9 +73,13 @@ public:
      *        consecutive chunks of this many photons.  If <= 0, slice into
      *        fixed-duration time windows of ``minimum_window_length`` seconds.
      * @param minimum_window_length Slice duration in seconds (time-window mode).
+     *
+     * The burst vector is spelled std::vector<long long> (not int64_t): SWIG
+     * treats int64_t elements as opaque in std_vector on LP64 Linux, so a
+     * Python list would not convert. Same convention as TTTR::burst_search.
      */
     void compute(
-        const std::vector<int64_t>& bursts,
+        const std::vector<long long>& bursts,
         int number_of_photons_per_slice = -1,
         double minimum_window_length = 0.01
     );

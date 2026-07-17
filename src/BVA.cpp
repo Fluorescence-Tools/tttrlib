@@ -87,7 +87,7 @@ inline bool in_micro_ranges(
 }  // namespace
 
 void BVA::compute(
-    const std::vector<int64_t>& bursts,
+    const std::vector<long long>& bursts,
     int number_of_photons_per_slice,
     double minimum_window_length
 ) {
