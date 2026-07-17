@@ -1,0 +1,179 @@
+name: Docs retrospective backfill
+
+# Manually rebuilds the documentation for one or more *existing* release tags and
+# deploys each into its own gh-pages/<version>/ directory, then merges them into
+# the shared versions.json used by the documentation version selector.
+#
+# Read the Docs cannot build historical tags (they predate .readthedocs.yaml), so
+# this workflow backfills the version history on GitHub Pages instead, reusing the
+# same per-version layout as the regular docs deploy in ci.yml.
+#
+# Each version is built from *its own* checkout (its doc/conf.py and sources), so
+# results vary per tag; builds are best-effort and the summary lists which tags
+# succeeded and which failed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: "Git tags to (re)build, space- or comma-separated, newest first (e.g. 'v0.26.2 v0.25.1 v0.24.4')"
+        required: true
+        type: string
+      stable:
+        description: "Optional: which of the tags to mark as the stable/default version (e.g. 'v0.26.2')"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    name: Backfill documentation versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch (build tooling + landing page)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Preserve default-branch tooling
+        run: |
+          # The per-version builds check out old tags into worktrees, so keep the
+          # current version-selector tooling and landing page out of the way.
+          cp tools/update_docs_versions.py /tmp/update_docs_versions.py
+          cp -r doc/static_root /tmp/static_root
+
+      - name: Build documentation for each requested version
+        id: build
+        run: |
+          set -u
+          versions="$(printf '%s' '${{ inputs.versions }}' | tr ',' ' ')"
+          mkdir -p pages-root
+          built=""
+          failed=""
+          for tag in $versions; do
+            echo "::group::Building ${tag}"
+            dest="${tag#v}"   # gh-pages dir: drop a leading 'v', matching ci.yml releases
+            rm -rf "src-${dest}"
+            if ! git worktree add --force --detach "src-${dest}" "${tag}"; then
+              echo "Tag '${tag}' not found."
+              failed="${failed} ${tag}"
+              echo "::endgroup::"
+              continue
+            fi
+
+            ok=1
+            (
+              set -e
+              cd "src-${dest}"
+              python -m pip install --upgrade pip
+              python -m pip install "scikit-build-core>=0.10" numpy "swig>=4.1"
+              # Documentation toolchain (prefer the tag's own pin list if present).
+              if [ -f doc/requirements.txt ]; then
+                python -m pip install -r doc/requirements.txt
+              else
+                python -m pip install sphinx sphinx-copybutton sphinx-design \
+                  sphinxext-opengraph numpydoc nbsphinx matplotlib ipython \
+                  sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme \
+                  scikit-image phconvert numba imagecodecs
+              fi
+              # Build + install the package for this tag so autodoc matches it.
+              python -m pip install ".[examples]" || python -m pip install .
+              cd doc
+              mkdir -p _build/api
+              doxygen || true
+              BUILD_TIER=4 TTTRLIB_DOCS_EXECUTE_EXAMPLES=0 \
+                sphinx-build -b html -T -d _build/doctrees . _build/html
+              if [ -d _build/api ]; then
+                rm -rf _build/html/api
+                cp -r _build/api _build/html/api
+              fi
+            ) || ok=0
+
+            if [ "${ok}" = "1" ] && [ -d "src-${dest}/doc/_build/html" ]; then
+              mkdir -p "pages-root/${dest}"
+              cp -r "src-${dest}/doc/_build/html/." "pages-root/${dest}/"
+              built="${built} ${tag}:${dest}"
+              echo "Built ${tag} -> pages-root/${dest}"
+            else
+              failed="${failed} ${tag}"
+              echo "Build failed for ${tag}"
+            fi
+            git worktree remove --force "src-${dest}" || true
+            echo "::endgroup::"
+          done
+          echo "built=${built# }" >> "$GITHUB_OUTPUT"
+          echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
+
+      - name: Merge into the versions manifest
+        run: |
+          set -u
+          # Start from the versions.json already published on gh-pages.
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          existing=""
+          if git show origin/gh-pages:versions.json > /tmp/versions.json 2>/dev/null; then
+            existing=/tmp/versions.json
+          fi
+          # Ship the current landing page / version selector.
+          cp -r /tmp/static_root/. pages-root/ 2>/dev/null || true
+
+          # Apply built versions oldest-last so the newest ends up on top of the
+          # list; "${{ inputs.versions }}" is given newest-first, so iterate it in
+          # reverse over what actually built.
+          built="${{ steps.build.outputs.built }}"
+          items=""
+          for item in ${built}; do items="${item} ${items}"; done  # reverse
+          for item in ${items}; do
+            tag="${item%%:*}"
+            dest="${item##*:}"
+            stable_flag=""
+            if [ -n "${{ inputs.stable }}" ] && \
+               { [ "${{ inputs.stable }}" = "${tag}" ] || [ "${{ inputs.stable }}" = "${dest}" ]; }; then
+              stable_flag="--stable"
+            fi
+            set -- --output pages-root/versions.json --version "${dest}" \
+                   --label "tttrlib ${dest}" --url "${dest}/index.html"
+            [ -n "${existing}" ] && set -- "$@" --existing "${existing}"
+            [ -n "${stable_flag}" ] && set -- "$@" "${stable_flag}"
+            python /tmp/update_docs_versions.py "$@"
+            existing=pages-root/versions.json
+          done
+          echo "Resulting versions.json:"
+          cat pages-root/versions.json 2>/dev/null || echo "(none written — no versions built)"
+
+      - name: Fail if nothing built
+        run: |
+          if [ -z "${{ steps.build.outputs.built }}" ]; then
+            echo "No versions built. Failed: ${{ steps.build.outputs.failed }}"
+            exit 1
+          fi
+
+      - name: Deploy backfilled versions to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages-root
+          keep_files: true
+          destination_dir: .
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Docs backfill result"
+            echo ""
+            echo "**Built:** ${{ steps.build.outputs.built }}"
+            echo ""
+            echo "**Failed:** ${{ steps.build.outputs.failed }}"
+          } >> "$GITHUB_STEP_SUMMARY"

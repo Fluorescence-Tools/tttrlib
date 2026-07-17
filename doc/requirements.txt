@@ -1,0 +1,19 @@
+# Sphinx documentation toolchain for the Read the Docs build.
+# Mirrors the pip install list of the "docs" job in .github/workflows/ci.yml so
+# the hosted site matches the GitHub Pages build. tttrlib itself and its example
+# dependencies are installed separately from the repository (see .readthedocs.yaml).
+sphinx
+sphinx-copybutton
+sphinx-design
+sphinxext-opengraph
+numpydoc
+nbsphinx
+matplotlib
+ipython
+sphinxcontrib-bibtex
+sphinx-gallery
+pydata-sphinx-theme
+scikit-image
+phconvert
+numba
+imagecodecs

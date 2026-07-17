@@ -431,7 +431,7 @@ CLSM / FLIM imaging
 Use discrete ``emitters`` for the sample and drive a raster scan with
 :class:`~tttrlib.SimScanner`; the output is a marker-annotated stream that
 :class:`~tttrlib.CLSMImage` reconstructs, with per-species decays giving FLIM
-contrast. See :ref:`clsm-flim-guide` and ``examples/simulation/clsm_star_scan.py``.
+contrast. See :doc:`clsm-flim-guide` and ``examples/simulation/clsm_star_scan.py``.
 
 
 .. _sim-performance:
