@@ -71,7 +71,7 @@ using json = nlohmann::json;
             ('duration', np.float64),
             ('count_rate', np.float64),
         ])
-        if not props:
+        if len(props) == 0:  # works for both sequences and ndarrays
             return np.empty(0, dtype=dtype)
         a = np.asarray(props).reshape((-1, 5))
         out = np.empty(a.shape[0], dtype=dtype)

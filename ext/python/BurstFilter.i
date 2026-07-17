@@ -77,7 +77,7 @@ using json = nlohmann::json;
         """Get all burst properties as a structured NumPy array."""
         import numpy as np
         props = self.get_all_burst_properties()
-        if not props:
+        if len(props) == 0:  # ndarray: no truthiness
             return np.empty(0, dtype=[
                 ('start', np.int64), ('stop', np.int64), ('size', np.int64),
                 ('duration', np.float64), ('count_rate', np.float64)
