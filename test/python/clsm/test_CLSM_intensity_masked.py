@@ -90,6 +90,15 @@ class TestCLSMIntensityMasked(unittest.TestCase):
         self.assertGreater(got.sum(), 0)
         self.assertEqual(img[0][0][0].size(), 0, "virtual fill must not fill pixels")
 
+    def test_deferred_pixel_allocation_still_fills_identically(self):
+        tttr = make_clsm_tttr(2, 16, 8, 50)
+        img = make_img(tttr, 16, 8, build_pixels=False)
+
+        fast = img.get_intensity_masked(tttr, [1, 2], [])
+        img.fill(tttr_data=tttr, channels=[1, 2])
+
+        np.testing.assert_array_equal(fast, np.asarray(img.intensity))
+
     def test_empty_channels_defaults_to_all(self):
         tttr = make_clsm_tttr(2, 16, 8, 50)
         img = make_img(tttr, 16, 8)

@@ -134,6 +134,13 @@ public:
     /// The routing channel of the pixel markers (Becker & Hickl mode).
     int marker_pixel = 1;
 
+    /// If false, skip eager allocation of the per-pixel photon-index containers
+    /// during construction. The frame/line structure is still built, so the
+    /// single-pass "virtual fill" intensity path (get_intensity_masked) works
+    /// and is faster, but fill()/pixel access is not available until pixels are
+    /// materialized. Default true keeps the classic behaviour.
+    bool build_pixels = true;
+
 public:
     /*!
      * \brief CLSMSettings Constructor.
@@ -172,7 +179,8 @@ public:
             bool bidirectional_scan            = false,
             bool split_by_channel              = false,
             bool use_pixel_markers             = false,
-            int marker_pixel                   = 1
+            int marker_pixel                   = 1,
+            bool build_pixels                  = true
     ) {
         this->skip_before_first_frame_marker = skip_before_first_frame_marker;
         this->skip_after_last_frame_marker  = skip_after_last_frame_marker;
@@ -187,6 +195,7 @@ public:
         this->split_by_channel               = split_by_channel;
         this->use_pixel_markers              = use_pixel_markers;
         this->marker_pixel                   = marker_pixel;
+        this->build_pixels                   = build_pixels;
     }
 };
 
@@ -204,6 +213,30 @@ private:
 
     /// Used to tack if the CLSMImage is in a filled state
     bool _is_filled_ = false;
+
+    /// Tracks whether per-pixel containers have been allocated. When
+    /// build_pixels=false the constructor defers this; ensure_pixels_built()
+    /// materializes them lazily the first time a pixel-consuming op runs.
+    bool _pixels_ready_ = false;
+
+    /// Cached per-pixel raw moments, shared by the mean-lifetime and
+    /// mean-micro-time (FastLifetime) images: m0 = photon count, m1 = integer
+    /// sum of micro times. Both are independent of the IRF, the background and
+    /// the micro-time resolution, so a changed IRF / background / resolution
+    /// only re-runs the O(pixels) correction, not a photon rescan. The mean
+    /// micro time is m1/m0 (agrees with the legacy iterative mean to ~1e-15).
+    /// Invalidated whenever pixel/mask content changes via invalidate_derived_caches().
+    std::vector<double> _lt_m0_cache_, _lt_m1_cache_;
+    bool _lt_cache_valid_ = false;
+    bool _lt_cache_stacked_ = false;
+
+    /// Cached per-pixel phasor sums: g = Sum cos(mt*2*pi*f), s = Sum sin(...),
+    /// cnt = photon count. These depend on the modulation frequency (keyed
+    /// below) but NOT on the IRF, whose calibration is a cheap output rotation.
+    std::vector<double> _ph_g_cache_, _ph_s_cache_, _ph_cnt_cache_;
+    bool _ph_cache_valid_ = false;
+    bool _ph_cache_stacked_ = false;
+    double _ph_cache_freq_ = 0.0;
 
     std::vector<CLSMFrame *> frames;
 
@@ -300,6 +333,31 @@ private:
     void remove_incomplete_frames();
 
     void create_pixels_in_lines();
+
+    /// Allocate per-pixel containers if they were deferred (build_pixels=false).
+    /// Idempotent; a no-op once pixels are materialized.
+    void ensure_pixels_built();
+
+    /// Drop the cached per-pixel moment and phasor sums (call when pixel/mask
+    /// content changes so the next lifetime / micro-time / phasor call rebuilds).
+    void invalidate_derived_caches() {
+        _lt_cache_valid_ = false;
+        _lt_m0_cache_.clear();
+        _lt_m1_cache_.clear();
+        _ph_cache_valid_ = false;
+        _ph_g_cache_.clear();
+        _ph_s_cache_.clear();
+        _ph_cnt_cache_.clear();
+    }
+
+    /// Build (if stale) the shared per-pixel moment cache (m0, m1, iterative
+    /// micro-time mean) for the given stacking, from the stream masks or the
+    /// materialized pixel indices.
+    void ensure_moment_cache(TTTR* tttr_data, bool stack_frames);
+
+    /// Build (if stale) the per-pixel phasor sums for the given stacking and
+    /// modulation frequency.
+    void ensure_phasor_cache(TTTR* tttr_data, bool stack_frames, double frequency);
 
 protected:
 

@@ -136,6 +136,23 @@ public:
     virtual std::vector<int> get_tttr_indices() const;
 
     /**
+     * @brief Accumulate the zeroth (count) and first (sum of micro times)
+     *        moments of this range into the given accumulators, in place and
+     *        without copying the index vector.
+     *
+     * Adds to @p count and @p sum so callers can fold several ranges (e.g. the
+     * same pixel across stacked frames) into one pair of accumulators.
+     */
+    inline void accumulate_moments(
+            const unsigned short* micro_times,
+            unsigned long long& count, unsigned long long& sum) const {
+        if (_tttr_indices) {
+            for (int i : *_tttr_indices) sum += micro_times[i];
+            count += _tttr_indices->size();
+        }
+    }
+
+    /**
      * @brief Gets TTTR indices as a raw pointer and size.
      * 
      * Allocates a copy of the internal data that Python can safely own and free.

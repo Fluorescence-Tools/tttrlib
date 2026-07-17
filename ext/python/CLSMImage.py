@@ -311,6 +311,7 @@ def __init__(
         channel_shifts=None,
         settings_file=None,
         settings=None,
+        build_pixels=True,
         **kwargs
 ):
     """
@@ -407,6 +408,7 @@ def __init__(
         "split_by_channel":              bool(split_by_channel),
         "use_pixel_markers":             bool(use_pixel_markers),
         "marker_pixel":                  int(marker_pixel),
+        "build_pixels":                  bool(build_pixels),
     }
     
     # Override CLSM settings from JSON if provided
@@ -523,7 +525,11 @@ def __init__(
     kwargs.pop('settings', None)
     kwargs['tttr_data'] = tttr_data
     kwargs['settings'] = clsm_settings
-    
+    # Without per-pixel containers, fill() cannot run; force it off unless the
+    # caller explicitly asked to fill (in which case pixels are needed anyway).
+    if not build_pixels and 'fill' not in kwargs:
+        kwargs['fill'] = False
+
     this = _tttrlib.new_CLSMImage(**kwargs)
 
     try:

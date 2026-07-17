@@ -83,6 +83,25 @@ public:
         }
     }
 
+    /// Like get_pixel_duration() but derives the per-pixel dwell time from an
+    /// externally supplied pixel count (the image's n_pixel) instead of this
+    /// line's materialized pixel vector size(). Identical to get_pixel_duration()
+    /// once pixels are built (then size() == n_pixel), but also correct when the
+    /// pixels were never allocated (the "virtual fill" intensity path).
+    unsigned long long get_pixel_duration_for(size_t n_pixel){
+        if(!pixel_durations.empty()){
+            return static_cast<unsigned long long>(pixel_durations[0]);
+        }
+        if(pixel_duration < 0){
+            if(_tttr && n_pixel > 0){
+                return (size_t) (get_duration(_tttr) / n_pixel);
+            }
+            return 0;
+        } else{
+            return pixel_duration;
+        }
+    }
+
     CLSMLine(){
         set_dense(false);
     }
