@@ -47,6 +47,50 @@ fluorescence decay analysis, FLIM, CLSM, and image scanning microscopy.
 > [PRDs/PRD-001-cross-language-test-parity.md](PRDs/PRD-001-cross-language-test-parity.md)). Please report
 > any binding-specific issues.
 
+## Performance — faster than the GPU, on the CPU
+
+Speed is the point of tttrlib. The hot loops are vectorized C++ with
+runtime-dispatched AVX/NEON kernels and OpenMP, so it stays fast on an ordinary
+laptop CPU — **and you don't need a GPU to keep up with GPU-accelerated tools;
+tttrlib on the CPU is faster than they are on the GPU.** On the same machine,
+tttrlib's CPU per-pixel FLIM fitting (~0.40 s, stable) beats FLIMKit running on the
+GPU (0.5–1.2 s, run-to-run) — **1.3–2.9× faster** across runs (the per-pixel fit is
+a swarm of tiny independent fits with branching, which GPUs handle poorly, so the
+GPU brings no benefit there). Every number below is
+tttrlib on CPU only, against the common open-source tools on **identical data,
+same machine** (reproducible suite in [`benchmarks/`](benchmarks/)):
+
+![tttrlib speedup vs competitors](benchmarks/plots/summary_speedup.png)
+
+### What tttrlib now wins
+
+CPU only, no GPU, identical data.
+
+| Task | tttrlib | Best competitor | Result |
+|------|--------:|----------------:|:-------|
+| **Single-curve lifetime fit** (one detector) | 0.23 ms | flimlib LMA 2.38 ms | **10×** (36× batched) |
+| **H2MM** photon-by-photon HMM (Baum-Welch) | 0.10 s | H2MM_C (C ref) 0.79 s · numba 0.39 s | **7.6× vs C ref** |
+| Burst search | 2.8 ms | FRETBursts 13.0 ms | **4.7×** |
+| Correlation / FCS (multi-tau) | 0.13 s | pycorrelate 1.71 s (direct) | **13×** |
+| Diffusion simulation (coasting) | 0.44 s | PyBroMo 2.23 s | **5.1×** |
+| Per-pixel reconvolution MLE (CPU) | 0.40 s | FLIMKit **on GPU** 0.5–1.2 s · CPU 0.9 s | **1.3–2.9× vs GPU** |
+| CLSM intensity image | 19 ms | ptufile 22 ms | **1.2×** |
+| TTTR file reading | 24 ms | ptufile 26 ms | **1.1×** |
+| Fast lifetime (moments) map | 36 ms | flimlib RLD 44 ms | **1.2×** |
+| ↳ re-tune IRF on a built map | **0.1 ms** | flimlib RLD 43 ms (recomputes) | **~400×** |
+
+<sub>Apple M1 Pro, CPU only, identical input files. Full methodology, per-task
+charts, and honest trade-offs: [`benchmarks/README.md`](benchmarks/README.md).</sub>
+
+Single-detector setups are first-class: `FitNExp` is a native C++ single- or
+multi-exponential Poisson reconvolution fitter for one decay curve, with batched
+`fit_many` / per-pixel `fit_map` variants that thread across cores. For
+intensity-only imaging, `CLSMImage(..., build_pixels=False)` does a single-pass
+"virtual fill" that beats dedicated PTU readers while staying byte-identical; the
+default builds the full photon-to-pixel structure for downstream lifetime/FCS/PDA
+analysis, and the simulator's coasting mode (`per_molecule_skip`) skips molecules
+far from the focus.
+
 ## Reproducible workflows
 
 The documentation includes executable examples and notebooks so analyses can be
@@ -75,8 +119,11 @@ Start here:
 - Experimental ISM tools, including adaptive pixel reassignment and Focus-ISM
   background rejection.
 
-On representative workloads, tttrlib is about 40x faster than pure Python for
-decay histogramming and about 2-5x faster for burst selection.
+On representative workloads, tttrlib runs about 5x faster than FRETBursts for
+burst selection, 9-36x faster than flimlib for reconvolution lifetime fitting,
+and produces per-pixel FLIM lifetime maps faster than FLIMKit and flimlib — all
+on CPU. See the [benchmark suite](benchmarks/) for the full, reproducible
+comparison and the cases where other tools win.
 
 ## Installation
 
