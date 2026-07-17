@@ -124,16 +124,21 @@ void BVA::compute(
         if (n_events <= 0) return;
 
         // Per-photon donor/acceptor membership and cumulative counts.
-        // donor_cs[k] / acceptor_cs[k] = counts over photons [s, s+k].
-        std::vector<int64_t> donor_cs(n_events);
-        std::vector<int64_t> acceptor_cs(n_events);
-        std::vector<int64_t> macro(n_events);
-        int64_t dcum = 0, acum = 0;
+        // donor_cs[k] / acceptor_cs[k] = counts over photons [s, s+k]. These are
+        // within-burst counts (<= n_events, always a few thousand), so int32
+        // halves the two largest per-burst buffers vs int64. The macro-time
+        // buffer is only read in time-window mode, so skip it entirely in
+        // photon-count mode.
+        std::vector<int32_t> donor_cs(n_events);
+        std::vector<int32_t> acceptor_cs(n_events);
+        std::vector<int64_t> macro;
+        if (by_time) macro.resize(n_events);
+        int32_t dcum = 0, acum = 0;
         for (int64_t k = 0; k < n_events; ++k) {
             const int64_t idx = s + k;
             const int mt = static_cast<int>(tttr_->get_micro_time_at(idx));
             const int ch = static_cast<int>(tttr_->get_routing_channel_at(idx));
-            macro[k] = static_cast<int64_t>(tttr_->get_macro_time_at(idx));
+            if (by_time) macro[k] = static_cast<int64_t>(tttr_->get_macro_time_at(idx));
             const bool is_donor =
                 in_channels(ch, donor_channels_) &&
                 in_micro_ranges(mt, donor_micro_time_ranges_);
@@ -146,7 +151,7 @@ void BVA::compute(
             acceptor_cs[k] = acum;
         }
 
-        auto count = [](const std::vector<int64_t>& cs, int64_t a, int64_t z) -> int64_t {
+        auto count = [](const std::vector<int32_t>& cs, int64_t a, int64_t z) -> int64_t {
             // count over half-open slice [a, z)
             return (a == 0) ? cs[z - 1] : cs[z - 1] - cs[a - 1];
         };

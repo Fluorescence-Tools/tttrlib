@@ -97,18 +97,18 @@ public:
     /**
      * @brief Per-burst mean proximity ratio (one value per burst).
      */
-    std::vector<double> get_proximity_ratio_mean() const { return prox_mean_; }
+    const std::vector<double>& get_proximity_ratio_mean() const { return prox_mean_; }
 
     /**
      * @brief Per-burst proximity-ratio standard deviation (one value per burst).
      */
-    std::vector<double> get_proximity_ratio_std() const { return prox_std_; }
+    const std::vector<double>& get_proximity_ratio_std() const { return prox_std_; }
 
     /**
      * @brief Number of photons in the acceptor stream per slice, averaged over
      *        the slices of each burst (useful for weighting/plotting).
      */
-    std::vector<double> get_mean_slice_size() const { return mean_slice_size_; }
+    const std::vector<double>& get_mean_slice_size() const { return mean_slice_size_; }
 
     /**
      * @brief Shot-noise-limited static BVA line.

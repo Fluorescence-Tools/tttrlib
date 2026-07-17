@@ -798,6 +798,11 @@ bool TTTR::write_ps_file(const std::string& filename, TTTRHeader* hdr) {
     // preceded by up to two position markers (x, y); the coordinate rides in
     // the marker's micro time (see read_ps_file).
     std::vector<int64_t> xs, ys, dt, ms, ch;
+    // At most one photon per valid event; reserve up front so the five parallel
+    // dataset buffers do not repeatedly reallocate while scanning the stream.
+    xs.reserve(n_valid_events); ys.reserve(n_valid_events);
+    dt.reserve(n_valid_events); ms.reserve(n_valid_events);
+    ch.reserve(n_valid_events);
     int64_t cur_x = 0, cur_y = 0;
     bool has_x = false, has_y = false;
     bool any_channel = false;

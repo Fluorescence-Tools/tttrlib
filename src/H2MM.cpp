@@ -505,7 +505,14 @@ void H2MM::set_bursts(
         kept_streams.push_back(&streams[b]);
     }
 
+    // Total photons is known from the kept bursts; reserve once so the flat CSR
+    // stream/gap arrays and the Δt scratch do not repeatedly reallocate.
+    size_t total_photons = 0;
+    for (const auto* sp : kept_streams) total_photons += sp->size();
+
     offsets_.push_back(0);
+    offsets_.reserve(kept_times.size() + 1);
+    streams_.reserve(total_photons);
     for (size_t b = 0; b < kept_times.size(); ++b) {
         const auto& s = *kept_streams[b];
         for (int v : s) streams_.push_back(static_cast<int32_t>(v));
@@ -514,6 +521,7 @@ void H2MM::set_bursts(
 
     // Unique inter-photon Δt (>0) across all bursts.
     std::vector<int64_t> all_dt;
+    all_dt.reserve(total_photons);
     for (const auto* tp : kept_times) {
         const auto& t = *tp;
         for (size_t k = 1; k < t.size(); ++k) {
@@ -523,7 +531,7 @@ void H2MM::set_bursts(
     }
     std::sort(all_dt.begin(), all_dt.end());
     all_dt.erase(std::unique(all_dt.begin(), all_dt.end()), all_dt.end());
-    unique_dt_ = all_dt;
+    unique_dt_ = std::move(all_dt);
 
     // gap_slot: for each photon, slot index into unique_dt_ of Δt to next photon
     // (-1 at the last photon of each burst).
@@ -919,7 +927,9 @@ void H2MM::viterbi(
         const int64_t e = offsets_[b + 1];
         const int64_t m_len = e - s;
         std::vector<double> delta(static_cast<size_t>(m_len) * n);
-        std::vector<int64_t> psi(static_cast<size_t>(m_len) * n, 0);
+        // psi holds back-pointer state indices in [0, n); int32 halves this
+        // per-burst buffer vs int64 (n is a handful of states).
+        std::vector<int32_t> psi(static_cast<size_t>(m_len) * n, 0);
 
         const int y0 = streams_[s];
         for (int i = 0; i < n; ++i) delta[i] = log_prior[i] + log_obs[i * p + y0];
@@ -932,7 +942,7 @@ void H2MM::viterbi(
                 : log_pow.data() + static_cast<size_t>(slot) * n2;
             const double* dprev = delta.data() + (rel - 1) * n;
             double* dcur = delta.data() + rel * n;
-            int64_t* pcur = psi.data() + rel * n;
+            int32_t* pcur = psi.data() + rel * n;
             for (int j = 0; j < n; ++j) {
                 double best = -std::numeric_limits<double>::infinity();
                 int arg = 0;

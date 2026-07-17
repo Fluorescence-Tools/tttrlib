@@ -109,12 +109,17 @@ std::vector<double> BurstFilter::get_burst_properties(size_t burst_index) {
 }
 
 std::vector<std::vector<double>> BurstFilter::get_all_burst_properties() {
+    // bursts is interleaved [s0,e0,s1,e1,...]; there are bursts.size()/2 bursts.
+    // Iterate over the burst count (not the interleaved length): the previous
+    // bound emitted an extra all-zero row per burst (get_burst_properties(i)
+    // returns zeros once i*2 runs past the array) and doubled the allocation.
+    const size_t n_bursts = bursts.size() / 2;
     std::vector<std::vector<double>> all_properties;
-    
-    for (size_t i = 0; i < bursts.size(); i++) {
+    all_properties.reserve(n_bursts);
+    for (size_t i = 0; i < n_bursts; i++) {
         all_properties.push_back(get_burst_properties(i));
     }
-    
+
     return all_properties;
 }
 
@@ -122,9 +127,19 @@ std::shared_ptr<TTTR> BurstFilter::get_burst_photons(long long* selected_bursts,
     if (!tttr_data) return nullptr;
     if (selected_bursts == nullptr) n_selected_bursts = 0;
     
-    // Collect all photon indices from selected bursts
+    // Collect all photon indices from selected bursts. Reserve the summed span
+    // of the selected bursts (not the whole stream) so a small selection stays
+    // small while a large one avoids repeated reallocation.
     std::vector<int> photon_indices;
-    
+    {
+        int64_t span = 0;
+        for (size_t i = 0; i + 1 < static_cast<size_t>(n_selected_bursts); i += 2) {
+            const int64_t d = selected_bursts[i + 1] - selected_bursts[i] + 1;
+            if (d > 0) span += d;
+        }
+        if (span > 0) photon_indices.reserve(static_cast<size_t>(span));
+    }
+
     for (size_t i = 0; i < static_cast<size_t>(n_selected_bursts); i += 2) {
         if (i + 1 < static_cast<size_t>(n_selected_bursts)) {
             int64_t start = selected_bursts[i];
