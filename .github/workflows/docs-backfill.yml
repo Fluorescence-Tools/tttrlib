@@ -52,6 +52,7 @@ jobs:
           # The per-version builds check out old tags into worktrees, so keep the
           # current version-selector tooling and landing page out of the way.
           cp tools/update_docs_versions.py /tmp/update_docs_versions.py
+          cp tools/make_switcher.py /tmp/make_switcher.py
           cp -r doc/static_root /tmp/static_root
 
       - name: Build documentation for each requested version
@@ -157,6 +158,10 @@ jobs:
           done
           echo "Resulting versions.json:"
           cat pages-root/versions.json 2>/dev/null || echo "(none written — no versions built)"
+          # Regenerate the version-switcher source from the merged manifest.
+          python /tmp/make_switcher.py \
+            --versions pages-root/versions.json \
+            --output pages-root/switcher.json 2>/dev/null || true
 
       - name: Fail if nothing built
         run: |
