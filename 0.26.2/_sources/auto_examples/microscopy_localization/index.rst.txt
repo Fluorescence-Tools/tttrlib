@@ -1,0 +1,33 @@
+
+
+.. _sphx_glr_auto_examples_microscopy_localization:
+
+.. _microscopy_localization_examples:
+
+Image Localization Examples
+============================
+
+Examples demonstrating single molecule localization using 2D Gaussian fitting.
+
+These examples show how to use the ImageLocalizer class to precisely localize
+fluorescent point sources (e.g., fluorescent beads or single molecules) with
+sub-pixel accuracy using 2D Gaussian curve fitting.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
