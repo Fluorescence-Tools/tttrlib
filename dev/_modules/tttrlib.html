@@ -12572,9 +12572,8 @@
         <span class="n">bursts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
-        <span class="n">array_index</span> <span class="o">=</span> <span class="n">burst_index</span> <span class="o">*</span> <span class="mi">2</span>
-        <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">array_index</span><span class="p">])</span>
-        <span class="n">stop_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">array_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">burst_index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stop_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">burst_index</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="c1"># Get the C++ map and convert to Python dict</span>
         <span class="n">cpp_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_burst_channel_photons</span><span class="p">(</span><span class="n">start_idx</span><span class="p">,</span> <span class="n">stop_idx</span><span class="p">)</span>
@@ -12602,9 +12601,8 @@
         <span class="n">bursts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
-        <span class="n">array_index</span> <span class="o">=</span> <span class="n">burst_index</span> <span class="o">*</span> <span class="mi">2</span>
-        <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">array_index</span><span class="p">])</span>
-        <span class="n">stop_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">array_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">burst_index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stop_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bursts</span><span class="p">[</span><span class="n">burst_index</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="c1"># Get the C++ map and convert to Python dict</span>
         <span class="n">cpp_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_burst_channel_indices</span><span class="p">(</span><span class="n">start_idx</span><span class="p">,</span> <span class="n">stop_idx</span><span class="p">)</span>

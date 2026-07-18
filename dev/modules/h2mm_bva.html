@@ -940,7 +940,7 @@ plt.tight_layout()
     d = tttrlib.TTTR()
     d.append_events(np.asarray(macro, np.uint64), np.zeros(len(macro), np.uint16),
                     np.asarray(chan, np.int8), np.zeros(len(macro), np.int8), False, 0)
-    return d, np.asarray(bounds, np.int64).ravel()
+    return d, np.asarray(bounds, np.int64)  # (n, 2) [start, stop]
 
 n_slice = 5
 static = [(rng.random(400) &lt; 0.5).astype(int) for _ in range(200)]
@@ -951,7 +951,7 @@ res = {}
 for name, b in [(&#39;static&#39;, static), (&#39;dynamic&#39;, dynamic)]:
     d, bounds = build_tttr(b)
     bva = tttrlib.BVA(d); bva.set_donor([0]); bva.set_acceptor([1])
-    bva.compute(list(map(int, bounds)), n_slice)   # positional: bursts, photons/slice
+    bva.compute(bounds, n_slice)   # positional: (n, 2) bursts, photons/slice
     res[name] = (bva.proximity_ratio_mean, bva.proximity_ratio_std)
 <br/></pre></div>
 </div>

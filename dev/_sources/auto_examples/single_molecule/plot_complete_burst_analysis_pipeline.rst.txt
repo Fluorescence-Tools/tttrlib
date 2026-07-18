@@ -383,10 +383,10 @@ Get burst properties
         print("\n=== Burst Analysis Summary ===")
         print(f"Data files: {len(data_files)} SPC files")
         print(f"Total photons: {len(combined_data):,}")
-        print(f"Acquisition time: {combined_data.get_acquisition_time():.1f} seconds")
+        print(f"Acquisition time: {combined_data.acquisition_time:.1f} seconds")
         print(f"Initial bursts detected: {len(bursts)}")
         print(f"Final bursts after filtering: {len(merged_bursts)}")
-        print(f"Burst rate: {len(merged_bursts)/combined_data.get_acquisition_time():.2f} bursts/second")
+        print(f"Burst rate: {len(merged_bursts)/combined_data.acquisition_time:.2f} bursts/second")
         print(f"Average burst size: {burst_sizes.mean():.1f} photons")
         print(f"Average burst duration: {burst_durations.mean()*1e3:.2f} ms")
 
@@ -397,7 +397,7 @@ Get burst properties
         results = {
             "data_files": [Path(f).name for f in data_files],
             "total_events": len(combined_data),
-            "acquisition_time_seconds": combined_data.get_acquisition_time(),
+            "acquisition_time_seconds": combined_data.acquisition_time,
             "parameters": burst_config,
             "bursts_found": 0,
             "background_periods": len(background_rates),
