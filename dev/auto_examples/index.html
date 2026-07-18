@@ -71,7 +71,7 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="python plot_01_read_tttr.py" href="beginner/index.html" />
+    <link rel="next" title="Beginner Examples for tttrlib" href="beginner/index.html" />
     <link rel="prev" title="15. References" href="../zreferences.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -825,7 +825,7 @@
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beginner/index.html">python plot_01_read_tttr.py</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beginner/index.html">Beginner Examples for tttrlib</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
 
 <li class="toctree-l3"><a class="reference internal" href="beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
@@ -838,15 +838,18 @@
 <li class="toctree-l3"><a class="reference internal" href="beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_full_correlation.html">Full correlation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="correlation/index.html">Fluorescence correlation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="flim/plot_intensity_image.html">Intensity image</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flim/plot_crop.html">Image cropping</a></li>
@@ -1089,28 +1092,15 @@ python<span class="w"> </span>beginner/plot_01_reading_files.py
   <div class="sphx-glr-thumbnail-title">CLSM image memory usage reporting</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
-<p># Beginner Examples for tttrlib</p>
-<p>This directory contains small, runnable examples that mirror the tested core features of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.
+</section>
+<section id="beginner-examples-for-tttrlib">
+<h2>Beginner Examples for tttrlib<a class="headerlink" href="#beginner-examples-for-tttrlib" title="Link to this heading">#</a></h2>
+<p>Small, runnable examples that mirror the tested core features of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.
 They are safe to copy-paste into your own analysis.</p>
-<p>Make sure the demo data bundle is available (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>) and set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> accordingly.</p>
-<p>## Examples</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_01_read_tttr.py</span></code>
-Load a TTTR file (PTU), print basic info (macro/micro times, routing channels), and make first diagnostic plots.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_02_slice_join_append.py</span></code>
-Take small slices, join/append photon streams, compare macro-time timelines (shifted vs unshifted), and get a micro-time histogram.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_03_selections_bursts_traces.py</span></code>
-Do count-rate based LOW/HIGH selections, run burst search, build per-burst micro-time histograms (log scale), and plot 1 ms intensity traces (first 3 s) with burst regions shaded.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_04_write_convert.py</span></code>
-Write subsets to a new file, make a full native copy, and convert between vendor formats by reusing a header template.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">plot_05_clsm_zeiss980.py</span></code>
-Reconstruct a confocal (CLSM) image from Zeiss LSM 980 TTTR data, show an intensity projection, and plot a per-pixel mean micro-time (pseudo-lifetime) map.</p></li>
-</ul>
-<p>## How to run</p>
-<p>From this directory:</p>
-<section id="python-plot-01-read-tttr-py">
-<h3>python plot_01_read_tttr.py<a class="headerlink" href="#python-plot-01-read-tttr-py" title="Link to this heading">#</a></h3>
-<p>Each script will either run and generate figures/output files, or exit with a clear message if the demo data cannot be found.</p>
+<p>Make sure the demo data bundle is available (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>) and
+set the <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> environment variable accordingly. Each script either
+runs and generates figures, or exits with a clear message when the demo data
+cannot be found.</p>
 <div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to perform basic operations with TTTR files."><img alt="" src="../_images/sphx_glr_plot_00_tttr_files_thumb.png" />
 <p><a class="reference internal" href="beginner/plot_00_tttr_files.html"><span class="doc">Basic operations with TTTR files</span></a></p>
   <div class="sphx-glr-thumbnail-title">Basic operations with TTTR files</div>
@@ -1129,7 +1119,9 @@ Reconstruct a confocal (CLSM) image from Zeiss LSM 980 TTTR data, show an intens
 </div><div class="sphx-glr-thumbcontainer" tooltip="1) Using tttrlib&#x27;s built-in count-rate filter to get LOW/HIGH count-rate selections 2) Micro-time histograms at native tick resolution on a log y-axis 3) Sliding-window burst search and comparison of burst vs all micro-time histograms 4) Channel-resolved (green/red) 1 ms intensity traces for the FIRST 3 SECONDS,    with the area under the curves FILLED where bursts are present."><img alt="" src="../_images/sphx_glr_plot_03_selections_thumb.png" />
 <p><a class="reference internal" href="beginner/plot_03_selections.html"><span class="doc">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</span></a></p>
   <div class="sphx-glr-thumbnail-title">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</div>
-</div></div><p>Fluorescence correlation</p>
+</div></div></section>
+<section id="fluorescence-correlation">
+<h2>Fluorescence correlation<a class="headerlink" href="#fluorescence-correlation" title="Link to this heading">#</a></h2>
 <p>Examples for computing auto-/cross-correlation functions from TTTR data,
 including gated, sliced, and normalized correlation variants.</p>
 <div id='sg-tag-list' class='sphx-glr-tag-list'></div><div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Introduction ============"><img alt="" src="../_images/sphx_glr_plot_estimate_noise_thumb.png" />
@@ -1160,7 +1152,6 @@ including gated, sliced, and normalized correlation variants.</p>
 <p><a class="reference internal" href="correlation/plot_lifetime_fcs.html"><span class="doc">Lifetime-filtered correlation (lifetime-FCS)</span></a></p>
   <div class="sphx-glr-thumbnail-title">Lifetime-filtered correlation (lifetime-FCS)</div>
 </div></div></section>
-</section>
 <section id="fluorescence-lifetime-imaging">
 <h2>Fluorescence lifetime imaging<a class="headerlink" href="#fluorescence-lifetime-imaging" title="Link to this heading">#</a></h2>
 <p>Examples showing lifetime image generation, phasor analysis, moment analysis,
@@ -1434,7 +1425,7 @@ microtime histograms, and I/O performance benchmarking.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">python plot_01_read_tttr.py</p>
+        <p class="prev-next-title">Beginner Examples for tttrlib</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1461,9 +1452,10 @@ microtime histograms, and I/O performance benchmarking.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-links">Quick Links</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-these-examples">How to Use These Examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-categories">Example Categories</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-plot-01-read-tttr-py">python plot_01_read_tttr.py</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#beginner-examples-for-tttrlib">Beginner Examples for tttrlib</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-correlation">Fluorescence correlation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-lifetime-imaging">Fluorescence lifetime imaging</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-decays">Fluorescence decays</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-correlation-spectroscopy">Image correlation spectroscopy</a></li>

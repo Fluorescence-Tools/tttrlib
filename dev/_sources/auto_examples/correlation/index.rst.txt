@@ -2,11 +2,11 @@
 
 .. _sphx_glr_auto_examples_correlation:
 
-
 .. _fcs_examples:
 
 Fluorescence correlation
- 
+------------------------
+
 Examples for computing auto-/cross-correlation functions from TTTR data,
 including gated, sliced, and normalized correlation variants.
 
