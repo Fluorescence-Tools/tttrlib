@@ -93,15 +93,21 @@ jobs:
               cd doc
               mkdir -p _build/api
               doxygen || true
+              # -D plot_gallery=0 forces sphinx-gallery to NOT execute examples,
+              # regardless of how the tag's own conf.py defaults it. Older tags
+              # execute examples by default, which fails without TTTRLIB_DATA and
+              # leaves a page-less build (only _static, no index.html).
               BUILD_TIER=4 TTTRLIB_DOCS_EXECUTE_EXAMPLES=0 \
-                sphinx-build -b html -T -d _build/doctrees . _build/html
+                sphinx-build -b html -T -D plot_gallery=0 -d _build/doctrees . _build/html
+              # A build that produced no landing page is a failure, not a deploy.
+              test -f _build/html/index.html
               if [ -d _build/api ]; then
                 rm -rf _build/html/api
                 cp -r _build/api _build/html/api
               fi
             ) || ok=0
 
-            if [ "${ok}" = "1" ] && [ -d "src-${dest}/doc/_build/html" ]; then
+            if [ "${ok}" = "1" ] && [ -f "src-${dest}/doc/_build/html/index.html" ]; then
               mkdir -p "pages-root/${dest}"
               cp -r "src-${dest}/doc/_build/html/." "pages-root/${dest}/"
               built="${built} ${tag}:${dest}"
