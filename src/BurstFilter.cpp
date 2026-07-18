@@ -123,9 +123,11 @@ std::vector<std::vector<double>> BurstFilter::get_all_burst_properties() {
     return all_properties;
 }
 
-std::shared_ptr<TTTR> BurstFilter::get_burst_photons(long long* selected_bursts, int n_selected_bursts) {
+std::shared_ptr<TTTR> BurstFilter::get_burst_photons(long long* selected_bursts, int n_selected_bursts, int n_cols) {
     if (!tttr_data) return nullptr;
-    if (selected_bursts == nullptr) n_selected_bursts = 0;
+    // selected_bursts is an (n_selected_bursts, 2) [start, stop] array (row-major).
+    const size_t n_flat = (selected_bursts == nullptr || n_cols != 2)
+        ? 0 : static_cast<size_t>(n_selected_bursts) * 2;
     
     // Collect all photon indices from selected bursts. Reserve the summed span
     // of the selected bursts (not the whole stream) so a small selection stays
@@ -133,15 +135,15 @@ std::shared_ptr<TTTR> BurstFilter::get_burst_photons(long long* selected_bursts,
     std::vector<int> photon_indices;
     {
         int64_t span = 0;
-        for (size_t i = 0; i + 1 < static_cast<size_t>(n_selected_bursts); i += 2) {
+        for (size_t i = 0; i + 1 < n_flat; i += 2) {
             const int64_t d = selected_bursts[i + 1] - selected_bursts[i] + 1;
             if (d > 0) span += d;
         }
         if (span > 0) photon_indices.reserve(static_cast<size_t>(span));
     }
 
-    for (size_t i = 0; i < static_cast<size_t>(n_selected_bursts); i += 2) {
-        if (i + 1 < static_cast<size_t>(n_selected_bursts)) {
+    for (size_t i = 0; i < n_flat; i += 2) {
+        if (i + 1 < n_flat) {
             int64_t start = selected_bursts[i];
             int64_t stop = selected_bursts[i + 1];
             
@@ -599,17 +601,20 @@ void BurstFilter::clear_filters() {
     applied_filters.clear();
 }
 
-void BurstFilter::get_bursts(long long** output, int* n_output) {
-    *n_output = bursts.size();
-    if (*n_output > 0) {
-        *output = (long long*)malloc(*n_output * sizeof(long long));
+void BurstFilter::get_bursts(long long** output, int* dim1, int* dim2) {
+    // Burst boundaries as an (n, 2) [start, stop] array (row-major == the
+    // interleaved storage), so *dim1 == number of bursts, *dim2 == 2.
+    *dim1 = static_cast<int>(bursts.size() / 2);
+    *dim2 = 2;
+    if (!bursts.empty()) {
+        *output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *output);
     } else {
         *output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
-void BurstFilter::find_bursts(long long** find_output, int* find_n_output) {
+void BurstFilter::find_bursts(long long** find_output, int* find_dim1, int* find_dim2) {
     // If photon mask is set, use masked photons only
     std::shared_ptr<TTTR> data_to_search = tttr_data;
     if (photon_mask) {
@@ -635,17 +640,18 @@ void BurstFilter::find_bursts(long long** find_output, int* find_n_output) {
     bursts = raw_bursts;
     applied_filters.clear();
     
-    // Return the bursts array
-    *find_n_output = bursts.size();
-    if (*find_n_output > 0) {
-        *find_output = (long long*)malloc(*find_n_output * sizeof(long long));
+    // Return the bursts as an (n, 2) [start, stop] array.
+    *find_dim1 = static_cast<int>(bursts.size() / 2);
+    *find_dim2 = 2;
+    if (!bursts.empty()) {
+        *find_output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *find_output);
     } else {
         *find_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
-void BurstFilter::filter_by_size(int min_size, int max_size, long long** size_output, int* size_n_output) {
+void BurstFilter::filter_by_size(int min_size, int max_size, long long** size_output, int* size_dim1, int* size_dim2) {
     std::vector<int64_t> filtered_bursts;
     
     for (size_t i = 0; i < bursts.size(); i += 2) {
@@ -668,20 +674,22 @@ void BurstFilter::filter_by_size(int min_size, int max_size, long long** size_ou
     applied_filters.push_back({FilterType::SIZE, {{"min_size", static_cast<double>(min_size)}, {"max_size", static_cast<double>(max_size)}}});
     
     // Return the updated bursts
-    *size_n_output = bursts.size();
-    if (*size_n_output > 0) {
-        *size_output = (long long*)malloc(*size_n_output * sizeof(long long));
+    *size_dim1 = static_cast<int>(bursts.size() / 2);
+    *size_dim2 = 2;
+    if (!bursts.empty()) {
+        *size_output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *size_output);
     } else {
         *size_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
-void BurstFilter::filter_by_duration(double min_duration, double max_duration, long long** duration_output, int* duration_n_output) {
+void BurstFilter::filter_by_duration(double min_duration, double max_duration, long long** duration_output, int* duration_dim1, int* duration_dim2) {
     std::vector<int64_t> filtered_bursts;
     
     if (!tttr_data) {
-        *duration_n_output = 0;
+        *duration_dim1 = 0;
+        *duration_dim2 = 2;
         *duration_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
         return;
     }
@@ -708,16 +716,17 @@ void BurstFilter::filter_by_duration(double min_duration, double max_duration, l
     applied_filters.push_back({FilterType::DURATION, {{"min_duration", min_duration}, {"max_duration", max_duration}}});
     
     // Return the updated bursts
-    *duration_n_output = bursts.size();
-    if (*duration_n_output > 0) {
-        *duration_output = (long long*)malloc(*duration_n_output * sizeof(long long));
+    *duration_dim1 = static_cast<int>(bursts.size() / 2);
+    *duration_dim2 = 2;
+    if (!bursts.empty()) {
+        *duration_output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *duration_output);
     } else {
         *duration_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
-void BurstFilter::filter_by_background(double max_background_ratio, long long** background_output, int* background_n_output) {
+void BurstFilter::filter_by_background(double max_background_ratio, long long** background_output, int* background_dim1, int* background_dim2) {
     // First estimate background if not already done
     if (background_rates.empty()) {
         estimate_background();
@@ -726,7 +735,8 @@ void BurstFilter::filter_by_background(double max_background_ratio, long long** 
     std::vector<int64_t> filtered_bursts;
     
     if (!tttr_data || background_rates.empty()) {
-        *background_n_output = 0;
+        *background_dim1 = 0;
+        *background_dim2 = 2;
         *background_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
         return;
     }
@@ -765,20 +775,22 @@ void BurstFilter::filter_by_background(double max_background_ratio, long long** 
     applied_filters.push_back({FilterType::BACKGROUND, {{"max_background_ratio", max_background_ratio}}});
     
     // Return the updated bursts
-    *background_n_output = bursts.size();
-    if (*background_n_output > 0) {
-        *background_output = (long long*)malloc(*background_n_output * sizeof(long long));
+    *background_dim1 = static_cast<int>(bursts.size() / 2);
+    *background_dim2 = 2;
+    if (!bursts.empty()) {
+        *background_output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *background_output);
     } else {
         *background_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
     }
 }
 
-void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge_n_output) {
+void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge_dim1, int* merge_dim2) {
     if (bursts.empty() || bursts.size() < 2) {
-        *merge_n_output = bursts.size();
-        if (*merge_n_output > 0) {
-            *merge_output = (long long*)malloc(*merge_n_output * sizeof(long long));
+        *merge_dim1 = static_cast<int>(bursts.size() / 2);
+        *merge_dim2 = 2;
+        if (!bursts.empty()) {
+            *merge_output = (long long*)malloc(bursts.size() * sizeof(long long));
             std::copy(bursts.begin(), bursts.end(), *merge_output);
         } else {
             *merge_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
@@ -819,9 +831,10 @@ void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge
     applied_filters.push_back({FilterType::MERGE, {{"max_gap", static_cast<double>(max_gap)}}});
     
     // Return the updated bursts
-    *merge_n_output = bursts.size();
-    if (*merge_n_output > 0) {
-        *merge_output = (long long*)malloc(*merge_n_output * sizeof(long long));
+    *merge_dim1 = static_cast<int>(bursts.size() / 2);
+    *merge_dim2 = 2;
+    if (!bursts.empty()) {
+        *merge_output = (long long*)malloc(bursts.size() * sizeof(long long));
         std::copy(bursts.begin(), bursts.end(), *merge_output);
     } else {
         *merge_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)

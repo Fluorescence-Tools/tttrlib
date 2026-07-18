@@ -143,7 +143,7 @@ class TestH2MM(unittest.TestCase):
         d = tttrlib.TTTR()
         d.append_events(macro, micro, chan, evt, False, 0)
 
-        bursts = np.asarray(burst_bounds, dtype=np.int64).ravel()
+        bursts = np.asarray(burst_bounds, dtype=np.int64)  # (n, 2) [start, stop]
 
         # C++ extraction
         g = tttrlib.Channel('g'); g.add_component(0, 0, 65535)

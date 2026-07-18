@@ -140,7 +140,7 @@ public:
      * @param n_selected_bursts Length of the selected_bursts array.
      * @return TTTR object with photons from selected bursts
      */
-    std::shared_ptr<TTTR> get_burst_photons(long long* selected_bursts, int n_selected_bursts);
+    std::shared_ptr<TTTR> get_burst_photons(long long* selected_bursts, int n_selected_bursts, int n_cols);
     
     /**
      * @brief Get the number of detected bursts
@@ -182,14 +182,14 @@ public:
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void get_bursts(long long** output, int* n_output);
+    void get_bursts(long long** output, int* dim1, int* dim2);
     
     /**
      * @brief Find bursts and return as NumPy-compatible arrays
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void find_bursts(long long** find_output, int* find_n_output);
+    void find_bursts(long long** find_output, int* find_dim1, int* find_dim2);
     
     /**
      * @brief Filter bursts by size and return as NumPy-compatible arrays
@@ -198,7 +198,7 @@ public:
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void filter_by_size(int min_size, int max_size, long long** size_output, int* size_n_output);
+    void filter_by_size(int min_size, int max_size, long long** size_output, int* size_dim1, int* size_dim2);
     
     /**
      * @brief Filter bursts by duration and return as NumPy-compatible arrays
@@ -207,7 +207,7 @@ public:
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void filter_by_duration(double min_duration, double max_duration, long long** duration_output, int* duration_n_output);
+    void filter_by_duration(double min_duration, double max_duration, long long** duration_output, int* duration_dim1, int* duration_dim2);
     
     /**
      * @brief Filter bursts by background ratio and return as NumPy-compatible arrays
@@ -215,7 +215,7 @@ public:
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void filter_by_background(double max_background_ratio, long long** background_output, int* background_n_output);
+    void filter_by_background(double max_background_ratio, long long** background_output, int* background_dim1, int* background_dim2);
     
     /**
      * @brief Merge bursts and return as NumPy-compatible arrays
@@ -223,7 +223,7 @@ public:
      * @param output Output array pointer (allocated by NumPy)
      * @param n_output Number of elements in output array
      */
-    void merge_bursts(int max_gap, long long** merge_output, int* merge_n_output);
+    void merge_bursts(int max_gap, long long** merge_output, int* merge_dim1, int* merge_dim2);
     
     /**
      * @brief Serialize burst parameters to JSON

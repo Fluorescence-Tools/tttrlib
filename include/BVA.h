@@ -80,7 +80,7 @@ public:
      * numeric vector, Java a long[].
      */
     void compute(
-        long long* bursts, int n_bursts,
+        long long* bursts, int n_bursts, int n_cols,
         int number_of_photons_per_slice = -1,
         double minimum_window_length = 0.01
     );

@@ -558,7 +558,7 @@ std::vector<long long> H2MM::get_unique_dt() const {
 
 void H2MM::set_bursts_from_tttr(
     std::shared_ptr<TTTR> tttr,
-    long long* bursts, int n_bursts,
+    long long* bursts, int n_bursts, int n_cols,
     const std::vector<std::shared_ptr<Channel>>& stream_channels,
     int min_photons,
     long long time_scale
@@ -587,8 +587,9 @@ void H2MM::set_bursts_from_tttr(
 
     std::vector<std::vector<long long>> times;
     std::vector<std::vector<int>> strms;
-    const size_t n_pairs = (bursts == nullptr || n_bursts < 2)
-        ? 0 : static_cast<size_t>(n_bursts) / 2;
+    // bursts is an (n_bursts, 2) [start, stop] array (row-major).
+    const size_t n_pairs = (bursts == nullptr || n_bursts < 1 || n_cols != 2)
+        ? 0 : static_cast<size_t>(n_bursts);
     for (size_t b = 0; b < n_pairs; ++b) {
         int64_t s = bursts[2 * b], e = bursts[2 * b + 1];
         if (s < 0) s = 0;
@@ -627,7 +628,7 @@ void H2MM::set_bursts_from_filter(
     std::vector<long long> b(burst_filter->get_burst_indices().begin(),
                              burst_filter->get_burst_indices().end());
     set_bursts_from_tttr(burst_filter->get_tttr(),
-                         b.data(), static_cast<int>(b.size()),
+                         b.data(), static_cast<int>(b.size() / 2), 2,
                          stream_channels, min_photons, time_scale);
 }
 
