@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['r_0',['r',['../struct_decay_fit_integrate_signals.html#a7f540e135ea4ed65e326d7398fcbef15',1,'DecayFitIntegrateSignals']]],
+  ['ranges_5fby_5ftime_5fwindow_1',['ranges_by_time_window',['../_t_t_t_r_8h.html#abb13b10dc8a7d0a83d6953f11b405b15',1,'TTTR.h']]],
+  ['read_5fbh132_5fheader_2',['read_bh132_header',['../class_t_t_t_r_header.html#a3aa4ca00037fc271a05bcafa87844896',1,'TTTRHeader']]],
+  ['read_5fcz_5fconfocor3_5fheader_3',['read_cz_confocor3_header',['../class_t_t_t_r_header.html#aa4c54a4100ca1a0ae8f53befc62e9c51',1,'TTTRHeader']]],
+  ['read_5ffile_4',['read_file',['../class_t_t_t_r.html#a5d150f203aefdf5597128525bc3b95ac',1,'TTTR']]],
+  ['read_5fht3_5fheader_5',['read_ht3_header',['../class_t_t_t_r_header.html#a93ddaec90ec867a50c13cc2a5d3b46e6',1,'TTTRHeader']]],
+  ['read_5fptu_5fheader_6',['read_ptu_header',['../class_t_t_t_r_header.html#a83a6bd72e37517be123417e991a4d0c4',1,'TTTRHeader']]],
+  ['read_5fsm_5fheader_7',['read_sm_header',['../class_t_t_t_r_header.html#a3dc7ac9417cfad7d9d086cc1dcd6487b',1,'TTTRHeader']]],
+  ['rebin_8',['rebin',['../class_c_l_s_m_image.html#afd49280df36971cb5f75759d03b06d3e',1,'CLSMImage']]],
+  ['rescale_9',['rescale',['../_decay_convolution_8h.html#a8b35ff5c9518235f4e9763a8acb35475',1,'DecayConvolution.h']]],
+  ['rescale_5fw_10',['rescale_w',['../_decay_convolution_8h.html#af39a07bf429dca0d50c5d0af1fe5479e',1,'DecayConvolution.h']]],
+  ['rescale_5fw_5fbg_11',['rescale_w_bg',['../_decay_convolution_8h.html#a2f6d2c2481a8a73c84e33a9b19502f41',1,'DecayConvolution.h']]],
+  ['resize_12',['resize',['../class_correlator_photon_stream.html#a99dfcdfa13fbac8f577072a6af58da0d',1,'CorrelatorPhotonStream::resize()'],['../class_correlator_curve.html#a3099ba1ebd3994f699d0319621105aed',1,'CorrelatorCurve::resize()']]],
+  ['rho_13',['rho',['../struct_decay_fit_integrate_signals.html#a1f96aa6c538afb24651f68fad154be96',1,'DecayFitIntegrateSignals']]],
+  ['rs_14',['rs',['../struct_decay_fit_integrate_signals.html#a7d80634c782b3f301595293f645b9ab6',1,'DecayFitIntegrateSignals']]],
+  ['run_15',['run',['../class_correlator.html#a5ed562f28f104690743a9c053b4ca1a9',1,'Correlator::run()'],['../class_pda_callback.html#a1fe41fa6c54f9b1dde0ce97a8b67761a',1,'PdaCallback::run()']]]
+];

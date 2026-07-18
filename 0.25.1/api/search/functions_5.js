@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['fconv_0',['fconv',['../_decay_convolution_8h.html#a08d6ad70b705fe0e9b5fcfe2336105e3',1,'DecayConvolution.h']]],
+  ['fconv_5favx_1',['fconv_avx',['../_decay_convolution_8h.html#ada8a7acdfd019f5cb365d3762671f3de',1,'DecayConvolution.h']]],
+  ['fconv_5fcs_5ftime_5faxis_2',['fconv_cs_time_axis',['../_decay_convolution_8h.html#aa347f8af11cd7947ebfbdf44d4671616',1,'DecayConvolution.h']]],
+  ['fconv_5fper_3',['fconv_per',['../_decay_convolution_8h.html#ad5e964b93928cc8d1c34a23e3d7fd8e9',1,'DecayConvolution.h']]],
+  ['fconv_5fper_5favx_4',['fconv_per_avx',['../_decay_convolution_8h.html#a75cdaca2ca84cd70db4c51579fa88125',1,'DecayConvolution.h']]],
+  ['fconv_5fper_5fcs_5',['fconv_per_cs',['../_decay_convolution_8h.html#a46575def872c14b29f8ac44b42e27bd2',1,'DecayConvolution.h']]],
+  ['fconv_5fper_5fcs_5ftime_5faxis_6',['fconv_per_cs_time_axis',['../_decay_convolution_8h.html#ad24a62886e90fd6cbabbf1e46a45cabf',1,'DecayConvolution.h']]],
+  ['fconv_5fref_7',['fconv_ref',['../_decay_convolution_8h.html#a757a6d813a633636f69a34f68700ce70',1,'DecayConvolution.h']]],
+  ['fgrad1_8',['fgrad1',['../i__lbfgs_8h.html#a650573a4df43b754838a1baa543ba30f',1,'i_lbfgs.h']]],
+  ['fgrad2_9',['fgrad2',['../i__lbfgs_8h.html#a4090f7b14e5a227a403a83023c3aebd3',1,'i_lbfgs.h']]],
+  ['fgrad4_10',['fgrad4',['../i__lbfgs_8h.html#af4dc9ec59f17d30bd21aa5c1e474e106',1,'i_lbfgs.h']]],
+  ['fill_11',['fill',['../class_c_l_s_m_image.html#a6d553225f1e2fd6ac4346f6db0dc56c7',1,'CLSMImage']]],
+  ['fill_5fpixels_12',['fill_pixels',['../class_c_l_s_m_image.html#a9894365144b9dab0c2616bebaa8361f1',1,'CLSMImage']]],
+  ['find_5ftag_13',['find_tag',['../class_t_t_t_r_header.html#ace3d50f79f279bd852372930c5f6c450',1,'TTTRHeader']]],
+  ['find_5fused_5frouting_5fchannels_14',['find_used_routing_channels',['../class_t_t_t_r.html#aa8bb53fa708d3f054bcd27024d1589b1',1,'TTTR']]],
+  ['fit_15',['fit',['../class_decay_fit26.html#a369966f61dece6e4c4ecb66dad8eaad6',1,'DecayFit26::fit()'],['../class_decay_fit25.html#a032f769f9935bbbd3f9a9d7bc2aaf6e1',1,'DecayFit25::fit()'],['../class_decay_fit24.html#ae3843588f16f4c63e0bce3fca839cfea',1,'DecayFit24::fit()'],['../class_decay_fit23.html#a023398a173be145ef92f3c35c7932f59',1,'DecayFit23::fit()'],['../class_decay_fit.html#ab80d70acd09abd9e6e166381d245c9b2',1,'DecayFit::fit()']]],
+  ['fix_16',['fix',['../classbfgs.html#a612c0482933e5a0d85615d2c150c65b7',1,'bfgs']]],
+  ['fjac1_17',['fjac1',['../i__lbfgs_8h.html#a6e777fdf307b23ba4734c6948bf7514e',1,'i_lbfgs.h']]],
+  ['fjac2_18',['fjac2',['../i__lbfgs_8h.html#a0889f82d4fd4730fb8275ca1ffa0fbb6',1,'i_lbfgs.h']]],
+  ['fjac4_19',['fjac4',['../i__lbfgs_8h.html#a1cc6f256bf9667f963e12434c1a2da74',1,'i_lbfgs.h']]],
+  ['flip_20',['flip',['../class_t_t_t_r_mask.html#a5f51524b40eba7fabc884e51bf859e6e',1,'TTTRMask']]],
+  ['fp_21',['Fp',['../struct_decay_fit_integrate_signals.html#a5bb2819fe0ff7cf45516d2aefa21dc2e',1,'DecayFitIntegrateSignals']]],
+  ['free_22',['free',['../classbfgs.html#a1edf570662f2553dc9e02fccd96d1ce0',1,'bfgs']]],
+  ['fs_23',['Fs',['../struct_decay_fit_integrate_signals.html#a405efee1e72fecbc2507445ffa168977',1,'DecayFitIntegrateSignals']]]
+];

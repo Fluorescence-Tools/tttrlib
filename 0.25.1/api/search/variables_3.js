@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['channel_0',['channel',['../unionsm__record.html#ac31feb1f0fbe8978edca7c23b4036364',1,'sm_record::channel'],['../unionpq__hh__t2__record.html#a82b5d3d114d4372361fc8893e9149965',1,'pq_hh_t2_record::channel'],['../unionpq__hh__t3__record.html#a8886873cd887e5e19b6c24cb305c517a',1,'pq_hh_t3_record::channel'],['../unionph__ph__t2__record.html#af76ccc9d950f5c4b2de3920fe2f0ac9f',1,'ph_ph_t2_record::channel'],['../unionpq__ph__t3__record.html#a4e35477de8ce4802aca8358ca181927f',1,'pq_ph_t3_record::channel'],['../unioncz__confocor3__settings.html#a292e9113ad058c66fcc095cae7122eb0',1,'cz_confocor3_settings::channel']]],
+  ['channel_5flabels_1',['channel_labels',['../structsm__header__t.html#a3e5bde46c7d6a1e9202d75d4bd96018c',1,'sm_header_t']]],
+  ['cnt_2',['cnt',['../unionbh__overflow.html#ae96b252c812d56da779f2a7255bd31cd',1,'bh_overflow']]],
+  ['col1_5fbho_3',['col1_bho',['../structsm__header__t.html#ad74e234043466b74d72d9ed6fdcbf8a0',1,'sm_header_t']]],
+  ['col1_5fname_4',['col1_name',['../structsm__header__t.html#ad88d50a6aaeb02b872cb3a1202ba79a6',1,'sm_header_t']]],
+  ['col1_5foffset_5',['col1_offset',['../structsm__header__t.html#a0c1cfad8437905aef7438fba4ba07c2c',1,'sm_header_t']]],
+  ['col1_5fresolution_6',['col1_resolution',['../structsm__header__t.html#afc19955d776be957dad5a9cf55e8b599',1,'sm_header_t']]],
+  ['col2_5fbho_7',['col2_bho',['../structsm__header__t.html#acf8189b5c479839a47159dcfcf92ac53',1,'sm_header_t']]],
+  ['col2_5fname_8',['col2_name',['../structsm__header__t.html#ad8f5868e36fdc4f602d975ccd8c54b0d',1,'sm_header_t']]],
+  ['col2_5foffset_9',['col2_offset',['../structsm__header__t.html#a8412716379bb57194bbe24d9d12d8554',1,'sm_header_t']]],
+  ['col2_5fresolution_10',['col2_resolution',['../structsm__header__t.html#aed357a4cc8f722953d9cab8ddd3ebaa2',1,'sm_header_t']]],
+  ['col3_5fname_11',['col3_name',['../structsm__header__t.html#af9e79c5dfa05ba09d6aaeaa3ba325f40',1,'sm_header_t']]],
+  ['col3_5foffset_12',['col3_offset',['../structsm__header__t.html#a658c23c0202c02acfed81aed25107897',1,'sm_header_t']]],
+  ['col3_5fresolution_13',['col3_resolution',['../structsm__header__t.html#adbe11ee377ba2c31c2115c76d1181418',1,'sm_header_t']]],
+  ['comment_14',['comment',['../structsm__header__t.html#a5c8e353cec983380b473c98b83e79af3',1,'sm_header_t']]],
+  ['commentfield_15',['CommentField',['../structpq__ht3___header__t.html#a3e760b5526d09bcaee2452a54d18df1e',1,'pq_ht3_Header_t']]],
+  ['convolution_5fstop_16',['convolution_stop',['../struct_decay_fit_corrections.html#ae8e5107df2844f644be36716e4e68c5d',1,'DecayFitCorrections']]],
+  ['corr_5fnormalized_17',['corr_normalized',['../class_correlator_curve.html#a9bad47e5aa82c130e40d90e0cb85b768',1,'CorrelatorCurve']]],
+  ['corrections_18',['corrections',['../struct_decay_fit_integrate_signals.html#ad61c4b8c88650bd421a5f9cad94c6203',1,'DecayFitIntegrateSignals::corrections'],['../struct_m_param.html#a155ff72e8f9f346d80f1aa5de5f1d30d',1,'MParam::corrections']]],
+  ['correlation_19',['correlation',['../class_correlator_curve.html#a2ecd013278a3b8a15f847883e9bab0f7',1,'CorrelatorCurve']]],
+  ['correlation_5fmethod_20',['correlation_method',['../struct_correlation_curve_settings.html#a22006102a66b0a1d9085a9adea4f6605',1,'CorrelationCurveSettings']]],
+  ['creatorname_21',['CreatorName',['../structpq__ht3___header__t.html#a9ed66a9f0ca70123f52abedd199c4977',1,'pq_ht3_Header_t']]],
+  ['creatorversion_22',['CreatorVersion',['../structpq__ht3___header__t.html#ab07feac4d307d708f90a23e58a1b6058',1,'pq_ht3_Header_t']]],
+  ['crlf_23',['CRLF',['../structpq__ht3___header__t.html#a2fceaa8c1a7f8c0b637409268188143a',1,'pq_ht3_Header_t']]],
+  ['curve_24',['curve',['../class_correlator.html#aa0ba29188337c36812b7f39579fa6e9e',1,'Correlator']]]
+];
