@@ -306,6 +306,23 @@ html_use_index = False
 html_theme_options = {"navigation_depth": 3}
 if html_theme == "pydata_sphinx_theme":
     html_theme_options["show_toc_level"] = 2
+    # Version switcher: a "Version" dropdown in the header that lists every
+    # published docs version (development + releases), read from switcher.json
+    # published at the gh-pages root (CORS-enabled, so it also works on the
+    # readthedocs mirror). DOCS_VERSION is set by CI (dev / X.Y.Z / stable) and
+    # selects the active entry.
+    html_theme_options["switcher"] = {
+        "json_url": "https://fluorescence-tools.github.io/tttrlib/switcher.json",
+        "version_match": os.environ.get("DOCS_VERSION", "dev"),
+        # Don't fetch/validate switcher.json at build time: it is published to
+        # gh-pages by the same job *after* the Sphinx build, so a build-time
+        # fetch would 404. The dropdown is populated client-side at page load.
+        "check_switcher": False,
+    }
+    html_theme_options["navbar_end"] = [
+        "version-switcher", "theme-switcher", "navbar-icon-links",
+    ]
+    html_theme_options["show_version_warning_banner"] = True
 
 # Optional sidebars only if the theme ships them
 html_sidebars = {
