@@ -3,9 +3,8 @@
 #include "TTTRSelection.h"
 %}
 
-// Python does not support overloading. Thus, ignore the copy constructor
-%ignore TTTRSelection(const TTTRSelection& p2);
-%ignore TTTRSelection(int start, int stop);
+// Expose the overloaded C++ constructors directly. SWIG generates a dispatching
+// __init__ for TTTRSelection() / TTTRSelection(start, stop) / TTTRSelection(other).
 
 // Ignore the vector-returning version of get_tttr_indices (slow, creates copy)
 // Use the pointer-based overload instead for efficient NumPy wrapping
@@ -47,28 +46,6 @@
             TTTRSelection object is alive.
             """
             return self.get_tttr_indices()
-        
-        # Override __init__ to handle 'other' keyword argument
-        __old_init = __init__
-        def __init__(self, start=-1, stop=-1, other=None):
-            """
-            Initialize TTTRSelection.
-            
-            Parameters
-            ----------
-            start : int, optional
-                Start index (default: -1)
-            stop : int, optional
-                Stop index (default: -1)
-            other : TTTRSelection, optional
-                Another TTTRSelection to copy from
-            """
-            if other is not None:
-                # Copy from other
-                self.__old_init(start, stop, other)
-            else:
-                # Normal initialization
-                self.__old_init(start, stop, None)
     %}
 #endif
 }
