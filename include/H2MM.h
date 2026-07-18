@@ -127,7 +127,7 @@ public:
      */
     void set_bursts_from_tttr(
         std::shared_ptr<TTTR> tttr,
-        long long* bursts, int n_bursts,
+        long long* bursts, int n_bursts, int n_cols,
         const std::vector<std::shared_ptr<Channel>>& stream_channels,
         int min_photons = 3,
         long long time_scale = 1

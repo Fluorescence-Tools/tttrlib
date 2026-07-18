@@ -49,7 +49,7 @@ void BVA::compute(int number_of_photons_per_slice, double minimum_window_length)
     // type from long long, so copy into the public pointer/length signature.
     std::vector<long long> b(burst_filter_->get_burst_indices().begin(),
                              burst_filter_->get_burst_indices().end());
-    compute(b.data(), static_cast<int>(b.size()),
+    compute(b.data(), static_cast<int>(b.size() / 2), 2,
             number_of_photons_per_slice, minimum_window_length);
 }
 
@@ -91,12 +91,13 @@ inline bool in_micro_ranges(
 }  // namespace
 
 void BVA::compute(
-    long long* bursts, int n_bursts,
+    long long* bursts, int n_bursts, int n_cols,
     int number_of_photons_per_slice,
     double minimum_window_length
 ) {
-    const size_t n_pairs = (bursts == nullptr || n_bursts < 2)
-        ? 0 : static_cast<size_t>(n_bursts) / 2;
+    // bursts is an (n_bursts, 2) [start, stop] array (row-major).
+    const size_t n_pairs = (bursts == nullptr || n_bursts < 1 || n_cols != 2)
+        ? 0 : static_cast<size_t>(n_bursts);
     prox_mean_.assign(n_pairs, std::nan(""));
     prox_std_.assign(n_pairs, std::nan(""));
     mean_slice_size_.assign(n_pairs, 0.0);
