@@ -25,6 +25,19 @@
 // pointer to the target function
 typedef double(*TargetFP)(double*, void*);
 
+/*!
+ * @brief Optional analytic-gradient callback.
+ *
+ * Fills @p grad_out with @f$\partial f/\partial x_i@f$ over the **full**
+ * parameter space (length ``N``; entries for fixed parameters are ignored) and
+ * returns @f$f(x)@f$ — one call yields both, which is what a forward-mode
+ * automatic-differentiation pass naturally produces.
+ *
+ * When no gradient is registered, ::bfgs falls back to its central-difference
+ * scheme, so existing callers are unaffected.
+ */
+typedef double(*GradientFP)(double* x, double* grad_out, void* p);
+
 /* Numerical Jacobians and gradients (1-, 2- and 4-point approximations).
  * Kept for interface compatibility; header-only now. */
 
@@ -189,6 +202,21 @@ class bfgs
     seteps(e);
   }
 
+  /*!
+   * @brief Register an analytic gradient, replacing central differences.
+   *
+   * The callback receives the full-length parameter vector and fills the
+   * full-length gradient, returning @f$f(x)@f$. Passing ``nullptr`` restores
+   * the finite-difference default.
+   *
+   * Exact gradients cost one pass instead of @f$2N@f$ objective evaluations
+   * and remove the step-size compromise, which also makes the ``EpsG``
+   * termination test trustworthy at tight tolerances.
+   */
+  void set_gradient(GradientFP g) { fgrad = g; }
+  /// Whether an analytic gradient is in use.
+  bool has_gradient() const { return fgrad != nullptr; }
+
   // fix or unfix a parameter
   void fix(int n) {
     if (n >= N || n < 0) return;
@@ -237,10 +265,18 @@ class bfgs
       return f(xd.data(), pcopy);
     };
 
-    // central-difference gradient, step h = sqrt_eps * |x| (h = sqrt_eps at 0),
-    // matching the previous 2-point scheme; returns f(zz)
+    // Gradient in the reduced space. Uses the registered analytic gradient when
+    // one is available (one pass, exact); otherwise falls back to the
+    // central-difference scheme with step h = sqrt_eps * |x| (h = sqrt_eps at
+    // 0), matching the previous 2-point behaviour. Returns f(zz).
+    std::vector<double> gfull(N);
     auto grad = [&](const std::vector<double>& zz, std::vector<double>& g) -> double {
       for (int j = 0; j < n; j++) xd[idx[j]] = zz[j];
+      if (fgrad != nullptr) {
+        const double fval = fgrad(xd.data(), gfull.data(), pcopy);
+        for (int j = 0; j < n; j++) g[j] = gfull[idx[j]];
+        return fval;
+      }
       double fval = f(xd.data(), pcopy);
       for (int j = 0; j < n; j++) {
         const double temp = zz[j];
@@ -363,6 +399,7 @@ class bfgs
   double eps;
   double sqrt_eps;
   TargetFP f;
+  GradientFP fgrad = nullptr;  ///< optional analytic gradient; central differences when null
   void* pcopy;
   std::vector<double> xd;
   std::vector<int> fixed;
