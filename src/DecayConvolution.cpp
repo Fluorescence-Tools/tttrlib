@@ -444,9 +444,67 @@ void fconv_per_simd(double *fit, double *x, double *lamp, int numexp, int start,
 }
 
 
+#if TTTRLIB_COMPILE_NEON
+// Periodic convolution WITH a convolution stop, vectorised over lifetimes
+// (lane 0 and lane 1 carry two different lifetimes of the same spectrum).
+// Mirrors fconv_per_cs()'s scalar recurrences exactly; padding lanes are given
+// a zero amplitude and a zero decay factor so they contribute nothing.
+static void fconv_per_cs_neon_impl(double *fit, double *x, double *lamp, int numexp, int stop,
+                                   int n_points, double period, int conv_stop, double dt)
+{
+    const int chunk = 2;                       // lifetimes per float64x2 register
+    const int n_ele = ((numexp + chunk - 1) / chunk) * chunk;
+    const int period_n = (int)ceil(period / dt - 0.5);
+    const int stop1 = (period_n > n_points - 1) ? n_points - 1 : period_n;
+    const double deltathalf = dt * 0.5;
+
+    std::vector<double> ex(n_ele, 0.0), amp(n_ele, 0.0), tail(n_ele, 0.0), post(n_ele, 0.0);
+    for (int i = 0; i < numexp; i++) {
+        ex[i]   = exp(-dt / x[2 * i + 1]);
+        amp[i]  = x[2 * i];
+        tail[i] = 1. / (1. - exp(-period / x[2 * i + 1]));
+        post[i] = exp(-(period_n - stop1) * dt / x[2 * i + 1]);
+    }
+
+    for (int i = 0; i <= stop; i++) fit[i] = 0.0;
+
+    for (int ne = 0; ne < numexp; ne += chunk) {
+        const float64x2_t e = vld1q_f64(&ex[ne]);
+        const float64x2_t a = vld1q_f64(&amp[ne]);
+        const float64x2_t t = vld1q_f64(&tail[ne]);
+        const float64x2_t s = vld1q_f64(&post[ne]);
+
+        // fit[0] += deltathalf*lamp[0]*(expcurr + 1.)*x[2*ne]
+        float64x2_t tmp = vmulq_f64(vmulq_f64(vdupq_n_f64(deltathalf * lamp[0]),
+                                              vaddq_f64(e, vdupq_n_f64(1.0))), a);
+        fit[0] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+
+        float64x2_t fitcurr = vdupq_n_f64(0.0);
+        int i = 1;
+        for (; i <= conv_stop; i++) {
+            // fitcurr = (fitcurr + deltathalf*lamp[i-1])*expcurr + deltathalf*lamp[i]
+            fitcurr = vaddq_f64(fitcurr, vdupq_n_f64(deltathalf * lamp[i - 1]));
+            fitcurr = vfmaq_f64(vdupq_n_f64(deltathalf * lamp[i]), fitcurr, e);
+            tmp = vmulq_f64(fitcurr, a);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+        for (; i <= stop1; i++) {
+            fitcurr = vmulq_f64(fitcurr, e);
+            tmp = vmulq_f64(fitcurr, a);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+        fitcurr = vmulq_f64(fitcurr, s);
+        for (i = 0; i <= stop; i++) {
+            fitcurr = vmulq_f64(fitcurr, e);
+            tmp = vmulq_f64(vmulq_f64(fitcurr, a), t);
+            fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+        }
+    }
+}
+#endif // TTTRLIB_COMPILE_NEON
+
 /* fast convolution, high repetition rate, with convolution stop for Paris */
-/* fast convolution, high repetition rate, with convolution stop for Paris */
-void fconv_per_cs(double *fit, double *x, double *lamp, int numexp, int stop,
+static void fconv_per_cs_scalar(double *fit, double *x, double *lamp, int numexp, int stop,
                   int n_points, double period, int conv_stop, double dt)
 {
     int ne, i,
@@ -476,6 +534,21 @@ void fconv_per_cs(double *fit, double *x, double *lamp, int numexp, int stop,
             fit[i] += fitcurr*x[2*ne]*tail_a;
         }
     }
+}
+
+// Periodic convolution with a convolution stop - picks the best available
+// kernel automatically, on the same CPU-and-size rule as fconv()/fconv_per().
+// No AVX kernel exists for this variant yet, so x86 takes the scalar path.
+void fconv_per_cs(double *fit, double *x, double *lamp, int numexp, int stop,
+                  int n_points, double period, int conv_stop, double dt)
+{
+#if TTTRLIB_COMPILE_NEON
+    if (numexp >= kSimdMinNumexp && tttrlib::cpu_features::get_neon_enabled()) {
+        fconv_per_cs_neon_impl(fit, x, lamp, numexp, stop, n_points, period, conv_stop, dt);
+        return;
+    }
+#endif
+    fconv_per_cs_scalar(fit, x, lamp, numexp, stop, n_points, period, conv_stop, dt);
 }
 
 

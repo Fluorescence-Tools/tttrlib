@@ -381,12 +381,17 @@ void my_fconv_per_cs(
         stop = n_irf - 1;
     }
     if(conv_stop < 0){
-        conv_stop = n_irf;
+        // The convolution loop runs i <= conv_stop and touches lamp[i] and
+        // fit[i], so the last valid value is n_irf - 1. Defaulting to n_irf
+        // read and wrote one element past both buffers -- survivable in the
+        // scalar path, but a hard crash once a SIMD kernel is used.
+        conv_stop = n_irf - 1;
     }
-    if (stop > n_irf) {
-        PyErr_Format(PyExc_ValueError,
-                     "Stop index (%d) too large for array of lengths (%d).",
-                     stop, n_irf);
+    if (conv_stop >= n_irf) {
+        conv_stop = n_irf - 1;
+    }
+    if (stop >= n_irf) {
+        stop = n_irf - 1;
     }
     fconv_per_cs(fit, x, irf, n_x / 2, stop, n_irf, period, conv_stop, dt);
 }
