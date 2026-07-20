@@ -1,6 +1,12 @@
 {
   "versions": [
     {
+      "version": "dev",
+      "label": "development",
+      "url": "dev/index.html",
+      "stable": false
+    },
+    {
       "version": "0.25.1",
       "label": "tttrlib 0.25.1",
       "url": "0.25.1/index.html",
@@ -10,12 +16,6 @@
       "version": "0.24.4",
       "label": "tttrlib 0.24.4",
       "url": "0.24.4/index.html",
-      "stable": false
-    },
-    {
-      "version": "dev",
-      "label": "development",
-      "url": "dev/index.html",
       "stable": false
     },
     {

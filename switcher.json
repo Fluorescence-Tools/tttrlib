@@ -1,5 +1,11 @@
 [
   {
+    "name": "development",
+    "version": "dev",
+    "url": "https://fluorescence-tools.github.io/tttrlib/dev/",
+    "preferred": false
+  },
+  {
     "name": "0.25.1",
     "version": "0.25.1",
     "url": "https://fluorescence-tools.github.io/tttrlib/0.25.1/",
@@ -9,12 +15,6 @@
     "name": "0.24.4",
     "version": "0.24.4",
     "url": "https://fluorescence-tools.github.io/tttrlib/0.24.4/",
-    "preferred": false
-  },
-  {
-    "name": "development",
-    "version": "dev",
-    "url": "https://fluorescence-tools.github.io/tttrlib/dev/",
     "preferred": false
   },
   {
