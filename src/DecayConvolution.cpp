@@ -61,8 +61,8 @@ if (is_verbose()) {
 }
 
 
-// fast convolution - OK
-void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+// fast convolution - scalar reference implementation.
+static void fconv_scalar(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
     std::vector<double> l2(stop);
     start = std::max(1, start);
     for (int i = 0; i < stop; i++) l2[i] = dt * 0.5 * lamp[i];
@@ -170,27 +170,50 @@ static void fconv_neon_impl(double *fit, double *x, double *lamp, int numexp, in
 }
 #endif // TTTRLIB_COMPILE_NEON
 
-// fast convolution - runtime SIMD dispatcher (AVX/FMA on x86_64, NEON on
-// AArch64, scalar fconv() otherwise).
-void fconv_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+// Below this many lifetimes the SIMD kernels do not pay off: they vectorise
+// ACROSS lifetimes and zero-pad to the register width, so a single-exponential
+// spectrum does the same work with extra setup. Measured on AArch64/NEON
+// (n=1024): numexp=1 is 1.02x for fconv and 0.89x -- i.e. a REGRESSION -- for
+// fconv_per, while numexp>=2 is a consistent 1.65-1.85x win. Selecting on CPU
+// features alone would therefore make single-exponential fits slower.
+static const int kSimdMinNumexp = 2;
+
+static inline bool simd_convolution_available(int numexp) {
+    if (numexp < kSimdMinNumexp) return false;
 #if TTTRLIB_COMPILE_AVX
-    if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
+    return tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled();
+#elif TTTRLIB_COMPILE_NEON
+    return tttrlib::cpu_features::get_neon_enabled();
+#else
+    return false;
+#endif
+}
+
+// fast convolution - picks the best available kernel automatically (AVX/FMA on
+// x86_64, NEON on AArch64, scalar otherwise), based on both the host CPU and
+// the problem size. Callers do not need to know which kernels exist.
+void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+    if (simd_convolution_available(numexp)) {
+#if TTTRLIB_COMPILE_AVX
         fconv_avx_impl(fit, x, lamp, numexp, start, stop, dt);
         return;
-    }
 #elif TTTRLIB_COMPILE_NEON
-    if (tttrlib::cpu_features::get_neon_enabled()) {
         fconv_neon_impl(fit, x, lamp, numexp, start, stop, dt);
         return;
-    }
 #endif
+    }
+    fconv_scalar(fit, x, lamp, numexp, start, stop, dt);
+}
+
+/// Explicit name for the same automatic selection; kept because callers use it.
+void fconv_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
     fconv(fit, x, lamp, numexp, start, stop, dt);
 }
 
 
 
-/* fast convolution, high repetition rate */
-void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+/* fast convolution, high repetition rate - scalar reference implementation. */
+static void fconv_per_scalar(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                int n_points, double period, double dt)
 {
     stop = (stop < 0) ? n_points: stop;
@@ -397,20 +420,26 @@ if (is_verbose()) {
 }
 #endif // TTTRLIB_COMPILE_NEON
 
-// fast convolution, high repetition rate - runtime dispatcher
-void fconv_per_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop,
-                   int n_points, double period, double dt) {
+// fast convolution, high repetition rate - picks the best available kernel
+// automatically; see fconv() for why the choice depends on numexp as well as
+// on the host CPU.
+void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+               int n_points, double period, double dt) {
+    if (simd_convolution_available(numexp)) {
 #if TTTRLIB_COMPILE_AVX
-    if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
         fconv_per_avx_impl(fit, x, lamp, numexp, start, stop, n_points, period, dt);
         return;
-    }
 #elif TTTRLIB_COMPILE_NEON
-    if (tttrlib::cpu_features::get_neon_enabled()) {
         fconv_per_neon_impl(fit, x, lamp, numexp, start, stop, n_points, period, dt);
         return;
-    }
 #endif
+    }
+    fconv_per_scalar(fit, x, lamp, numexp, start, stop, n_points, period, dt);
+}
+
+/// Explicit name for the same automatic selection; kept because callers use it.
+void fconv_per_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+                   int n_points, double period, double dt) {
     fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
 }
 
