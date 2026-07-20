@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta property="og:title" content="Correlators" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="modules/correlation.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="The analysis of signals by correlation functions is a common approach to study fluctuations signal time evolutions. Fluorescence correlation spectroscopy (FCS), a relatively old technique, original..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_modules_correlation_9f0adcd6.png" />
+<meta property="og:image:alt" content="The analysis of signals by correlation functions is a common approach to study fluctuations signal time evolutions. Fluorescence correlation spectroscopy (FCS), a relatively old technique, original..." />
+<meta name="description" content="The analysis of signals by correlation functions is a common approach to study fluctuations signal time evolutions. Fluorescence correlation spectroscopy (FCS), a relatively old technique, original..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>Correlators &mdash; tttrlib  documentation</title>
+  
+  <link rel="canonical" href="http://tttrlib.peulen.xyz/stable/modules/correlation.html" />
+
+  
+
+  <link rel="stylesheet" href="../_static/css/vendor/bootstrap.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+<script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+<script src="../_static/jquery.js"></script> 
+</head>
+<body>
+<nav id="navbar" class="sk-docs-navbar navbar navbar-expand-md navbar-light bg-light py-0">
+  <div class="container-fluid sk-docs-container px-0">
+    <button
+      id="sk-navbar-toggler"
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="sk-navbar-collapse collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../install.html">Install</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../api/index.html">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../auto_examples/index.html">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../getting_started.html">Getting Started</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../tutorial/index.html">Tutorial</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../whats_new/v0.24.4.html">What's new</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../glossary.html">Glossary</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../faq.html">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../related_projects.html">Related packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../roadmap.html">Roadmap</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../about.html">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+        </li>
+        <li class="nav-item dropdown nav-more-item-dropdown">
+          <a class="sk-nav-link nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="sk-nav-dropdown-item dropdown-item" href="../getting_started.html">Getting Started</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../tutorial/index.html">Tutorial</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../whats_new/v0.24.4.html">What's new</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../glossary.html">Glossary</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../faq.html">FAQ</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../related_projects.html">Related packages</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../roadmap.html">Roadmap</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../about.html">About us</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+          </div>
+        </li>
+      </ul>
+      <div id="searchbox" role="search">
+          <div class="searchformwrapper">
+          <form class="search" action="../search.html" method="get">
+            <input class="sk-search-text-input" type="text" name="q" aria-labelledby="searchlabel" />
+            <input class="sk-search-text-btn" type="submit" value="Go" />
+          </form>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="d-flex" id="sk-doc-wrapper">
+    <input type="checkbox" name="sk-toggle-checkbox" id="sk-toggle-checkbox">
+    <label id="sk-sidemenu-toggle" class="sk-btn-toggle-toc btn sk-btn-primary" for="sk-toggle-checkbox">Toggle Menu</label>
+    <div id="sk-sidebar-wrapper" class="border-right">
+      <div class="sk-sidebar-toc-wrapper">
+        <div class="sk-sidebar-toc-logo">
+        </div>
+        <div class="btn-group w-100 mb-2" role="group" aria-label="rellinks">
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Prev</a>
+            <a href="#" role="button" class="btn sk-btn-rellink disabled py-1">Up</a>
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Next</a>
+        </div>
+        <div class="alert alert-danger p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+          <strong>tttrlib </strong><br/>
+          <a href="http://tttrlib.peulen.xyz/dev/versions.html">Other versions</a>
+          </p>
+        </div>
+        <div class="alert alert-warning p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+            Please <a class="font-weight-bold" href="../about.html#citing-tttrlib"><string>cite us</string></a> if you use the software.
+          </p>
+        </div>
+            <div class="sk-sidebar-toc">
+              <ul>
+<li><a class="reference internal" href="#">Correlators</a></li>
+</ul>
+
+            </div>
+      </div>
+    </div>
+    <div id="sk-page-content-wrapper">
+      <div class="sk-page-content container-fluid body px-md-3" role="main">
+        
+  <section id="Correlators">
+<h1>Correlators<a class="headerlink" href="#Correlators" title="Permalink to this heading">¶</a></h1>
+<p>The analysis of signals by correlation functions is a common approach to study fluctuations signal time evolutions. Fluorescence correlation spectroscopy (FCS), a relatively old technique, originally introduced by Elson, Magde, and Webb in the early seventies, correlation functions are computed for fluorescence signals and the obtained correlation functions are analyzed to recover kinetic information, e.g. on molecular kinetics or diffusion :cite:<code class="docutils literal notranslate"><span class="pre">elson201340,Elson1974,magde1972</span></code>.</p>
+<p>The normalized cross-correlation function of the signal <span class="math notranslate nohighlight">\(S_A\)</span> and the signal <span class="math notranslate nohighlight">\(S_B\)</span> that were registered by channel <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span>, respectively, is:</p>
+<div class="math notranslate nohighlight">
+\[G_{AB} (t_{c}) = \frac{\langle S_A(t) S_B (t+t_c) \rangle}{\langle S_A(t) \rangle \langle S_B(t) \rangle}.\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(t\)</span> is the time and <span class="math notranslate nohighlight">\(t_c\)</span> is the correlation time (lag time). If <span class="math notranslate nohighlight">\(A=B\)</span> then <span class="math notranslate nohighlight">\(G_{AB}(t_c)\)</span> is a auto correlation function . If <span class="math notranslate nohighlight">\(A \neq B\)</span> then <span class="math notranslate nohighlight">\(G_{AB}(t_c)\)</span> is a cross-correlation function.</p>
+<p>Computed auto (FCS) and cross-correlation functions (FCCS) can be analyzed to derive rate constants of interest. FCS and FCCS can provide a dynamic pattern or “fingerprint” of a probed specimen. FCS can be combined with FRET :cite:<code class="docutils literal notranslate"><span class="pre">slaughter2004single,torres2007measuring</span></code> to cover structural fluctuations over a time range of nanoseconds to seconds and study conformational dynamics of biomolecules, complex formation, folding and catalysis
+cite:<code class="docutils literal notranslate"><span class="pre">johnson2006calmodulin,price2011fret,price2010detecting,slaughter2004single,slaughter2005single,slaughter2005conformational,gurunathan2010fret,levitus2010relaxation,al2005fluorescence,torres2007measuring</span></code>. Practical aspects of FRET-FCS were reviewed in detail in :cite:<code class="docutils literal notranslate"><span class="pre">felekyan2013analyzing</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> implements fast and accurate algorithms for cross-correlation over arbitrary time lags for photon timestamps registered in an asynchronous photon counting mode. The cross-correlation algorithms are commonly used in physics or biophysics for techniques such as fluorescence correlation spectroscopy (FCS) but can be used for other analysis.</p>
+<p>The algorithms can handels computing cross-correlation over log-spaced to covering several orders of magnitude for <a class="reference external" href="https://aip.scitation.org/doi/10.1063/1.1946088">full correlations</a> from picoseconds to seconds. The algorithms are implemented in C/C++ are are outlined in more detail in:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-11-26-3583&amp;id=78223">Wahl et al., Opt.Express</a></p></li>
+<li><p><a class="reference external" href="https://aip.scitation.org/doi/10.1063/1.1946088">Felekyan et al., Rev.Sci.Inst.(2005)</a></p></li>
+<li><p><a class="reference external" href="https://opg.optica.org/ol/abstract.cfm?uri=ol-31-6-829">Laurence et al., Opt.Lett (2006)</a></p></li>
+</ul>
+<p>The described algorithms were modified to account for arbitrary (non-integer) weights for facilitating the implementation of <a class="reference external" href="https://aip.scitation.org/doi/10.1063/1.1863399">lifetime</a> or <a class="reference external" href="https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cphc.201100897">filtered correlations</a>.</p>
+<p>Correlation functions can be analyzed by dedicated open tools such as <a class="reference external" href="https://github.com/fluorescence-tools/chisurf/">ChiSurf</a>, <a class="reference external" href="https://github.com/FCS-analysis/PyCorrFit">PyCorrFit</a>, <a class="reference external" href="https://github.com/fluorescence-tools/pam">PAM</a>, or generic curve analysis software.</p>
+</section>
+
+
+      </div>
+    <div class="container">
+      <footer class="sk-content-footer">
+            &copy; 2021 - 2026, tttrlib developers (BSD License).
+          <a href="../_sources/modules/correlation.ipynb.txt" rel="nofollow">Show this page source</a>
+      </footer>
+    </div>
+  </div>
+</div>
+<script src="../_static/js/vendor/bootstrap.min.js"></script>
+
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-22606712-2', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script>
+$(document).ready(function() {
+    /* Add a [>>>] button on the top-right corner of code samples to hide
+     * the >>> and ... prompts and the output and thus make the code
+     * copyable. */
+    var div = $('.highlight-python .highlight,' +
+                '.highlight-python3 .highlight,' +
+                '.highlight-pycon .highlight,' +
+		'.highlight-default .highlight')
+    var pre = div.find('pre');
+
+    // get the styles from the current theme
+    pre.parent().parent().css('position', 'relative');
+    var hide_text = 'Hide prompts and outputs';
+    var show_text = 'Show prompts and outputs';
+
+    // create and add the button to all the code blocks that contain >>>
+    div.each(function(index) {
+        var jthis = $(this);
+        if (jthis.find('.gp').length > 0) {
+            var button = $('<span class="copybutton">&gt;&gt;&gt;</span>');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+            jthis.prepend(button);
+        }
+        // tracebacks (.gt) contain bare text elements that need to be
+        // wrapped in a span to work with .nextUntil() (see later)
+        jthis.find('pre:has(.gt)').contents().filter(function() {
+            return ((this.nodeType == 3) && (this.data.trim().length > 0));
+        }).wrap('<span>');
+    });
+
+    // define the behavior of the button when it's clicked
+    $('.copybutton').click(function(e){
+        e.preventDefault();
+        var button = $(this);
+        if (button.data('hidden') === 'false') {
+            // hide the code output
+            button.parent().find('.go, .gp, .gt').hide();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'hidden');
+            button.css('text-decoration', 'line-through');
+            button.attr('title', show_text);
+            button.data('hidden', 'true');
+        } else {
+            // show the code output
+            button.parent().find('.go, .gp, .gt').show();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'visible');
+            button.css('text-decoration', 'none');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+        }
+    });
+
+	/*** Add permalink buttons next to glossary terms ***/
+	$('dl.glossary > dt[id]').append(function() {
+		return ('<a class="headerlink" href="#' +
+			    this.getAttribute('id') +
+			    '" title="Permalink to this term">¶</a>');
+	});
+  /*** Hide navbar when scrolling down ***/
+  // Returns true when headerlink target matches hash in url
+  (function() {
+    hashTargetOnTop = function() {
+        var hash = window.location.hash;
+        if ( hash.length < 2 ) { return false; }
+
+        var target = document.getElementById( hash.slice(1) );
+        if ( target === null ) { return false; }
+
+        var top = target.getBoundingClientRect().top;
+        return (top < 2) && (top > -2);
+    };
+
+    // Hide navbar on load if hash target is on top
+    var navBar = document.getElementById("navbar");
+    var navBarToggler = document.getElementById("sk-navbar-toggler");
+    var navBarHeightHidden = "-" + navBar.getBoundingClientRect().height + "px";
+    var $window = $(window);
+
+    hideNavBar = function() {
+        navBar.style.top = navBarHeightHidden;
+    };
+
+    showNavBar = function() {
+        navBar.style.top = "0";
+    }
+
+    if (hashTargetOnTop()) {
+        hideNavBar()
+    }
+
+    var prevScrollpos = window.pageYOffset;
+    hideOnScroll = function(lastScrollTop) {
+        if (($window.width() < 768) && (navBarToggler.getAttribute("aria-expanded") === 'true')) {
+            return;
+        }
+        if (lastScrollTop > 2 && (prevScrollpos <= lastScrollTop) || hashTargetOnTop()){
+            hideNavBar()
+        } else {
+            showNavBar()
+        }
+        prevScrollpos = lastScrollTop;
+    };
+
+    /*** high performance scroll event listener***/
+    var raf = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        window.oRequestAnimationFrame;
+    var lastScrollTop = $window.scrollTop();
+
+    if (raf) {
+        loop();
+    }
+
+    function loop() {
+        var scrollTop = $window.scrollTop();
+        if (lastScrollTop === scrollTop) {
+            raf(loop);
+            return;
+        } else {
+            lastScrollTop = scrollTop;
+            hideOnScroll(lastScrollTop);
+            raf(loop);
+        }
+    }
+  })();
+});
+
+</script>
+    
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+</body>
+</html>

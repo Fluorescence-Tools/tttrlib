@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta property="og:title" content="Installation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="install.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="tttrlib can either be installed from prebuilt binaries or from the source code. For most users it is recommended to install tttrlib using the prebuilt binaries. Below the installation using prebuil..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_install_84045a27.png" />
+<meta property="og:image:alt" content="tttrlib can either be installed from prebuilt binaries or from the source code. For most users it is recommended to install tttrlib using the prebuilt binaries. Below the installation using prebuil..." />
+<meta name="description" content="tttrlib can either be installed from prebuilt binaries or from the source code. For most users it is recommended to install tttrlib using the prebuilt binaries. Below the installation using prebuil..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>Installation &mdash; tttrlib  documentation</title>
+  
+  <link rel="canonical" href="http://tttrlib.peulen.xyz/stable/install.html" />
+
+  
+
+  <link rel="stylesheet" href="_static/css/vendor/bootstrap.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+<script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+<script src="_static/jquery.js"></script> 
+</head>
+<body>
+<nav id="navbar" class="sk-docs-navbar navbar navbar-expand-md navbar-light bg-light py-0">
+  <div class="container-fluid sk-docs-container px-0">
+    <button
+      id="sk-navbar-toggler"
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="sk-navbar-collapse collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="#">Install</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="api/index.html">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="auto_examples/index.html">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="getting_started.html">Getting Started</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="tutorial/index.html">Tutorial</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="whats_new/v0.25.1.html">What's new</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="glossary.html">Glossary</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="faq.html">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="related_projects.html">Related packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="roadmap.html">Roadmap</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="about.html">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+        </li>
+        <li class="nav-item dropdown nav-more-item-dropdown">
+          <a class="sk-nav-link nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="sk-nav-dropdown-item dropdown-item" href="getting_started.html">Getting Started</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="tutorial/index.html">Tutorial</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="whats_new/v0.25.1.html">What's new</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="glossary.html">Glossary</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="faq.html">FAQ</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="related_projects.html">Related packages</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="roadmap.html">Roadmap</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="about.html">About us</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+          </div>
+        </li>
+      </ul>
+      <div id="searchbox" role="search">
+          <div class="searchformwrapper">
+          <form class="search" action="search.html" method="get">
+            <input class="sk-search-text-input" type="text" name="q" aria-labelledby="searchlabel" />
+            <input class="sk-search-text-btn" type="submit" value="Go" />
+          </form>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="d-flex" id="sk-doc-wrapper">
+    <input type="checkbox" name="sk-toggle-checkbox" id="sk-toggle-checkbox">
+    <label id="sk-sidemenu-toggle" class="sk-btn-toggle-toc btn sk-btn-primary" for="sk-toggle-checkbox">Toggle Menu</label>
+    <div id="sk-sidebar-wrapper" class="border-right">
+      <div class="sk-sidebar-toc-wrapper">
+        <div class="sk-sidebar-toc-logo">
+        </div>
+        <div class="btn-group w-100 mb-2" role="group" aria-label="rellinks">
+            <a href="preface.html" role="button" class="btn sk-btn-rellink py-1" sk-rellink-tooltip="Welcome to tttrlib">Prev</a><a href="preface.html" role="button" class="btn sk-btn-rellink py-1" sk-rellink-tooltip="Welcome to tttrlib">Up</a>
+            <a href="faq.html" role="button" class="btn sk-btn-rellink py-1" sk-rellink-tooltip="Frequently Asked Questions">Next</a>
+        </div>
+        <div class="alert alert-warning p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+            Please <a class="font-weight-bold" href="about.html#citing-tttrlib"><string>cite us</string></a> if you use the software.
+          </p>
+        </div>
+            <div class="sk-sidebar-toc">
+              <ul>
+<li><a class="reference internal" href="#">Installation</a></li>
+<li><a class="reference internal" href="#Prebuilt-binaries">Prebuilt binaries</a></li>
+<li><a class="reference internal" href="#Compilation">Compilation</a><ul>
+<li><a class="reference internal" href="#Windows">Windows</a></li>
+<li><a class="reference internal" href="#macOS">macOS</a></li>
+<li><a class="reference internal" href="#Linux">Linux</a></li>
+<li><a class="reference internal" href="#Conda">Conda</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+      </div>
+    </div>
+    <div id="sk-page-content-wrapper">
+      <div class="sk-page-content container-fluid body px-md-3" role="main">
+        
+  <section id="Installation">
+<h1>Installation<a class="headerlink" href="#Installation" title="Permalink to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can either be installed from prebuilt binaries or from the source code. For most users it is recommended to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> using the prebuilt binaries. Below the installation using prebuilt binaries and the prerequisites to compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> are briefly outlined.</p>
+</section>
+<section id="Prebuilt-binaries">
+<h1>Prebuilt binaries<a class="headerlink" href="#Prebuilt-binaries" title="Permalink to this heading">¶</a></h1>
+<p>It is recommended to install <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> for Python environments via <code class="docutils literal notranslate"><span class="pre">conda</span></code> by.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda install -c tpeulen tttrlib
+</pre></div>
+</div>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>pip install tttrlib
+</pre></div>
+</div>
+</section>
+<section id="Compilation">
+<h1>Compilation<a class="headerlink" href="#Compilation" title="Permalink to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can be compiled and installed using the source code provided in the git repository. <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is compiled in Docker environments. The continuous integration pipeline can be used as a reference to setup a compilation machine</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>git clone --recursive https://github.com/fluorescence-tools/tttrlib.git
+cd tttrlib
+python setup.py install
+</pre></div>
+</div>
+<p>To compile <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> a set of prerequisites need to be fulfilled:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. An installed compiler.
+2. The `HDF5 &lt;https://www.hdfgroup.org/&gt;`_ library with C/C++ include files.
+3. A recent 64bit `Python &lt;https://www.python.org/&gt;`_ installation with include files.
+4. `cmake &lt;https://cmake.org/&gt;`_
+5. `SWIG &lt;http://www.swig.org/&gt;`_
+</pre></div>
+</div>
+<p>To debug and analyze the ouput of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> in more detail it can be useful to build the library in Debug mode that outputs additional information to the standard standard logging stream. tttrlib can be build in debugging mode by.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python setup.py build_ext --debug
+</pre></div>
+</div>
+<section id="Windows">
+<h2>Windows<a class="headerlink" href="#Windows" title="Permalink to this heading">¶</a></h2>
+<p>On windows <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is best compiled with the <code class="docutils literal notranslate"><span class="pre">Visual</span> <span class="pre">Studio</span> <span class="pre">2017</span> <span class="pre">&lt;https://visualstudio.microsoft.com/&gt;</span></code><em>. For compilation the Visual Studion Community edition is sufficient. In addition to Visual Studio the libraries and the include files as listed above need to be installed. The prebuilt binaries are compiled on Windows 10 with using 64bit anaconda Python environments ``miniconda &lt;https://docs.conda.io/en/latest/miniconda.html&gt;``</em> using the conda build recipe that is provided with the
+source code in the <code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code> folder.</p>
+</section>
+<section id="macOS">
+<h2>macOS<a class="headerlink" href="#macOS" title="Permalink to this heading">¶</a></h2>
+<p>For MacOS the prebuilt binaries are compiled on MacOS 10.13 with the Apple clang compiler using a anaconda distribution and the provided <code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code>.</p>
+</section>
+<section id="Linux">
+<h2>Linux<a class="headerlink" href="#Linux" title="Permalink to this heading">¶</a></h2>
+<p>The Linux prebuilt binaries are compiled on Ubuntu 18.04 in an anaconda distribution and the provided <code class="docutils literal notranslate"><span class="pre">conda-recipe</span></code>.</p>
+</section>
+<section id="Conda">
+<h2>Conda<a class="headerlink" href="#Conda" title="Permalink to this heading">¶</a></h2>
+<p>A conda recipe is provided in the folder ‘conda-recipe’ to build the tttrlib library with the <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">build</span> <span class="pre">&lt;https://docs.conda.io/projects/conda-build/en/latest/&gt;</span></code>_ environment.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda install conda-build
+conda build build-tools/conda-recipe
+</pre></div>
+</div>
+<p>To build the library download the recipe, install the conda build package and use the provided recipe to build the library.</p>
+</section>
+</section>
+
+
+      </div>
+    <div class="container">
+      <footer class="sk-content-footer">
+            &copy; 2021 - 2026, tttrlib developers (BSD License).
+          <a href="_sources/install.ipynb.txt" rel="nofollow">Show this page source</a>
+      </footer>
+    </div>
+  </div>
+</div>
+<script src="_static/js/vendor/bootstrap.min.js"></script>
+
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-22606712-2', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script>
+$(document).ready(function() {
+    /* Add a [>>>] button on the top-right corner of code samples to hide
+     * the >>> and ... prompts and the output and thus make the code
+     * copyable. */
+    var div = $('.highlight-python .highlight,' +
+                '.highlight-python3 .highlight,' +
+                '.highlight-pycon .highlight,' +
+		'.highlight-default .highlight')
+    var pre = div.find('pre');
+
+    // get the styles from the current theme
+    pre.parent().parent().css('position', 'relative');
+    var hide_text = 'Hide prompts and outputs';
+    var show_text = 'Show prompts and outputs';
+
+    // create and add the button to all the code blocks that contain >>>
+    div.each(function(index) {
+        var jthis = $(this);
+        if (jthis.find('.gp').length > 0) {
+            var button = $('<span class="copybutton">&gt;&gt;&gt;</span>');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+            jthis.prepend(button);
+        }
+        // tracebacks (.gt) contain bare text elements that need to be
+        // wrapped in a span to work with .nextUntil() (see later)
+        jthis.find('pre:has(.gt)').contents().filter(function() {
+            return ((this.nodeType == 3) && (this.data.trim().length > 0));
+        }).wrap('<span>');
+    });
+
+    // define the behavior of the button when it's clicked
+    $('.copybutton').click(function(e){
+        e.preventDefault();
+        var button = $(this);
+        if (button.data('hidden') === 'false') {
+            // hide the code output
+            button.parent().find('.go, .gp, .gt').hide();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'hidden');
+            button.css('text-decoration', 'line-through');
+            button.attr('title', show_text);
+            button.data('hidden', 'true');
+        } else {
+            // show the code output
+            button.parent().find('.go, .gp, .gt').show();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'visible');
+            button.css('text-decoration', 'none');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+        }
+    });
+
+	/*** Add permalink buttons next to glossary terms ***/
+	$('dl.glossary > dt[id]').append(function() {
+		return ('<a class="headerlink" href="#' +
+			    this.getAttribute('id') +
+			    '" title="Permalink to this term">¶</a>');
+	});
+  /*** Hide navbar when scrolling down ***/
+  // Returns true when headerlink target matches hash in url
+  (function() {
+    hashTargetOnTop = function() {
+        var hash = window.location.hash;
+        if ( hash.length < 2 ) { return false; }
+
+        var target = document.getElementById( hash.slice(1) );
+        if ( target === null ) { return false; }
+
+        var top = target.getBoundingClientRect().top;
+        return (top < 2) && (top > -2);
+    };
+
+    // Hide navbar on load if hash target is on top
+    var navBar = document.getElementById("navbar");
+    var navBarToggler = document.getElementById("sk-navbar-toggler");
+    var navBarHeightHidden = "-" + navBar.getBoundingClientRect().height + "px";
+    var $window = $(window);
+
+    hideNavBar = function() {
+        navBar.style.top = navBarHeightHidden;
+    };
+
+    showNavBar = function() {
+        navBar.style.top = "0";
+    }
+
+    if (hashTargetOnTop()) {
+        hideNavBar()
+    }
+
+    var prevScrollpos = window.pageYOffset;
+    hideOnScroll = function(lastScrollTop) {
+        if (($window.width() < 768) && (navBarToggler.getAttribute("aria-expanded") === 'true')) {
+            return;
+        }
+        if (lastScrollTop > 2 && (prevScrollpos <= lastScrollTop) || hashTargetOnTop()){
+            hideNavBar()
+        } else {
+            showNavBar()
+        }
+        prevScrollpos = lastScrollTop;
+    };
+
+    /*** high performance scroll event listener***/
+    var raf = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        window.oRequestAnimationFrame;
+    var lastScrollTop = $window.scrollTop();
+
+    if (raf) {
+        loop();
+    }
+
+    function loop() {
+        var scrollTop = $window.scrollTop();
+        if (lastScrollTop === scrollTop) {
+            raf(loop);
+            return;
+        } else {
+            lastScrollTop = scrollTop;
+            hideOnScroll(lastScrollTop);
+            raf(loop);
+        }
+    }
+  })();
+});
+
+</script>
+    
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+</body>
+</html>

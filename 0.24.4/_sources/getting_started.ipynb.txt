@@ -1,0 +1,97 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "3c7e29a2",
+   "metadata": {},
+   "source": [
+    "Getting Started\n",
+    "===============\n",
+    "\n",
+    "The purpose of this guide is to illustrate some of the main features that\n",
+    "``tttrlib`` provides. It assumes a very basic working knowledge of\n",
+    "fluorescence spectroscopy (decay analysis, correlation spectroscopy,\n",
+    "etc.). Please refer to our :ref:`installation instructions\n",
+    "<installation-instructions>` for installing ``tttrlib``.\n",
+    "\n",
+    "``tttrlib`` is an open source library that supports a diverse set of\n",
+    "experimental TTTR data. It also provides various tools for processing TTTR\n",
+    "data, data preprocessing."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1bc4b5f1",
+   "metadata": {},
+   "source": [
+    "Opening TTTR files and accesing data\n",
+    "------------------------------------\n",
+    "``tttrlib`` provides a simple interface to TTTR data contained in TTTR files.\n",
+    "The data in TTTR files is presented via so called :term:`TTTR` objects. These\n",
+    "objects can be created on their on or by reading files.\n",
+    "\n",
+    "Here is a simple example where we fit a\n",
+    ":class:`~sklearn.ensemble.RandomForestClassifier` to some very basic data::\n",
+    "\n",
+    "```\n",
+    "import tttrlib\n",
+    "tttr1 = TTTR()\n",
+    "tttr2 = TTTR('filename.ptu')\n",
+    "micro_time = tttr2.micro_time\n",
+    "```\n",
+    "\n",
+    "TTTR objects can be used to compute correlation curves, fluorescence decays,\n",
+    "for photon distribution analysis, or to compute fluorescence images in \n",
+    "confocal laser scanning microscopy.\n",
+    "\n",
+    "```\n",
+    "import tttrlib\n",
+    "data = TTTR('clsm_filename.ptu')\n",
+    "clsm = tttrlib.CLSMImage(data)\n",
+    "intensity_img = clsm.intensity\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8fab8b6d",
+   "metadata": {},
+   "source": [
+    "Next steps\n",
+    "----------\n",
+    "We have briefly covered how TTTR files are read and data contained in\n",
+    "these files are accessed. Please refer to our :ref:`user_guide` for details \n",
+    "on all the tools that we provide. You can also find an exhaustive list of \n",
+    "the public API in the\n",
+    ":ref:`api_ref`.\n",
+    "\n",
+    "You can also look at our numerous :ref:`examples <general_examples>` that\n",
+    "illustrate the use of ``tttrlib`` in many different contexts.\n",
+    "\n",
+    "The :ref:`tutorials <tutorial_menu>` also contain additional learning\n",
+    "resources."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.15"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

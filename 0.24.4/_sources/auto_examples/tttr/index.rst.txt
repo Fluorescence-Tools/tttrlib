@@ -1,0 +1,134 @@
+
+
+.. _sphx_glr_auto_examples_tttr:
+
+.. _tttr_examples:
+
+Working with TTTR objects
+-------------------------
+
+Examples on working with ``tttrlib.TTTR`` objects.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Save the content of a PTU file in an SPC file">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_transcode_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_transcode.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Transcode</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data...">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_header_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_header.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR-Header</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of a...">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_write_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_write.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_read_benchmark_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR reading benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="To open TTTR files import the tttrlib library.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_files_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_files.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Working with TTTR files</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tttr/plot_tttr_transcode
+   /auto_examples/tttr/plot_tttr_microtime_histogram
+   /auto_examples/tttr/plot_tttr_header
+   /auto_examples/tttr/plot_tttr_write
+   /auto_examples/tttr/plot_tttr_read_benchmark
+   /auto_examples/tttr/plot_tttr_files
+

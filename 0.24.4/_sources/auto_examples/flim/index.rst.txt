@@ -1,0 +1,316 @@
+
+
+.. _sphx_glr_auto_examples_flim:
+
+.. _flim_examples:
+
+Fluorescence lifetime imaging
+-----------------------------
+
+Time resolved imaging, e.g., Fluorescence lifetime imaging.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Intensity image">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_intensity_image_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_intensity_image.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity image</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image cropping">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_crop_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_crop.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image cropping</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image rebinning">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_rebin_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_rebin.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image rebinning</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Marker in Scanning microscopy">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_marker_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_marker.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Marker in Scanning microscopy</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a tra...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_transform_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_transform.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image transform</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_read_clsm_data_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_read_clsm_data.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mean_lifetime_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_mean_lifetime.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_pixel_masks_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Using Pixel masks</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments_bg.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mle_lifetime_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_mle_lifetime.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime analysis</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Changing the data representation from the classical time delay histog...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_phasor_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_phasor.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Phasor analysis of images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_tutorial_python_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_tutorial_python.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Tutorial: Image construction</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="FLIM-PIE">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_flim_pie_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_flim_pie.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">FLIM-PIE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, few examples visualize typical mappings from photon groups to representations that can be...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_imaging_representations_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_imaging_representations.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR Image representations</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. Data Loading     2. Create CLSM image container     3. Pulsed interleaved excitation    ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_segmentation_based_decays_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_segmentation_based_decays.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image-based segmentation of FLIM data</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/flim/plot_intensity_image
+   /auto_examples/flim/plot_crop
+   /auto_examples/flim/plot_rebin
+   /auto_examples/flim/plot_marker
+   /auto_examples/flim/plot_lifetime_moments
+   /auto_examples/flim/plot_transform
+   /auto_examples/flim/plot_read_clsm_data
+   /auto_examples/flim/plot_mean_lifetime
+   /auto_examples/flim/plot_pixel_masks
+   /auto_examples/flim/plot_lifetime_moments_bg
+   /auto_examples/flim/plot_mle_lifetime
+   /auto_examples/flim/plot_phasor
+   /auto_examples/flim/plot_tutorial_python
+   /auto_examples/flim/plot_flim_pie
+   /auto_examples/flim/plot_imaging_representations
+   /auto_examples/flim/plot_segmentation_based_decays
+

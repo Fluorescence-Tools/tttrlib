@@ -1,0 +1,81 @@
+
+
+.. _sphx_glr_auto_examples_miscellaneous:
+
+
+Miscellaneous
+-------------
+
+Application of miscellaneous function part of ``tttrlib``.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_2D_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 2D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttr...">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_1D_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 1D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy v...">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_benchmark_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Benchmark of histogram routines</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/miscellaneous/plot_histogram_2D
+   /auto_examples/miscellaneous/plot_histogram_1D
+   /auto_examples/miscellaneous/plot_histogram_benchmark
+

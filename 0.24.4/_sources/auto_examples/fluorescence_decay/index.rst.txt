@@ -1,0 +1,188 @@
+
+
+.. _sphx_glr_auto_examples_fluorescence_decay:
+
+.. _fluorescence_decay_examples:
+
+Fluorescence decays
+-------------------
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit24.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit26_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">fit26</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit25.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit23 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Polarization resolved lifetime MLE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_decay_fit_irf_bg_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_decay_fit_irf_bg.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fluorescence decay analysis - 3</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1) Compute model function 2) Simulate data for computed model function 3) Fit simulated data wi...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_usage_2_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23_usage_2.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Usage example 2</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Pile-up">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_pile_up_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_pile_up.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Pile-up</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview ========">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_convolution_routines_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_convolution_routines.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Convolution routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (t...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_benchmark_1_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23_benchmark_1.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/fluorescence_decay/plot_fit24
+   /auto_examples/fluorescence_decay/plot_fit26
+   /auto_examples/fluorescence_decay/plot_fit25
+   /auto_examples/fluorescence_decay/plot_fit23
+   /auto_examples/fluorescence_decay/plot_decay_fit_irf_bg
+   /auto_examples/fluorescence_decay/plot_fit23_usage_2
+   /auto_examples/fluorescence_decay/plot_pile_up
+   /auto_examples/fluorescence_decay/plot_convolution_routines
+   /auto_examples/fluorescence_decay/plot_fit23_benchmark_1
+

@@ -1,0 +1,757 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta property="og:title" content="Image-based segmentation of FLIM data" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/flim/plot_segmentation_based_decays.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Overview: In live-cell imaging, the conformation or the oligomeric state of biomolecules can depend on their cellular location. In this application example we combine image segmentation with fluore..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_flim_plot_segmentation_based_decays_abe790e1.png" />
+<meta property="og:image:alt" content="Overview: In live-cell imaging, the conformation or the oligomeric state of biomolecules can depend on their cellular location. In this application example we combine image segmentation with fluore..." />
+<meta name="description" content="Overview: In live-cell imaging, the conformation or the oligomeric state of biomolecules can depend on their cellular location. In this application example we combine image segmentation with fluore..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>Image-based segmentation of FLIM data &mdash; tttrlib  documentation</title>
+  
+  <link rel="canonical" href="http://tttrlib.peulen.xyz/stable/auto_examples/flim/plot_segmentation_based_decays.html" />
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/vendor/bootstrap.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+<script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+<script src="../../_static/jquery.js"></script> 
+</head>
+<body>
+<nav id="navbar" class="sk-docs-navbar navbar navbar-expand-md navbar-light bg-light py-0">
+  <div class="container-fluid sk-docs-container px-0">
+    <button
+      id="sk-navbar-toggler"
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="sk-navbar-collapse collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../install.html">Install</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../api/index.html">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../index.html">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../getting_started.html">Getting Started</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../tutorial/index.html">Tutorial</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../whats_new/v0.24.4.html">What's new</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../glossary.html">Glossary</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../faq.html">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../related_projects.html">Related packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../roadmap.html">Roadmap</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../about.html">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+        </li>
+        <li class="nav-item dropdown nav-more-item-dropdown">
+          <a class="sk-nav-link nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../getting_started.html">Getting Started</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../tutorial/index.html">Tutorial</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../whats_new/v0.24.4.html">What's new</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../glossary.html">Glossary</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../faq.html">FAQ</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../related_projects.html">Related packages</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../roadmap.html">Roadmap</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../about.html">About us</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+          </div>
+        </li>
+      </ul>
+      <div id="searchbox" role="search">
+          <div class="searchformwrapper">
+          <form class="search" action="../../search.html" method="get">
+            <input class="sk-search-text-input" type="text" name="q" aria-labelledby="searchlabel" />
+            <input class="sk-search-text-btn" type="submit" value="Go" />
+          </form>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="d-flex" id="sk-doc-wrapper">
+    <input type="checkbox" name="sk-toggle-checkbox" id="sk-toggle-checkbox">
+    <label id="sk-sidemenu-toggle" class="sk-btn-toggle-toc btn sk-btn-primary" for="sk-toggle-checkbox">Toggle Menu</label>
+    <div id="sk-sidebar-wrapper" class="border-right">
+      <div class="sk-sidebar-toc-wrapper">
+        <div class="sk-sidebar-toc-logo">
+        </div>
+        <div class="btn-group w-100 mb-2" role="group" aria-label="rellinks">
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Prev</a>
+            <a href="#" role="button" class="btn sk-btn-rellink disabled py-1">Up</a>
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Next</a>
+        </div>
+        <div class="alert alert-danger p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+          <strong>tttrlib </strong><br/>
+          <a href="http://tttrlib.peulen.xyz/dev/versions.html">Other versions</a>
+          </p>
+        </div>
+        <div class="alert alert-warning p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+            Please <a class="font-weight-bold" href="../../about.html#citing-tttrlib"><string>cite us</string></a> if you use the software.
+          </p>
+        </div>
+            <div class="sk-sidebar-toc">
+              <ul>
+<li><a class="reference internal" href="#">Image-based segmentation of FLIM data</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#loading-data-and-creating-the-intensity-images">1. Loading data and creating the intensity images</a></li>
+<li><a class="reference internal" href="#pulsed-interleaved-excitation">3. Pulsed interleaved excitation</a></li>
+<li><a class="reference internal" href="#create-clsm-image-container">2. Create CLSM image container</a></li>
+<li><a class="reference internal" href="#intensity-imaging">3. Intensity imaging</a><ul>
+<li><a class="reference internal" href="#lifetime-analysis">Lifetime analysis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#image-segmentation">7. Image segmentation</a><ul>
+<li><a class="reference internal" href="#segmentation-of-the-vesicles">7.1 Segmentation of the vesicles</a></li>
+<li><a class="reference internal" href="#segmentation-of-the-cytoplasm">7.2 Segmentation of the cytoplasm</a></li>
+<li><a class="reference internal" href="#segmentation-of-nucleus">7.3 Segmentation of nucleus</a></li>
+<li><a class="reference internal" href="#remove-nucleus-and-vesicles-from-cytoplasm">7.4 Remove nucleus and vesicles from cytoplasm</a></li>
+<li><a class="reference internal" href="#remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">7.5 Remove vesicles in nucleus regions and outside cell of interest</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#apply-pixel-classes-for-analysis">8. Apply pixel classes for analysis</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+      </div>
+    </div>
+    <div id="sk-page-content-wrapper">
+      <div class="sk-page-content container-fluid body px-md-3" role="main">
+        
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-flim-plot-segmentation-based-decays-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="image-based-segmentation-of-flim-data">
+<span id="sphx-glr-auto-examples-flim-plot-segmentation-based-decays-py"></span><h1>Image-based segmentation of FLIM data<a class="headerlink" href="#image-based-segmentation-of-flim-data" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>In live-cell imaging, the conformation or the oligomeric state of biomolecules can
+depend on their cellular location. In this application example we combine
+image segmentation with fluorescence-lifetime based analysis and generate fluorescence
+intensity decays of molecular sub-ensembles to resolve molecular states of the studied
+protein of interest for different cellular compartments. We segment multi-parameter
+fluorescence image spectroscopy (MFIS) data into nucleus, cytoplasm and vesicles-like
+structures.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Data Loading</p></li>
+<li><p>Create CLSM image container</p></li>
+<li><p>Pulsed interleaved excitation</p></li>
+<li><p>Intensity imaging</p></li>
+<li><p>Micro time imaging</p></li>
+<li><p>Define pixel classes by image segmentation</p></li>
+<li><p>Apply pixel classes for analysis</p></li>
+</ol>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ski</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skimage.filters</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skimage.morphology</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skimage.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.ndimage</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_images</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">titles</span><span class="p">,</span> <span class="n">cmaps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># Define convenience function for plotting</span>
+    <span class="k">if</span> <span class="n">cmaps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmaps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;viridis&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">titles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="matplotlib.pyplot.subplots" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="n">ax</span><span class="p">])</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmaps</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">titles</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+</pre></div>
+</div>
+</section>
+<section id="loading-data-and-creating-the-intensity-images">
+<h2>1. Loading data and creating the intensity images<a class="headerlink" href="#loading-data-and-creating-the-intensity-images" title="Permalink to this heading">¶</a></h2>
+<blockquote>
+<div><p>First, read the TTTR data.
+Define used channels</p>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">filename_data</span> <span class="o">=</span> <span class="s1">&#39;../../tttr-data/imaging/pq/ht3/mGBP_DA.ht3&#39;</span>
+<span class="n">tttr_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">filename_data</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Used routing channels:&quot;</span><span class="p">,</span> <span class="n">tttr_data</span><span class="o">.</span><span class="n">used_routing_channels</span><span class="p">)</span>
+<span class="n">green_ch</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">red_ch</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">sum_all</span> <span class="o">=</span> <span class="n">green_ch</span> <span class="o">+</span> <span class="n">red_ch</span>
+</pre></div>
+</div>
+</section>
+<section id="pulsed-interleaved-excitation">
+<h2>3. Pulsed interleaved excitation<a class="headerlink" href="#pulsed-interleaved-excitation" title="Permalink to this heading">¶</a></h2>
+<p>Split the data into prompt and delay.
+For a more detailed description see plot_pie_flim.py</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">filename_irf</span> <span class="o">=</span> <span class="s1">&#39;../../tttr-data/imaging/pq/ht3/mGBP_IRF.ht3&#39;</span>
+<span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">filename_irf</span><span class="p">)</span>
+<span class="n">tttr_irf_green</span> <span class="o">=</span> <span class="n">irf</span><span class="o">.</span><span class="n">get_tttr_by_channel</span><span class="p">(</span><span class="n">green_ch</span><span class="p">)</span>
+<span class="n">tttr_irf_red</span> <span class="o">=</span> <span class="n">irf</span><span class="o">.</span><span class="n">get_tttr_by_channel</span><span class="p">(</span><span class="n">red_ch</span><span class="p">)</span>
+<span class="n">tttr_green</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="o">.</span><span class="n">get_tttr_by_channel</span><span class="p">(</span><span class="n">green_ch</span><span class="p">)</span>
+<span class="n">tttr_red</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="o">.</span><span class="n">get_tttr_by_channel</span><span class="p">(</span><span class="n">red_ch</span><span class="p">)</span>
+<span class="n">prompt_range</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">11000</span>
+<span class="n">delay_range</span> <span class="o">=</span> <span class="mi">11000</span><span class="p">,</span> <span class="mi">25000</span>
+</pre></div>
+</div>
+</section>
+<section id="create-clsm-image-container">
+<h2>2. Create CLSM image container<a class="headerlink" href="#create-clsm-image-container" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># In the green channel we use all photons</span>
+<span class="n">clsm_green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">green_ch</span><span class="p">)</span>
+<span class="n">clsm_red_prompt</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">red_ch</span><span class="p">,</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[</span><span class="n">prompt_range</span><span class="p">])</span>
+<span class="n">clsm_red_delay</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">red_ch</span><span class="p">,</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[</span><span class="n">delay_range</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="intensity-imaging">
+<h2>3. Intensity imaging<a class="headerlink" href="#intensity-imaging" title="Permalink to this heading">¶</a></h2>
+<p>Fills the CLSM image container with intensities
+An intensity image the number of counts in a pixel corresponds to the number of photons
+Red intensity is toatal intenstiy, ie, prompt + delayed excitation
+Fig. 4B Green, red prompt, red delay
+Sum over all frames
+The intensity images are a time-series (multiple frames). We sum over
+all frames to improve the counting statistics
+Note: image shape is in the order of t-y-x, thus summation of over axis=0
+results in generating the t-projection</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SUM_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">SUM_red_prompt</span> <span class="o">=</span> <span class="n">clsm_red_prompt</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">SUM_red_delay</span> <span class="o">=</span> <span class="n">clsm_red_delay</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plot_images</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">SUM_green</span><span class="p">,</span> <span class="n">SUM_red_prompt</span><span class="p">,</span> <span class="n">SUM_red_delay</span><span class="p">],</span>
+    <span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">titles</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;Integrated intensity (green)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Integrated intensity (red, prompt)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Integrated intensity (red, delay)&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="lifetime-analysis">
+<h3>Lifetime analysis<a class="headerlink" href="#lifetime-analysis" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mean_tau_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_mean_lifetime</span><span class="p">(</span>
+    <span class="n">tttr_data</span><span class="p">,</span>
+    <span class="n">minimum_number_of_photons</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">stack_frames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">tttr_irf</span><span class="o">=</span><span class="n">tttr_irf_green</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plot_images</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">mean_tau_green</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+    <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">titles</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;Mean donor lifetime&#39;</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="image-segmentation">
+<h2>7. Image segmentation<a class="headerlink" href="#image-segmentation" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Next, we use the generated intensity image and use standard image segmentation</span>
+<span class="c1"># techniques like Median or Gaussian filtering, Li- or Otsu-based thresholding to</span>
+<span class="c1"># separate the three regions of interest: cytoplasm, vesicles and nucleus.</span>
+<span class="c1"># At the end these segmentations represent binary masks, which are filled with &quot;1/TRUE&quot; in</span>
+<span class="c1"># the region of interest and &quot;0/FALSE&quot; outside.</span>
+</pre></div>
+</div>
+<section id="segmentation-of-the-vesicles">
+<h3>7.1 Segmentation of the vesicles<a class="headerlink" href="#segmentation-of-the-vesicles" title="Permalink to this heading">¶</a></h3>
+<p>We start with the segmentation of the vesicles.
+Here, first a Gaussian smoothing with a size of 1 sigma is applied,
+followed by thresholding using the method of Otsu.
+Finally, objects with a size smaller than 5 pixels are removed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_vesicles</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># radius for Gaussian smoothing</span>
+<span class="n">min_vesicle_size</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># give minimal vesicle size in pixel</span>
+<span class="c1"># Calculate intensity sum over all detection channels</span>
+<span class="c1"># This facilitates the segmentation due to higher SNR</span>
+<span class="n">int_all_channel</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">intensity</span> <span class="o">+</span> <span class="n">clsm_red_prompt</span><span class="o">.</span><span class="n">intensity</span> <span class="o">+</span> <span class="n">clsm_red_delay</span><span class="o">.</span><span class="n">intensity</span>
+<span class="n">filled_frames</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">378</span>
+
+<span class="n">binary_img_vesicles</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">filled_frames</span><span class="p">):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">int_all_channel</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="c1"># A. Gaussian filtering</span>
+    <span class="n">gaussian_img</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">input_img</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_vesicles</span><span class="p">)</span>
+    <span class="n">thresh_vesicles</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">threshold_otsu</span><span class="p">(</span><span class="n">gaussian_img</span><span class="p">)</span>  <span class="c1"># B. Determine Otsu threshold for each frame</span>
+    <span class="n">binary_temp</span> <span class="o">=</span> <span class="n">gaussian_img</span> <span class="o">&gt;=</span> <span class="n">thresh_vesicles</span>  <span class="c1"># C. Intensities larger than threshold = TRUE /1</span>
+    <span class="c1"># D. Remove small objects</span>
+    <span class="n">cleaned_image</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">remove_small_objects</span><span class="p">(</span><span class="n">binary_temp</span><span class="p">,</span> <span class="n">min_vesicle_size</span><span class="p">)</span>
+    <span class="n">binary_img_vesicles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_image</span><span class="p">)</span>
+
+<span class="n">vesicle_mask</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">binary_img_vesicles</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="segmentation-of-the-cytoplasm">
+<h3>7.2 Segmentation of the cytoplasm<a class="headerlink" href="#segmentation-of-the-cytoplasm" title="Permalink to this heading">¶</a></h3>
+<p>Next, the cytoplasm is segmented.
+Here, first a median filtering with a disk size of 3 pixel is applied.
+This is followed by thresholding using the method of Otsu.
+However, for later frames direct usage of the Otsu threshold selected too much of
+background, thus we slightly increase the threshold by multiplying with 1.03 (Otsu_scaling_factor)
+In the final steps, first small holes inside the cytoplasm area are closed,
+followed by the removal of small detected areas outside the main cell.
+Here, a minimal size threshold of 10’000 pixel is applied.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">disk_size_cyto</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># smoothing radius in pixel for median filtering</span>
+<span class="n">otsu_scaling_factor</span> <span class="o">=</span> <span class="mf">1.03</span>  <span class="c1"># increase Otsu threshold by multiplication with this factor</span>
+<span class="n">minimal_size</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># give minimal cytoplasm size in pixel</span>
+
+<span class="n">binary_img_cytoplasm</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">filled_frames</span><span class="p">):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">int_all_channel</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="c1"># A. Median filtering</span>
+    <span class="n">median_img</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">input_img</span><span class="p">,</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">disk</span><span class="p">(</span><span class="n">disk_size_cyto</span><span class="p">))</span>
+    <span class="n">thresh_cyto</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">threshold_otsu</span><span class="p">(</span><span class="n">median_img</span><span class="p">)</span>  <span class="c1"># B. Determine Otsu threshold for each frame</span>
+    <span class="n">binary_temp</span> <span class="o">=</span> <span class="n">median_img</span> <span class="o">&gt;=</span> <span class="n">thresh_cyto</span><span class="o">*</span><span class="n">otsu_scaling_factor</span>  <span class="c1"># C. Intensities larger than threshold = TRUE /1</span>
+    <span class="c1"># D. Fill holes in the cytoplasm</span>
+    <span class="n">bool_img</span> <span class="o">=</span> <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_fill_holes.html#scipy.ndimage.binary_fill_holes" title="scipy.ndimage.binary_fill_holes" class="sphx-glr-backref-module-scipy-ndimage sphx-glr-backref-type-py-function"><span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">binary_fill_holes</span></a><span class="p">(</span><span class="n">binary_temp</span><span class="p">)</span>
+    <span class="n">segmentation_filled</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.copy.html#numpy.copy" title="numpy.copy" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">copy</span></a><span class="p">(</span><span class="n">bool_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">))</span>
+    <span class="c1"># E. Remove small speckles outside the large cell</span>
+    <span class="n">small_aggregates_removed</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">area_closing</span><span class="p">(</span><span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">segmentation_filled</span><span class="p">),</span> <span class="n">area_threshold</span><span class="o">=</span><span class="n">minimal_size</span><span class="p">)</span>
+    <span class="n">final_segmentation</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">small_aggregates_removed</span><span class="p">)</span>
+    <span class="n">binary_img_cytoplasm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_segmentation</span><span class="p">)</span>
+<span class="n">cytoplasm_mask</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">binary_img_cytoplasm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="segmentation-of-nucleus">
+<h3>7.3 Segmentation of nucleus<a class="headerlink" href="#segmentation-of-nucleus" title="Permalink to this heading">¶</a></h3>
+<p>Finally, the nucleus is segmented.
+In contrast to the cytoplasm and vesicles, here only the green intensity image
+is used as input as here the contrast between cytoplasm/vesicles region and nucleus
+seemed largest. Please note that the nucleus can be best seen as “region in cytoplasm
+but without vesicles”. The segmentation of the nucleus thus proves to be a challenge.
+We first apply a Gaussian smoothing with a radius of 2 sigma, followed by thresholding
+using the method of Li. The thresholded image is dilated, holes inside the nucleus filled
+and small areas outside removed. Next all left-overs outside the cytoplasmic (i.e. body
+of the cell) are removed by multiplying with the generated cytoplasm mask, followed by
+another round of dilation to make the nucleus “smoother”.
+Finally, as the nucleus is characterized by being outside the way of the diffusing
+vesicles, we average the such obtained nucleus and generate an average nucleus by
+summing over all 400 frames and threshold this projection using the method of Otsu.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_nucleus</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># radius for Gaussian filtering</span>
+<span class="n">dilation_radius</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># for dilation operation</span>
+<span class="n">minimal_hole_size</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># minimal area size (smaller areas will be removed)</span>
+<span class="n">minimal_nucleus_size</span> <span class="o">=</span> <span class="mi">2000</span> <span class="c1"># minimal nucleus size</span>
+
+<span class="n">binary_img_nucleus</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">int_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">intensity</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">filled_frames</span><span class="p">):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">int_green</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">input_img_cytoplasm</span> <span class="o">=</span> <span class="n">cytoplasm_mask</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="c1"># A. Gaussian img</span>
+    <span class="n">gaussian_img_nucleus</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">input_img</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma_nucleus</span><span class="p">)</span>
+    <span class="c1"># B. Li-thresholding</span>
+    <span class="n">li_threshold</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">threshold_li</span><span class="p">(</span><span class="n">gaussian_img_nucleus</span><span class="p">)</span>
+    <span class="n">thresholded_image</span> <span class="o">=</span> <span class="n">gaussian_img_nucleus</span> <span class="o">&gt;</span> <span class="n">li_threshold</span>
+    <span class="c1"># C. Dilation</span>
+    <span class="n">dilated_segmentation</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">dilation</span><span class="p">(</span><span class="n">thresholded_image</span><span class="p">,</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">disk</span><span class="p">(</span><span class="n">dilation_radius</span><span class="p">))</span>
+    <span class="c1"># D. Fill holes</span>
+    <span class="n">bool_img</span> <span class="o">=</span> <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.binary_fill_holes.html#scipy.ndimage.binary_fill_holes" title="scipy.ndimage.binary_fill_holes" class="sphx-glr-backref-module-scipy-ndimage sphx-glr-backref-type-py-function"><span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">binary_fill_holes</span></a><span class="p">(</span><span class="n">dilated_segmentation</span><span class="p">)</span>
+    <span class="n">segmentation_filled</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.copy.html#numpy.copy" title="numpy.copy" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">copy</span></a><span class="p">(</span><span class="n">bool_img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">))</span>
+    <span class="c1"># E Remove small areas</span>
+    <span class="n">small_areas_removed</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">area_closing</span><span class="p">(</span><span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">segmentation_filled</span><span class="p">),</span> <span class="n">area_threshold</span><span class="o">=</span><span class="n">minimal_nucleus_size</span><span class="p">)</span>
+    <span class="c1"># F. Combine with cytoplasm by multiplication of binary images</span>
+    <span class="n">combination</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">(</span><span class="n">small_areas_removed</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint" title="numpy.uint" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">uint</span></a><span class="p">)</span>
+    <span class="n">combination</span> <span class="o">=</span> <span class="n">input_img_cytoplasm</span> <span class="o">*</span> <span class="p">(</span><span class="n">small_areas_removed</span> <span class="o">-</span> <span class="mi">254</span><span class="p">)</span>
+    <span class="c1"># G. Remove small areas at the cytoplasm border</span>
+    <span class="n">cleaned_combination</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">area_closing</span><span class="p">(</span><span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">combination</span><span class="p">),</span> <span class="n">area_threshold</span><span class="o">=</span><span class="n">minimal_nucleus_size</span><span class="p">)</span>
+    <span class="c1"># H. dilate Nucleus to make more &quot;smooth&quot;</span>
+    <span class="n">dilated_combination</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">dilation</span><span class="p">(</span><span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">cleaned_combination</span><span class="p">),</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">disk</span><span class="p">(</span><span class="n">dilation_radius</span><span class="p">))</span>
+    <span class="n">binary_img_nucleus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dilated_combination</span><span class="p">)</span>
+
+<span class="c1"># I. Average over all frames to get a smoother nucleus</span>
+<span class="n">averaged_img_nucleus</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.sum.html#numpy.sum" title="numpy.sum" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">sum</span></a><span class="p">(</span><span class="n">binary_img_nucleus</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int64</span></a><span class="p">)</span>
+<span class="n">Otsu_thresh</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">threshold_otsu</span><span class="p">(</span><span class="n">averaged_img_nucleus</span><span class="p">)</span>
+<span class="n">thresholded_img</span> <span class="o">=</span> <span class="n">averaged_img_nucleus</span> <span class="o">&gt;</span> <span class="n">Otsu_thresh</span>
+<span class="c1"># J. Maybe required to removed smaller stuff</span>
+<span class="n">nucleus_mask_avg</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">remove_small_objects</span><span class="p">(</span><span class="n">thresholded_img</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="n">minimal_nucleus_size</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the next two steps, we clean up the cytoplasm and vesicles masks.
+First, we remove the nucleus and vesicles from the cytoplasm, and second
+we remove the vesicles inside the nucleus region - if any- and the vesicles
+beloging to the neighboring cell from the vesicles mask.</p>
+</section>
+<section id="remove-nucleus-and-vesicles-from-cytoplasm">
+<h3>7.4 Remove nucleus and vesicles from cytoplasm<a class="headerlink" href="#remove-nucleus-and-vesicles-from-cytoplasm" title="Permalink to this heading">¶</a></h3>
+<p>We invert the average nucleus mask and multiply with each frame, followed
+by inverting the vesicles mask and frame-wise multiplication.
+Remember that all masks are filled with 0 and 1, thus 0*0 or 0*1 = 0,
+only those regions, where both, in the cytoplasm mask and the inverted mask,
+the value 1 is given, stay 1.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">inv_nucleus</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">nucleus_mask_avg</span><span class="p">)</span>  <span class="c1"># Invert nucleus_mask</span>
+
+<span class="n">cytoplasm_wo_nucleus_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply nucleus mask on cytoplasm</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cytoplasm_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">cytoplasm_mask</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">temp_cyto</span> <span class="o">=</span> <span class="n">input_img</span> <span class="o">*</span> <span class="n">inv_nucleus</span>
+    <span class="n">cytoplasm_wo_nucleus_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_cyto</span><span class="p">)</span>
+
+<span class="n">cytoplasm_wo_nucleus</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">cytoplasm_wo_nucleus_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+
+<span class="n">inv_vesicles</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">vesicle_mask</span><span class="p">)</span> <span class="o">-</span> <span class="mi">254</span>  <span class="c1"># Invert vesicle_mask</span>
+
+<span class="n">cytoplasm_wo_nucleus_vesicles</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply vesicle mask on cytoplasm_wo_nucleus</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cytoplasm_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">cytoplasm_wo_nucleus</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">input_img_inv_vesicle</span> <span class="o">=</span> <span class="n">inv_vesicles</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">temp_cyto2</span> <span class="o">=</span> <span class="n">input_img</span> <span class="o">*</span> <span class="n">input_img_inv_vesicle</span>
+    <span class="n">cytoplasm_wo_nucleus_vesicles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_cyto2</span><span class="p">)</span>
+
+<span class="c1"># Final cytoplasm mask:</span>
+<span class="n">mask_cytoplasm</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">cytoplasm_wo_nucleus_vesicles</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">
+<h3>7.5 Remove vesicles in nucleus regions and outside cell of interest<a class="headerlink" href="#remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest" title="Permalink to this heading">¶</a></h3>
+<p>Here, the same strategy as for the cleaned up cytoplasm is used.
+First vesicles inside the nucleus are removed, followed by those outside the
+main cell by multiplying with inverted masks.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vesicles_wo_nucleus_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply nucleus mask</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vesicle_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">input_img</span> <span class="o">=</span> <span class="n">vesicle_mask</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">temp_vesicle</span> <span class="o">=</span> <span class="n">input_img</span> <span class="o">*</span> <span class="n">inv_nucleus</span>
+    <span class="n">vesicles_wo_nucleus_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_vesicle</span><span class="p">)</span>
+
+<span class="n">vesicles_wo_nucleus</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">vesicles_wo_nucleus_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+
+<span class="n">vesicles_in_cytoplasm</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply cytoplasm mask on nucleus-free vesicles</span>
+<span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vesicle_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">input_img_vesicle</span> <span class="o">=</span> <span class="n">vesicles_wo_nucleus</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">input_img_cytoplasm</span> <span class="o">=</span> <span class="n">cytoplasm_wo_nucleus</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
+    <span class="n">temp_vesicle_in_cyto</span> <span class="o">=</span> <span class="n">input_img_vesicle</span> <span class="o">*</span> <span class="n">input_img_cytoplasm</span>
+    <span class="n">vesicles_in_cytoplasm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_vesicle_in_cyto</span><span class="p">)</span>
+
+<span class="c1"># Final vesicles mask:</span>
+<span class="n">mask_vesicles</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">vesicles_in_cytoplasm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="matplotlib.pyplot.subplots" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_cytoplasm</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Cytoplasm mask (frame 0)&#39;</span><span class="p">)</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_vesicles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Vesicle mask (frame 0)&#39;</span><span class="p">)</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">nucleus_mask_avg</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Nucleus mask (avg over all frames)&#39;</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="apply-pixel-classes-for-analysis">
+<h2>8. Apply pixel classes for analysis<a class="headerlink" href="#apply-pixel-classes-for-analysis" title="Permalink to this heading">¶</a></h2>
+<p>Apply generated masks to reconstruct green intensity decays
+Now we used the generated masks for our three regions of interest and
+group the pixels belonging to each class. This procedure is applied to
+every individual frame. Then, based on the micro time information
+in each pixel the photon arrival time histogram can be reconstructed.
+However, first we ignore our masks and generate the mean arrival time
+image summed over all frames.
+Next, the summed decays for all pixel and the three pixel classes are
+generated.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># generate decays for unmasked pixel</span>
+<span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">pseudo_mask</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones.html#numpy.ones" title="numpy.ones" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones</span></a><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">)</span>
+<span class="n">kw</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tttr_data&quot;</span><span class="p">:</span> <span class="n">tttr_data</span><span class="p">,</span>
+    <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="n">pseudo_mask</span><span class="p">,</span>  <span class="c1"># Here a mask filled with all 1 is used</span>
+    <span class="s2">&quot;tac_coarsening&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>  <span class="c1"># binning of the micro times</span>
+    <span class="s2">&quot;stack_frames&quot;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># TRUE = all frames are summed up</span>
+<span class="p">}</span>
+<span class="n">decay_all</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_decay_of_pixels</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+<span class="n">sum_decay_all</span> <span class="o">=</span> <span class="n">decay_all</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Generate decay from masked pixels for cytoplasm, nucleus and vesicles</span>
+<span class="c1"># Caution: for nucleus only single average image mask was generated</span>
+<span class="c1"># &quot;multiply&quot; 400x to have a mask for each frame</span>
+<span class="n">final_cytoplasm</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">filled_frames</span><span class="p">):</span>
+    <span class="n">final_cytoplasm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_cytoplasm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<span class="n">kw_cytoplasm</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tttr_data&quot;</span><span class="p">:</span> <span class="n">tttr_data</span><span class="p">,</span>
+    <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="n">final_cytoplasm</span><span class="p">,</span>  <span class="c1"># cyotplasm mask</span>
+    <span class="s2">&quot;tac_coarsening&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s2">&quot;stack_frames&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+<span class="n">decay_cytoplasm</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_decay_of_pixels</span><span class="p">(</span><span class="o">**</span><span class="n">kw_cytoplasm</span><span class="p">)</span>
+<span class="n">sum_decay_cytoplasm</span> <span class="o">=</span> <span class="n">decay_cytoplasm</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">final_vesicles</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">filled_frames</span><span class="p">):</span>
+    <span class="n">final_vesicles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_vesicles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<span class="n">kw_vesicles</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tttr_data&quot;</span><span class="p">:</span> <span class="n">tttr_data</span><span class="p">,</span>
+    <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="n">final_vesicles</span><span class="p">,</span>  <span class="c1"># vesicles mask</span>
+    <span class="s2">&quot;tac_coarsening&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s2">&quot;stack_frames&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+<span class="n">decay_vesicles</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_decay_of_pixels</span><span class="p">(</span><span class="o">**</span><span class="n">kw_vesicles</span><span class="p">)</span>
+<span class="n">sum_decay_vesicles</span> <span class="o">=</span> <span class="n">decay_vesicles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Caution: for nucleus only single average image mask was generated</span>
+<span class="c1"># &quot;multiply&quot; 400x to have a mask for each frame</span>
+<span class="n">nucleus_mask</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+    <span class="n">nucleus_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nucleus_mask_avg</span>
+<span class="n">kw_nucleus</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tttr_data&quot;</span><span class="p">:</span> <span class="n">tttr_data</span><span class="p">,</span>
+    <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="n">nucleus_mask</span><span class="p">,</span>  <span class="c1"># nucleus mask</span>
+    <span class="s2">&quot;tac_coarsening&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s2">&quot;stack_frames&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+<span class="n">decay_nucleus</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_decay_of_pixels</span><span class="p">(</span><span class="o">**</span><span class="n">kw_nucleus</span><span class="p">)</span>
+<span class="n">sum_decay_nucleus</span> <span class="o">=</span> <span class="n">decay_nucleus</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="matplotlib.pyplot.subplots" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">sum_decay_all</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;all pixel&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">sum_decay_nucleus</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nucleus&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">sum_decay_cytoplasm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Cytoplasm&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">sum_decay_vesicles</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Vesicles&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;TCSPC bin&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Counts&#39;</span><span class="p">,</span>
+             <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Donor fluorescence intensity decay&#39;</span><span class="p">)</span>
+<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-flim-plot-segmentation-based-decays-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/21b98c976084afe873a55ae02ca12f21/plot_segmentation_based_decays.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_segmentation_based_decays.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b6d82867b58f0f17847f16af96f85605/plot_segmentation_based_decays.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_segmentation_based_decays.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+      </div>
+    <div class="container">
+      <footer class="sk-content-footer">
+            &copy; 2021 - 2026, tttrlib developers (BSD License).
+          <a href="../../_sources/auto_examples/flim/plot_segmentation_based_decays.rst.txt" rel="nofollow">Show this page source</a>
+      </footer>
+    </div>
+  </div>
+</div>
+<script src="../../_static/js/vendor/bootstrap.min.js"></script>
+
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-22606712-2', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script>
+$(document).ready(function() {
+    /* Add a [>>>] button on the top-right corner of code samples to hide
+     * the >>> and ... prompts and the output and thus make the code
+     * copyable. */
+    var div = $('.highlight-python .highlight,' +
+                '.highlight-python3 .highlight,' +
+                '.highlight-pycon .highlight,' +
+		'.highlight-default .highlight')
+    var pre = div.find('pre');
+
+    // get the styles from the current theme
+    pre.parent().parent().css('position', 'relative');
+    var hide_text = 'Hide prompts and outputs';
+    var show_text = 'Show prompts and outputs';
+
+    // create and add the button to all the code blocks that contain >>>
+    div.each(function(index) {
+        var jthis = $(this);
+        if (jthis.find('.gp').length > 0) {
+            var button = $('<span class="copybutton">&gt;&gt;&gt;</span>');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+            jthis.prepend(button);
+        }
+        // tracebacks (.gt) contain bare text elements that need to be
+        // wrapped in a span to work with .nextUntil() (see later)
+        jthis.find('pre:has(.gt)').contents().filter(function() {
+            return ((this.nodeType == 3) && (this.data.trim().length > 0));
+        }).wrap('<span>');
+    });
+
+    // define the behavior of the button when it's clicked
+    $('.copybutton').click(function(e){
+        e.preventDefault();
+        var button = $(this);
+        if (button.data('hidden') === 'false') {
+            // hide the code output
+            button.parent().find('.go, .gp, .gt').hide();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'hidden');
+            button.css('text-decoration', 'line-through');
+            button.attr('title', show_text);
+            button.data('hidden', 'true');
+        } else {
+            // show the code output
+            button.parent().find('.go, .gp, .gt').show();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'visible');
+            button.css('text-decoration', 'none');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+        }
+    });
+
+	/*** Add permalink buttons next to glossary terms ***/
+	$('dl.glossary > dt[id]').append(function() {
+		return ('<a class="headerlink" href="#' +
+			    this.getAttribute('id') +
+			    '" title="Permalink to this term">¶</a>');
+	});
+  /*** Hide navbar when scrolling down ***/
+  // Returns true when headerlink target matches hash in url
+  (function() {
+    hashTargetOnTop = function() {
+        var hash = window.location.hash;
+        if ( hash.length < 2 ) { return false; }
+
+        var target = document.getElementById( hash.slice(1) );
+        if ( target === null ) { return false; }
+
+        var top = target.getBoundingClientRect().top;
+        return (top < 2) && (top > -2);
+    };
+
+    // Hide navbar on load if hash target is on top
+    var navBar = document.getElementById("navbar");
+    var navBarToggler = document.getElementById("sk-navbar-toggler");
+    var navBarHeightHidden = "-" + navBar.getBoundingClientRect().height + "px";
+    var $window = $(window);
+
+    hideNavBar = function() {
+        navBar.style.top = navBarHeightHidden;
+    };
+
+    showNavBar = function() {
+        navBar.style.top = "0";
+    }
+
+    if (hashTargetOnTop()) {
+        hideNavBar()
+    }
+
+    var prevScrollpos = window.pageYOffset;
+    hideOnScroll = function(lastScrollTop) {
+        if (($window.width() < 768) && (navBarToggler.getAttribute("aria-expanded") === 'true')) {
+            return;
+        }
+        if (lastScrollTop > 2 && (prevScrollpos <= lastScrollTop) || hashTargetOnTop()){
+            hideNavBar()
+        } else {
+            showNavBar()
+        }
+        prevScrollpos = lastScrollTop;
+    };
+
+    /*** high performance scroll event listener***/
+    var raf = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        window.oRequestAnimationFrame;
+    var lastScrollTop = $window.scrollTop();
+
+    if (raf) {
+        loop();
+    }
+
+    function loop() {
+        var scrollTop = $window.scrollTop();
+        if (lastScrollTop === scrollTop) {
+            raf(loop);
+            return;
+        } else {
+            lastScrollTop = scrollTop;
+            hideOnScroll(lastScrollTop);
+            raf(loop);
+        }
+    }
+  })();
+});
+
+</script>
+    
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+</body>
+</html>

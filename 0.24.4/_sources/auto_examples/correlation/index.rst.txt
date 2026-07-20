@@ -1,0 +1,152 @@
+
+
+.. _sphx_glr_auto_examples_correlation:
+
+
+.. _fcs_examples:
+
+Fluorescence correlation
+------------------------
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_estimate_noise_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_estimate_noise.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Estimating the noise of the correlation curves</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Fluorescence Correlation Spectroscopy (FCS) in cells often suffers fr...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_sliced_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_sliced_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Correlation of sliced TTTR objects</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_confocor3_two_ch_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_confocor3_two_ch_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The background in the fluorescence intensity traces affects the computed fluorescence correlati...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_gated_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time gated correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Full correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="An alternative approach is to calculate the FCS curve by software on the basis of the directly ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_normal_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_normal_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Normal multi-tau correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview -------- The background in the fluorescence intensity affects the computed fluorescenc...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_correlation_cr_filter_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_correlation_cr_filter.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Count rate filtered correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/correlation/plot_estimate_noise
+   /auto_examples/correlation/plot_sliced_correlation
+   /auto_examples/correlation/plot_confocor3_two_ch_correlation
+   /auto_examples/correlation/plot_gated_correlation
+   /auto_examples/correlation/plot_full_correlation
+   /auto_examples/correlation/plot_normal_correlation
+   /auto_examples/correlation/plot_correlation_cr_filter
+

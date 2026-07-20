@@ -1,0 +1,1057 @@
+:orphan:
+
+.. _examples:
+
+Applications
+============
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    </div>
+
+
+
+Fluorescence correlation
+------------------------
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_estimate_noise_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_estimate_noise.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Estimating the noise of the correlation curves</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Fluorescence Correlation Spectroscopy (FCS) in cells often suffers fr...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_sliced_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_sliced_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Correlation of sliced TTTR objects</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_confocor3_two_ch_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_confocor3_two_ch_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The background in the fluorescence intensity traces affects the computed fluorescence correlati...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_gated_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_gated_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time gated correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The example below illustrates how a full correlation can be computed. Note, in the example the ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_full_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Full correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="An alternative approach is to calculate the FCS curve by software on the basis of the directly ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_normal_correlation_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_normal_correlation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Normal multi-tau correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview -------- The background in the fluorescence intensity affects the computed fluorescenc...">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_correlation_cr_filter_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_correlation_plot_correlation_cr_filter.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Count rate filtered correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Fluorescence lifetime imaging
+-----------------------------
+
+Time resolved imaging, e.g., Fluorescence lifetime imaging.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Intensity image">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_intensity_image_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_intensity_image.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity image</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image cropping">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_crop_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_crop.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image cropping</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image rebinning">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_rebin_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_rebin.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image rebinning</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Marker in Scanning microscopy">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_marker_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_marker.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Marker in Scanning microscopy</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Note: Transformations of CLSM images changes the temporal ordering of the photons. Hence, a tra...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_transform_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_transform.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image transform</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A CLSM image container contains a list of frames. Each frame contains a list of lines and each ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_read_clsm_data_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_read_clsm_data.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Reading of CLSM data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mean_lifetime_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_mean_lifetime.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Using Pixel masks">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_pixel_masks_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Using Pixel masks</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Mean lifetime images">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_lifetime_moments_bg_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_lifetime_moments_bg.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Mean lifetime images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_mle_lifetime_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_mle_lifetime.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime analysis</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------ Changing the data representation from the classical time delay histog...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_phasor_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_phasor.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Phasor analysis of images</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="For any productive applications it is recommended to use the built-in tttrlib CLSM functions.">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_tutorial_python_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_tutorial_python.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Tutorial: Image construction</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="FLIM-PIE">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_flim_pie_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_flim_pie.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">FLIM-PIE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, few examples visualize typical mappings from photon groups to representations that can be...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_imaging_representations_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_imaging_representations.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR Image representations</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. Data Loading     2. Create CLSM image container     3. Pulsed interleaved excitation    ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_segmentation_based_decays_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_flim_plot_segmentation_based_decays.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image-based segmentation of FLIM data</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Fluorescence decays
+-------------------
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit24 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit24_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit24.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Bi-exponential model</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    g_i = f \cdot pattern_{1,i} + (1-f) \cdot pattern_{2,i}">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit26_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">fit26</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit25 ----- Selects the lifetime out of a set of 4 fixed lifetimes that best describes the data...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit25.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lifetime selection</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="fit23 -----">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Polarization resolved lifetime MLE</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_decay_fit_irf_bg_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_decay_fit_irf_bg.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fluorescence decay analysis - 3</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="1) Compute model function 2) Simulate data for computed model function 3) Fit simulated data wi...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_usage_2_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23_usage_2.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Usage example 2</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Pile-up">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_pile_up_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_pile_up.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Pile-up</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Overview ========">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_convolution_routines_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_convolution_routines.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Convolution routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (t...">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_benchmark_1_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit23_benchmark_1.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Image correlation spectroscopy
+------------------------------
+
+Time resolved imaging, e.g., Fluorescence lifetime imaging.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation use CLS...">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_tttrlib_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_tttrlib.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Computing ICS data by tttrlib</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when us...">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_numpy_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_numpy.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Computing ICS data by numpy</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Image correlation spectroscopy - benchmark">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_benchmark_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_benchmark.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Image correlation spectroscopy - benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Fitting ICS data by a RICS model">
+
+.. only:: html
+
+  .. image:: /auto_examples/image_correlation/images/thumb/sphx_glr_plot_imaging_ics_fit_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_image_correlation_plot_imaging_ics_fit.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fitting ICS data by a RICS model</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Miscellaneous
+-------------
+
+Application of miscellaneous function part of ``tttrlib``.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Make a 2D Histogram">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_2D_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_2D.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 2D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib offers some functions and classes for the creation of histograms. They are part of tttr...">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_1D_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_1D.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Make a 1D Histogram</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy v...">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_histogram_benchmark_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Benchmark of histogram routines</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Single-molecule
+---------------
+
+Application of ``tttrlib`` to single-molecule data.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_mcs_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. The minimum window length minimum_window_length     2. The minimum number of photons in ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_burst_selection_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst selection routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_1_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_1.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 1</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis as described in https://pubs.acs.org/doi/abs/10.1021/jp057257">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_2_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 2</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Working with TTTR objects
+-------------------------
+
+Examples on working with ``tttrlib.TTTR`` objects.
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Save the content of a PTU file in an SPC file">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_transcode_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_transcode.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Transcode</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Micro time histograms">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_microtime_histogram_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_microtime_histogram.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Micro time histograms</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ============ TTTR files can contain additional meta-data. In tttrlib the meta data...">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_header_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_header.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR-Header</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here it is illustrated how TTTR data of CLSM experiments can be created and written.  Data of a...">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_write_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_write.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR writing / Modify CLSM files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="TTTR reading benchmark">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_read_benchmark_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">TTTR reading benchmark</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="To open TTTR files import the tttrlib library.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_files_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_tttr_plot_tttr_files.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Working with TTTR files</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+Release Highlights
+------------------
+
+These examples illustrate the main features of the releases of tttrlib.
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.20, which comes with many bug fixes and new...">
+
+.. only:: html
+
+  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_20_0_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_20_0.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.23</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.24, which comes with many bug fixes and new...">
+
+.. only:: html
+
+  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_24_0_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_24_0.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.24</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+   :includehidden:
+
+
+   /auto_examples/correlation/index.rst
+   /auto_examples/flim/index.rst
+   /auto_examples/fluorescence_decay/index.rst
+   /auto_examples/image_correlation/index.rst
+   /auto_examples/miscellaneous/index.rst
+   /auto_examples/single_molecule/index.rst
+   /auto_examples/tttr/index.rst
+   /auto_examples/release_highlights/index.rst
+
+
+.. only:: html
+
+  .. container:: sphx-glr-footer sphx-glr-footer-gallery
+
+    .. container:: sphx-glr-download sphx-glr-download-python
+
+      :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+      :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

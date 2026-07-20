@@ -1,0 +1,438 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta property="og:title" content="TTTR-Header" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/tttr/plot_tttr_header.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Introduction: TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats suchh as the PTU format provide the o..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_plot_tttr_header_8a121308.png" />
+<meta property="og:image:alt" content="Introduction: TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats suchh as the PTU format provide the o..." />
+<meta name="description" content="Introduction: TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats suchh as the PTU format provide the o..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>TTTR-Header &mdash; tttrlib  documentation</title>
+  
+  <link rel="canonical" href="http://tttrlib.peulen.xyz/stable/auto_examples/tttr/plot_tttr_header.html" />
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/vendor/bootstrap.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+<script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+<script src="../../_static/jquery.js"></script> 
+</head>
+<body>
+<nav id="navbar" class="sk-docs-navbar navbar navbar-expand-md navbar-light bg-light py-0">
+  <div class="container-fluid sk-docs-container px-0">
+    <button
+      id="sk-navbar-toggler"
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="sk-navbar-collapse collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../install.html">Install</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../api/index.html">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../index.html">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../getting_started.html">Getting Started</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../tutorial/index.html">Tutorial</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../whats_new/v0.25.1.html">What's new</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../glossary.html">Glossary</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../faq.html">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../related_projects.html">Related packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../roadmap.html">Roadmap</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../about.html">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+        </li>
+        <li class="nav-item dropdown nav-more-item-dropdown">
+          <a class="sk-nav-link nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../getting_started.html">Getting Started</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../tutorial/index.html">Tutorial</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../whats_new/v0.25.1.html">What's new</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../glossary.html">Glossary</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../faq.html">FAQ</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../related_projects.html">Related packages</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../roadmap.html">Roadmap</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../about.html">About us</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+          </div>
+        </li>
+      </ul>
+      <div id="searchbox" role="search">
+          <div class="searchformwrapper">
+          <form class="search" action="../../search.html" method="get">
+            <input class="sk-search-text-input" type="text" name="q" aria-labelledby="searchlabel" />
+            <input class="sk-search-text-btn" type="submit" value="Go" />
+          </form>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="d-flex" id="sk-doc-wrapper">
+    <input type="checkbox" name="sk-toggle-checkbox" id="sk-toggle-checkbox">
+    <label id="sk-sidemenu-toggle" class="sk-btn-toggle-toc btn sk-btn-primary" for="sk-toggle-checkbox">Toggle Menu</label>
+    <div id="sk-sidebar-wrapper" class="border-right">
+      <div class="sk-sidebar-toc-wrapper">
+        <div class="sk-sidebar-toc-logo">
+        </div>
+        <div class="btn-group w-100 mb-2" role="group" aria-label="rellinks">
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Prev</a>
+            <a href="#" role="button" class="btn sk-btn-rellink disabled py-1">Up</a>
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Next</a>
+        </div>
+        <div class="alert alert-danger p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+          <strong>tttrlib </strong><br/>
+          <a href="http://tttrlib.peulen.xyz/dev/versions.html">Other versions</a>
+          </p>
+        </div>
+        <div class="alert alert-warning p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+            Please <a class="font-weight-bold" href="../../about.html#citing-tttrlib"><string>cite us</string></a> if you use the software.
+          </p>
+        </div>
+            <div class="sk-sidebar-toc">
+              <ul>
+<li><a class="reference internal" href="#">TTTR-Header</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#accessing-header-data">Accessing header data</a></li>
+<li><a class="reference internal" href="#time-calibration-data">Time calibration data</a></li>
+<li><a class="reference internal" href="#creating-and-writing-tttrheader">Creating and writing TTTRHeader</a></li>
+<li><a class="reference internal" href="#modifying-meta-data">Modifying meta-data</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+      </div>
+    </div>
+    <div id="sk-page-content-wrapper">
+      <div class="sk-page-content container-fluid body px-md-3" role="main">
+        
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-plot-tttr-header-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="tttr-header">
+<span id="sphx-glr-auto-examples-tttr-plot-tttr-header-py"></span><h1>TTTR-Header<a class="headerlink" href="#tttr-header" title="Permalink to this heading">¶</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<p>TTTR files can contain additional meta-data. In tttrlib the meta data can be
+accessed and edited via the TTTRHeader class. Some TTTR file formats suchh as the
+PTU format provide the option for arbitrary meta data. In other TTTR formats have
+defined / fixed headers. Some of the information that can be found in a TTTR file
+is listed in <a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
+<p>Note, the list of Header tags is by any means not comprehensive. If you have information
+on the used header tags. Please contact the authors of tttrlib to contribute
+to the list.</p>
+</section>
+<section id="accessing-header-data">
+<h2>Accessing header data<a class="headerlink" href="#accessing-header-data" title="Permalink to this heading">¶</a></h2>
+<p>Most TTTR container contain meta-data that can be accessed through <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.
+For that, a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object provides a header attribute. The header attribute is
+of the type <code class="xref py py-class docutils literal notranslate"><span class="pre">Header</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../tttr-data/bh/pq/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+<span class="c1"># the header can be accesses by the method get_header or as an property</span>
+<span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
+</pre></div>
+</div>
+<p>The most important attributes of the header are the <code class="xref py py-attr docutils literal notranslate"><span class="pre">micro_time_resolution</span></code>
+and <code class="xref py py-attr docutils literal notranslate"><span class="pre">macro_time_resolution</span></code>. Becker&amp;Hickl Spc132 files files contain
+only a limited amount of information in the first record (32 bit).</p>
+<p>PicoQuant PTU and HT3 files provide more extensive information in their header
+that can be accessed via the <code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object. The
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object is a JSON string. Setting the <code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code>
+attribute modifies the header / meta data of a TTTR object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;./test/data/PQ/PTU/pq_ptu_hh_t3.ptu&#39;</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the header can be accesses by the method get_header or as a property</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
+<span class="n">header_json</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><a href="https://docs.python.org/3/library/json.html#module-json" title="builtins.json" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-module"><span class="n">json</span></a>
+<span class="n">header_dict</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/json.html#json.loads" title="json.loads" class="sphx-glr-backref-module-json sphx-glr-backref-type-py-function"><span class="n">json</span><span class="o">.</span><span class="n">loads</span></a><span class="p">(</span><span class="n">header_json</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">header_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="time-calibration-data">
+<h2>Time calibration data<a class="headerlink" href="#time-calibration-data" title="Permalink to this heading">¶</a></h2>
+<p>Essential for the analysis of TTTR data is the time calibration (time resolution)
+of the macro and the micro times in addition to the number of possible micro time
+channels. In many functions the micro and macro time calibration are transparently
+handeled, meaning there is no need to worry. The <code class="docutils literal notranslate"><span class="pre">macro_time</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">micro_time</span></code> TTTR attributes correspond the to raw uncalibrated data.</p>
+<p>The macro and micro time resolution is accessed as follows.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
+</pre></div>
+</div>
+<p>The number of micro time channels can be accessed as displayed below.
+The header can be accesses by the method get_header or as an property.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+<span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<span class="c1"># macro_time_resolution = 12.5 ns</span>
+<span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
+<span class="c1"># micro_time_resolution = 4 ps</span>
+<span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">number_of_micro_time_channels</span>
+<span class="c1"># will return 8129</span>
+<span class="n">data</span><span class="o">.</span><span class="n">get_number_of_micro_time_channels</span><span class="p">()</span>
+<span class="c1"># will return 3125</span>
+</pre></div>
+</div>
+<p>Note, the effective number of micro time channels, i.e., the number of micro time
+channels can be smaller than the actual number of micro time channels. For
+instance at a micro time channel resolution of 4 ps and macro time resolution
+of 12.5 ns effectively only 3125 micro time channels will be filled with
+photons.</p>
+</section>
+<section id="creating-and-writing-tttrheader">
+<h2>Creating and writing TTTRHeader<a class="headerlink" href="#creating-and-writing-tttrheader" title="Permalink to this heading">¶</a></h2>
+<dl class="simple">
+<dt>Each TTTR object has an attribute that is an instance of the TTTRHeader class.</dt><dd><p>This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader</p>
+</dd>
+</dl>
+<p>objects can also be created independently of TTTR object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="modifying-meta-data">
+<h2>Modifying meta-data<a class="headerlink" href="#modifying-meta-data" title="Permalink to this heading">¶</a></h2>
+<p>The data containted in a TTTRHeader instance can be accesses as JSON string. The
+<a class="reference external" href="https://www.json.org">JSON</a> string.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The JSON string must contain a <code class="docutils literal notranslate"><span class="pre">tags</span></code> list. The <code class="docutils literal notranslate"><span class="pre">tags</span></code> list is a list of dictionarys
+in which each dictionary corresponds to a meta-data field in the header. For instance,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><a href="https://docs.python.org/3/library/json.html#module-json" title="builtins.json" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-module"><span class="n">json</span></a><span class="p">)</span> <span class="c1"># &#39;{\n &quot;tags&quot;: []\n}&#39;</span>
+</pre></div>
+</div>
+<p>Different meta data fields are listed in
+<a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-header-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d1917d97529c359c2b919a59d0dfcd81/plot_tttr_header.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_header.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/556f445f5c3a9909dd1c3f6c989a0ebb/plot_tttr_header.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_tttr_header.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+      </div>
+    <div class="container">
+      <footer class="sk-content-footer">
+            &copy; 2021 - 2026, tttrlib developers (BSD License).
+          <a href="../../_sources/auto_examples/tttr/plot_tttr_header.rst.txt" rel="nofollow">Show this page source</a>
+      </footer>
+    </div>
+  </div>
+</div>
+<script src="../../_static/js/vendor/bootstrap.min.js"></script>
+
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-22606712-2', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script>
+$(document).ready(function() {
+    /* Add a [>>>] button on the top-right corner of code samples to hide
+     * the >>> and ... prompts and the output and thus make the code
+     * copyable. */
+    var div = $('.highlight-python .highlight,' +
+                '.highlight-python3 .highlight,' +
+                '.highlight-pycon .highlight,' +
+		'.highlight-default .highlight')
+    var pre = div.find('pre');
+
+    // get the styles from the current theme
+    pre.parent().parent().css('position', 'relative');
+    var hide_text = 'Hide prompts and outputs';
+    var show_text = 'Show prompts and outputs';
+
+    // create and add the button to all the code blocks that contain >>>
+    div.each(function(index) {
+        var jthis = $(this);
+        if (jthis.find('.gp').length > 0) {
+            var button = $('<span class="copybutton">&gt;&gt;&gt;</span>');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+            jthis.prepend(button);
+        }
+        // tracebacks (.gt) contain bare text elements that need to be
+        // wrapped in a span to work with .nextUntil() (see later)
+        jthis.find('pre:has(.gt)').contents().filter(function() {
+            return ((this.nodeType == 3) && (this.data.trim().length > 0));
+        }).wrap('<span>');
+    });
+
+    // define the behavior of the button when it's clicked
+    $('.copybutton').click(function(e){
+        e.preventDefault();
+        var button = $(this);
+        if (button.data('hidden') === 'false') {
+            // hide the code output
+            button.parent().find('.go, .gp, .gt').hide();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'hidden');
+            button.css('text-decoration', 'line-through');
+            button.attr('title', show_text);
+            button.data('hidden', 'true');
+        } else {
+            // show the code output
+            button.parent().find('.go, .gp, .gt').show();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'visible');
+            button.css('text-decoration', 'none');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+        }
+    });
+
+	/*** Add permalink buttons next to glossary terms ***/
+	$('dl.glossary > dt[id]').append(function() {
+		return ('<a class="headerlink" href="#' +
+			    this.getAttribute('id') +
+			    '" title="Permalink to this term">¶</a>');
+	});
+  /*** Hide navbar when scrolling down ***/
+  // Returns true when headerlink target matches hash in url
+  (function() {
+    hashTargetOnTop = function() {
+        var hash = window.location.hash;
+        if ( hash.length < 2 ) { return false; }
+
+        var target = document.getElementById( hash.slice(1) );
+        if ( target === null ) { return false; }
+
+        var top = target.getBoundingClientRect().top;
+        return (top < 2) && (top > -2);
+    };
+
+    // Hide navbar on load if hash target is on top
+    var navBar = document.getElementById("navbar");
+    var navBarToggler = document.getElementById("sk-navbar-toggler");
+    var navBarHeightHidden = "-" + navBar.getBoundingClientRect().height + "px";
+    var $window = $(window);
+
+    hideNavBar = function() {
+        navBar.style.top = navBarHeightHidden;
+    };
+
+    showNavBar = function() {
+        navBar.style.top = "0";
+    }
+
+    if (hashTargetOnTop()) {
+        hideNavBar()
+    }
+
+    var prevScrollpos = window.pageYOffset;
+    hideOnScroll = function(lastScrollTop) {
+        if (($window.width() < 768) && (navBarToggler.getAttribute("aria-expanded") === 'true')) {
+            return;
+        }
+        if (lastScrollTop > 2 && (prevScrollpos <= lastScrollTop) || hashTargetOnTop()){
+            hideNavBar()
+        } else {
+            showNavBar()
+        }
+        prevScrollpos = lastScrollTop;
+    };
+
+    /*** high performance scroll event listener***/
+    var raf = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        window.oRequestAnimationFrame;
+    var lastScrollTop = $window.scrollTop();
+
+    if (raf) {
+        loop();
+    }
+
+    function loop() {
+        var scrollTop = $window.scrollTop();
+        if (lastScrollTop === scrollTop) {
+            raf(loop);
+            return;
+        } else {
+            lastScrollTop = scrollTop;
+            hideOnScroll(lastScrollTop);
+            raf(loop);
+        }
+    }
+  })();
+});
+
+</script>
+    
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+</body>
+</html>

@@ -1,0 +1,100 @@
+
+
+.. _sphx_glr_auto_examples_single_molecule:
+
+.. _single_molecule_examples:
+
+Single-molecule
+---------------
+
+Application of ``tttrlib`` to single-molecule data.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="#.. plot:: ../examples/single_molecule/single_molecule_mcs.py">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_mcs_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_mcs.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Intensity traces</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="    1. The minimum window length minimum_window_length     2. The minimum number of photons in ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_burst_selection_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_burst_selection.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Burst selection routines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_1_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_1.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 1</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis as described in https://pubs.acs.org/doi/abs/10.1021/jp057257">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_single_molecule_pda_2_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 2</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/single_molecule/plot_single_molecule_mcs
+   /auto_examples/single_molecule/plot_single_molecule_burst_selection
+   /auto_examples/single_molecule/plot_single_molecule_pda_1
+   /auto_examples/single_molecule/plot_single_molecule_pda_2
+

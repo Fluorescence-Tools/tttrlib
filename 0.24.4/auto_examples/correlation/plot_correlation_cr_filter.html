@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta property="og:title" content="Count rate filtered correlation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/correlation/plot_correlation_cr_filter.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Overview: The background in the fluorescence intensity affects the computed fluorescence correlation curves. To mitigate the effect of the background on the correlation curves, low count rate regio..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_correlation_plot_correlation_cr_filter_ff84343e.png" />
+<meta property="og:image:alt" content="Overview: The background in the fluorescence intensity affects the computed fluorescence correlation curves. To mitigate the effect of the background on the correlation curves, low count rate regio..." />
+<meta name="description" content="Overview: The background in the fluorescence intensity affects the computed fluorescence correlation curves. To mitigate the effect of the background on the correlation curves, low count rate regio..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>Count rate filtered correlation &mdash; tttrlib  documentation</title>
+  
+  <link rel="canonical" href="http://tttrlib.peulen.xyz/stable/auto_examples/correlation/plot_correlation_cr_filter.html" />
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/vendor/bootstrap.min.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-binder.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-dataframe.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/sg_gallery-rendered-html.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+<script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+<script src="../../_static/jquery.js"></script> 
+</head>
+<body>
+<nav id="navbar" class="sk-docs-navbar navbar navbar-expand-md navbar-light bg-light py-0">
+  <div class="container-fluid sk-docs-container px-0">
+    <button
+      id="sk-navbar-toggler"
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="sk-navbar-collapse collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../install.html">Install</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../../api/index.html">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link" href="../index.html">Applications</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../getting_started.html">Getting Started</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../tutorial/index.html">Tutorial</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../whats_new/v0.24.4.html">What's new</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../glossary.html">Glossary</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../faq.html">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../related_projects.html">Related packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../roadmap.html">Roadmap</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="../../about.html">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="sk-nav-link nav-link nav-more-item-mobile-items" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+        </li>
+        <li class="nav-item dropdown nav-more-item-dropdown">
+          <a class="sk-nav-link nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">More</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../getting_started.html">Getting Started</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../tutorial/index.html">Tutorial</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../whats_new/v0.24.4.html">What's new</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../glossary.html">Glossary</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../faq.html">FAQ</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../related_projects.html">Related packages</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../roadmap.html">Roadmap</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="../../about.html">About us</a>
+              <a class="sk-nav-dropdown-item dropdown-item" href="https://github.com/fluorescence-tools/tttrlib">GitHub</a>
+          </div>
+        </li>
+      </ul>
+      <div id="searchbox" role="search">
+          <div class="searchformwrapper">
+          <form class="search" action="../../search.html" method="get">
+            <input class="sk-search-text-input" type="text" name="q" aria-labelledby="searchlabel" />
+            <input class="sk-search-text-btn" type="submit" value="Go" />
+          </form>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="d-flex" id="sk-doc-wrapper">
+    <input type="checkbox" name="sk-toggle-checkbox" id="sk-toggle-checkbox">
+    <label id="sk-sidemenu-toggle" class="sk-btn-toggle-toc btn sk-btn-primary" for="sk-toggle-checkbox">Toggle Menu</label>
+    <div id="sk-sidebar-wrapper" class="border-right">
+      <div class="sk-sidebar-toc-wrapper">
+        <div class="sk-sidebar-toc-logo">
+        </div>
+        <div class="btn-group w-100 mb-2" role="group" aria-label="rellinks">
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Prev</a>
+            <a href="#" role="button" class="btn sk-btn-rellink disabled py-1">Up</a>
+            <a href="#" role="button" class="btn sk-btn-rellink py-1 disabled"">Next</a>
+        </div>
+        <div class="alert alert-danger p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+          <strong>tttrlib </strong><br/>
+          <a href="http://tttrlib.peulen.xyz/dev/versions.html">Other versions</a>
+          </p>
+        </div>
+        <div class="alert alert-warning p-1 mb-2" role="alert">
+          <p class="text-center mb-0">
+            Please <a class="font-weight-bold" href="../../about.html#citing-tttrlib"><string>cite us</string></a> if you use the software.
+          </p>
+        </div>
+            <div class="sk-sidebar-toc">
+              <ul>
+<li><a class="reference internal" href="#">Count rate filtered correlation</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#implementation">Implementation</a></li>
+<li><a class="reference internal" href="#count-rate-threshold">Count rate threshold</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+      </div>
+    </div>
+    <div id="sk-page-content-wrapper">
+      <div class="sk-page-content container-fluid body px-md-3" role="main">
+        
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-correlation-cr-filter-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="count-rate-filtered-correlation">
+<span id="sphx-glr-auto-examples-correlation-plot-correlation-cr-filter-py"></span><h1>Count rate filtered correlation<a class="headerlink" href="#count-rate-filtered-correlation" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>The background in the fluorescence intensity affects the computed
+fluorescence correlation curves. To mitigate the effect of the background
+on the correlation curves, low count rate regions in a photon stream can be
+discriminated before correlation.</p>
+<p>The example below illustrates a correlation analysis for a single molecule
+FRET experiments to illustrate different options to discriminate low
+count rate regions in a photon stream for computing correlation functions of
+background filtered data.</p>
+<p>Note, in the single-molecule example data the background has a significant
+contribution to the correlation functions. In the example a sliding time-window
+(TW) is used to select regions in the photon stream with less than a certain
+amount of photons that are discriminated.</p>
+<p>Such a filter can be used to remove the background in a single-molecule experiment
+that decreased the correlation amplitude.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+</pre></div>
+</div>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading">¶</a></h2>
+<p>First, we do a normal correlation where all unfiltered data is correlated.
+For that, we first read the data into a TTTR container.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s1">&#39;../../tttr-data/bh/bh_spc132.spc&#39;</span><span class="p">,</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We use a dictionary that contains the most relevant parameters for the
+correlation algorithm, i.e., the number of bins, <code class="docutils literal notranslate"><span class="pre">n_bins</span></code>, and the number
+of coarsening steps, <code class="docutils literal notranslate"><span class="pre">n_casc</span></code>, as we are going to reuse these parameters later.
+<code class="docutils literal notranslate"><span class="pre">n_bins</span></code> and <code class="docutils literal notranslate"><span class="pre">n_casc</span></code> define the settings of the multi-tau correlation steps.
+If <code class="docutils literal notranslate"><span class="pre">make_fine</span></code> is set to false the micro time is not used for correlation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;n_casc&quot;</span><span class="p">:</span> <span class="mi">27</span><span class="p">,</span>
+    <span class="s2">&quot;make_fine&quot;</span><span class="p">:</span> <span class="kc">False</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the TTTR data the channel number 0 and 8 correspond to the green detectors.
+Here, ([0], [8]) is a correlation of the photons in the channel [0] and the photons
+in channel [8].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">corr_channels_green</span> <span class="o">=</span> <span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">])</span>  <span class="c1"># green detectors</span>
+<span class="n">correlator_green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">channels</span><span class="o">=</span><span class="n">corr_channels_green</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">settings</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, we compute the green-red cross correlation. The red detectors correspond
+to the channel numbers [1,9]. Thus, our input for the correlator is ([0, 8], [1, 9]).
+This means, that all photons in the green channels [0, 8] are correlated to
+the photons in the channel [1, 9].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">channels_green_red</span> <span class="o">=</span> <span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+<span class="n">correlator_green_red</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">channels</span><span class="o">=</span><span class="n">channels_green_red</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">settings</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To reduce the contribution of scattered light on the correlation we select regions in
+the TTTR stream that have a minimum count rate. Here, we select regions with
+at least 60 photons in time windows of 10 ms.
+Part of the photon stream is selected either by creating a list of indices that
+refer to TTTR events. These indices are used to create a new TTTR object by slicing
+the original TTTR object. Below two options to create such a selection is
+illustrated.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">filter_options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;n_ph_max&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+    <span class="s1">&#39;time_window&#39;</span><span class="p">:</span> <span class="mf">10.0e-3</span><span class="p">,</span>  <span class="c1"># = 10 ms (macro_time_resolution is in seconds)</span>
+    <span class="s1">&#39;invert&#39;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># set invert to True to select TW with more than 60 ph</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A selection can be made using the function <code class="docutils literal notranslate"><span class="pre">selection_by_count_rate</span></code> or using
+the method <code class="docutils literal notranslate"><span class="pre">get_selection_by_count_rate</span></code>.
+Alternatively, a new TTTR object can be created directly using the filter options and
+the <code class="docutils literal notranslate"><span class="pre">get_tttr_by_count_rate</span></code> method of a TTTR object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">selection_idx</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">selection_by_count_rate</span><span class="p">(</span>
+        <span class="n">time</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">,</span>
+        <span class="n">macro_time_calibration</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">filter_options</span>
+    <span class="p">)</span>
+<span class="n">selection_idx</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_count_rate</span><span class="p">(</span><span class="o">**</span><span class="n">filter_options</span><span class="p">)</span>
+<span class="n">tttr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">selection_idx</span><span class="p">]</span>
+<span class="n">tttr_selection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_tttr_by_count_rate</span><span class="p">(</span><span class="o">**</span><span class="n">filter_options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, we computed correlations for the green/green and green/red.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">correlator_green_filtered</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">channels</span><span class="o">=</span><span class="n">corr_channels_green</span><span class="p">,</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">tttr_selection</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">settings</span>
+<span class="p">)</span>
+<span class="n">correlator_green_red_filtered</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+    <span class="n">channels</span><span class="o">=</span><span class="n">channels_green_red</span><span class="p">,</span>
+    <span class="n">tttr</span><span class="o">=</span><span class="n">tttr_selection</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">settings</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The correlation amplitudes of the correlation curves for data with discriminated
+background is considerably higher as seen in the plots of the raw and unfiltered
+correlations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fig1</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span>
+    <span class="n">correlator_green</span><span class="o">.</span><span class="n">x_axis</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>
+    <span class="n">correlator_green</span><span class="o">.</span><span class="n">correlation</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;pG/sG&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;corr. time (ms)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;corr. amplitude&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span>
+    <span class="n">correlator_green_red</span><span class="o">.</span><span class="n">x_axis</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>
+    <span class="n">correlator_green_red</span><span class="o">.</span><span class="n">correlation</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;pG,sG/pR,sR&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;RAW correlations&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span>
+    <span class="n">correlator_green_filtered</span><span class="o">.</span><span class="n">x_axis</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>
+    <span class="n">correlator_green_filtered</span><span class="o">.</span><span class="n">correlation</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;pG/sG&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;corr. time (ms)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span>
+    <span class="n">correlator_green_red_filtered</span><span class="o">.</span><span class="n">x_axis</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>
+    <span class="n">correlator_green_red_filtered</span><span class="o">.</span><span class="n">correlation</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;pG,sG/pR,sR&quot;</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Count rate filtered correlations&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="count-rate-threshold">
+<h2>Count rate threshold<a class="headerlink" href="#count-rate-threshold" title="Permalink to this heading">¶</a></h2>
+<p>The threshold for the count rate filter has an effect on
+the computed correlation functions.
+To illustrate the effect of the count rate filter on the correlation
+amplitude we will vary the threshold value for the filter and
+compute correlation functions for each filter value.
+To decrease the computation time, we decrease the number of
+bins in a correlation curve. For reference, we compute the
+correlation curve of the unfiltered data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">corr_settings</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">&quot;n_casc&quot;</span><span class="p">:</span> <span class="mi">30</span>
+<span class="p">}</span>
+<span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span><span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">corr_channels_green</span><span class="p">,</span> <span class="o">**</span><span class="n">corr_settings</span><span class="p">)</span>
+<span class="n">x_unfiltered</span><span class="p">,</span> <span class="n">y_unfiltered</span> <span class="o">=</span> <span class="n">correlator</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">correlator</span><span class="o">.</span><span class="n">correlation</span>
+</pre></div>
+</div>
+<p>Next, we define the filter parameter values. Here, we select for
+time windows (TWs) with at least two photons in time windows of
+10 seconds.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n_ph</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">filter_options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;n_ph_max&#39;</span><span class="p">:</span> <span class="n">n_ph</span><span class="p">,</span>
+    <span class="s1">&#39;time_window&#39;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>  <span class="c1"># 10 seconds</span>
+    <span class="s1">&#39;invert&#39;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># set invert to True to select TW with more than 50 ph</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Using our values defines for the filter, we repeat the correlation
+calculations several times for different time windows. Here, we
+vary the time window from 0.1 ms to 1 ms and require that each time
+window has at least two photons.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">correlations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">n_tw</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">tws</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="n">n_tw</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">tw</span> <span class="ow">in</span> <span class="n">tws</span><span class="p">:</span>
+    <span class="n">filter_options</span><span class="p">[</span><span class="s1">&#39;time_window&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tw</span>
+    <span class="n">tttr</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_tttr_by_count_rate</span><span class="p">(</span><span class="o">**</span><span class="n">filter_options</span><span class="p">)</span>
+    <span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span><span class="n">tttr</span><span class="o">=</span><span class="n">tttr</span><span class="p">,</span> <span class="o">**</span><span class="n">corr_settings</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">corr_channels_green</span><span class="p">)</span>
+    <span class="n">correlations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">correlator</span><span class="o">.</span><span class="n">correlation</span><span class="p">)</span>
+<span class="n">correlations</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">correlations</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, we plot the resulting correlation curves. As expected,
+the correlation amplitude of correlation curves computed for
+smaller TWs (higher count rate) is higher. Note, this effect can
+be used in methods such as Photon Arrival-Time Interval Distribution
+(PAID) to resolve species mixtures <span class="bibtex" id="id1">[laurence2004]</span>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the raw/unfiltered correlations</span>
+<span class="n">fig2</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$</span><span class="si">%s</span><span class="s2"> ph / </span><span class="si">%.1f</span><span class="s2"> ms^{-1}$&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n_ph</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tws</span><span class="p">]</span>
+<span class="n">colormap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">winter</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_prop_cycle</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cycler</span><span class="p">(</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="n">colormap</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_tw</span><span class="p">))))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">corr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">correlations</span><span class="p">):</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_unfiltered</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="n">corr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">x_unfiltered</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="n">y_unfiltered</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Unfiltered&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;corr. time (ms) &#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;corr. amplitude&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-correlation-cr-filter-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/eb9a0016b9eb65f8e020f811621fc4d7/plot_correlation_cr_filter.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_correlation_cr_filter.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e64eeae26aa1cc35cc84dbb7b45bcf6c/plot_correlation_cr_filter.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_correlation_cr_filter.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+      </div>
+    <div class="container">
+      <footer class="sk-content-footer">
+            &copy; 2021 - 2026, tttrlib developers (BSD License).
+          <a href="../../_sources/auto_examples/correlation/plot_correlation_cr_filter.rst.txt" rel="nofollow">Show this page source</a>
+      </footer>
+    </div>
+  </div>
+</div>
+<script src="../../_static/js/vendor/bootstrap.min.js"></script>
+
+<script>
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', 'UA-22606712-2', 'auto');
+    ga('set', 'anonymizeIp', true);
+    ga('send', 'pageview');
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+<script>
+$(document).ready(function() {
+    /* Add a [>>>] button on the top-right corner of code samples to hide
+     * the >>> and ... prompts and the output and thus make the code
+     * copyable. */
+    var div = $('.highlight-python .highlight,' +
+                '.highlight-python3 .highlight,' +
+                '.highlight-pycon .highlight,' +
+		'.highlight-default .highlight')
+    var pre = div.find('pre');
+
+    // get the styles from the current theme
+    pre.parent().parent().css('position', 'relative');
+    var hide_text = 'Hide prompts and outputs';
+    var show_text = 'Show prompts and outputs';
+
+    // create and add the button to all the code blocks that contain >>>
+    div.each(function(index) {
+        var jthis = $(this);
+        if (jthis.find('.gp').length > 0) {
+            var button = $('<span class="copybutton">&gt;&gt;&gt;</span>');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+            jthis.prepend(button);
+        }
+        // tracebacks (.gt) contain bare text elements that need to be
+        // wrapped in a span to work with .nextUntil() (see later)
+        jthis.find('pre:has(.gt)').contents().filter(function() {
+            return ((this.nodeType == 3) && (this.data.trim().length > 0));
+        }).wrap('<span>');
+    });
+
+    // define the behavior of the button when it's clicked
+    $('.copybutton').click(function(e){
+        e.preventDefault();
+        var button = $(this);
+        if (button.data('hidden') === 'false') {
+            // hide the code output
+            button.parent().find('.go, .gp, .gt').hide();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'hidden');
+            button.css('text-decoration', 'line-through');
+            button.attr('title', show_text);
+            button.data('hidden', 'true');
+        } else {
+            // show the code output
+            button.parent().find('.go, .gp, .gt').show();
+            button.next('pre').find('.gt').nextUntil('.gp, .go').css('visibility', 'visible');
+            button.css('text-decoration', 'none');
+            button.attr('title', hide_text);
+            button.data('hidden', 'false');
+        }
+    });
+
+	/*** Add permalink buttons next to glossary terms ***/
+	$('dl.glossary > dt[id]').append(function() {
+		return ('<a class="headerlink" href="#' +
+			    this.getAttribute('id') +
+			    '" title="Permalink to this term">¶</a>');
+	});
+  /*** Hide navbar when scrolling down ***/
+  // Returns true when headerlink target matches hash in url
+  (function() {
+    hashTargetOnTop = function() {
+        var hash = window.location.hash;
+        if ( hash.length < 2 ) { return false; }
+
+        var target = document.getElementById( hash.slice(1) );
+        if ( target === null ) { return false; }
+
+        var top = target.getBoundingClientRect().top;
+        return (top < 2) && (top > -2);
+    };
+
+    // Hide navbar on load if hash target is on top
+    var navBar = document.getElementById("navbar");
+    var navBarToggler = document.getElementById("sk-navbar-toggler");
+    var navBarHeightHidden = "-" + navBar.getBoundingClientRect().height + "px";
+    var $window = $(window);
+
+    hideNavBar = function() {
+        navBar.style.top = navBarHeightHidden;
+    };
+
+    showNavBar = function() {
+        navBar.style.top = "0";
+    }
+
+    if (hashTargetOnTop()) {
+        hideNavBar()
+    }
+
+    var prevScrollpos = window.pageYOffset;
+    hideOnScroll = function(lastScrollTop) {
+        if (($window.width() < 768) && (navBarToggler.getAttribute("aria-expanded") === 'true')) {
+            return;
+        }
+        if (lastScrollTop > 2 && (prevScrollpos <= lastScrollTop) || hashTargetOnTop()){
+            hideNavBar()
+        } else {
+            showNavBar()
+        }
+        prevScrollpos = lastScrollTop;
+    };
+
+    /*** high performance scroll event listener***/
+    var raf = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        window.oRequestAnimationFrame;
+    var lastScrollTop = $window.scrollTop();
+
+    if (raf) {
+        loop();
+    }
+
+    function loop() {
+        var scrollTop = $window.scrollTop();
+        if (lastScrollTop === scrollTop) {
+            raf(loop);
+            return;
+        } else {
+            lastScrollTop = scrollTop;
+            hideOnScroll(lastScrollTop);
+            raf(loop);
+        }
+    }
+  })();
+});
+
+</script>
+    
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    
+</body>
+</html>
