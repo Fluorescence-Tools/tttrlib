@@ -235,6 +235,21 @@ ELSE()
   LINK_LIBRARIES(nlohmann_json::nlohmann_json)
 ENDIF()
 
+# Eigen — header-only dense linear algebra (no link step). Used by NeuralNet for
+# the batched GEMMs of training/inference, and later by the forward-mode AD
+# gradient provider. Vendored copy wins; otherwise fall back to the system one.
+IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen/Eigen/Core")
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen)
+ELSE()
+  # No version floor: Eigen's config treats a major bump as incompatible, so
+  # asking for "3.3" rejects Eigen 5.x. Everything used here is ancient API.
+  FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
+  MESSAGE(STATUS "Using system Eigen3 ${Eigen3_VERSION}")
+  # Eigen3::Eigen is an INTERFACE target (headers only, no link step); newer
+  # Eigen no longer sets the legacy EIGEN3_INCLUDE_DIR variable.
+  LINK_LIBRARIES(Eigen3::Eigen)
+ENDIF()
+
 # HighFive HDF5 reader
 IF(BUILD_PHOTON_HDF)
   IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/HighFive/CMakeLists.txt")

@@ -141,6 +141,7 @@ if 'CLSMISM' in dir():
 %include "BurstFeatureExtractor.i"
 %include "BVA.i"
 %include "H2MM.i"
+%include "NeuralNet.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
