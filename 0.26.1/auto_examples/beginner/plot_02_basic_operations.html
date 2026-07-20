@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/beginner/plot_02_basic_operations';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_02_basic_operations.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_02_basic_operations.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,22 +472,24 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Basic-Example-2:-Basic-operations-on-TTTR-objects-(focused-illustration)">
-<h1>Basic Example 2: Basic operations on TTTR objects (focused illustration)<a class="headerlink" href="#Basic-Example-2:-Basic-operations-on-TTTR-objects-(focused-illustration)" title="Link to this heading">#</a></h1>
-<p>This example uses only a small slice (first ~300 events) so that the effect of joining/appending is visible in the plots.</p>
-<p>Make sure the demo PTU file is available (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>). Set the environment variable <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> so that the file <code class="docutils literal notranslate"><span class="pre">pq/ptu/pq_ptu_hh_t3.ptu</span></code> can be found.</p>
-<p>What this example covers:</p>
-<ol class="arabic simple">
-<li><p>Inspect a few header fields</p></li>
-<li><p>Slice, join, and append a small subset</p></li>
-<li><p>Visualize macro times <strong>before</strong> and <strong>after</strong> appending on a tiny window</p></li>
-<li><p>Plot a micro-time histogram using the built-in helper</p></li>
-</ol>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-beginner-plot-02-basic-operations-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<section class="sphx-glr-example-title" id="basic-example-2-basic-operations-on-tttr-objects-focused-illustration">
+<span id="sphx-glr-auto-examples-beginner-plot-02-basic-operations-py"></span><h1>Basic Example 2: Basic operations on TTTR objects (focused illustration)<a class="headerlink" href="#basic-example-2-basic-operations-on-tttr-objects-focused-illustration" title="Link to this heading">#</a></h1>
+<p>This example uses only a small slice (first ~300 events) so that the effect of
+joining/appending is visible in the plots.</p>
+<p>Make sure the demo PTU file is available (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>).
+Set the environment variable <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> so that the file
+<code class="docutils literal notranslate"><span class="pre">pq/ptu/pq_ptu_hh_t3.ptu</span></code> can be found.</p>
+<p>What this example covers:
+1) Inspect a few header fields
+2) Slice, join, and append a small subset
+3) Visualize macro times <strong>before</strong> and <strong>after</strong> appending on a tiny window
+4) Plot a micro-time histogram using the built-in helper</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
@@ -605,7 +604,18 @@
 <span class="c1"># - Example 1 covers routing/per-channel plots; we avoid repeating them here.</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-beginner-plot-02-basic-operations-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/70c1e39e763778212c8cc9ef9f23dd48/plot_02_basic_operations.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_02_basic_operations.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0a4b47b573c2e3c722e6612e42673c84/plot_02_basic_operations.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_02_basic_operations.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2527fb490d838c2fef31e3f842db51cc/plot_02_basic_operations.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_02_basic_operations.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -650,7 +660,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_02_basic_operations.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_02_basic_operations.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

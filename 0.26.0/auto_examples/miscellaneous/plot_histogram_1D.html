@@ -19,7 +19,7 @@
 <meta name="description" content="tttrlib offers some functions and classes for the creation of histograms. They are part of tttrlib to offer more performance in direct comparison to general purpose routines for analysis methods as..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Make a 1D Histogram &#8212; tttrlib v0.26.1</title>
+    <title>Make a 1D Histogram &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/miscellaneous/plot_histogram_1D';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Make a 2D Histogram" href="plot_histogram_2D.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_1D.ipynb.txt">
+    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_1D.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,30 +472,62 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Make-a-1D-Histogram">
-<h1>Make a 1D Histogram<a class="headerlink" href="#Make-a-1D-Histogram" title="Link to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> offers some functions and classes for the creation of histograms. They are part of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> to offer more performance in direct comparison to general purpose routines for analysis methods as Photon Distribution Analysis (PDA) that make heady use of repeated histogram calculations.</p>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-miscellaneous-plot-histogram-1d-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="make-a-1d-histogram">
+<span id="sphx-glr-auto-examples-miscellaneous-plot-histogram-1d-py"></span><h1>Make a 1D Histogram<a class="headerlink" href="#make-a-1d-histogram" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> offers some functions and classes for the creation of histograms.
+They are part of <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> to offer more performance in direct comparison to
+general purpose routines for analysis methods as Photon Distribution Analysis
+(PDA) that make heady use of repeated histogram calculations.</p>
 <div class="admonition note">
-<div class="admonition-title"><h4></div><p>Note</p>
-</h4><p><p>These function and <code class="docutils literal notranslate"><span class="pre">classes</span></code> are not intended as a substitution for more general functions, e.g., offered by <a class="reference external" href="https://www.numpy.org/">NumPy</a> and are less tested. They offer performance advantages for histograms calculated on a logarithmic (log10) scale and a linear scale in direct comparison to NumPy.</p>
-</p></div>
-<section id="One-dimensional-histograms">
-<h2>One dimensional histograms<a class="headerlink" href="#One-dimensional-histograms" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> supports one dimensional histograms with linear, logarithmic, or arbitrary spaced bins.</p>
-<p>#.. plot:: ../examples/miscellaneous/histogram_1D.py :include-source:</p>
+<p class="admonition-title">Note</p>
+<p>These function and <code class="docutils literal notranslate"><span class="pre">classes</span></code> are not intended as a substitution for more
+general functions, e.g., offered by <a class="reference external" href="https://www.numpy.org/">NumPy</a> and
+are less tested. They offer performance advantages for histograms
+calculated on a logarithmic (log10) scale and a linear scale in direct
+comparison to NumPy.</p>
+</div>
+<section id="one-dimensional-histograms">
+<h2>One dimensional histograms<a class="headerlink" href="#one-dimensional-histograms" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> supports one dimensional histograms with linear, logarithmic, or
+arbitrary spaced bins.</p>
+<dl class="simple">
+<dt>#.. plot:: ../examples/miscellaneous/histogram_1D.py</dt><dd><dl class="field-list simple">
+<dt class="field-odd">include-source<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
 <p>In the example shown above, the histograms for the three bin spacings are shown.</p>
 </section>
-<section id="Multi-dimensional-histograms">
-<h2>Multi dimensional histograms<a class="headerlink" href="#Multi-dimensional-histograms" title="Link to this heading">#</a></h2>
-<p>In addition to simple one dimensional histograms <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can calculate multidimensional histograms with an arbitrary number of dimensions. For that, first a new object of the class <code class="docutils literal notranslate"><span class="pre">doubleHistogram</span></code> is created. Here, <em>double</em> refers to the data type double - a floating point number. Next, axes are added to the Histogram by calling the method <code class="docutils literal notranslate"><span class="pre">setAxis</span></code>. The first argument is the number of the axis, the second the name of the axis, the third and the fourth the range of the axis, the fifth
-the number of bins, and the sixth the type of the axis. The <code class="docutils literal notranslate"><span class="pre">Histogram</span></code> class support arbitrary axis types. However, when initializing an axis via <code class="docutils literal notranslate"><span class="pre">setAxis</span></code> the axis type must be either <em>lin</em> or <em>log10</em> for a linear or an logarithmic axis with base 10. Next, the data are assigned to the histogram by the <code class="docutils literal notranslate"><span class="pre">setData</span></code> method and the histogram is calculated by the <code class="docutils literal notranslate"><span class="pre">update</span></code> method. A working example for 2D normal distributed data is shown below.</p>
-<p>#.. plot:: ../examples/miscellaneous/histogram_2D.py :include-source:</p>
+<section id="multi-dimensional-histograms">
+<h2>Multi dimensional histograms<a class="headerlink" href="#multi-dimensional-histograms" title="Link to this heading">#</a></h2>
+<p>In addition to simple one dimensional histograms <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> can calculate
+multidimensional histograms with an arbitrary number of dimensions. For that,
+first a new object of the class <code class="docutils literal notranslate"><span class="pre">doubleHistogram</span></code> is created. Here, <em>double</em>
+refers to the data type double - a floating point number. Next, axes are added
+to the Histogram by calling the method <code class="docutils literal notranslate"><span class="pre">setAxis</span></code>. The first argument is the
+number of the axis, the second the name of the axis, the third and the fourth
+the range of the axis, the fifth the number of bins, and the sixth the type of
+the axis. The <code class="docutils literal notranslate"><span class="pre">Histogram</span></code> class support arbitrary axis types. However, when
+initializing an axis via <code class="docutils literal notranslate"><span class="pre">setAxis</span></code> the axis type must be either <em>lin</em> or
+<em>log10</em> for a linear or an logarithmic axis with base 10. Next, the data are
+assigned to the histogram by the <code class="docutils literal notranslate"><span class="pre">setData</span></code> method and the histogram is
+calculated by the <code class="docutils literal notranslate"><span class="pre">update</span></code> method. A working example for 2D normal
+distributed data is shown below.</p>
+<dl class="simple">
+<dt>#.. plot:: ../examples/miscellaneous/histogram_2D.py</dt><dd><dl class="field-list simple">
+<dt class="field-odd">include-source<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
 <p>Above, a two dimensional histogram with linear spaced bins is shown.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 
@@ -532,7 +561,18 @@ the number of bins, and the sixth the type of the axis. The <code class="docutil
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-miscellaneous-plot-histogram-1d-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/737acdc7ab3041a96affbd8a22b49291/plot_histogram_1D.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_histogram_1D.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/fa9bb5402cd963fd9757f49a12384ba2/plot_histogram_1D.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_histogram_1D.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7827a59a34633b7cedfee02f51353084/plot_histogram_1D.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_histogram_1D.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -583,15 +623,15 @@ the number of bins, and the sixth the type of the axis. The <code class="docutil
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#One-dimensional-histograms">One dimensional histograms</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Multi-dimensional-histograms">Multi dimensional histograms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-dimensional-histograms">One dimensional histograms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-dimensional-histograms">Multi dimensional histograms</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_1D.ipynb.txt">
+    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_1D.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/release_highlights/plot_release_highlights_0_24_0';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/release_highlights/plot_release_highlights_0_24_0.ipynb.txt">
+    <a href="../../_sources/auto_examples/release_highlights/plot_release_highlights_0_24_0.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,24 +472,26 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Release-Highlights-for-tttrlib-0.24">
-<h1>Release Highlights for tttrlib 0.24<a class="headerlink" href="#Release-Highlights-for-tttrlib-0.24" title="Link to this heading">#</a></h1>
-<p>We are pleased to announce the release of tttrlib 0.24, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all the changes, please refer to the <code class="docutils literal notranslate"><span class="pre">release</span> <span class="pre">notes</span> <span class="pre">&lt;changes_0_20&gt;</span></code>.</p>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-release-highlights-plot-release-highlights-0-24-0-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="release-highlights-for-tttrlib-0-24">
+<span id="sphx-glr-auto-examples-release-highlights-plot-release-highlights-0-24-0-py"></span><h1>Release Highlights for tttrlib 0.24<a class="headerlink" href="#release-highlights-for-tttrlib-0-24" title="Link to this heading">#</a></h1>
+<p>We are pleased to announce the release of tttrlib 0.24, which comes
+with many bug fixes and new features! We detail below a few of the major
+features of this release. For an exhaustive list of all the changes, please
+refer to the <span class="xref std std-ref">release notes</span>.</p>
 <p>To install the latest version with conda:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>::
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">tpeulen</span> <span class="n">tttrlib</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>conda install -c tpeulen tttrlib</p>
-</div></blockquote>
-<section id="Test-for-plotting">
-<h2>Test for plotting<a class="headerlink" href="#Test-for-plotting" title="Link to this heading">#</a></h2>
-<p>The :func:<code class="docutils literal notranslate"><span class="pre">inspection.permutation_importance</span></code> can be used to get an estimate of the importance of each feature, for any fitted estimator:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<section id="test-for-plotting">
+<h2>Test for plotting<a class="headerlink" href="#test-for-plotting" title="Link to this heading">#</a></h2>
+<p>The <code class="xref py py-func docutils literal notranslate"><span class="pre">inspection.permutation_importance()</span></code> can be used to get an
+estimate of the importance of each feature, for any fitted estimator:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
@@ -504,29 +503,29 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+</section>
+<section id="improved-ptu-header-support">
+<h2>Improved PTU header support<a class="headerlink" href="#improved-ptu-header-support" title="Link to this heading">#</a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">ensemble.HistGradientBoostingClassifier</span></code>
+and <code class="xref py py-class docutils literal notranslate"><span class="pre">ensemble.HistGradientBoostingRegressor</span></code> now have native
+support for missing values (NaNs). This means that there is no need for
+imputing data when training or predicting.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Better Header support&quot;</span><span class="p">)</span>
+</pre></div>
 </div>
 </section>
-<section id="Improved-PTU-header-support">
-<h2>Improved PTU header support<a class="headerlink" href="#Improved-PTU-header-support" title="Link to this heading">#</a></h2>
-<p>The :class:<code class="docutils literal notranslate"><span class="pre">ensemble.HistGradientBoostingClassifier</span></code> and :class:<code class="docutils literal notranslate"><span class="pre">ensemble.HistGradientBoostingRegressor</span></code> now have native support for missing values (NaNs). This means that there is no need for imputing data when training or predicting.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Better Header support&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="Writing-of-TTTR-data">
-<h2>Writing of TTTR data<a class="headerlink" href="#Writing-of-TTTR-data" title="Link to this heading">#</a></h2>
-<p>Most estimators based on nearest neighbors graphs now accept precomputed sparse graphs as input, to reuse the same graph for multiple estimator fits. To use this feature in a pipeline, one can use the <code class="docutils literal notranslate"><span class="pre">memory</span></code> parameter, along with one of the two new transformers, :class:<code class="docutils literal notranslate"><span class="pre">neighbors.KNeighborsTransformer</span></code> and :class:<code class="docutils literal notranslate"><span class="pre">neighbors.RadiusNeighborsTransformer</span></code>. The precomputation can also be performed by custom estimators to use alternative implementations, such as approximate nearest neighbors
-methods. See more details in the <code class="docutils literal notranslate"><span class="pre">User</span> <span class="pre">Guide</span> <span class="pre">&lt;neighbors_transformer&gt;</span></code>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemporaryDirectory</span>
+<section id="writing-of-tttr-data">
+<h2>Writing of TTTR data<a class="headerlink" href="#writing-of-tttr-data" title="Link to this heading">#</a></h2>
+<p>Most estimators based on nearest neighbors graphs now accept precomputed
+sparse graphs as input, to reuse the same graph for multiple estimator fits.
+To use this feature in a pipeline, one can use the <a class="reference external" href="https://docs.python.org/3/c-api/memory.html#memory" title="(in Python v3.14)"><code class="docutils literal notranslate"><span class="pre">Memory</span> <span class="pre">Management</span></code></a> parameter, along
+with one of the two new transformers,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">neighbors.KNeighborsTransformer</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">neighbors.RadiusNeighborsTransformer</span></code>. The precomputation
+can also be performed by custom estimators to use alternative
+implementations, such as approximate nearest neighbors methods.
+See more details in the <span class="xref std std-ref">User Guide</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemporaryDirectory</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
 
@@ -543,7 +542,18 @@ methods. See more details in the <code class="docutils literal notranslate"><spa
 <span class="c1">#     estimator.fit(X)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-release-highlights-plot-release-highlights-0-24-0-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2e6d841155147c9fbce4ea3837b924b9/plot_release_highlights_0_24_0.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_release_highlights_0_24_0.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d20432c5cccdd8b208184031b83a8cf9/plot_release_highlights_0_24_0.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_release_highlights_0_24_0.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/3d40c54d0288de1437e5299f8039b95a/plot_release_highlights_0_24_0.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_release_highlights_0_24_0.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -594,16 +604,16 @@ methods. See more details in the <code class="docutils literal notranslate"><spa
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Test-for-plotting">Test for plotting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Improved-PTU-header-support">Improved PTU header support</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Writing-of-TTTR-data">Writing of TTTR data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-for-plotting">Test for plotting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#improved-ptu-header-support">Improved PTU header support</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-of-tttr-data">Writing of TTTR data</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/release_highlights/plot_release_highlights_0_24_0.ipynb.txt">
+    <a href="../../_sources/auto_examples/release_highlights/plot_release_highlights_0_24_0.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

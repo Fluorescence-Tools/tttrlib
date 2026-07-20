@@ -19,7 +19,7 @@
 <meta name="description" content="Overview: In tttrlib there are a set of different convolution routines that can be used to compute fluorescence decays. Most fluorescence decays are linear combinations of exponential decays. Convo..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Convolution routines &#8212; tttrlib v0.26.1</title>
+    <title>Convolution routines &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/fluorescence_decay/plot_convolution_routines';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Pile-up" href="plot_pile_up.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_convolution_routines.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_convolution_routines.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,18 +472,30 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Convolution-routines">
-<h1>Convolution routines<a class="headerlink" href="#Convolution-routines" title="Link to this heading">#</a></h1>
-<section id="Overview">
-<h2>Overview<a class="headerlink" href="#Overview" title="Link to this heading">#</a></h2>
-<p>In <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> there are a set of different convolution routines that can be used to compute fluorescence decays. Most fluorescence decays are linear combinations of exponential decays. Convolutions of such fluorescence decays with instrument response functions can be computed using the routines (fconv, fconv_per, fconv_per_cs, etc.). Here, fconv stands for fast convolution.</p>
-<p>For faster convolutions <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> provides routines that make use of SIMD (Single Instruction Multiple Data). The SIMD routines use of the AVX2 extension (Advanced Vector Extension). For instance, the routines <code class="docutils literal notranslate"><span class="pre">fconv</span></code> and <code class="docutils literal notranslate"><span class="pre">fconv_per</span></code> (periodic convolution) have corresponding SIMD routines named <code class="docutils literal notranslate"><span class="pre">fconv_avx</span></code>and <code class="docutils literal notranslate"><span class="pre">fconv_per_avx</span></code>. The SIMD routines compute in parallel the decay in cases the decay is compose of more than a single fluorescence lifetime.</p>
-<p>The SIMD AVX make use of AVX2 and FMA (Fused Multiply Add). AVX2 and FMA require CPUs with ‘modern’ instruction sets. Most x86 CPUs that were manufacture since 2012 are supported.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-fluorescence-decay-plot-convolution-routines-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<section class="sphx-glr-example-title" id="convolution-routines">
+<span id="sphx-glr-auto-examples-fluorescence-decay-plot-convolution-routines-py"></span><h1>Convolution routines<a class="headerlink" href="#convolution-routines" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> there are a set of different convolution routines that can be used to compute
+fluorescence decays. Most fluorescence decays are linear combinations of exponential
+decays. Convolutions of such fluorescence decays with instrument response functions
+can be computed using the routines (fconv, fconv_per, fconv_per_cs, etc.). Here,
+fconv stands for fast convolution.</p>
+<p>For faster convolutions <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> provides routines that make use of
+SIMD (Single Instruction Multiple Data). The SIMD routines use of the AVX2 extension
+(Advanced Vector Extension). For instance, the routines <code class="docutils literal notranslate"><span class="pre">fconv</span></code> and <code class="docutils literal notranslate"><span class="pre">fconv_per</span></code>
+(periodic convolution) have corresponding SIMD routines named <code class="docutils literal notranslate"><span class="pre">fconv_avx``and</span>
+<span class="pre">``fconv_per_avx</span></code>. The SIMD routines compute in parallel the decay in cases
+the decay is compose of more than a single fluorescence lifetime.</p>
+<p>The SIMD AVX make use of AVX2 and FMA (Fused Multiply Add). AVX2 and FMA require
+CPUs with ‘modern’ instruction sets. Most x86 CPUs that were manufacture since
+2012 are supported.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -494,13 +503,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 </pre></div>
 </div>
-</div>
-<p>Illustrate the different convolution methods for a computed instrument response function (IRF). Excitation period, i.e., the time between two subsequent excitation pulses Number of micro time channels (usually, linear spacing of micro time channels)</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">period</span> <span class="o">=</span> <span class="mi">16</span>
+<p>Illustrate the different convolution methods for a computed instrument response function (IRF).
+Excitation period, i.e., the time between two subsequent excitation pulses
+Number of micro time channels (usually, linear spacing of micro time channels)</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">period</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="n">n_channels</span> <span class="o">=</span> <span class="mi">4505</span>
 <span class="n">irf_position</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="n">irf_width</span> <span class="o">=</span> <span class="mf">0.25</span>
@@ -513,7 +519,6 @@
 <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">irf</span><span class="p">)</span>
 <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
-</div>
 </div>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -546,11 +551,7 @@
 </tbody>
 </table>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_runs</span> <span class="o">=</span> <span class="mi">50</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_runs</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="n">times</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 <span class="n">times_avx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fconv&quot;</span><span class="p">,</span> <span class="s2">&quot;fconv_per&quot;</span><span class="p">]</span>
@@ -624,7 +625,18 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-fluorescence-decay-plot-convolution-routines-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/cfa464bca756e1746a73055f431d7854/plot_convolution_routines.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_convolution_routines.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c34bc3164edbd59b2a199c8f9c9318a8/plot_convolution_routines.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_convolution_routines.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/98e08256b5f436d4abb6b0b9b98a2333/plot_convolution_routines.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_convolution_routines.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -675,14 +687,14 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_convolution_routines.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_convolution_routines.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

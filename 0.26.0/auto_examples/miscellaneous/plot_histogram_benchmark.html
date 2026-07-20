@@ -19,7 +19,7 @@
 <meta name="description" content="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the tttrlib histogram..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Benchmark of histogram routines &#8212; tttrlib v0.26.1</title>
+    <title>Benchmark of histogram routines &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/miscellaneous/plot_histogram_benchmark';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Make a 1D Histogram" href="plot_histogram_1D.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_benchmark.ipynb.txt">
+    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_benchmark.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,20 +472,32 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Benchmark-of-histogram-routines">
-<h1>Benchmark of histogram routines<a class="headerlink" href="#Benchmark-of-histogram-routines" title="Link to this heading">#</a></h1>
-<p>A direct comparison of the performance of the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> histogram routines outperform numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)</p>
-<p>#.. plot:: ../examples/miscellaneous/histogram_benchmark.py</p>
-<p>The current histogram implementation in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is not particularly optimized for speed, e.g., by making use of multiple cores. Nevertheless, in special cases it outperforms Numpy. This comparison demonstrates that Numpy is optimized for general use cases.</p>
-<div class="admonition note">
-<div class="admonition-title"><h4></div><p>Note</p>
-</h4><p><p>As already stressed above, the histogram routines are (except for the rarely used case of arbitrarily spaced histograms primarily optimized for performance (with room for improvements). The routines are internally used. For other purposes than the applications tested for in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> other libraries, e.g. <a class="reference external" href="https://github.com/boostorg/histogram">Boost histogram</a> are a better choice.</p>
-</p></div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-miscellaneous-plot-histogram-benchmark-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="benchmark-of-histogram-routines">
+<span id="sphx-glr-auto-examples-miscellaneous-plot-histogram-benchmark-py"></span><h1>Benchmark of histogram routines<a class="headerlink" href="#benchmark-of-histogram-routines" title="Link to this heading">#</a></h1>
+<p>A direct comparison of the performance of the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> and the Numpy
+histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for
+arbitrarily spaced histograms the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> histogram routines outperform
+numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a
+factor of ~40 (1D linear Histograms)</p>
+<p>#.. plot:: ../examples/miscellaneous/histogram_benchmark.py</p>
+<p>The current histogram implementation in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> is not particularly
+optimized for speed, e.g., by making use of multiple cores. Nevertheless, in
+special cases it outperforms Numpy. This comparison demonstrates that Numpy is
+optimized for general use cases.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As already stressed above, the histogram routines are (except for the
+rarely used case of arbitrarily spaced histograms primarily optimized for     performance (with room for improvements). The routines are internally used.
+For other purposes than the applications tested for in <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> other libraries, e.g.
+<a class="reference external" href="https://github.com/boostorg/histogram">Boost histogram</a> are a better
+choice.</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
@@ -626,7 +635,18 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-miscellaneous-plot-histogram-benchmark-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/5b223ed61b4e90a18370d52c9a0f319d/plot_histogram_benchmark.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_histogram_benchmark.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/28ed7127172fa6f3fb6732a617efb223/plot_histogram_benchmark.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_histogram_benchmark.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b2d5b14b223f85f0be88f969aaab9852/plot_histogram_benchmark.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_histogram_benchmark.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -671,7 +691,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_benchmark.ipynb.txt">
+    <a href="../../_sources/auto_examples/miscellaneous/plot_histogram_benchmark.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

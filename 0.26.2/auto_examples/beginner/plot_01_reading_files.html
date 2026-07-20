@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/beginner/plot_01_reading_files';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_01_reading_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_01_reading_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,21 +472,27 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Basic-Example-1:-Reading-TTTR-data">
-<h1>Basic Example 1: Reading TTTR data<a class="headerlink" href="#Basic-Example-1:-Reading-TTTR-data" title="Link to this heading">#</a></h1>
-<p>This example mirrors the unit-test data resolution logic and expects the demo PTU files to be available. Set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> to the directory containing the reference data (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>) before building the docs. It shows how to open a TTTR object, inspect its contents, and visualize a few basic properties.</p>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-beginner-plot-01-reading-files-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="basic-example-1-reading-tttr-data">
+<span id="sphx-glr-auto-examples-beginner-plot-01-reading-files-py"></span><h1>Basic Example 1: Reading TTTR data<a class="headerlink" href="#basic-example-1-reading-tttr-data" title="Link to this heading">#</a></h1>
+<p>This example mirrors the unit-test data resolution logic and expects the
+demo PTU files to be available. Set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> to the directory containing
+the reference data (see <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code>) before building the docs. It
+shows how to open a TTTR object, inspect its contents, and visualize a few
+basic properties.</p>
 </section>
-<section id="Notes">
-<h1>Notes<a class="headerlink" href="#Notes" title="Link to this heading">#</a></h1>
+<section id="notes">
+<h1>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h1>
 <ul class="simple">
-<li><p>This script is Sphinx-Gallery friendly: it does not call <code class="docutils literal notranslate"><span class="pre">plt.show()</span></code> and will render figures with a non-interactive backend during doc builds.</p></li>
+<li><p>This script is Sphinx-Gallery friendly: it does not call <code class="docutils literal notranslate"><span class="pre">plt.show()</span></code> and
+will render figures with a non-interactive backend during doc builds.</p></li>
 <li><p>If the demo file cannot be located, a clear error is raised with a helpful hint.</p></li>
 </ul>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -497,13 +500,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
 </pre></div>
 </div>
-</div>
-<p>Open a TTTR data set ——————————————————— The helper below returns the path to the demo PTU file. In real experiments you would read a file instead, e.g. <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR('measurement.ptu')</span></code>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+<p>Open a TTTR data set ———————————————————
+The helper below returns the path to the demo PTU file. In real experiments
+you would read a file instead, e.g. <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR('measurement.ptu')</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="n">data_path</span> <span class="o">=</span> <span class="n">get_data_path</span><span class="p">(</span><span class="s2">&quot;pq/ptu/pq_ptu_hh_t3.ptu&quot;</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
@@ -514,13 +514,11 @@
 <span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data_path</span><span class="p">),</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Inspect the TTTR data ——————————————————– Macro times give the coarse arrival time (laser repetition periods). Micro times resolve the fine delay within the current laser period. Routing channels record which detector/input registered the event.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">num_events</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tttr</span><span class="p">)</span>
+<p>Inspect the TTTR data ——————————————————–
+Macro times give the coarse arrival time (laser repetition periods).
+Micro times resolve the fine delay within the current laser period.
+Routing channels record which detector/input registered the event.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">num_events</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tttr</span><span class="p">)</span>
 <span class="n">macro</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">tttr</span><span class="o">.</span><span class="n">macro_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int64</span></a><span class="p">)</span>   <span class="c1"># shape: (N,)</span>
 <span class="n">micro</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">tttr</span><span class="o">.</span><span class="n">micro_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int32" title="numpy.int32" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int32</span></a><span class="p">)</span>   <span class="c1"># shape: (N,)</span>
 <span class="n">routing</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">tttr</span><span class="o">.</span><span class="n">routing_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int32" title="numpy.int32" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int32</span></a><span class="p">)</span>  <span class="c1"># shape: (N,)</span>
@@ -533,13 +531,9 @@
     <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">&quot;The selected TTTR file contains no events.&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Routing-channel histogram —————————————————- Ensure the example produces plot output so Sphinx-Gallery keeps it.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ch_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">routing</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+<p>Routing-channel histogram —————————————————-
+Ensure the example produces plot output so Sphinx-Gallery keeps it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">ch_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">routing</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
 <span class="n">ch_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">routing</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="c1"># Centered integer bins: [..., k-0.5, k+0.5, ...]</span>
 <span class="n">bin_edges</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="n">ch_min</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">ch_max</span> <span class="o">+</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
@@ -553,13 +547,10 @@
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<p>First 100 micro-times (illustrative) —————————————– The macro time typically increases ~linearly with the event index. For readability, plot a short slice of the micro-time sequence.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sample_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">micro</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+<p>First 100 micro-times (illustrative) —————————————–
+The macro time typically increases ~linearly with the event index. For readability,
+plot a short slice of the micro-time sequence.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sample_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">micro</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
 <span class="n">fig_sample</span><span class="p">,</span> <span class="n">ax_sample</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">2.6</span><span class="p">))</span>
 <span class="n">ax_sample</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="n">sample_size</span><span class="p">),</span> <span class="n">micro</span><span class="p">[:</span><span class="n">sample_size</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
 <span class="n">ax_sample</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Event index&quot;</span><span class="p">)</span>
@@ -568,13 +559,9 @@
 <span class="n">fig_sample</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<p>Micro-time distributions per routing channel ——————————– This reveals fluorescence decay characteristics recorded by each detector channel.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">unique_channels</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.unique.html#numpy.unique" title="numpy.unique" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">unique</span></a><span class="p">(</span><span class="n">routing</span><span class="p">)</span>
+<p>Micro-time distributions per routing channel ——————————–
+This reveals fluorescence decay characteristics recorded by each detector channel.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">unique_channels</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.unique.html#numpy.unique" title="numpy.unique" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">unique</span></a><span class="p">(</span><span class="n">routing</span><span class="p">)</span>
 <span class="n">mt_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">micro</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
 <span class="n">mt_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">micro</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="c1"># Use fixed-width bins over the observed micro-time span (inclusive on the right)</span>
@@ -598,7 +585,18 @@
 <span class="n">fig2</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-beginner-plot-01-reading-files-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7d71590ef84c4ea5dccb334fbdc9b391/plot_01_reading_files.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_01_reading_files.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e2c92f39d0004291ab4d55a2a91b7d17/plot_01_reading_files.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_01_reading_files.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8c6668bcbbb3b57052e12c13a6d0e9db/plot_01_reading_files.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_01_reading_files.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -649,7 +647,7 @@
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Basic Example 1: Reading TTTR data</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Notes">Notes</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
 </ul>
 
   </nav></div>
@@ -657,7 +655,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_01_reading_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_01_reading_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

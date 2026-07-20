@@ -19,7 +19,7 @@
 <meta name="description" content="This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”. Key features demo..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Enhanced BurstFilter: Dynamic Parameter Changes Example &#8212; tttrlib v0.26.1</title>
+    <title>Enhanced BurstFilter: Dynamic Parameter Changes Example &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Burst Analysis with BurstFilter Class and Photon Masking" href="plot_burst_analysis_with_filter.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,34 +472,29 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Enhanced-BurstFilter:-Dynamic-Parameter-Changes-Example">
-<h1>Enhanced BurstFilter: Dynamic Parameter Changes Example<a class="headerlink" href="#Enhanced-BurstFilter:-Dynamic-Parameter-Changes-Example" title="Link to this heading">#</a></h1>
-<p>This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities. Users can now change filter parameters and see previously filtered bursts “reappear”.</p>
-<p>Key features demonstrated:</p>
-<ul class="simple">
-<li><p>Dynamic parameter changes without permanent burst removal</p></li>
-<li><p>Filter state tracking and reapplication</p></li>
-<li><p>Burst reappearance when parameters are relaxed</p></li>
-<li><p>Filter reset and clearing capabilities</p></li>
-</ul>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-burstfilter-dynamic-enhanced-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="enhanced-burstfilter-dynamic-parameter-changes-example">
+<span id="sphx-glr-auto-examples-single-molecule-plot-burstfilter-dynamic-enhanced-py"></span><h1>Enhanced BurstFilter: Dynamic Parameter Changes Example<a class="headerlink" href="#enhanced-burstfilter-dynamic-parameter-changes-example" title="Link to this heading">#</a></h1>
+<p>This example demonstrates the enhanced BurstFilter class with dynamic filtering capabilities.
+Users can now change filter parameters and see previously filtered bursts “reappear”.</p>
+<p>Key features demonstrated:
+- Dynamic parameter changes without permanent burst removal
+- Filter state tracking and reapplication
+- Burst reappearance when parameters are relaxed
+- Filter reset and clearing capabilities</p>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </pre></div>
 </div>
-</div>
-<section id="Load-sample-data">
-<h2>Load sample data<a class="headerlink" href="#Load-sample-data" title="Link to this heading">#</a></h2>
+<section id="load-sample-data">
+<h2>Load sample data<a class="headerlink" href="#load-sample-data" title="Link to this heading">#</a></h2>
 <p>For this example, we’ll use sample data. In practice, you would load your own TTTR files.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Note: This example requires actual TTTR data to run completely.&quot;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Note: This example requires actual TTTR data to run completely.&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;For demonstration purposes, we&#39;ll show the enhanced workflow.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="c1"># In a real scenario, you would load data like this:</span>
@@ -510,16 +502,11 @@
 <span class="c1"># burst_filter = tttrlib.BurstFilter(data)</span>
 </pre></div>
 </div>
-</div>
 </section>
 </section>
-<section id="Enhanced-BurstFilter-Workflow-Demonstration">
-<h1>Enhanced BurstFilter Workflow Demonstration<a class="headerlink" href="#Enhanced-BurstFilter-Workflow-Demonstration" title="Link to this heading">#</a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
+<section id="enhanced-burstfilter-workflow-demonstration">
+<h1>Enhanced BurstFilter Workflow Demonstration<a class="headerlink" href="#enhanced-burstfilter-workflow-demonstration" title="Link to this heading">#</a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ENHANCED BURSTFILTER: Dynamic Filtering Workflow&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
 
@@ -565,15 +552,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">workflow_steps</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Key-Benefits-of-Enhanced-BurstFilter">
-<h1>Key Benefits of Enhanced BurstFilter<a class="headerlink" href="#Key-Benefits-of-Enhanced-BurstFilter" title="Link to this heading">#</a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">benefits</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<section id="key-benefits-of-enhanced-burstfilter">
+<h1>Key Benefits of Enhanced BurstFilter<a class="headerlink" href="#key-benefits-of-enhanced-burstfilter" title="Link to this heading">#</a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">benefits</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">KEY BENEFITS OF ENHANCED BURSTFILTER:</span>
 
 <span class="s2">✅ DYNAMIC PARAMETER CHANGES</span>
@@ -605,15 +587,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">benefits</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Code-Example-for-Dynamic-Filtering">
-<h1>Code Example for Dynamic Filtering<a class="headerlink" href="#Code-Example-for-Dynamic-Filtering" title="Link to this heading">#</a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">code_example</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<section id="code-example-for-dynamic-filtering">
+<h1>Code Example for Dynamic Filtering<a class="headerlink" href="#code-example-for-dynamic-filtering" title="Link to this heading">#</a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">code_example</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
 <span class="s1"># Enhanced BurstFilter usage example</span>
 
 <span class="s1">import tttrlib</span>
@@ -653,15 +630,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">code_example</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Testing-the-Enhanced-Functionality">
-<h1>Testing the Enhanced Functionality<a class="headerlink" href="#Testing-the-Enhanced-Functionality" title="Link to this heading">#</a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+<section id="testing-the-enhanced-functionality">
+<h1>Testing the Enhanced Functionality<a class="headerlink" href="#testing-the-enhanced-functionality" title="Link to this heading">#</a></h1>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TESTING ENHANCED FUNCTIONALITY&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
 
@@ -711,7 +683,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">70</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-burstfilter-dynamic-enhanced-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/916f82bf10f93e248271d873930b8ad6/plot_burstfilter_dynamic_enhanced.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_burstfilter_dynamic_enhanced.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7801d1c8cf7bbfce51f1a2262e5618d8/plot_burstfilter_dynamic_enhanced.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_burstfilter_dynamic_enhanced.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ae9c1dd2afd2e31c1b9b6f211da33c68/plot_burstfilter_dynamic_enhanced.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_burstfilter_dynamic_enhanced.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -762,13 +745,13 @@
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Enhanced BurstFilter: Dynamic Parameter Changes Example</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-sample-data">Load sample data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-sample-data">Load sample data</a></li>
 </ul>
 </li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Enhanced-BurstFilter-Workflow-Demonstration">Enhanced BurstFilter Workflow Demonstration</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Key-Benefits-of-Enhanced-BurstFilter">Key Benefits of Enhanced BurstFilter</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Code-Example-for-Dynamic-Filtering">Code Example for Dynamic Filtering</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Testing-the-Enhanced-Functionality">Testing the Enhanced Functionality</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#enhanced-burstfilter-workflow-demonstration">Enhanced BurstFilter Workflow Demonstration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#key-benefits-of-enhanced-burstfilter">Key Benefits of Enhanced BurstFilter</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#code-example-for-dynamic-filtering">Code Example for Dynamic Filtering</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-the-enhanced-functionality">Testing the Enhanced Functionality</a></li>
 </ul>
 
   </nav></div>
@@ -776,7 +759,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

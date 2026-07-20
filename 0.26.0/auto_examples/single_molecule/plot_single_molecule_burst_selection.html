@@ -19,7 +19,7 @@
 <meta name="description" content="The function tttrlib.ranges_by_time_window can be used to define ranges in a photon stream based on time windows and a minimum number of photons within the time windows. The function has two main p..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Burst selection routines &#8212; tttrlib v0.26.1</title>
+    <title>Burst selection routines &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_single_molecule_burst_selection';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Minimal Microtime Range Selection Example" href="plot_microtime_selection_minimal.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_burst_selection.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_burst_selection.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,41 +472,50 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Burst-selection-routines">
-<h1>Burst selection routines<a class="headerlink" href="#Burst-selection-routines" title="Link to this heading">#</a></h1>
-<p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.ranges_by_time_window</span></code> can be used to define ranges in a photon stream based on time windows and a minimum number of photons within the time windows. The function has two main parameters that determine the selection of the ranges besides the stream of time events provided by the parameter <code class="docutils literal notranslate"><span class="pre">time</span></code>:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. The minimum window length ``minimum_window_length``
-2. The minimum number of photons in a time window ``minimum_number_of_photons_in_time_window``
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-burst-selection-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
+<section class="sphx-glr-example-title" id="burst-selection-routines">
+<span id="sphx-glr-auto-examples-single-molecule-plot-single-molecule-burst-selection-py"></span><h1>Burst selection routines<a class="headerlink" href="#burst-selection-routines" title="Link to this heading">#</a></h1>
+<p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.ranges_by_time_window</span></code> can be used to define ranges in
+a photon stream based on time windows and a minimum number of photons within
+the time windows. The function has two main parameters that determine the
+selection of the ranges besides the stream of time events provided by the
+parameter <code class="docutils literal notranslate"><span class="pre">time</span></code>:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>The minimum window length <code class="docutils literal notranslate"><span class="pre">minimum_window_length</span></code></p></li>
+<li><p>The minimum number of photons in a time window <code class="docutils literal notranslate"><span class="pre">minimum_number_of_photons_in_time_window</span></code></p></li>
+</ol>
+</div></blockquote>
 <p>Additional parameters to discriminate bursts are:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>3. The maximum allowed window length ``maximum_window_length``
-4. The maximum number of events in a window ``maximum_number_of_photons_in_time_window``
-</pre></div>
-</div>
+<blockquote>
+<div><ol class="arabic simple" start="3">
+<li><p>The maximum allowed window length <code class="docutils literal notranslate"><span class="pre">maximum_window_length</span></code></p></li>
+<li><p>The maximum number of events in a window <code class="docutils literal notranslate"><span class="pre">maximum_number_of_photons_in_time_window</span></code></p></li>
+</ol>
+</div></blockquote>
 <p>The parameters of the C function and the function header are shown below</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>void ranges_by_time_window(
-        int **output, int *n_output,
-        unsigned long long *input, int n_input,
-        double minimum_window_length,
-        double maximum_window_length=-1,
-        int minimum_number_of_photons_in_time_window=-1,
-        int maximum_number_of_photons_in_time_window=-1,
-        double macro_time_calibration=1.0,
-        bool invert=false
-)
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">ranges_by_time_window</span><span class="p">(</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="o">**</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">n_output</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="o">*</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n_input</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">minimum_window_length</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">maximum_window_length</span><span class="o">=</span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">minimum_number_of_photons_in_time_window</span><span class="o">=</span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">maximum_number_of_photons_in_time_window</span><span class="o">=</span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">macro_time_calibration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">invert</span><span class="o">=</span><span class="nb">false</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>The units of the macro time are defined by the parameter <code class="docutils literal notranslate"><span class="pre">macro_time_calibration</span></code>.</p>
-<p>For a given TTTR object the functionality is provided by the method <code class="docutils literal notranslate"><span class="pre">TTTR.get_time_window_ranges</span></code>. A typical use case of this function is to select single molecule events confocal single-molecule FRET experiments as shown below.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<p>For a given TTTR object the functionality is provided by the method
+<code class="docutils literal notranslate"><span class="pre">TTTR.get_time_window_ranges</span></code>. A typical use case of this function is
+to select single molecule events confocal single-molecule FRET experiments as
+shown below.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -530,13 +536,10 @@
             <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%i</span><span class="se">\t</span><span class="si">%i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-<p>This selects ranges in the event stream with a length of at least 250 microseconds with that with at least 20 events. This selection will select “bright” regions in the event stream.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_window_length</span> <span class="o">=</span> <span class="mf">2e-3</span> <span class="c1"># 2 millisecond</span>
+<p>This selects ranges in the event stream with a length of at least 250 microseconds
+with that with at least 20 events. This selection will select “bright” regions in
+the event stream.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_window_length</span> <span class="o">=</span> <span class="mf">2e-3</span> <span class="c1"># 2 millisecond</span>
 <span class="n">maximum_window_length</span> <span class="o">=</span> <span class="mf">30e-3</span> <span class="c1"># 30 millisecond / optional parameter</span>
 <span class="n">tw_ranges</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span>
     <span class="n">minimum_window_length</span><span class="o">=</span><span class="n">minimum_window_length</span><span class="p">,</span>
@@ -545,26 +548,18 @@
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>The method returns an array of indices that mark the start and the stop of the time window in the TTTR events (start1, stop1, start2, stop2, …).</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">start_stop</span> <span class="o">=</span> <span class="n">tw_ranges</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">tw_ranges</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<p>The method returns an array of indices that mark the start and the stop of the
+time window in the TTTR events (start1, stop1, start2, stop2, …).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">start_stop</span> <span class="o">=</span> <span class="n">tw_ranges</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">tw_ranges</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="n">sel</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">start_stop</span><span class="p">:</span>
     <span class="n">sel</span> <span class="o">+=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
 <span class="n">sel</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Select the “green” donor and the “red” acceptor events separately for plotting and compute intensity traces The selection is plotted in blue.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">green_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+<p>Select the “green” donor and the “red” acceptor events separately for plotting and
+compute intensity traces The selection is plotted in blue.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">green_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
 <span class="n">red_indices</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
 
 <span class="n">intensity_trace_green</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">green_indices</span><span class="p">]</span><span class="o">.</span><span class="n">get_intensity_trace</span><span class="p">(</span><span class="n">maximum_window_length</span><span class="p">)</span>
@@ -572,13 +567,8 @@
 <span class="n">bursts_selected</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span><span class="o">.</span><span class="n">get_intensity_trace</span><span class="p">(</span><span class="n">maximum_window_length</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 <p>Save the traces to files</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># folder = &quot;S:/Papers/00_in_preparation/tttrlib/Figures/Fig1_Introduction/&quot;</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># folder = &quot;S:/Papers/00_in_preparation/tttrlib/Figures/Fig1_Introduction/&quot;</span>
 <span class="c1"># np.savetxt(folder + &quot;red_trace.txt&quot;, intensity_trace_red)</span>
 <span class="c1"># np.savetxt(folder + &quot;green_trace.txt&quot;, intensity_trace_green)</span>
 <span class="c1"># np.savetxt(folder + &quot;bursts_selected.txt&quot;, bursts_selected)</span>
@@ -602,7 +592,18 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-burst-selection-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4217f83f949a6f2f5476682928a14b4c/plot_single_molecule_burst_selection.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_single_molecule_burst_selection.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/50668274e02a5d367c739b7503fbf251/plot_single_molecule_burst_selection.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_single_molecule_burst_selection.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/225a28e3fd6739814bade205843cd872/plot_single_molecule_burst_selection.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_single_molecule_burst_selection.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -647,7 +648,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_burst_selection.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_burst_selection.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

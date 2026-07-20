@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/flim/plot_phasor';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_phasor.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_phasor.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,17 +472,30 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Phasor-analysis-of-images">
-<h1>Phasor analysis of images<a class="headerlink" href="#Phasor-analysis-of-images" title="Link to this heading">#</a></h1>
-<section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">#</a></h2>
-<p>Changing the data representation from the classical time delay histogram to the phasor representation provides a global view of the fluorescence decay at each pixel of an image. In the phasor representation we can easily recognize the presence of different molecular species in a pixel or the occurrence of fluorescence resonance energy transfer. The analysis of the fluorescence lifetime imaging microscopy (FLIM) data in the phasor space is done observing clustering of pixels values in specific
-regions of the phasor plot rather than by fitting the fluorescence decay using exponentials. The analysis is instantaneous since is not based on calculations or nonlinear fitting. The phasor approach has the potential to simplify the way data are analyzed in FLIM, paving the way for the analysis of large data sets and, in general, making the FLIM technique accessible to the nonexpert in spectroscopy and data analysis :cite:<code class="docutils literal notranslate"><span class="pre">DIGMAN2008L14</span></code>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-flim-plot-phasor-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
+<section class="sphx-glr-example-title" id="phasor-analysis-of-images">
+<span id="sphx-glr-auto-examples-flim-plot-phasor-py"></span><h1>Phasor analysis of images<a class="headerlink" href="#phasor-analysis-of-images" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Changing the data representation from the classical time delay
+histogram to the phasor representation provides a global view
+of the fluorescence decay at each pixel of an image. In the phasor
+representation we can easily recognize the presence of different
+molecular species in a pixel or the occurrence of fluorescence
+resonance energy transfer. The analysis of the fluorescence lifetime
+imaging microscopy (FLIM) data in the phasor space is done observing
+clustering of pixels values in specific regions of the phasor plot rather
+than by fitting the fluorescence decay using exponentials. The
+analysis is instantaneous since is not based on calculations or nonlinear
+fitting. The phasor approach has the potential to simplify the way data
+are analyzed in FLIM, paving the way for the analysis of large data sets
+and, in general, making the FLIM technique accessible to the nonexpert
+in spectroscopy and data analysis <span class="bibtex-citation" id="id1">[]</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -496,13 +506,8 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
 <span class="n">DATA_ROOT</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 <p>Read data of the CLSM image</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/crn_clv_img.ht3&#39;</span><span class="p">))</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/crn_clv_img.ht3&#39;</span><span class="p">))</span>
 <span class="c1"># Macro time in header missing</span>
 <span class="n">ht3_reading_parameter</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;marker_frame_start&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">],</span>
@@ -534,13 +539,9 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
 <span class="n">phasor_x_1d_1</span><span class="p">,</span> <span class="n">phasor_y_1d_1</span> <span class="o">=</span> <span class="n">phasor_1d</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">phasor_1d</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-</div>
-<p>ssas IRF correction</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_mirror</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/crn_clv_mirror.ht3&#39;</span><span class="p">))</span>
+<p>ssas
+IRF correction</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">data_mirror</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/crn_clv_mirror.ht3&#39;</span><span class="p">))</span>
 <span class="n">data_irf</span> <span class="o">=</span> <span class="n">data_mirror</span><span class="p">[</span><span class="n">data_mirror</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]</span>
 <span class="n">phasor</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_phasor</span><span class="p">(</span>
     <span class="n">tttr_irf</span><span class="o">=</span><span class="n">data_irf</span><span class="p">,</span>
@@ -555,13 +556,8 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
 <span class="n">phasor_x_1d_2</span><span class="p">,</span> <span class="n">phasor_y_1d_2</span> <span class="o">=</span> <span class="n">phasor_1d</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">phasor_1d</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-</div>
 <p>Plot histogram of pixels phasors</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">hist_settings</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">hist_settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;bins&#39;</span><span class="p">:</span> <span class="mi">101</span><span class="p">,</span>
     <span class="s1">&#39;range&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)),</span>
     <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;inferno&#39;</span>
@@ -595,13 +591,9 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<p>The both phasor values can be inspected by mapping them to colors.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">phasor_clr</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><span class="n">phasor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">phasor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
+<p>The both phasor values can be inspected by mapping them to
+colors.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">phasor_clr</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">((</span><span class="n">phasor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">phasor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
 <span class="n">phasor_xc</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.clip.html#numpy.clip" title="numpy.clip" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">clip</span></a><span class="p">(</span><span class="n">phasor_x</span> <span class="o">*</span> <span class="mf">0.59</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">phasor_yc</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.clip.html#numpy.clip" title="numpy.clip" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">clip</span></a><span class="p">(</span><span class="n">phasor_y</span> <span class="o">*</span> <span class="mf">1.45</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">phasor_clr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">phasor_xc</span>
@@ -610,7 +602,18 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-flim-plot-phasor-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2a7e6f8ab34e92d766181385834bda3a/plot_phasor.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_phasor.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/56867079b27ef39ab1d8f8b7792679fa/plot_phasor.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_phasor.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e7d07474358e837070aa93a1d4e56f16/plot_phasor.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_phasor.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -661,14 +664,14 @@ regions of the phasor plot rather than by fitting the fluorescence decay using e
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_phasor.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_phasor.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

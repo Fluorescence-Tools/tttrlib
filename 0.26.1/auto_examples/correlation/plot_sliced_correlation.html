@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/correlation/plot_sliced_correlation';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_sliced_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_sliced_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,22 +472,37 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Correlation-of-sliced-TTTR-objects">
-<h1>Correlation of sliced TTTR objects<a class="headerlink" href="#Correlation-of-sliced-TTTR-objects" title="Link to this heading">#</a></h1>
-<section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">#</a></h2>
-<p>Fluorescence Correlation Spectroscopy (FCS) in cells often suffers from artifacts caused by bright aggregates or vesicles, depletion of fluorophores or bleaching of a fluorescent background. A common practice is to record multiple FCS curves and reject manually FCS curves. When recording TTTR data that is later correlated the processing of the data, i.e., the computation of FCS curves and the sorting based on certain criteria :cite:<code class="docutils literal notranslate"><span class="pre">Ries2010</span></code> can be automated to greatly simplify and accelerate
-the data analysis.</p>
-<p>Here, we demonstrate how to use tttrlib to slice data into subsets and correlate the subsets individually. The output of such a procedure can be used as an input to select and discriminate perturbed FCS curves for automated suppression of sample-related artifacts in Fluorescence Correlation Spectroscopy.</p>
-</section>
-<section id="Implementation">
-<h2>Implementation<a class="headerlink" href="#Implementation" title="Link to this heading">#</a></h2>
-<p>First, we import libraries to read the data into a new TTTR container. We inspect the header to find header tags that inform on the macro time calibration. We print the content of the data header as is can be useful for asserting correct correlation parameters in later steps.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-sliced-correlation-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="correlation-of-sliced-tttr-objects">
+<span id="sphx-glr-auto-examples-correlation-plot-sliced-correlation-py"></span><h1>Correlation of sliced TTTR objects<a class="headerlink" href="#correlation-of-sliced-tttr-objects" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Fluorescence Correlation Spectroscopy (FCS) in cells often
+suffers from artifacts caused by bright aggregates or vesicles,
+depletion of fluorophores or bleaching of a fluorescent background.
+A common practice is to record multiple FCS curves and reject
+manually FCS curves. When recording TTTR data that is later correlated
+the processing of the data, i.e., the computation of FCS curves
+and the sorting based on certain criteria <span class="bibtex-citation" id="id1">[]</span> can be
+automated to greatly simplify and accelerate the data analysis.</p>
+<p>Here, we demonstrate how to use tttrlib to slice data into subsets
+and correlate the subsets individually. The output of such a procedure
+can be used as an input to select and discriminate perturbed FCS
+curves for automated suppression of sample-related artifacts in
+Fluorescence Correlation Spectroscopy.</p>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading">#</a></h2>
+<p>First, we import libraries to read the data into a new TTTR container.
+We inspect the header to find header tags that inform
+on the macro time calibration. We print the content of the data header
+as is can be useful for asserting correct correlation parameters in later
+steps.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -501,48 +513,39 @@ the data analysis.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_json</span><span class="p">())</span>
 </pre></div>
 </div>
-</div>
-<p>Here, we manually compute the calibration. This may not be necessary in many cases.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<p>Here, we manually compute the calibration. This may not be
+necessary in many cases.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">time_calibration</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="s1">&#39;MeasDesc_GlobalResolution&#39;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">time_calibration</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="s1">&#39;MeasDesc_GlobalResolution&#39;</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<p>Next, we plan to split the TTTR data into separate data chunks. Here, chunk the data into at least 5 seconds long pieces. The method <code class="docutils literal notranslate"><span class="pre">get_ranges_by_time_window</span></code> returns a one-dimensional array with the beginning and the end index of each chunk. Later, we will use these start/stop indices to define TTTR slices that will be correlated. To slice the data into time windows we use the macro time calibration we computed previously. Note, the last chunk can be shorter than the specified time.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_window_length</span> <span class="o">=</span> <span class="mf">5.0</span>  <span class="c1"># in seconds</span>
+<p>Next, we plan to split the TTTR data into separate data chunks. Here, chunk
+the data into at least 5 seconds long pieces. The method <code class="docutils literal notranslate"><span class="pre">get_ranges_by_time_window</span></code>
+returns a one-dimensional array with the beginning and the end index of each
+chunk. Later, we will use these start/stop indices to define TTTR slices
+that will be correlated. To slice the data into time windows we use the
+macro time calibration we computed previously. Note, the last chunk can
+be shorter than the specified time.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_window_length</span> <span class="o">=</span> <span class="mf">5.0</span>  <span class="c1"># in seconds</span>
 <span class="n">time_windows</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_ranges_by_time_window</span><span class="p">(</span>
     <span class="n">minimum_window_length</span><span class="p">,</span> <span class="n">macro_time_calibration</span><span class="o">=</span><span class="n">time_calibration</span><span class="p">)</span>
 <span class="n">start_stop</span> <span class="o">=</span> <span class="n">time_windows</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">time_windows</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">start_stop</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Before correlating the data, we define the number of bins and the number of coarsening steps for the multi-tau correlation algorithm and create a new correlator instance.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corr_settings</span> <span class="o">=</span> <span class="p">{</span>
+<p>Before correlating the data, we define the number of bins and the number
+of coarsening steps for the multi-tau correlation algorithm and create
+a new correlator instance.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">corr_settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
     <span class="s2">&quot;n_casc&quot;</span><span class="p">:</span> <span class="mi">30</span>
 <span class="p">}</span>
 <span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span><span class="o">**</span><span class="n">corr_settings</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>We print the used routing channels and define the routing channels that should be used in the correlation as a first and second correlation channel.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">used_routing_channels</span><span class="p">)</span>
+<p>We print the used routing channels and define the routing channels
+that should be used in the correlation as a first and second correlation
+channel.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">used_routing_channels</span><span class="p">)</span>
 <span class="n">ch1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">ch2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
@@ -563,13 +566,9 @@ the data analysis.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">correlations</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Finally, we compute the correlation for all data and plot all correlations for all subsets.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
+<p>Finally, we compute the correlation for all data and plot all correlations
+for all subsets.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">correlator</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Correlator</span><span class="p">(</span>
     <span class="n">tttr</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
     <span class="n">channels</span><span class="o">=</span><span class="p">(</span><span class="n">ch1</span><span class="p">,</span> <span class="n">ch2</span><span class="p">),</span>
     <span class="o">**</span><span class="n">corr_settings</span>
@@ -591,8 +590,21 @@ the data analysis.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<p>Slicing data and correlating photon traces of data subsets can be
+useful to discriminate artifacts or to estimate the noise of experimental
+correlation curves.</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-sliced-correlation-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/169dffd9d6ebf8b3c25cb532b27d24cc/plot_sliced_correlation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_sliced_correlation.ipynb</span></code></a></p>
 </div>
-<p>Slicing data and correlating photon traces of data subsets can be useful to discriminate artifacts or to estimate the noise of experimental correlation curves.</p>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/a087b3e1db74461390801e37ff8a55f2/plot_sliced_correlation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_sliced_correlation.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/64dfe53b51e8da08e020d70a78774451/plot_sliced_correlation.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_sliced_correlation.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -643,15 +655,15 @@ the data analysis.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Introduction">Introduction</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Implementation">Implementation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation">Implementation</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_sliced_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_sliced_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/image_correlation/plot_imaging_ics_numpy.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input." />
+<meta property="og:description" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input. Download Jupyter notebook: plot_imaging_ics_numpy.ipynb Download Python so..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_image_correlation_plot_imaging_ics_numpy_28497655.png" />
-<meta property="og:image:alt" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input." />
-<meta name="description" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input." />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_image_correlation_plot_imaging_ics_numpy_1a9bb009.png" />
+<meta property="og:image:alt" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input. Download Jupyter notebook: plot_imaging_ics_numpy.ipynb Download Python so..." />
+<meta name="description" content="Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input. Download Jupyter notebook: plot_imaging_ics_numpy.ipynb Download Python so..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Computing ICS data by numpy &#8212; tttrlib v0.26.1</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/image_correlation/plot_imaging_ics_numpy';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/image_correlation/plot_imaging_ics_numpy.ipynb.txt">
+    <a href="../../_sources/auto_examples/image_correlation/plot_imaging_ics_numpy.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,14 +472,16 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Computing-ICS-data-by-numpy">
-<h1>Computing ICS data by numpy<a class="headerlink" href="#Computing-ICS-data-by-numpy" title="Link to this heading">#</a></h1>
-<p>Demonstrate the use of the tttrlib ICS features and compare to numpy ICS implementation when using normal images as input.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-image-correlation-plot-imaging-ics-numpy-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<section class="sphx-glr-example-title" id="computing-ics-data-by-numpy">
+<span id="sphx-glr-auto-examples-image-correlation-plot-imaging-ics-numpy-py"></span><h1>Computing ICS data by numpy<a class="headerlink" href="#computing-ics-data-by-numpy" title="Link to this heading">#</a></h1>
+<p>Demonstrate the use of the tttrlib ICS features and compare to
+numpy ICS implementation when using normal images as input.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -574,7 +573,18 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-image-correlation-plot-imaging-ics-numpy-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/f4241b77743af19157ef4cbd9336e4a5/plot_imaging_ics_numpy.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_imaging_ics_numpy.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c3451c80396ffdf1317ca05bee921fa3/plot_imaging_ics_numpy.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_imaging_ics_numpy.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/66175aa0b308ff8e5ade03143ef65546/plot_imaging_ics_numpy.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_imaging_ics_numpy.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -619,7 +629,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/image_correlation/plot_imaging_ics_numpy.ipynb.txt">
+    <a href="../../_sources/auto_examples/image_correlation/plot_imaging_ics_numpy.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

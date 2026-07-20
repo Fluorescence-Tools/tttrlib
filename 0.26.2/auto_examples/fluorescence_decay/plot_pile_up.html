@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/fluorescence_decay/plot_pile_up.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up." />
+<meta property="og:description" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up. Download Jupyter ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
 <meta property="og:image" content="_images/social_previews/summary_auto_examples_fluorescence_decay_plot_pile_up_e033e422.png" />
-<meta property="og:image:alt" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up." />
-<meta name="description" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up." />
+<meta property="og:image:alt" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up. Download Jupyter ..." />
+<meta name="description" content="This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up. Download Jupyter ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Pile-up &#8212; tttrlib v0.26.2</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/fluorescence_decay/plot_pile_up';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_pile_up.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_pile_up.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,14 +472,17 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Pile-up">
-<h1>Pile-up<a class="headerlink" href="#Pile-up" title="Link to this heading">#</a></h1>
-<p>This example illustrates the effect of pile up on the shape of fluorescence decay curves and demonstrates how the shape of a model function can be modified to account for pile up.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-fluorescence-decay-plot-pile-up-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
+<section class="sphx-glr-example-title" id="pile-up">
+<span id="sphx-glr-auto-examples-fluorescence-decay-plot-pile-up-py"></span><h1>Pile-up<a class="headerlink" href="#pile-up" title="Link to this heading">#</a></h1>
+<p>This example illustrates the effect of pile up on the shape of fluorescence decay
+curves and demonstrates how the shape of a model function can be modified to
+account for pile up.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -573,7 +573,18 @@
 <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-fluorescence-decay-plot-pile-up-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/af4fcb35fc5b9f899c748a94f025bb1d/plot_pile_up.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_pile_up.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/04f629cc6deda8429f246ebe8ffa9401/plot_pile_up.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_pile_up.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4ab93074b8528de5be89db168e5a02c4/plot_pile_up.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_pile_up.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -618,7 +629,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_pile_up.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_pile_up.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

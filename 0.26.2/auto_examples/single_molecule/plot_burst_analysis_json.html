@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/single_molecule/plot_burst_analysis_json.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Note This example requires a T..." />
+<meta property="og:description" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Import required libraries Load..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
 <meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_burst_analysis_json_12a264e3.png" />
-<meta property="og:image:alt" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Note This example requires a T..." />
-<meta name="description" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Note This example requires a T..." />
+<meta property="og:image:alt" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Import required libraries Load..." />
+<meta name="description" content="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files. Import required libraries Load..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Burst Analysis with JSON Parameter Support &#8212; tttrlib v0.26.2</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_burst_analysis_json';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_json.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_json.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,32 +472,29 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Burst-Analysis-with-JSON-Parameter-Support">
-<h1>Burst Analysis with JSON Parameter Support<a class="headerlink" href="#Burst-Analysis-with-JSON-Parameter-Support" title="Link to this heading">#</a></h1>
-<p>This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files.</p>
-<div class="admonition note">
-<div class="admonition-title"><h4></div><p>Note</p>
-</h4><p><p>This example requires a TTTR file. We use a sample file for demonstration.</p>
-</p></div>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-burst-analysis-json-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="burst-analysis-with-json-parameter-support">
+<span id="sphx-glr-auto-examples-single-molecule-plot-burst-analysis-json-py"></span><h1>Burst Analysis with JSON Parameter Support<a class="headerlink" href="#burst-analysis-with-json-parameter-support" title="Link to this heading">#</a></h1>
+<p>This example demonstrates burst analysis using the BurstFilter class with JSON
+parameter serialization support. Parameters can be saved to and loaded from JSON files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example requires a TTTR file. We use a sample file for demonstration.</p>
+</div>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 </pre></div>
 </div>
-</div>
-<section id="Load-data">
-<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 
 <span class="c1"># Read the files from the tttrlib-data repository</span>
@@ -514,27 +508,17 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-BurstFilter-instance">
-<h2>Create BurstFilter instance<a class="headerlink" href="#Create-BurstFilter-instance" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<section id="create-burstfilter-instance">
+<h2>Create BurstFilter instance<a class="headerlink" href="#create-burstfilter-instance" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
 </section>
-<section id="Set-and-save-burst-parameters-to-JSON">
-<h2>Set and save burst parameters to JSON<a class="headerlink" href="#Set-and-save-burst-parameters-to-JSON" title="Link to this heading">#</a></h2>
+<section id="set-and-save-burst-parameters-to-json">
+<h2>Set and save burst parameters to JSON<a class="headerlink" href="#set-and-save-burst-parameters-to-json" title="Link to this heading">#</a></h2>
 <p>Configure burst search parameters</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bf</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bf</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
     <span class="n">min_photons</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>      <span class="c1"># L: minimum photons per burst</span>
     <span class="n">window_photons</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>   <span class="c1"># m: window size (photons)</span>
     <span class="n">window_time_max</span><span class="o">=</span><span class="mf">0.5e-3</span>  <span class="c1"># T: window duration in seconds (0.5ms)</span>
@@ -551,70 +535,45 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Burst parameters saved to burst_parameters.json&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Load-parameters-from-JSON">
-<h2>Load parameters from JSON<a class="headerlink" href="#Load-parameters-from-JSON" title="Link to this heading">#</a></h2>
+<section id="load-parameters-from-json">
+<h2>Load parameters from JSON<a class="headerlink" href="#load-parameters-from-json" title="Link to this heading">#</a></h2>
 <p>Create a new BurstFilter instance</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bf2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bf2</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 
 <span class="c1"># Load parameters from JSON file</span>
 <span class="n">bf2</span><span class="o">.</span><span class="n">load_parameters</span><span class="p">(</span><span class="s2">&quot;burst_parameters.json&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Burst parameters loaded from burst_parameters.json&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Verify-parameters">
-<h2>Verify parameters<a class="headerlink" href="#Verify-parameters" title="Link to this heading">#</a></h2>
+<section id="verify-parameters">
+<h2>Verify parameters<a class="headerlink" href="#verify-parameters" title="Link to this heading">#</a></h2>
 <p>Convert to dict and print for verification</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">params_dict</span> <span class="o">=</span> <span class="n">bf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">params_dict</span> <span class="o">=</span> <span class="n">bf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Saved parameters:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><a href="https://docs.python.org/3/library/json.html#json.dumps" title="json.dumps" class="sphx-glr-backref-module-json sphx-glr-backref-type-py-function"><span class="n">json</span><span class="o">.</span><span class="n">dumps</span></a><span class="p">(</span><span class="n">params_dict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Perform-burst-search-with-loaded-parameters">
-<h2>Perform burst search with loaded parameters<a class="headerlink" href="#Perform-burst-search-with-loaded-parameters" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bursts_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
+<section id="perform-burst-search-with-loaded-parameters">
+<h2>Perform burst search with loaded parameters<a class="headerlink" href="#perform-burst-search-with-loaded-parameters" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bursts_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bursts_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts using loaded parameters&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Estimate-background-rates">
-<h2>Estimate background rates<a class="headerlink" href="#Estimate-background-rates" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">background_rates</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">estimate_background</span><span class="p">()</span>
+<section id="estimate-background-rates">
+<h2>Estimate background rates<a class="headerlink" href="#estimate-background-rates" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">background_rates</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">estimate_background</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated background rates in </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">background_rates</span><span class="p">)</span><span class="si">}</span><span class="s2"> time periods&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Filter-bursts">
-<h2>Filter bursts<a class="headerlink" href="#Filter-bursts" title="Link to this heading">#</a></h2>
+<section id="filter-bursts">
+<h2>Filter bursts<a class="headerlink" href="#filter-bursts" title="Link to this heading">#</a></h2>
 <p>Filter by size</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">size_filtered_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">filter_by_size</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">size_filtered_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">filter_by_size</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">size_filtered_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts by size (20-1000 photons)&quot;</span><span class="p">)</span>
 
 <span class="c1"># Filter by duration</span>
@@ -626,28 +585,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bg_filtered_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts by background ratio (≤5.0)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Merge-bursts">
-<h2>Merge bursts<a class="headerlink" href="#Merge-bursts" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">merged_bursts_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">merge_bursts</span><span class="p">(</span><span class="n">max_gap</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<section id="merge-bursts">
+<h2>Merge bursts<a class="headerlink" href="#merge-bursts" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">merged_bursts_np</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">merge_bursts</span><span class="p">(</span><span class="n">max_gap</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Merged to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">merged_bursts_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Get-burst-properties">
-<h2>Get burst properties<a class="headerlink" href="#Get-burst-properties" title="Link to this heading">#</a></h2>
+<section id="get-burst-properties">
+<h2>Get burst properties<a class="headerlink" href="#get-burst-properties" title="Link to this heading">#</a></h2>
 <p>Legacy: raw list of lists (from C++), converted to matrix below for convenience</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_properties</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">get_all_burst_properties</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_properties</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">get_all_burst_properties</span><span class="p">()</span>
 
 <span class="c1"># Preferred: structured NumPy array with named fields</span>
 <span class="n">props_struct</span> <span class="o">=</span> <span class="n">bf2</span><span class="o">.</span><span class="n">burst_properties</span>
@@ -687,16 +636,11 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No bursts detected with current parameters.&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Export-burst-data-to-JSON">
-<h2>Export burst data to JSON<a class="headerlink" href="#Export-burst-data-to-JSON" title="Link to this heading">#</a></h2>
+<section id="export-burst-data-to-json">
+<h2>Export burst data to JSON<a class="headerlink" href="#export-burst-data-to-json" title="Link to this heading">#</a></h2>
 <p>Create a dictionary with burst analysis results</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;total_events&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
     <span class="s2">&quot;bursts_found&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts_np</span><span class="p">),</span>
     <span class="s2">&quot;background_periods&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">background_rates</span><span class="p">),</span>
@@ -716,7 +660,18 @@
 <span class="nb">print</span><span class="p">(</span><a href="https://docs.python.org/3/library/json.html#json.dumps" title="json.dumps" class="sphx-glr-backref-module-json sphx-glr-backref-type-py-function"><span class="n">json</span><span class="o">.</span><span class="n">dumps</span></a><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-burst-analysis-json-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/78dbb61fdb5cdc7b2f6f485250b04145/plot_burst_analysis_json.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_burst_analysis_json.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d634dd93eae322acf2a0df9dd1979bb9/plot_burst_analysis_json.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_burst_analysis_json.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8f1a3467e7490b71ad3db88652f45df4/plot_burst_analysis_json.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_burst_analysis_json.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -767,24 +722,24 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-data">Load data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-BurstFilter-instance">Create BurstFilter instance</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Set-and-save-burst-parameters-to-JSON">Set and save burst parameters to JSON</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-parameters-from-JSON">Load parameters from JSON</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Verify-parameters">Verify parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Perform-burst-search-with-loaded-parameters">Perform burst search with loaded parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Estimate-background-rates">Estimate background rates</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Filter-bursts">Filter bursts</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Merge-bursts">Merge bursts</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Get-burst-properties">Get burst properties</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Export-burst-data-to-JSON">Export burst data to JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-burstfilter-instance">Create BurstFilter instance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-and-save-burst-parameters-to-json">Set and save burst parameters to JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-parameters-from-json">Load parameters from JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-parameters">Verify parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perform-burst-search-with-loaded-parameters">Perform burst search with loaded parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimate-background-rates">Estimate background rates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filter-bursts">Filter bursts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#merge-bursts">Merge bursts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-burst-properties">Get burst properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-burst-data-to-json">Export burst data to JSON</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_json.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_json.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

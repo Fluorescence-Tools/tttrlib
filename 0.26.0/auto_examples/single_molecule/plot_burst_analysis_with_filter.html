@@ -19,7 +19,7 @@
 <meta name="description" content="This example demonstrates burst analysis using the BurstFilter class with photon masking. Photon masking allows you to pre-filter photons by channel, microtime, or other criteria before performing ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Burst Analysis with BurstFilter Class and Photon Masking &#8212; tttrlib v0.26.1</title>
+    <title>Burst Analysis with BurstFilter Class and Photon Masking &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_burst_analysis_with_filter';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Burst Analysis with JSON Parameter Support" href="plot_burst_analysis_json.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_with_filter.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_with_filter.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,32 +472,30 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Burst-Analysis-with-BurstFilter-Class-and-Photon-Masking">
-<h1>Burst Analysis with BurstFilter Class and Photon Masking<a class="headerlink" href="#Burst-Analysis-with-BurstFilter-Class-and-Photon-Masking" title="Link to this heading">#</a></h1>
-<p>This example demonstrates burst analysis using the BurstFilter class with photon masking. Photon masking allows you to pre-filter photons by channel, microtime, or other criteria before performing burst analysis.</p>
-<div class="admonition note">
-<div class="admonition-title"><h4></div><p>Note</p>
-</h4><p><p>This example requires a TTTR file. We use a sample file for demonstration.</p>
-</p></div>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-burst-analysis-with-filter-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="burst-analysis-with-burstfilter-class-and-photon-masking">
+<span id="sphx-glr-auto-examples-single-molecule-plot-burst-analysis-with-filter-py"></span><h1>Burst Analysis with BurstFilter Class and Photon Masking<a class="headerlink" href="#burst-analysis-with-burstfilter-class-and-photon-masking" title="Link to this heading">#</a></h1>
+<p>This example demonstrates burst analysis using the BurstFilter class with photon masking.
+Photon masking allows you to pre-filter photons by channel, microtime, or other criteria
+before performing burst analysis.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example requires a TTTR file. We use a sample file for demonstration.</p>
+</div>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </pre></div>
 </div>
-</div>
-<section id="Load-data">
-<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">#</a></h2>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Link to this heading">#</a></h2>
 <p>Find a sample file using TTTRLIB_DATA</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 
 <span class="n">data_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;TTTRLIB_DATA&#39;</span><span class="p">)</span>
@@ -520,16 +515,12 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-photon-mask-for-pre-filtering">
-<h2>Create photon mask for pre-filtering<a class="headerlink" href="#Create-photon-mask-for-pre-filtering" title="Link to this heading">#</a></h2>
-<p>Create a TTTRMask to filter photons by microtime ranges This allows selecting only photons within specific time windows</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">photon_mask</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRMask</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
+<section id="create-photon-mask-for-pre-filtering">
+<h2>Create photon mask for pre-filtering<a class="headerlink" href="#create-photon-mask-for-pre-filtering" title="Link to this heading">#</a></h2>
+<p>Create a TTTRMask to filter photons by microtime ranges
+This allows selecting only photons within specific time windows</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">photon_mask</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRMask</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 
 <span class="c1"># Select photons within specific microtime ranges (e.g., for channel selection)</span>
 <span class="c1"># Example: select photons in microtime ranges 500-1500 and 2000-3000</span>
@@ -540,83 +531,53 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Photon mask created with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> selected photons&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-filtered-TTTR-data">
-<h2>Create filtered TTTR data<a class="headerlink" href="#Create-filtered-TTTR-data" title="Link to this heading">#</a></h2>
+<section id="create-filtered-tttr-data">
+<h2>Create filtered TTTR data<a class="headerlink" href="#create-filtered-tttr-data" title="Link to this heading">#</a></h2>
 <p>Create a new TTTR object containing only the selected photons</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered TTTR data contains </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">filtered_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-BurstFilter-instance-with-filtered-data">
-<h2>Create BurstFilter instance with filtered data<a class="headerlink" href="#Create-BurstFilter-instance-with-filtered-data" title="Link to this heading">#</a></h2>
+<section id="create-burstfilter-instance-with-filtered-data">
+<h2>Create BurstFilter instance with filtered data<a class="headerlink" href="#create-burstfilter-instance-with-filtered-data" title="Link to this heading">#</a></h2>
 <p>Create a BurstFilter instance using the pre-filtered photons</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 </pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
-</pre></div>
-</div>
 </div>
 </section>
-<section id="Set-burst-search-parameters">
-<h2>Set burst search parameters<a class="headerlink" href="#Set-burst-search-parameters" title="Link to this heading">#</a></h2>
+<section id="set-burst-search-parameters">
+<h2>Set burst search parameters<a class="headerlink" href="#set-burst-search-parameters" title="Link to this heading">#</a></h2>
 <p>Configure burst search parameters similar to FRETBursts</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
     <span class="n">min_photons</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>      <span class="c1"># L: minimum photons per burst</span>
     <span class="n">window_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>   <span class="c1"># m: window size (photons)</span>
     <span class="n">window_time_max</span><span class="o">=</span><span class="mf">0.5e-3</span>  <span class="c1"># T: window duration in seconds (0.5ms)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Perform-burst-search-on-masked-photons">
-<h2>Perform burst search on masked photons<a class="headerlink" href="#Perform-burst-search-on-masked-photons" title="Link to this heading">#</a></h2>
+<section id="perform-burst-search-on-masked-photons">
+<h2>Perform burst search on masked photons<a class="headerlink" href="#perform-burst-search-on-masked-photons" title="Link to this heading">#</a></h2>
 <p>Find bursts in the data using only the masked (selected) photons</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bursts_np</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bursts_np</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Burst search completed on masked data: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bursts_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Estimate-background-rates">
-<h2>Estimate background rates<a class="headerlink" href="#Estimate-background-rates" title="Link to this heading">#</a></h2>
+<section id="estimate-background-rates">
+<h2>Estimate background rates<a class="headerlink" href="#estimate-background-rates" title="Link to this heading">#</a></h2>
 <p>Estimate background rates for filtering</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">background_rates</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">estimate_background</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">background_rates</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">estimate_background</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated background rates in </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">background_rates</span><span class="p">)</span><span class="si">}</span><span class="s2"> time periods&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Get-burst-properties">
-<h2>Get burst properties<a class="headerlink" href="#Get-burst-properties" title="Link to this heading">#</a></h2>
+<section id="get-burst-properties">
+<h2>Get burst properties<a class="headerlink" href="#get-burst-properties" title="Link to this heading">#</a></h2>
 <p>Extract properties of all bursts</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Burst filtering and analysis:&quot;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Burst filtering and analysis:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Filtering by size (50-1000 photons)...&quot;</span><span class="p">)</span>
 <span class="n">filtered_bursts_np</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">filter_by_size</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
@@ -630,31 +591,21 @@
 <span class="n">merged_bursts_np</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">merge_bursts</span><span class="p">(</span><span class="n">max_gap</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Enhanced:-Dynamic-Filter-Parameter-Changes">
-<h2>Enhanced: Dynamic Filter Parameter Changes<a class="headerlink" href="#Enhanced:-Dynamic-Filter-Parameter-Changes" title="Link to this heading">#</a></h2>
+<section id="enhanced-dynamic-filter-parameter-changes">
+<h2>Enhanced: Dynamic Filter Parameter Changes<a class="headerlink" href="#enhanced-dynamic-filter-parameter-changes" title="Link to this heading">#</a></h2>
 <p>Demonstrate the new dynamic filtering capabilities</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ENHANCED: Dynamic Filter Parameter Changes&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current burst count after filtering: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Change-filter-parameters-and-see-bursts-%22reappear%22">
-<h2>Change filter parameters and see bursts “reappear”<a class="headerlink" href="#Change-filter-parameters-and-see-bursts-%22reappear%22" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Changing filter parameters to demonstrate burst reappearance:&quot;</span><span class="p">)</span>
+<section id="change-filter-parameters-and-see-bursts-reappear">
+<h2>Change filter parameters and see bursts “reappear”<a class="headerlink" href="#change-filter-parameters-and-see-bursts-reappear" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Changing filter parameters to demonstrate burst reappearance:&quot;</span><span class="p">)</span>
 
 <span class="c1"># Relax the size filter - should bring back smaller bursts</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Relaxing size filter from min_size=50 to min_size=25...&quot;</span><span class="p">)</span>
@@ -667,15 +618,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Burst count after duration filter change: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Reapply-entire-filtering-pipeline-with-different-parameters">
-<h2>Reapply entire filtering pipeline with different parameters<a class="headerlink" href="#Reapply-entire-filtering-pipeline-with-different-parameters" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reapplying entire filter pipeline with updated parameters:&quot;</span><span class="p">)</span>
+<section id="reapply-entire-filtering-pipeline-with-different-parameters">
+<h2>Reapply entire filtering pipeline with different parameters<a class="headerlink" href="#reapply-entire-filtering-pipeline-with-different-parameters" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reapplying entire filter pipeline with updated parameters:&quot;</span><span class="p">)</span>
 
 <span class="c1"># Change background filter to be more permissive</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Making background filter more permissive (max ratio: 10.0 instead of 5.0)...&quot;</span><span class="p">)</span>
@@ -688,15 +634,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Final burst count after merge change: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Demonstrate-filter-reset-and-reapplication">
-<h2>Demonstrate filter reset and reapplication<a class="headerlink" href="#Demonstrate-filter-reset-and-reapplication" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Demonstrating filter reset and reapplication:&quot;</span><span class="p">)</span>
+<section id="demonstrate-filter-reset-and-reapplication">
+<h2>Demonstrate filter reset and reapplication<a class="headerlink" href="#demonstrate-filter-reset-and-reapplication" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Demonstrating filter reset and reapplication:&quot;</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Current burst count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -716,16 +657,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Burst count after clearing all filters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
 <section id="id1">
 <h2>Get burst properties<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
 <p>Extract properties of all bursts as a structured NumPy array</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">props</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">burst_properties</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">props</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">burst_properties</span>
 
 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">props</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">burst_sizes</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span>               <span class="c1"># Integer photon counts per burst</span>
@@ -752,16 +688,11 @@
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Compare-with-unfiltered-burst-analysis">
-<h2>Compare with unfiltered burst analysis<a class="headerlink" href="#Compare-with-unfiltered-burst-analysis" title="Link to this heading">#</a></h2>
+<section id="compare-with-unfiltered-burst-analysis">
+<h2>Compare with unfiltered burst analysis<a class="headerlink" href="#compare-with-unfiltered-burst-analysis" title="Link to this heading">#</a></h2>
 <p>For comparison, perform burst analysis on the full data without masking</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter_full</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter_full</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">burst_filter_full</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
     <span class="n">min_photons</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
     <span class="n">window_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
@@ -773,23 +704,29 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Photon reduction: </span><span class="si">{</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">filtered_data</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Extract-burst-photons">
-<h2>Extract burst photons<a class="headerlink" href="#Extract-burst-photons" title="Link to this heading">#</a></h2>
+<section id="extract-burst-photons">
+<h2>Extract burst photons<a class="headerlink" href="#extract-burst-photons" title="Link to this heading">#</a></h2>
 <p>Create a TTTR object containing only photons from selected bursts</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">merged_bursts_np</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">merged_bursts_np</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">burst_photons</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">get_burst_photons</span><span class="p">(</span><span class="n">merged_bursts_np</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extracted </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">burst_photons</span><span class="p">)</span><span class="si">}</span><span class="s2"> photons from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">merged_bursts_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts&quot;</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No bursts available for photon extraction after filtering/merging.&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-burst-analysis-with-filter-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/dcb253a5c9aee154886f53ae96382d4a/plot_burst_analysis_with_filter.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_burst_analysis_with_filter.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b7be466540588913f377e265138bd89a/plot_burst_analysis_with_filter.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_burst_analysis_with_filter.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ab52b2fa0e6bfe136ca579270a6514db/plot_burst_analysis_with_filter.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_burst_analysis_with_filter.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -840,28 +777,28 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-data">Load data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-photon-mask-for-pre-filtering">Create photon mask for pre-filtering</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-filtered-TTTR-data">Create filtered TTTR data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-BurstFilter-instance-with-filtered-data">Create BurstFilter instance with filtered data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Set-burst-search-parameters">Set burst search parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Perform-burst-search-on-masked-photons">Perform burst search on masked photons</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Estimate-background-rates">Estimate background rates</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Get-burst-properties">Get burst properties</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Enhanced:-Dynamic-Filter-Parameter-Changes">Enhanced: Dynamic Filter Parameter Changes</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Change-filter-parameters-and-see-bursts-%22reappear%22">Change filter parameters and see bursts “reappear”</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reapply-entire-filtering-pipeline-with-different-parameters">Reapply entire filtering pipeline with different parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Demonstrate-filter-reset-and-reapplication">Demonstrate filter reset and reapplication</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-photon-mask-for-pre-filtering">Create photon mask for pre-filtering</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-filtered-tttr-data">Create filtered TTTR data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-burstfilter-instance-with-filtered-data">Create BurstFilter instance with filtered data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-burst-search-parameters">Set burst search parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perform-burst-search-on-masked-photons">Perform burst search on masked photons</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimate-background-rates">Estimate background rates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-burst-properties">Get burst properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enhanced-dynamic-filter-parameter-changes">Enhanced: Dynamic Filter Parameter Changes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-filter-parameters-and-see-bursts-reappear">Change filter parameters and see bursts “reappear”</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reapply-entire-filtering-pipeline-with-different-parameters">Reapply entire filtering pipeline with different parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demonstrate-filter-reset-and-reapplication">Demonstrate filter reset and reapplication</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Get burst properties</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Compare-with-unfiltered-burst-analysis">Compare with unfiltered burst analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Extract-burst-photons">Extract burst photons</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compare-with-unfiltered-burst-analysis">Compare with unfiltered burst analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-burst-photons">Extract burst photons</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_with_filter.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burst_analysis_with_filter.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

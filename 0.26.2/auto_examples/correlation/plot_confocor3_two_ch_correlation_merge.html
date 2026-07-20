@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/correlation/plot_confocor3_two_ch_correlation_merge';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,29 +472,30 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Confocor3-two-channel-cross-correlation-(using-merge-method)">
-<h1>Confocor3 two channel cross-correlation (using merge method)<a class="headerlink" href="#Confocor3-two-channel-cross-correlation-(using-merge-method)" title="Link to this heading">#</a></h1>
-<p>The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.</p>
-<p>This example demonstrates how to use the new TTTR merge method to combine multiple Confocor3 channels into a single photon stream for cross-correlation analysis. The merge method automatically handles time sorting and is more efficient than manual concatenation.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-confocor3-two-ch-correlation-merge-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<section class="sphx-glr-example-title" id="confocor3-two-channel-cross-correlation-using-merge-method">
+<span id="sphx-glr-auto-examples-correlation-plot-confocor3-two-ch-correlation-merge-py"></span><h1>Confocor3 two channel cross-correlation (using merge method)<a class="headerlink" href="#confocor3-two-channel-cross-correlation-using-merge-method" title="Link to this heading">#</a></h1>
+<p>The raw FCS data format of the Zeiss Confocor3 is relatively simple.
+Zeiss Confocor3 raw files store time-difference between photons.
+A relatively small header is followed by a set of 32-bit integers that
+contain the time difference to the previous registered photon. Photons
+registered by different channels are stored in separate files.</p>
+<p>This example demonstrates how to use the new TTTR merge method to combine
+multiple Confocor3 channels into a single photon stream for cross-correlation
+analysis. The merge method automatically handles time sorting and is more
+efficient than manual concatenation.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>The photon data registered by different detectors are saved in separate files.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_root</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_root</span>
 <span class="c1"># Read the data of all channels that should be correlated into separate containers.</span>
 <span class="n">fns</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">get_data_root</span><span class="p">()</span> <span class="o">/</span> <span class="s1">&#39;cz/fcs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw&#39;</span><span class="p">)])</span>
 
@@ -508,27 +506,13 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Channel </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tttr</span><span class="o">.</span><span class="n">get_number_of_records</span><span class="p">()</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>You can check the count rates of the channels using the macro time resolution contained in the header</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
 <span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
 <span class="n">count_rates</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">macro_time_resolution</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Count rates:&quot;</span><span class="p">,</span> <span class="n">count_rates</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>Use the new merge method to combine channels automatically The merge method with strategy=1 (interleave) automatically sorts by time</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_merged</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_merged</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">()</span>
 <span class="n">tttr_merged</span><span class="o">.</span><span class="n">set_header</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
 <span class="c1"># Copy first channel</span>
@@ -551,28 +535,14 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Merged channels: </span><span class="si">{</span><span class="n">merged_channels</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>The interleave merge strategy ensures events are sorted by time</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">times</span> <span class="o">=</span> <span class="n">tttr_merged</span><span class="o">.</span><span class="n">macro_times</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">times</span> <span class="o">=</span> <span class="n">tttr_merged</span><span class="o">.</span><span class="n">macro_times</span>
 <span class="k">if</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.all.html#numpy.all" title="numpy.all" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">all</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.diff.html#numpy.diff" title="numpy.diff" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">diff</span></a><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Events are in chronological order&quot;</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✗ Events are NOT in chronological order&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>The merged container can be used for standard analysis, e.g., correlations.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>  <span class="c1"># n_bins and n_casc defines the settings of the multi-tau</span>
     <span class="s2">&quot;n_casc&quot;</span><span class="p">:</span> <span class="mi">19</span><span class="p">,</span>  <span class="c1"># correlation algorithm</span>
 <span class="p">}</span>
@@ -623,14 +593,7 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<hr class="docutils" />
-<p>Compare the new merge method with the old manual approach</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
 <span class="c1"># Old method (manual concatenation and sorting)</span>
 <span class="n">start_time</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/time.html#time.time" title="time.time" class="sphx-glr-backref-module-time sphx-glr-backref-type-py-function"><span class="n">time</span><span class="o">.</span><span class="n">time</span></a><span class="p">()</span>
@@ -676,7 +639,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Both methods produce identical results&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-confocor3-two-ch-correlation-merge-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/7395ee682200a4dc2c7d2601232bf16a/plot_confocor3_two_ch_correlation_merge.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_confocor3_two_ch_correlation_merge.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/3c20577f537c8cef03d9b889fce99083/plot_confocor3_two_ch_correlation_merge.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_confocor3_two_ch_correlation_merge.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4eb9f5e413801910fe6afcbc61943ef7/plot_confocor3_two_ch_correlation_merge.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_confocor3_two_ch_correlation_merge.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -721,7 +695,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -19,7 +19,7 @@
 <meta name="description" content="Overview: In live-cell imaging, the conformation or the oligomeric state of biomolecules can depend on their cellular location. In this application example we combine image segmentation with fluore..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Image-based segmentation of FLIM data &#8212; tttrlib v0.26.1</title>
+    <title>Image-based segmentation of FLIM data &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/flim/plot_segmentation_based_decays';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="TTTR Image representations" href="plot_imaging_representations.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_segmentation_based_decays.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_segmentation_based_decays.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,26 +472,34 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Image-based-segmentation-of-FLIM-data">
-<h1>Image-based segmentation of FLIM data<a class="headerlink" href="#Image-based-segmentation-of-FLIM-data" title="Link to this heading">#</a></h1>
-<section id="Overview">
-<h2>Overview<a class="headerlink" href="#Overview" title="Link to this heading">#</a></h2>
-<p>In live-cell imaging, the conformation or the oligomeric state of biomolecules can depend on their cellular location. In this application example we combine image segmentation with fluorescence-lifetime based analysis and generate fluorescence intensity decays of molecular sub-ensembles to resolve molecular states of the studied protein of interest for different cellular compartments. We segment multi-parameter fluorescence image spectroscopy (MFIS) data into nucleus, cytoplasm and vesicles-like
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-flim-plot-segmentation-based-decays-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="image-based-segmentation-of-flim-data">
+<span id="sphx-glr-auto-examples-flim-plot-segmentation-based-decays-py"></span><h1>Image-based segmentation of FLIM data<a class="headerlink" href="#image-based-segmentation-of-flim-data" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In live-cell imaging, the conformation or the oligomeric state of biomolecules can
+depend on their cellular location. In this application example we combine
+image segmentation with fluorescence-lifetime based analysis and generate fluorescence
+intensity decays of molecular sub-ensembles to resolve molecular states of the studied
+protein of interest for different cellular compartments. We segment multi-parameter
+fluorescence image spectroscopy (MFIS) data into nucleus, cytoplasm and vesicles-like
 structures.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Data Loading
-2. Create CLSM image container
-3. Pulsed interleaved excitation
-4. Intensity imaging
-5. Micro time imaging
-6. Define pixel classes by image segmentation
-7. Apply pixel classes for analysis
-</pre></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Data Loading</p></li>
+<li><p>Create CLSM image container</p></li>
+<li><p>Pulsed interleaved excitation</p></li>
+<li><p>Intensity imaging</p></li>
+<li><p>Micro time imaging</p></li>
+<li><p>Define pixel classes by image segmentation</p></li>
+<li><p>Apply pixel classes for analysis</p></li>
+</ol>
+</div></blockquote>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">skimage</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ski</span>
@@ -522,12 +527,7 @@ structures.</p>
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
 </pre></div>
 </div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
 
 <span class="c1"># 1. Loading data and creating the intensity images</span>
 <span class="c1">#--------------------------------------------------</span>
@@ -542,16 +542,12 @@ structures.</p>
 <span class="n">sum_all</span> <span class="o">=</span> <span class="n">green_ch</span> <span class="o">+</span> <span class="n">red_ch</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="3.-Pulsed-interleaved-excitation">
-<h2>3. Pulsed interleaved excitation<a class="headerlink" href="#3.-Pulsed-interleaved-excitation" title="Link to this heading">#</a></h2>
-<p>Split the data into prompt and delay. For a more detailed description see plot_pie_flim.py</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filename_irf</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_data_path</span><span class="p">(</span><span class="s1">&#39;imaging/pq/ht3/mGBP_IRF.ht3&#39;</span><span class="p">))</span>
+<section id="pulsed-interleaved-excitation">
+<h2>3. Pulsed interleaved excitation<a class="headerlink" href="#pulsed-interleaved-excitation" title="Link to this heading">#</a></h2>
+<p>Split the data into prompt and delay.
+For a more detailed description see plot_pie_flim.py</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">filename_irf</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_data_path</span><span class="p">(</span><span class="s1">&#39;imaging/pq/ht3/mGBP_IRF.ht3&#39;</span><span class="p">))</span>
 <span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">filename_irf</span><span class="p">)</span>
 
 <span class="n">tttr_irf_green</span> <span class="o">=</span> <span class="n">irf</span><span class="o">.</span><span class="n">get_tttr_by_channel</span><span class="p">(</span><span class="n">green_ch</span><span class="p">)</span>
@@ -562,30 +558,28 @@ structures.</p>
 <span class="n">delay_range</span> <span class="o">=</span> <span class="mi">11000</span><span class="p">,</span> <span class="mi">25000</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="2.-Create-CLSM-image-container">
-<h2>2. Create CLSM image container<a class="headerlink" href="#2.-Create-CLSM-image-container" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># In the green channel we use all photons</span>
+<section id="create-clsm-image-container">
+<h2>2. Create CLSM image container<a class="headerlink" href="#create-clsm-image-container" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In the green channel we use all photons</span>
 <span class="n">clsm_green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">green_ch</span><span class="p">)</span>
 <span class="n">clsm_red_prompt</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">red_ch</span><span class="p">,</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[</span><span class="n">prompt_range</span><span class="p">])</span>
 <span class="n">clsm_red_delay</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="o">=</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">red_ch</span><span class="p">,</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[</span><span class="n">delay_range</span><span class="p">])</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="3.-Intensity-imaging">
-<h2>3. Intensity imaging<a class="headerlink" href="#3.-Intensity-imaging" title="Link to this heading">#</a></h2>
-<p>Fills the CLSM image container with intensities An intensity image the number of counts in a pixel corresponds to the number of photons Red intensity is toatal intenstiy, ie, prompt + delayed excitation Fig. 4B Green, red prompt, red delay Sum over all frames The intensity images are a time-series (multiple frames). We sum over all frames to improve the counting statistics Note: image shape is in the order of t-y-x, thus summation of over axis=0 results in generating the t-projection</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SUM_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<section id="intensity-imaging">
+<h2>3. Intensity imaging<a class="headerlink" href="#intensity-imaging" title="Link to this heading">#</a></h2>
+<p>Fills the CLSM image container with intensities
+An intensity image the number of counts in a pixel corresponds to the number of photons
+Red intensity is toatal intenstiy, ie, prompt + delayed excitation
+Fig. 4B Green, red prompt, red delay
+Sum over all frames
+The intensity images are a time-series (multiple frames). We sum over
+all frames to improve the counting statistics
+Note: image shape is in the order of t-y-x, thus summation of over axis=0
+results in generating the t-projection</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">SUM_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">SUM_red_prompt</span> <span class="o">=</span> <span class="n">clsm_red_prompt</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">SUM_red_delay</span> <span class="o">=</span> <span class="n">clsm_red_delay</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
@@ -601,14 +595,9 @@ structures.</p>
 <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<section id="Lifetime-analysis">
-<h3>Lifetime analysis<a class="headerlink" href="#Lifetime-analysis" title="Link to this heading">#</a></h3>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_tau_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_mean_lifetime</span><span class="p">(</span>
+<section id="lifetime-analysis">
+<h3>Lifetime analysis<a class="headerlink" href="#lifetime-analysis" title="Link to this heading">#</a></h3>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">mean_tau_green</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">get_mean_lifetime</span><span class="p">(</span>
     <span class="n">tttr_data</span><span class="p">,</span>
     <span class="n">minimum_number_of_photons</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
     <span class="n">stack_frames</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -624,31 +613,24 @@ structures.</p>
 <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 </section>
 </section>
-<section id="7.-Image-segmentation">
-<h2>7. Image segmentation<a class="headerlink" href="#7.-Image-segmentation" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Next, we use the generated intensity image and use standard image segmentation</span>
+<section id="image-segmentation">
+<h2>7. Image segmentation<a class="headerlink" href="#image-segmentation" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Next, we use the generated intensity image and use standard image segmentation</span>
 <span class="c1"># techniques like Median or Gaussian filtering, Li- or Otsu-based thresholding to</span>
 <span class="c1"># separate the three regions of interest: cytoplasm, vesicles and nucleus.</span>
 <span class="c1"># At the end these segmentations represent binary masks, which are filled with &quot;1/TRUE&quot; in</span>
 <span class="c1"># the region of interest and &quot;0/FALSE&quot; outside.</span>
 </pre></div>
 </div>
-</div>
-<section id="7.1-Segmentation-of-the-vesicles">
-<h3>7.1 Segmentation of the vesicles<a class="headerlink" href="#7.1-Segmentation-of-the-vesicles" title="Link to this heading">#</a></h3>
-<p>We start with the segmentation of the vesicles. Here, first a Gaussian smoothing with a size of 1 sigma is applied, followed by thresholding using the method of Otsu. Finally, objects with a size smaller than 5 pixels are removed.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_vesicles</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># radius for Gaussian smoothing</span>
+<section id="segmentation-of-the-vesicles">
+<h3>7.1 Segmentation of the vesicles<a class="headerlink" href="#segmentation-of-the-vesicles" title="Link to this heading">#</a></h3>
+<p>We start with the segmentation of the vesicles.
+Here, first a Gaussian smoothing with a size of 1 sigma is applied,
+followed by thresholding using the method of Otsu.
+Finally, objects with a size smaller than 5 pixels are removed.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_vesicles</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># radius for Gaussian smoothing</span>
 <span class="n">min_vesicle_size</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># give minimal vesicle size in pixel</span>
 <span class="c1"># Calculate intensity sum over all detection channels</span>
 <span class="c1"># This facilitates the segmentation due to higher SNR</span>
@@ -670,17 +652,18 @@ structures.</p>
 <span class="n">vesicle_mask</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">binary_img_vesicles</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="7.2-Segmentation-of-the-cytoplasm">
-<h3>7.2 Segmentation of the cytoplasm<a class="headerlink" href="#7.2-Segmentation-of-the-cytoplasm" title="Link to this heading">#</a></h3>
-<p>Next, the cytoplasm is segmented. Here, first a median filtering with a disk size of 3 pixel is applied. This is followed by thresholding using the method of Otsu. However, for later frames direct usage of the Otsu threshold selected too much of background, thus we slightly increase the threshold by multiplying with 1.03 (Otsu_scaling_factor) In the final steps, first small holes inside the cytoplasm area are closed, followed by the removal of small detected areas outside the main cell. Here, a
-minimal size threshold of 10’000 pixel is applied.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">disk_size_cyto</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># smoothing radius in pixel for median filtering</span>
+<section id="segmentation-of-the-cytoplasm">
+<h3>7.2 Segmentation of the cytoplasm<a class="headerlink" href="#segmentation-of-the-cytoplasm" title="Link to this heading">#</a></h3>
+<p>Next, the cytoplasm is segmented.
+Here, first a median filtering with a disk size of 3 pixel is applied.
+This is followed by thresholding using the method of Otsu.
+However, for later frames direct usage of the Otsu threshold selected too much of
+background, thus we slightly increase the threshold by multiplying with 1.03 (Otsu_scaling_factor)
+In the final steps, first small holes inside the cytoplasm area are closed,
+followed by the removal of small detected areas outside the main cell.
+Here, a minimal size threshold of 10’000 pixel is applied.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">disk_size_cyto</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># smoothing radius in pixel for median filtering</span>
 <span class="n">otsu_scaling_factor</span> <span class="o">=</span> <span class="mf">1.03</span>  <span class="c1"># increase Otsu threshold by multiplication with this factor</span>
 <span class="n">minimal_size</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># give minimal cytoplasm size in pixel</span>
 
@@ -701,18 +684,23 @@ minimal size threshold of 10’000 pixel is applied.</p>
 <span class="n">cytoplasm_mask</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">binary_img_cytoplasm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="7.3-Segmentation-of-nucleus">
-<h3>7.3 Segmentation of nucleus<a class="headerlink" href="#7.3-Segmentation-of-nucleus" title="Link to this heading">#</a></h3>
-<p>Finally, the nucleus is segmented. In contrast to the cytoplasm and vesicles, here only the green intensity image is used as input as here the contrast between cytoplasm/vesicles region and nucleus seemed largest. Please note that the nucleus can be best seen as “region in cytoplasm but without vesicles”. The segmentation of the nucleus thus proves to be a challenge. We first apply a Gaussian smoothing with a radius of 2 sigma, followed by thresholding using the method of Li. The thresholded
-image is dilated, holes inside the nucleus filled and small areas outside removed. Next all left-overs outside the cytoplasmic (i.e. body of the cell) are removed by multiplying with the generated cytoplasm mask, followed by another round of dilation to make the nucleus “smoother”. Finally, as the nucleus is characterized by being outside the way of the diffusing vesicles, we average the such obtained nucleus and generate an average nucleus by summing over all 400 frames and threshold this
-projection using the method of Otsu.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_nucleus</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># radius for Gaussian filtering</span>
+<section id="segmentation-of-nucleus">
+<h3>7.3 Segmentation of nucleus<a class="headerlink" href="#segmentation-of-nucleus" title="Link to this heading">#</a></h3>
+<p>Finally, the nucleus is segmented.
+In contrast to the cytoplasm and vesicles, here only the green intensity image
+is used as input as here the contrast between cytoplasm/vesicles region and nucleus
+seemed largest. Please note that the nucleus can be best seen as “region in cytoplasm
+but without vesicles”. The segmentation of the nucleus thus proves to be a challenge.
+We first apply a Gaussian smoothing with a radius of 2 sigma, followed by thresholding
+using the method of Li. The thresholded image is dilated, holes inside the nucleus filled
+and small areas outside removed. Next all left-overs outside the cytoplasmic (i.e. body
+of the cell) are removed by multiplying with the generated cytoplasm mask, followed by
+another round of dilation to make the nucleus “smoother”.
+Finally, as the nucleus is characterized by being outside the way of the diffusing
+vesicles, we average the such obtained nucleus and generate an average nucleus by
+summing over all 400 frames and threshold this projection using the method of Otsu.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sigma_nucleus</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># radius for Gaussian filtering</span>
 <span class="n">dilation_radius</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># for dilation operation</span>
 <span class="n">minimal_hole_size</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># minimal area size (smaller areas will be removed)</span>
 <span class="n">minimal_nucleus_size</span> <span class="o">=</span> <span class="mi">2000</span> <span class="c1"># minimal nucleus size</span>
@@ -751,17 +739,19 @@ projection using the method of Otsu.</p>
 <span class="n">nucleus_mask_avg</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">morphology</span><span class="o">.</span><span class="n">remove_small_objects</span><span class="p">(</span><span class="n">thresholded_img</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="n">minimal_nucleus_size</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>In the next two steps, we clean up the cytoplasm and vesicles masks. First, we remove the nucleus and vesicles from the cytoplasm, and second we remove the vesicles inside the nucleus region - if any- and the vesicles beloging to the neighboring cell from the vesicles mask.</p>
+<p>In the next two steps, we clean up the cytoplasm and vesicles masks.
+First, we remove the nucleus and vesicles from the cytoplasm, and second
+we remove the vesicles inside the nucleus region - if any- and the vesicles
+beloging to the neighboring cell from the vesicles mask.</p>
 </section>
-<section id="7.4-Remove-nucleus-and-vesicles-from-cytoplasm">
-<h3>7.4 Remove nucleus and vesicles from cytoplasm<a class="headerlink" href="#7.4-Remove-nucleus-and-vesicles-from-cytoplasm" title="Link to this heading">#</a></h3>
-<p>We invert the average nucleus mask and multiply with each frame, followed by inverting the vesicles mask and frame-wise multiplication. Remember that all masks are filled with 0 and 1, thus 0<em>0 or 0</em>1 = 0, only those regions, where both, in the cytoplasm mask and the inverted mask, the value 1 is given, stay 1.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inv_nucleus</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">nucleus_mask_avg</span><span class="p">)</span>  <span class="c1"># Invert nucleus_mask</span>
+<section id="remove-nucleus-and-vesicles-from-cytoplasm">
+<h3>7.4 Remove nucleus and vesicles from cytoplasm<a class="headerlink" href="#remove-nucleus-and-vesicles-from-cytoplasm" title="Link to this heading">#</a></h3>
+<p>We invert the average nucleus mask and multiply with each frame, followed
+by inverting the vesicles mask and frame-wise multiplication.
+Remember that all masks are filled with 0 and 1, thus 0*0 or 0*1 = 0,
+only those regions, where both, in the cytoplasm mask and the inverted mask,
+the value 1 is given, stay 1.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inv_nucleus</span> <span class="o">=</span> <span class="n">ski</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">nucleus_mask_avg</span><span class="p">)</span>  <span class="c1"># Invert nucleus_mask</span>
 
 <span class="n">cytoplasm_wo_nucleus_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply nucleus mask on cytoplasm</span>
 <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">filled_frames</span><span class="p">:</span>
@@ -784,16 +774,13 @@ projection using the method of Otsu.</p>
 <span class="n">mask_cytoplasm</span> <span class="o">=</span> <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">cytoplasm_wo_nucleus_vesicles</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.ubyte" title="numpy.ubyte" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">ubyte</span></a><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="7.5-Remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">
-<h3>7.5 Remove vesicles in nucleus regions and outside cell of interest<a class="headerlink" href="#7.5-Remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest" title="Link to this heading">#</a></h3>
-<p>Here, the same strategy as for the cleaned up cytoplasm is used. First vesicles inside the nucleus are removed, followed by those outside the main cell by multiplying with inverted masks.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vesicles_wo_nucleus_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply nucleus mask</span>
+<section id="remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">
+<h3>7.5 Remove vesicles in nucleus regions and outside cell of interest<a class="headerlink" href="#remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest" title="Link to this heading">#</a></h3>
+<p>Here, the same strategy as for the cleaned up cytoplasm is used.
+First vesicles inside the nucleus are removed, followed by those outside the
+main cell by multiplying with inverted masks.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">vesicles_wo_nucleus_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Apply nucleus mask</span>
 <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">filled_frames</span><span class="p">:</span>
     <span class="n">input_img</span> <span class="o">=</span> <span class="n">vesicle_mask</span><span class="p">[</span><span class="n">image</span><span class="p">,:,:]</span>
     <span class="n">temp_vesicle</span> <span class="o">=</span> <span class="n">input_img</span> <span class="o">*</span> <span class="n">inv_nucleus</span>
@@ -821,18 +808,20 @@ projection using the method of Otsu.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 </section>
 </section>
-<section id="8.-Apply-pixel-classes-for-analysis">
-<h2>8. Apply pixel classes for analysis<a class="headerlink" href="#8.-Apply-pixel-classes-for-analysis" title="Link to this heading">#</a></h2>
-<p>Apply generated masks to reconstruct green intensity decays Now we used the generated masks for our three regions of interest and group the pixels belonging to each class. This procedure is applied to every individual frame. Then, based on the micro time information in each pixel the photon arrival time histogram can be reconstructed. However, first we ignore our masks and generate the mean arrival time image summed over all frames. Next, the summed decays for all pixel and the three pixel
-classes are generated.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># generate decays for unmasked pixel</span>
+<section id="apply-pixel-classes-for-analysis">
+<h2>8. Apply pixel classes for analysis<a class="headerlink" href="#apply-pixel-classes-for-analysis" title="Link to this heading">#</a></h2>
+<p>Apply generated masks to reconstruct green intensity decays
+Now we used the generated masks for our three regions of interest and
+group the pixels belonging to each class. This procedure is applied to
+every individual frame. Then, based on the micro time information
+in each pixel the photon arrival time histogram can be reconstructed.
+However, first we ignore our masks and generate the mean arrival time
+image summed over all frames.
+Next, the summed decays for all pixel and the three pixel classes are
+generated.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># generate decays for unmasked pixel</span>
 <span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span> <span class="o">=</span> <span class="n">clsm_green</span><span class="o">.</span><span class="n">shape</span>
 <span class="n">pseudo_mask</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones.html#numpy.ones" title="numpy.ones" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones</span></a><span class="p">((</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_pixel</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint8" title="numpy.uint8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint8</span></a><span class="p">)</span>
 <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span>
@@ -896,7 +885,18 @@ classes are generated.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-flim-plot-segmentation-based-decays-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b6d82867b58f0f17847f16af96f85605/plot_segmentation_based_decays.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_segmentation_based_decays.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/21b98c976084afe873a55ae02ca12f21/plot_segmentation_based_decays.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_segmentation_based_decays.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ba112592c3380abcfaecee6e2fcac048/plot_segmentation_based_decays.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_segmentation_based_decays.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -947,29 +947,29 @@ classes are generated.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Pulsed-interleaved-excitation">3. Pulsed interleaved excitation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Create-CLSM-image-container">2. Create CLSM image container</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Intensity-imaging">3. Intensity imaging</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Lifetime-analysis">Lifetime analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pulsed-interleaved-excitation">3. Pulsed interleaved excitation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-clsm-image-container">2. Create CLSM image container</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#intensity-imaging">3. Intensity imaging</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lifetime-analysis">Lifetime analysis</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Image-segmentation">7. Image segmentation</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#7.1-Segmentation-of-the-vesicles">7.1 Segmentation of the vesicles</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#7.2-Segmentation-of-the-cytoplasm">7.2 Segmentation of the cytoplasm</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#7.3-Segmentation-of-nucleus">7.3 Segmentation of nucleus</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#7.4-Remove-nucleus-and-vesicles-from-cytoplasm">7.4 Remove nucleus and vesicles from cytoplasm</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#7.5-Remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">7.5 Remove vesicles in nucleus regions and outside cell of interest</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-segmentation">7. Image segmentation</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#segmentation-of-the-vesicles">7.1 Segmentation of the vesicles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#segmentation-of-the-cytoplasm">7.2 Segmentation of the cytoplasm</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#segmentation-of-nucleus">7.3 Segmentation of nucleus</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-nucleus-and-vesicles-from-cytoplasm">7.4 Remove nucleus and vesicles from cytoplasm</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-vesicles-in-nucleus-regions-and-outside-cell-of-interest">7.5 Remove vesicles in nucleus regions and outside cell of interest</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Apply-pixel-classes-for-analysis">8. Apply pixel classes for analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-pixel-classes-for-analysis">8. Apply pixel classes for analysis</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_segmentation_based_decays.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_segmentation_based_decays.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

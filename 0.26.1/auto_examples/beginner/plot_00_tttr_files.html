@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/beginner/plot_00_tttr_files';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_00_tttr_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_00_tttr_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,46 +472,58 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Basic-operations-with-TTTR-files">
-<h1>Basic operations with TTTR files<a class="headerlink" href="#Basic-operations-with-TTTR-files" title="Link to this heading">#</a></h1>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-beginner-plot-00-tttr-files-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="basic-operations-with-tttr-files">
+<span id="sphx-glr-auto-examples-beginner-plot-00-tttr-files-py"></span><h1>Basic operations with TTTR files<a class="headerlink" href="#basic-operations-with-tttr-files" title="Link to this heading">#</a></h1>
 <p>This example shows how to perform basic operations with TTTR files.</p>
 </section>
-<section id="Introduction-to-Time-Tagged-Time-Resolved-(TTTR)-Data-with-tttrlib">
-<h1>Introduction to Time-Tagged Time-Resolved (TTTR) Data with tttrlib<a class="headerlink" href="#Introduction-to-Time-Tagged-Time-Resolved-(TTTR)-Data-with-tttrlib" title="Link to this heading">#</a></h1>
+<section id="introduction-to-time-tagged-time-resolved-tttr-data-with-tttrlib">
+<h1>Introduction to Time-Tagged Time-Resolved (TTTR) Data with tttrlib<a class="headerlink" href="#introduction-to-time-tagged-time-resolved-tttr-data-with-tttrlib" title="Link to this heading">#</a></h1>
 <p>TTTR data is a format used in single-molecule fluorescence, fluorescence lifetime imaging (FLIM), and time-correlated single-photon counting (TCSPC) experiments. TTTR files record streams of photon detection events, each with precise timing and detector channel information.</p>
-<p>Each event typically contains:</p>
-<ol class="arabic simple">
+<dl class="simple">
+<dt>Each event typically contains:</dt><dd><ol class="arabic simple">
 <li><p>Macro time (experiment time or sync pulse number)</p></li>
 <li><p>Micro time (photon delay after excitation pulse)</p></li>
 <li><p>Channel number (detector ID)</p></li>
 <li><p>Event type (photon, marker, etc.)</p></li>
 </ol>
+</dd>
+</dl>
 <p>This rich, raw data enables advanced analyses such as burst detection, fluorescence lifetime calculation, FRET efficiency, and more.</p>
-<p>Common Use Cases:</p>
-<ul class="simple">
+<dl>
+<dt>Common Use Cases:</dt><dd><ul class="simple">
 <li><p>Single-molecule FRET (smFRET) burst analysis</p></li>
 <li><p>Fluorescence Correlation Spectroscopy (FCS)</p></li>
 <li><p>Fluorescence Lifetime Imaging (FLIM)</p></li>
 <li><p>Photon counting histograms</p></li>
 <li><p>Custom photon stream filtering and selection</p></li>
 </ul>
-<p>Installation &amp; Setup: You can install tttrlib using pip: pip install tttrlib</p>
-<p>Or, for the latest development version, clone the repository and install: git clone <a class="github reference external" href="https://github.com/fluorescence-tools/tttrlib.git">fluorescence-tools/tttrlib.git</a> cd tttrlib pip install .</p>
+</dd>
+<dt>Installation &amp; Setup:</dt><dd><dl class="simple">
+<dt>You can install tttrlib using pip:</dt><dd><p>pip install tttrlib</p>
+</dd>
+<dt>Or, for the latest development version, clone the repository and install:</dt><dd><p>git clone <a class="github reference external" href="https://github.com/fluorescence-tools/tttrlib.git">fluorescence-tools/tttrlib.git</a>
+cd tttrlib
+pip install .</p>
+</dd>
+</dl>
 <p>You will need Python (&gt;=3.7), NumPy, and optionally Jupyter for running notebooks.</p>
-<p>The operations demonstrated in this script include:</p>
-<ol class="arabic simple">
+</dd>
+<dt>The operations demonstrated in this script include:</dt><dd><ol class="arabic simple">
 <li><p>Reading a TTTR file</p></li>
 <li><p>Slicing TTTR data</p></li>
 <li><p>Joining TTTR objects</p></li>
 <li><p>Selecting events by channel</p></li>
 <li><p>Selecting events by count rate</p></li>
 </ol>
+</dd>
+</dl>
 <p>Note: Replace the file paths with your own data.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
@@ -531,27 +540,17 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;First 5 routing channels:&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">routing_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">])</span>
 </pre></div>
 </div>
-</div>
-<section id="Slicing-TTTR-data">
-<h2>Slicing TTTR data<a class="headerlink" href="#Slicing-TTTR-data" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select the first 100 events</span>
+<section id="slicing-tttr-data">
+<h2>Slicing TTTR data<a class="headerlink" href="#slicing-tttr-data" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select the first 100 events</span>
 <span class="n">first_100</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">100</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;First 100 events, macro times:&quot;</span><span class="p">,</span> <span class="n">first_100</span><span class="o">.</span><span class="n">macro_times</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Joining-TTTR-objects">
-<h2>Joining TTTR objects<a class="headerlink" href="#Joining-TTTR-objects" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read a second file (or use the same for demonstration)</span>
+<section id="joining-tttr-objects">
+<h2>Joining TTTR objects<a class="headerlink" href="#joining-tttr-objects" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read a second file (or use the same for demonstration)</span>
 <span class="c1"># data2 = tttrlib.TTTR(filename)</span>
 <span class="c1"># For the example, we&#39;ll just use a slice of the original data to avoid needing two files.</span>
 <span class="n">data2</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">100</span><span class="p">:</span><span class="mi">200</span><span class="p">]</span>
@@ -561,36 +560,37 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Joined event count:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">joined</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Selecting-by-channel">
-<h2>Selecting by channel<a class="headerlink" href="#Selecting-by-channel" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select events from channel 0</span>
+<section id="selecting-by-channel">
+<h2>Selecting by channel<a class="headerlink" href="#selecting-by-channel" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select events from channel 0</span>
 <span class="n">indices_ch0</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_selection_by_channel</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
 <span class="n">data_ch0</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">indices_ch0</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of events in channel 0:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_ch0</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Selecting-by-count-rate">
-<h2>Selecting by count rate<a class="headerlink" href="#Selecting-by-count-rate" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select events where the local count rate is below a threshold</span>
+<section id="selecting-by-count-rate">
+<h2>Selecting by count rate<a class="headerlink" href="#selecting-by-count-rate" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select events where the local count rate is below a threshold</span>
 <span class="c1"># We use a window of 1000 macro time units and a maximum of 10 photons per window</span>
 <span class="n">indices_low_cr</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_time_window_ranges</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">data_low_cr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">indices_low_cr</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of events with low count rate:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_low_cr</span><span class="p">))</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-beginner-plot-00-tttr-files-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/668291f029c596eefe10ac1f2200bcbc/plot_00_tttr_files.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_00_tttr_files.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/149b566d1699d4f62a0def0c2ecde63e/plot_00_tttr_files.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_00_tttr_files.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/93bab21f33de1d9fb0aa35850b33c91c/plot_00_tttr_files.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_00_tttr_files.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -642,11 +642,11 @@
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Basic operations with TTTR files</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Introduction-to-Time-Tagged-Time-Resolved-(TTTR)-Data-with-tttrlib">Introduction to Time-Tagged Time-Resolved (TTTR) Data with tttrlib</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Slicing-TTTR-data">Slicing TTTR data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Joining-TTTR-objects">Joining TTTR objects</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Selecting-by-channel">Selecting by channel</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Selecting-by-count-rate">Selecting by count rate</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction-to-time-tagged-time-resolved-tttr-data-with-tttrlib">Introduction to Time-Tagged Time-Resolved (TTTR) Data with tttrlib</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slicing-tttr-data">Slicing TTTR data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#joining-tttr-objects">Joining TTTR objects</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#selecting-by-channel">Selecting by channel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#selecting-by-count-rate">Selecting by count rate</a></li>
 </ul>
 </li>
 </ul>
@@ -656,7 +656,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_00_tttr_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_00_tttr_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

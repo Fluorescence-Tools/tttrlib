@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/tttr/plot_tttr_files.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class :cla..." />
+<meta property="og:description" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class TTTR..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
 <meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_plot_tttr_files_e74dbd2d.png" />
-<meta property="og:image:alt" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class :cla..." />
-<meta name="description" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class :cla..." />
+<meta property="og:image:alt" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class TTTR..." />
+<meta name="description" content="To open TTTR files import the tttrlib library. TTTR attributes: For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class TTTR..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Working with TTTR files &#8212; tttrlib v0.26.1</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/tttr/plot_tttr_files';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,14 +472,15 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Working-with-TTTR-files">
-<h1>Working with TTTR files<a class="headerlink" href="#Working-with-TTTR-files" title="Link to this heading">#</a></h1>
-<p>To open TTTR files import the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> library.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-plot-tttr-files-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="working-with-tttr-files">
+<span id="sphx-glr-auto-examples-tttr-plot-tttr-files-py"></span><h1>Working with TTTR files<a class="headerlink" href="#working-with-tttr-files" title="Link to this heading">#</a></h1>
+<p>To open TTTR files import the <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> library.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
@@ -492,37 +490,37 @@
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;bh/bh_spc132.spc&#39;</span><span class="p">),</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<section id="TTTR-attributes">
-<h2>TTTR attributes<a class="headerlink" href="#TTTR-attributes" title="Link to this heading">#</a></h2>
-<p>For convenience, tttrlib provides a unified way of accessing the TTTR data independently of the vendor data format via the class :class:<code class="docutils literal notranslate"><span class="pre">TTTR</span></code>. In memory the TTTR data are handled by tttrlib in :class:<code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects as follows:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Macro time - 64 bit unsigned integer
-2. Micro time - 16 bit unsigned integer
-3. Channel number - 8 bit signed integer
-4. Event type - 8 bit signed integer
-5. TTTR Header data - dedicated class
-</pre></div>
-</div>
-<p>TTTR files are handled by creating :class:<code class="docutils literal notranslate"><span class="pre">TTTR</span></code> objects that contain the TTTR data of the files. The data contained in the files can be accessed by the methods provided by the TTTR class. Opening and accessing the information contained in TTTR files is demonstrated by the Python code examples shown below. A TTTR object provides getter methods to access the data contained in the associated file.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_times</span><span class="p">()</span>
+<section id="tttr-attributes">
+<h2>TTTR attributes<a class="headerlink" href="#tttr-attributes" title="Link to this heading">#</a></h2>
+<p>For convenience, tttrlib provides a unified way of accessing the TTTR data
+independently of the vendor data format via the class <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code>. In memory
+the TTTR data are handled by tttrlib in <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code> objects as follows:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Macro time - 64 bit unsigned integer</p></li>
+<li><p>Micro time - 16 bit unsigned integer</p></li>
+<li><p>Channel number - 8 bit signed integer</p></li>
+<li><p>Event type - 8 bit signed integer</p></li>
+<li><p>TTTR Header data - dedicated class</p></li>
+</ol>
+</div></blockquote>
+<p>TTTR files are handled by creating <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTR</span></code> objects that contain the TTTR
+data of the files. The data contained in the files can be accessed by the methods
+provided by the TTTR class. Opening and accessing the information contained in
+TTTR files is demonstrated by the Python code examples shown below. A TTTR object
+provides getter methods to access the data contained in the associated file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_macro_times</span><span class="p">()</span>
 <span class="n">micro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_times</span><span class="p">()</span>
 <span class="n">channel</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_routing_channel</span><span class="p">()</span>
 <span class="n">event_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
 <span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<p>In Python, the getter methods for the macro time, micro time, the channel, and the event type return <a class="reference external" href="http://www.numpy.org/">NumPy</a> arrays. The returned header is of the type :class:<code class="docutils literal notranslate"><span class="pre">TTTRHeader</span></code>.</p>
+<p>In Python, the getter methods for the macro time, micro time, the channel, and the
+event type return <a class="reference external" href="http://www.numpy.org/">NumPy</a> arrays. The returned header is
+of the type <code class="xref py py-class docutils literal notranslate"><span class="pre">TTTRHeader</span></code>.</p>
 <p>Alternatively, the data can be accesses by corresponding the (write-only) attributes.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">macro_times</span>
 <span class="n">micro_time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">micro_times</span>
 <span class="n">channel</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">routing_channels</span>
 <span class="n">event_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">event_types</span>
@@ -604,7 +602,18 @@
 <span class="sd">&quot;&quot;&quot;</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-files-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/188f661bc1ec8bdb87463475fab5e373/plot_tttr_files.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_tttr_files.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2f20d7f0f0b5f3bceacbe815faab48f8/plot_tttr_files.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_files.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/f2c2925d9e81fec9c2aef35c30edb2b6/plot_tttr_files.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_tttr_files.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -655,14 +664,14 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#TTTR-attributes">TTTR attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tttr-attributes">TTTR attributes</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

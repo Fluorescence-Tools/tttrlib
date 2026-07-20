@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/tttr/plot_tttr_transcode.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout" />
+<meta property="og:description" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout Download Jupyter notebook: plot_tttr_transcode.ipynb Download Python source code: plo..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_plot_tttr_transcode_04e5dba9.png" />
-<meta property="og:image:alt" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout" />
-<meta name="description" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_tttr_plot_tttr_transcode_d3054497.png" />
+<meta property="og:image:alt" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout Download Jupyter notebook: plot_tttr_transcode.ipynb Download Python source code: plo..." />
+<meta name="description" content="Save the content of a PTU file in an SPC file Use TTTRLIB_DATA if set, otherwise fall back to repository layout Download Jupyter notebook: plot_tttr_transcode.ipynb Download Python source code: plo..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>TTTR writing / Transcode &#8212; tttrlib v0.26.2</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/tttr/plot_tttr_transcode';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_transcode.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_transcode.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,14 +472,15 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="TTTR-writing-/-Transcode">
-<h1>TTTR writing / Transcode<a class="headerlink" href="#TTTR-writing-/-Transcode" title="Link to this heading">#</a></h1>
-<p>Save the content of a PTU file in an SPC file</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-plot-tttr-transcode-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="tttr-writing-transcode">
+<span id="sphx-glr-auto-examples-tttr-plot-tttr-transcode-py"></span><h1>TTTR writing / Transcode<a class="headerlink" href="#tttr-writing-transcode" title="Link to this heading">#</a></h1>
+<p>Save the content of a PTU file in an SPC file</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -490,13 +488,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </pre></div>
 </div>
-</div>
 <p>Use TTTRLIB_DATA if set, otherwise fall back to repository layout</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">DATA_ROOT</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">DATA_ROOT</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
 <span class="n">filename_ptu</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;pq/ptu/pq_ptu_hh_t3.ptu&#39;</span><span class="p">)</span>
 <span class="n">tttr_ptu</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">filename_ptu</span><span class="p">)</span>
 
@@ -505,7 +498,18 @@
 <span class="n">tttr_ptu</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename_spc_1</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-transcode-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4f37c8640fb5c90e50fe062ba326abb8/plot_tttr_transcode.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_tttr_transcode.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/a2fe0784994d3473b5b2d4ab1f8f91c3/plot_tttr_transcode.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_transcode.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8fba835106b79a7bd276c7feb8d4ee29/plot_tttr_transcode.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_tttr_transcode.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -550,7 +554,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_transcode.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_transcode.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

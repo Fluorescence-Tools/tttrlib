@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/flim/plot_read_clsm_data';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_read_clsm_data.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_read_clsm_data.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,17 +472,31 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Reading-of-CLSM-data">
-<h1>Reading of CLSM data<a class="headerlink" href="#Reading-of-CLSM-data" title="Link to this heading">#</a></h1>
-<p>In laser scanning microscopy (LSM) with time-tagged time resolved (TTTR) detection, the LSM image is stored in a stream of events. Events are either photons or special events that can for instance mark the beginning of a new frame, a new line in laser scanning, or the end of a line. <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> uses a special LSM container that maps the photon events in a TTTR stream to pixels in an image. When a LSM container is constructed the TTTR stream is read and the beginning and the end of a frame, line,
-and pixel are identified.</p>
-<p>A CLSM image container contains a list of frames. Each frame contains a list of lines and each line contains a list of pixel. Frames, lines, and pixels refer to a photon index ranges in the TTTR data stream. When a new CLSMImage container is created the markers for frames and lines contained in the data stream are read. There are usually no pixel markers. Markers are identified in the data stream by numbers. There are no default identifier for frames and lines (see
-<code class="docutils literal notranslate"><span class="pre">auto_examples/flim/plot_marker.py</span></code>). Nevertheless, if no identifier for markers are provided, either the default values for a particular setup are used, or meta-data contained in the TTTR file is read.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-flim-plot-read-clsm-data-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="reading-of-clsm-data">
+<span id="sphx-glr-auto-examples-flim-plot-read-clsm-data-py"></span><h1>Reading of CLSM data<a class="headerlink" href="#reading-of-clsm-data" title="Link to this heading">#</a></h1>
+<p>In laser scanning microscopy (LSM) with time-tagged time resolved (TTTR)
+detection, the LSM image is stored in a stream of events. Events are either
+photons or special events that can for instance mark the beginning of a
+new frame, a new  line in laser scanning, or the end of a line.
+<code class="docutils literal notranslate"><span class="pre">tttrlib</span></code> uses a special LSM container that maps the photon events in a
+TTTR stream to pixels in an image. When a LSM container is constructed the
+TTTR stream is read and the beginning and the end of a frame, line, and pixel
+are identified.</p>
+<p>A CLSM image container contains a list of frames. Each frame contains a list of
+lines and each line contains a list of pixel. Frames, lines, and pixels refer to
+a photon index ranges in the TTTR data stream. When a new CLSMImage container
+is created the markers for frames and lines contained in the data stream are read.
+There are usually no pixel markers. Markers are identified in the
+data stream by numbers. There are no default identifier for frames and lines
+(see <span class="xref std std-ref">auto_examples/flim/plot_marker.py</span>). Nevertheless, if no identifier
+for markers are provided, either the default values for a particular setup are used,
+or meta-data contained in the TTTR file is read.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imread</span>
@@ -496,48 +507,35 @@ and pixel are identified.</p>
 <span class="n">DATA_ROOT</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TTTRLIB_DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<p>The first step, when constructing a LSM image from TTTR data is to read the data contained in a TTTR file into a TTTR container.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<p>The first step, when constructing a LSM image from TTTR data is to
+read the data contained in a TTTR file into a TTTR container.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/pq_ht3_clsm.ht3&#39;</span><span class="p">),</span> <span class="s1">&#39;HT3&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/pq/ht3/pq_ht3_clsm.ht3&#39;</span><span class="p">),</span> <span class="s1">&#39;HT3&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<p>Next, a LSM image container is constructed. There are multiple options to encode markers for frames and lines in TTTR files. The default reading routine supports PicoQuant marker encodings and data recorded on Zeiss microscopes.</p>
-<section id="Default-reading-routine">
-<h2>Default reading routine<a class="headerlink" href="#Default-reading-routine" title="Link to this heading">#</a></h2>
-<p>PTU and HT3 files provide additional information that can be used to interpret the data in a TTTR file, ie, definitions for line and frame markers. Thus, many files can be opened without explicitly specifying details on frame and line markers. LSM images (which are mappings from pixel to ranges in the event stream) can be filled with photons after construction.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">channels</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<p>Next, a LSM image container is constructed. There are multiple options to
+encode markers for frames and lines in TTTR files. The default reading routine
+supports PicoQuant marker encodings and data recorded on Zeiss microscopes.</p>
+<section id="default-reading-routine">
+<h2>Default reading routine<a class="headerlink" href="#default-reading-routine" title="Link to this heading">#</a></h2>
+<p>PTU and HT3 files provide additional information that can be used to interpret
+the data in a TTTR file, ie, definitions for line and frame markers. Thus,
+many files can be opened without explicitly specifying details on frame and line
+markers. LSM images (which are mappings from pixel to ranges in the event stream)
+can be filled with photons after construction.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">channels</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">clsm_image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">)</span>
 <span class="n">clsm_image</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">clsm_image</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 <p>Alternatively, the images are filled with photons in a single step.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clsm_image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">channels</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">clsm_image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">channels</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">clsm_image</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
 
 <span class="c1"># In cases there are issues with the meta data (there are no official standards),</span>
 <span class="c1"># the frame and line markers can be explicitly specified.</span>
@@ -560,16 +558,12 @@ and pixel are identified.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Leica-instruments">
-<h2>Leica instruments<a class="headerlink" href="#Leica-instruments" title="Link to this heading">#</a></h2>
-<p>Leica instruments use a non-default marker encoding and different marker reading routines.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sp5_filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/leica/sp5/LSM_1.ptu&#39;</span><span class="p">)</span>
+<section id="leica-instruments">
+<h2>Leica instruments<a class="headerlink" href="#leica-instruments" title="Link to this heading">#</a></h2>
+<p>Leica instruments use a non-default marker encoding and different
+marker reading routines.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sp5_filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;imaging/leica/sp5/LSM_1.ptu&#39;</span><span class="p">)</span>
 <span class="n">sp5_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">sp5_filename</span><span class="p">,</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
 <span class="n">clsm_image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span>
     <span class="n">tttr_data</span><span class="o">=</span><span class="n">sp5_data</span><span class="p">,</span>
@@ -593,7 +587,18 @@ and pixel are identified.</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-flim-plot-read-clsm-data-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/46e861233c52de3717308a911a4ee7b8/plot_read_clsm_data.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_read_clsm_data.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/cf4fdbe98715151651dad09eb8be298d/plot_read_clsm_data.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_read_clsm_data.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1255f614b188805ec72bc6d9cc82ec6d/plot_read_clsm_data.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_read_clsm_data.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -644,15 +649,15 @@ and pixel are identified.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Default-reading-routine">Default reading routine</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Leica-instruments">Leica instruments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-reading-routine">Default reading routine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#leica-instruments">Leica instruments</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_read_clsm_data.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_read_clsm_data.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

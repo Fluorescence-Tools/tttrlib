@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_microtime_selection_example_fixed';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_microtime_selection_example_fixed.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_microtime_selection_example_fixed.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,25 +472,23 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Microtime-Range-Selection-Example-(Fixed-Version)">
-<h1>Microtime Range Selection Example (Fixed Version)<a class="headerlink" href="#Microtime-Range-Selection-Example-(Fixed-Version)" title="Link to this heading">#</a></h1>
-<p>This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn’t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.</p>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-microtime-selection-example-fixed-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="microtime-range-selection-example-fixed-version">
+<span id="sphx-glr-auto-examples-single-molecule-plot-microtime-selection-example-fixed-py"></span><h1>Microtime Range Selection Example (Fixed Version)<a class="headerlink" href="#microtime-range-selection-example-fixed-version" title="Link to this heading">#</a></h1>
+<p>This example demonstrates how to implement microtime range selection for burst analysis.
+While the BurstFilter class doesn’t currently have built-in microtime selection,
+this example shows how to achieve the same functionality by pre-filtering the TTTR data.</p>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </pre></div>
 </div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
 
 <span class="c1"># Load data</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">get_data_path</span><span class="p">(</span><span class="s2">&quot;bh/bh_spc132.spc&quot;</span><span class="p">)),</span> <span class="s2">&quot;SPC-130&quot;</span><span class="p">)</span>
@@ -501,15 +496,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<section id="Analyze-microtime-distribution">
-<h2>Analyze microtime distribution<a class="headerlink" href="#Analyze-microtime-distribution" title="Link to this heading">#</a></h2>
+<section id="analyze-microtime-distribution">
+<h2>Analyze microtime distribution<a class="headerlink" href="#analyze-microtime-distribution" title="Link to this heading">#</a></h2>
 <p>First, let’s look at the microtime distribution to understand the data</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">micro_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_times</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">micro_times</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_micro_times</span><span class="p">()</span>
 
 <span class="c1"># Plot histogram of microtimes</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
@@ -524,16 +514,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Most common microtime: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.argmax.html#numpy.argmax" title="numpy.argmax" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">argmax</span></a><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="si">}</span><span class="s2"> (count: </span><span class="si">{</span><span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Define-microtime-ranges-for-selection">
-<h2>Define microtime ranges for selection<a class="headerlink" href="#Define-microtime-ranges-for-selection" title="Link to this heading">#</a></h2>
+<section id="define-microtime-ranges-for-selection">
+<h2>Define microtime ranges for selection<a class="headerlink" href="#define-microtime-ranges-for-selection" title="Link to this heading">#</a></h2>
 <p>Define ranges of interest (min, max) in microtime channels</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">microtime_ranges</span> <span class="o">=</span> <span class="p">[</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">microtime_ranges</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>      <span class="c1"># Early photons</span>
     <span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">3000</span><span class="p">),</span>   <span class="c1"># Middle photons</span>
     <span class="p">(</span><span class="mi">3500</span><span class="p">,</span> <span class="mi">4095</span><span class="p">)</span>    <span class="c1"># Late photons</span>
@@ -544,15 +529,10 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">min_mt</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">max_mt</span><span class="si">}</span><span class="s2"> channels&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Select-photons-within-microtime-ranges">
-<h2>Select photons within microtime ranges<a class="headerlink" href="#Select-photons-within-microtime-ranges" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">select_photons_by_microtime</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">ranges</span><span class="p">):</span>
+<section id="select-photons-within-microtime-ranges">
+<h2>Select photons within microtime ranges<a class="headerlink" href="#select-photons-within-microtime-ranges" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">select_photons_by_microtime</span><span class="p">(</span><span class="n">tttr_data</span><span class="p">,</span> <span class="n">ranges</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Select photons that fall within specified microtime ranges.&quot;&quot;&quot;</span>
     <span class="n">micro_times</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="o">.</span><span class="n">get_micro_times</span><span class="p">()</span>
     <span class="n">selected_indices</span> <span class="o">=</span> <span class="p">[]</span>
@@ -571,29 +551,19 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Selected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> photons (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">% of total)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-filtered-TTTR-object">
-<h2>Create filtered TTTR object<a class="headerlink" href="#Create-filtered-TTTR-object" title="Link to this heading">#</a></h2>
+<section id="create-filtered-tttr-object">
+<h2>Create filtered TTTR object<a class="headerlink" href="#create-filtered-tttr-object" title="Link to this heading">#</a></h2>
 <p>Create a new TTTR object containing only the selected photons</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">selected_indices</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered data contains </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">filtered_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Perform-burst-analysis-on-filtered-data">
-<h2>Perform burst analysis on filtered data<a class="headerlink" href="#Perform-burst-analysis-on-filtered-data" title="Link to this heading">#</a></h2>
+<section id="perform-burst-analysis-on-filtered-data">
+<h2>Perform burst analysis on filtered data<a class="headerlink" href="#perform-burst-analysis-on-filtered-data" title="Link to this heading">#</a></h2>
 <p>Create BurstFilter with filtered data</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 
 <span class="c1"># Configure burst search parameters</span>
 <span class="n">burst_filter</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
@@ -615,7 +585,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Microtime selection example completed successfully!&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-microtime-selection-example-fixed-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b4d523c1b98f551b83a0d1f358224fb5/plot_microtime_selection_example_fixed.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_microtime_selection_example_fixed.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/b7dc6bf08ba00c0fe2a7fa9f13ca3203/plot_microtime_selection_example_fixed.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_microtime_selection_example_fixed.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2b0b60e5dd022b973721270157555462/plot_microtime_selection_example_fixed.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_microtime_selection_example_fixed.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -666,18 +647,18 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Analyze-microtime-distribution">Analyze microtime distribution</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Define-microtime-ranges-for-selection">Define microtime ranges for selection</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Select-photons-within-microtime-ranges">Select photons within microtime ranges</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-filtered-TTTR-object">Create filtered TTTR object</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Perform-burst-analysis-on-filtered-data">Perform burst analysis on filtered data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analyze-microtime-distribution">Analyze microtime distribution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-microtime-ranges-for-selection">Define microtime ranges for selection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#select-photons-within-microtime-ranges">Select photons within microtime ranges</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-filtered-tttr-object">Create filtered TTTR object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perform-burst-analysis-on-filtered-data">Perform burst analysis on filtered data</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_microtime_selection_example_fixed.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_microtime_selection_example_fixed.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

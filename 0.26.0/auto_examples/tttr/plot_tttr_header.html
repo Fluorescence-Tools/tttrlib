@@ -19,7 +19,7 @@
 <meta name="description" content="Introduction: TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the op..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>TTTR-Header &#8212; tttrlib v0.26.1</title>
+    <title>TTTR-Header &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/tttr/plot_tttr_header';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Micro time histograms" href="plot_tttr_microtime_histogram.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_header.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_header.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,21 +472,30 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="TTTR-Header">
-<h1>TTTR-Header<a class="headerlink" href="#TTTR-Header" title="Link to this heading">#</a></h1>
-<section id="Introduction">
-<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">#</a></h2>
-<p>TTTR files can contain additional meta-data. In tttrlib the meta data can be accessed and edited via the TTTRHeader class. Some TTTR file formats such as the PTU format provide the option for arbitrary meta data. Other TTTR formats have defined / fixed headers. Some of the information that can be found in a TTTR file is listed in <a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
-<p>Note, the list of Header tags is by any means not comprehensive. If you have information on the used header tags. Please contact the authors of tttrlib to contribute to the list.</p>
-</section>
-<section id="Accessing-header-data">
-<h2>Accessing header data<a class="headerlink" href="#Accessing-header-data" title="Link to this heading">#</a></h2>
-<p>Most TTTR container contain meta-data that can be accessed through <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>. For that, a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object provides a header attribute. The header attribute is of the type :class:<code class="docutils literal notranslate"><span class="pre">.Header</span></code>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-tttr-plot-tttr-header-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="tttr-header">
+<span id="sphx-glr-auto-examples-tttr-plot-tttr-header-py"></span><h1>TTTR-Header<a class="headerlink" href="#tttr-header" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>TTTR files can contain additional meta-data. In tttrlib the meta data can be
+accessed and edited via the TTTRHeader class. Some TTTR file formats such as the
+PTU format provide the option for arbitrary meta data. Other TTTR formats have
+defined / fixed headers. Some of the information that can be found in a TTTR file
+is listed in <a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
+<p>Note, the list of Header tags is by any means not comprehensive. If you have information
+on the used header tags. Please contact the authors of tttrlib to contribute
+to the list.</p>
+</section>
+<section id="accessing-header-data">
+<h2>Accessing header data<a class="headerlink" href="#accessing-header-data" title="Link to this heading">#</a></h2>
+<p>Most TTTR container contain meta-data that can be accessed through <code class="docutils literal notranslate"><span class="pre">tttrlib</span></code>.
+For that, a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object provides a header attribute. The header attribute is
+of the type <code class="xref py py-class docutils literal notranslate"><span class="pre">Header</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
@@ -501,50 +507,40 @@
 <span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
 </pre></div>
 </div>
-</div>
-<p>The most important attributes of the header are the :py:attr:<code class="docutils literal notranslate"><span class="pre">micro_time_resolution</span></code> and :py:attr:<code class="docutils literal notranslate"><span class="pre">macro_time_resolution</span></code>. Becker&amp;Hickl Spc132 files files contain only a limited amount of information in the first record (32 bit).</p>
-<p>PicoQuant PTU and HT3 files provide more extensive information in their header that can be accessed via the :py:attr:<code class="docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object. The :py:attr:<code class="docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object is a JSON string. Setting the :py:attr:<code class="docutils literal notranslate"><span class="pre">json</span></code> attribute modifies the header / meta data of a TTTR object.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<p>The most important attributes of the header are the <code class="xref py py-attr docutils literal notranslate"><span class="pre">micro_time_resolution</span></code>
+and <code class="xref py py-attr docutils literal notranslate"><span class="pre">macro_time_resolution</span></code>. Becker&amp;Hickl Spc132 files files contain
+only a limited amount of information in the first record (32 bit).</p>
+<p>PicoQuant PTU and HT3 files provide more extensive information in their header
+that can be accessed via the <code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object. The
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code> attribute of a header object is a JSON string. Setting the <code class="xref py py-attr docutils literal notranslate"><span class="pre">json</span></code>
+attribute modifies the header / meta data of a TTTR object.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;pq/ptu/pq_ptu_hh_t3.ptu&#39;</span><span class="p">),</span> <span class="s1">&#39;PTU&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 <p>the header can be accesses by the method get_header or as a property</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span>
 <span class="n">header_json</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><a href="https://docs.python.org/3/library/json.html#module-json" title="builtins.json" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-module"><span class="n">json</span></a>
 <span class="n">header_dict</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/json.html#json.loads" title="json.loads" class="sphx-glr-backref-module-json sphx-glr-backref-type-py-function"><span class="n">json</span><span class="o">.</span><span class="n">loads</span></a><span class="p">(</span><span class="n">header_json</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">header_dict</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Time-calibration-data">
-<h2>Time calibration data<a class="headerlink" href="#Time-calibration-data" title="Link to this heading">#</a></h2>
-<p>Essential for the analysis of TTTR data is the time calibration (time resolution) of the macro and the micro times in addition to the number of possible micro time channels. In many functions the micro and macro time calibration are transparently handled, meaning there is no need to worry. The <code class="docutils literal notranslate"><span class="pre">macro_time</span></code> and the <code class="docutils literal notranslate"><span class="pre">micro_time</span></code> TTTR attributes correspond the to raw uncalibrated data.</p>
+<section id="time-calibration-data">
+<h2>Time calibration data<a class="headerlink" href="#time-calibration-data" title="Link to this heading">#</a></h2>
+<p>Essential for the analysis of TTTR data is the time calibration (time resolution)
+of the macro and the micro times in addition to the number of possible micro time
+channels. In many functions the micro and macro time calibration are transparently
+handled, meaning there is no need to worry. The <code class="docutils literal notranslate"><span class="pre">macro_time</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">micro_time</span></code> TTTR attributes correspond the to raw uncalibrated data.</p>
 <p>The macro and micro time resolution is accessed as follows.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
 <span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
 </pre></div>
 </div>
-</div>
-<p>The number of micro time channels can be accessed as displayed below. The header can be accesses by the method get_header or as an property.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+<p>The number of micro time channels can be accessed as displayed below.
+The header can be accesses by the method get_header or as an property.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
 <span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
 <span class="c1"># macro_time_resolution = 12.5 ns</span>
 <span class="n">micro_time_resolution</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">micro_time_resolution</span>
@@ -555,42 +551,49 @@
 <span class="c1"># will return 3125</span>
 </pre></div>
 </div>
-</div>
-<p>Note, the effective number of micro time channels, i.e., the number of micro time channels can be smaller than the actual number of micro time channels. For instance at a micro time channel resolution of 4 ps and macro time resolution of 12.5 ns effectively only 3125 micro time channels will be filled with photons.</p>
+<p>Note, the effective number of micro time channels, i.e., the number of micro time
+channels can be smaller than the actual number of micro time channels. For
+instance at a micro time channel resolution of 4 ps and macro time resolution
+of 12.5 ns effectively only 3125 micro time channels will be filled with
+photons.</p>
 </section>
-<section id="Creating-and-writing-TTTRHeader">
-<h2>Creating and writing TTTRHeader<a class="headerlink" href="#Creating-and-writing-TTTRHeader" title="Link to this heading">#</a></h2>
-<p>Each TTTR object has an attribute that is an instance of the TTTRHeader class. This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader objects can also be created independently of TTTR object.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<section id="creating-and-writing-tttrheader">
+<h2>Creating and writing TTTRHeader<a class="headerlink" href="#creating-and-writing-tttrheader" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>Each TTTR object has an attribute that is an instance of the TTTRHeader class.</dt><dd><p>This instances makes the meta-data contained in the TTTR file accessible. TTTRHeader</p>
+</dd>
+</dl>
+<p>objects can also be created independently of TTTR object.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
 </pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
-</pre></div>
-</div>
 </div>
 </section>
-<section id="Modifying-meta-data">
-<h2>Modifying meta-data<a class="headerlink" href="#Modifying-meta-data" title="Link to this heading">#</a></h2>
-<p>The data containted in a TTTRHeader instance can be accesses as JSON string. The <a class="reference external" href="https://www.json.org">JSON</a> string.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<section id="modifying-meta-data">
+<h2>Modifying meta-data<a class="headerlink" href="#modifying-meta-data" title="Link to this heading">#</a></h2>
+<p>The data containted in a TTTRHeader instance can be accesses as JSON string. The
+<a class="reference external" href="https://www.json.org">JSON</a> string.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRHeader</span><span class="p">()</span>
+<p>The JSON string must contain a <code class="xref any docutils literal notranslate"><span class="pre">tags</span></code> list. The <code class="xref any docutils literal notranslate"><span class="pre">tags</span></code> list is a list of dictionarys
+in which each dictionary corresponds to a meta-data field in the header. For instance,</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><a href="https://docs.python.org/3/library/json.html#module-json" title="builtins.json" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-module"><span class="n">json</span></a><span class="p">)</span> <span class="c1"># &#39;{\n &quot;tags&quot;: []\n}&#39;</span>
 </pre></div>
 </div>
+<p>Different meta data fields are listed in
+<a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-tttr-plot-tttr-header-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/556f445f5c3a9909dd1c3f6c989a0ebb/plot_tttr_header.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_tttr_header.ipynb</span></code></a></p>
 </div>
-<p>The JSON string must contain a <code class="docutils literal notranslate"><span class="pre">tags</span></code> list. The <code class="docutils literal notranslate"><span class="pre">tags</span></code> list is a list of dictionarys in which each dictionary corresponds to a meta-data field in the header. For instance,</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d1917d97529c359c2b919a59d0dfcd81/plot_tttr_header.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_tttr_header.py</span></code></a></p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><a href="https://docs.python.org/3/library/json.html#module-json" title="builtins.json" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-module"><span class="n">json</span></a><span class="p">)</span> <span class="c1"># &#39;{\n &quot;tags&quot;: []\n}&#39;</span>
-</pre></div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/112fddd18db486c29fc9d5eaa5b38724/plot_tttr_header.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_tttr_header.zip</span></code></a></p>
 </div>
 </div>
-<p>Different meta data fields are listed in <a class="reference external" href="https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL">Header tags sheet</a>.</p>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -641,18 +644,18 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Introduction">Introduction</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Accessing-header-data">Accessing header data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Time-calibration-data">Time calibration data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Creating-and-writing-TTTRHeader">Creating and writing TTTRHeader</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Modifying-meta-data">Modifying meta-data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-header-data">Accessing header data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#time-calibration-data">Time calibration data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-and-writing-tttrheader">Creating and writing TTTRHeader</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modifying-meta-data">Modifying meta-data</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/tttr/plot_tttr_header.ipynb.txt">
+    <a href="../../_sources/auto_examples/tttr/plot_tttr_header.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

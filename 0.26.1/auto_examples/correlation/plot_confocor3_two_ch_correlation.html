@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/correlation/plot_confocor3_two_ch_correlation';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,96 +472,74 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Confocor3-two-channel-cross-correlation">
-<h1>Confocor3 two channel cross-correlation<a class="headerlink" href="#Confocor3-two-channel-cross-correlation" title="Link to this heading">#</a></h1>
-<p>The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.</p>
-<p>In this example two raw files of a Confocor3 are read and merged into a single photon stream. Next, the merged photon stream is used to compute the cross-correlation between the two channels.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-confocor3-two-ch-correlation-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<section class="sphx-glr-example-title" id="confocor3-two-channel-cross-correlation">
+<span id="sphx-glr-auto-examples-correlation-plot-confocor3-two-ch-correlation-py"></span><h1>Confocor3 two channel cross-correlation<a class="headerlink" href="#confocor3-two-channel-cross-correlation" title="Link to this heading">#</a></h1>
+<p>The raw FCS data format of the Zeiss Confocor3 is relatively simple.
+Zeiss Confocor3 raw files store time-difference between photons.
+A relatively small header is followed by a set of 32-bit integers that
+contain the time difference to the previous registered photon. Photons
+registered by different channels are stored in separate files.</p>
+<p>In this example two raw files of a Confocor3 are read and merged into
+a single photon stream. Next, the merged photon stream is used to compute
+the cross-correlation between the two channels.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 </pre></div>
 </div>
-</div>
-<section id="Reading-data">
-<h2>Reading data<a class="headerlink" href="#Reading-data" title="Link to this heading">#</a></h2>
+<section id="reading-data">
+<h2>Reading data<a class="headerlink" href="#reading-data" title="Link to this heading">#</a></h2>
 <p>The photon data registered by different detectors are saved in separate files.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_root</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_root</span>
 <span class="c1"># Read the data of all channels that should be correlated into separate containers.</span>
 <span class="n">fns</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">get_data_root</span><span class="p">()</span> <span class="o">/</span> <span class="s1">&#39;cz/fcs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw&#39;</span><span class="p">)])</span>
 
 <span class="n">tttr_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;CZ-RAW&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">fns</span><span class="p">]</span>
 </pre></div>
 </div>
-</div>
-<p>We combine the data in different files into a single TTTR container using the header of first file as template.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+<p>We combine the data in different files into a single TTTR container using the header
+of first file as template.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">header</span> <span class="o">=</span> <span class="n">tttr_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
 <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">routing_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Used channels:&quot;</span><span class="p">,</span> <span class="n">channels</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>You can check the count rates of the channels using the macro time resolution contained in the header</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
+<p>You can check the count rates of the channels using the macro time resolution contained
+in the header</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_time_resolution</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">macro_time_resolution</span>
 <span class="n">count_rates</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">macro_time_resolution</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Count rates:&quot;</span><span class="p">,</span> <span class="n">count_rates</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Now we merge the data of the two detectors in a single container. The marco times need to be sorted first.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">macro_times</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html#numpy.concatenate" title="numpy.concatenate" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span></a><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">macro_times</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">])</span>
+<p>Now we merge the data of the two detectors in a single container. The
+marco times need to be sorted first.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">macro_times</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html#numpy.concatenate" title="numpy.concatenate" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span></a><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">macro_times</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">])</span>
 <span class="n">routing_channels</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html#numpy.concatenate" title="numpy.concatenate" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span></a><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">routing_channels</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tttr_data</span><span class="p">])</span>
 <span class="n">sorted_indices</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.argsort.html#numpy.argsort" title="numpy.argsort" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">argsort</span></a><span class="p">(</span><span class="n">macro_times</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;stable&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Using the sorted macro times we sort the routing channel numbers and the macro times.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">routing_channels</span> <span class="o">=</span> <span class="n">routing_channels</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
+<p>Using the sorted macro times we sort the routing channel numbers
+and the macro times.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">routing_channels</span> <span class="o">=</span> <span class="n">routing_channels</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
 <span class="n">macro_times</span> <span class="o">=</span> <span class="n">macro_times</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
 </pre></div>
 </div>
-</div>
-<p>Note: no micro time and no event type in the raw Confocor3 format. Thus, we use ones for the micro time and the event type.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">micro_times</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html#numpy.ones_like" title="numpy.ones_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span></a><span class="p">(</span><span class="n">macro_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint16" title="numpy.uint16" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint16</span></a><span class="p">)</span>
+<p>Note: no micro time and no event type in the raw Confocor3 format.
+Thus, we use ones for the micro time and the event type.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">micro_times</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html#numpy.ones_like" title="numpy.ones_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span></a><span class="p">(</span><span class="n">macro_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint16" title="numpy.uint16" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">uint16</span></a><span class="p">)</span>
 <span class="n">event_types</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html#numpy.ones_like" title="numpy.ones_like" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span></a><span class="p">(</span><span class="n">macro_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int8" title="numpy.int8" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int8</span></a><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Using the merged marcro times and channel numbers, we create a new TTTR container.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_merged</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">()</span>
+<p>Using the merged marcro times and channel numbers, we create a new
+TTTR container.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_merged</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">()</span>
 <span class="n">tttr_merged</span><span class="o">.</span><span class="n">set_header</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 <span class="n">tttr_merged</span><span class="o">.</span><span class="n">append_events</span><span class="p">(</span>
     <span class="n">macro_times</span><span class="o">=</span><span class="n">macro_times</span><span class="p">,</span>
@@ -574,13 +549,8 @@
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
 <p>The container can be used for standard analysis, e.g., correlations.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;n_bins&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>  <span class="c1"># n_bins and n_casc defines the settings of the multi-tau</span>
     <span class="s2">&quot;n_casc&quot;</span><span class="p">:</span> <span class="mi">19</span><span class="p">,</span>  <span class="c1"># correlation algorithm</span>
 <span class="p">}</span>
@@ -625,7 +595,18 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-confocor3-two-ch-correlation-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/08bca11ccca1d38fd98ff010460b834c/plot_confocor3_two_ch_correlation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_confocor3_two_ch_correlation.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/480298e9de6345b52822377119134adf/plot_confocor3_two_ch_correlation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_confocor3_two_ch_correlation.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/a90c9771405a3c536baefd0ad1fe30e7/plot_confocor3_two_ch_correlation.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_confocor3_two_ch_correlation.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -676,14 +657,14 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reading-data">Reading data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-data">Reading data</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_confocor3_two_ch_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/fluorescence_decay/plot_fit24.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes $ au_1$, $ au_2$, and amplitude of the second lifetime a_2, the fraction scattered light\gamma, and a const..." />
+<meta property="og:description" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes :math:` au_1`, :math:` au_2`, and amplitude of the second lifetime a_2, the fraction scattered light\gamma,..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_fluorescence_decay_plot_fit24_c680a054.png" />
-<meta property="og:image:alt" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes $ au_1$, $ au_2$, and amplitude of the second lifetime a_2, the fraction scattered light\gamma, and a const..." />
-<meta name="description" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes $ au_1$, $ au_2$, and amplitude of the second lifetime a_2, the fraction scattered light\gamma, and a const..." />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_fluorescence_decay_plot_fit24_1a6e8667.png" />
+<meta property="og:image:alt" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes :math:` au_1`, :math:` au_2`, and amplitude of the second lifetime a_2, the fraction scattered light\gamma,..." />
+<meta name="description" content="fit24: Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes :math:` au_1`, :math:` au_2`, and amplitude of the second lifetime a_2, the fraction scattered light\gamma,..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Bi-exponential model &#8212; tttrlib v0.26.1</title>
@@ -406,7 +406,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_fit24.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_fit24.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -474,20 +474,39 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Bi-exponential-model">
-<h1>Bi-exponential model<a class="headerlink" href="#Bi-exponential-model" title="Link to this heading">#</a></h1>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-fluorescence-decay-plot-fit24-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="bi-exponential-model">
+<span id="sphx-glr-auto-examples-fluorescence-decay-plot-fit24-py"></span><h1>Bi-exponential model<a class="headerlink" href="#bi-exponential-model" title="Link to this heading">#</a></h1>
 <section id="fit24">
 <h2>fit24<a class="headerlink" href="#fit24" title="Link to this heading">#</a></h2>
-<p>Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes $ au_1$, $ au_2$, and amplitude of the second lifetime <span class="math notranslate nohighlight">\(a_2\)</span>, the fraction scattered light <span class="math notranslate nohighlight">\(\gamma\)</span>, and a constant offset to experimental data. Fit24 does not describe anisotropy. The decays passed to the fit in the :term:<code class="docutils literal notranslate"><span class="pre">Jordi</span></code> format. The two decays in the Jordi array are both treated by the same model function and convoluted with the corresponding :term:<code class="docutils literal notranslate"><span class="pre">instrument</span> <span class="pre">response</span> <span class="pre">function&lt;IRF&gt;</span></code>. The
-model function is</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>M_i =(1-a_2) \exp(i\Delta t/        au_1) + a_2 \exp(i\Delta t/     au_2)
-</pre></div>
+<p>Fit24 optimizes is a bi-exponential model function with two fluorescence lifetimes
+:math:` au_1`, :math:`  au_2`, and amplitude of the second lifetime <span class="math notranslate nohighlight">\(a_2\)</span>,
+the fraction scattered light <span class="math notranslate nohighlight">\(\gamma\)</span>, and a constant offset to experimental
+data. Fit24 does not describe anisotropy. The decays passed to the fit in the
+<span class="xref std std-term">Jordi</span> format. The two decays in the Jordi array are both treated by the
+same model function and convoluted with the corresponding
+<a class="reference internal" href="../../glossary.html#term-IRF"><span class="xref std std-term">instrument response function</span></a>. The model function is</p>
+<p>where <span class="math notranslate nohighlight">\(\Delta t\)</span> is the time per micro time channel, <span class="math notranslate nohighlight">\(i\)</span> is the micro time
+channel number, <span class="math notranslate nohighlight">\(a_2\)</span> is the fraction of the second species. The model function
+is corrected for the fraction of background and a constant offset.</p>
+<p>Where,  <span class="math notranslate nohighlight">\(c\)</span> is a constant offset, <span class="math notranslate nohighlight">\(B\)</span> the background pattern, <span class="math notranslate nohighlight">\(M\)</span>
+the model function and <span class="math notranslate nohighlight">\(\gamma\)</span> the fraction of scattered light.</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-fluorescence-decay-plot-fit24-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9b25965c40d7bea1c7f428d9cc1d332d/plot_fit24.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_fit24.ipynb</span></code></a></p>
 </div>
-<p>where <span class="math notranslate nohighlight">\(\Delta t\)</span> is the time per micro time channel, <span class="math notranslate nohighlight">\(i\)</span> is the micro time channel number, <span class="math notranslate nohighlight">\(a_2\)</span> is the fraction of the second species. The model function is corrected for the fraction of background and a constant offset.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>g_i =(1 - \gamma)  rac{M_i}{\sum_i M_i} + \gamma  rac{B_i}{\sum_i B_i} + c
-</pre></div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1328826b0fd4e207e5b188d095e5fb00/plot_fit24.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_fit24.py</span></code></a></p>
 </div>
-<p>Where, <span class="math notranslate nohighlight">\(c\)</span> is a constant offset, <span class="math notranslate nohighlight">\(B\)</span> the background pattern, <span class="math notranslate nohighlight">\(M\)</span> the model function and <span class="math notranslate nohighlight">\(\gamma\)</span> the fraction of scattered light.</p>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/0d31a86540e629f76d18be37de203b97/plot_fit24.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_fit24.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -545,7 +564,7 @@ model function is</p>
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/fluorescence_decay/plot_fit24.ipynb.txt">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_fit24.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_single_molecule_mcs';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_mcs.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_mcs.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,12 +472,24 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Intensity-traces">
-<h1>Intensity traces<a class="headerlink" href="#Intensity-traces" title="Link to this heading">#</a></h1>
-<p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.intensity_trace</span></code> can be applied to a sequences of event times traces to calculate the time-dependent counts for a given time window size. In single-molecule FRET experiments such traces are particularly useful to illustrate single-molecule bursts. The function takes an array of macro times as an input the macro times are binned and the counts per bin are returned.</p>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-mcs-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="intensity-traces">
+<span id="sphx-glr-auto-examples-single-molecule-plot-single-molecule-mcs-py"></span><h1>Intensity traces<a class="headerlink" href="#intensity-traces" title="Link to this heading">#</a></h1>
+<p>The function <code class="docutils literal notranslate"><span class="pre">tttrlib.intensity_trace</span></code> can be applied to a sequences of event
+times traces to calculate the time-dependent counts for a given time window size.
+In single-molecule FRET experiments such traces are particularly useful to illustrate
+single-molecule bursts. The function takes an array of macro times as an input
+the macro times are binned and the counts per bin are returned.</p>
 <p>#.. plot:: ../examples/single_molecule/single_molecule_mcs.py</p>
-<p>Above, for a donor and acceptor detection channel a histogram trace for is shown in green and red.</p>
-<p>There are two options to compute intensity traces. Intensity traces can either be computed using the function <code class="docutils literal notranslate"><span class="pre">tttrlib.compute_intensity_trace</span></code> or using the method <code class="docutils literal notranslate"><span class="pre">intensity_trace</span></code> of a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object.</p>
+<p>Above, for a donor and acceptor detection channel a histogram trace for is shown
+in green and red.</p>
+<p>There are two options to compute intensity traces. Intensity traces can either be
+computed using the function <code class="docutils literal notranslate"><span class="pre">tttrlib.compute_intensity_trace</span></code> or using the method
+<code class="docutils literal notranslate"><span class="pre">intensity_trace</span></code> of a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr_object</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">DATA_ROOT</span> <span class="o">/</span> <span class="s1">&#39;bh/bh_spc132.spc&#39;</span><span class="p">),</span> <span class="s1">&#39;SPC-130&#39;</span><span class="p">)</span>
 <span class="c1"># option 1</span>
 <span class="n">tttr_object</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">compute_intensity_trace</span><span class="p">(</span>
@@ -494,12 +503,11 @@
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>When the first option is used, a calibration for the macro time array needs to be provided. If the second option is used, the macro time calibration of the header information that was processes from the tttr file when the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object was created is already considered. The time window length are in units of milli seconds.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<p>When the first option is used, a calibration for the macro time array needs to be
+provided. If the second option is used, the macro time calibration of the header
+information that was processes from the tttr file when the <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> object was
+created is already considered. The time window length are in units of milli seconds.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">p</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -546,7 +554,18 @@
 <span class="c1">#</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-single-molecule-mcs-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4db36fea45b401d14fbbaab49e3ff50e/plot_single_molecule_mcs.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_single_molecule_mcs.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2a96f9904cf6d2deda5c790e1f03efee/plot_single_molecule_mcs.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_single_molecule_mcs.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d564c6d65f4e62f672859a8404a0811c/plot_single_molecule_mcs.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_single_molecule_mcs.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -591,7 +610,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_mcs.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_single_molecule_mcs.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

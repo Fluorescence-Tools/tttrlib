@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/single_molecule/plot_01_burst_analysis.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: Loading TTTR data, Selecting donor and acceptor channels, Optional PIE/ALEX micro-time gating, Performing..." />
+<meta property="og:description" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: - Loading TTTR data - Selecting donor and acceptor channels - Optional PIE/ALEX micro-time gating - Perfo..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_01_burst_analysis_d0b0add2.png" />
-<meta property="og:image:alt" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: Loading TTTR data, Selecting donor and acceptor channels, Optional PIE/ALEX micro-time gating, Performing..." />
-<meta name="description" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: Loading TTTR data, Selecting donor and acceptor channels, Optional PIE/ALEX micro-time gating, Performing..." />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_01_burst_analysis_fed9f453.png" />
+<meta property="og:image:alt" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: - Loading TTTR data - Selecting donor and acceptor channels - Optional PIE/ALEX micro-time gating - Perfo..." />
+<meta name="description" content="This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers: - Loading TTTR data - Selecting donor and acceptor channels - Optional PIE/ALEX micro-time gating - Perfo..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Burst Analysis Example with BurstFilter &#8212; tttrlib v0.26.1</title>
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_01_burst_analysis';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_01_burst_analysis.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_01_burst_analysis.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,42 +472,36 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Burst-Analysis-Example-with-BurstFilter">
-<h1>Burst Analysis Example with BurstFilter<a class="headerlink" href="#Burst-Analysis-Example-with-BurstFilter" title="Link to this heading">#</a></h1>
-<p>This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers:</p>
-<ul class="simple">
-<li><p>Loading TTTR data</p></li>
-<li><p>Selecting donor and acceptor channels</p></li>
-<li><p>Optional PIE/ALEX micro-time gating</p></li>
-<li><p>Performing burst search using BurstFilter</p></li>
-<li><p>Filtering bursts by size, duration, and background</p></li>
-<li><p>Merging short gaps between bursts</p></li>
-<li><p>Computing FRET efficiency</p></li>
-<li><p>Visualizing burst size and FRET distributions</p></li>
-</ul>
-<div class="admonition note">
-<div class="admonition-title"><h4></div><p>Note</p>
-</h4><p><p>This example requires a TTTR file. We use a sample file for demonstration.</p>
-</p></div>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-01-burst-analysis-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="burst-analysis-example-with-burstfilter">
+<span id="sphx-glr-auto-examples-single-molecule-plot-01-burst-analysis-py"></span><h1>Burst Analysis Example with BurstFilter<a class="headerlink" href="#burst-analysis-example-with-burstfilter" title="Link to this heading">#</a></h1>
+<p>This example demonstrates burst analysis using the BurstFilter class in tttrlib. It covers:
+- Loading TTTR data
+- Selecting donor and acceptor channels
+- Optional PIE/ALEX micro-time gating
+- Performing burst search using BurstFilter
+- Filtering bursts by size, duration, and background
+- Merging short gaps between bursts
+- Computing FRET efficiency
+- Visualizing burst size and FRET distributions</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example requires a TTTR file. We use a sample file for demonstration.</p>
+</div>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </pre></div>
 </div>
-</div>
-<section id="Load-data">
-<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">#</a></h2>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Link to this heading">#</a></h2>
 <p>Use TTTRLIB_DATA\bh\bh_spc132_sm_dna\*.spc explicitly (no complicated lookup).</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 
 <span class="n">data_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;TTTRLIB_DATA&#39;</span><span class="p">)</span>
@@ -532,16 +523,12 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Define-donor-and-acceptor-channels">
-<h2>Define donor and acceptor channels<a class="headerlink" href="#Define-donor-and-acceptor-channels" title="Link to this heading">#</a></h2>
-<p>Define channels with routing channels and microtime ranges Adjust these values based on your instrument configuration</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">channels_dict</span> <span class="o">=</span> <span class="p">[</span>
+<section id="define-donor-and-acceptor-channels">
+<h2>Define donor and acceptor channels<a class="headerlink" href="#define-donor-and-acceptor-channels" title="Link to this heading">#</a></h2>
+<p>Define channels with routing channels and microtime ranges
+Adjust these values based on your instrument configuration</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">channels_dict</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span>
         <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;donor&#39;</span><span class="p">,</span>
         <span class="s1">&#39;components&#39;</span><span class="p">:</span> <span class="p">[</span>
@@ -559,16 +546,11 @@
 <span class="c1"># Channel system is now the primary approach for channel selection</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Burst-search-using-BurstFilter-with-channels">
-<h2>Burst search using BurstFilter with channels<a class="headerlink" href="#Burst-search-using-BurstFilter-with-channels" title="Link to this heading">#</a></h2>
+<section id="burst-search-using-burstfilter-with-channels">
+<h2>Burst search using BurstFilter with channels<a class="headerlink" href="#burst-search-using-burstfilter-with-channels" title="Link to this heading">#</a></h2>
 <p>Create BurstFilter instance</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 
 <span class="c1"># Load channel definitions</span>
 <span class="n">burst_filter</span><span class="o">.</span><span class="n">load_channels_from_json_dict</span><span class="p">(</span><span class="n">channels_dict</span><span class="p">)</span>
@@ -603,16 +585,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bursts_np</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Filter-and-merge-bursts">
-<h2>Filter and merge bursts<a class="headerlink" href="#Filter-and-merge-bursts" title="Link to this heading">#</a></h2>
+<section id="filter-and-merge-bursts">
+<h2>Filter and merge bursts<a class="headerlink" href="#filter-and-merge-bursts" title="Link to this heading">#</a></h2>
 <p>Print burst statistics before filtering</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Burst statistics before filtering:&quot;</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Burst statistics before filtering:&quot;</span><span class="p">)</span>
 <span class="n">num_bursts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">burst_filter</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Number of bursts: </span><span class="si">{</span><span class="n">num_bursts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -654,15 +631,10 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean size: </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.mean.html#numpy.mean" title="numpy.mean" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">mean</span></a><span class="p">(</span><span class="n">sizes</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> photons&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Compute-FRET-efficiency-using-JSON-data-only">
-<h2>Compute FRET efficiency using JSON data only<a class="headerlink" href="#Compute-FRET-efficiency-using-JSON-data-only" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">E_values</span> <span class="o">=</span> <span class="p">[]</span>
+<section id="compute-fret-efficiency-using-json-data-only">
+<h2>Compute FRET efficiency using JSON data only<a class="headerlink" href="#compute-fret-efficiency-using-json-data-only" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">E_values</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">burst_sizes</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">donor_counts</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">acceptor_counts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -702,15 +674,10 @@
             <span class="n">acceptor_count_rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acceptor_rate</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Plotting">
-<h2>Plotting<a class="headerlink" href="#Plotting" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">burst_sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<section id="plotting">
+<h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">burst_sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 
     <span class="c1"># Burst size distribution</span>
@@ -745,7 +712,18 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No bursts found after filtering&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-01-burst-analysis-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/88226410c5d2283d354482ab172e5fb4/plot_01_burst_analysis.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_01_burst_analysis.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e63a95e7a03b47ce6f9c3515ad1df914/plot_01_burst_analysis.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_01_burst_analysis.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/68ada6f59780d7acb3255f539e2d90ba/plot_01_burst_analysis.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_01_burst_analysis.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -796,19 +774,19 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-data">Load data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Define-donor-and-acceptor-channels">Define donor and acceptor channels</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Burst-search-using-BurstFilter-with-channels">Burst search using BurstFilter with channels</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Filter-and-merge-bursts">Filter and merge bursts</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Compute-FRET-efficiency-using-JSON-data-only">Compute FRET efficiency using JSON data only</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plotting">Plotting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-donor-and-acceptor-channels">Define donor and acceptor channels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#burst-search-using-burstfilter-with-channels">Burst search using BurstFilter with channels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filter-and-merge-bursts">Filter and merge bursts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-fret-efficiency-using-json-data-only">Compute FRET efficiency using JSON data only</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting">Plotting</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_01_burst_analysis.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_01_burst_analysis.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

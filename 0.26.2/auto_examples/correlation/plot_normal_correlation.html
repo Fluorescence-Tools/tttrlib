@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/correlation/plot_normal_correlation';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_normal_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_normal_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,18 +472,32 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Normal-multi-tau-correlation">
-<h1>Normal multi-tau correlation<a class="headerlink" href="#Normal-multi-tau-correlation" title="Link to this heading">#</a></h1>
-<p>An alternative approach is to calculate the FCS curve by software on the basis of the directly recorded asynchronous photon count data. The straightforward approach would be to generate a continuous file of fluorescence intensity values in consecutive time bins of fixed bin width, and to use this file for a conventional autocorrelation calculation. But then again, one encounters the same unreasonably large amount of data as when directly recording fluorescence intensity values in a synchronous
-data acquisition mode.</p>
-<p>When applying the algorithm only at the increasingly spaced lag times as given by Eq. (2), it will completely miss, e.g., the strong autocorrelation of any periodic signal with a repetition time not included within the vector of used lag times. To avoid that, one usually applies an averaging procedure by coarsening the time resolution of the photon detection times tj when coming to the calculation of the autocorrelation function at increasingly larger lag time. This is equivalent to the
-multiple-tau and multiple-sampling time correlation method employed in hardware correlators [12].</p>
-<p>:cite:<code class="docutils literal notranslate"><span class="pre">Wahl2003</span></code>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-correlation-plot-normal-correlation-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<section class="sphx-glr-example-title" id="normal-multi-tau-correlation">
+<span id="sphx-glr-auto-examples-correlation-plot-normal-correlation-py"></span><h1>Normal multi-tau correlation<a class="headerlink" href="#normal-multi-tau-correlation" title="Link to this heading">#</a></h1>
+<p>An alternative approach is to calculate the FCS curve by software
+on the basis of the directly recorded asynchronous photon count data.
+The straightforward approach would be to generate a continuous file of
+fluorescence intensity values in consecutive time bins of fixed bin
+width, and to use this file for a conventional autocorrelation calculation.
+But then again, one encounters the same unreasonably large amount of data
+as when directly recording fluorescence intensity values in a synchronous
+data acquisition mode.</p>
+<p>When applying the algorithm only at the increasingly spaced lag
+times as given by Eq. (2), it will completely miss, e.g., the strong
+autocorrelation of any periodic signal with a repetition time not
+included within the vector of used lag times. To avoid that, one usually
+applies an averaging procedure by coarsening the time resolution of the photon
+detection times tj when coming to the calculation of the autocorrelation
+function at increasingly larger lag time. This is equivalent to the multiple-tau
+and multiple-sampling time correlation method employed in hardware
+correlators [12].</p>
+<p><span class="bibtex-citation" id="id1">[]</span>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pylab</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
@@ -583,7 +594,18 @@ multiple-tau and multiple-sampling time correlation method employed in hardware 
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-correlation-plot-normal-correlation-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/14294d7048acc01b57c30345ce143a90/plot_normal_correlation.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_normal_correlation.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/5e346751c17c9cb01b66a1ccbf34fc36/plot_normal_correlation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_normal_correlation.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9033068d73005669e652a91f15653e7f/plot_normal_correlation.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_normal_correlation.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -628,7 +650,7 @@ multiple-tau and multiple-sampling time correlation method employed in hardware 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/correlation/plot_normal_correlation.ipynb.txt">
+    <a href="../../_sources/auto_examples/correlation/plot_normal_correlation.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

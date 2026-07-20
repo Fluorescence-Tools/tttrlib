@@ -19,7 +19,7 @@
 <meta name="description" content="TTTR images are mappings from pixels to groups of photons. The photons relate to a set of pulsed light sources that illuminate the sample. The photons are detected by a set of detectors and the tim..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>TTTR Image representations &#8212; tttrlib v0.26.1</title>
+    <title>TTTR Image representations &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/flim/plot_imaging_representations';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="FLIM-PIE" href="plot_flim_pie.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_imaging_representations.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_imaging_representations.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,22 +472,34 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="TTTR-Image-representations">
-<h1>TTTR Image representations<a class="headerlink" href="#TTTR-Image-representations" title="Link to this heading">#</a></h1>
-<p>TTTR images are mappings from pixels to groups of photons. The photons relate to a set of pulsed light sources that illuminate the sample. The photons are detected by a set of detectors and the time between the light pulse and the detection is registered along with a detector identifier using time-resolved detection. To visualize features of photon groups that relate to the pixel a dimensionality reduction is applied.</p>
-<p>Here, few examples visualize typical mappings from photon groups to representations that can be visualized in an image. In this example data of a pulsed interleaved (PIE) multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer (FRET) experiment is processed. The FRET sample contained a donor, D, and an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. create intensity images
-2. selection of channels
-3. stripping of photons from CLSMImage
-4. image of the mean micro times
-5. a fluorescence intensity decay of the micro times
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-flim-plot-imaging-representations-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#%</span>
+<section class="sphx-glr-example-title" id="tttr-image-representations">
+<span id="sphx-glr-auto-examples-flim-plot-imaging-representations-py"></span><h1>TTTR Image representations<a class="headerlink" href="#tttr-image-representations" title="Link to this heading">#</a></h1>
+<p>TTTR images are mappings from pixels to groups of photons. The photons
+relate to a set of pulsed light sources that illuminate the sample. The
+photons are detected by a set of detectors and the time between the light
+pulse and the detection is registered along with a detector identifier
+using time-resolved detection. To visualize features of photon groups that
+relate to the pixel a dimensionality reduction is applied.</p>
+<p>Here, few examples visualize typical mappings from photon groups to representations
+that can be visualized in an image. In this example data of a pulsed interleaved (PIE)
+multiparameter fluorescence detection (MFD) Förster Resonance Energy Transfer
+(FRET) experiment is processed. The FRET sample contained a donor, D, and
+an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>create intensity images</p></li>
+<li><p>selection of channels</p></li>
+<li><p>stripping of photons from CLSMImage</p></li>
+<li><p>image of the mean micro times</p></li>
+<li><p>a fluorescence intensity decay of the micro times</p></li>
+</ol>
+</div></blockquote>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1">#%</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -513,12 +522,7 @@
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
 </pre></div>
 </div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">examples._example_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_data_path</span>
 
 <span class="c1"># The FLIM dataset consists of a measurement of the sample</span>
 <span class="c1"># and an instrument response function (IRF).</span>
@@ -558,14 +562,22 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<p>The FLIM dataset is a Pulsed-Interleaved-Excitation (PIE) dataset. In PIE experiments, the sample is sequentially excited by light sources of different wavelength. In our dataset the sample is first excited by a laser that predominantly excites the donor. Here we define a range of micro time channels that we are using to define a “Prompt” and a “Delay”. The prompt microtime range captures the fluorescence, F, of the green, F(G|G), and red, F(R|G), detectors, given the green excitation light
-source, G. The delay microtime channels capture the fluorescence given an excitation by the red, R, light source (F(R|R), F(G|R)). In the data acquired in an MFIS (Multiparameter Fluorescence Image spectroscopy) the green and red fluorescence is moreover split into P and S. Here, we will only inspect data in F(G|G) and F(R|G).</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">excitation_windows</span> <span class="o">=</span> <span class="p">{</span>
+<p>The FLIM dataset is a Pulsed-Interleaved-Excitation (PIE)
+dataset. In PIE experiments, the sample is sequentially
+excited by light sources of different wavelength. In our
+dataset the sample is first excited by a laser that
+predominantly excites the donor. Here we define a range
+of micro time channels that we are using to define a
+“Prompt” and a “Delay”. The prompt microtime range
+captures the fluorescence, F, of the green, F(G|G), and red,
+F(R|G), detectors, given the green excitation light source, G.
+The delay microtime channels capture the fluorescence given
+an excitation by the red, R, light source (F(R|R), F(G|R)). In
+the data acquired in an MFIS (Multiparameter Fluorescence Image
+spectroscopy) the green and red fluorescence is moreover
+split into P and S. Here, we will only inspect data in F(G|G)
+and F(R|G).</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">excitation_windows</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;G&quot;</span><span class="p">:</span> <span class="p">{</span>  <span class="c1"># Green excitation</span>
         <span class="s2">&quot;micro_time_ranges&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12000</span><span class="p">)]</span>
     <span class="p">},</span>
@@ -605,13 +617,9 @@ source, G. The delay microtime channels capture the fluorescence given an excita
         <span class="n">irfs</span><span class="p">[</span><span class="n">ex</span><span class="p">][</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">irf_sel</span>
 </pre></div>
 </div>
-</div>
-<p>Next, we plot the IRFs for the different combinations of excitation pulses and detectors.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">irfs</span><span class="p">:</span>
+<p>Next, we plot the IRFs for the different combinations of
+excitation pulses and detectors.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">irfs</span><span class="p">:</span>
     <span class="n">name_ex</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ex</span>
     <span class="k">for</span> <span class="n">det</span> <span class="ow">in</span> <span class="n">irfs</span><span class="p">[</span><span class="n">ex</span><span class="p">]:</span>
         <span class="n">name_det</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">det</span>
@@ -625,22 +633,14 @@ source, G. The delay microtime channels capture the fluorescence given an excita
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
 <p>Create image</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<p>In case an automated processing of header does not wor reads header but does not always work, frame marker, line marker, etc. more details (in case it does not work without providing markers)</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clsm_settings</span> <span class="o">=</span> <span class="p">{</span>
+<p>In case an automated processing of header does not wor
+reads header but does not always work, frame marker, line marker, etc.
+more details (in case it does not work without providing markers)</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">clsm_settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;marker_frame_start&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">],</span>
     <span class="s2">&quot;marker_line_start&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;marker_line_stop&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
@@ -667,13 +667,9 @@ source, G. The delay microtime channels capture the fluorescence given an excita
 <span class="n">image_intensity_green_sum</span> <span class="o">=</span> <span class="n">image_intensity_green</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Plot images Intensity images</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_images</span><span class="p">(</span>
+<p>Plot images
+Intensity images</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_images</span><span class="p">(</span>
     <span class="n">images</span><span class="o">=</span><span class="p">[</span>
         <span class="n">image_intensity_green</span><span class="p">[</span><span class="mi">30</span><span class="p">],</span>
         <span class="n">image_intensity_green</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -720,25 +716,16 @@ source, G. The delay microtime channels capture the fluorescence given an excita
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<p>Frames, lines, pixel, micro time channel Coarsening micro time resolution / 256</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">image_decay_green</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_fluorescence_decay</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+<p>Frames, lines, pixel, micro time channel
+Coarsening micro time resolution / 256</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">image_decay_green</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_fluorescence_decay</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
 <span class="n">image_decay_green_sum</span> <span class="o">=</span> <span class="n">image_decay_green</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<section id="Anisotropy-image">
-<h2>Anisotropy image<a class="headerlink" href="#Anisotropy-image" title="Link to this heading">#</a></h2>
+<section id="anisotropy-image">
+<h2>Anisotropy image<a class="headerlink" href="#anisotropy-image" title="Link to this heading">#</a></h2>
 <p>Show how to use intensity images and lifetimes</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">clsm_settings</span><span class="p">)</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">clsm_settings</span><span class="p">)</span>
 <span class="n">image</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="o">**</span><span class="n">fill_settings</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">][</span><span class="s1">&#39;Gps&#39;</span><span class="p">])</span>
 <span class="n">int_t</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">intensity</span>
 <span class="n">int_t_s</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -788,7 +775,18 @@ source, G. The delay microtime channels capture the fluorescence given an excita
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-flim-plot-imaging-representations-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/691e047fccf6544e9a90b8117981f5d6/plot_imaging_representations.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_imaging_representations.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/871f09fb858144fc56bde1ec159a7f32/plot_imaging_representations.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_imaging_representations.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c3b4791ae82feabee263d61fe703244c/plot_imaging_representations.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_imaging_representations.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -839,14 +837,14 @@ source, G. The delay microtime channels capture the fluorescence given an excita
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Anisotropy-image">Anisotropy image</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#anisotropy-image">Anisotropy image</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/flim/plot_imaging_representations.ipynb.txt">
+    <a href="../../_sources/auto_examples/flim/plot_imaging_representations.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

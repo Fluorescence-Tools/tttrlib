@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_burstfilter_with_selection';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_with_selection.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_with_selection.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,28 +472,27 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="BurstFilter-with-TTTRSelection-Example">
-<h1>BurstFilter with TTTRSelection Example<a class="headerlink" href="#BurstFilter-with-TTTRSelection-Example" title="Link to this heading">#</a></h1>
-<p>This example demonstrates how to use TTTRSelection with BurstFilter for advanced photon selection and burst analysis.</p>
-<p>While BurstFilter currently only accepts TTTR objects directly, this example shows how to achieve the same functionality by creating a new TTTR object from selected photons using TTTRSelection.</p>
-<p>Import required libraries</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-burstfilter-with-selection-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<section class="sphx-glr-example-title" id="burstfilter-with-tttrselection-example">
+<span id="sphx-glr-auto-examples-single-molecule-plot-burstfilter-with-selection-py"></span><h1>BurstFilter with TTTRSelection Example<a class="headerlink" href="#burstfilter-with-tttrselection-example" title="Link to this heading">#</a></h1>
+<p>This example demonstrates how to use TTTRSelection with BurstFilter for advanced
+photon selection and burst analysis.</p>
+<p>While BurstFilter currently only accepts TTTR objects directly, this example
+shows how to achieve the same functionality by creating a new TTTR object
+from selected photons using TTTRSelection.</p>
+<p>Import required libraries</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </pre></div>
 </div>
-</div>
-<section id="Load-data">
-<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">#</a></h2>
+<section id="load-data">
+<h2>Load data<a class="headerlink" href="#load-data" title="Link to this heading">#</a></h2>
 <p>Find a sample file using TTTRLIB_DATA</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="pathlib.Path" class="sphx-glr-backref-module-pathlib sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Path</span></a>
 
 <span class="n">data_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;TTTRLIB_DATA&#39;</span><span class="p">)</span>
@@ -516,16 +512,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total events: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Create-TTTRSelection-with-specific-criteria">
-<h2>Create TTTRSelection with specific criteria<a class="headerlink" href="#Create-TTTRSelection-with-specific-criteria" title="Link to this heading">#</a></h2>
+<section id="create-tttrselection-with-specific-criteria">
+<h2>Create TTTRSelection with specific criteria<a class="headerlink" href="#create-tttrselection-with-specific-criteria" title="Link to this heading">#</a></h2>
 <p>Create a selection object</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selection</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRSelection</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">selection</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTRSelection</span><span class="p">()</span>
 
 <span class="c1"># Set selection criteria (e.g., a specific time range)</span>
 <span class="n">selection</span><span class="o">.</span><span class="n">set_range</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">50000</span><span class="p">)</span>  <span class="c1"># Select photons from index 1000 to 50000</span>
@@ -535,16 +526,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selection is dense: </span><span class="si">{</span><span class="n">selection</span><span class="o">.</span><span class="n">is_dense</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Export-and-import-selection-as-JSON">
-<h2>Export and import selection as JSON<a class="headerlink" href="#Export-and-import-selection-as-JSON" title="Link to this heading">#</a></h2>
+<section id="export-and-import-selection-as-json">
+<h2>Export and import selection as JSON<a class="headerlink" href="#export-and-import-selection-as-json" title="Link to this heading">#</a></h2>
 <p>Export selection to JSON string</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selection_json</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">selection_json</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Selection as JSON: </span><span class="si">{</span><span class="n">selection_json</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="c1"># Create a new selection from JSON</span>
@@ -555,16 +541,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New selection is dense: </span><span class="si">{</span><span class="n">new_selection</span><span class="o">.</span><span class="n">is_dense</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Apply-selection-to-create-filtered-TTTR-object">
-<h2>Apply selection to create filtered TTTR object<a class="headerlink" href="#Apply-selection-to-create-filtered-TTTR-object" title="Link to this heading">#</a></h2>
+<section id="apply-selection-to-create-filtered-tttr-object">
+<h2>Apply selection to create filtered TTTR object<a class="headerlink" href="#apply-selection-to-create-filtered-tttr-object" title="Link to this heading">#</a></h2>
 <p>Get the indices from the selection</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">indices</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">get_tttr_indices</span><span class="p">()</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">indices</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">get_tttr_indices</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Selected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> photon indices&quot;</span><span class="p">)</span>
 
 <span class="c1"># Create a new TTTR object with only the selected photons</span>
@@ -572,16 +553,11 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Filtered TTTR object contains </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">filtered_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Use-BurstFilter-with-the-filtered-data">
-<h2>Use BurstFilter with the filtered data<a class="headerlink" href="#Use-BurstFilter-with-the-filtered-data" title="Link to this heading">#</a></h2>
+<section id="use-burstfilter-with-the-filtered-data">
+<h2>Use BurstFilter with the filtered data<a class="headerlink" href="#use-burstfilter-with-the-filtered-data" title="Link to this heading">#</a></h2>
 <p>Create BurstFilter with the filtered data</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">burst_filter</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">filtered_data</span><span class="o">.</span><span class="n">Get</span><span class="p">())</span>
 
 <span class="c1"># Configure burst search parameters</span>
 <span class="n">burst_filter</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span>
@@ -601,15 +577,10 @@
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">)</span><span class="si">}</span><span class="s2"> bursts in filtered data&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
 </section>
-<section id="Analyze-burst-properties">
-<h2>Analyze burst properties<a class="headerlink" href="#Analyze-burst-properties" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<section id="analyze-burst-properties">
+<h2>Analyze burst properties<a class="headerlink" href="#analyze-burst-properties" title="Link to this heading">#</a></h2>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
     <span class="c1"># Use structured NumPy array with named fields</span>
     <span class="n">props</span> <span class="o">=</span> <span class="n">burst_filter</span><span class="o">.</span><span class="n">burst_properties</span>
     <span class="n">sizes</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span>
@@ -622,7 +593,18 @@
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">BurstFilter with TTTRSelection example completed successfully!&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-burstfilter-with-selection-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/63c5b327a43967a63004a75cabd3e319/plot_burstfilter_with_selection.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_burstfilter_with_selection.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/77c3350a2998044200dc5a5a16b0c767/plot_burstfilter_with_selection.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_burstfilter_with_selection.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/6f1efbe3f224e2c331d5beeebeb51ddb/plot_burstfilter_with_selection.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_burstfilter_with_selection.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 </section>
 
@@ -673,19 +655,19 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Load-data">Load data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Create-TTTRSelection-with-specific-criteria">Create TTTRSelection with specific criteria</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Export-and-import-selection-as-JSON">Export and import selection as JSON</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Apply-selection-to-create-filtered-TTTR-object">Apply selection to create filtered TTTR object</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Use-BurstFilter-with-the-filtered-data">Use BurstFilter with the filtered data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Analyze-burst-properties">Analyze burst properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-data">Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-tttrselection-with-specific-criteria">Create TTTRSelection with specific criteria</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-import-selection-as-json">Export and import selection as JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-selection-to-create-filtered-tttr-object">Apply selection to create filtered TTTR object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-burstfilter-with-the-filtered-data">Use BurstFilter with the filtered data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#analyze-burst-properties">Analyze burst properties</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_with_selection.ipynb.txt">
+    <a href="../../_sources/auto_examples/single_molecule/plot_burstfilter_with_selection.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

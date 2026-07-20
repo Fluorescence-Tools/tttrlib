@@ -19,7 +19,7 @@
 <meta name="description" content="This example demonstrates three common write operations: Writing a subset of events to a new PTU file., Making a full copy of a TTTR dataset in its native format., Re-using a header from another fi..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Basic Example 4: Writing TTTR data and converting formats &#8212; tttrlib v0.26.1</title>
+    <title>Basic Example 4: Writing TTTR data and converting formats &#8212; tttrlib v0.0.0</title>
   
   
   
@@ -49,7 +49,6 @@
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -57,7 +56,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=eeda5ee3"></script>
+    <script src="../../_static/documentation_options.js?v=7026087e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,8 +64,6 @@
     <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/beginner/plot_04_writing_files';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -76,7 +73,7 @@
     <link rel="prev" title="Basic Example 1: Reading TTTR data" href="plot_01_reading_files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.26.1" />
+  <meta name="docsearch:version" content="0.0.0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -148,8 +145,8 @@
       
     
     
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.26.1 - Home"/>
-    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.26.1 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.0.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.0.0 - Home"/>
   
   
 </a></div>
@@ -407,7 +404,7 @@
         <div class="sidebar-primary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_04_writing_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_04_writing_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -475,20 +472,24 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Basic-Example-4:-Writing-TTTR-data-and-converting-formats">
-<h1>Basic Example 4: Writing TTTR data and converting formats<a class="headerlink" href="#Basic-Example-4:-Writing-TTTR-data-and-converting-formats" title="Link to this heading">#</a></h1>
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-beginner-plot-04-writing-files-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="basic-example-4-writing-tttr-data-and-converting-formats">
+<span id="sphx-glr-auto-examples-beginner-plot-04-writing-files-py"></span><h1>Basic Example 4: Writing TTTR data and converting formats<a class="headerlink" href="#basic-example-4-writing-tttr-data-and-converting-formats" title="Link to this heading">#</a></h1>
 <p>This example demonstrates three common write operations:</p>
 <ol class="arabic simple">
 <li><p>Writing a subset of events to a new PTU file.</p></li>
 <li><p>Making a full copy of a TTTR dataset in its native format.</p></li>
-<li><p>Re-using a header from another file to <em>convert</em> a dataset between vendor formats (borrowed from the unit tests in <code class="docutils literal notranslate"><span class="pre">test/test_TTTR_transcode.py</span></code>).</p></li>
+<li><p>Re-using a header from another file to <em>convert</em> a dataset between
+vendor formats (borrowed from the unit tests in
+<code class="docutils literal notranslate"><span class="pre">test/test_TTTR_transcode.py</span></code>).</p></li>
 </ol>
-<p>The example uses the real demo data bundle; set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> as described in <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code> before building the documentation.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<p>The example uses the real demo data bundle; set <code class="docutils literal notranslate"><span class="pre">TTTRLIB_DATA</span></code> as described
+in <code class="docutils literal notranslate"><span class="pre">test/test_settings.py</span></code> before building the documentation.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
@@ -556,7 +557,18 @@
 <span class="p">)</span>
 </pre></div>
 </div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-beginner-plot-04-writing-files-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/2e2a6c32351b3d0a71d48a62a48987c9/plot_04_writing_files.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_04_writing_files.ipynb</span></code></a></p>
 </div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/ffbd6ae3cae713586b49bf04bebd9a58/plot_04_writing_files.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_04_writing_files.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/4e33e3916108a4bd157a5d5b345e593e/plot_04_writing_files.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_04_writing_files.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -601,7 +613,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/auto_examples/beginner/plot_04_writing_files.ipynb.txt">
+    <a href="../../_sources/auto_examples/beginner/plot_04_writing_files.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
