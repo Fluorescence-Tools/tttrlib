@@ -78,19 +78,38 @@ jobs:
             (
               set -e
               cd "src-${dest}"
+              # Isolated virtualenv per version: a shared env leaks the installed
+              # tttrlib version between builds (e.g. 0.26.0 built while 0.26.1 was
+              # still installed -> wrong version label / autodoc).
+              python -m venv .venv
+              . .venv/bin/activate
               python -m pip install --upgrade pip
               python -m pip install "scikit-build-core>=0.10" numpy "swig>=4.1"
-              # Documentation toolchain (prefer the tag's own pin list if present).
+              # Documentation toolchain. Tiered conf.py (BUILD_TIER) builds with
+              # the modern toolchain; the older pre-tiered conf.py needs its
+              # contemporary pins (sphinx<7 / bibtex<2 / older sphinx-gallery),
+              # otherwise modern Sphinx breaks on a cascade of incompatibilities
+              # (bibtex_bibfiles required, sphinx-gallery pickle error, ...).
               if [ -f doc/requirements.txt ]; then
                 python -m pip install -r doc/requirements.txt
-              else
+              elif grep -q "BUILD_TIER" doc/conf.py; then
                 python -m pip install sphinx sphinx-copybutton sphinx-design \
                   sphinxext-opengraph numpydoc nbsphinx matplotlib ipython \
                   sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme \
                   scikit-image phconvert numba imagecodecs
+              else
+                python -m pip install "sphinx<7" "sphinxcontrib-bibtex<2.0.0" \
+                  "sphinx-gallery<0.14" "jinja2<3.2" nbsphinx numpydoc \
+                  sphinx-copybutton sphinxext-opengraph pydata-sphinx-theme \
+                  matplotlib ipython scikit-image phconvert numba imagecodecs
               fi
-              # Build + install the package for this tag so autodoc matches it.
+              # Build + install this tag's package so autodoc + the version label
+              # match the version being built.
               python -m pip install ".[examples]" || python -m pip install .
+              # Pre-tiered conf.py does not exclude the gallery-generated
+              # notebooks, which collide with the generated .rst ("multiple files
+              # found"). Add the exclusion the tiered conf.py already carries.
+              printf '\nexclude_patterns = list(globals().get("exclude_patterns", [])) + ["auto_examples/**/*.ipynb", "auto_examples/*.ipynb"]\n' >> doc/conf.py
               cd doc
               mkdir -p _build/api
               doxygen || true
