@@ -230,12 +230,12 @@ void my_fconv(
 %}
 
 
-//// fconv_avx
+//// fconv_simd
 ///////////////////
-%ignore fconv_avx;
-%rename (fconv_avx) my_fconv_avx;
+%ignore fconv_simd;
+%rename (fconv_simd) my_fconv_simd;
 %inline %{
-void my_fconv_avx(
+void my_fconv_simd(
         double* fit, int n_fit,
         double* irf, int n_irf,
         double* x, int n_x,
@@ -267,7 +267,7 @@ void my_fconv_avx(
                      "Stop index (%d) too large for array of lengths (%d).",
                      stop, n_irf);
     }
-    fconv_avx(fit, x, irf, n_x / 2, start, stop, dt);
+    fconv_simd(fit, x, irf, n_x / 2, start, stop, dt);
 }
 %}
 
@@ -314,12 +314,12 @@ void my_fconv_per(
 }
 %}
 
-//// fconv_per_avx
+//// fconv_per_simd
 ///////////////////
-%ignore fconv_per_avx;
-%rename (fconv_per_avx) my_fconv_per_avx;
+%ignore fconv_per_simd;
+%rename (fconv_per_simd) my_fconv_per_simd;
 %inline %{
-void my_fconv_per_avx(
+void my_fconv_per_simd(
         double* fit, int n_fit,
         double* irf, int n_irf,
         double* x, int n_x,
@@ -352,7 +352,7 @@ void my_fconv_per_avx(
                      "Stop index (%d) too large for array of lengths (%d).",
                      stop, n_irf);
     }
-    fconv_per_avx(fit, x, irf, n_x / 2, start, stop, n_irf, period, dt);
+    fconv_per_simd(fit, x, irf, n_x / 2, start, stop, n_irf, period, dt);
 }
 %}
 

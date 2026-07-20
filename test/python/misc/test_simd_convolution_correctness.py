@@ -3,8 +3,8 @@ Comprehensive test suite to verify AVX convolution implementations
 against default implementations for correctness.
 
 This test suite checks:
-1. fconv_avx vs fconv
-2. fconv_per_avx vs fconv_per
+1. fconv_simd vs fconv
+2. fconv_per_simd vs fconv_per
 
 With various test cases including:
 - Different numbers of exponentials (1, 2, 4, 5, 8, 16)
@@ -44,9 +44,9 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         )
         return irf, time_axis
 
-    def test_fconv_avx_single_exponential(self):
-        """Test fconv_avx with a single exponential."""
-        print("\n=== Testing fconv_avx: Single Exponential ===")
+    def test_fconv_simd_single_exponential(self):
+        """Test fconv_simd with a single exponential."""
+        print("\n=== Testing fconv_simd: Single Exponential ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -63,7 +63,7 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         
         # AVX implementation
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(
+        tttrlib.fconv_simd(
             fit=model_avx,
             irf=irf,
             x=lifetime_spectrum,
@@ -75,9 +75,9 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_two_exponentials(self):
-        """Test fconv_avx with two exponentials."""
-        print("\n=== Testing fconv_avx: Two Exponentials ===")
+    def test_fconv_simd_two_exponentials(self):
+        """Test fconv_simd with two exponentials."""
+        print("\n=== Testing fconv_simd: Two Exponentials ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -87,15 +87,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_four_exponentials(self):
-        """Test fconv_avx with four exponentials (exactly one AVX register)."""
-        print("\n=== Testing fconv_avx: Four Exponentials (1 AVX register) ===")
+    def test_fconv_simd_four_exponentials(self):
+        """Test fconv_simd with four exponentials (exactly one AVX register)."""
+        print("\n=== Testing fconv_simd: Four Exponentials (1 AVX register) ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -105,15 +105,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_five_exponentials(self):
-        """Test fconv_avx with five exponentials (requires padding)."""
-        print("\n=== Testing fconv_avx: Five Exponentials (requires padding) ===")
+    def test_fconv_simd_five_exponentials(self):
+        """Test fconv_simd with five exponentials (requires padding)."""
+        print("\n=== Testing fconv_simd: Five Exponentials (requires padding) ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -123,15 +123,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_eight_exponentials(self):
-        """Test fconv_avx with eight exponentials (two AVX registers)."""
-        print("\n=== Testing fconv_avx: Eight Exponentials (2 AVX registers) ===")
+    def test_fconv_simd_eight_exponentials(self):
+        """Test fconv_simd with eight exponentials (two AVX registers)."""
+        print("\n=== Testing fconv_simd: Eight Exponentials (2 AVX registers) ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -144,15 +144,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_extreme_lifetimes(self):
-        """Test fconv_avx with very short and very long lifetimes."""
-        print("\n=== Testing fconv_avx: Extreme Lifetimes ===")
+    def test_fconv_simd_extreme_lifetimes(self):
+        """Test fconv_simd with very short and very long lifetimes."""
+        print("\n=== Testing fconv_simd: Extreme Lifetimes ===")
         
         irf, time_axis = self.generate_irf(n_channels=64)
         dt = time_axis[1] - time_axis[0]
@@ -162,15 +162,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_avx_different_irf_shapes(self):
-        """Test fconv_avx with different IRF shapes."""
-        print("\n=== Testing fconv_avx: Different IRF Shapes ===")
+    def test_fconv_simd_different_irf_shapes(self):
+        """Test fconv_simd with different IRF shapes."""
+        print("\n=== Testing fconv_simd: Different IRF Shapes ===")
         
         lifetime_spectrum = np.array([0.6, 3.5, 0.4, 6.0])
         
@@ -182,7 +182,7 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf_narrow, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf_narrow)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf_narrow, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf_narrow, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference (narrow IRF): {max_diff:.2e}")
@@ -196,15 +196,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv(fit=model_default, irf=irf_wide, x=lifetime_spectrum, dt=dt)
         
         model_avx = np.zeros_like(irf_wide)
-        tttrlib.fconv_avx(fit=model_avx, irf=irf_wide, x=lifetime_spectrum, dt=dt)
+        tttrlib.fconv_simd(fit=model_avx, irf=irf_wide, x=lifetime_spectrum, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference (wide IRF): {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_single_exponential(self):
-        """Test fconv_per_avx with a single exponential."""
-        print("\n=== Testing fconv_per_avx: Single Exponential ===")
+    def test_fconv_per_simd_single_exponential(self):
+        """Test fconv_per_simd with a single exponential."""
+        print("\n=== Testing fconv_per_simd: Single Exponential ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -224,7 +224,7 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         )
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(
+        tttrlib.fconv_per_simd(
             fit=model_avx,
             irf=irf,
             x=lifetime_spectrum,
@@ -238,9 +238,9 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_two_exponentials(self):
-        """Test fconv_per_avx with two exponentials."""
-        print("\n=== Testing fconv_per_avx: Two Exponentials ===")
+    def test_fconv_per_simd_two_exponentials(self):
+        """Test fconv_per_simd with two exponentials."""
+        print("\n=== Testing fconv_per_simd: Two Exponentials ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -252,15 +252,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_four_exponentials(self):
-        """Test fconv_per_avx with four exponentials."""
-        print("\n=== Testing fconv_per_avx: Four Exponentials ===")
+    def test_fconv_per_simd_four_exponentials(self):
+        """Test fconv_per_simd with four exponentials."""
+        print("\n=== Testing fconv_per_simd: Four Exponentials ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -272,15 +272,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_five_exponentials(self):
-        """Test fconv_per_avx with five exponentials (requires padding)."""
-        print("\n=== Testing fconv_per_avx: Five Exponentials ===")
+    def test_fconv_per_simd_five_exponentials(self):
+        """Test fconv_per_simd with five exponentials (requires padding)."""
+        print("\n=== Testing fconv_per_simd: Five Exponentials ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -292,15 +292,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_eight_exponentials(self):
-        """Test fconv_per_avx with eight exponentials."""
-        print("\n=== Testing fconv_per_avx: Eight Exponentials ===")
+    def test_fconv_per_simd_eight_exponentials(self):
+        """Test fconv_per_simd with eight exponentials."""
+        print("\n=== Testing fconv_per_simd: Eight Exponentials ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -315,15 +315,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_different_periods(self):
-        """Test fconv_per_avx with different period values."""
-        print("\n=== Testing fconv_per_avx: Different Periods ===")
+    def test_fconv_per_simd_different_periods(self):
+        """Test fconv_per_simd with different period values."""
+        print("\n=== Testing fconv_per_simd: Different Periods ===")
         
         lifetime_spectrum = np.array([0.6, 3.5, 0.4, 6.0])
         
@@ -337,15 +337,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
             tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
             
             model_avx = np.zeros_like(irf)
-            tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+            tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
             
             max_diff = np.max(np.abs(model_default - model_avx))
             print(f"    Max difference: {max_diff:.2e}")
             np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_extreme_lifetimes(self):
-        """Test fconv_per_avx with very short and very long lifetimes."""
-        print("\n=== Testing fconv_per_avx: Extreme Lifetimes ===")
+    def test_fconv_per_simd_extreme_lifetimes(self):
+        """Test fconv_per_simd with very short and very long lifetimes."""
+        print("\n=== Testing fconv_per_simd: Extreme Lifetimes ===")
         
         period = 13.0
         irf, time_axis = self.generate_irf(n_channels=64, period=period, irf_width=0.15)
@@ -357,15 +357,15 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")
         np.testing.assert_allclose(model_avx, model_default, rtol=self.tolerance, atol=self.tolerance)
 
-    def test_fconv_per_avx_large_dataset(self):
-        """Test fconv_per_avx with a larger dataset."""
-        print("\n=== Testing fconv_per_avx: Large Dataset ===")
+    def test_fconv_per_simd_large_dataset(self):
+        """Test fconv_per_simd with a larger dataset."""
+        print("\n=== Testing fconv_per_simd: Large Dataset ===")
         
         period = 25.0
         irf, time_axis = self.generate_irf(n_channels=256, period=period, irf_width=0.2)
@@ -377,7 +377,7 @@ class TestAVXConvolutionCorrectness(unittest.TestCase):
         tttrlib.fconv_per(fit=model_default, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         model_avx = np.zeros_like(irf)
-        tttrlib.fconv_per_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
+        tttrlib.fconv_per_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, period=period, start=0, stop=-1, dt=dt)
         
         max_diff = np.max(np.abs(model_default - model_avx))
         print(f"Max difference: {max_diff:.2e}")

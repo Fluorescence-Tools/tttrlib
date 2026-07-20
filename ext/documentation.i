@@ -3773,7 +3773,7 @@ Parameters
     time difference between two micro time channels  
 ";
 
-%feature("docstring") fconv_avx "
+%feature("docstring") fconv_simd "
 
 Convolve lifetime spectrum with instrument response (fast convolution, AVX
 optimized for large lifetime spectra)  
@@ -3827,7 +3827,7 @@ Parameters
     time difference between two micro time channels  
 ";
 
-%feature("docstring") fconv_per_avx "
+%feature("docstring") fconv_per_simd "
 
 Convolve lifetime spectrum with instrument response (fast convolution, high
 repetition rate), AVX optimized version.  

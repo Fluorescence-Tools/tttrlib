@@ -10,7 +10,9 @@
 // plain `double` and in forward-mode AD.
 //
 // Strategies compared, at the parameter counts of the real consumers
-// (DecayFit26 n=1, DecayFit23 n=4, DecayFit24 n=5, ImageLocalization n=18):
+// (DecayFit26 n=1, DecayFit23 n=4, DecayFit24 n=5). NOTE: the n=18 row is NOT
+// representative of ImageLocalization -- see bench_ad_vectorized.cpp, which
+// benchmarks its real 2D-Gaussian objective at its real free-parameter counts.
 //
 //   1. objective            — the cost unit everything else is quoted in
 //   2. central differences, h = eps*|x|        (what i_lbfgs.h does today)
@@ -20,10 +22,11 @@
 // Build (from benchmarks/, with autodiff and Eigen on the include path):
 //   clang++ -std=c++17 -O3 -I<autodiff> -I<eigen> bench_ad_gradients.cpp -o bench_ad
 //
-// Note the AVX caveat: tttrlib's production `double` path can use fconv_avx,
-// which uses intrinsics and CANNOT be templated. The AD column therefore loses
-// the AVX kernel while the finite-difference columns keep it. These numbers are
-// scalar-vs-scalar and so are an UPPER bound on the AD win for AVX-enabled models.
+// Note the SIMD caveat: tttrlib's production `double` path can use fconv_simd(),
+// whose intrinsic kernels CANNOT be templated. The AD column therefore loses the
+// SIMD kernel while the finite-difference columns keep it, so these scalar-vs-
+// scalar numbers are an UPPER bound. bench_ad_vectorized.cpp measures the
+// with-SIMD comparison directly.
 
 #include <Eigen/Core>
 
@@ -184,6 +187,6 @@ int main() {
     run_case<4>();   // DecayFit23
     run_case<5>();   // DecayFit24
     run_case<8>();
-    run_case<18>();  // ImageLocalization
+    run_case<18>();  // NOT ImageLocalization -- see bench_ad_vectorized.cpp
     return 0;
 }

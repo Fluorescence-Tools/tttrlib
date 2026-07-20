@@ -9,9 +9,10 @@
 #include <algorithm> /* std::max */
 #include <string.h> /* strcmp */
 
-/* AVX/FMA intrinsics and the runtime-dispatch macros live in info.h; the AVX
- * kernels in DecayConvolution.cpp are compiled in on x86 and selected at
- * runtime. No compiler-wide AVX flag is required here. */
+/* SIMD intrinsics and the runtime-dispatch macros live in info.h; the AVX
+ * (x86_64) and NEON (AArch64) kernels in DecayConvolution.cpp are compiled in
+ * per target and selected at runtime. No compiler-wide SIMD flag is required
+ * here. */
 
 
 /*!
@@ -104,11 +105,17 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
 
 /*!
  * @brief Convolve lifetime spectrum with instrument response (fast convolution,
- * AVX optimized for large lifetime spectra)
+ * SIMD optimized for large lifetime spectra)
  *
  * This function is a modification of fconv for large lifetime spectra. The
- * lifetime spectrum is processed by AVX intrinsics. Four lifetimes are convolved
- * at once. Spectra with lifetimes that are not multiple of four are zero padded.
+ * lifetime spectrum is processed with SIMD intrinsics, several lifetimes at
+ * once; spectra whose lifetime count is not a multiple of the register width
+ * are zero padded.
+ *
+ * The kernel is chosen at **runtime** for the host CPU: AVX+FMA on x86_64
+ * (four lifetimes per register), NEON on AArch64 (two per register), and the
+ * scalar fconv() elsewhere. Results match the scalar path to rounding on every
+ * backend.
  *
  * @param fit
  * @param x
@@ -119,7 +126,7 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
  * @param n_points
  * @param dt
  */
-void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt=0.05);
+void fconv_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt=0.05);
 
 
 /*!
@@ -148,7 +155,7 @@ void fconv_per(
 );
 /*!
  * @brief Convolve lifetime spectrum with instrument response (fast convolution,
- * high repetition rate), AVX optimized version
+ * high repetition rate), SIMD optimized version
  *
  * This function computes the convolution of a lifetime spectrum (a set of
  * lifetimes with corresponding amplitudes) with a instrument response function
@@ -166,7 +173,7 @@ void fconv_per(
  * nanoseconds)
  * @param dt[in] time difference between two micro time channels
  */
-void fconv_per_avx(
+void fconv_per_simd(
         double *fit, double *x, double *lamp, int numexp, int start, int stop,
         int n_points, double period, double dt=0.05
 );

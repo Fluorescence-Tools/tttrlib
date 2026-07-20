@@ -15,8 +15,8 @@ fconv stands for fast convolution.
 For faster convolutions ``tttrlib`` provides routines that make use of
 SIMD (Single Instruction Multiple Data). The SIMD routines use of the AVX2 extension
 (Advanced Vector Extension). For instance, the routines ``fconv`` and ``fconv_per``
-(periodic convolution) have corresponding SIMD routines named ``fconv_avx``and
-``fconv_per_avx``. The SIMD routines compute in parallel the decay in cases
+(periodic convolution) have corresponding SIMD routines named ``fconv_simd``and
+``fconv_per_simd``. The SIMD routines compute in parallel the decay in cases
 the decay is compose of more than a single fluorescence lifetime.
 
 The SIMD AVX make use of AVX2 and FMA (Fused Multiply Add). AVX2 and FMA require
@@ -58,9 +58,9 @@ start = 0
 # +-----------------------------------------+-----------------+
 # |Fast periodic convolution                |fconv_per        |
 # +-----------------------------------------+-----------------+
-# |Fast convolution (AVX)                   |fconv_avx        |
+# |Fast convolution (AVX)                   |fconv_simd        |
 # +-----------------------------------------+-----------------+
-# |Fast periodic convolution (AVX)          |fconv_per_avx    |
+# |Fast periodic convolution (AVX)          |fconv_per_simd    |
 # +-----------------------------------------+-----------------+
 # |Fast periodic convolution (with stop)    |fconv_per_cs     |
 # +-----------------------------------------+-----------------+
@@ -81,7 +81,7 @@ times.append(ex)
 
 t_start = time.perf_counter()
 for _ in range(n_runs):
-    tttrlib.fconv_avx(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)
+    tttrlib.fconv_simd(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)
 ex = time.perf_counter() - t_start
 times_avx.append(ex)
 
@@ -93,7 +93,7 @@ times.append(ex)
 
 t_start = time.perf_counter()
 for _ in range(n_runs):
-    tttrlib.fconv_per_avx(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)
+    tttrlib.fconv_per_simd(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)
 ex = time.perf_counter() - t_start
 times_avx.append(ex)
 
@@ -114,16 +114,16 @@ tttrlib.fconv(fit=model, irf=irf, x=lifetime_spectrum, start=start, stop=stop, d
 ax[0].semilogy(model, label="fconv")
 
 model_avx = np.zeros_like(irf)
-tttrlib.fconv_avx(fit=model_avx, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)
-ax[0].semilogy(model, label="fconv_avx")
+tttrlib.fconv_simd(fit=model_avx, irf=irf, x=lifetime_spectrum, start=start, stop=stop, dt=dt)
+ax[0].semilogy(model, label="fconv_simd")
 
 model = np.zeros_like(irf)
 tttrlib.fconv_per(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)
 ax[0].semilogy(model, label="fconv_per")
 
 model = np.zeros_like(irf)
-tttrlib.fconv_per_avx(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)
-ax[0].semilogy(model, label="fconv_per_avx")
+tttrlib.fconv_per_simd(fit=model, irf=irf, x=lifetime_spectrum, period=period, start=start, stop=stop, dt=dt)
+ax[0].semilogy(model, label="fconv_per_simd")
 ax[0].legend()
 
 # Benchmark

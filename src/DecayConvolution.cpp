@@ -82,7 +82,7 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
 
 #if TTTRLIB_COMPILE_AVX
 // AVX+FMA kernel for fconv(). Only called after a runtime CPUID check confirms
-// the host supports AVX and FMA (see fconv_avx() dispatcher below); the target
+// the host supports AVX and FMA (see fconv_simd() dispatcher below); the target
 // attribute lets it use AVX/FMA even when the TU is built without -mavx.
 TTTRLIB_TARGET_AVX_FMA
 static void fconv_avx_impl(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
@@ -170,9 +170,9 @@ static void fconv_neon_impl(double *fit, double *x, double *lamp, int numexp, in
 }
 #endif // TTTRLIB_COMPILE_NEON
 
-// fast convolution - runtime dispatcher (AVX/FMA on x86, NEON on AArch64,
-// scalar fconv() otherwise).
-void fconv_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
+// fast convolution - runtime SIMD dispatcher (AVX/FMA on x86_64, NEON on
+// AArch64, scalar fconv() otherwise).
+void fconv_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
 #if TTTRLIB_COMPILE_AVX
     if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
         fconv_avx_impl(fit, x, lamp, numexp, start, stop, dt);
@@ -398,7 +398,7 @@ if (is_verbose()) {
 #endif // TTTRLIB_COMPILE_NEON
 
 // fast convolution, high repetition rate - runtime dispatcher
-void fconv_per_avx(double *fit, double *x, double *lamp, int numexp, int start, int stop,
+void fconv_per_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                    int n_points, double period, double dt) {
 #if TTTRLIB_COMPILE_AVX
     if (tttrlib::cpu_features::get_avx_enabled() && tttrlib::cpu_features::get_fma_enabled()) {
@@ -677,9 +677,9 @@ void fconv_per_cs_time_axis(
         double period
 ){
     double dt = time_axis[1] - time_axis[0];
-    // fconv_per_avx() dispatches to the AVX kernel when the CPU supports it and
+    // fconv_per_simd() dispatches to a SIMD kernel when the CPU supports one and
     // falls back to the scalar fconv_per() otherwise.
-    fconv_per_avx(
+    fconv_per_simd(
             model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, n_model, period, dt
     );
@@ -696,9 +696,9 @@ void fconv_cs_time_axis(
         int convolution_stop
 ){
     double dt = time_axis[1] - time_axis[0];
-    // fconv_avx() dispatches to the AVX kernel when the CPU supports it and
+    // fconv_simd() dispatches to a SIMD kernel when the CPU supports one and
     // falls back to the scalar fconv() otherwise.
-    fconv_avx(
+    fconv_simd(
             output,
             lifetime_spectrum,
             irf,
