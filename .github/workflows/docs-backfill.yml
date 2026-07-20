@@ -45,7 +45,12 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          # 3.10 (default) for tiered/modern builds; 3.9 for the older tags whose
+          # contemporary doc toolchain (sphinxcontrib-bibtex<2) imports
+          # collections.MutableSet, removed in 3.10.
+          python-version: |
+            3.9
+            3.10
 
       - name: Preserve default-branch tooling
         run: |
@@ -81,21 +86,28 @@ jobs:
             (
               set -e
               cd "src-${dest}"
+              # Tiered conf.py (BUILD_TIER) / a doc/requirements.txt means the
+              # modern toolchain on the current Python; the older pre-tiered
+              # conf.py needs its contemporary toolchain, which only works on
+              # Python 3.9 (old sphinxcontrib-bibtex<2 imports
+              # collections.MutableSet, removed in 3.10). Pick the interpreter.
+              if [ -f doc/requirements.txt ] || grep -q "BUILD_TIER" doc/conf.py; then
+                DOC_PY=python3.10; TIERED=1
+              else
+                DOC_PY=python3.9; TIERED=0
+              fi
               # Isolated virtualenv per version: a shared env leaks the installed
-              # tttrlib version between builds (e.g. 0.26.0 built while 0.26.1 was
-              # still installed -> wrong version label / autodoc).
-              python -m venv .venv
+              # tttrlib version between builds (wrong version label / autodoc).
+              "${DOC_PY}" -m venv .venv
               . .venv/bin/activate
               python -m pip install --upgrade pip
               python -m pip install "scikit-build-core>=0.10" numpy "swig>=4.1"
-              # Documentation toolchain. Tiered conf.py (BUILD_TIER) builds with
-              # the modern toolchain; the older pre-tiered conf.py needs its
-              # contemporary pins (sphinx<7 / bibtex<2 / older sphinx-gallery),
-              # otherwise modern Sphinx breaks on a cascade of incompatibilities
-              # (bibtex_bibfiles required, sphinx-gallery pickle error, ...).
+              # Documentation toolchain (see interpreter choice above): tiered ->
+              # modern pins; pre-tiered -> contemporary pins (sphinx<7 / bibtex<2
+              # / older sphinx-gallery).
               if [ -f doc/requirements.txt ]; then
                 python -m pip install -r doc/requirements.txt
-              elif grep -q "BUILD_TIER" doc/conf.py; then
+              elif [ "${TIERED}" = "1" ]; then
                 python -m pip install sphinx sphinx-copybutton sphinx-design \
                   sphinxext-opengraph numpydoc nbsphinx matplotlib ipython \
                   sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme \
