@@ -41,7 +41,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
+          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz libboost-dev
 
       - uses: actions/setup-python@v5
         with:
@@ -73,6 +73,9 @@ jobs:
               echo "::endgroup::"
               continue
             fi
+            # Older tags vendor their thirdparty deps as git submodules (e.g.
+            # nlohmann_json); initialize them so the C++ build finds them.
+            git -C "src-${dest}" submodule update --init --recursive || true
 
             ok=1
             (
