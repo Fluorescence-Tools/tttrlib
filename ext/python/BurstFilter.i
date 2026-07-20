@@ -165,9 +165,8 @@ using json = nlohmann::json;
         bursts = self.get_bursts()
         if len(bursts) == 0:
             return {}
-        array_index = burst_index * 2
-        start_idx = int(bursts[array_index])
-        stop_idx = int(bursts[array_index + 1])
+        start_idx = int(bursts[burst_index][0])
+        stop_idx = int(bursts[burst_index][1])
         
         # Get the C++ map and convert to Python dict
         cpp_map = self.get_burst_channel_photons(start_idx, stop_idx)
@@ -195,9 +194,8 @@ using json = nlohmann::json;
         bursts = self.get_bursts()
         if len(bursts) == 0:
             return {}
-        array_index = burst_index * 2
-        start_idx = int(bursts[array_index])
-        stop_idx = int(bursts[array_index + 1])
+        start_idx = int(bursts[burst_index][0])
+        stop_idx = int(bursts[burst_index][1])
         
         # Get the C++ map and convert to Python dict
         cpp_map = self.get_burst_channel_indices(start_idx, stop_idx)
@@ -223,12 +221,12 @@ using json = nlohmann::json;
 }
 #endif
 
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)};
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **find_output, int *find_n_output)};
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **size_output, int *size_n_output)};
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **duration_output, int *duration_n_output)};
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **background_output, int *background_n_output)};
-%apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **merge_output, int *merge_n_output)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **output, int *dim1, int *dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **find_output, int *find_dim1, int *find_dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **size_output, int *size_dim1, int *size_dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **duration_output, int *duration_dim1, int *duration_dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **background_output, int *background_dim1, int *background_dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **merge_output, int *merge_dim1, int *merge_dim2)};
 
 %rename(_reset_to_raw_bursts) tttrlib::BurstFilter::reset_to_raw_bursts;
 %rename(_reapply_filters) tttrlib::BurstFilter::reapply_filters;
@@ -237,7 +235,7 @@ using json = nlohmann::json;
 // Burst selections arrive as a NumPy int array (Python) / numeric vector (R) /
 // long[] (Java): std::vector<int64_t> inputs would reject Python lists and
 // arrays on LP64 Linux, where int64_t stays opaque to SWIG.
-%apply (long long* IN_ARRAY1, int DIM1) {(long long* selected_bursts, int n_selected_bursts)};
+%apply (long long* IN_ARRAY2, int DIM1, int DIM2) {(long long* selected_bursts, int n_selected_bursts, int n_cols)};
 
 #ifdef SWIGPYTHON
 // Array-out surface returns NumPy directly (no caller-side conversion):

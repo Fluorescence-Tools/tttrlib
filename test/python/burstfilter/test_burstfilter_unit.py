@@ -46,7 +46,8 @@ class TestBurstFilter(unittest.TestCase):
         bursts = burst_filter.find_bursts()
         self.assertIsInstance(bursts, np.ndarray)
         self.assertGreater(len(bursts), 0)
-        self.assertEqual(bursts.ndim, 1)  # Should be 1D array
+        self.assertEqual(bursts.ndim, 2)  # (n, 2) [start, stop] pairs
+        self.assertEqual(bursts.shape[1], 2)
 
     def test_filter_by_size(self):
         """Test filter_by_size method"""
