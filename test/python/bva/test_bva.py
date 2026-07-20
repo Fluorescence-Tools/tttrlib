@@ -36,7 +36,7 @@ def _build_tttr(bursts_channels):
         np.zeros(len(macro), dtype=np.int8),
         False, 0,
     )
-    return d, np.asarray(bounds, dtype=np.int64).ravel()
+    return d, np.asarray(bounds, dtype=np.int64)  # (n, 2) [start, stop] pairs
 
 
 class TestBVA(unittest.TestCase):
