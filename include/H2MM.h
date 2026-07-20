@@ -127,7 +127,7 @@ public:
      */
     void set_bursts_from_tttr(
         std::shared_ptr<TTTR> tttr,
-        long long* bursts, int n_bursts,
+        long long* bursts, int n_bursts, int n_cols,
         const std::vector<std::shared_ptr<Channel>>& stream_channels,
         int min_photons = 3,
         long long time_scale = 1
@@ -148,6 +148,13 @@ public:
     int get_n_streams() const { return n_streams_; }
     /// Sorted unique inter-photon gaps used to key the caches.
     std::vector<long long> get_unique_dt() const;
+
+    /// Per-photon stream index (CSR values), length ``get_n_photons()``.
+    const std::vector<int32_t>& get_streams() const { return streams_; }
+    /// Per-photon slot of @f$\Delta t@f$ to the next photon; ``-1`` at each burst end.
+    const std::vector<int32_t>& get_gap_slot() const { return gap_slot_; }
+    /// CSR burst offsets, length ``get_n_bursts() + 1``.
+    const std::vector<int64_t>& get_offsets() const { return offsets_; }
 
     /**
      * @brief Baum-Welch (EM) optimisation of an H2MM model.
