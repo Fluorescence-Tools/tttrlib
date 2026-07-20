@@ -109,6 +109,13 @@ jobs:
               # Build + install this tag's package so autodoc + the version label
               # match the version being built.
               python -m pip install ".[examples]" || python -m pip install .
+              # Old tttrlib does not expose __version__, which the old conf.py
+              # reads unguarded (AttributeError). Inject it (value = the version
+              # being built) so conf.py's version detection works.
+              TTTR_FILE=$(python -c "import tttrlib; print(tttrlib.__file__)" 2>/dev/null || true)
+              if [ -n "${TTTR_FILE}" ] && ! python -c "import tttrlib,sys; sys.exit(0 if hasattr(tttrlib,'__version__') else 1)" 2>/dev/null; then
+                printf "\n__version__ = '%s'\n" "${dest}" >> "${TTTR_FILE}"
+              fi
               # Pre-tiered conf.py does not exclude the gallery-generated
               # notebooks, which collide with the generated .rst ("multiple files
               # found"). Add the exclusion the tiered conf.py already carries.
