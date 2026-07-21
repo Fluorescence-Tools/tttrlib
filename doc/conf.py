@@ -107,7 +107,11 @@ def _try_import(modname: str) -> bool:
         print(f"[conf] Skipping '{modname}' (not importable in this env).")
         return False
 
-BUILD_TIER = int(os.environ.get("BUILD_TIER", "0"))
+# On Read the Docs default to the full build (tier 4: style, numpydoc,
+# notebooks, citations + gallery) so the hosted site matches the GitHub Pages
+# build. Locally the default stays at the safest tier 0 unless BUILD_TIER is set.
+_DEFAULT_BUILD_TIER = "4" if os.environ.get("READTHEDOCS") else "0"
+BUILD_TIER = int(os.environ.get("BUILD_TIER", _DEFAULT_BUILD_TIER))
 
 CORE_EXTS = [
     "sphinx.ext.autodoc",
@@ -115,6 +119,7 @@ CORE_EXTS = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
+    "sphinx.ext.extlinks",
     # keep doctest off by default; re-enable later if you want:
     # "sphinx.ext.doctest",
 ]
@@ -154,6 +159,13 @@ if BUILD_TIER >= 1:
     for e in STYLE_EXTS:
         if _try_import(e):
             extensions.append(e)
+
+# Literature links. Used by the burst-search algorithm table and anywhere else
+# a primary source is cited; keeps the citation readable in the .rst source.
+extlinks = {
+    "doi": ("https://doi.org/%s", "doi:%s"),
+    "arxiv": ("https://arxiv.org/abs/%s", "arXiv:%s"),
+}
 
 # Tier 2: numpydoc
 if BUILD_TIER >= 2:
@@ -302,6 +314,23 @@ html_use_index = False
 html_theme_options = {"navigation_depth": 3}
 if html_theme == "pydata_sphinx_theme":
     html_theme_options["show_toc_level"] = 2
+    # Version switcher: a "Version" dropdown in the header that lists every
+    # published docs version (development + releases), read from switcher.json
+    # published at the gh-pages root (CORS-enabled, so it also works on the
+    # readthedocs mirror). DOCS_VERSION is set by CI (dev / X.Y.Z / stable) and
+    # selects the active entry.
+    html_theme_options["switcher"] = {
+        "json_url": "https://fluorescence-tools.github.io/tttrlib/switcher.json",
+        "version_match": os.environ.get("DOCS_VERSION", "dev"),
+        # Don't fetch/validate switcher.json at build time: it is published to
+        # gh-pages by the same job *after* the Sphinx build, so a build-time
+        # fetch would 404. The dropdown is populated client-side at page load.
+        "check_switcher": False,
+    }
+    html_theme_options["navbar_end"] = [
+        "version-switcher", "theme-switcher", "navbar-icon-links",
+    ]
+    html_theme_options["show_version_warning_banner"] = True
 
 # Optional sidebars only if the theme ships them
 html_sidebars = {

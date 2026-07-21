@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTR.h"
+
+#include "BurstSearchBayesianBlocks.h"
+#include "BurstSearchMaxTree.h"
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "FileCheck.h"
@@ -1942,6 +1945,30 @@ std::vector<long long> TTTR::burst_search(
 ) {
     if (mode == "cusum_sprt") {
         return burst_search_cusum_sprt(L, m, T, alpha, beta);
+    } else if (mode == "kalman") {
+        // `T` is reinterpreted as the bin width in seconds; 0 keeps the default.
+        return burst_search_kalman(L, (T > 0.0) ? T : 1e-4);
+    } else if (mode == "maxtree") {
+        // `T` is reinterpreted as the rolling-ball background window (seconds);
+        // 0 falls back to the default. The remaining max-tree parameters keep
+        // their defaults here — use burst_search_maxtree() to control them.
+        //
+        // The values come from the settings struct rather than being written out
+        // again: this entry point has to name them only because they sit ahead of
+        // `background_window` in the argument list, and a second copy of a default
+        // is a second thing to forget to update.
+        const tttrlib::MaxTreeBurstSettings mt;
+        return burst_search_maxtree(L, m, mt.delta, mt.max_variation,
+                                    (T > 0.0) ? T : mt.background_window,
+                                    mt.min_contrast);
+    } else if (mode == "bayesian_blocks") {
+        // `T` is reinterpreted as p0, the change-point false-alarm probability;
+        // 0 keeps the default. As with the other modes, this three-parameter
+        // entry point can only reach a slice of the algorithm — use
+        // burst_search_bayesian_blocks(), or burst_search_by_name() with the
+        // registry schema, to control the rest.
+        const tttrlib::BayesianBlocksBurstSettings bb;
+        return burst_search_bayesian_blocks(L, m, (T > 0.0) ? T : bb.p0);
     } else {
         return burst_search_sliding_window(L, m, T);
     }

@@ -3,10 +3,260 @@
 ## [Unreleased]
 
 ### Added
+- **Bayesian Blocks burst search** (`TTTR::burst_search_bayesian_blocks`, also
+  `burst_search(..., mode="bayesian_blocks")`). Rather than asking whether the
+  rate near each photon clears a threshold, it finds by dynamic programming the
+  single most probable partition of the photon stream into constant-rate
+  intervals. There is no binning, no window duration and no phase, so burst edges
+  are placed optimally instead of snapped to a window boundary, and the only
+  detection parameter is `p0`, a false-alarm probability. The method is
+  Scargle's, developed for time-tagged photon events from BATSE and Fermi — the
+  same data model as a TTTR file.
+
+  The segmentation is O(N²), so it runs behind a two-stage trigger in the manner
+  of Fermi GBM and Swift BAT: a cheap loose sliding-window pass proposes
+  candidate regions, and the exact segmentation runs only inside them. Cost is
+  roughly `f · n̄ · N` for candidate fraction `f` and mean region size `n̄`, with
+  `n̄` bounded by `max_region_photons`. See
+  `include/BurstSearchBayesianBlocks.h`.
+
+  Measured against the simulated ground truth in
+  `examples/single_molecule/plot_burst_search_comparison.py`, pooled over 2688
+  transits: it reaches 50% completeness at 18.4 photons, against 13.9 for
+  `maxtree`, 21.6 for `cusum_sprt` and 22.7 for `sliding_window`. At the base
+  condition its F1 is 0.918, against 0.961 for `cusum_sprt` and 0.952 for
+  `maxtree`. It is the slowest of the five at roughly 1.2 Mphoton/s, against
+  ~16 for `maxtree` and ~1080 for `sliding_window`.
+
+  So it is **not** the best method on this benchmark — `maxtree` has the better
+  detection limit and `cusum_sprt` the better F1 and purity. Bayesian Blocks
+  looks strongest on isolated, sharp-edged, high-contrast bursts against a
+  uniform background, which is the regime optimal segmentation is built for and
+  which flatters it relative to real diffusion transits with soft edges. Its
+  distinguishing property here is burst *extent*: because it places edges by
+  likelihood rather than snapping them to a window boundary, it does not inherit
+  the `m`-photon truncation the window-based searches do. Choose it when
+  boundaries matter; choose `maxtree` for the lowest detection limit and
+  `sliding_window` when throughput dominates.
+- **Exact low-count detection statistics** (`include/BurstSignificance.h`,
+  exposed in Python as `poisson_significance`, `li_ma_significance`,
+  `log_poisson_upper_tail`, `log_p_to_sigma`, `sigma_for_false_alarm_rate`).
+  The Gaussian z-score `(k − μ)/√μ` assumes the Poisson distribution is already
+  normal, which is false at the counts this library operates at — a 20-photon
+  transit against 2 expected background photons — so a "4 sigma" threshold did
+  not deliver the false-positive rate it appeared to promise. Adds the exact
+  Poisson upper tail (via the regularized incomplete gamma, computed in log space
+  so it does not underflow where `scipy.stats.poisson.sf` returns 0) and the
+  Li & Ma (1983) on/off statistic, which additionally propagates the uncertainty
+  of a background that was *measured* rather than known — always the case here,
+  since the baseline comes from a rolling-ball estimate.
+
+  Selected by `significance_mode` on both `burst_search_maxtree` (default `0`,
+  Gaussian, so existing results reproduce bit-exactly) and
+  `burst_search_bayesian_blocks` (default `2`, Li & Ma).
+
+  On the simulated benchmark, switching `maxtree` from Gaussian to Li & Ma is a
+  modest, one-directional trade: purity rises from 0.904 to 0.916 and F1 from
+  0.952 to 0.957, while completeness falls from 0.719 to 0.701 and the 50%
+  detection limit moves from 13.9 to 14.6 photons. That is the expected
+  behaviour — accounting for the background's own error makes the test strictly
+  more conservative — and it is the right default only when false positives cost
+  more than missed dim bursts. The effect is much larger on isolated bursts
+  against a uniform background than on real diffusion transits, so do not expect
+  the dramatic version of this result on experimental data.
+- **Calibrated false-alarm thresholds** (`max_false_alarm_rate` on
+  `burst_search_maxtree` and `burst_search_bayesian_blocks`). Expresses the
+  detection threshold as expected spurious bursts per second instead of a bare
+  sigma, correcting for the trials factor. Unlike a sigma, one such setting means
+  the same thing on a 10 s and a 1 h acquisition. The trials correction is
+  approximate — the exact factor for a multi-level search is not analytically
+  available — so verify it against a background-only measurement before relying
+  on the absolute number.
+- **Burst-search algorithm table** in `doc/burst-analysis.rst`, comparing all
+  five searches — how each decides, when to use it, and the primary literature
+  each derives from, with resolvable DOI/arXiv links.
+- **Max-tree burst search** (`TTTR::burst_search_maxtree`, also
+  `burst_search(..., mode="maxtree")`). A threshold-free burst search: it builds
+  the component tree of the local log count rate — every connected component at
+  every level — and keeps components that are maximally stable (the MSER
+  criterion) and whose photon count, duration, contrast and Poisson significance
+  are plausible. Because each burst is detected at its own level, dim and bright
+  bursts in the same trace are both found, which no single rate threshold can do,
+  and overlapping transits are deblended by the tree structure rather than by a
+  separate splitting step. Includes a rolling-ball (morphological opening)
+  baseline that tracks drift without chunking. See
+  `include/BurstSearchMaxTree.h`.
+
+  Measured against a simulated ground truth at a dilute single-molecule
+  condition (`examples/single_molecule/plot_burst_search_comparison.py`): recall
+  0.98 / precision 0.93 / F1 0.95, versus 0.93 / 1.00 / 0.96 for `cusum_sprt` and
+  0.84 / 0.69 / 0.76 for `sliding_window`. Its recall is flat across a 16x
+  bright-to-dim brightness spread, where the threshold searches lose 10-15 points,
+  and its merge rate is roughly half that of `cusum_sprt` as concentration rises.
+  It is slower: ~15 Mphotons/s against ~110 for `cusum_sprt` and ~1000 for
+  `sliding_window`.
+
+  Note the method assumes bursts are a *minority* of the trace: its contrast and
+  significance filters are measured against an estimated baseline. Above roughly
+  half of photons belonging to bursts that assumption fails and those two filters
+  should be disabled (`min_contrast=0`, `min_significance=0`).
+- **Burst-search registry** (`TTTR::burst_search_algorithms_json()`, and in Python
+  `TTTR.burst_search_algorithms()`, `TTTR.burst_search_defaults()`,
+  `TTTR.burst_search_by_name()`). Advertises every burst search with its label,
+  summary and a **JSON Schema** of its parameters — types, defaults, ranges and
+  units — the way `container_names` advertises the readable file containers.
+  Because the parameter description is standard JSON Schema, a tool that can
+  already render one can build a burst-search user interface with no
+  tttrlib-specific code, and picks up new algorithms on upgrade.
+  See `src/BurstSearchRegistry.cpp`.
+- **Burst-search benchmark example**
+  (`examples/single_molecule/plot_burst_search_comparison.py`). Simulates a
+  single-molecule sample with `SimEngine`, recovers the true transits from the
+  simulator's per-photon molecule labels, and scores every burst search on
+  precision, recall, and the split and merge rates, sweeping concentration and
+  brightness heterogeneity.
 
 ### Fixed
+- **BVA and H2MM dropped the last photon of every burst.** Burst index ranges are
+  inclusive `[start, stop]` everywhere they are produced — a 30-photon burst is
+  reported as `[0, 29]`, and `BurstFilter` sizes it as `stop - start + 1` — but
+  `BVA::compute` and `H2MM::set_bursts_from_tttr` indexed them half-open. Both
+  therefore silently discarded each burst's final photon: a 5% count error on a
+  20-photon burst, and a biased one, since the discarded photon is the photon
+  that ended the burst. This changes the numeric output of existing BVA and H2MM
+  analyses. The stale "half-open" wording in `BVA.h` and `H2MM.h` is corrected,
+  and `test/python/burstfilter/test_burst_range_convention.py` now pins the
+  convention across producers and consumers together — which is what the previous
+  per-component tests could not do, since each agreed only with itself.
 
 ### Changed
+- **Bayesian Blocks is ~9.6x faster** (119 ms -> 12 ms on 127k photons), by
+  applying **PELT pruning** (Killick, Fearnhead & Eckley 2012,
+  doi:10.1080/01621459.2012.737745) to the dynamic program. A candidate block
+  start that has fallen behind the current optimum by more than the change-point
+  penalty can never recover, so it is dropped. This is an *exact* optimisation:
+  verified byte-identical output across 72 parameter combinations and 19,647
+  bursts. The practical consequence is that cost no longer scales with region
+  size — raising `max_region_photons` from 512 to 8192 now changes runtime by
+  under 10%, against more than 12x before — so boundary quality can be bought
+  without a quadratic bill.
+- **Max-tree is ~1.3x faster** (8.1 ms -> 6.4 ms). The rolling-ball baseline was
+  53% of its runtime and is now threaded, each chunk re-deriving its monotonic
+  deque from a time-based halo so the result is identical to the serial sweep;
+  the per-photon rate signal is threaded too. The component-tree sweep is
+  inherently sequential, which caps this at about 1.5x parallel speed-up.
+  Verified byte-identical output across 48 parameter combinations.
+- The Bayesian Blocks candidate set is now a struct-of-arrays, carrying each
+  candidate's `block_length[i]` and `best[i-1]` beside it so the inner loop reads
+  sequentially instead of gathering. Worth a further ~5%, output unchanged.
+- **Bayesian Blocks defaults retuned against the simulated ground truth**:
+  `p0` 0.05 -> **0.005** and `trigger_contrast` 1.5 -> **2.5**. Together these
+  are worth a further ~2x (12.0 ms -> 6.8 ms on 127k photons), bringing the
+  method level with `maxtree` on throughput.
+
+  This is not a speed-for-accuracy trade. Chosen by sweeping 60 parameter
+  combinations against per-transit ground truth and taking the Pareto frontier,
+  then **validated on held-out conditions** (different seeds, plus 0.4x and 3x
+  crowding) to check the choice was not fitted to one simulation. On the
+  held-out set the new defaults are 3.5x faster with **purity 0.903 vs 0.869**,
+  completeness 0.678 vs 0.680 and the 50% detection limit unchanged at 19.1 —
+  i.e. the only metric that moved beyond noise moved in the right direction.
+
+  Two things the sweep exposed. `p0 = 0.05` was simply the wrong default:
+  0.005 measured better on purity, completeness *and* detection limit
+  simultaneously, because splitting a burst into spurious extra blocks costs
+  more here than missing a marginal change point does. And `trigger_contrast`
+  = 1.5 defeated the two-stage architecture entirely — at that setting the
+  trigger fires on roughly a quarter of background positions, and once each
+  firing is padded and merged the segmentation covers essentially the whole
+  stream, so the cheap stage filtered nothing.
+
+  `max_region_photons` was also swept and left at 4096: dropping it to 512 is
+  faster but collapses completeness to ~0.59, and 2048 is indistinguishable
+  from 4096.
+- **Max-tree `delta` retuned, 0.5 -> 0.15**, which turns out to matter far more
+  than any of the performance work. Against the ground truth this raises
+  completeness from 0.719 to 0.799, purity from 0.904 to 0.964 and drops the 50%
+  detection limit from 13.9 to 11.4 photons — while running slightly *faster*.
+  At the base condition it reaches recall 1.000 / precision 0.975 / F1 0.988,
+  against 0.976 / 0.929 / 0.952 before, and its split rate falls to zero.
+  Confirmed on the held-out conditions (0.714 -> 0.800 completeness,
+  0.897 -> 0.973 purity, 15.3 -> 12.0 limit).
+
+  The reason is worth stating because the parameter reads backwards. A *smaller*
+  `delta` probes a smaller level drop, so components grow less over it, so more
+  of them survive `max_variation` — lower is the more *permissive* setting. It
+  therefore shifts the work from the stability heuristic onto the contrast and
+  Poisson-significance filters, and since those two are the statistically
+  principled tests and stability is a shape heuristic, that is the better
+  division of labour.
+
+  This also changes what `significance_mode` is worth: with the new `delta`,
+  Li & Ma reaches precision 0.997 and purity 0.994 against the Gaussian form's
+  0.975 / 0.964, a much clearer margin than before.
+
+  `background_window` measured better still at 0.2-0.5 s but was **left at
+  0.05 s**: the simulation has a constant background, so a longer window is free
+  there in a way it will not be on real data, where tracking drift is the whole
+  point of the rolling ball. Documented in the header rather than adopted.
+- **Defaults are no longer written down more than once.** `TTTR::burst_search`
+  had the max-tree and Bayesian Blocks defaults spelled out as literals; it now
+  reads them from the settings structs. `burst_search_sliding_window` and
+  `burst_search_cusum_sprt` had no C++ defaults at all while the registry
+  advertised some, so the two entry points disagreed — they now carry the same
+  defaults, and every burst search is callable with no arguments. A new test
+  asserts the registry defaults equal the C++ signature defaults for every
+  algorithm and parameter, so the remaining duplication cannot drift silently.
+  `plot_burst_search_comparison.py` no longer pins tuning parameters either; it
+  was benchmarking a combination nobody runs.
+- `parallel_for` was duplicated in `BVA.cpp` and the Bayesian Blocks source and
+  was about to be copied a third time; it now lives in `include/ParallelFor.h`.
+
+### Not done
+- **Approaching `sliding_window`'s throughput is not achievable** for the exact
+  searches, and the gap is inherent rather than an implementation defect:
+  `sliding_window` does one comparison per photon (~1100 Mphotons/s), while
+  `bayesian_blocks` (~10) and `maxtree` (~20) do strictly more work to get a
+  lower detection limit and better boundaries. The remaining Bayesian Blocks
+  cost is concentrated in flat background stretches, where PELT has no change
+  point to prune against; `pad_photons` pads every region with exactly such
+  stretches, which is why it is the dominant cost knob.
+- Decoupling the local background estimate from the segmented region (a wider
+  *counted* span rather than a wider *segmented* one) was implemented and then
+  removed: measurement showed it changed completeness by less than the binomial
+  error. Padding helps by giving the segmentation edge-placement context, not by
+  improving the background estimate.
+- A hand-rolled polynomial logarithm (1 ulp, 1.75x faster than `std::log` in
+  isolation) was implemented and then removed: in the actual inner loop it made
+  the search **23% slower**. Measured in a loop resembling the real one,
+  `std::log` costs 3.51 ns/iteration against 4.4-4.6 ns for three different
+  hand-rolled variants. The isolated microbenchmark was misleading — there the
+  logarithm is the only work, whereas in the real loop its latency is already
+  hidden by neighbouring loads and multiply-adds, and a 10-term series is one
+  long dependency chain with no instruction-level parallelism to hide. The DP
+  now carries a comment saying so, to stop the idea being retried.
+- **Functional pruning (FPOP, Maidstone et al. 2017) was implemented and
+  removed: it pruned nothing.** The candidate set stayed at 114.1 live starts and
+  the cell count came out bit-identical to PELT's (14,480,250), while the root
+  solving it requires made the search ~52x slower.
+
+  Two findings are worth recording so this is not retried blind. First, the
+  algebra collapses: "candidate i is beaten outright by the newest candidate" is
+  exactly `val + ncp_prior <= best_val`, i.e. PELT's rule is the single-rival
+  special case of functional pruning. Any gain must therefore come from the
+  *intersection* over several rivals. Second, that intersection is empty far less
+  often than the literature suggests, because a dilute photon stream is mostly
+  homogeneous background: every candidate start inside a long background stretch
+  implies almost the same rate, so their viable rate ranges sit on top of one
+  another and none is squeezed out. Functional pruning needs candidates that
+  disagree about the parameter, and background does not supply that.
+
+  Note also that a fully correct FPOP needs per-candidate interval *lists*, not a
+  single interval: a candidate beats newer rivals on an interval but older ones
+  on the complement of an interval. The version tried here tracked one interval
+  and so pruned strictly less than true FPOP — but since it pruned nothing at
+  all, the extra machinery would have had to overcome a 52x cost deficit to break
+  even.
 
 
 ## [0.27.0] - 2026-07-17
@@ -14,7 +264,7 @@
 A **performance and memory** release. Confocal (CLSM/FLIM) reconstruction is
 faster and much lighter on memory, single-detector lifetime fitting and
 dynamic-FRET analysis are new, and a cross-version benchmark now tracks speed and
-peak memory across releases.
+peak memory across releases. Measured numbers: [`PERF.md`](PERF.md).
 
 ### Performance / memory
 - **CLSM lazy fill.** `CLSMImage.fill()` now stores a one-bit-per-event
@@ -52,7 +302,8 @@ peak memory across releases.
 - NumPy-native burst API: `TTTR.burst_search` and the BurstFilter/BVA/H2MM
   accessors return NumPy arrays and accept NumPy inputs, no list conversion.
 - Cross-version performance + peak-memory monitor (`benchmarks/bench_versions.py`,
-  `make_version_plots.py`) and a benchmark-backed performance guide.
+  `make_version_plots.py`), a benchmark-backed performance guide, and
+  [`PERF.md`](PERF.md) as the single place where benchmark results are recorded.
 - **Photon-simulation subsystem** (`SimEngine`, `SimSystem`, `SimSpecies`,
   `SimIntegrator`, `SimGrid`): single-molecule diffusion + photon simulation with
   an OpenMM-style API, PSF fillers, per-molecule coasting for throughput, and

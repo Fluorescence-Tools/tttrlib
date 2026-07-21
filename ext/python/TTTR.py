@@ -280,3 +280,120 @@ def __str__(self):
         f"Number of micro time channels: {self.get_number_of_micro_time_channels()}\n"
         f"Used routing channels: {self.get_used_routing_channels()}"
     )
+
+
+@staticmethod
+def burst_search_algorithms():
+    """The available burst searches as a dict, keyed by algorithm name.
+
+    This is for burst searches what ``container_names`` is for file containers —
+    a way to discover what tttrlib can do instead of hard-coding a list — but it
+    also describes each algorithm's parameters, so a caller can build a user
+    interface for a search it knows nothing about.
+
+    Each entry has ``name``, ``label``, ``summary``, ``description``, the
+    ``method`` implementing it, and ``params_schema``: a JSON Schema of the
+    parameters, with ``type``, ``title``, ``description``, ``default``,
+    ``minimum`` and ``maximum`` per property. Because that schema is standard
+    JSON Schema rather than a tttrlib-specific format, anything that can already
+    render a JSON Schema can render a burst-search form directly. Non-standard
+    presentation hints (``unit``, ``scale``, ``advanced``) ride along as extra
+    keys, which a JSON Schema consumer ignores.
+
+    Adding an algorithm to tttrlib therefore adds it to such a UI on upgrade,
+    with no change to the consuming code.
+
+    Returns:
+        dict: ``{name: {"name", "label", "summary", "description", "method",
+        "params_schema"}}``
+
+    Example:
+        >>> import tttrlib
+        >>> algorithms = tttrlib.TTTR.burst_search_algorithms()
+        >>> sorted(algorithms)
+        ['cusum_sprt', 'maxtree', 'sliding_window']
+        >>> sorted(algorithms["sliding_window"]["params_schema"]["properties"])
+        ['L', 'T', 'm']
+    """
+    import json as _json
+    import tttrlib as _tttrlib
+    return _json.loads(_tttrlib.TTTR.burst_search_algorithms_json())
+
+
+@staticmethod
+def burst_search_defaults(algorithm):
+    """Default parameters of ``algorithm`` as a ``{name: value}`` dict.
+
+    Example:
+        >>> import tttrlib
+        >>> tttrlib.TTTR.burst_search_defaults("sliding_window")
+        {'L': 20, 'm': 10, 'T': 0.0005}
+    """
+    spec = TTTR._burst_search_spec(algorithm)
+    return {
+        name: prop["default"]
+        for name, prop in spec["params_schema"]["properties"].items()
+        if "default" in prop
+    }
+
+
+@staticmethod
+def _burst_search_spec(algorithm):
+    """Registry entry for ``algorithm``, or a ValueError naming the alternatives."""
+    algorithms = TTTR.burst_search_algorithms()
+    if algorithm not in algorithms:
+        raise ValueError(
+            f"unknown burst search {algorithm!r}; available: {sorted(algorithms)}"
+        )
+    return algorithms[algorithm]
+
+
+def burst_search_by_name(self, algorithm, **parameters):
+    """Run a burst search selected by name, filling in the registry defaults.
+
+    Dispatches to whichever method implements ``algorithm``, so a caller can
+    drive any search from a name plus a dict of parameters without knowing which
+    method implements it or what its full signature is.
+
+    Args:
+        algorithm: key from :meth:`burst_search_algorithms`.
+        **parameters: overrides; anything omitted takes its registry default.
+
+    Returns:
+        numpy.ndarray: ``(n, 2)`` array of inclusive ``[start, stop]`` photon
+        indices, reshaped from the flat form the underlying methods return.
+
+    Raises:
+        ValueError: unknown algorithm, or a parameter the algorithm does not take.
+
+    Example:
+        >>> bursts = tttr.burst_search_by_name("maxtree", L=30)   # doctest: +SKIP
+    """
+    import numpy as _np
+    spec = TTTR._burst_search_spec(algorithm)
+    properties = spec["params_schema"]["properties"]
+
+    unknown = set(parameters) - set(properties)
+    if unknown:
+        raise ValueError(
+            f"{algorithm} does not take {sorted(unknown)}; "
+            f"available: {sorted(properties)}"
+        )
+
+    kwargs = TTTR.burst_search_defaults(algorithm)
+    kwargs.update(parameters)
+    # Coerce to the declared JSON Schema types: a form hands back whatever its
+    # widget produced, and a float where the C++ signature wants an int fails in
+    # the SWIG layer rather than here.
+    for name, prop in properties.items():
+        if name not in kwargs:
+            continue
+        kind = prop.get("type")
+        if kind == "integer":
+            kwargs[name] = int(kwargs[name])
+        elif kind == "number":
+            kwargs[name] = float(kwargs[name])
+        elif kind == "boolean":
+            kwargs[name] = bool(kwargs[name])
+    result = getattr(self, spec["method"])(**kwargs)
+    return _np.asarray(result, dtype=_np.int64).reshape(-1, 2)

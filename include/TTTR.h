@@ -823,7 +823,9 @@ public:
      *         (or counts) < L are discarded.
      *     m (int): number of consecutive photons used to compute the rate.
      *     T (double): max time separation of `m` photons to be inside a burst (in seconds).
-     *     mode (string): "sliding_window" or "cusum_sprt" (default: "sliding_window")
+     *     mode (string): "sliding_window", "cusum_sprt" or "maxtree"
+     *         (default: "sliding_window"). For "maxtree", `T` is reinterpreted as
+     *         the background window in seconds; see burst_search_maxtree().
      *     alpha (double): SPRT alpha parameter (default: 0.05)
      *     beta (double): SPRT beta parameter (default: 0.05)
      *
@@ -837,14 +839,200 @@ public:
         double beta = 0.05
     );
 
-    std::vector<long long> burst_search_sliding_window(int L, int m, double T);
+    /// Defaults mirror the burst-search registry, which is what
+    /// `burst_search_by_name` and any UI built on it advertise; a test asserts
+    /// the two stay in step.
+    std::vector<long long> burst_search_sliding_window(
+        int L = 20, int m = 10, double T = 5e-4);
 
     std::vector<long long> burst_search_cusum_sprt(
-        int min_photons,
-        double background_cps,
-        double signal_to_background_ratio,
+        int min_photons = 20,
+        double background_cps = 0.0,
+        double signal_to_background_ratio = 4.0,
         double alpha = 0.05,
         double beta = 0.05
+    );
+
+    /**
+     * Threshold-free burst search by max-tree attribute filtering.
+     *
+     * Builds the component tree of the local log count-rate — every connected
+     * component at every level — and keeps the components that are *maximally
+     * stable* (their extent barely changes as the level is varied) and whose
+     * photon count, duration and contrast are plausible. Because each burst is
+     * detected at its own level, a dim and a bright burst in the same trace are
+     * both found, which no single rate threshold can do. Overlapping transits are
+     * deblended by the tree structure rather than by a separate splitting step.
+     *
+     * See include/BurstSearchMaxTree.h for the algorithm.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst.
+     *     m (int): number of consecutive photons used to compute the local rate
+     *         (same meaning as in the sliding-window search).
+     *     delta (double): MSER stability offset in log2 rate units; 0.15 probes
+     *         a rate change of ~1.11x. Lower is the more permissive setting, and
+     *         measured markedly better than the 0.5 this once defaulted to.
+     *     max_variation (double): reject components whose relative extent growth
+     *         over `delta` exceeds this. Larger accepts less well-defined bursts.
+     *     background_window (double): rolling-ball background window in seconds,
+     *         which must be much longer than a burst. 0 disables it.
+     *     min_contrast (double): minimum burst-to-background rate ratio. 0 disables.
+     *     min_duration, max_duration (double): burst duration bounds in seconds.
+     *         0 disables the respective bound.
+     *     n_levels (int): quantization levels of the log-rate signal.
+     *     min_significance (double): minimum Poisson significance (in sigma) of the
+     *         photon excess over the local background. This is what rejects
+     *         shot-noise clumps, which stability alone accepts. 0 disables.
+     *     significance_mode (int): which statistic computes that significance.
+     *         0 Gaussian (k-mu)/sqrt(mu), the default, kept so existing results
+     *         reproduce exactly; 1 exact Poisson; 2 Li & Ma (1983), which also
+     *         accounts for the background being measured rather than known. The
+     *         Gaussian form is unreliable at the counts this library operates at
+     *         (~20 photons over ~2 expected), so 2 is the better choice for new work.
+     *     max_false_alarm_rate (double): expected spurious bursts per second.
+     *         When > 0 this overrides `min_significance` with a post-trials
+     *         threshold, so one setting means the same thing on a 10 s and a 1 h
+     *         acquisition. See include/BurstSignificance.h on how approximate the
+     *         calibration is.
+     *     background_off_ratio (double): t_off/t_on for the Li & Ma test.
+     *         0 derives it from `background_window`.
+     *
+     * Returns:
+     *     vector<long long>: interleaved, non-overlapping start and stop indices.
+     */
+    /**
+     * Burst search by Kalman-filtered count rate with a Mahalanobis test.
+     *
+     * Bins the stream and tracks the count rate with a Kalman filter whose
+     * measurement noise comes from Poisson statistics, then marks bins whose
+     * innovation is large compared with the filter's own uncertainty. Unlike the
+     * threshold searches it responds to a *change* in rate, so a drifting
+     * background is tracked and ignored rather than detected; unlike them its
+     * resolution is limited by the bin width rather than by the photons.
+     *
+     * With `per_channel` and more than one routing channel, one state dimension
+     * is tracked per detector, so a simultaneous rise across detectors scores
+     * higher than an uncorrelated one of the same size.
+     *
+     * See include/BurstSearchKalman.h.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst.
+     *     dt (double): bin width in seconds.
+     *     q (double): process-noise variance; larger tracks bursts instead of
+     *         flagging them, so it makes the search less sensitive.
+     *     r_scale (double): scale on the Poisson measurement noise.
+     *     z_thresh (double): Mahalanobis distance above which a bin is in a burst.
+     *     min_len (int): minimum consecutive bins over threshold.
+     *     merge_gap (int): merge bursts separated by at most this many bins.
+     *     per_channel (bool): track one rate per routing channel.
+     *
+     * Returns:
+     *     vector<long long>: interleaved, non-overlapping start and stop indices.
+     */
+    std::vector<long long> burst_search_kalman(
+        int L = 20,
+        double dt = 1e-4,
+        double q = 100.0,
+        double r_scale = 0.1,
+        double z_thresh = 3.0,
+        int min_len = 2,
+        int merge_gap = 5,
+        bool per_channel = true
+    );
+
+    /**
+     * Machine-readable description of every available burst search, as JSON.
+     *
+     * Mirrors what `container_names` does for file containers, but carries enough
+     * detail for a caller to build a user interface for a search it knows nothing
+     * about: per algorithm a label, a summary, the name of the method to call, and
+     * an ordered list of parameters with type, default, range and unit.
+     *
+     * See src/BurstSearchRegistry.cpp. In Python prefer the parsed form,
+     * `TTTR.burst_search_algorithms()`, and `TTTR.burst_search_by_name()` to
+     * dispatch on a name.
+     */
+    static std::string burst_search_algorithms_json();
+
+    std::vector<long long> burst_search_maxtree(
+        int L = 20,
+        int m = 10,
+        double delta = 0.15,
+        double max_variation = 0.5,
+        double background_window = 0.05,
+        double min_contrast = 2.0,
+        double min_duration = 0.0,
+        double max_duration = 0.0,
+        int n_levels = 1024,
+        double min_significance = 4.0,
+        int significance_mode = 0,
+        double max_false_alarm_rate = 0.0,
+        double background_off_ratio = 0.0
+    );
+
+    /**
+     * Burst search by Bayesian Blocks behind a two-stage trigger.
+     *
+     * Instead of asking whether the rate around each photon exceeds a threshold,
+     * this finds the single most probable partition of the photon stream into
+     * intervals of constant rate, by dynamic programming. There is no binning, no
+     * window duration and no phase, so burst edges are placed optimally rather
+     * than snapped to a window boundary. The method is Scargle's, developed for
+     * time-tagged photon events from BATSE and Fermi -- the same data model as a
+     * TTTR file.
+     *
+     * The dynamic program is O(N^2), so it runs behind a trigger, mirroring how
+     * Fermi GBM and Swift BAT are built: a cheap loose sliding-window pass
+     * proposes candidate regions, and the exact segmentation runs only inside
+     * them. Cost is roughly `f * n_bar * N` for candidate fraction `f` and mean
+     * region size `n_bar`.
+     *
+     * See include/BurstSearchBayesianBlocks.h for the algorithm and references.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst.
+     *     m (int): photons per trigger window. Affects only which regions are
+     *         examined, never where the burst boundaries end up.
+     *     p0 (double): false-alarm probability for accepting a change point.
+     *         This replaces the rate threshold and is instrument-independent.
+     *         The default is deliberately strict: it measured better on purity,
+     *         completeness and detection limit together than a looser value.
+     *     trigger_contrast (double): stage-1 trigger rate as a multiple of the
+     *         measured background rate. Below ~2 the segmentation ends up
+     *         covering the whole stream and the trigger stops filtering
+     *         anything; above ~3 the dim end starts to suffer.
+     *     pad_photons (long long): background context added each side of a
+     *         candidate run. The segmentation needs flanks to place an edge
+     *         against. This is the dominant cost knob: lowering it to 16 roughly
+     *         2.5x the speed for ~0.03 less completeness.
+     *     max_region_photons (long long): cap on one region's size, bounding the
+     *         quadratic cost. Oversized regions split at their sparsest point.
+     *     min_significance (double): minimum significance of a block over the
+     *         local background, in sigma.
+     *     max_false_alarm_rate (double): expected spurious bursts per second.
+     *         When > 0 this overrides `min_significance`, and unlike a bare sigma
+     *         it means the same thing on a 10 s and a 1 h acquisition.
+     *     significance_mode (int): 0 Gaussian, 1 exact Poisson, 2 Li & Ma.
+     *         Defaults to Li & Ma, which accounts for the background being
+     *         measured rather than known.
+     *     trials_model (int): 0 independent windows, 1 tested components.
+     *
+     * Returns:
+     *     vector<long long>: interleaved, non-overlapping start and stop indices.
+     */
+    std::vector<long long> burst_search_bayesian_blocks(
+        int L = 20,
+        int m = 10,
+        double p0 = 0.005,
+        double trigger_contrast = 2.5,
+        long long pad_photons = 64,
+        long long max_region_photons = 4096,
+        double min_significance = 4.0,
+        double max_false_alarm_rate = 0.0,
+        int significance_mode = 2,
+        int trials_model = 0
     );
 
     void merge(

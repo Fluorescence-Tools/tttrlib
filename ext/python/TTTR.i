@@ -64,7 +64,14 @@ TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
 TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search)
 TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_sliding_window)
 TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_cusum_sprt)
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_maxtree)
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_kalman)
+TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_bayesian_blocks)
 #endif
+
+// The Bayesian Blocks dynamic program is the one burst search long-running
+// enough to be worth releasing the GIL for, and it touches no Python objects.
+TTTRLIB_NOGIL(TTTR::burst_search_bayesian_blocks)
 
 %include "TTTR.h"
 
