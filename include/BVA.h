@@ -67,8 +67,10 @@ public:
 
     /**
      * @brief Compute per-burst proximity-ratio mean and standard deviation.
-     * @param bursts Interleaved half-open photon index ranges
-     *        ``[s0, e0, s1, e1, ...]`` (as produced by BurstFilter).
+     * @param bursts Interleaved **inclusive** photon index ranges
+     *        ``[s0, e0, s1, e1, ...]`` (as produced by BurstFilter and by every
+     *        ``TTTR::burst_search*`` method).  Both ends belong to the burst, so
+     *        it contains ``e - s + 1`` photons.
      * @param number_of_photons_per_slice If > 0, slice each burst into
      *        consecutive chunks of this many photons.  If <= 0, slice into
      *        fixed-duration time windows of ``minimum_window_length`` seconds.

@@ -117,11 +117,11 @@ void BVA::compute(
 
     parallel_for(static_cast<int>(n_pairs), [&](int b) {
         int64_t s = bursts[2 * b];
-        int64_t e = bursts[2 * b + 1];  // half-open
+        int64_t e = bursts[2 * b + 1];  // inclusive, as produced by every burst search
         // Clamp to valid range.
         if (s < 0) s = 0;
-        if (e > n_total) e = n_total;
-        const int64_t n_events = e - s;
+        if (e > n_total - 1) e = n_total - 1;
+        const int64_t n_events = e - s + 1;
         if (n_events <= 0) return;
 
         // Per-photon donor/acceptor membership and cumulative counts.

@@ -135,7 +135,12 @@ class TestH2MM(unittest.TestCase):
                 macro.append(t)
                 chan.append(0 if rng.random() < 0.6 else 1)
             t += 100000  # long dark gap between bursts
-            burst_bounds.append((start, len(macro)))
+            # Inclusive [start, stop], matching what every TTTR.burst_search*
+            # and BurstFilter actually produces: a 30-photon burst comes back as
+            # [0, 29]. This test used to build half-open bounds, which agreed
+            # with H2MM's own indexing but not with any real burst search --
+            # so it passed while H2MM silently dropped each burst's last photon.
+            burst_bounds.append((start, len(macro) - 1))
         macro = np.asarray(macro, dtype=np.uint64)
         micro = np.zeros(len(macro), dtype=np.uint16)
         chan = np.asarray(chan, dtype=np.int8)
@@ -153,7 +158,7 @@ class TestH2MM(unittest.TestCase):
 
         # NumPy reference
         chan_np = np.asarray(d.routing_channels)
-        n_ref = sum(int(np.isin(chan_np[s:e], [0, 1]).sum())
+        n_ref = sum(int(np.isin(chan_np[s:e + 1], [0, 1]).sum())
                     for s, e in burst_bounds)
         self.assertEqual(eng.get_n_photons(), n_ref)
         self.assertEqual(eng.get_n_bursts(), len(burst_bounds))

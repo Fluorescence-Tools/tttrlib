@@ -115,7 +115,8 @@ public:
      * ``extract_burst_photons`` step so H2MM runs straight off a burst search.
      *
      * @param tttr Photon stream.
-     * @param bursts Interleaved half-open index ranges ``[s0,e0,...]`` as a
+     * @param bursts Interleaved **inclusive** index ranges ``[s0,e0,...]`` (both
+     *        ends belong to the burst, so it spans ``e - s + 1`` photons) as a
      *        pointer/length pair (long long so the SWIG IN_ARRAY1 typemaps
      *        apply: NumPy int array from Python, numeric vector from R,
      *        long[] from Java).

@@ -593,11 +593,11 @@ void H2MM::set_bursts_from_tttr(
     for (size_t b = 0; b < n_pairs; ++b) {
         int64_t s = bursts[2 * b], e = bursts[2 * b + 1];
         if (s < 0) s = 0;
-        if (e > n_total) e = n_total;
+        if (e > n_total - 1) e = n_total - 1;
         std::vector<long long> bt;
         std::vector<int> bs;
         long long last_t = std::numeric_limits<long long>::min();
-        for (int64_t idx = s; idx < e; ++idx) {
+        for (int64_t idx = s; idx <= e; ++idx) {
             const int ch = static_cast<int>(tttr->get_routing_channel_at(idx));
             const int mt = static_cast<int>(tttr->get_micro_time_at(idx));
             const int stream = match_stream(ch, mt);
