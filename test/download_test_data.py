@@ -86,11 +86,16 @@ def get_output_dir(settings: dict) -> Path:
         return Path(env_dir)
     
     data_root = settings.get("data_root", "tttr-data")
-    
+
     if os.path.isabs(data_root):
         return Path(data_root)
-    
-    return Path(__file__).parent / data_root
+
+    # Anchor a relative data_root at the *repository* root, matching
+    # test/python/test_settings.py, which is what the test suite reads. These
+    # used to disagree -- this script anchored at test/ -- so a successful
+    # download landed in test/tttr-data while every test looked in ./tttr-data
+    # and reported the data as missing.
+    return Path(__file__).resolve().parent.parent / data_root
 
 
 def create_pooch_client(output_dir: Path, settings: dict) -> pooch.Pooch:
