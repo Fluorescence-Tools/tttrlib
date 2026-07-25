@@ -138,6 +138,18 @@ IF(BUILD_PYTHON_INTERFACE)
             Python3::Module
             ${CMAKE_THREAD_LIBS_INIT}
     )
+    # The OpenMP link flags reach the top-level CMAKE_EXE_LINKER_FLAGS only, and
+    # a Python extension is a MODULE library rather than an executable, so it
+    # never saw them: the module compiled with -fopenmp but linked without the
+    # runtime. The R and Java modules below always linked OpenMP explicitly; do
+    # the same here. Without this the module fails at *import* rather than at
+    # link time on macOS, where the dynamic-lookup flag below lets the
+    # unresolved OpenMP symbols through ("symbol not found in flat namespace
+    # '___kmpc_barrier'"), which forced every downstream build to inject
+    # -lomp by hand.
+    IF(OpenMP_CXX_FOUND)
+        TARGET_LINK_LIBRARIES(${MODULE_NAME} OpenMP::OpenMP_CXX)
+    ENDIF()
     # On macOS, use dynamic lookup for Python symbols
     IF (APPLE)
         SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")

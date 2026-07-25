@@ -117,6 +117,21 @@
   brightness heterogeneity.
 
 ### Fixed
+- **The Python extension compiled with OpenMP but never linked it.** The
+  top-level OpenMP flags reach `CMAKE_CXX_FLAGS` and `CMAKE_EXE_LINKER_FLAGS`,
+  but a Python extension is a `MODULE` library rather than an executable, so it
+  received the compile flags and none of the link ones. The R and Java modules
+  have always linked `OpenMP::OpenMP_CXX` explicitly; the Python module now does
+  too.
+
+  The failure mode was worse than a plain link error. On macOS the Python module
+  is linked with `-Wl,-flat_namespace,-undefined,dynamic_lookup` so that Python
+  symbols resolve at load time, and that flag let the unresolved OpenMP symbols
+  through as well. The build therefore succeeded and the module failed at
+  **import**, with `symbol not found in flat namespace '___kmpc_barrier'` —
+  which forced every downstream build to inject `-lomp` and an rpath by hand.
+  `pip install .` in an environment where CMake can find OpenMP now produces an
+  importable module with no extra flags.
 - **`CLSMImage::compute_ics` returned an array longer than it allocated,
   segfaulting any caller that used frame lags.** The function allocates one
   correlation map per correlated frame *pair* — `calloc(pairs * pixels)` — but
