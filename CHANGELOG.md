@@ -117,6 +117,37 @@
   brightness heterogeneity.
 
 ### Fixed
+- **`CLSMImage::compute_ics` returned an array longer than it allocated,
+  segfaulting any caller that used frame lags.** The function allocates one
+  correlation map per correlated frame *pair* — `calloc(pairs * pixels)` — but
+  reported the number of input *frames* as the first output dimension. The two
+  agree only for the default auto-correlation, where every frame is paired with
+  itself. Any other pairing has fewer pairs than frames: correlating a stack of
+  50 frames at a lag of 2 writes 48 maps but declares 50, so the returned NumPy
+  array over-declares its own length and reading the tail — `arr.mean(axis=0)`
+  is enough — walks off the allocation and crashes the interpreter. This made
+  the whole spatiotemporal side of image correlation (STICS/TICS/iMSD, anything
+  with a non-zero frame lag) unusable from Python.
+
+  The first dimension is now the number of pairs actually correlated. Frame
+  pairs are also bounds-checked against the ROI and dropped if out of range;
+  the correlation loop indexes `roi[frame * pixel_in_roi]` directly, so an
+  out-of-range frame number was a second out-of-bounds read. A pair list with
+  no valid entries returns an empty result instead of correlating garbage. See
+  `test/python/clsm/test_clsm_ics.py`.
+- **MLE decay fits (`Fit23`/`Fit24`/`Fit25`/`Fit26`) could segfault on a decay
+  whose length did not match the IRF.** The fit derives its channel count from
+  the experimental `data`, but `DecayFitData::set_data()` grows only `data` (and
+  `model`) to a new decay's length while leaving `irf`/`background` at their
+  original size. A decay longer than the IRF therefore made the objective read
+  past the end of `irf`/`background` and crash the process — in every binding
+  (Python/Java/R), since they all reach native code through `DecayFit*::fit`. The
+  single-decay path now validates array consistency the way the batch
+  `fit_matrix` already did, via `DecayFitData::has_consistent_fit_arrays()`, and
+  reports an invalid fit (`x[0] = -1`) instead of segfaulting. `targetf` is
+  guarded too, as it is exposed directly. See
+  `test/python/decayfit/test_DecayFit23.py` (`..._decay_longer_than_irf...`,
+  `..._empty_data...`).
 - **BVA and H2MM dropped the last photon of every burst.** Burst index ranges are
   inclusive `[start, stop]` everywhere they are produced — a 30-photon burst is
   reported as `[0, 29]`, and `BurstFilter` sizes it as `stop - start + 1` — but

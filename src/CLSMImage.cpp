@@ -3713,6 +3713,28 @@ void CLSMImage::compute_ics(
             frames_index_pairs.emplace_back(std::make_pair(i, i));
     }
 
+    // Discard pairs that address frames outside the ROI. The correlation loop
+    // below indexes roi[frame * pixel_in_roi] directly, so an out-of-range
+    // frame number would read past the allocation. Dropping such pairs here
+    // (rather than in the loop) also keeps the output length equal to the
+    // number of maps actually written.
+    frames_index_pairs.erase(
+            std::remove_if(
+                    frames_index_pairs.begin(), frames_index_pairs.end(),
+                    [nf](const std::pair<int, int> &p) {
+                        return p.first < 0 || p.first >= nf ||
+                               p.second < 0 || p.second >= nf;
+                    }),
+            frames_index_pairs.end()
+    );
+
+    if (frames_index_pairs.empty()) {
+        free(roi);
+        *dim1 = 0; *dim2 = 0; *dim3 = 0;
+        *output = (T *) calloc(1, sizeof(T));
+        return;
+    }
+
     // Allocate memory for the ICS output array
     auto out_tmp = (T *) calloc(frames_index_pairs.size() * pixel_in_roi, sizeof(T));
 
@@ -3770,8 +3792,12 @@ void CLSMImage::compute_ics(
     }
     free(roi);
 
-    // Assign output
-    *dim1 = static_cast<int>(nf);
+    // Assign output. The first dimension is the number of correlated frame
+    // PAIRS, which is what was allocated and written above. Reporting the
+    // number of input frames instead over-declares the array whenever fewer
+    // pairs than frames were correlated (any frame lag > 0), so callers read
+    // past the allocation.
+    *dim1 = static_cast<int>(frames_index_pairs.size());
     *dim2 = static_cast<int>(nl);
     *dim3 = static_cast<int>(np);
     *output = out_tmp;
