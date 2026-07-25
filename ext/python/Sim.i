@@ -122,6 +122,127 @@
                 event_type=_np.asarray(self.event_type()),
             )
 
+        def state_trajectory(self):
+            """The state trajectory as a dict of numpy arrays (see ``set_state_log``).
+
+            One row per recorded event, time-ordered: ``window`` and ``time``
+            (within-window, macro units) locate it, ``molecule`` says which emitter,
+            and ``from``/``to`` are the states it left and entered. ``from == -1``
+            marks a birth (the molecule's initial state) and ``to == -1`` a death
+            (it left the box), so the log is self-contained.
+
+            ``macro_time`` is added for convenience: the absolute time
+            ``window * dt + time`` in macro-time units.
+
+            Rows are sorted by time. The C++ arrays are in recording order, which differs
+            when a coasting molecule is caught up on waking and its transitions are appended
+            after later events of other molecules.
+            """
+            import numpy as _np
+            w = _np.asarray(self.state_window())
+            t = _np.asarray(self.state_time())
+            mt = w * self.settings().dt + t
+            mol = _np.asarray(self.state_molecule())
+            order = _np.lexsort((mol, mt))
+            return dict(
+                window=w[order], time=t[order],
+                macro_time=mt[order], molecule=mol[order],
+                **{"from": _np.asarray(self.state_from())[order],
+                   "to": _np.asarray(self.state_to())[order]},
+            )
+
+        def state_occupancy(self, windows_per_bin=1, window_start=0, window_stop=None):
+            """Fraction of each time bin that each molecule spent in each state.
+
+            Reduces the state trajectory (``set_state_log``) to the quantity most
+            analyses actually want: a time-average of a state-dependent observable
+            is an average over these fractions. Because the log is event-based the
+            fractions are exact — a state entered and left inside one bin still
+            contributes its true dwell time, which a strided position/state
+            snapshot cannot represent.
+
+            Bins are ``windows_per_bin`` macro-windows wide, covering
+            ``[window_start, window_stop)``; ``window_stop`` defaults to the end of the
+            simulation, not to the last recorded transition — a molecule that stops
+            exchanging still occupies its final state for the rest of the run.
+            Returns ``(molecules, fractions)`` with ``molecules`` the sorted
+            molecule ids and ``fractions`` of shape
+            ``(n_molecules, n_bins, n_species)``. Rows for a molecule that is not
+            alive anywhere in a bin are all zero, so ``fractions.sum(axis=2)`` also
+            tells you what fraction of each bin it was present for.
+            """
+            import numpy as _np
+            tr = self.state_trajectory()
+            dt = float(self.settings().dt)
+            nsp = int(self.system().n_species())
+            per_bin = int(windows_per_bin)
+            if per_bin < 1:
+                raise ValueError("windows_per_bin must be >= 1")
+            mol = tr["molecule"]
+            if mol.size == 0:
+                raise ValueError(
+                    "no state events recorded — call set_state_log(True) before run()")
+            time = tr["macro_time"]
+            to = tr["to"]
+
+            w0 = int(window_start)
+            w1 = int(self.current_window() if window_stop is None else window_stop)
+            n_bins = max(0, -(-(w1 - w0) // per_bin))          # ceil
+            bin_len = per_bin * dt
+            t0 = w0 * dt
+
+            molecules = _np.unique(mol)
+            n_mol = molecules.size
+            if n_bins == 0:
+                return molecules, _np.zeros((n_mol, 0, nsp))
+            t_end = t0 + n_bins * bin_len
+
+            # Consecutive events of one molecule bracket an interval spent in one state.
+            order = _np.lexsort((time, mol))
+            mol, time, to = mol[order], time[order], to[order]
+            row = _np.searchsorted(molecules, mol)
+            stops = _np.searchsorted(mol, molecules, side="right")
+
+            nxt = _np.empty_like(time)
+            nxt[:-1] = time[1:]
+            nxt[stops - 1] = t_end            # each molecule's last state runs to the end
+            lo = _np.clip(time, t0, t_end)
+            hi = _np.clip(nxt, t0, t_end)
+
+            keep = (to >= 0) & (hi > lo)      # a death ends the previous interval, adds none
+            row, lo, hi = row[keep], lo[keep], hi[keep]
+            st = to[keep].astype(_np.intp)
+            i0 = ((lo - t0) // bin_len).astype(_np.intp)
+            i1 = _np.minimum(n_bins - 1, ((hi - t0) // bin_len).astype(_np.intp))
+
+            # Split each interval into a head bin, whole interior bins and a tail bin. The
+            # interior is accumulated as a difference array so a long dwell costs O(1) rather
+            # than one write per bin it spans.
+            size = n_mol * n_bins * nsp
+            flat = (row * n_bins + i0) * nsp + st
+            one = i0 == i1
+            span = ~one
+            n_span = int(span.sum())
+            full = _np.full(n_span, bin_len)
+            # bincount returns an integer array when it is handed no weights to sum, so
+            # accumulate into an explicitly-typed buffer rather than adopting its dtype.
+            acc = _np.zeros(size)
+            acc += _np.bincount(flat[one], (hi - lo)[one], minlength=size)
+            acc += _np.bincount(flat[span],
+                                t0 + (i0[span] + 1) * bin_len - lo[span], minlength=size)
+            acc += _np.bincount((row[span] * n_bins + i1[span]) * nsp + st[span],
+                                hi[span] - (t0 + i1[span] * bin_len), minlength=size)
+
+            dsize = n_mol * (n_bins + 1) * nsp
+            d = _np.zeros(dsize)
+            d += _np.bincount((row[span] * (n_bins + 1) + i0[span] + 1) * nsp + st[span],
+                              full, minlength=dsize)
+            d -= _np.bincount((row[span] * (n_bins + 1) + i1[span]) * nsp + st[span],
+                              full, minlength=dsize)
+            interior = _np.cumsum(d.reshape(n_mol, n_bins + 1, nsp), axis=1)[:, :n_bins, :]
+
+            return molecules, (acc.reshape(n_mol, n_bins, nsp) + interior) / bin_len
+
         def state_numpy(self):
             """``get_state()`` as a dict of numpy arrays (window, n_photons, id, species, x, y, z)."""
             import numpy as _np

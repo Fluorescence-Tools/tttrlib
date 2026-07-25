@@ -113,8 +113,54 @@ public:
     const std::vector<double>&   trajectory_y() const { return traj_y_; }
     const std::vector<double>&   trajectory_z() const { return traj_z_; }
 
+    /*!
+     * \brief Record the state trajectory: every species/state change, exactly when it happens.
+     *
+     * Complementary to `set_trajectory_reporter`, which samples every molecule on a fixed
+     * stride. A stride cannot see a state that is entered and left between two samples, so it
+     * biases any time-average of a state-dependent observable whenever the exchange is fast
+     * compared with the stride — which is the regime that is usually interesting. This log is
+     * *event-based* instead: nothing is written while a molecule sits in a state, and a
+     * transition is written with the time it occurred, so occupation times are exact and the
+     * cost is proportional to the number of transitions rather than to the run length.
+     *
+     * The log is self-contained: a birth (`from == -1`) records a molecule's initial state and
+     * a death (`to == -1`) records it leaving the box, so a reader never has to guess what a
+     * molecule was doing before its first transition. Off by default; set before run().
+     *
+     * \see state_occupancy (Python) for the time-averaged occupancy this is usually reduced to.
+     */
+    /// Enabling records every live molecule's current state as a birth, so the log describes the
+    /// whole population from the moment it is switched on rather than only the molecules that
+    /// happen to be created later.
+    void set_state_log(bool on) {
+        if (on && !state_log_)
+            for (const auto& m : mols_) if (m.alive) log_state(T0_, 0.0, m.id, -1, m.state);
+        state_log_ = on;
+    }
+    bool state_log() const { return state_log_; }
+
+    // --- state trajectory (flat, one row per transition; see set_state_log) ------
+    // Rows are in RECORDING order, which is time order except across a coast: a molecule that
+    // sleeps is caught up when it wakes, so its transitions are appended then, dated to the
+    // earlier windows in which they actually happened. Sort by (window, time) if you need a
+    // globally ordered stream — the Python `state_trajectory()` view already does.
+    const std::vector<uint32_t>& state_window() const { return st_w_; }    ///< macro-window
+    const std::vector<double>&   state_time() const { return st_t_; }      ///< within-window time
+    const std::vector<int32_t>&  state_molecule() const { return st_mol_; }
+    const std::vector<int16_t>&  state_from() const { return st_from_; }   ///< -1 = birth
+    const std::vector<int16_t>&  state_to() const { return st_to_; }       ///< -1 = death
+    uint64_t n_state_events() const { return st_w_.size(); }
+
     /// Write the recorded trajectory to an HDF5 file (group /trajectory). Requires HDF5.
     void write_trajectory_hdf5(const std::string& path) const;
+
+    /// The integrator settings this engine was built with (dt, channel count, laser period, ...).
+    /// Read-only: the precomputed per-species tables depend on them, so they are fixed at
+    /// construction.
+    const SimIntegrator& settings() const { return set_; }
+    /// The simulated sample (species, kinetics, background, box).
+    const SimSystem& system() const { return sample_; }
 
     /// Cap worker threads (0 = hardware concurrency). Set before run()/step().
     void set_num_threads(unsigned n) { num_threads_ = n; }
@@ -182,16 +228,27 @@ private:
         uint32_t w_sleep = 0, w_wake = 0;  // coast span [w_sleep, w_wake) in window units
     };
 
+    /// One recorded state change (see set_state_log). Carries its own absolute window because
+    /// a transition may happen during a coast, i.e. outside the window being processed.
+    struct Tr {
+        uint32_t w; double t; int32_t mol; int16_t from, to;
+    };
+
     /// Photons produced by one worker over its molecule range (merged after the loop).
+    /// `tr` collects that worker's state transitions when the state log is on.
     struct LocalBuf {
         std::vector<double> t;
         std::vector<int16_t> N, sp;
         std::vector<int32_t> mol;
         std::vector<uint16_t> micro;
-        void clear() { t.clear(); N.clear(); sp.clear(); mol.clear(); micro.clear(); }
+        std::vector<Tr> tr;
+        void clear() { t.clear(); N.clear(); sp.clear(); mol.clear(); micro.clear(); tr.clear(); }
         void push(double tt, int ch, int species, int molid, uint16_t mt) {
             t.push_back(tt); N.push_back(int16_t(ch));
             sp.push_back(int16_t(species)); mol.push_back(int32_t(molid)); micro.push_back(mt);
+        }
+        void push_transition(uint32_t w, double tt, int molid, int from, int to) {
+            tr.push_back(Tr{w, tt, int32_t(molid), int16_t(from), int16_t(to)});
         }
     };
 
@@ -312,9 +369,18 @@ private:
     /// (k_nrad-only) path, plus the state jump. Shared by window-mode wake and independent
     /// mode; the coast RNG is keyed by (id, w_start) so it is thread-count-independent.
     template <class Rng>
-    void coast_over(Mol& m, uint32_t w_start, uint64_t n) const {
+    void coast_over(Mol& m, uint32_t w_start, uint64_t n, LocalBuf* log = nullptr) const {
         const double tau = double(n) * set_.dt;
         if (tau <= 0.0) return;
+        // Map an elapsed time within the coast onto (absolute window, within-window time), so a
+        // transition that happens while a molecule sleeps is timed like any other event.
+        auto stamp = [&](double elapsed, int from, int to) {
+            if (!log) return;
+            uint64_t dw = uint64_t(elapsed / set_.dt);
+            if (dw >= n) dw = n - 1;          // keep the event inside the coasted span
+            log->push_transition(uint32_t(w_start + dw), elapsed - double(dw) * set_.dt,
+                                 m.id, from, to);
+        };
         Rng crng; crng.reset(mol_base_seed_ ^ kCoastSalt, uint32_t(m.id),
                              uint64_t(w_start) * kWindowStride);
         const int nsp = sample_.n_species();
@@ -335,6 +401,7 @@ private:
                 r -= knij;
             }
             if (j < 0) j = i;
+            stamp(t, i, j);
             i = j;
         }
         const double s = std::sqrt(var);
@@ -343,15 +410,19 @@ private:
         m.state = i;
         const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
         const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
-        if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
+        if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq) {
             m.alive = false;
+            // The displacement is a single catch-up draw, so the crossing has no resolvable
+            // time within the coast; attribute the death to its end.
+            stamp(tau, i, -1);
+        }
     }
 
     /// Wake a coasting molecule at window `T0`: exact catch-up over the elapsed coast.
     template <class Rng>
-    void wake_molecule(Mol& m, uint32_t T0) const {
+    void wake_molecule(Mol& m, uint32_t T0, LocalBuf* log = nullptr) const {
         m.coasting = false;
-        coast_over<Rng>(m, m.w_sleep, uint64_t(T0 - m.w_sleep));
+        coast_over<Rng>(m, m.w_sleep, uint64_t(T0 - m.w_sleep), log);
     }
 
     /// Simulate one molecule's whole timeline independently over [w_birth, W): coast far from
@@ -360,9 +431,16 @@ private:
     /// awake window yields the same photons as the window engine.
     template <class Rng, class PhVec>
     void simulate_timeline(Mol m, uint32_t w_birth, uint32_t W, bool coast,
-                           std::vector<double>& wv, LocalBuf& buf, PhVec& ph) const {
+                           std::vector<double>& wv, LocalBuf& buf, PhVec& ph,
+                           std::vector<Tr>* tr = nullptr) const {
         const int nchan = set_.n_channels; (void)nchan;
         const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
+        // `buf` is reused per window, so its transitions must be drained before it is cleared.
+        auto drain = [&]() {
+            if (!tr) return;
+            tr->insert(tr->end(), buf.tr.begin(), buf.tr.end());
+            buf.tr.clear();
+        };
         uint32_t w = w_birth;
         while (w < W && m.alive) {
             if (coast && m.mobile) {
@@ -376,7 +454,8 @@ private:
                         if (n >= set_.min_coast_windows) {
                             if (uint64_t(w) + n > W) n = W - w;   // clamp to horizon
                             if (n > 0) {
-                                coast_over<Rng>(m, w, n);
+                                coast_over<Rng>(m, w, n, tr ? &buf : nullptr);
+                                drain();
                                 w += uint32_t(n);
                                 continue;
                             }
@@ -386,10 +465,11 @@ private:
             }
             Rng rng; rng.reset(mol_base_seed_, uint32_t(m.id), uint64_t(w) * kWindowStride);
             buf.clear();
-            process_molecule(m, rng, wv, buf, laser_for_window(w));
+            process_molecule(m, rng, wv, buf, laser_for_window(w), w);
             for (size_t k = 0; k < buf.t.size(); ++k)
                 ph.push_back(typename PhVec::value_type{
                     w, buf.t[k], buf.N[k], buf.sp[k], buf.mol[k], buf.micro[k]});
+            drain();
             ++w;
         }
     }
@@ -399,7 +479,7 @@ private:
     /// so results are independent of the number of worker threads.
     template <class Rng>
     void process_molecule(Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf,
-                          int laser) const {
+                          int laser, uint32_t window = 0) const {
         const double dt = set_.dt;
         const int nsp = sample_.n_species();
         const int nchan = set_.n_channels;
@@ -519,6 +599,7 @@ private:
                     double knij = (size_t(i * nsp + j) < kn.size()) ? kn[i * nsp + j] : 0.0;
                     r -= tau_off * (Iex * krij + knij);
                 }
+                if (state_log_ && j != i) buf.push_transition(window, t_tr, m.id, i, j);
                 i = j;
             }
         } while (t_tr < dt);
@@ -531,8 +612,12 @@ private:
             m.x += step * g0;
             m.y += step * g1;
             m.z += step * g2;
-            if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq)
+            if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq) {
                 m.alive = false;
+                // The step is one Gaussian draw, so the crossing has no resolvable time within
+                // the window; attribute the death to its end.
+                if (state_log_) buf.push_transition(window, dt, m.id, i, -1);
+            }
         }
     }
 
@@ -559,11 +644,11 @@ private:
         auto handle = [&](Mol& m, Rng& rng, std::vector<double>& w, LocalBuf& buf) {
             if (coast && m.coasting) {
                 if (T0 < m.w_wake) return;               // still asleep: skip entirely
-                wake_molecule<Rng>(m, T0);               // exact catch-up
+                wake_molecule<Rng>(m, T0, state_log_ ? &buf : nullptr);   // exact catch-up
                 if (!m.alive) return;                    // left the box on wake
             }
             if (!per_thread) rng.reset(mol_base_seed_, uint32_t(m.id), counter_start);
-            process_molecule(m, rng, w, buf, laser);
+            process_molecule(m, rng, w, buf, laser, T0);
             if (coast) maybe_sleep<Rng>(m, T0, rng);
         };
         if (parallel) {
@@ -629,6 +714,19 @@ private:
     // per-channel background arrival times, carried across windows
     std::vector<double> t_bg_;
     bool t_bg_setup_ = false;
+
+    // state trajectory (see set_state_log): one row per birth / transition / death
+    bool state_log_ = false;
+    std::vector<uint32_t> st_w_;
+    std::vector<double> st_t_;
+    std::vector<int32_t> st_mol_;
+    std::vector<int16_t> st_from_, st_to_;
+
+    /// Append one recorded state change to the engine-level log (serial contexts only).
+    void log_state(uint32_t w, double t, int mol, int from, int to) {
+        st_w_.push_back(w); st_t_.push_back(t); st_mol_.push_back(int32_t(mol));
+        st_from_.push_back(int16_t(from)); st_to_.push_back(int16_t(to));
+    }
 
     // parallelism
     std::unique_ptr<SimThreadPool> pool_;   // lazily created on first parallel window

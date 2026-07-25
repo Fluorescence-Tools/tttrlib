@@ -342,6 +342,7 @@ void SimEngine::inject_open_volume(double windows) {
             init_orientation(m);
             mols_.push_back(m);
             mol_alive_++;
+            if (state_log_) log_state(T0_, 0.0, m.id, -1, m.state);
             t_in_[i] -= std::log(rng_diff_.random0e1e()) / rate_in_[i];
         }
         t_in_[i] -= windows;
@@ -395,6 +396,24 @@ void SimEngine::emit_window() {
 
     if (open_volume_) {   // deletions happened during the (possibly parallel) loop
         size_t a = 0; for (auto& m : mols_) if (m.alive) ++a; mol_alive_ = a;
+    }
+
+    // Drain the workers' state transitions. Sorted by (window, time, molecule) so the log is
+    // thread-count-independent, like the photon stream; a wake-up catch-up can date a
+    // transition to an earlier window than the one being processed, hence the window key.
+    if (state_log_) {
+        std::vector<Tr> trs;
+        size_t ntr = 0; for (auto& b : bufs_) ntr += b.tr.size();
+        if (ntr) {
+            trs.reserve(ntr);
+            for (auto& b : bufs_) trs.insert(trs.end(), b.tr.begin(), b.tr.end());
+            std::sort(trs.begin(), trs.end(), [](const Tr& a, const Tr& b) {
+                if (a.w != b.w) return a.w < b.w;
+                if (a.t != b.t) return a.t < b.t;
+                return a.mol < b.mol;
+            });
+            for (const auto& e : trs) log_state(e.w, e.t, e.mol, e.from, e.to);
+        }
     }
 
     // Background: independent Poisson per channel (serial, carried across windows).
@@ -587,6 +606,7 @@ void SimEngine::run_independent_impl(uint64_t W) {
     if (parallel) { if (!pool_) pool_.reset(new SimThreadPool(num_threads_)); if (pool_->size() < 2) parallel = false; }
     const unsigned nbuf = (parallel && pool_) ? pool_->size() : 1u;
     std::vector<std::vector<IndPh>> perbuf(nbuf);
+    std::vector<std::vector<Tr>> pertr(nbuf);   // state transitions, one run per worker
 
     auto cmp = [](const IndPh& a, const IndPh& b) {
         if (a.w != b.w) return a.w < b.w;
@@ -623,12 +643,34 @@ void SimEngine::run_independent_impl(uint64_t W) {
                     m.ox = std::cos(ph) * rr; m.oy = std::sin(ph) * rr; m.oz = z;
                 }
             }
-            simulate_timeline<Rng>(m, w_birth, uint32_t(W), coast, wv, lb, out);
+            // Molecules already in the pool had their birth recorded when the log was enabled;
+            // only the ones injected here are new to it.
+            if (state_log_ && k >= init)
+                pertr[wi].push_back(Tr{w_birth, 0.0, int32_t(m.id), int16_t(-1),
+                                       int16_t(m.state)});
+            simulate_timeline<Rng>(m, w_birth, uint32_t(W), coast, wv, lb, out,
+                                   state_log_ ? &pertr[wi] : nullptr);
         }
         std::sort(out.begin(), out.end(), cmp);   // per-worker sort — parallel across workers
     };
     if (parallel) pool_->parallel_for(nmol, do_range);
     else do_range(0, nmol, 0);
+
+    // Flatten the per-worker state transitions into one time-ordered log. Each worker owns whole
+    // molecules rather than a time slice, so its run is not globally sorted — sort the union.
+    if (state_log_) {
+        size_t ntr = 0; for (const auto& v : pertr) ntr += v.size();
+        if (ntr) {
+            std::vector<Tr> trs; trs.reserve(ntr);
+            for (const auto& v : pertr) trs.insert(trs.end(), v.begin(), v.end());
+            std::sort(trs.begin(), trs.end(), [](const Tr& a, const Tr& b) {
+                if (a.w != b.w) return a.w < b.w;
+                if (a.t != b.t) return a.t < b.t;
+                return a.mol < b.mol;
+            });
+            for (const auto& e : trs) log_state(e.w, e.t, e.mol, e.from, e.to);
+        }
+    }
 
     // --- 3) Background (serial) into its own sorted run. ------------------------------------
     std::vector<IndPh> bg;
