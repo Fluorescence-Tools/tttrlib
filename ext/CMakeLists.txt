@@ -133,6 +133,15 @@ IF(BUILD_PYTHON_INTERFACE)
         endif()
     endif()
 
+    # Keep the SWIG runtime type table private to this module. SWIG modules
+    # otherwise share one process-global table, and whichever registers a common
+    # type such as std::vector<double> first owns the entry -- so a proxy created
+    # here stops matching a by-value argument of that type as soon as another SWIG
+    # extension (IMP, for one) is imported first. The failure is import-order
+    # dependent and reads as an unrelated TypeError. Nothing here is meant to be
+    # exchanged with another SWIG module, so a private table costs nothing.
+    TARGET_COMPILE_DEFINITIONS(${MODULE_NAME} PRIVATE SWIG_TYPE_TABLE=tttrlib)
+
     TARGET_LINK_LIBRARIES(
             ${MODULE_NAME}
             Python3::Module
