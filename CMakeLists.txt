@@ -104,7 +104,21 @@ ENDIF()
 # HDF5 Support (Mandatory for Photon HDF)
 ################################################################################
 IF(BUILD_PHOTON_HDF)
+    # A caller that names an HDF5 (HDF5_ROOT, or a prefix on CMAKE_PREFIX_PATH
+    # that ships HDF5) means it: honour that root instead of letting
+    # find_package fall through to whatever HDF5 *CMake config package* happens
+    # to be installed. On macOS that config is usually Homebrew's, and it wins
+    # even when HDF5_ROOT points elsewhere — the extension then loads a second
+    # HDF5 into a process that already has the environment's (via h5py or
+    # PyTables), and whichever initialises first wins: writing a Photon-HDF5
+    # file aborts the interpreter outright.
+    IF(DEFINED HDF5_ROOT OR DEFINED ENV{HDF5_ROOT})
+        SET(HDF5_NO_FIND_PACKAGE_CONFIG_FILE TRUE)
+    ENDIF()
     FIND_PACKAGE(HDF5 COMPONENTS C)
+    IF(HDF5_FOUND)
+        MESSAGE(STATUS "HDF5 in use: ${HDF5_LIBRARIES}")
+    ENDIF()
 ENDIF()
 
 # Build type specific optimizations
