@@ -3,6 +3,10 @@
 #include "TTTRMask.h"
 %}
 
+// Masks are handed out as shared_ptr by the H2MM state sidecar
+// (H2mmStateSidecar::mask_for_state), so the type has to be shared_ptr-aware.
+%shared_ptr(TTTRMask)
+
 // Hide the std::vector<bool> version (slow in Python)
 %ignore TTTRMask::get_mask_as_vector();
 
@@ -44,4 +48,22 @@
 %extend TTTRMask{%pythoncode "./ext/python/TTTRMask.py"}
 #endif
 
+// to_msgpack hands back a freshly allocated buffer, so it takes the *owning*
+// ARGOUTVIEWM typemap -- unlike get_mask, whose (unsigned char**, int*) pair is
+// re-mapped above to a non-owning view of a cached snapshot.
+%apply(unsigned char** ARGOUTVIEWM_ARRAY1, int* DIM1) {
+    (unsigned char** msgpack_out, int* n_msgpack_out)}
+
+// from_msgpack / read_msgpack reject foreign payloads by throwing; without a
+// handler that aborts the interpreter instead of raising.
+%exception {
+    try {
+        $action
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    }
+}
+
 %include "TTTRMask.h"
+
+%exception;   // scoped to this header only

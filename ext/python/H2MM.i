@@ -10,15 +10,40 @@
 %template(VectorVectorInt32) std::vector<std::vector<int>>;
 // Stream definitions for set_bursts_from_tttr / _from_filter.
 %template(VectorChannelPtr) std::vector<std::shared_ptr<tttrlib::Channel>>;
+// std::vector<unsigned char> (H2mmStateSidecar::states / ::streams) is already
+// instantiated as VectorUint8 by Sim.i, which tttrlib.i includes first.
 
-// Viterbi path -> NumPy array + ICL scalar out-argument.
+// Viterbi / marginal-draw path -> NumPy array + scalar out-arguments.
 %apply(long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long **output, int *n_output)};
 %apply double *OUTPUT { double *icl };
+%apply long long *OUTPUT { long long *n_underflow };
 
-// Release the GIL around the heavy EM / Viterbi kernels (OpenMP over bursts).
+// γ -> (N, n_states) float32; FFBS draws -> (n_samples, N) int64.  Distinct
+// parameter names, because the 1-D (T** output, int* n_output) mappings in
+// misc_types.i / TTTRMask.i would otherwise claim the leading pair.
+%apply(float** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {
+    (float** gamma_out, int* gamma_rows, int* gamma_cols)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {
+    (long long** paths_out, int* path_rows, int* path_cols)};
+
+// Per-photon state / stream arrays over the source range.  These are freshly
+// malloc'd (unlike TTTRMask::get_mask, which hands back a cached view), so they
+// must take the *owning* ARGOUTVIEWM typemap.
+%apply(unsigned char** ARGOUTVIEWM_ARRAY1, int* DIM1) {
+    (unsigned char** states_out, int* n_states_out)};
+%apply(unsigned char** ARGOUTVIEWM_ARRAY1, int* DIM1) {
+    (unsigned char** streams_out, int* n_streams_out)};
+
+// Decoder input paths come in as NumPy int64 arrays.
+%apply(long long* IN_ARRAY1, int DIM1) {(const long long* path, int n_path)};
+
+// Release the GIL around the heavy EM / decode kernels (parallel over bursts).
 TTTRLIB_NOGIL(tttrlib::H2MM::optimize)
 TTTRLIB_NOGIL(tttrlib::H2MM::viterbi)
 TTTRLIB_NOGIL(tttrlib::H2MM::fit)
+TTTRLIB_NOGIL(tttrlib::H2MM::posterior)
+TTTRLIB_NOGIL(tttrlib::H2MM::sample_states)
+TTTRLIB_NOGIL(tttrlib::H2MM::sample_paths)
 
 #ifdef SWIGPYTHON
 // Array-out consistency: unique inter-photon dt values as a NumPy int64 array.
@@ -28,7 +53,20 @@ TTTRLIB_NOGIL(tttrlib::H2MM::fit)
 %}
 #endif
 
+// The channel-budget check, the missing-photon-index guards and the sidecar I/O
+// all report by throwing.  Without a handler the exception unwinds through the
+// wrapper and aborts the interpreter instead of raising.
+%exception {
+    try {
+        $action
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    }
+}
+
 %include "H2MM.h"
+
+%exception;   // scoped to this header only
 
 #ifdef SWIGPYTHON
 %extend tttrlib::H2mmModel {
@@ -72,6 +110,47 @@ TTTRLIB_NOGIL(tttrlib::H2MM::fit)
     %}
 }
 
+%extend tttrlib::H2mmChannelMap {
+    %pythoncode %{
+    @property
+    def channels_np(self):
+        """Allocated routing-channel ids as an (n_streams, n_states) array."""
+        import numpy as np
+        return np.asarray(self.channels, dtype=np.int32).reshape(
+            self.n_streams, self.n_states)
+
+    def to_dict(self):
+        return {
+            "n_streams": self.n_streams,
+            "n_states": self.n_states,
+            "max_channel": self.max_channel,
+            "channels": self.channels_np,
+            "used_channels": list(self.used_channels),
+        }
+    %}
+}
+
+%extend tttrlib::H2mmStateSidecar {
+    %pythoncode %{
+    @property
+    def states_np(self):
+        """Per-photon state over the source range (255 = unassigned)."""
+        import numpy as np
+        return np.asarray(self.states, dtype=np.uint8)
+
+    @property
+    def streams_np(self):
+        """Per-photon stream index over the source range (255 = unassigned)."""
+        import numpy as np
+        return np.asarray(self.streams, dtype=np.uint8)
+
+    def indices_for_state(self, state):
+        """Source photon indices assigned to `state`."""
+        import numpy as np
+        return np.asarray(self.mask_for_state(state).get_indices(), dtype=np.int64)
+    %}
+}
+
 %extend tttrlib::H2MM {
     %pythoncode %{
     def viterbi_path(self, model):
@@ -79,6 +158,60 @@ TTTRLIB_NOGIL(tttrlib::H2MM::fit)
         import numpy as np
         path, icl = self.viterbi(model)
         return np.asarray(path, dtype=np.int64), float(icl)
+
+    def gamma(self, model):
+        """Per-photon posterior state probabilities.
+
+        Returns
+        -------
+        gamma : ndarray, shape (n_photons, n_states), float32
+            Rows sum to 1.  This is a *distribution*, not an assignment -- the
+            answer to "how do the photons distribute over the states", which
+            the Viterbi argmax reports winner-takes-all.
+        n_underflow : int
+            Photons whose forward scale underflowed; their rows are uniform.
+        """
+        import numpy as np
+        g, n_underflow = self.posterior(model)
+        return np.asarray(g, dtype=np.float32), int(n_underflow)
+
+    def jitter_path(self, model, seed=0):
+        """Draw each photon's state independently from its gamma row.
+
+        Faithful per-photon marginal, but the draws are independent, so the
+        path fragments: use :meth:`ffbs_paths` for dwell times or transition
+        counts.
+
+        Returns (path, n_underflow).
+        """
+        import numpy as np
+        path, n_underflow = self.sample_states(model, seed)
+        return np.asarray(path, dtype=np.int64), int(n_underflow)
+
+    def ffbs_paths(self, model, seed=0, n_samples=1):
+        """Draw whole trajectories from P(path | data) (forward filtering,
+        backward sampling).
+
+        Returns an (n_samples, n_photons) int64 array.  The per-photon marginal
+        over many draws converges to gamma *and* the dwell statistics are valid.
+        """
+        import numpy as np
+        return np.asarray(self.sample_paths(model, seed, n_samples), dtype=np.int64)
+
+    def occupancy(self, model, path=None):
+        """Fraction of photons in each state.
+
+        With no `path`, returns the gamma column means -- the unbiased
+        posterior occupancy.  With a decoded `path`, returns the counted
+        fractions, which is what any hard assignment reports.
+        """
+        import numpy as np
+        if path is None:
+            g, _ = self.gamma(model)
+            return g.mean(axis=0).astype(float)
+        path = np.asarray(path, dtype=np.int64)
+        n = model.n_states()
+        return np.bincount(path, minlength=n)[:n] / max(len(path), 1)
     %}
 }
 #endif

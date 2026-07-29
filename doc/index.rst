@@ -106,6 +106,7 @@ Documentation
    file-formats
    burst-analysis
    h2mm-bva
+   h2mm-state-decoding
    pda-guide
    fcs-correlation
    clsm-flim-guide

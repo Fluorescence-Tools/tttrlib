@@ -7,8 +7,11 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <string>
 
 #include "TTTR.h"
+
+class TTTRMask;      // forward declaration (header included in H2MMState.cpp)
 
 namespace tttrlib {
 
@@ -61,6 +64,87 @@ struct H2mmModel {
     }
     /// Renormalise ``prior`` and the rows of ``trans`` and ``obs`` in place.
     void normalize();
+};
+
+/// Sentinel state / stream index for photons no decoder assigned (outside every
+/// burst, matching no stream, or in a burst the engine skipped).
+constexpr uint8_t H2MM_UNASSIGNED = 255;
+
+/// Largest routing-channel id a PTU record can hold (``unsigned channel :6``).
+constexpr int H2MM_PTU_MAX_CHANNEL = 63;
+
+/**
+ * @brief Routing-channel ids allocated to (stream, state) pairs.
+ *
+ * Path A of persisting a decoded state assignment rewrites each photon's
+ * routing channel so the state is visible to every tool that reads the file.
+ * Ids are handed out **densely, step 1**, from the sorted free ids, stream
+ * major / state minor — the mapping is a published lookup table, not something
+ * a reader is expected to derive from arithmetic.
+ */
+struct H2mmChannelMap {
+    int n_streams = 0;
+    int n_states = 0;
+    /// Allocated id per (stream, state), row-major ``[stream * n_states + state]``.
+    std::vector<int> channels;
+    /// Source routing-channel ids that were already in use (left untouched).
+    std::vector<int> used_channels;
+    /// Largest id the target container's record field can hold.
+    int max_channel = H2MM_PTU_MAX_CHANNEL;
+
+    /// Allocated id for a (stream, state) pair, or ``-1`` if out of range.
+    int channel_for(int stream, int state) const {
+        if (stream < 0 || state < 0 || stream >= n_streams || state >= n_states)
+            return -1;
+        return channels[static_cast<size_t>(stream) * n_states + state];
+    }
+    std::string to_json() const;
+    static H2mmChannelMap from_json(const std::string& payload);
+};
+
+/**
+ * @brief A decoded per-photon state assignment, persisted as a msgpack sidecar.
+ *
+ * Path B of persisting a decoded assignment: the source file is left untouched
+ * and the assignment travels beside it.  What is stored is the per-photon state
+ * **array**, not N masks — an assignment is a partition, so one ``uint8`` per
+ * photon holds everything N bitmasks would.  ``mask_for_state`` materialises a
+ * ``TTTRMask`` on demand to feed the existing selection machinery.
+ *
+ * The payload is msgpack rather than JSON because the arrays are one entry per
+ * photon: nlohmann's ``json::binary`` values survive the msgpack round trip as a
+ * native ``bin`` field, so a 10 M-photon assignment is 10 MB of bytes instead of
+ * ~20 MB of decimal text.
+ */
+struct H2mmStateSidecar {
+    /// Per-photon state over the **source** photon range; ``H2MM_UNASSIGNED``
+    /// for photons no burst/stream claimed.
+    std::vector<uint8_t> states;
+    /// Per-photon stream index over the same range, same sentinel.
+    std::vector<uint8_t> streams;
+    int n_states = 0;
+    int n_streams = 0;
+    /// ``"viterbi"``, ``"jitter"`` or ``"ffbs"`` — how ``states`` was produced.
+    std::string decoder;
+    /// Seed of the draw (meaningless for ``"viterbi"``).
+    long long seed = 0;
+    /// Model the decode ran under.
+    H2mmModel model;
+    H2mmChannelMap channel_map;
+    bool has_channel_map = false;
+
+    void write(const std::string& filename) const;
+    static H2mmStateSidecar read(const std::string& filename);
+
+    /// Number of photons assigned to ``state``.
+    long long count_state(int state) const;
+    /**
+     * @brief Mask selecting exactly the photons in ``state``.
+     *
+     * ``TTTRMask`` bits mark **excluded** events, so every photon outside
+     * ``state`` is masked and ``get_indices(true)`` returns the state's photons.
+     */
+    std::shared_ptr<TTTRMask> mask_for_state(int state) const;
 };
 
 /**
@@ -156,6 +240,17 @@ public:
     const std::vector<int32_t>& get_gap_slot() const { return gap_slot_; }
     /// CSR burst offsets, length ``get_n_bursts() + 1``.
     const std::vector<int64_t>& get_offsets() const { return offsets_; }
+    /**
+     * @brief Index in the source TTTR of each photon in the CSR layout.
+     *
+     * Length ``get_n_photons()``, or empty when the bursts were supplied as
+     * plain arrays through ``set_bursts`` (there is no source file to point
+     * at).  Both persistence paths need it — Path A to rewrite the right
+     * records, Path B to place the state at the right photon.
+     */
+    const std::vector<int64_t>& get_photon_index() const { return photon_index_; }
+    /// Number of photons in the source TTTR (0 when set through ``set_bursts``).
+    long long get_n_source_photons() const { return n_source_photons_; }
 
     /**
      * @brief Baum-Welch (EM) optimisation of an H2MM model.
@@ -195,6 +290,171 @@ public:
     );
 
     /**
+     * @brief Per-photon posterior state probabilities @f$\gamma@f$.
+     *
+     * @f$ \gamma_t(i) = P(s_t = i \mid \text{data}, \lambda) @f$ from the scaled
+     * forward-backward recursion — the same quantity the reference ``H2MM_C``
+     * calls ``gamma``, and the one the E-step forms and contracts away.  Rows
+     * sum to 1.
+     *
+     * Unlike ``viterbi`` this is a *distribution*, not an assignment: it is what
+     * to use when the question is "how do the photons distribute over states"
+     * rather than "what is the single most likely sequence".
+     *
+     * @param model A (usually optimised) model.
+     * @param output ``(N, n_states)`` row-major float32 matrix (NumPy-owned).
+     * @param n_rows N, the photon count.
+     * @param n_cols ``n_states``.
+     * @param n_underflow Photons whose forward scale underflowed to zero; their
+     *        rows carry no information and are returned uniform (``1/n``).
+     *        Non-zero means the model assigns (near-)zero probability to part of
+     *        the data — treat the decode with suspicion.
+     */
+    void posterior(
+        const H2mmModel& model,
+        float** gamma_out, int* gamma_rows, int* gamma_cols,
+        long long* n_underflow
+    );
+
+    /**
+     * @brief Draw each photon's state independently from its @f$\gamma@f$ row.
+     *
+     * The cheap faithful decoder.  Viterbi answers "most likely sequence" and
+     * therefore reports the photon distribution winner-takes-all: photons at
+     * @f$\gamma = (0.7, 0.3)@f$ all land in state 0 and the 30 % is erased.
+     * Drawing from @f$\gamma@f$ reproduces the marginal by construction, so
+     * well-separated states stop being inflated and ambiguous ones stop
+     * vanishing.
+     *
+     * @warning The draws are **independent per photon**, so the sampled path
+     * has none of @f$\gamma@f$'s temporal correlation: a solid state at
+     * @f$\gamma = (0.9, 0.1)@f$ fragments into spurious one-photon dwells.
+     * Use it for per-photon questions (occupancies, per-state decays, per-state
+     * spectra); use ``sample_paths`` when dwell times, transition counts or
+     * path-level error bars matter.
+     *
+     * @param model A (usually optimised) model.
+     * @param seed Seed of the counter-based per-photon RNG.  Output is
+     *        reproducible and **independent of the thread count**.
+     * @param output Per-photon state index, length N (NumPy-owned).
+     * @param n_output Length of output.
+     * @param n_underflow Photons whose @f$\gamma@f$ row underflowed (drawn
+     *        uniformly).
+     */
+    void sample_states(
+        const H2mmModel& model, long long seed,
+        long long** output, int* n_output,
+        long long* n_underflow
+    );
+
+    /**
+     * @brief Draw whole state trajectories from @f$P(\text{path} \mid \text{data})@f$ (FFBS).
+     *
+     * Forward filtering, backward sampling: the shared scaled forward pass, then
+     * @f$ s_N \sim \alpha_N @f$ and
+     * @f$ s_t \sim \alpha_t(i)\,A^{\Delta t}[i, s_{t+1}] @f$ backwards.  Each
+     * draw is an exact sample from the joint posterior, so it keeps
+     * @f$\gamma@f$'s temporal correlation: the per-photon marginal of many draws
+     * converges to @f$\gamma@f$ *and* the dwell-time statistics are valid,
+     * which independent per-photon draws (``sample_states``) cannot give.
+     *
+     * Averaging a quantity over ``n_samples`` draws is multiple imputation: the
+     * spread across draws is the decoding uncertainty that a single Viterbi path
+     * reports as zero.
+     *
+     * @param model A (usually optimised) model.
+     * @param seed Seed of the counter-based RNG (thread-count independent).
+     * @param n_samples Number of independent trajectories.
+     * @param output ``(n_samples, N)`` row-major int64 matrix (NumPy-owned).
+     * @param n_rows ``n_samples``.
+     * @param n_cols N, the photon count.
+     */
+    void sample_paths(
+        const H2mmModel& model, long long seed, int n_samples,
+        long long** paths_out, int* path_rows, int* path_cols
+    );
+
+    // -----------------------------------------------------------------------
+    // Persisting a decoded assignment
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Spread a CSR-ordered decode over the full source photon range.
+     * @param path Per-photon state, length ``get_n_photons()`` (from any decoder).
+     * @param n_path Length of path.
+     * @param output Per-photon state over ``get_n_source_photons()`` photons,
+     *        ``H2MM_UNASSIGNED`` where no burst/stream claimed the photon.
+     * @param n_output Length of output.
+     */
+    void photon_states(
+        const long long* path, int n_path,
+        unsigned char** states_out, int* n_states_out
+    ) const;
+
+    /**
+     * @brief Per-photon stream index over the full source photon range.
+     *        ``H2MM_UNASSIGNED`` where no burst/stream claimed the photon.
+     */
+    void photon_stream_index(unsigned char** streams_out, int* n_streams_out) const;
+
+    /**
+     * @brief Allocate a routing-channel id per (stream, state) pair.
+     *
+     * Ids are taken **densely, one step apart**, from the free ids of
+     * ``[0, max_channel]`` — the ones ``src`` does not already use — assigned
+     * stream major / state minor.  Channels already in the file keep their
+     * meaning, so after a split the original ids hold only the photons no
+     * decoder assigned.
+     *
+     * @param src Source photon stream (its used channels are reserved).
+     * @param n_states Number of hidden states.
+     * @param max_channel Largest id the *target container's record field* can
+     *        hold.  This is the real budget, not the in-memory ``signed char``:
+     *        PTU HydraHarp T2/T3 store ``unsigned channel :6`` (0..63), which is
+     *        why PTU is the assumed target.  Narrower containers truncate
+     *        **silently** rather than failing — PicoHarp and SPC-130 keep 4 bits
+     *        (an id of 40 reads back as 8), SPC-600/256 keeps 3 — so writing a
+     *        split to one of those quietly merges states into each other.
+     * @throws std::runtime_error naming the numbers when the free ids do not
+     *         suffice; the mask path (``state_sidecar``) has no budget.
+     */
+    H2mmChannelMap build_channel_map(
+        std::shared_ptr<TTTR> src, int n_states,
+        int max_channel = H2MM_PTU_MAX_CHANNEL
+    ) const;
+
+    /**
+     * @brief Copy ``src`` with each photon's routing channel replaced by the id
+     *        its (stream, state) pair was allocated.
+     *
+     * Every photon stays in the one file; photons no decoder assigned keep their
+     * original channel id.  Write the result with ``TTTR::write`` — per-state
+     * decays, FCS and burst analyses are then ordinary channel selections.
+     */
+    std::shared_ptr<TTTR> split_routing_channels(
+        std::shared_ptr<TTTR> src,
+        const long long* path, int n_path,
+        const H2mmChannelMap& map
+    ) const;
+
+    /**
+     * @brief Bundle a decode into the sidecar object (Path B).
+     * @param path Per-photon state from any decoder, length ``get_n_photons()``.
+     * @param n_path Length of path.
+     * @param model Model the decode ran under.
+     * @param decoder ``"viterbi"``, ``"jitter"`` or ``"ffbs"``.
+     * @param seed Seed of the draw (0 for Viterbi).
+     * @param map Optional channel map to record alongside, when Path A also ran.
+     */
+    H2mmStateSidecar state_sidecar(
+        const long long* path, int n_path,
+        const H2mmModel& model,
+        const std::string& decoder = "viterbi",
+        long long seed = 0,
+        const H2mmChannelMap* map = nullptr
+    ) const;
+
+    /**
      * @brief Build a reasonable initial model for EM (near-identity transitions,
      *        spread emission profiles).
      */
@@ -228,7 +488,25 @@ private:
     std::vector<int32_t> gap_slot_;     // slot of Δt to next photon, -1 at burst end
     std::vector<int64_t> offsets_;      // CSR burst offsets, length n_bursts+1
     std::vector<int64_t> unique_dt_;    // sorted unique inter-photon Δt (>0)
+    std::vector<int64_t> photon_index_; // index in the source TTTR, or empty
+    long long n_source_photons_ = 0;    // photons in the source TTTR, or 0
     int n_streams_ = 0;
+
+    // Shared by set_bursts and the TTTR-backed loaders; `indices` is null when
+    // there is no source file to point back at.
+    void set_bursts_impl(
+        const std::vector<std::vector<long long>>& times,
+        const std::vector<std::vector<int>>& streams,
+        int n_streams,
+        const std::vector<std::vector<int64_t>>* indices,
+        long long n_source_photons
+    );
+
+    // Build A^Δt only (no ρ), for the decoders and Viterbi which never need the
+    // expected-transition tensor.  Bit-identical to fill_caches' pow output.
+    void fill_pow_cache(
+        const std::vector<double>& A, int n, std::vector<double>& pow_cache
+    ) const;
 
     // Build A^Δt and ρ(Δt) caches (pair-power binary exponentiation).
     void fill_caches(

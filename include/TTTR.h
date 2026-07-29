@@ -627,15 +627,22 @@ public:
      */
     void read_records();
 
-protected:
+public:
 
     /*!
      * \brief Traverses the routing channel array and identifies used routing channel numbers.
      *
      * Traverses the routing channel array and populates the protected attribute
      * used_routing_channels with the routing channel numbers that are in use.
+     *
+     * Public because `set_routing_channel_at` is: rewriting channels (as the
+     * H2MM state split does) invalidates the cache that `get_used_routing_channels`
+     * reads, and without a way to refresh it that accessor silently returns the
+     * channels the file had before the edit.
      */
     void find_used_routing_channels();
+
+protected:
 
     /// \brief A routing channel is a numeric identifier associated with each photon
     ///        in the time-tagged time-resolved (TTTR) data. It signifies the path

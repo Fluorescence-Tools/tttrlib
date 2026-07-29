@@ -44,6 +44,12 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
+- **`get_used_routing_channels` could return the channels the file had before
+  you edited it.** `set_routing_channel_at` is public but
+  `find_used_routing_channels`, which refreshes the cache it invalidates, was
+  protected — so any code that rewrote channels (as the new H2MM state split
+  does) left the accessor silently reporting stale values with no way to fix it.
+  `find_used_routing_channels` is now public; the cache itself stays protected.
 - **A response sized for one channel was accepted on a multi-channel fit, and
   read out of bounds.** `DecayFitProblem::validation_error` treated any
   `n_bins`-long `irf`/`background` as "shared", but a polarisation-resolved model
@@ -89,6 +95,54 @@
   is documented as a failure mode in `doc/fit-guide.rst`.
 
 ### Added
+- **H2MM state decoding that reports a distribution, not a winner.** Viterbi
+  answers "what is the single most likely state sequence"; most burst analysis
+  instead asks "how do the photons distribute over the states", and the argmax
+  answers that badly — photons at γ = (0.7, 0.3) all land in state 0, so
+  well-separated states are inflated and ambiguous or short-lived ones erased.
+  On simulated data with 75/25 occupancy and overlapping emission profiles the
+  Viterbi occupancy error is **0.081** against a ground truth the two new
+  decoders reproduce to **0.0006**.
+
+  `H2MM::posterior` returns the per-photon posterior **γ** as a float32
+  `(N, n_states)` matrix — the quantity the E-step already formed and threw
+  away, and the same array the reference `H2MM_C` calls `gamma`.
+  `H2MM::sample_states` draws each photon's state from its own γ row (faithful
+  marginal, but the independent draws shatter dwells — 15103 where the truth has
+  1244 — so it must not drive dwell or transition statistics), and
+  `H2MM::sample_paths` does **FFBS** (forward filtering, backward sampling),
+  drawing whole trajectories from `P(path | data)`, which reproduces the
+  marginal *and* the dwell structure (1191 dwells against a true 1244).
+  Averaging over draws is multiple imputation: the spread is the decoding
+  uncertainty a single Viterbi path reports as zero. `viterbi` is untouched and
+  stays the default.
+
+  Both samplers use a **counter-based** RNG keyed by
+  `(seed, draw, photon index)` rather than a shared stream, so output is
+  bit-identical at any thread count. The forward filter is shared across FFBS
+  draws, so extra draws are nearly free (8 draws over 200 k photons: 3.3 ms,
+  against 1.6 ms for γ alone and 110 ms for the fit).
+
+  A decode can be persisted two ways, which agree photon for photon:
+  `split_routing_channels` rewrites each photon's routing channel so every
+  `(stream, state)` pair has its own id and writes one PTU holding every photon
+  — self-describing, so per-state decays and FCS become ordinary `Channel`
+  selections; and `state_sidecar` writes a msgpack sidecar leaving the source
+  file untouched, with no id budget. Ids are allocated **densely, one step
+  apart**, from the ids the file does not already use. Photons no decoder
+  assigned keep their original channel id, so after a split the original
+  channels hold *only* unassigned photons.
+
+  `set_bursts_from_tttr` / `set_bursts_from_filter` now record the source photon
+  index (`get_photon_index`), which both persistence paths need and which was
+  previously discarded.
+- **`TTTRMask::to_msgpack` / `from_msgpack` / `write_msgpack` / `read_msgpack`**
+  (Python: `to_bytes` / `from_bytes`). `to_json` emits one JSON integer **per
+  event**, so a 10 M-photon mask is ~20 MB of decimal text; the msgpack form
+  carries the already bit-packed words verbatim as a `bin` field, at `size/8`
+  bytes plus a header. msgpack is now the convention for tttrlib outputs that
+  scale with the photon count — it costs no new dependency, since nlohmann/json
+  is already vendored. `to_json` stays for small masks and compatibility.
 - **Two convolution backends behind one call**, `dfa::convolve` /
   `dfa_convolve(rates, weights, irf, n_bins, shift_bins, method)`. `Recursive`
   (the default) is the SIMD time-domain recursion the library already used;

@@ -79,6 +79,17 @@ The engine also provides :func:`H2MM.factory_model` and
 :func:`H2MM.simulate_bursts` for generating test data, and
 :func:`H2MM.set_bursts` to load pre-extracted per-burst photon streams directly.
 
+.. important::
+
+   ``viterbi_path`` answers "what is the single most likely state sequence".
+   If your next step is instead "how do the photons distribute over the
+   states" — occupancies, per-state decays, populations — the argmax is a
+   **biased** answer to that question: it inflates well-separated states and
+   erases ambiguous and short-lived ones. See
+   :ref:`h2mm_state_decoding` for the per-photon posterior and the two
+   decoders that reproduce the distribution faithfully, plus how to persist a
+   decoded assignment.
+
 .. _h2mm_performance:
 
 Why the tttrlib H2MM engine is fast

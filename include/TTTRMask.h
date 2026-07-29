@@ -172,6 +172,11 @@ public:
 
     /**
      * @brief Serialize TTTRMask to JSON string
+     *
+     * @warning One JSON integer **per event**: a 10 M-photon mask is ~20 MB of
+     * decimal text.  Use ``to_msgpack`` for anything at photon scale; this stays
+     * for small masks and for compatibility with existing payloads.
+     *
      * @return JSON string containing TTTRMask data
      */
     std::string to_json() const;
@@ -181,6 +186,31 @@ public:
      * @param payload JSON string containing TTTRMask data
      */
     void from_json(const std::string& payload);
+
+    /**
+     * @brief Serialize to msgpack, carrying the bit-packed words verbatim.
+     *
+     * The mask is already stored 64 events to a word; msgpack's ``bin`` type
+     * lets those bytes travel as bytes, so the payload is ``size/8`` bytes plus
+     * a small header rather than the ~2 bytes *per event* ``to_json`` costs.
+     *
+     * @param output msgpack byte buffer (caller-owned).
+     * @param n_output Length of the buffer.
+     */
+    void to_msgpack(unsigned char** msgpack_out, int* n_msgpack_out) const;
+
+    /**
+     * @brief Load from a msgpack buffer produced by ``to_msgpack``.
+     * @param input msgpack byte buffer.
+     * @param n_input Length of the buffer.
+     */
+    void from_msgpack(unsigned char* input, int n_input);
+
+    /// Write ``to_msgpack`` straight to a file.
+    void write_msgpack(const std::string& filename) const;
+
+    /// Load a mask written by ``write_msgpack``.
+    void read_msgpack(const std::string& filename);
 
 };
 

@@ -111,6 +111,40 @@ def main():
     bench("h2mm_viterbi", "tttrlib", "Viterbi path decode", run_viterbi, repeat=5,
           n_items=n_phot, unit="photon", dataset="simulated")
 
+    # ---- faithful decoders -------------------------------------------------
+    # Viterbi reports the photon distribution over states winner-takes-all.
+    # These three answer the distribution question instead; their cost sits here
+    # so it can be read against the fit and the Viterbi decode.  Quality is
+    # reported beside the time: the occupancy error against the posterior is the
+    # thing being bought.
+    post = np.asarray(eng.gamma(fit_sq)[0], dtype=np.float64)
+    occ_post = post.mean(axis=0)
+
+    bench("h2mm_decode", "tttrlib", "posterior gamma (N x n_states)",
+          lambda: eng.gamma(fit_sq), repeat=5,
+          n_items=n_phot, unit="photon", dataset="simulated")
+
+    bench("h2mm_decode", "tttrlib", "marginal gamma draw (jitter)",
+          lambda: eng.jitter_path(fit_sq, 0), repeat=5,
+          n_items=n_phot, unit="photon", dataset="simulated")
+
+    N_FFBS = 8
+    bench("h2mm_decode", "tttrlib", f"FFBS path sampling ({N_FFBS} draws)",
+          lambda: eng.ffbs_paths(fit_sq, 0, N_FFBS), repeat=3,
+          n_items=n_phot * N_FFBS, unit="photon", dataset="simulated",
+          extra={"n_samples": N_FFBS})
+
+    def occ_err(path):
+        counts = np.bincount(np.asarray(path).ravel(), minlength=N_STATES)
+        return float(np.abs(counts / counts.sum() - occ_post).max())
+
+    vpath, _ = eng.viterbi_path(fit_sq)
+    jpath, _ = eng.jitter_path(fit_sq, 0)
+    fpaths = eng.ffbs_paths(fit_sq, 0, N_FFBS)
+    print(f"[h2mm] occupancy error vs posterior -- "
+          f"viterbi {occ_err(vpath):.4f}, jitter {occ_err(jpath):.4f}, "
+          f"ffbs {occ_err(fpaths):.4f}")
+
     print(f"[h2mm] tttrlib plain-EM best={row['best_s']*1e3:.1f} ms")
 
 

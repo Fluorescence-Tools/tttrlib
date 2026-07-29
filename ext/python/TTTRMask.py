@@ -73,6 +73,26 @@ def get_indices(self, selected=True):
     # Convert tuple to list
     return list(indices) if isinstance(indices, tuple) else indices
 
+def to_bytes(self):
+    """
+    Serialize the mask to a msgpack payload.
+
+    The bit-packed words travel as bytes, so this is ~size/8 bytes where
+    :meth:`to_json` costs ~2 characters per event.
+
+    :return: msgpack payload as `bytes`
+    """
+    return self.to_msgpack().tobytes()
+
+def from_bytes(self, payload):
+    """
+    Load a mask from a msgpack payload produced by :meth:`to_bytes`.
+
+    :param payload: `bytes` or a uint8 array
+    """
+    import numpy as np
+    self.from_msgpack(np.frombuffer(payload, dtype=np.uint8))
+
 def get_selected_ranges(self):
     """
     Get selected ranges as a list of (start, stop) tuples

@@ -3,6 +3,11 @@
 #include "info.h"
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <stdexcept>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -217,4 +222,78 @@ void TTTRMask::from_json(const std::string& payload) {
     for (int i = 0; i < size && i < static_cast<int>(mask_data.size()); ++i) {
         set_bit(static_cast<size_t>(i), mask_data[i] != 0);
     }
+}
+
+namespace {
+
+/// Bit-packed words -> msgpack buffer.
+std::vector<uint8_t> mask_to_msgpack(
+    const std::vector<uint64_t>& masked_words, size_t masked_size
+) {
+    // The bits are already packed 64 to a word; hand msgpack those bytes as a
+    // `bin` field so they stay bytes instead of becoming one integer per event.
+    std::vector<uint8_t> words(masked_words.size() * sizeof(uint64_t));
+    for (size_t w = 0; w < masked_words.size(); ++w) {
+        uint64_t v = masked_words[w];      // little-endian, explicitly, so a
+        for (int b = 0; b < 8; ++b) {      // payload is portable across hosts
+            words[w * 8 + b] = static_cast<uint8_t>(v & 0xFF);
+            v >>= 8;
+        }
+    }
+    nlohmann::json j;
+    j["format"] = "tttrlib.mask";
+    j["version"] = 1;
+    j["size"] = static_cast<long long>(masked_size);
+    j["words"] = nlohmann::json::binary(words);
+    return nlohmann::json::to_msgpack(j);
+}
+
+}  // namespace
+
+void TTTRMask::to_msgpack(unsigned char** msgpack_out, int* n_msgpack_out) const {
+    const std::vector<uint8_t> buf = mask_to_msgpack(masked_words, masked_size);
+    get_array<unsigned char>(buf.size(), const_cast<unsigned char*>(buf.data()),
+                             msgpack_out, n_msgpack_out);
+}
+
+void TTTRMask::from_msgpack(unsigned char* input, int n_input) {
+    std::vector<uint8_t> payload(input, input + std::max(n_input, 0));
+    nlohmann::json j = nlohmann::json::from_msgpack(payload);
+    if (j.value("format", std::string()) != "tttrlib.mask")
+        throw std::runtime_error("TTTRMask::from_msgpack: not a tttrlib mask payload");
+    const long long size = j.value("size", 0LL);
+    resize_bits(static_cast<size_t>(size < 0 ? 0 : size), true);
+    std::vector<uint8_t> words;
+    const auto& jw = j.at("words");
+    if (jw.is_binary()) {
+        const auto& b = jw.get_binary();
+        words.assign(b.begin(), b.end());
+    } else {
+        words = jw.get<std::vector<uint8_t>>();
+    }
+    const size_t nw = std::min(masked_words.size(), words.size() / sizeof(uint64_t));
+    for (size_t w = 0; w < nw; ++w) {
+        uint64_t v = 0;
+        for (int b = 7; b >= 0; --b) v = (v << 8) | words[w * 8 + b];
+        masked_words[w] = v;
+    }
+    if (!masked_words.empty())
+        masked_words.back() &= tail_mask(masked_size);
+}
+
+void TTTRMask::write_msgpack(const std::string& filename) const {
+    const std::vector<uint8_t> buf = mask_to_msgpack(masked_words, masked_size);
+    std::ofstream fp(filename, std::ios::binary);
+    if (!fp) throw std::runtime_error("TTTRMask::write_msgpack: cannot open " + filename);
+    fp.write(reinterpret_cast<const char*>(buf.data()),
+             static_cast<std::streamsize>(buf.size()));
+    if (!fp) throw std::runtime_error("TTTRMask::write_msgpack: write failed for " + filename);
+}
+
+void TTTRMask::read_msgpack(const std::string& filename) {
+    std::ifstream fp(filename, std::ios::binary);
+    if (!fp) throw std::runtime_error("TTTRMask::read_msgpack: cannot open " + filename);
+    std::vector<unsigned char> buf((std::istreambuf_iterator<char>(fp)),
+                                   std::istreambuf_iterator<char>());
+    from_msgpack(buf.data(), static_cast<int>(buf.size()));
 }

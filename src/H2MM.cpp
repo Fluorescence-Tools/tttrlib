@@ -304,6 +304,127 @@ void fill_caches_t(
     else body(0, 0, n_slots);
 }
 
+/// A^power with every row renormalised at each step.
+///
+/// The P half of ``pair_pow``, operation for operation, without building the
+/// n^4 ρ tensor beside it.  Decoding (Viterbi, γ, both samplers) needs the
+/// propagator and never the expected-transition tensor, so it gets its cache
+/// from here instead of paying ``n_slots * n^4`` doubles to throw them away.
+void mat_pow_norm(const double* A, long long power, int n, double* out) {
+    const int n2 = n * n;
+    std::vector<double> Pres(n2, 0.0), Pb(A, A + n2), Ptmp(n2), Pb2(n2);
+    for (int i = 0; i < n; ++i) Pres[i * n + i] = 1.0;
+    long long e = power;
+    while (e > 0) {
+        if (e & 1) {
+            matmul_norm<double>(Pres.data(), Pb.data(), Ptmp.data(), n);
+            Pres.swap(Ptmp);
+        }
+        e >>= 1;
+        if (e > 0) {
+            matmul_norm<double>(Pb.data(), Pb.data(), Pb2.data(), n);
+            Pb.swap(Pb2);
+        }
+    }
+    std::copy(Pres.begin(), Pres.end(), out);
+}
+
+/// Scaled forward recursion over one burst's photons.
+///
+/// Fills ``alpha`` (m_len x n, row-major, each row normalised) and ``scale``
+/// (the row sums), and returns the burst's log-likelihood contribution.  Shared
+/// by the E-step and by every decoder, so the scaled recursion exists once
+/// rather than in four subtly diverging copies.
+template <class R>
+double forward_burst(
+    const int32_t* streams, const int32_t* gap_slot,
+    int64_t s, int64_t m_len,
+    const double* prior, const double* obs, const R* pow_cache,
+    int n, int p, double* alpha, double* scale
+) {
+    double ll = 0.0;
+    {
+        const int y0 = streams[s];
+        double tot = 0.0;
+        for (int i = 0; i < n; ++i) {
+            double a0 = prior[i] * obs[i * p + y0];
+            alpha[i] = a0;
+            tot += a0;
+        }
+        scale[0] = tot;
+        if (tot > 0.0) {
+            for (int i = 0; i < n; ++i) alpha[i] /= tot;
+            ll += std::log(tot);
+        }
+    }
+    const int n2 = n * n;
+    for (int64_t li = 1; li < m_len; ++li) {
+        const int64_t nn = s + li;
+        const int32_t slot = gap_slot[nn - 1];
+        const int yn = streams[nn];
+        const R* P = pow_cache + static_cast<size_t>(slot < 0 ? 0 : slot) * n2;
+        const double* aprev = alpha + (li - 1) * n;
+        double* acur = alpha + li * n;
+        double tot = 0.0;
+        if (slot < 0) {
+            for (int i = 0; i < n; ++i) {
+                double v = aprev[i] * obs[i * p + yn];
+                acur[i] = v; tot += v;
+            }
+        } else {
+            for (int i = 0; i < n; ++i) {
+                double v = 0.0;
+                for (int k = 0; k < n; ++k) v += aprev[k] * static_cast<double>(P[k * n + i]);
+                v *= obs[i * p + yn];
+                acur[i] = v; tot += v;
+            }
+        }
+        scale[li] = tot;
+        if (tot > 0.0) {
+            for (int i = 0; i < n; ++i) acur[i] /= tot;
+            ll += std::log(tot);
+        }
+    }
+    return ll;
+}
+
+/// Counter-based bit mixer (SplitMix64 finaliser).
+inline uint64_t splitmix64(uint64_t x) {
+    x += 0x9E3779B97F4A7C15ULL;
+    x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9ULL;
+    x = (x ^ (x >> 27)) * 0x94D049BB133111EBULL;
+    return x ^ (x >> 31);
+}
+
+/**
+ * @brief One uniform in [0,1) keyed by (seed, draw, photon).
+ *
+ * Counter-based rather than sequential: each draw is a pure function of its
+ * coordinates, so bursts can decode in any order on any number of threads and
+ * the output is bit-identical.  A single shared generator would make the result
+ * depend on thread scheduling.
+ */
+inline double rng_unit(uint64_t seed, uint64_t draw, uint64_t index) {
+    uint64_t h = splitmix64(seed ^ 0xD1B54A32D192ED03ULL);
+    h = splitmix64(h ^ (draw * 0xC2B2AE3D27D4EB4FULL));
+    h = splitmix64(h ^ (index * 0x165667B19E3779F9ULL));
+    return static_cast<double>(h >> 11) * (1.0 / 9007199254740992.0);
+}
+
+/// Inverse-CDF draw from an unnormalised weight vector; -1 if it sums to zero.
+inline int draw_from(const double* w, int n, double u) {
+    double tot = 0.0;
+    for (int i = 0; i < n; ++i) tot += w[i];
+    if (!(tot > 0.0)) return -1;
+    const double x = u * tot;
+    double acc = 0.0;
+    for (int i = 0; i < n; ++i) {
+        acc += w[i];
+        if (x < acc) return i;
+    }
+    return n - 1;
+}
+
 /// Scaled forward-backward + Baum-Welch accumulation with caches of type R.
 /// The hot loop runs in R (float for the fast mode); every reduction that feeds
 /// the M-step (ξ, γ, prior, log-likelihood) accumulates in double.
@@ -342,48 +463,10 @@ double estep_t(
             const int64_t e = offsets[b + 1];
             const int64_t m_len = e - s;
 
-            // forward
-            {
-                const int y0 = streams[s];
-                double tot = 0.0;
-                for (int i = 0; i < n; ++i) {
-                    double a0 = prior[i] * obs[i * p + y0];
-                    alpha[i] = a0;
-                    tot += a0;
-                }
-                scale[0] = tot;
-                if (tot > 0.0) {
-                    for (int i = 0; i < n; ++i) alpha[i] /= tot;
-                    ll_local += std::log(tot);
-                }
-            }
-            for (int64_t li = 1; li < m_len; ++li) {
-                const int64_t nn = s + li;
-                const int32_t slot = gap_slot[nn - 1];
-                const int yn = streams[nn];
-                const R* P = pow_cache + static_cast<size_t>(slot < 0 ? 0 : slot) * n2;
-                const double* aprev = alpha.data() + (li - 1) * n;
-                double* acur = alpha.data() + li * n;
-                double tot = 0.0;
-                if (slot < 0) {
-                    for (int i = 0; i < n; ++i) {
-                        double v = aprev[i] * obs[i * p + yn];
-                        acur[i] = v; tot += v;
-                    }
-                } else {
-                    for (int i = 0; i < n; ++i) {
-                        double v = 0.0;
-                        for (int k = 0; k < n; ++k) v += aprev[k] * static_cast<double>(P[k * n + i]);
-                        v *= obs[i * p + yn];
-                        acur[i] = v; tot += v;
-                    }
-                }
-                scale[li] = tot;
-                if (tot > 0.0) {
-                    for (int i = 0; i < n; ++i) acur[i] /= tot;
-                    ll_local += std::log(tot);
-                }
-            }
+            ll_local += forward_burst<R>(
+                streams.data(), gap_slot.data(), s, m_len,
+                prior.data(), obs.data(), pow_cache, n, p,
+                alpha.data(), scale.data());
 
             // backward with γ and W fused
             {
@@ -485,24 +568,42 @@ void H2MM::set_bursts(
     const std::vector<std::vector<int>>& streams,
     int n_streams
 ) {
+    set_bursts_impl(times, streams, n_streams, nullptr, 0);
+}
+
+void H2MM::set_bursts_impl(
+    const std::vector<std::vector<long long>>& times,
+    const std::vector<std::vector<int>>& streams,
+    int n_streams,
+    const std::vector<std::vector<int64_t>>* indices,
+    long long n_source_photons
+) {
     if (times.size() != streams.size())
         throw std::invalid_argument("times and streams must have equal burst count");
+    if (indices && indices->size() != times.size())
+        throw std::invalid_argument("indices must have the same burst count as times");
 
     n_streams_ = n_streams;
+    n_source_photons_ = n_source_photons;
     streams_.clear();
     gap_slot_.clear();
     offsets_.clear();
     unique_dt_.clear();
+    photon_index_.clear();
 
     // Keep only non-empty bursts; build offsets and concatenated streams.
     std::vector<const std::vector<long long>*> kept_times;
     std::vector<const std::vector<int>*> kept_streams;
+    std::vector<const std::vector<int64_t>*> kept_indices;
     for (size_t b = 0; b < times.size(); ++b) {
         if (times[b].size() != streams[b].size())
             throw std::invalid_argument("each burst needs equal-length times and streams");
+        if (indices && (*indices)[b].size() != times[b].size())
+            throw std::invalid_argument("each burst needs as many indices as times");
         if (times[b].empty()) continue;
         kept_times.push_back(&times[b]);
         kept_streams.push_back(&streams[b]);
+        if (indices) kept_indices.push_back(&(*indices)[b]);
     }
 
     // Total photons is known from the kept bursts; reserve once so the flat CSR
@@ -513,9 +614,14 @@ void H2MM::set_bursts(
     offsets_.push_back(0);
     offsets_.reserve(kept_times.size() + 1);
     streams_.reserve(total_photons);
+    if (indices) photon_index_.reserve(total_photons);
     for (size_t b = 0; b < kept_times.size(); ++b) {
         const auto& s = *kept_streams[b];
         for (int v : s) streams_.push_back(static_cast<int32_t>(v));
+        if (indices) {
+            const auto& ix = *kept_indices[b];
+            photon_index_.insert(photon_index_.end(), ix.begin(), ix.end());
+        }
         offsets_.push_back(static_cast<int64_t>(streams_.size()));
     }
 
@@ -587,6 +693,9 @@ void H2MM::set_bursts_from_tttr(
 
     std::vector<std::vector<long long>> times;
     std::vector<std::vector<int>> strms;
+    // Index in the source file of every photon kept, so a decoded state can be
+    // written back to the right record / mask bit later.
+    std::vector<std::vector<int64_t>> idxs;
     // bursts is an (n_bursts, 2) [start, stop] array (row-major).
     const size_t n_pairs = (bursts == nullptr || n_bursts < 1 || n_cols != 2)
         ? 0 : static_cast<size_t>(n_bursts);
@@ -596,6 +705,7 @@ void H2MM::set_bursts_from_tttr(
         if (e > n_total - 1) e = n_total - 1;
         std::vector<long long> bt;
         std::vector<int> bs;
+        std::vector<int64_t> bi;
         long long last_t = std::numeric_limits<long long>::min();
         for (int64_t idx = s; idx <= e; ++idx) {
             const int ch = static_cast<int>(tttr->get_routing_channel_at(idx));
@@ -607,13 +717,16 @@ void H2MM::set_bursts_from_tttr(
             last_t = t;
             bt.push_back(t);
             bs.push_back(stream);
+            bi.push_back(idx);
         }
         if (static_cast<int>(bt.size()) >= min_photons) {
             times.push_back(std::move(bt));
             strms.push_back(std::move(bs));
+            idxs.push_back(std::move(bi));
         }
     }
-    set_bursts(times, strms, static_cast<int>(stream_channels.size()));
+    set_bursts_impl(times, strms, static_cast<int>(stream_channels.size()),
+                    &idxs, static_cast<long long>(n_total));
 }
 
 void H2MM::set_bursts_from_filter(
@@ -643,6 +756,20 @@ void H2MM::fill_caches(
 ) const {
     fill_caches_t<double>(unique_dt_, A.data(), n,
                           pow_cache.data(), rho_cache.data(), pool);
+}
+
+void H2MM::fill_pow_cache(
+    const std::vector<double>& A, int n, std::vector<double>& pow_cache
+) const {
+    const int n2 = n * n;
+    const int n_slots = static_cast<int>(unique_dt_.size());
+    pow_cache.assign(static_cast<size_t>(std::max(n_slots, 1)) * n2, 0.0);
+    if (n_slots == 0) return;
+    parallel_chunks(worker_count(n_slots), n_slots, [&](int, int s0, int s1) {
+        for (int s = s0; s < s1; ++s)
+            mat_pow_norm(A.data(), unique_dt_[s], n,
+                         pow_cache.data() + static_cast<size_t>(s) * n2);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -895,18 +1022,13 @@ void H2MM::viterbi(
     const int n = model.n_states();
     const int p = n_streams_;
     const int n2 = n * n;
-    const int n4 = n2 * n2;
-    const int n_dt = static_cast<int>(unique_dt_.size());
-    const int n_slots = std::max(n_dt, 1);
+    const int n_slots = std::max<int>(static_cast<int>(unique_dt_.size()), 1);
     const long long N = get_n_photons();
 
-    std::vector<double> pow_cache(static_cast<size_t>(n_slots) * n2, 0.0);
-    std::vector<double> rho_cache(1, 0.0);  // not used by Viterbi
-    if (n_dt > 0) {
-        // Build only the A^Δt powers (ρ unused): reuse fill_caches then ignore ρ.
-        rho_cache.assign(static_cast<size_t>(n_slots) * n4, 0.0);
-        fill_caches(model.trans, n, pow_cache, rho_cache);
-    }
+    // Only the A^Δt powers: Viterbi never touches the ρ tensor, and building it
+    // would cost n_slots * n^4 doubles to discard.
+    std::vector<double> pow_cache;
+    fill_pow_cache(model.trans, n, pow_cache);
 
     const double tiny = std::numeric_limits<double>::min();
     std::vector<double> log_prior(n), log_obs(static_cast<size_t>(n) * p);
@@ -984,6 +1106,274 @@ void H2MM::viterbi(
     }
     *output = path;
     *n_output = static_cast<int>(N);
+}
+
+// ---------------------------------------------------------------------------
+// Faithful decoders: γ, the marginal draw, and FFBS path sampling
+//
+// Viterbi answers "what is the single most likely state sequence".  The
+// question most downstream analysis actually asks is "how do the photons
+// distribute over the states", and the argmax answers that badly: at
+// γ = (0.7, 0.3) every photon lands in state 0 and the 30 % is erased.  The
+// three entry points below expose the posterior itself and two ways of drawing
+// a hard assignment from it that reproduce the distribution by construction.
+// ---------------------------------------------------------------------------
+
+/// Run forward+backward over one burst, invoking ``sink(li, global_index, g)``
+/// for li = m_len-1 down to 0 with the unnormalised γ row in ``g``.
+///
+/// Kept as a macro-free lambda-taking template so the three decoders share the
+/// recursion rather than each carrying a copy of it.
+template <class Sink>
+static void h2mm_backward_gamma(
+    const std::vector<int32_t>& streams, const std::vector<int32_t>& gap_slot,
+    int64_t s, int64_t m_len, const double* obs, const double* pow_cache,
+    int n, int p, int n2, const double* alpha, const double* scale,
+    double* w, double* beta_next, double* beta_cur, double* g, Sink&& sink
+) {
+    {
+        const double* alast = alpha + (m_len - 1) * n;
+        for (int i = 0; i < n; ++i) {
+            beta_next[i] = 1.0;
+            g[i] = alast[i];
+        }
+        sink(m_len - 1, s + m_len - 1, g);
+    }
+    for (int64_t li = m_len - 2; li >= 0; --li) {
+        const int64_t nn = s + li;
+        const int32_t slot = gap_slot[nn];
+        const int yn1 = streams[nn + 1];
+        const double cc = scale[li + 1];
+        const double inv_c = (cc > 0.0) ? 1.0 / cc : 0.0;
+        for (int k = 0; k < n; ++k) w[k] = obs[k * p + yn1] * beta_next[k];
+        const double* acur_row = alpha + li * n;
+        if (slot < 0) {
+            for (int i = 0; i < n; ++i) beta_cur[i] = w[i] * inv_c;
+        } else {
+            const double* P = pow_cache + static_cast<size_t>(slot) * n2;
+            for (int i = 0; i < n; ++i) {
+                double v = 0.0;
+                for (int k = 0; k < n; ++k) v += P[i * n + k] * w[k];
+                beta_cur[i] = v * inv_c;
+            }
+        }
+        for (int i = 0; i < n; ++i) g[i] = acur_row[i] * beta_cur[i];
+        sink(li, nn, g);
+        for (int i = 0; i < n; ++i) beta_next[i] = beta_cur[i];
+    }
+}
+
+void H2MM::posterior(
+    const H2mmModel& model,
+    float** gamma_out, int* gamma_rows, int* gamma_cols,
+    long long* n_underflow
+) {
+    const int n = model.n_states();
+    const int p = n_streams_;
+    const int n2 = n * n;
+    const long long N = get_n_photons();
+
+    std::vector<double> pow_cache;
+    fill_pow_cache(model.trans, n, pow_cache);
+
+    auto* gamma = static_cast<float*>(
+        malloc(sizeof(float) * static_cast<size_t>(std::max<long long>(N * n, 1))));
+    if (!gamma) throw std::bad_alloc();
+
+    int64_t max_len = 0;
+    const int n_bursts = get_n_bursts();
+    for (int b = 0; b < n_bursts; ++b)
+        max_len = std::max(max_len, offsets_[b + 1] - offsets_[b]);
+
+    const int nthreads = worker_count(n_bursts);
+    std::vector<long long> uf_p(nthreads, 0);
+    const double uniform = (n > 0) ? 1.0 / n : 0.0;
+
+    parallel_chunks(nthreads, n_bursts, [&](int c, int b0, int b1) {
+        std::vector<double> alpha(static_cast<size_t>(std::max<int64_t>(max_len, 1)) * n);
+        std::vector<double> scale(std::max<int64_t>(max_len, 1));
+        std::vector<double> w(n), beta_next(n), beta_cur(n), g(n);
+        long long uf = 0;
+        for (int b = b0; b < b1; ++b) {
+            const int64_t s = offsets_[b], e = offsets_[b + 1];
+            const int64_t m_len = e - s;
+            forward_burst<double>(streams_.data(), gap_slot_.data(), s, m_len,
+                                  model.prior.data(), model.obs.data(),
+                                  pow_cache.data(), n, p,
+                                  alpha.data(), scale.data());
+            h2mm_backward_gamma(
+                streams_, gap_slot_, s, m_len, model.obs.data(), pow_cache.data(),
+                n, p, n2, alpha.data(), scale.data(),
+                w.data(), beta_next.data(), beta_cur.data(), g.data(),
+                [&](int64_t /*li*/, int64_t nn, const double* row) {
+                    double tot = 0.0;
+                    for (int i = 0; i < n; ++i) tot += row[i];
+                    float* out = gamma + static_cast<size_t>(nn) * n;
+                    if (tot > 0.0) {
+                        for (int i = 0; i < n; ++i)
+                            out[i] = static_cast<float>(row[i] / tot);
+                    } else {
+                        // The forward scale underflowed: this photon's row holds
+                        // no information at all.  Returning it uniform keeps the
+                        // "rows sum to 1" contract without inventing a
+                        // preference; the count says how much of the decode is
+                        // affected.
+                        for (int i = 0; i < n; ++i) out[i] = static_cast<float>(uniform);
+                        ++uf;
+                    }
+                });
+        }
+        uf_p[c] = uf;
+    });
+
+    if (n_underflow) {
+        long long total = 0;
+        for (long long v : uf_p) total += v;
+        *n_underflow = total;
+    }
+    *gamma_out = gamma;
+    *gamma_rows = static_cast<int>(N);
+    *gamma_cols = n;
+}
+
+void H2MM::sample_states(
+    const H2mmModel& model, long long seed,
+    long long** output, int* n_output,
+    long long* n_underflow
+) {
+    const int n = model.n_states();
+    const int p = n_streams_;
+    const int n2 = n * n;
+    const long long N = get_n_photons();
+
+    std::vector<double> pow_cache;
+    fill_pow_cache(model.trans, n, pow_cache);
+
+    auto* path = static_cast<long long*>(
+        malloc(sizeof(long long) * static_cast<size_t>(std::max<long long>(N, 1))));
+    if (!path) throw std::bad_alloc();
+
+    int64_t max_len = 0;
+    const int n_bursts = get_n_bursts();
+    for (int b = 0; b < n_bursts; ++b)
+        max_len = std::max(max_len, offsets_[b + 1] - offsets_[b]);
+
+    const int nthreads = worker_count(n_bursts);
+    std::vector<long long> uf_p(nthreads, 0);
+    const uint64_t useed = static_cast<uint64_t>(seed);
+
+    parallel_chunks(nthreads, n_bursts, [&](int c, int b0, int b1) {
+        std::vector<double> alpha(static_cast<size_t>(std::max<int64_t>(max_len, 1)) * n);
+        std::vector<double> scale(std::max<int64_t>(max_len, 1));
+        std::vector<double> w(n), beta_next(n), beta_cur(n), g(n);
+        long long uf = 0;
+        for (int b = b0; b < b1; ++b) {
+            const int64_t s = offsets_[b], e = offsets_[b + 1];
+            const int64_t m_len = e - s;
+            forward_burst<double>(streams_.data(), gap_slot_.data(), s, m_len,
+                                  model.prior.data(), model.obs.data(),
+                                  pow_cache.data(), n, p,
+                                  alpha.data(), scale.data());
+            h2mm_backward_gamma(
+                streams_, gap_slot_, s, m_len, model.obs.data(), pow_cache.data(),
+                n, p, n2, alpha.data(), scale.data(),
+                w.data(), beta_next.data(), beta_cur.data(), g.data(),
+                [&](int64_t /*li*/, int64_t nn, const double* row) {
+                    // Keyed by the photon's global index, so the draw does not
+                    // depend on which thread or in what order the burst ran.
+                    const double u = rng_unit(useed, 0, static_cast<uint64_t>(nn));
+                    int st = draw_from(row, n, u);
+                    if (st < 0) {  // underflowed row: uniform, and counted
+                        st = std::min(n - 1, static_cast<int>(u * n));
+                        ++uf;
+                    }
+                    path[nn] = st;
+                });
+        }
+        uf_p[c] = uf;
+    });
+
+    if (n_underflow) {
+        long long total = 0;
+        for (long long v : uf_p) total += v;
+        *n_underflow = total;
+    }
+    *output = path;
+    *n_output = static_cast<int>(N);
+}
+
+void H2MM::sample_paths(
+    const H2mmModel& model, long long seed, int n_samples,
+    long long** paths_out, int* path_rows, int* path_cols
+) {
+    const int n = model.n_states();
+    const int p = n_streams_;
+    const int n2 = n * n;
+    const long long N = get_n_photons();
+    const int draws = std::max(1, n_samples);
+
+    std::vector<double> pow_cache;
+    fill_pow_cache(model.trans, n, pow_cache);
+
+    auto* paths = static_cast<long long*>(
+        malloc(sizeof(long long) * static_cast<size_t>(std::max<long long>(N * draws, 1))));
+    if (!paths) throw std::bad_alloc();
+
+    int64_t max_len = 0;
+    const int n_bursts = get_n_bursts();
+    for (int b = 0; b < n_bursts; ++b)
+        max_len = std::max(max_len, offsets_[b + 1] - offsets_[b]);
+
+    const int nthreads = worker_count(n_bursts);
+    const uint64_t useed = static_cast<uint64_t>(seed);
+
+    parallel_chunks(nthreads, n_bursts, [&](int /*c*/, int b0, int b1) {
+        std::vector<double> alpha(static_cast<size_t>(std::max<int64_t>(max_len, 1)) * n);
+        std::vector<double> scale(std::max<int64_t>(max_len, 1));
+        std::vector<double> w(n);
+        for (int b = b0; b < b1; ++b) {
+            const int64_t s = offsets_[b], e = offsets_[b + 1];
+            const int64_t m_len = e - s;
+            // The forward filter is shared by every draw of this burst; only the
+            // backward sampling pass is repeated, so extra draws are cheap.
+            forward_burst<double>(streams_.data(), gap_slot_.data(), s, m_len,
+                                  model.prior.data(), model.obs.data(),
+                                  pow_cache.data(), n, p,
+                                  alpha.data(), scale.data());
+            for (int d = 0; d < draws; ++d) {
+                long long* out = paths + static_cast<size_t>(d) * N;
+                const uint64_t ud = static_cast<uint64_t>(d);
+                // s_N ~ α_N
+                const double* alast = alpha.data() + (m_len - 1) * n;
+                double u = rng_unit(useed, ud, static_cast<uint64_t>(s + m_len - 1));
+                int j = draw_from(alast, n, u);
+                if (j < 0) j = std::min(n - 1, static_cast<int>(u * n));
+                out[e - 1] = j;
+                // s_t ~ α_t(i) · A^{Δt}[i, s_{t+1}]
+                for (int64_t li = m_len - 2; li >= 0; --li) {
+                    const int64_t nn = s + li;
+                    const int32_t slot = gap_slot_[nn];
+                    if (slot < 0) {
+                        // Coincident photons: A = I, so the state cannot change.
+                        out[nn] = j;
+                        continue;
+                    }
+                    const double* P = pow_cache.data() + static_cast<size_t>(slot) * n2;
+                    const double* arow = alpha.data() + li * n;
+                    for (int i = 0; i < n; ++i) w[i] = arow[i] * P[i * n + j];
+                    u = rng_unit(useed, ud, static_cast<uint64_t>(nn));
+                    int i = draw_from(w.data(), n, u);
+                    if (i < 0) i = std::min(n - 1, static_cast<int>(u * n));
+                    j = i;
+                    out[nn] = j;
+                }
+            }
+        }
+    });
+
+    *paths_out = paths;
+    *path_rows = draws;
+    *path_cols = static_cast<int>(N);
 }
 
 // ---------------------------------------------------------------------------
