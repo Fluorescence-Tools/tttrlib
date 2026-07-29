@@ -119,6 +119,11 @@ TTTRLIB_NOGIL(tttrlib::H2MM::sample_paths)
         return np.asarray(self.channels, dtype=np.int32).reshape(
             self.n_streams, self.n_states)
 
+    @property
+    def source_map(self):
+        """{original source channel: compressed id} for the untouched photons."""
+        return dict(zip(self.used_channels, self.compressed_channels))
+
     def to_dict(self):
         return {
             "n_streams": self.n_streams,
@@ -126,6 +131,8 @@ TTTRLIB_NOGIL(tttrlib::H2MM::sample_paths)
             "max_channel": self.max_channel,
             "channels": self.channels_np,
             "used_channels": list(self.used_channels),
+            "compressed_channels": list(self.compressed_channels),
+            "highest_channel": self.highest_channel(),
         }
     %}
 }

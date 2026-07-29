@@ -253,17 +253,34 @@ lifetime fits all become ordinary :class:`tttrlib.Channel` selections, with no
 new plumbing anywhere downstream and no need for the consuming tool to know
 H2MM exists.
 
-**Channel allocation.** Ids are handed out **densely, one step apart**, from the
-free ids of ``[0, max_channel]`` — those the source file does not already use —
-in stream-major / state-minor order. The mapping is a published lookup table
-(``cmap.channels_np``, and recorded in the sidecar), not an arithmetic stride a
-reader is expected to reverse-engineer. Channels already in the file keep their
-meaning. For a two-stream file already using ids 0 and 1:
+**Channel allocation — the whole id space is compacted.** A source file's
+channels are usually sparse: 1, 12 and 30 for three detectors is perfectly
+ordinary, and those gaps are dead weight in a record field only a few bits wide.
+So the split does not merely append new ids, it renumbers everything. The used
+source ids compress to ``0..k-1`` in ascending order, and the ``(stream, state)``
+pairs are allocated immediately after, **densely, one step apart**, in
+stream-major / state-minor order:
 
 .. code-block:: text
 
-   stream 0, state 0 -> 2       stream 1, state 0 -> 4
-   stream 0, state 1 -> 3       stream 1, state 1 -> 5
+   source 1, 12, 30    ->  0, 1, 2       (compressed, ascending)
+
+   stream 0, state 0   ->  3       stream 1, state 0  ->  5
+   stream 0, state 1   ->  4       stream 1, state 1  ->  6
+
+Every id the split writes then lies in one run from 0 with no holes, and that is
+what decides whether the result still fits a narrow container. Left
+uncompressed, the example above would keep background photons on id 30 and need
+**5 bits** to store a file with all of 7 distinct channels; compressed it needs
+**3**, so the same split that would have required PTU now round-trips through an
+SPC-600/256 record.
+
+Both directions are recorded, so nothing is lost: ``cmap.used_channels[i]`` is
+the original id and ``cmap.compressed_channels[i]`` the id it became, with
+``cmap.source_map`` giving the same thing as a dict in Python and
+``cmap.highest_channel()`` the largest id that will be written. The map is a
+published lookup table, stored in the state sidecar, not an arithmetic stride a
+reader is expected to reverse-engineer.
 
 .. warning::
 
@@ -295,18 +312,26 @@ meaning. For a two-stream file already using ids 0 and 1:
    high bits silently, so an id of 40 written to an SPC-130 file reads back as
    8 and two states quietly merge. This is why ``build_channel_map`` takes an
    explicit ``max_channel`` (defaulting to PTU's 63) rather than inheriting one
-   from the source, and why **PTU is the assumed target** for a split. If the
-   free ids do not suffice the call throws, naming the numbers and pointing at
-   Path B, which has no budget at all.
+   from the source, and why **PTU is the assumed target** for a split. The
+   budget needed is ``k + n_streams * n_states`` where ``k`` is the number of
+   source channels; if that does not fit, the call throws, naming the numbers
+   and pointing at Path B, which has no budget at all.
 
 .. warning::
 
-   **Photons no decoder assigned keep their original channel id.** Photons
-   outside every burst, or matching no stream, are not relabelled. So after a
-   split the *original* channel ids hold **only** unassigned photons: summing
-   "channel 0" gives you background, not the total. That is a useful semantic —
-   background is separated for free — and a sharp edge if you were not
-   expecting it.
+   **Every photon is renumbered, and channel ids do not survive a split.**
+   Photons no decoder assigned — outside every burst, or matching no stream —
+   move to the *compressed* form of the channel they were on, so they stay
+   distinguishable from each other while the id space stays dense. Two
+   consequences:
+
+   * The compressed source ids afterwards hold **only** unassigned photons.
+     Summing the channel that used to be the donor gives you background, not the
+     donor total. That is a useful semantic — background is separated for free —
+     and a sharp edge if you were not expecting it.
+   * A downstream tool that hard-codes "channel 1 is the donor" will be wrong
+     about a split file. Read ``cmap.source_map`` (or the ``channel_map`` in the
+     sidecar) rather than assuming; that is what it is there for.
 
 Path B — the msgpack state sidecar
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

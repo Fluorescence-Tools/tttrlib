@@ -255,18 +255,24 @@ path2, _ = eng2.jitter_path(model2, seed=7)
 # %%
 # Path A — state-encoded routing channels.
 #
-# Every ``(stream, state)`` pair gets its own routing-channel id, taken densely
-# (one step apart) from the ids the file does not already use. The result is one
-# PTU holding every photon, in which each state is an ordinary channel
-# selection — no downstream tool has to know H2MM exists.
+# The whole id space is compacted. A file's channels are usually sparse — 1, 12
+# and 30 for three detectors is ordinary — and those gaps are dead weight in a
+# record field a few bits wide. So the used source ids compress to ``0..k-1``
+# and the ``(stream, state)`` pairs are allocated immediately after, densely.
+# The result is one PTU holding every photon, in which each state is an ordinary
+# channel selection — no downstream tool has to know H2MM exists.
 #
 # The budget is the *container's* record field: PTU stores 6 channel bits
 # (0..63). Narrower formats truncate silently, which is why the target is fixed
 # to PTU and why ``build_channel_map`` throws rather than overflowing.
+# Compressing is what keeps a split inside a small field: a file whose detectors
+# sat at 1, 12 and 30 would otherwise still need 5 bits to hold 7 channels.
 
 cmap = eng2.build_channel_map(data, model2.n_states())
+print("source channels compressed:", cmap.source_map)
 print("channel map (rows = streams, cols = states):\n", cmap.channels_np)
-print("ids already in use:", list(cmap.used_channels))
+print(f"highest id written: {cmap.highest_channel()} "
+      f"({max(1, cmap.highest_channel().bit_length())} bits)")
 
 split = eng2.split_routing_channels(data, path2, cmap)
 
@@ -325,13 +331,15 @@ fig.tight_layout()
 print("both paths select identical photons for every state")
 
 # %%
-# Note one deliberate asymmetry: photons that no decoder assigned — background
-# outside every burst, or matching no stream — keep their *original* channel id
-# in the split file. So after a split the original channels hold only unassigned
-# photons; summing "channel 0" gives background, not the total.
+# Note one consequence of the renumbering: photons that no decoder assigned —
+# background outside every burst, or matching no stream — move to the
+# *compressed* form of the channel they were on. So after a split those ids hold
+# only unassigned photons; summing what used to be the donor channel gives
+# background, not the donor total. A tool that hard-codes channel numbers will be
+# wrong about a split file — read ``cmap.source_map`` instead.
 
 states = np.asarray(back.states_np)
-print(f"{int((states == 255).sum())} photons unassigned "
-      f"(kept their original channel id)")
+print(f"{int((states == 255).sum())} photons unassigned, now on the compressed "
+      f"source ids {sorted(set(cmap.source_map.values()))}")
 
 plt.show()

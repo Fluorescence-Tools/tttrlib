@@ -128,10 +128,17 @@
   `(stream, state)` pair has its own id and writes one PTU holding every photon
   — self-describing, so per-state decays and FCS become ordinary `Channel`
   selections; and `state_sidecar` writes a msgpack sidecar leaving the source
-  file untouched, with no id budget. Ids are allocated **densely, one step
-  apart**, from the ids the file does not already use. Photons no decoder
-  assigned keep their original channel id, so after a split the original
-  channels hold *only* unassigned photons.
+  file untouched, with no id budget. The split **compacts the whole id space**,
+  not just the new ids: source channels are usually sparse (1, 12, 30 for three
+  detectors is ordinary) and those gaps are dead weight in a field a few bits
+  wide, so the used ids compress to `0..k-1` and the `(stream, state)` pairs are
+  allocated immediately after, densely, one step apart. Everything then lies in
+  one run from 0 — a file whose detectors sat at 1, 12 and 30 needs 3 bits
+  instead of 5, so a split that would have required PTU round-trips through an
+  SPC-600/256 record. Both directions are recorded in the map, which travels in
+  the sidecar. Photons no decoder assigned move to the compressed form of the
+  channel they were on, so afterwards those ids hold *only* unassigned photons —
+  and a tool that hard-codes channel numbers will be wrong about a split file.
 
   `set_bursts_from_tttr` / `set_bursts_from_filter` now record the source photon
   index (`get_photon_index`), which both persistence paths need and which was

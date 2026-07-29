@@ -312,15 +312,65 @@ class TestPersistence(unittest.TestCase):
         self.assertTrue((states[unassigned] == 255).all())
         self.assertGreater(unassigned.size, 0)
 
-    def test_channel_map_is_dense_and_reserves_used_ids(self):
+    def test_channel_map_is_dense_and_follows_the_compressed_sources(self):
         cmap = self.eng.build_channel_map(self.tttr, 2)
         ch = cmap.channels_np
         self.assertEqual(ch.shape, (2, 2))
-        flat = np.sort(ch.ravel())
-        # dense, one step apart, and clear of the ids already in the file
-        np.testing.assert_array_equal(np.diff(flat), np.ones(flat.size - 1))
-        self.assertEqual(set(flat) & set(cmap.used_channels), set())
-        self.assertLessEqual(flat.max(), 63)
+        # The source ids compress to 0..k-1 and the states follow immediately,
+        # so the whole allocation is one run of consecutive ids from 0.
+        allocated = np.concatenate([np.asarray(cmap.compressed_channels),
+                                    ch.ravel()])
+        np.testing.assert_array_equal(np.sort(allocated),
+                                      np.arange(allocated.size))
+        self.assertEqual(cmap.highest_channel(), allocated.size - 1)
+        self.assertLessEqual(cmap.highest_channel(), 63)
+
+    def test_sparse_source_channels_are_compressed(self):
+        # The point of compressing: a file whose detectors sit at 1, 12 and 30
+        # would otherwise keep a photon on id 30, so the split would need 5 bits
+        # to store a file that has only 7 distinct channels.
+        n = 600
+        d = tttrlib.TTTR()
+        d.append_events(np.arange(1, n + 1, dtype=np.uint64) * 10,
+                        np.zeros(n, np.uint16),
+                        np.tile(np.array([1, 12, 30], np.int8), n // 3),
+                        np.zeros(n, np.int8), False, 0)
+        g = tttrlib.Channel('g'); g.add_component(1, 0, 65535)
+        r = tttrlib.Channel('r'); r.add_component(12, 0, 65535)
+        eng = tttrlib.H2MM()
+        eng.set_bursts_from_tttr(d, np.asarray([[0, n - 1]], np.int64), [g, r], 3, 1)
+        fit = eng.fit(2, 1, 100, 1e-7, 0)
+        path, _ = eng.viterbi_path(fit)
+
+        cmap = eng.build_channel_map(d, 2)
+        self.assertEqual(list(cmap.used_channels), [1, 12, 30])
+        self.assertEqual(cmap.source_map, {1: 0, 12: 1, 30: 2})
+        np.testing.assert_array_equal(np.sort(cmap.channels_np.ravel()),
+                                      np.array([3, 4, 5, 6]))
+        self.assertEqual(cmap.highest_channel(), 6)
+
+        out = eng.split_routing_channels(d, path, cmap)
+        och = np.asarray(out.routing_channels)
+        self.assertLessEqual(och.max(), 6)
+        self.assertGreaterEqual(och.min(), 0)
+        # Channel 30 carried no stream, so all of its photons are unassigned and
+        # land together on its compressed id.
+        src = np.asarray(d.routing_channels)
+        np.testing.assert_array_equal(np.flatnonzero(och == 2),
+                                      np.flatnonzero(src == 30))
+
+    def test_split_rejects_a_map_from_another_file(self):
+        # A map that does not know a channel present in the file would otherwise
+        # leave those photons on an id that means something else entirely.
+        other = tttrlib.TTTR()
+        other.append_events(np.arange(1, 51, dtype=np.uint64) * 10,
+                            np.zeros(50, np.uint16),
+                            np.full(50, 7, np.int8),
+                            np.zeros(50, np.int8), False, 0)
+        foreign = self.eng.build_channel_map(other, 2)
+        with self.assertRaises(Exception) as cm:
+            self.eng.split_routing_channels(self.tttr, self.path, foreign)
+        self.assertIn("different file", str(cm.exception))
 
     def test_channel_budget_throws_with_the_numbers(self):
         # More (stream, state) pairs than the container's record field can hold
@@ -328,7 +378,7 @@ class TestPersistence(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             self.eng.build_channel_map(self.tttr, 3, 4)   # max_channel = 4
         msg = str(cm.exception)
-        self.assertIn("6", msg)          # 2 streams x 3 states
+        self.assertIn("8", msg)          # 2 source channels + 2 streams x 3 states
         self.assertIn("state_sidecar", msg)
 
     def test_path_a_round_trip(self):
@@ -345,11 +395,15 @@ class TestPersistence(unittest.TestCase):
                 sel = (streams == s) & (states == st)
                 if sel.any():
                     self.assertTrue((och[sel] == ch[s, st]).all())
-        # Unassigned photons keep their original id -- so afterwards the
-        # original channels hold *only* background, not the total.
+        # Unassigned photons land on the *compressed* form of the channel they
+        # were on -- still distinguishable, but the id space stays dense. So
+        # afterwards the compressed source ids hold *only* background photons,
+        # not the total.
         un = states == 255
-        np.testing.assert_array_equal(och[un],
-                                      np.asarray(self.tttr.routing_channels)[un])
+        src = np.asarray(self.tttr.routing_channels)
+        expect = np.array([cmap.source_map[int(c)] for c in src[un]])
+        np.testing.assert_array_equal(och[un], expect)
+        self.assertEqual(set(och[un]) & set(cmap.channels_np.ravel().tolist()), set())
 
     def test_path_b_round_trip_and_agrees_with_path_a(self):
         cmap = self.eng.build_channel_map(self.tttr, 2)

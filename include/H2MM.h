@@ -74,21 +74,43 @@ constexpr uint8_t H2MM_UNASSIGNED = 255;
 constexpr int H2MM_PTU_MAX_CHANNEL = 63;
 
 /**
- * @brief Routing-channel ids allocated to (stream, state) pairs.
+ * @brief Routing-channel ids allocated by a state split.
  *
  * Path A of persisting a decoded state assignment rewrites each photon's
  * routing channel so the state is visible to every tool that reads the file.
- * Ids are handed out **densely, step 1**, from the sorted free ids, stream
- * major / state minor — the mapping is a published lookup table, not something
- * a reader is expected to derive from arithmetic.
+ *
+ * **The whole id space is compacted, not just the new ids.** A source file's
+ * channels are usually sparse — 1, 12 and 30 for three detectors is ordinary —
+ * and those gaps are dead weight in a field only a few bits wide. So the used
+ * source ids are first compressed to ``0..k-1`` in ascending order, and the
+ * ``(stream, state)`` pairs are allocated immediately after, **densely, step
+ * 1**, stream major / state minor:
+ *
+ * ```
+ * source 1, 12, 30   ->  0, 1, 2          (compressed, in ascending order)
+ * (stream 0, state 0) -> 3    (stream 1, state 0) -> 5
+ * (stream 0, state 1) -> 4    (stream 1, state 1) -> 6
+ * ```
+ *
+ * Every id in the output file is then in ``[0, k + n_streams*n_states)`` with no
+ * holes, which is what decides whether the result still fits a narrow container:
+ * left uncompressed, the example above would keep a photon on id 30 and need 5
+ * bits to store a file that actually has 7 distinct channels.
+ *
+ * Both directions are recorded, so nothing is lost: ``used_channels[i]`` is the
+ * original id and ``compressed_channels[i]`` the id it became. The map is a
+ * published lookup table — written into the state sidecar — not something a
+ * reader is expected to derive from arithmetic.
  */
 struct H2mmChannelMap {
     int n_streams = 0;
     int n_states = 0;
     /// Allocated id per (stream, state), row-major ``[stream * n_states + state]``.
     std::vector<int> channels;
-    /// Source routing-channel ids that were already in use (left untouched).
+    /// Source routing-channel ids that were in use, ascending.
     std::vector<int> used_channels;
+    /// Compressed id each ``used_channels`` entry was moved to (``0..k-1``).
+    std::vector<int> compressed_channels;
     /// Largest id the target container's record field can hold.
     int max_channel = H2MM_PTU_MAX_CHANNEL;
 
@@ -97,6 +119,20 @@ struct H2mmChannelMap {
         if (stream < 0 || state < 0 || stream >= n_streams || state >= n_states)
             return -1;
         return channels[static_cast<size_t>(stream) * n_states + state];
+    }
+    /// Compressed id for an original source channel, or ``-1`` if unknown.
+    int compressed_for(int source_channel) const {
+        for (size_t i = 0; i < used_channels.size(); ++i)
+            if (used_channels[i] == source_channel)
+                return i < compressed_channels.size() ? compressed_channels[i] : -1;
+        return -1;
+    }
+    /// Highest id the split will write; ``-1`` for an empty map.
+    int highest_channel() const {
+        int hi = -1;
+        for (int c : compressed_channels) hi = std::max(hi, c);
+        for (int c : channels) hi = std::max(hi, c);
+        return hi;
     }
     std::string to_json() const;
     static H2mmChannelMap from_json(const std::string& payload);
@@ -398,15 +434,15 @@ public:
     void photon_stream_index(unsigned char** streams_out, int* n_streams_out) const;
 
     /**
-     * @brief Allocate a routing-channel id per (stream, state) pair.
+     * @brief Allocate the routing-channel ids a state split will write.
      *
-     * Ids are taken **densely, one step apart**, from the free ids of
-     * ``[0, max_channel]`` — the ones ``src`` does not already use — assigned
-     * stream major / state minor.  Channels already in the file keep their
-     * meaning, so after a split the original ids hold only the photons no
-     * decoder assigned.
+     * The source file's used ids are compressed to ``0..k-1`` and the
+     * ``(stream, state)`` pairs allocated immediately after, densely, stream
+     * major / state minor — see ``H2mmChannelMap``.  The output therefore uses
+     * ``k + n_streams*n_states`` consecutive ids starting at 0, whatever the
+     * source numbering looked like.
      *
-     * @param src Source photon stream (its used channels are reserved).
+     * @param src Source photon stream (its used channels are compressed).
      * @param n_states Number of hidden states.
      * @param max_channel Largest id the *target container's record field* can
      *        hold.  This is the real budget, not the in-memory ``signed char``:
@@ -415,8 +451,8 @@ public:
      *        **silently** rather than failing — PicoHarp and SPC-130 keep 4 bits
      *        (an id of 40 reads back as 8), SPC-600/256 keeps 3 — so writing a
      *        split to one of those quietly merges states into each other.
-     * @throws std::runtime_error naming the numbers when the free ids do not
-     *         suffice; the mask path (``state_sidecar``) has no budget.
+     * @throws std::runtime_error naming the numbers when the ids do not fit;
+     *         the mask path (``state_sidecar``) has no budget.
      */
     H2mmChannelMap build_channel_map(
         std::shared_ptr<TTTR> src, int n_states,
@@ -425,11 +461,17 @@ public:
 
     /**
      * @brief Copy ``src`` with each photon's routing channel replaced by the id
-     *        its (stream, state) pair was allocated.
+     *        ``map`` allocated for it.
      *
-     * Every photon stays in the one file; photons no decoder assigned keep their
-     * original channel id.  Write the result with ``TTTR::write`` — per-state
-     * decays, FCS and burst analyses are then ordinary channel selections.
+     * Every photon stays in the one file.  Photons a decoder assigned move to
+     * their ``(stream, state)`` id; photons it did not — outside every burst, or
+     * matching no stream — move to the **compressed** form of the channel they
+     * were already on, so they stay distinguishable while the file's id space
+     * stays dense.  Write the result with ``TTTR::write`` — per-state decays,
+     * FCS and burst analyses are then ordinary channel selections.
+     *
+     * @throws std::runtime_error if a photon sits on a channel ``map`` does not
+     *         know, which means the map was built from a different file.
      */
     std::shared_ptr<TTTR> split_routing_channels(
         std::shared_ptr<TTTR> src,
