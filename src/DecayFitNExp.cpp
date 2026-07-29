@@ -102,6 +102,17 @@ std::vector<double> convolved_component(double tau,
                                         const std::vector<double>& irf,
                                         const DecayFitNExpOptions& options) {
     const int n_bins = static_cast<int>(irf.size());
+
+    // Tail fit: a pure exponential decay from tail_start, no IRF reconvolution.
+    if (options.tail_start >= 0) {
+        std::vector<double> component(irf.size(), 0.0);
+        const int t0 = std::min(options.tail_start, n_bins - 1);
+        for (int i = t0; i < n_bins; ++i)
+            component[i] = std::exp(-static_cast<double>(i - t0) * options.dt / tau);
+        normalize_probability(component, "tail exponential");
+        return component;
+    }
+
     const double period = options.period > 0.0
                               ? options.period
                               : static_cast<double>(n_bins) * options.dt;
@@ -455,7 +466,15 @@ DecayFitNExpResult DecayFitNExp::fit(
                                 std::min(lifetime, options.tau_max));
         }
     }
-    const std::vector<double> counts = pooled_counts(data, irf.size());
+    std::vector<double> counts = pooled_counts(data, irf.size());
+    // Tail fit: exclude the pre-tail channels (rise/prompt) from the likelihood.
+    // The EM and NLL skip channels whose count is <= 0, so zeroing them here is
+    // the mask (the components are also zero there).
+    if (options.tail_start > 0) {
+        const int t0 = std::min<int>(options.tail_start,
+                                     static_cast<int>(counts.size()));
+        for (int i = 0; i < t0; ++i) counts[i] = 0.0;
+    }
     const double photons = std::accumulate(counts.begin(), counts.end(), 0.0);
     if (!(photons > 0.0) || !std::isfinite(photons))
         throw std::invalid_argument(

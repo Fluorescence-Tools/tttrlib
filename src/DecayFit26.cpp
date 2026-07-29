@@ -2,6 +2,8 @@
 #include "DecayFit26.h"
 #include "include/Verbose.h"
 
+#include <limits>
+
 
 static thread_local double Sp, Ss, Bp, Bs;
 static thread_local double penalty = 0.;
@@ -32,14 +34,15 @@ if (is_verbose()) {
 
 double DecayFit26::targetf(double* x, void* pv)
 {
+    if (((DecayFitContext *) pv) != nullptr) ((DecayFitContext *) pv)->iterations++;
 
     double s = 0., xm[1], w, f;
     int i;
-    DecayFitData* p = (DecayFitData*)pv;
+    DecayFitContext* p = (DecayFitContext*)pv;
 
-    int *expdata = p->data.data();
-    int Nchannels = static_cast<int>(p->data.size());
-    double *irf = p->irf.data(), *bg = p->background.data(), *M = p->model.data();
+    const int *expdata = p->counts;
+    int Nchannels = 2 * p->n_bins;
+    double *irf = const_cast<double *>(p->irf()), *bg = const_cast<double *>(p->background()), *M = p->model();
 
     correct_input(x, xm);
     f = xm[0];
@@ -59,16 +62,42 @@ double DecayFit26::targetf(double* x, void* pv)
 }
 
 
-double DecayFit26::fit(double* x, short* fixed, DecayFitData* p)
+/*!
+ * Score `x` without optimising.
+ *
+ * Unlike the other Fit2x models this one needs no preamble: its objective
+ * derives the scale from the data itself and reads no thread-local state, so it
+ * is already a complete evaluation. The entry point exists so every model is
+ * reached the same way.
+ */
+double DecayFit26::evaluate(double *x, short *fixed, DecayFitContext *p) {
+    if (p == nullptr || x == nullptr || fixed == nullptr || !p->is_usable()) {
+        return std::numeric_limits<double>::infinity();
+    }
+    return DecayFit26::targetf(x, p);
+}
+
+
+double DecayFit26::fit(double* x, short* fixed, DecayFitContext* p)
 {
     // x is:
     // [0] fraction of pattern 1
     double tIstar, xm[1], f, s = 0., s1 = 0., s2 = 0.;
     int i, info;
 
-    int *expdata = p->data.data();
-    int Nchannels = static_cast<int>(p->data.size());
-    double *irf = p->irf.data(), *bg = p->background.data(), *M = p->model.data();
+    // Fail safely on inconsistently sized arrays instead of reading past the end
+    // of irf/background (see DecayFitContext::is_usable). fit26 uses
+    // the full data length as its channel count, so irf/background must be at
+    // least that long.
+    if (p == nullptr || x == nullptr || fixed == nullptr ||
+        !p->is_usable()) {
+        if (x != nullptr) x[0] = -1.0;
+        return std::numeric_limits<double>::infinity();
+    }
+
+    const int *expdata = p->counts;
+    int Nchannels = 2 * p->n_bins;
+    double *irf = const_cast<double *>(p->irf()), *bg = const_cast<double *>(p->background()), *M = p->model();
     for(i=0; i<Nchannels; i++)
     {
         s1 += irf[i];
@@ -81,6 +110,10 @@ double DecayFit26::fit(double* x, short* fixed, DecayFitData* p)
         bg[i]*=s2;
     }
     bfgs bfgs_o(targetf, 1);
+        // Bounds are priors in this interface, so anything the caller attached
+        // to a slot has to reach the optimiser that actually moves it. Without
+        // this the bound was accepted, stored, serialised — and ignored.
+        apply_context_bounds(bfgs_o, p, 1);
     info = bfgs_o.minimize(x,p);
 
     correct_input(x, xm);
@@ -100,57 +133,4 @@ double DecayFit26::fit(double* x, short* fixed, DecayFitData* p)
     x[1]=1.-x[0];
     return tIstar;
 
-}
-
-
-std::string DecayFit26::to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result) {
-    json j;
-
-    if (x != nullptr) {
-        j["parameters"] = json::array();
-        for (int i = 0; i < 2; i++) {
-            j["parameters"].push_back(x[i]);
-        }
-    }
-
-    if (fixed != nullptr) {
-        j["fixed"] = json::array();
-        for (int i = 0; i < 1; i++) {
-            j["fixed"].push_back(static_cast<int>(fixed[i]));
-        }
-    }
-
-    j["result"] = result;
-
-    if (p != nullptr) {
-        json jp;
-        jp["data_length"] = static_cast<int>(p->data.size());
-        jp["irf_length"] = static_cast<int>(p->irf.size());
-        jp["background_length"] = static_cast<int>(p->background.size());
-        j["mparam"] = jp;
-    }
-
-    return j.dump();
-}
-
-
-void DecayFit26::from_json(const json &j,
-                          double *x,
-                          short *fixed) {
-    if (j.contains("parameters") && j.at("parameters").is_array()) {
-        const auto &params = j.at("parameters");
-        for (int i = 0; i < std::min(2, static_cast<int>(params.size())); ++i) {
-            x[i] = params.at(i);
-        }
-    }
-
-    if (j.contains("fixed") && j.at("fixed").is_array()) {
-        const auto &fixed_arr = j.at("fixed");
-        for (int i = 0; i < std::min(1, static_cast<int>(fixed_arr.size())); ++i) {
-            fixed[i] = static_cast<short>(fixed_arr.at(i));
-        }
-    }
 }

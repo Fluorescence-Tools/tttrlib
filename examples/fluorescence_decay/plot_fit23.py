@@ -90,40 +90,47 @@ data = np.array(
 # that defines a non-constant offset that gets scaled by :math:`\gamma` (the fraction
 # of scattered light).
 
-settings = {
-    'dt': 0.5079365079365079,
-    'g_factor': 1.0, 'l1': 0.1, 'l2': 0.2,
-    'convolution_stop': 31,
-    'irf': irf,
-    'period': 16.0,
-    'background': np.zeros_like(irf)
-}
+dt = 0.5079365079365079
+setup = tttrlib.setup_vector(
+    'fit23', dt=dt, period=16.0, g_factor=1.0, l1=0.1, l2=0.2,
+    convolution_stop=31)
 
 #%%
-# The settings are used to initialize a instance of the class ``Fit23``. A dataset
-# is fitted by calling an instance of ``Fit23`` using the data, an array of the initial
-# values of the fitting parameters, and an array that specifies which parameters are
-# fixed.
+# The setup and the IRF build the model once; it is immutable, so the same
+# instance fits any number of decays. The measurement itself lives in a
+# ``DecayFitProblem``.
 
-fit23 = tttrlib.Fit23(**settings)
+fit23 = tttrlib.DecayFit2('fit23', setup, irf.tolist())
+
+problem = tttrlib.DecayFitProblem(2, len(irf) // 2, dt)
+problem.irf = tttrlib.VectorDouble(irf.tolist())
+problem.background = tttrlib.VectorDouble(np.zeros_like(irf).tolist())
+problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
+
+#%%
+# The link vector says what the optimiser may move: ``0`` free, ``-1`` held.
+# Here the lifetime and the rotational correlation time are fitted while the
+# scatter fraction and the fundamental anisotropy are held.
 
 tau, gamma, r0, rho = 2.2, 0.01, 0.38, 1.22
-x0 = np.array([tau, gamma, r0, rho])
-fixed = np.array([0, 1, 1, 0])
-r = fit23(
-    data=data,
-    initial_values=x0,
-    fixed=fixed
-)
+x0 = [tau, gamma, r0, rho]
+constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, -1, -1, 0]))
+outcome = fit23.fit(x0, constraints, problem)
 
 #%%
-# Calling an ``Fit23`` instance returns a dictionary that contains an array with the
-# fit results ``x``, an array that of the fixed values ``fixed``, and a floating
-# point number ``twoIstar`` that quantifies the goodness of the optimized model.
+# The outcome carries the fitted ``parameters``, the ``objective`` (2I*), and a
+# vector of ``results`` whose columns the registry names. The fitted curve is
+# left on ``problem.model``.
+
+r = {
+    'x': np.asarray(outcome.parameters),
+    'twoIstar': outcome.objective,
+    **tttrlib.results_as_dict('fit23', list(outcome.results)),
+}
 
 
-p.plot(fit23.data, label='data')
-p.plot(fit23.model, label='model')
+p.plot(np.asarray(problem.data), label='data')
+p.plot(np.asarray(problem.model), label='model')
 p.show()
 
 print("Results")

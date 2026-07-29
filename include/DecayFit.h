@@ -14,7 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "i_lbfgs.h"
-#include "DecayFitData.h"
+#include "DecayFitContext.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
 
@@ -221,7 +221,17 @@ struct DecayFitIntegrateSignals {
         return (Sp - g * Ss) / (Sp * (1. - 3. * l2) + (2. - 3. * l1) * g * Ss);
     }
 
-    void compute_signal_and_background(DecayFitData *p);
+    /*!
+     * \brief Integrate the parallel/perpendicular signal and background.
+     *
+     * Takes the arrays rather than a container so it serves every model and does
+     * not tie the shared statistics to one model family's data layout.
+     *
+     * \param counts Integer counts, `2 * n_bins`, parallel then perpendicular.
+     * \param bg Background pattern, same layout.
+     * \param n_bins Bins per polarization.
+     */
+    void compute_signal_and_background(const int *counts, const double *bg, int n_bins);
 
     void normM(double *M, int Nchannels);
 
@@ -293,10 +303,15 @@ public:
     };
 
 
-    static double fit(double *x, short *fixed, DecayFitData *p) {
+    static double fit(double *x, short *fixed, DecayFitContext *p) {
         return 0.0;
     };
 
+    // The former ``fit_matrix_generic`` lived here: a batch loop parameterised by
+    // a per-model function pointer, with each model wrapping it in its own
+    // ``fit_matrix``. ``fit_batch`` (DecayFitModel.h) replaces both — it is
+    // parameterised by the model *interface* instead, so there is one batch loop
+    // and no per-model wrapper to keep in step with it.
 
     static void correct_input(double *x, double *xm, double *corrections, int return_r) {};
 

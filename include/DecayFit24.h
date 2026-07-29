@@ -56,7 +56,7 @@ public:
      *
      * @param[in] x array containing the parameters of the model
      * [0] tau1, [1] gamma, [2] tau2, [3] A2, [4] offset
-     * @param pv[in] a pointer to a DecayFitData container that contains the data and
+     * @param pv[in] a pointer to a DecayFitContext container that contains the data and
      * a set of corrections.
      * @return a normalized chi2
      */
@@ -80,7 +80,7 @@ public:
      *
      * The anisotropy is computed assuming that the first and the second part
      * of the Jordi input arrays are for parallel and perpendicular using the
-     * correction array of the attribute p of the type DecayFitData.
+     * correction array of the attribute p of the type DecayFitContext.
      *
      *
      * @param[in,out] x array containing the parameters of the model
@@ -90,12 +90,14 @@ public:
      * @param fixed an array at least of length 5 for the parameters [0] tau1,
      * [1] gamma, [2] tau2, [3] A2, [4] offset. If a value is not set to fixed
      * the parameter is optimized.
-     * @param p an instance of DecayFitData that contains relevant information. Here,
+     * @param p an instance of DecayFitContext that contains relevant information. Here,
      * experimental data, the instrument response function, and the background decay
      * are used.
      * @return Quality parameter 2I*
      */
-    static double fit(double *x, short *fixed, DecayFitData *p);
+    /*! \brief Score \p x without optimising (runs the preamble ``fit`` does). */
+    static double evaluate(double *x, short *fixed, DecayFitContext *p);
+    static double fit(double *x, short *fixed, DecayFitContext *p);
 
 
     /*!
@@ -113,15 +115,6 @@ public:
      * @return
      */
     static void correct_input(double *x, double *xm, double *corrections, int return_r);
-
-    static std::string to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result);
-
-    static void from_json(const json &j,
-                         double *x,
-                         short *fixed);
 
 };
 

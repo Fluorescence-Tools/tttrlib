@@ -130,6 +130,7 @@ if 'CLSMISM' in dir():
 
 %include "info.h"
 %include "misc_types.i"
+%include "Registry.i"
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"

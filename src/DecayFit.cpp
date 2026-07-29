@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit.h"
 
-void DecayFitIntegrateSignals::compute_signal_and_background(DecayFitData *p) {
-    const int *expdata = p->data.data();
-    const double *bg = p->background.data();
-    int Nchannels_exp = p->n_channels();
+#include <algorithm>
+#include <vector>
+
+
+
+void DecayFitIntegrateSignals::compute_signal_and_background(
+        const int *counts, const double *bg, int n_bins) {
+    const int *expdata = counts;
+    int Nchannels_exp = n_bins;
 
     Sp = 0.; Ss = 0.;
     Bp = 0.; Bs = 0.;

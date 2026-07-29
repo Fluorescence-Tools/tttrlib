@@ -494,10 +494,21 @@ static void fconv_per_cs_neon_impl(double *fit, double *x, double *lamp, int num
             fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
         }
         fitcurr = vmulq_f64(fitcurr, s);
+        // The wrap-around tail. fitcurr now holds the continuation at bin
+        // period_n, which *is* bin 0 of the next period — so bin 0 takes it as
+        // it stands and the decay step comes after, not before. Stepping first
+        // would place the value belonging to bin period_n+1 into bin 0 and shift
+        // the whole tail one bin early. (fconv_per() gets this right by ending
+        // its main loop one bin earlier, which is why only the _cs variants
+        // carried the error.) It is invisible whenever the decay completes
+        // within the period, and grows as it does not: 5.8e-5 of the peak at a
+        // lifetime of a fifth of the period, and larger for longer lifetimes.
+        // With this order the recursion matches an exact circular convolution to
+        // 1.3e-15; test_dfa_kernel.py pins that against the spectral backend.
         for (i = 0; i <= stop; i++) {
-            fitcurr = vmulq_f64(fitcurr, e);
             tmp = vmulq_f64(vmulq_f64(fitcurr, a), t);
             fit[i] += vgetq_lane_f64(tmp, 0) + vgetq_lane_f64(tmp, 1);
+            fitcurr = vmulq_f64(fitcurr, e);
         }
     }
 }
@@ -529,9 +540,20 @@ static void fconv_per_cs_scalar(double *fit, double *x, double *lamp, int numexp
             fit[i] += fitcurr*x[2*ne];
         }
         fitcurr *= exp(-(period_n - stop1)*dt/x[2*ne+1]);
+        // The wrap-around tail. fitcurr now holds the continuation at bin
+        // period_n, which *is* bin 0 of the next period — so bin 0 takes it as
+        // it stands and the decay step comes after, not before. Stepping first
+        // would place the value belonging to bin period_n+1 into bin 0 and shift
+        // the whole tail one bin early. (fconv_per() gets this right by ending
+        // its main loop one bin earlier, which is why only the _cs variants
+        // carried the error.) It is invisible whenever the decay completes
+        // within the period, and grows as it does not: 5.8e-5 of the peak at a
+        // lifetime of a fifth of the period, and larger for longer lifetimes.
+        // With this order the recursion matches an exact circular convolution to
+        // 1.3e-15; test_dfa_kernel.py pins that against the spectral backend.
         for (i=0; i<=stop; i++) {
-            fitcurr *= expcurr;
             fit[i] += fitcurr*x[2*ne]*tail_a;
+            fitcurr *= expcurr;
         }
     }
 }
@@ -599,11 +621,22 @@ static void fconv_per_cs_2ch_neon(
         }
         vfc = vmulq_f64(vfc, vdupq_n_f64(exp(-(period_n - stop1) * dt / lifetime)));
         const float64x2_t vtail = vdupq_n_f64(tail_a);
+        // The wrap-around tail. fitcurr now holds the continuation at bin
+        // period_n, which *is* bin 0 of the next period — so bin 0 takes it as
+        // it stands and the decay step comes after, not before. Stepping first
+        // would place the value belonging to bin period_n+1 into bin 0 and shift
+        // the whole tail one bin early. (fconv_per() gets this right by ending
+        // its main loop one bin earlier, which is why only the _cs variants
+        // carried the error.) It is invisible whenever the decay completes
+        // within the period, and grows as it does not: 5.8e-5 of the peak at a
+        // lifetime of a fifth of the period, and larger for longer lifetimes.
+        // With this order the recursion matches an exact circular convolution to
+        // 1.3e-15; test_dfa_kernel.py pins that against the spectral backend.
         for (i = 0; i <= stop; i++) {
-            vfc = vmulq_f64(vfc, ve);
             vf = float64x2_t{fit0[i], fit1[i]};
             vf = vfmaq_f64(vf, vmulq_f64(vfc, vamp), vtail);
             fit0[i] = vgetq_lane_f64(vf, 0); fit1[i] = vgetq_lane_f64(vf, 1);
+            vfc = vmulq_f64(vfc, ve);
         }
     }
 }

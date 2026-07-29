@@ -50,32 +50,6 @@ inline void apply_corrections(double *corrections) {
     fit_corrections.convolution_stop = static_cast<int>(corrections[4]);
 }
 
-unsigned int fit23_batch_threads(int n_rows) {
-    if (n_rows < 1024) return 1;
-
-    const char *enabled = std::getenv("TTTRLIB_USE_OPENMP");
-    if (enabled != nullptr &&
-        (enabled[0] == '0' || enabled[0] == 'f' || enabled[0] == 'F' ||
-         enabled[0] == 'n' || enabled[0] == 'N')) {
-        return 1;
-    }
-
-    unsigned int requested = 0;
-    const char *thread_variables[] = {"TTTRLIB_NUM_THREADS", "OMP_NUM_THREADS"};
-    for (const char *name : thread_variables) {
-        const char *value = std::getenv(name);
-        if (value != nullptr) {
-            const int parsed = std::atoi(value);
-            if (parsed > 0) {
-                requested = static_cast<unsigned int>(parsed);
-                break;
-            }
-        }
-    }
-    if (requested == 0) requested = 4;
-    return std::max(1u, std::min(requested,
-                                static_cast<unsigned int>(n_rows / 512)));
-}
 
 inline double count_entropy(int count) {
     static const std::array<double, 4096> table = [] {
@@ -240,6 +214,12 @@ int DecayFit23::modelf(
             fit_corrections.period, fit_corrections.convolution_stop, dt);
 
     /// add background
+    //
+    // gamma weights the (caller-supplied) background pattern; the caller is
+    // responsible for its normalisation. This is the cross-language model
+    // contract exercised by the Python/R/Java reference tests, so it is left
+    // exactly as-is. (chisurf's burst-MLE wizard area-normalises the background
+    // before the fit so gamma is a true 0..1 fraction there.)
     double sum_m = 0.;
     for (int i = 0; i < 2 * Nchannels; i++) sum_m += mfunction[i];
     if (sum_m <= 0.) {
@@ -270,12 +250,21 @@ double DecayFit23::targetf(double *x, void *pv) {
 
     double w, xm[8], Bgamma;
     (void)Bgamma; // silence unused variable warning on MSVC
-    DecayFitData *p = (DecayFitData *) pv;
+    DecayFitContext *p = (DecayFitContext *) pv;
 
-    int *expdata = p->data.data();
-    int Nchannels = p->n_channels();
-    double *irf = p->irf.data(), *bg = p->background.data(),
-            *corrections = p->corrections.data(), *M = p->model.data();
+    // Defensive: targetf is also exposed directly to the bindings, so it must
+    // not read past inconsistently sized arrays. fit() validates once before the
+    // optimiser runs; this covers a direct call. Return a large finite penalty so
+    // an optimiser moving through here is simply pushed away, never crashed.
+    if (p == nullptr || !p->is_usable()) {
+        return std::numeric_limits<double>::max();
+    }
+
+    p->iterations++;
+    const int *expdata = p->counts;
+    int Nchannels = p->n_bins;
+    double *irf = const_cast<double *>(p->irf()), *bg = const_cast<double *>(p->background()),
+            *corrections = const_cast<double *>(p->corrections), *M = p->model();
     DecayFit23::correct_input(x, xm, corrections, 0);
     // Sp/Ss/B are data-only and constant during a fit (fit() computes them once
     // before the optimiser runs); only Bexpected, used by the soft-BIFL term
@@ -283,7 +272,7 @@ double DecayFit23::targetf(double *x, void *pv) {
     // only when soft-BIFL is active — otherwise reuse the cached values and save
     // an O(2*Nchannels) pass on every objective evaluation.
     if (fit_settings.softbifl)
-        fit_signals.compute_signal_and_background(p);
+        fit_signals.compute_signal_and_background(expdata, bg, Nchannels);
 
     DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM(M, 1., Nchannels);
@@ -299,16 +288,53 @@ double DecayFit23::targetf(double *x, void *pv) {
 if (is_verbose()) {
     std::cout << "COMPUTING TARGET23" << std::endl;
     std::cout << "xm:" ; for(int i=0; i<8;i++) std::cout << xm[i] << " "; std::cout << std::endl;
-    std::cout << p->str();
     std::cout << "score:"  << v << std::endl;
 }
     return v;
 }
 
 
-double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
+/*!
+ * Score `x` without optimising, with the same preamble `fit` runs.
+ *
+ * `targetf` alone is not a complete evaluation: `correct_input` derives rho from
+ * the integrated signals, and which parameters are held is thread-local state
+ * that `fit` sets before the optimiser starts. Calling `targetf` cold therefore
+ * yields NaN rather than a score. This is the entry point a caller wanting "the
+ * objective at these parameters" should use.
+ */
+double DecayFit23::evaluate(double *x, short *fixed, DecayFitContext *p) {
+    if (p == nullptr || x == nullptr || fixed == nullptr || !p->is_usable()) {
+        return std::numeric_limits<double>::infinity();
+    }
+    if (fit_settings.firstcall) init_fact();
+    fit_settings.firstcall = 0;
+    fit_settings.softbifl = (x[4] < 0.);
+    fit_settings.p2s_twoIstar = (x[5] > 0.);
+    fit_signals.corrections = &fit_corrections;
+    fit_settings.fixedrho = fixed[3];
+    fit_signals.compute_signal_and_background(p->counts, p->background(), p->n_bins);
+    return DecayFit23::targetf(x, p);
+}
+
+
+double DecayFit23::fit(double *x, short *fixed, DecayFitContext *p) {
     double tIstar, xm[8];
     int info = -1;
+
+    // Guard against inconsistently sized inputs before touching any array: a
+    // decay longer than the IRF would make the objective read past the end of
+    // irf/background and crash. Every binding (Python/Java/R) reaches native
+    // code through here, so validating here fails safely everywhere rather than
+    // segfaulting in whichever binding got there first.
+    if (p == nullptr || x == nullptr || fixed == nullptr) {
+        if (x != nullptr) x[0] = -1.0;
+        return std::numeric_limits<double>::infinity();
+    }
+    if (!p->is_usable()) {
+        x[0] = -1.0;   // report an invalid fit rather than crashing
+        return std::numeric_limits<double>::infinity();
+    }
 
     if (fit_settings.firstcall) init_fact();
 
@@ -318,12 +344,11 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
     fit_signals.corrections = &fit_corrections;
     fit_settings.fixedrho = fixed[3];
 
-    double *corrections = p->corrections.data(), *M = p->model.data();
-    fit_signals.compute_signal_and_background(p);
+    double *corrections = const_cast<double *>(p->corrections), *M = p->model();
+    const int *expdata = p->counts;
+    int Nchannels = p->n_bins;
+    fit_signals.compute_signal_and_background(expdata, p->background(), Nchannels);
     correct_input(x, xm, corrections, 1);
-
-    int *expdata = p->data.data();
-    int Nchannels = p->n_channels();
 
     // Fast path: when only the lifetime tau is free (gamma/r0/rho fixed) the
     // fit is a 1-D minimisation, so use the bounded Brent minimiser instead of
@@ -339,11 +364,24 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
             xloc[0] = tau;
             return DecayFit23::targetf(xloc, p);
         };
-        x[0] = brent_minimize_tau(kMinTau, hi, feval, 1.0e-4, 100);
+        // The same prior bounds the general path applies. If the two disagreed,
+        // a fit's answer would depend on which internal path it happened to
+        // take — a specialisation is an optimisation, not a different model.
+        double lo_tau = kMinTau, hi_tau = hi;
+        if (p->lower != nullptr && std::isfinite(p->lower[0]))
+            lo_tau = std::max(lo_tau, p->lower[0]);
+        if (p->upper != nullptr && std::isfinite(p->upper[0]))
+            hi_tau = std::min(hi_tau, p->upper[0]);
+        if (hi_tau <= lo_tau) hi_tau = lo_tau;
+        x[0] = brent_minimize_tau(lo_tau, hi_tau, feval, 1.0e-4, 100);
         feval(x[0]);  // leave p->model evaluated at the minimizer
         info = 1;
     } else {
         bfgs bfgs_o(DecayFit23::targetf, 4);
+        // Bounds are priors in this interface, so anything the caller attached
+        // to a slot has to reach the optimiser that actually moves it. Without
+        // this the bound was accepted, stored, serialised — and ignored.
+        apply_context_bounds(bfgs_o, p, 4);
 
         bfgs_o.fix(1);    // gamma
         bfgs_o.fix(2);    // r0
@@ -361,6 +399,13 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitData *p) {
         // bfgs_o.maxiter = 100;
         if (!fixed[1] && (x[4] <= 0.)) {
             bfgs_o.free(1);
+            // gamma is a fraction and must stay in [kMinGamma, kMaxGamma]. Impose
+            // it as a *soft* bound: the model still clamps gamma for numerical
+            // safety, but without a restoring gradient beyond the bound the
+            // optimiser used to walk gamma onto the clamp and stall there (a
+            // spurious "all background" corner). The soft bound leaves the true
+            // objective untouched inside the range and only pushes back outside.
+            bfgs_o.set_bounds(1, kMinGamma, kMaxGamma);
             info = bfgs_o.minimize(x, p);
         }
     }
@@ -400,7 +445,7 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         int n_fixed,
         double bifl_scatter,
         double p2s_flag,
-        DecayFitData *p,
+        DecayFitContext *p,
         double *out,
         int n_out_cols,
         bool retain_model) {
@@ -412,28 +457,27 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         fixed[0] || !fixed[1] || !fixed[2] || !fixed[3] ||
         p2s_flag > 0.0 || !std::isfinite(x0[1]) || x0[1] > 0.0 ||
         !std::isfinite(x0[2]) || x0[2] != 0.0 ||
-        static_cast<int>(p->irf.size()) != n_cols ||
-        static_cast<int>(p->background.size()) != n_cols ||
-        p->corrections.size() < 5) {
+        p->problem == nullptr ||
+        static_cast<int>(p->problem->irf.size()) != n_cols ||
+        static_cast<int>(p->problem->background.size()) != n_cols ||
+        p->counts == nullptr || p->corrections == nullptr) {
         return false;
     }
 
     const int n_channels = n_cols / 2;
-    const double *corrections = p->corrections.data();
+    const double *corrections = p->corrections;
     const double g = corrections[1];
     if (!std::isfinite(g) || g <= 0.0 ||
-        !std::equal(p->irf.begin(), p->irf.begin() + n_channels,
-                    p->irf.begin() + n_channels)) {
+        !std::equal(p->problem->irf.begin(), p->problem->irf.begin() + n_channels,
+                    p->problem->irf.begin() + n_channels)) {
         return false;
     }
     // The generic model evaluates bg[i] * gamma even for gamma == 0. Avoid
     // changing its NaN semantics for non-finite background inputs.
-    for (double value : p->background) {
+    for (double value : p->problem->background) {
         if (!std::isfinite(value)) return false;
     }
 
-    p->data.resize(static_cast<size_t>(n_cols));
-    p->model.resize(static_cast<size_t>(n_cols), 0.0);
 
     // During minimization the first half stores Cp+Cs and the second half Cp.
     // This avoids an allocation for combined counts. The original Jordi row is
@@ -446,8 +490,8 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         const int cp = static_cast<int>(data[i]);
         const int cs = static_cast<int>(data[i + n_channels]);
         if (cp < 0 || cs < 0) return false;
-        p->data[i] = cp + cs;
-        p->data[i + n_channels] = cp;
+        p->counts[i] = cp + cs;
+        p->counts[i + n_channels] = cp;
         sp += cp;
         ss += cs;
         data_entropy += count_entropy(cp) + count_entropy(cs);
@@ -457,8 +501,8 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
     const double log_total = total > 0.0 ? std::log(total) : 0.0;
     const double log_perpendicular = std::log(perpendicular_scale);
     const double log_channel_scale = std::log1p(perpendicular_scale);
-    double *model = p->model.data();
-    const double *irf = p->irf.data();
+    double *model = p->model();
+    const double *irf = p->problem->irf.data();
 
     // A one-bin IRF over one complete TAC period has a piecewise geometric
     // convolution. Its Poisson score therefore depends on only five row
@@ -494,13 +538,13 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
     bool used_sufficient_statistics = false;
     if (delta_irf) {
         for (int i = 0; i < delta_bin; ++i) {
-            const double counts = p->data[i];
+            const double counts = p->counts[i];
             prefix_counts += counts;
             prefix_index += counts * i;
         }
-        pulse_counts = p->data[delta_bin];
+        pulse_counts = p->counts[delta_bin];
         for (int i = delta_bin + 1; i < n_channels; ++i) {
-            const double counts = p->data[i];
+            const double counts = p->counts[i];
             suffix_counts += counts;
             suffix_distance += counts * (i - delta_bin);
         }
@@ -590,8 +634,8 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         constexpr double log_model_threshold = -27.631021115928547;
         double w = 0.0;
         for (int i = 0; i < n_channels; ++i) {
-            const int cp = p->data[i + n_channels];
-            const int cs = p->data[i] - cp;
+            const int cp = p->counts[i + n_channels];
+            const int cs = p->counts[i] - cp;
             if (model[i] > 0.0) {
                 const double log_q = std::log(model[i]);
                 const double log_mp = log_q + log_parallel_scale;
@@ -626,8 +670,8 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         evaluate(tau, true);
         double two_istar_sum = 0.0;
         for (int i = 0; i < n_channels; ++i) {
-            const int cp = p->data[i + n_channels];
-            const int cs = p->data[i] - cp;
+            const int cp = p->counts[i + n_channels];
+            const int cs = p->counts[i] - cp;
             if (cp > 0)
                 two_istar_sum += cp * std::log(model[i] / cp);
             if (cs > 0)
@@ -637,10 +681,10 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
     }
     if (retain_model) {
         for (int i = 0; i < n_channels; ++i) {
-            const int cp = p->data[i + n_channels];
-            const int cs = p->data[i] - cp;
-            p->data[i] = cp;
-            p->data[i + n_channels] = cs;
+            const int cp = p->counts[i + n_channels];
+            const int cs = p->counts[i] - cp;
+            p->counts[i] = cp;
+            p->counts[i + n_channels] = cs;
         }
     }
 
@@ -660,205 +704,3 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
 }
 
 
-void DecayFit23::fit_matrix(
-        double *data_in,
-        int n_rows,
-        int n_cols,
-        double *x0,
-        int n_x0,
-        short *fixed_in,
-        int n_fixed,
-        double bifl_scatter,
-        double p2s_flag,
-        DecayFitData *p,
-        double *out,
-        int n_out_rows,
-        int n_out_cols) {
-    if (data_in == nullptr || x0 == nullptr || fixed_in == nullptr ||
-        p == nullptr || out == nullptr || n_rows < 0 || n_cols <= 0 ||
-        n_x0 < 4 || n_fixed < 4 || n_out_rows != n_rows || n_out_cols < 5) {
-        return;
-    }
-
-    std::vector<short> fixed(fixed_in, fixed_in + n_fixed);
-    if (fixed.size() < 6) fixed.resize(6, 0);
-
-    const unsigned int n_threads = fit23_batch_threads(n_rows);
-    std::vector<DecayFitData> workspaces(n_threads, *p);
-    for (DecayFitData &workspace : workspaces) {
-        workspace.data.resize(static_cast<size_t>(n_cols));
-        workspace.model.resize(static_cast<size_t>(n_cols), 0.0);
-    }
-
-    auto fit_range = [&](unsigned int worker, int begin, int end) {
-        DecayFitData *workspace = &workspaces[worker];
-        for (int i = begin; i < end; ++i) {
-            const double *row = data_in + static_cast<size_t>(i) * n_cols;
-            double *result = out + static_cast<size_t>(i) * n_out_cols;
-            if (fit_tau_only_unpolarized_row(
-                    row, n_cols, x0, n_x0, fixed.data(),
-                    static_cast<int>(fixed.size()), bifl_scatter, p2s_flag,
-                    workspace, result, n_out_cols, i == n_rows - 1)) {
-                continue;
-            }
-
-            for (int channel = 0; channel < n_cols; ++channel)
-                workspace->data[channel] = static_cast<int>(row[channel]);
-            double x[8] = {x0[0], x0[1], x0[2], x0[3],
-                           bifl_scatter, p2s_flag, 0.0, 0.0};
-            const double two_istar = fit(x, fixed.data(), workspace);
-            result[0] = x[0];
-            result[1] = x[1];
-            result[2] = x[2];
-            result[3] = x[3];
-            result[4] = two_istar;
-            if (n_out_cols > 5) result[5] = x[6];
-            if (n_out_cols > 6) result[6] = x[7];
-        }
-    };
-
-    if (n_threads == 1) {
-        fit_range(0, 0, n_rows);
-    } else {
-        std::vector<std::thread> workers;
-        workers.reserve(n_threads);
-        const int block = (n_rows + static_cast<int>(n_threads) - 1) /
-                          static_cast<int>(n_threads);
-        for (unsigned int worker = 0; worker < n_threads; ++worker) {
-            const int begin = static_cast<int>(worker) * block;
-            const int end = std::min(n_rows, begin + block);
-            workers.emplace_back(fit_range, worker, begin, end);
-        }
-        for (std::thread &worker : workers) worker.join();
-    }
-
-    // Preserve the historical postcondition that the caller's container holds
-    // the final row and model after a batch fit.
-    if (n_rows > 0) {
-        p->data = workspaces.back().data;
-        p->model = workspaces.back().model;
-    }
-}
-
-
-std::string DecayFit23::fit_to_json(const double *x,
-                                   const short *fixed,
-                                   const DecayFitData *p,
-                                   double result) {
-    json j;
-
-    if (x != nullptr) {
-        j["parameters"] = json::array();
-        for (int i = 0; i < 8; i++) {
-            j["parameters"].push_back(x[i]);
-        }
-    }
-
-    if (fixed != nullptr) {
-        j["fixed"] = json::array();
-        for (int i = 0; i < 4; i++) {
-            j["fixed"].push_back(static_cast<int>(fixed[i]));
-        }
-    }
-
-    j["result"] = result;
-
-    if (p != nullptr) {
-        json jp;
-        jp["dt"] = p->dt;
-        jp["data_length"] = static_cast<int>(p->data.size());
-        {
-            json jcorr = json::array();
-            for (double v: p->corrections) jcorr.push_back(v);
-            jp["corrections"] = jcorr;
-        }
-        jp["irf_length"] = static_cast<int>(p->irf.size());
-        jp["background_length"] = static_cast<int>(p->background.size());
-        j["mparam"] = jp;
-    }
-
-    return j.dump();
-}
-
-
-std::string DecayFit23::to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result) {
-    return fit_to_json(x, fixed, p, result);
-}
-
-
-void DecayFit23::from_json(const json &j,
-                          double *x,
-                          short *fixed) {
-    if (j.contains("parameters") && j.at("parameters").is_array()) {
-        const auto &params = j.at("parameters");
-        for (int i = 0; i < std::min(8, static_cast<int>(params.size())); ++i) {
-            x[i] = params.at(i);
-        }
-    }
-
-    if (j.contains("fixed") && j.at("fixed").is_array()) {
-        const auto &fixed_arr = j.at("fixed");
-        for (int i = 0; i < std::min(4, static_cast<int>(fixed_arr.size())); ++i) {
-            fixed[i] = static_cast<short>(fixed_arr.at(i));
-        }
-    }
-}
-
-
-std::string DecayFit23::modelf_to_json(const double *param,
-                                      const double *irf,
-                                      const double *bg,
-                                      int Nchannels,
-                                      double dt,
-                                      const double *corrections,
-                                      const double *mfunction,
-                                      int result) {
-    json j;
-
-    if (param != nullptr) {
-        j["parameters"] = json::array();
-        for (int i = 0; i < 4; i++) {
-            j["parameters"].push_back(param[i]);
-        }
-    }
-
-    if (corrections != nullptr) {
-        j["corrections"] = json::array();
-        for (int i = 0; i < 5; i++) {
-            j["corrections"].push_back(corrections[i]);
-        }
-    }
-
-    j["Nchannels"] = Nchannels;
-    j["dt"] = dt;
-    j["result"] = result;
-
-    if (irf != nullptr) {
-        json jirf = json::array();
-        for (int i = 0; i < 2 * Nchannels; ++i) {
-            jirf.push_back(irf[i]);
-        }
-        j["irf"] = jirf;
-    }
-
-    if (bg != nullptr) {
-        json jbg = json::array();
-        for (int i = 0; i < 2 * Nchannels; ++i) {
-            jbg.push_back(bg[i]);
-        }
-        j["background"] = jbg;
-    }
-
-    if (mfunction != nullptr) {
-        json jm = json::array();
-        for (int i = 0; i < 2 * Nchannels; ++i) {
-            jm.push_back(mfunction[i]);
-        }
-        j["model"] = jm;
-    }
-
-    return j.dump();
-}

@@ -31,26 +31,19 @@ public:
      *
      * Fits the fraction of a mixture of two patterns
      *
-     * The two patterns are set by the attributes irf and background of the DecayFitData
+     * The two patterns are set by the attributes irf and background of the DecayFitContext
      * structure.
      *
      * @param x [0] fraction of pattern 1
      * @param fixed not used
-     * @param p an instance of DecayFitData that contains the patterns. The fist pattern is
+     * @param p an instance of DecayFitContext that contains the patterns. The fist pattern is
      * contained in the instrument response function array, the second in the background,
      * array, the experimental data is in the array expdata.
      * @return
      */
-    static double fit(double* x, short* fixed, DecayFitData* p);
-
-    static std::string to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result);
-
-    static void from_json(const json &j,
-                         double *x,
-                         short *fixed);
+    /*! \brief Score \p x without optimising (runs the preamble ``fit`` does). */
+    static double evaluate(double* x, short* fixed, DecayFitContext* p);
+    static double fit(double* x, short* fixed, DecayFitContext* p);
 
 };
 

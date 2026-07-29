@@ -1,4 +1,25 @@
 // SPDX-License-Identifier: BSD-3-Clause
+/*!
+ * \file DecayFit23.h
+ * \brief Single-lifetime Poisson MLE with a time-resolved anisotropy.
+ *
+ * The single-molecule burst workhorse: one lifetime fitted to a
+ * polarisation-resolved decay, modelling the anisotropy so the parallel and
+ * perpendicular channels are described jointly rather than independently.
+ *
+ * These are the **numerical kernels only**, not the way to run the fit. That is
+ * ``make_decay_fit("fit23")``, which returns a ``DecayFitModel``
+ * (see DecayFitModel.h). The kernels deliberately kept their raw-pointer shape
+ * when the library moved to that interface, so the change was one of plumbing
+ * rather than of physics: ``modelf`` and ``correct_input`` are untouched, and the
+ * objective still sees exactly the arrays it always saw — including integer
+ * counts, because the Poisson statistics index a factorial table by count.
+ *
+ * The packed ``x`` the kernels use (parameters, two setup flags and two outputs
+ * in one array) is a property of *these functions*, not of the library's
+ * interface: the model wrapper presents parameters, setup and results as three
+ * separate registry-described vectors and packs them on the way in.
+ */
 #ifndef TTTRLIB_DECAYFIT23_H
 #define TTTRLIB_DECAYFIT23_H
 
@@ -9,21 +30,28 @@
 #include <string>
 #include <sstream>
 
-#include <nlohmann/json.hpp>
-
 #include "i_lbfgs.h"
-#include "DecayFitData.h"
+#include "DecayFitContext.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"
 #include "DecayFit.h"
-
-using json = nlohmann::json;
 
 
 class DecayFit23 {
 
 public:
 
+    /*!
+     * \brief Build the model decay for \p param into \p mfunction.
+     *
+     * \param param ``[tau, gamma, r0, rho]``, already through ``correct_input``.
+     * \param irf Instrument response, ``2 * Nchannels`` (parallel then perpendicular).
+     * \param bg Background pattern, same layout.
+     * \param Nchannels Bins **per polarization**.
+     * \param dt Micro-time bin width.
+     * \param corrections ``[period, g, l1, l2, convolution_stop]``.
+     * \param mfunction Output, ``2 * Nchannels``.
+     */
     static int modelf(
             double *param,
             double *irf,
@@ -34,20 +62,43 @@ public:
             double *mfunction
     );
 
+    /*!
+     * \brief Objective handed to the optimiser.
+     *
+     * \param x Packed parameter vector.
+     * \param pv A ``DecayFitContext*``.
+     */
     static double targetf(double *x, void *pv);
 
-    static double fit(double *x, short *fixed, DecayFitData *p);
-
-    /**
-     * Fast, allocation-free row fit for the unpolarized tau-only case.
+    /*!
+     * \brief Score \p x without optimising.
      *
-     * This is the exact single-exponential specialization used by batch
-     * callers when gamma and r0 are zero, only tau is free, and the two IRF
-     * halves are identical. The input row is converted with the same
-     * double-to-int semantics as the generic Python batch wrapper. Returns
-     * false when the preconditions are not met so callers can fall back to
-     * fit(). On success, out contains [tau, gamma, r0, rho, 2I*] and, when
-     * requested, the corrected and uncorrected anisotropies.
+     * Runs the same preamble as ``fit`` — integrated signals, held-parameter
+     * state — which ``targetf`` needs and does not do itself, so calling
+     * ``targetf`` cold yields NaN rather than a score.
+     */
+    static double evaluate(double *x, short *fixed, DecayFitContext *p);
+
+    /*!
+     * \brief Optimise \p x in place; returns 2I* at the optimum.
+     *
+     * \param x ``[tau, gamma, r0, rho, softbifl_flag, p2s_flag, r_scatter,
+     *        r_experimental]``; the last two are outputs.
+     * \param fixed Which of the first four parameters are held.
+     * \param p Borrowed data context.
+     */
+    static double fit(double *x, short *fixed, DecayFitContext *p);
+
+    /*!
+     * \brief Fast path for the unpolarized, tau-only case.
+     *
+     * Used by the model when gamma and r0 are zero, only tau is free, and the two
+     * IRF halves are identical — the shape a batch of bursts normally has. The
+     * general ``fit`` would give the same answer; this exists because the batched
+     * per-fit cost is a number people rely on.
+     *
+     * \return false when the preconditions do not hold, so the caller falls back
+     *         to ``fit``.
      */
     static bool fit_tau_only_unpolarized_row(
             const double *data,
@@ -58,51 +109,17 @@ public:
             int n_fixed,
             double bifl_scatter,
             double p2s_flag,
-            DecayFitData *p,
+            DecayFitContext *p,
             double *out,
             int n_out_cols,
             bool retain_model = true);
 
-    /// Batch Fit23 entry point shared by all language bindings.
-    static void fit_matrix(
-            double *data_in,
-            int n_rows,
-            int n_cols,
-            double *x0,
-            int n_x0,
-            short *fixed_in,
-            int n_fixed,
-            double bifl_scatter,
-            double p2s_flag,
-            DecayFitData *p,
-            double *out,
-            int n_out_rows,
-            int n_out_cols);
-
+    /*!
+     * \brief Map the user-facing parameters onto the model's internal ones.
+     *
+     * \param return_r when non-zero, also writes the anisotropy outputs into \p x.
+     */
     static void correct_input(double *x, double *xm, double *corrections, int return_r);
-
-    static std::string fit_to_json(const double *x,
-                                   const short *fixed,
-                                   const DecayFitData *p,
-                                   double result);
-
-    static std::string modelf_to_json(const double *param,
-                                      const double *irf,
-                                      const double *bg,
-                                      int Nchannels,
-                                      double dt,
-                                      const double *corrections,
-                                      const double *mfunction,
-                                      int result);
-
-    static std::string to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result);
-
-    static void from_json(const json &j,
-                         double *x,
-                         short *fixed);
 };
 
 

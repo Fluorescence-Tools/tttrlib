@@ -64,7 +64,7 @@ double wcm_p2s(int C, double mp, double ms);
  * (half the number of elements in C and M).
  * @return -log-likelihood for Cp + 2Cs for all micro time channels
  */
-double Wcm_p2s(int* C, double* M, int Nchannels);
+double Wcm_p2s(const int* C, double* M, int Nchannels);
 
 /*!
  * Compute overall 2I* for Cp + 2Cs
@@ -83,7 +83,7 @@ double Wcm_p2s(int* C, double* M, int Nchannels);
  * (half the number of elements in C and M).
  * @return 2I* for Cp + 2Cs
  */
-double twoIstar_p2s(int* C, double* M, int Nchannels);
+double twoIstar_p2s(const int* C, double* M, int Nchannels);
 
 /*!
  * Compute overall 2I* for Cp & Cs
@@ -98,7 +98,7 @@ double twoIstar_p2s(int* C, double* M, int Nchannels);
  * (half the number of elements in C and M).
  * @return 2I* for Cp & Cs
  */
-double twoIstar(int* C, double* M, int Nchannels);
+double twoIstar(const int* C, double* M, int Nchannels);
 
 /*!
  * Compute overall -log-likelihood for Cp & Cs
@@ -109,7 +109,7 @@ double twoIstar(int* C, double* M, int Nchannels);
  * (half the number of elements in C and M).
  * @return -log-likelihood for Cp & Cs
  */
-double Wcm(int* C, double* M, int Nchannels);
+double Wcm(const int* C, double* M, int Nchannels);
 
 
 namespace statistics{

@@ -14,7 +14,7 @@ static std::once_flag logfact_once;
 
 
 // overall log-likelihood w(C,M)
-double twoIstar_1ch(int* C, double* M, int Ndata)
+double twoIstar_1ch(const int* C, double* M, int Ndata)
 {
     double W = 0., W0 = 0.;
     //int nempty = 0;
@@ -143,7 +143,7 @@ double wcm_p2s(int C, double mp, double ms)
   else return -0.5*(logtwopi + log(variance) + (C-meanC)*(C-meanC)/variance) + mp + ms; //chi2w
 }
 
-double Wcm_p2s(int* C, double* M, int Nchannels)
+double Wcm_p2s(const int* C, double* M, int Nchannels)
 {
   double W = 0.;
   for (int i=0; i<Nchannels; i++)
@@ -152,7 +152,7 @@ double Wcm_p2s(int* C, double* M, int Nchannels)
   return -W;
 }
 
-double twoIstar_p2s(int* C, double* M, int Nchannels)
+double twoIstar_p2s(const int* C, double* M, int Nchannels)
 {
   double W = 0., W0 = 0., mp, ms;
   int Cp2s;
@@ -167,7 +167,7 @@ double twoIstar_p2s(int* C, double* M, int Nchannels)
   return -2.*(W-W0)/(double)Nchannels;
 }
 
-double twoIstar(int* C, double* M, int Nchannels)
+double twoIstar(const int* C, double* M, int Nchannels)
 {
   double W = 0;
   for (int i=0; i<2*Nchannels; i++)
@@ -176,7 +176,7 @@ double twoIstar(int* C, double* M, int Nchannels)
   return -W/(double)Nchannels;
 }
 
-double Wcm(int* C, double* M, int Nchannels)
+double Wcm(const int* C, double* M, int Nchannels)
 {
   double W = 0.;
   for (int i=0; i<2*Nchannels; i++)

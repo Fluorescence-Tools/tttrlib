@@ -2,7 +2,93 @@
 
 ## [Unreleased]
 
+### Changed
+- **One interface for every decay fit.** A fit is now built by registry name and
+  called the same way whatever the model: `DecayFit2("fit23", setup, irf)`, a
+  `DecayFitProblem` holding the measurement, a `DecayFitConstraints` saying what
+  may move, and an outcome carrying `parameters`, `results` and `objective`. The
+  per-estimator classes, their per-model `fit_matrix`, and `DecayFitData` are
+  gone; `DecayFitNExp` is registered as `fit_nexp` and is reachable the same way
+  (it never appeared in the registry before).
+
+  Parameters, setup values and results each cross as one flat `double` array
+  whose slots the registry names, so nothing counts positions. `FitRegistry.cpp`
+  now states the **flattening rule** normatively, gains JSON-Schema `array`
+  properties with a `count_from` link for variable-length blocks, a symmetric
+  `results_schema`, an `objective` category replacing the two boolean flags that
+  used to ride inside the parameter vector, and `n_patterns`/`supports_*`
+  capability flags. `decay_fit_setup_vector(name, json)` builds a setup block
+  from named values in **every** binding, so R and Java are not left assembling
+  it by hand.
+
+  New capabilities that fell out of the unification: `fixed` becomes an integer
+  **link vector** (negative fixed, `0` free, `k>0` shares one value across every
+  slot in group `k`); a parameter may carry a **prior**, of which a hard bound is
+  the degenerate uniform case, serialised in the same JSON form ChiSurf uses;
+  one `fit_batch` serves every model instead of five near-copies; `model_curve`
+  returns the model *independent of the data* (which `evaluate` cannot, since it
+  scales to the observed counts); and every model now reports `converged` and
+  `iterations`, which only the multi-exponential fit did before.
+
+  **Linked fits.** `fit_linked` fits many measurements *together* against one
+  parameter vector, with link groups resolved across the whole of it, so a
+  parameter that belongs to the instrument (a rotational correlation time, a
+  g-factor, a timeshift) is informed by every measurement at once while a
+  per-sample parameter stays free. `fit_many` fits rows independently, where a
+  group spanning rows can do nothing because the rows never meet.
+
+  Migration: the former Python API (`Fit23`…`Fit26`, the `fit23`-style helpers,
+  `DecayFitData`, `DecayFit23.modelf`/`fit_matrix`) is kept as a **Python-only**
+  compatibility layer that warns on use and is **removed in 0.29**. It is rebuilt
+  on the new interface and reproduces the same numbers. R and Java took the clean
+  break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
+
+### Fixed
+- **`fconv_per_cs` shifted its wrap-around tail one bin early.** The periodic
+  convolution's tail loop applied a decay step *before* writing bin 0, but the
+  value it held was already the continuation at bin `period_n` — which *is* bin 0
+  of the next period. The three `_cs` kernels (scalar, NEON, and the two-channel
+  NEON) all carried it; `fconv_per()` did not, because its main loop ends one bin
+  earlier and compensates. The error is invisible whenever the decay completes
+  within the excitation period and grows as it does not — 5.8e-5 of the peak at a
+  lifetime of a fifth of the period, and larger for longer lifetimes or higher
+  repetition rates. With the fix the recursion matches an exact circular
+  convolution to 1.3e-15, which is what makes the machine-precision agreement
+  between the two convolution backends a meaningful check rather than a tuned
+  tolerance.
+- **Priors set on a single-row fit were stored, serialised and then ignored.**
+  `DecayFitConstraints::set_prior_json` reached the optimiser in `fit_linked` but
+  not in `DecayFit2::fit` for `fit23`/`24`/`25`/`26`, because those models build
+  their optimiser internally and never saw the constraints. A uniform prior — the
+  documented way to express a hard bound — therefore did nothing on the primary
+  path, silently, while the caller believed the bound held. Bounds now travel on
+  `DecayFitContext` and are applied by every fit2x kernel, including `fit23`'s
+  1-D Brent specialisation (where an unbounded fast path would have made a fit's
+  answer depend on which internal route it took).
+- **Cross-language `fit23` reference tests now start inside the basin they pin.**
+  The 58-photon reference decay is sparse enough that the objective falls
+  monotonically as the lifetime grows, so the historical answer is a *local*
+  minimum with a basin of roughly 0.5–1.2; the old start of 2.1 sat close enough
+  to the edge that a change of 1e-4 in the model flipped it to a converged,
+  successful-looking fit reporting a lifetime in the tens of thousands. The
+  reference values are unchanged. The runaway itself is now pinned by a test, and
+  is documented as a failure mode in `doc/fit-guide.rst`.
+
 ### Added
+- **Two convolution backends behind one call**, `dfa::convolve` /
+  `dfa_convolve(rates, weights, irf, n_bins, shift_bins, method)`. `Recursive`
+  (the default) is the SIMD time-domain recursion the library already used;
+  `Spectral` multiplies the closed-form periodic spectrum by the response's.
+  Benchmarked in `benchmarks/bench_convolution.py` and recorded in `PERF.md`:
+  the recursion is **1.7× to 6.2× faster**, the gap widening with the number of
+  rates, so the frequency domain is *not* the fast path — it is there for the
+  three things the recursion cannot do (an arbitrary measured pattern, an
+  independent cross-check, and a response that wraps around the period). A
+  fractional `shift_bins` is applied to the *response* under either backend,
+  costing one transform independent of the rate count.
+- **`dfa::vv_vh_convolved`**, the polarisation-resolved decay in the form a fit
+  compares against data: both rate products are convolved before the VV/VH
+  projection, because the response acts on the photons and not on the anisotropy.
 - **Bayesian Blocks burst search** (`TTTR::burst_search_bayesian_blocks`, also
   `burst_search(..., mode="bayesian_blocks")`). Rather than asking whether the
   rate near each photon clears a threshold, it finds by dynamic programming the

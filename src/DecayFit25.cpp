@@ -2,6 +2,8 @@
 #include "DecayFit25.h"
 #include "include/Verbose.h"
 
+#include <limits>
+
 
 // normalization
 static thread_local int fixedrho = 0;
@@ -59,15 +61,16 @@ if (is_verbose()) {
 
 double DecayFit25::targetf(double* x, void* pv)
 {
+    if (((DecayFitContext *) pv) != nullptr) ((DecayFitContext *) pv)->iterations++;
     fit_signals.corrections = &fit_corrections;
 
     double w, xm[4], Bgamma;
-    DecayFitData* p = (DecayFitData*)pv;
+    DecayFitContext* p = (DecayFitContext*)pv;
 
-    int *expdata = p->data.data();
-    int Nchannels = p->n_channels();
-    double *irf = p->irf.data(), *bg = p->background.data(),
-            *corrections = p->corrections.data(), *M = p->model.data();
+    const int *expdata = p->counts;
+    int Nchannels = p->n_bins;
+    double *irf = const_cast<double *>(p->irf()), *bg = const_cast<double *>(p->background()),
+            *corrections = const_cast<double *>(p->corrections), *M = p->model();
 
     correct_input(x, xm, corrections, 0);
     DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
@@ -87,7 +90,26 @@ double DecayFit25::targetf(double* x, void* pv)
 }
 
 
-double DecayFit25::fit (double* x, short* fixed, DecayFitData* p)
+/*!
+ * Score `x` without optimising, with the same preamble `fit` runs.
+ *
+ * See DecayFit24::evaluate — `targetf` alone is not a complete evaluation.
+ */
+double DecayFit25::evaluate(double *x, short *fixed, DecayFitContext *p) {
+    if (p == nullptr || x == nullptr || fixed == nullptr || !p->is_usable()) {
+        return std::numeric_limits<double>::infinity();
+    }
+    fit_signals.corrections = &fit_corrections;
+    if (firstcall) init_fact();
+    firstcall = 0;
+    softbifl = (x[6] < 0.);
+    p2s_twoIstar = 1;
+    fit_signals.compute_signal_and_background(p->counts, p->background(), p->n_bins);
+    return DecayFit25::targetf(x, p);
+}
+
+
+double DecayFit25::fit (double* x, short* fixed, DecayFitContext* p)
 {
     // x is:
     // [0] tau1 always fixed
@@ -106,25 +128,37 @@ double DecayFit25::fit (double* x, short* fixed, DecayFitData* p)
     (void)B; // silence unused variable warning
     (void)i; // silence unused variable warning
 
+    // Fail safely on inconsistently sized Jordi arrays instead of reading past
+    // the end of irf/background (see DecayFitContext::is_usable).
+    if (p == nullptr || x == nullptr || fixed == nullptr ||
+        !p->is_usable()) {
+        if (x != nullptr) x[0] = -1.0;
+        return std::numeric_limits<double>::infinity();
+    }
+
     if (firstcall) init_fact();
     firstcall = 0;
     softbifl = (x[6]<0.);
     p2s_twoIstar = 1;
 
-    int *expdata = p->data.data();
-    int Nchannels = p->n_channels();
-    double *irf = p->irf.data(), *bg = p->background.data(),
-            *corrections = p->corrections.data(), *M = p->model.data();
+    const int *expdata = p->counts;
+    int Nchannels = p->n_bins;
+    double *irf = const_cast<double *>(p->irf()), *bg = const_cast<double *>(p->background()),
+            *corrections = const_cast<double *>(p->corrections), *M = p->model();
 
     // total signal and background
 
     fixedrho = 0;
-    fit_signals.compute_signal_and_background(p);
+    fit_signals.compute_signal_and_background(expdata, bg, Nchannels);
 
     // xtmp: same order as for fit23: [tau gamma r0 rho]
     xtmp[0] = x[0]; xtmp[1] = x[4]; xtmp[2] = x[5]; xtmp[3] = 1.;
 
     bfgs bfgs_o(targetf, 4);
+        // Bounds are priors in this interface, so anything the caller attached
+        // to a slot has to reach the optimiser that actually moves it. Without
+        // this the bound was accepted, stored, serialised — and ignored.
+        apply_context_bounds(bfgs_o, p, 4);
 
     bfgs_o.fix(0);	// tau
     bfgs_o.fix(2); 	// r0
@@ -165,63 +199,4 @@ if (is_verbose()) {
     x[7] = xtmp[7]; x[8] = xtmp[8];
     return tIstarbest;
 
-}
-
-
-std::string DecayFit25::to_json(const double *x,
-                               const short *fixed,
-                               const DecayFitData *p,
-                               double result) {
-    json j;
-
-    if (x != nullptr) {
-        j["parameters"] = json::array();
-        for (int i = 0; i < 9; i++) {
-            j["parameters"].push_back(x[i]);
-        }
-    }
-
-    if (fixed != nullptr) {
-        j["fixed"] = json::array();
-        for (int i = 0; i < 5; i++) {
-            j["fixed"].push_back(static_cast<int>(fixed[i]));
-        }
-    }
-
-    j["result"] = result;
-
-    if (p != nullptr) {
-        json jp;
-        jp["dt"] = p->dt;
-        jp["data_length"] = static_cast<int>(p->data.size());
-        {
-            json jcorr = json::array();
-            for (double v: p->corrections) jcorr.push_back(v);
-            jp["corrections"] = jcorr;
-        }
-        jp["irf_length"] = static_cast<int>(p->irf.size());
-        jp["background_length"] = static_cast<int>(p->background.size());
-        j["mparam"] = jp;
-    }
-
-    return j.dump();
-}
-
-
-void DecayFit25::from_json(const json &j,
-                          double *x,
-                          short *fixed) {
-    if (j.contains("parameters") && j.at("parameters").is_array()) {
-        const auto &params = j.at("parameters");
-        for (int i = 0; i < std::min(9, static_cast<int>(params.size())); ++i) {
-            x[i] = params.at(i);
-        }
-    }
-
-    if (j.contains("fixed") && j.at("fixed").is_array()) {
-        const auto &fixed_arr = j.at("fixed");
-        for (int i = 0; i < std::min(5, static_cast<int>(fixed_arr.size())); ++i) {
-            fixed[i] = static_cast<short>(fixed_arr.at(i));
-        }
-    }
 }

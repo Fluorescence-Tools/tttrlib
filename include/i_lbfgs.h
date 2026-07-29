@@ -19,6 +19,7 @@
 
 #include <cmath>      /* std::sqrt, std::fabs, std::isfinite */
 #include <cstdlib>    /* std::abs */
+#include <limits>     /* std::numeric_limits (soft-bound sentinels) */
 #include <vector>
 #include <algorithm>  /* std::min, std::max */
 
@@ -183,6 +184,32 @@ class bfgs
     N = n;
     xd.assign(N, 0.0);
     fixed.assign(N, 0);
+    lb.assign(N, -std::numeric_limits<double>::infinity());
+    ub.assign(N, std::numeric_limits<double>::infinity());
+  }
+
+  /*!
+   * @brief Soft box constraint on parameter @p i: keep it within [@p lo, @p hi].
+   *
+   * Implemented as a smooth exterior penalty added to the objective rather than
+   * a hard projection/clamp. A hard clamp (e.g. the caller sanitising a
+   * parameter to a maximum before evaluating) makes the objective *flat* beyond
+   * the bound: the numerical gradient there is zero, the line search sees no
+   * reason to come back, and the optimiser stalls pinned at the bound even when
+   * a better interior point exists. A soft bound instead adds
+   * @f$k\,(x-hi)^2@f$ once @f$x>hi@f$ (and symmetrically below @p lo), which is
+   * zero and gradient-free inside the box — so the true objective is untouched
+   * where it matters — but rises with a real gradient outside, pushing the
+   * iterate back in. @p stiffness scales the penalty; the default suits an
+   * O(1) objective. Call with no bound (the default @f$\pm\infty@f$) to leave a
+   * parameter unconstrained.
+   */
+  void set_bounds(int i, double lo, double hi, double stiffness = 1.0e6) {
+    if (i < 0 || i >= N) return;
+    lb[i] = lo;
+    ub[i] = hi;
+    bound_k = stiffness;
+    has_bounds = true;
   }
 
   // set epsilon explicitly
@@ -259,10 +286,18 @@ class bfgs
     std::vector<double> z(n);
     for (int j = 0; j < n; j++) z[j] = x[idx[j]];
 
+    // Objective seen by the optimiser: the target plus the soft-bound penalty
+    // (identically zero when no bounds are set, so the unconstrained path is
+    // unchanged). Using it everywhere f was called makes both the line search
+    // and the numerical gradient feel the bounds.
+    auto fp = [&](double* xx) -> double {
+      return f(xx, pcopy) + bound_penalty(xx);
+    };
+
     // evaluate f at a reduced-space point (fixed entries stay at input values)
     auto eval = [&](const std::vector<double>& zz) -> double {
       for (int j = 0; j < n; j++) xd[idx[j]] = zz[j];
-      return f(xd.data(), pcopy);
+      return fp(xd.data());
     };
 
     // Gradient in the reduced space. Uses the registered analytic gradient when
@@ -273,19 +308,29 @@ class bfgs
     auto grad = [&](const std::vector<double>& zz, std::vector<double>& g) -> double {
       for (int j = 0; j < n; j++) xd[idx[j]] = zz[j];
       if (fgrad != nullptr) {
-        const double fval = fgrad(xd.data(), gfull.data(), pcopy);
+        double fval = fgrad(xd.data(), gfull.data(), pcopy);
+        // The analytic gradient does not know about the soft bounds, so add the
+        // penalty and its (piecewise-linear) gradient here.
+        if (has_bounds) {
+          fval += bound_penalty(xd.data());
+          for (int j = 0; j < n; j++) {
+            const int i = idx[j];
+            if (xd[i] < lb[i]) gfull[i] += -2.0 * bound_k * (lb[i] - xd[i]);
+            else if (xd[i] > ub[i]) gfull[i] += 2.0 * bound_k * (xd[i] - ub[i]);
+          }
+        }
         for (int j = 0; j < n; j++) g[j] = gfull[idx[j]];
         return fval;
       }
-      double fval = f(xd.data(), pcopy);
+      double fval = fp(xd.data());
       for (int j = 0; j < n; j++) {
         const double temp = zz[j];
         double h = sqrt_eps * std::fabs(temp);
         if (h == 0.) h = sqrt_eps;
         xd[idx[j]] = temp + h;
-        const double w1 = f(xd.data(), pcopy);
+        const double w1 = fp(xd.data());
         xd[idx[j]] = temp - h;
-        const double w2 = f(xd.data(), pcopy);
+        const double w2 = fp(xd.data());
         xd[idx[j]] = temp;
         g[j] = 0.5 * (w1 - w2) / h;
       }
@@ -403,6 +448,21 @@ class bfgs
   void* pcopy;
   std::vector<double> xd;
   std::vector<int> fixed;
+  std::vector<double> lb, ub;   ///< per-parameter soft bounds (±inf = unbounded)
+  double bound_k = 1.0e6;        ///< penalty stiffness for soft bounds
+  bool has_bounds = false;       ///< skip the penalty entirely when unused
+
+  /// Smooth exterior penalty enforcing the soft box bounds (0 inside the box).
+  double bound_penalty(const double* x) const {
+    if (!has_bounds) return 0.0;
+    double p = 0.0;
+    for (int i = 0; i < N; ++i) {
+      if (fixed[i]) continue;
+      if (x[i] < lb[i]) { const double d = lb[i] - x[i]; p += bound_k * d * d; }
+      else if (x[i] > ub[i]) { const double d = x[i] - ub[i]; p += bound_k * d * d; }
+    }
+    return p;
+  }
 
   void setdefaults()
   {

@@ -44,32 +44,28 @@ convolution_stop = len(irf) // 2 - 1
 corrections = np.array([period, 1.0, 0.1, 0.1, convolution_stop])
 
 true_parameters = np.array([4.0, 0.01, 0.5, 0.9, 1.0])
-probability_model = np.zeros_like(irf)
-tttrlib.DecayFit24.modelf(
-    true_parameters,
-    irf,
-    background,
-    dt,
-    corrections,
-    probability_model,
-)
+_setup24 = tttrlib.setup_vector(
+    'fit24', dt=dt, period=period, convolution_stop=int(convolution_stop))
+fit24 = tttrlib.DecayFit2('fit24', _setup24, irf.tolist())
+
+problem = tttrlib.DecayFitProblem(2, len(irf) // 2, dt)
+problem.irf = tttrlib.VectorDouble(irf.tolist())
+problem.background = tttrlib.VectorDouble(background.tolist())
+
+probability_model = np.asarray(fit24.model_curve(true_parameters, problem))
 
 data = np.random.poisson(probability_model * 500_000 / probability_model.sum())
 
-fit24 = tttrlib.Fit24(
-    dt=dt,
-    irf=irf,
-    background=background,
-    period=period,
-    convolution_stop=convolution_stop,
-)
+problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
 
-initial = np.array([3.5, 0.02, 0.7, 0.5, 1.0])
-fixed = np.array([0, 0, 0, 0, 0], dtype=np.int16)
-result = fit24(data=data, initial_values=initial, fixed=fixed, include_model=True)
+initial = [3.5, 0.02, 0.7, 0.5, 1.0]
+# 0 = free, -1 = held. Everything is fitted here.
+constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, 0, 0, 0]))
+outcome = fit24.fit(initial, constraints, problem)
+result = {"x": np.asarray(outcome.parameters), "twoIstar": outcome.objective}
 
 plt.plot(data, label="synthetic data")
-plt.plot(result["model"], label="Fit24 model")
+plt.plot(np.asarray(problem.model), label="fit24 model")
 plt.xlabel("microtime channel")
 plt.ylabel("counts")
 plt.legend()

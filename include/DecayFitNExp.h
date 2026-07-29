@@ -18,6 +18,15 @@ struct DecayFitNExpOptions {
     double period = 0.0;
     int convolution_stop = -1;
 
+    /// Tail-fit start channel. When >= 0 the fit is a **tail fit**: each
+    /// exponential component is a pure decay ``exp(-(i - tail_start)*dt/tau)``
+    /// from ``tail_start`` (no IRF reconvolution — the IRF argument is ignored
+    /// for the shape), and channels before ``tail_start`` are excluded from the
+    /// likelihood. This is the standard approach for FRET sensitised-emission
+    /// decays, whose rise/prompt is not a simple instrument response. -1 (the
+    /// default) keeps the normal reconvolution fit.
+    int tail_start = -1;
+
     double tau_min = 1.0e-3;
     double tau_max = 100.0;
     double lifetime_tolerance = 1.0e-4;
