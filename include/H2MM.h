@@ -127,6 +127,28 @@ struct H2mmChannelMap {
                 return i < compressed_channels.size() ? compressed_channels[i] : -1;
         return -1;
     }
+    /**
+     * @brief Build a map from a bare list of source channels.
+     *
+     * The allocation itself, without an ``H2MM`` engine — for callers that
+     * assembled their photon streams some other way (several source files, a
+     * burst table, a nanotime-split stream set) and still want *this* id
+     * layout rather than a second, subtly different one.
+     * ``H2MM::build_channel_map`` is a thin wrapper over it.
+     *
+     * @param used_channels Routing-channel ids present in the source data
+     *        (duplicates and order do not matter).
+     * @param n_streams Number of photon streams.
+     * @param n_states Number of hidden states.
+     * @param max_channel Largest id the target container's record field holds.
+     * @throws std::runtime_error naming the numbers when the ids do not fit.
+     */
+    static H2mmChannelMap allocate(
+        const std::vector<int>& used_channels,
+        int n_streams, int n_states,
+        int max_channel = H2MM_PTU_MAX_CHANNEL
+    );
+
     /// Highest id the split will write; ``-1`` for an empty map.
     int highest_channel() const {
         int hi = -1;
@@ -171,6 +193,20 @@ struct H2mmStateSidecar {
 
     void write(const std::string& filename) const;
     static H2mmStateSidecar read(const std::string& filename);
+
+    /**
+     * @brief Fill ``states`` and ``streams`` from plain arrays.
+     *
+     * ``H2MM::state_sidecar`` is the usual way in; this is for callers that
+     * derived the assignment themselves — from several source files, or from a
+     * decode the engine did not perform — so that they still write *this*
+     * format rather than inventing a parallel one.  The two arrays must be the
+     * same length (one entry per photon of the source file).
+     */
+    void set_arrays(
+        unsigned char* states_in, int n_states_in,
+        unsigned char* streams_in, int n_streams_in
+    );
 
     /// Number of photons assigned to ``state``.
     long long count_state(int state) const;

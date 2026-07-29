@@ -62,22 +62,14 @@ H2mmChannelMap H2mmChannelMap::from_json(const std::string& payload) {
     return m;
 }
 
-H2mmChannelMap H2MM::build_channel_map(
-    std::shared_ptr<TTTR> src, int n_states, int max_channel
-) const {
-    if (!src) throw std::invalid_argument("build_channel_map: null TTTR");
-    if (n_states < 1) throw std::invalid_argument("build_channel_map: n_states < 1");
-    if (n_streams_ < 1)
-        throw std::invalid_argument("build_channel_map: no streams (load bursts first)");
-
-    src->find_used_routing_channels();
-    std::set<int> used;
-    {
-        signed char* chans = nullptr; int n_chans = 0;
-        src->get_used_routing_channels(&chans, &n_chans);
-        for (int i = 0; i < n_chans; ++i) used.insert(static_cast<int>(chans[i]));
-        free(chans);
-    }
+H2mmChannelMap H2mmChannelMap::allocate(
+    const std::vector<int>& used_channels, int n_streams, int n_states, int max_channel
+) {
+    if (n_states < 1)
+        throw std::invalid_argument("H2mmChannelMap::allocate: n_states < 1");
+    if (n_streams < 1)
+        throw std::invalid_argument("H2mmChannelMap::allocate: n_streams < 1");
+    const std::set<int> used(used_channels.begin(), used_channels.end());
 
     // Compress the source ids first.  A file's channels are usually sparse
     // (1, 12, 30 for three detectors is ordinary) and those gaps are dead weight
@@ -87,7 +79,7 @@ H2mmChannelMap H2MM::build_channel_map(
     // immediately after -- everything the split writes ends up in one dense run
     // starting at 0.
     const size_t n_used = used.size();
-    const size_t need = static_cast<size_t>(n_streams_) * n_states;
+    const size_t need = static_cast<size_t>(n_streams) * n_states;
     const size_t total = n_used + need;
     if (total > static_cast<size_t>(max_channel) + 1) {
         // Loud, with the numbers, and pointing at the path that has no budget:
@@ -95,7 +87,7 @@ H2mmChannelMap H2MM::build_channel_map(
         // looks perfectly plausible downstream.
         std::string msg =
             "H2MM::build_channel_map: " + std::to_string(n_used) +
-            " source channels + " + std::to_string(n_streams_) + " streams x " +
+            " source channels + " + std::to_string(n_streams) + " streams x " +
             std::to_string(n_states) + " states needs " + std::to_string(total) +
             " routing-channel ids, but only " + std::to_string(max_channel + 1) +
             " (0.." + std::to_string(max_channel) + ") are available. The target "
@@ -108,7 +100,7 @@ H2mmChannelMap H2MM::build_channel_map(
     }
 
     H2mmChannelMap m;
-    m.n_streams = n_streams_;
+    m.n_streams = n_streams;
     m.n_states = n_states;
     m.max_channel = max_channel;
     m.used_channels.assign(used.begin(), used.end());   // std::set -> ascending
@@ -117,10 +109,43 @@ H2mmChannelMap H2MM::build_channel_map(
         m.compressed_channels[i] = static_cast<int>(i);
     m.channels.resize(need);
     int next = static_cast<int>(n_used);
-    for (int s = 0; s < n_streams_; ++s)          // stream major
+    for (int s = 0; s < n_streams; ++s)          // stream major
         for (int st = 0; st < n_states; ++st)     // state minor
             m.channels[static_cast<size_t>(s) * n_states + st] = next++;
     return m;
+}
+
+H2mmChannelMap H2MM::build_channel_map(
+    std::shared_ptr<TTTR> src, int n_states, int max_channel
+) const {
+    if (!src) throw std::invalid_argument("build_channel_map: null TTTR");
+    if (n_streams_ < 1)
+        throw std::invalid_argument("build_channel_map: no streams (load bursts first)");
+
+    src->find_used_routing_channels();
+    std::vector<int> used;
+    {
+        signed char* chans = nullptr; int n_chans = 0;
+        src->get_used_routing_channels(&chans, &n_chans);
+        used.reserve(static_cast<size_t>(std::max(n_chans, 0)));
+        for (int i = 0; i < n_chans; ++i) used.push_back(static_cast<int>(chans[i]));
+        free(chans);
+    }
+    return H2mmChannelMap::allocate(used, n_streams_, n_states, max_channel);
+}
+
+void H2mmStateSidecar::set_arrays(
+    unsigned char* states_in, int n_states_in,
+    unsigned char* streams_in, int n_streams_in
+) {
+    if (n_states_in != n_streams_in)
+        throw std::invalid_argument(
+            "H2mmStateSidecar::set_arrays: states has " + std::to_string(n_states_in) +
+            " entries but streams has " + std::to_string(n_streams_in) +
+            " -- both are one entry per source photon");
+    const size_t n = static_cast<size_t>(std::max(n_states_in, 0));
+    states.assign(states_in, states_in + n);
+    streams.assign(streams_in, streams_in + n);
 }
 
 // ---------------------------------------------------------------------------

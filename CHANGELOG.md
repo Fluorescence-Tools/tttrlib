@@ -44,6 +44,12 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
+- **A C++ throw from `TTTR`, `TTTRMask` or `H2MM` aborted the interpreter.**
+  Those three `.i` files had no SWIG `%exception` handler, so an exception
+  raised to report a bad argument (a mismatched array length, an unreadable
+  file, a foreign msgpack payload) unwound through the wrapper and terminated
+  the process — no traceback, and no way to catch it. They now raise
+  `RuntimeError` like the rest of the library.
 - **`get_used_routing_channels` could return the channels the file had before
   you edited it.** `set_routing_channel_at` is public but
   `find_used_routing_channels`, which refreshes the cache it invalidates, was
@@ -95,6 +101,17 @@
   is documented as a failure mode in `doc/fit-guide.rst`.
 
 ### Added
+- **`TTTR::set_routing_channel`** — the bulk companion to
+  `set_routing_channel_at`. Relabelling a whole measurement through the
+  per-event setter costs one binding call per photon, which at photon scale is
+  the dominant cost of the operation. Refreshes `used_routing_channels`, so the
+  accessor cannot go stale behind it.
+- **`H2mmChannelMap::allocate` and `H2mmStateSidecar::set_arrays`** — the id
+  allocation and the sidecar format, usable without an `H2MM` engine. A caller
+  that assembled its photon streams some other way (several source files, a
+  burst table, a nanotime-split stream set) can now write *this* layout and
+  *this* file rather than a second, subtly different one; `H2MM::build_channel_map`
+  is a thin wrapper over the former.
 - **H2MM state decoding that reports a distribution, not a winner.** Viterbi
   answers "what is the single most likely state sequence"; most burst analysis
   instead asks "how do the photons distribute over the states", and the argmax

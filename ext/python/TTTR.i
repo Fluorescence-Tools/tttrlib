@@ -39,7 +39,9 @@
 %apply (unsigned long long* IN_ARRAY1, int DIM1) {(unsigned long long *macro_times, int n_macrotimes)} 
 %apply (unsigned short* IN_ARRAY1, int DIM1) {(unsigned short *micro_times, int n_microtimes)} 
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *routing_channels, int n_routing_channels)} 
-%apply (signed char * IN_ARRAY1, int DIM1) {(signed char *event_types, int n_event_types)} 
+%apply (signed char * IN_ARRAY1, int DIM1) {(signed char *event_types, int n_event_types)}
+// Bulk routing-channel replacement (TTTR::set_routing_channel).
+%apply (signed char * IN_ARRAY1, int DIM1) {(signed char *input, int n_input)} 
 
 // Release the Python GIL around heavy, Python-object-free file I/O so other
 // threads can run while a file is loaded. numpy typemaps marshal under the GIL
@@ -73,7 +75,21 @@ TTTRLIB_NUMPY_INT64_RETURN(TTTR::burst_search_bayesian_blocks)
 // enough to be worth releasing the GIL for, and it touches no Python objects.
 TTTRLIB_NOGIL(TTTR::burst_search_bayesian_blocks)
 
+// TTTR validates its inputs by throwing (a mismatched array length, an
+// unreadable file). Without a handler that unwinds through the wrapper and
+// aborts the interpreter -- no traceback, no chance to catch it -- rather than
+// raising a Python exception.
+%exception {
+    try {
+        $action
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    }
+}
+
 %include "TTTR.h"
+
+%exception;   // scoped to this header only
 
 #ifdef SWIGPYTHON
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}
