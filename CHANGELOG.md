@@ -44,6 +44,20 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
+- **A response sized for one channel was accepted on a multi-channel fit, and
+  read out of bounds.** `DecayFitProblem::validation_error` treated any
+  `n_bins`-long `irf`/`background` as "shared", but a polarisation-resolved model
+  reads `n_channels * n_bins` samples straight out of the array — so a
+  half-length response was an out-of-bounds read, not a shorthand. It was silent:
+  the memory past a heap vector is usually mapped, so the curve came back with
+  plausible numbers and the process died later in unrelated code. Found by
+  bisecting exactly that: a crash in a different test file, four runs out of
+  four. A shared response is now accepted only when there is one channel to share
+  it with, and the message names both sizes.
+- **`model_curve` validated nothing.** `fit` reaches the sizing check through
+  `bind`/`is_usable`; `model_curve` bypassed it and handed raw pointers to the
+  kernel. It now calls `require_valid()` first, so a mis-sized problem raises
+  instead of corrupting the heap.
 - **`fconv_per_cs` shifted its wrap-around tail one bin early.** The periodic
   convolution's tail loop applied a decay step *before* writing bin 0, but the
   value it held was already the continuation at bin `period_n` — which *is* bin 0

@@ -5,7 +5,23 @@ Seidel/redRobin *harvest* has started. This file is the entry point for picking
 it up.
 
 Approved plan: `~/.claude/plans/check-seidel-and-robin-sleepy-frog.md`.
-Nothing here is committed — both repos have large uncommitted working trees.
+
+**Committed** (local only, never pushed):
+- tttrlib `77662d29` — the interface, the DFA kernel, both convolution backends,
+  the two defect fixes, docs/examples/tests. 76 files.
+- chisurf `ffb742849` — the mle facade + burst-MLE wizard reaching tttrlib
+  through the interface. 6 files.
+
+Both were committed through a **temporary `GIT_INDEX_FILE`**, because both trees
+are shared with other agent instances that had their own work staged — in
+tttrlib a peer's Bayesian-Blocks CHANGELOG hunk, in chisurf 53 staged files. A
+bare `git commit` would have swept those in. Afterwards the shared index was
+realigned with `git reset -- <only my paths>` so a peer's next bare commit does
+not revert this work. **Do the same next time; do not `git add -A`.**
+
+Still uncommitted from this work: the `PERF.md` section (that file is untracked
+and carries another agent's benchmark content, so committing it would have taken
+their work too).
 
 ---
 
@@ -165,6 +181,40 @@ PERF.md, CHANGELOG.md
 
 ---
 
+## Defect found late: `DecayFit2::model_curve` corrupts memory
+
+`model_curve` segfaults when several short-lived `DecayFit2` + `DecayFitProblem`
+pairs are created, used and destroyed in one process with `fit()` interleaved.
+It is **not** reproducible with one long-lived fitter, and not with
+`model_curve` alone — 8 create/curve/destroy cycles pass. It needs the mix:
+
+```python
+# segfaults on iteration 1, inside tttrlib's model_curve
+for i in range(6):
+    f = Fit2x(settings(), model=Fit2xModel.FIT23)   # one fitter for the curve
+    c = f.model_curve([2.0, 0.0, 0.38, 1.2])
+    d = poisson_from(c)
+    g = Fit2x(settings(), model=Fit2xModel.FIT23)   # a second for the fit
+    g.fit(d, [2.0, 0.0, 0.38, 1.2], [0, -1, -1, -1], include_model=True)
+    del f, g; gc.collect()
+```
+
+The crash surfaces one cycle *after* the corrupting call, which is the signature
+of a heap overwrite rather than a dangling pointer — and it is loud in a test
+suite: it took down unrelated tests in `test_state_split.py` at 91%, four runs
+out of four, alternating SIGSEGV and SIGABRT.
+
+Sizes check out on inspection (`model_curve` allocates `problem.total_size()` =
+`n_channels * n_bins`, and `DecayFit23::modelf` writes `2 * Nchannels` where
+`Nchannels` is bins per polarisation), so the overflow is somewhere below
+`modelf` — `fconv_per_cs_2ch` and the shared `fit_signals`/`fit_corrections`
+statics are the places to look. Worth running the repro under ASan.
+
+**chisurf does not use it.** A `Fit2x.model_curve()` pass-through was written and
+then **removed** rather than shipped, because a facade method that can segfault
+is worse than an absent one. Nothing else calls it, so the exposure today is
+limited to direct `DecayFit2.model_curve` users.
+
 ## Open / unverified at handover
 
 - **chisurf's non-GUI suite is UNVERIFIED — it hangs.** Resolve this before
@@ -183,39 +233,50 @@ PERF.md, CHANGELOG.md
 Three attempts, none reached a result. Each time the process **blocks** rather
 than works: ~13 s of CPU over 7–8 minutes, 0.3–0.5% CPU, state `S`.
 
-A `sample(1)` of the stuck process shows the main thread inside a **PyQt slot
-chain ending in `poll`** — a nested Qt event loop, i.e. something is waiting on a
-modal dialog that will never be answered headless. ZMQ IO/reaper threads sit in
-`kevent` alongside it, so a chisurf server/client may be involved.
+A `sample(1)` of the stuck process settles what it is — and it is **not** a modal
+dialog, which is what the PyQt frames in the stack first suggested. Searching
+206 KB of stack for `QDialog`, `QMessageBox`, `QEventLoop`, `exec_` and
+`processEvents` returns **zero** hits.
+
+What it actually is: the main thread sits inside a **Python slot invoked from Qt**
+(`QObject::event` -> `PyQtSlotProxy::unislot` -> `PyQtSlot::call`), and inside
+that slot a C-level call blocks in `qt_safe_poll` -> `poll`. Underneath, a
+sub-branch shows `zmq_msg_recv` -> `socket_base_t::recv` -> `mailbox_t::recv` ->
+`signaler_t::wait` -> `poll`.
+
+**So it is a blocking ZMQ receive made from a Qt slot** — chisurf's ZMQ/JSON-RPC
+layer waiting on a server that never answers. Hunt for a test that stands up a
+chisurf server or client and blocks on an RPC, *not* for a stray `QMessageBox`.
+
+That also explains two dead ends: `QT_QPA_PLATFORM=offscreen` cannot help,
+because offscreen rendering does not unblock a socket; and
+`-k 'not gui and not widget and not window'` cannot help, because the blocking
+code is not in a test named for the GUI.
 
 What has been ruled out:
 
-- **Not my invocation.** It hangs with the project's own filter,
-  `-k 'not gui and not widget and not window'`, and with
+- **Not my invocation.** It hangs with the project's own filter and with
   `QT_QPA_PLATFORM=offscreen` set.
 - **Not the tttrlib changes**, on the evidence available: chisurf needed no
-  source change for the interface, and both fixes are ≪1e-4 in chisurf's regime.
-  Unproven, though — nobody has run this suite to completion recently.
-
-What is still unknown: **which test**. All three runs produced *zero* output,
-even with `-v` writing straight to a file, which suggests it may hang during
-**collection/import** rather than inside a test body.
+  source change for the interface, and both fixes are <<1e-4 in chisurf's
+  regime. A ZMQ RPC has nothing to do with a convolution kernel. Still unproven
+  in the strict sense — nobody has run this suite to completion recently.
+- **Not a test body.** `--collect-only` hangs too, so it happens at
+  import/collection time.
 
 How to chase it next (in order):
 
-1. `pip install pytest-timeout` (not installed) then
-   `--timeout=60 --timeout-method=thread` — the traceback names the culprit
-   directly. This is by far the fastest route.
-2. Failing that, bisect by directory: run `test/` alone, then each
-   `chisurf/plugins/**/test` directory, with `-p no:cacheprovider -x` and output
-   going to a terminal, not a pipe.
-3. `--collect-only` first — if *that* hangs, it is an import-time modal and the
-   offending module is the one after the last one listed.
-4. Cross-check against the known trap in this codebase: raw `QMessageBox` /
-   `QProgressDialog` are banned by a guard test in favour of `ChiSurfMessageBox`
-   / `ChiSurfProgress` precisely because they hang headless. A new one may have
-   slipped in, or a third-party dialog is being raised.
-
+1. A scan that imports each of the 858 test modules in its own subprocess with a
+   timeout was running at handover — that names the module outright. The script
+   is `find_hang.py` (recreate: walk `test/` and every `chisurf/plugins/**/test`,
+   `subprocess.run([python, "-c", "import <mod>"], timeout=45)`, print on
+   `TimeoutExpired`). **Write its output straight to a file** — see below.
+2. `pip install pytest-timeout` (not installed) then
+   `--timeout=60 --timeout-method=thread`, which gives a traceback naming the
+   line inside the module.
+3. Grep the suspects directly: tests touching `chisurf/server`, `ChisurfClient`,
+   `ChiSurfAPI` in `server`/`hybrid` mode, or anything constructing a plugin
+   whose `manifest.json` declares `rpc_methods`.
 **Do not pipe a long run through `tail`** — pytest buffers, and you get nothing
 at all until it exits. That cost ~50 minutes on the first attempt, during which
 the run looked healthy and was in fact parked.

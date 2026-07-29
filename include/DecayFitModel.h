@@ -682,6 +682,13 @@ public:
      */
     std::vector<double> model_curve(const std::vector<double> &parameters,
                                     const DecayFitProblem &problem) const {
+        // Validate before handing raw pointers to a kernel. `fit()` reaches
+        // this check through `bind()`/`is_usable()`; `model_curve` used to skip
+        // it entirely and wrote/read straight out of `problem.irf.data()` and
+        // `background.data()`. An undersized response therefore produced a
+        // plausible-looking curve *and* read past the end of the heap buffer,
+        // which surfaces as a crash somewhere else entirely, one call later.
+        problem.require_valid();
         std::vector<double> curve(problem.total_size(), 0.0);
         std::vector<double> x = parameters;
         x.resize(static_cast<std::size_t>(model_->n_parameters(problem)), 0.0);

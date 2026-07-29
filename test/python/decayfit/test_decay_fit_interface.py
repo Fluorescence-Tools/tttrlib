@@ -591,3 +591,102 @@ class TestPriors(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestModelCurveRejectsAMalformedProblem(unittest.TestCase):
+    """`model_curve` must validate what it is handed, as `fit` does.
+
+    It writes and reads through raw pointers into `problem.irf` and
+    `problem.background`. A two-channel model reads `2 * n_bins` samples, so a
+    response sized for one channel is an out-of-bounds read — and a silent one,
+    because the heap just past a vector is usually mapped. The curve comes back
+    looking plausible; the process dies later, somewhere unrelated.
+
+    That is not hypothetical: it took down tests in a different file entirely,
+    four runs out of four, and cost a long bisect to trace back here.
+    """
+
+    FN = 64
+    DT = 0.032
+
+    def _pieces(self):
+        half = np.exp(-0.5 * ((np.arange(self.FN) * self.DT - 0.3) / 0.05) ** 2)
+        half /= half.sum()
+        setup = tttrlib.setup_vector(
+            "fit23", dt=self.DT, period=32.0, convolution_stop=self.FN - 1)
+        fit = tttrlib.DecayFit2(
+            "fit23", setup, np.concatenate([half, half]).tolist())
+        return half, fit
+
+    def test_a_one_channel_response_on_a_two_channel_fit_is_refused(self):
+        half, fit = self._pieces()
+        problem = tttrlib.DecayFitProblem(2, self.FN, self.DT)
+        problem.irf = tttrlib.VectorDouble(half.tolist())
+        problem.background = tttrlib.VectorDouble(np.zeros(self.FN).tolist())
+
+        self.assertIn("irf has 64 samples", problem.validation_error())
+        with self.assertRaises(ValueError):
+            fit.model_curve([2.0, 0.0, 0.38, 1.2], problem)
+
+    def test_a_short_background_is_refused_too(self):
+        half, fit = self._pieces()
+        problem = tttrlib.DecayFitProblem(2, self.FN, self.DT)
+        problem.irf = tttrlib.VectorDouble(
+            np.concatenate([half, half]).tolist())
+        problem.background = tttrlib.VectorDouble(np.zeros(self.FN).tolist())
+
+        with self.assertRaises(ValueError):
+            fit.model_curve([2.0, 0.0, 0.38, 1.2], problem)
+
+    def test_a_correctly_sized_problem_still_works(self):
+        """The guard must not cost the valid case."""
+        half, fit = self._pieces()
+        problem = tttrlib.DecayFitProblem(2, self.FN, self.DT)
+        problem.irf = tttrlib.VectorDouble(
+            np.concatenate([half, half]).tolist())
+        problem.background = tttrlib.VectorDouble(
+            np.zeros(2 * self.FN).tolist())
+
+        curve = np.asarray(fit.model_curve([2.0, 0.0, 0.38, 1.2], problem))
+        self.assertEqual(curve.size, 2 * self.FN)
+        self.assertTrue(np.all(np.isfinite(curve)))
+        self.assertGreater(float(curve.sum()), 0.0)
+
+    def test_many_short_lived_fitters_survive_curve_then_fit(self):
+        """The lifecycle the crash was first seen through.
+
+        Build a fitter, take a model curve, build another, fit, discard both,
+        repeat. Nothing here should touch memory it does not own.
+        """
+        import gc
+
+        for i in range(8):
+            half, fit = self._pieces()
+            problem = tttrlib.DecayFitProblem(2, self.FN, self.DT)
+            problem.irf = tttrlib.VectorDouble(
+                np.concatenate([half, half]).tolist())
+            problem.background = tttrlib.VectorDouble(
+                np.zeros(2 * self.FN).tolist())
+
+            curve = np.clip(
+                np.asarray(fit.model_curve([2.0, 0.0, 0.38, 1.2], problem)),
+                0.0, None)
+            data = np.random.default_rng(i).poisson(
+                curve / curve.sum() * 40000).astype(float)
+
+            _, other = self._pieces()
+            second = tttrlib.DecayFitProblem(2, self.FN, self.DT)
+            second.irf = tttrlib.VectorDouble(
+                np.concatenate([half, half]).tolist())
+            second.background = tttrlib.VectorDouble(
+                np.zeros(2 * self.FN).tolist())
+            second.data = tttrlib.VectorDouble(data.tolist())
+
+            out = other.fit(
+                [2.0, 0.0, 0.38, 1.2],
+                tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, -1, -1, -1])),
+                second)
+            self.assertGreater(out.parameters[0], 0.0)
+
+            del fit, other, problem, second, curve, out
+            gc.collect()

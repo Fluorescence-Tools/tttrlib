@@ -238,7 +238,9 @@ data:
 
    curve = fit.model_curve([2.0, 0.0, 0.0, 1.0], problem)
 
-Use it to simulate, or to plot a model before a measurement exists. ``evaluate``
+Use it to simulate, or to plot a model before a measurement exists. It checks the
+problem first — same sizing rules as ``fit`` — and raises rather than reading
+past the end of a mis-sized response. ``evaluate``
 is the other thing: it scores parameters *against* the data, and for models that
 profile their amplitude against the observed counts it scales the curve to them
 — so on empty data it returns zeros. ``supports_model_curve()`` reports whether a
@@ -345,6 +347,15 @@ Common failure modes
 
    * - Symptom
      - What it usually is
+   * - ``ValueError: irf has N samples, expected 2N``.
+     - The instrument response is sized for **one** detection channel while the
+       problem describes two. A shared response is only shared when there is one
+       channel to share it with: a polarisation-resolved model reads
+       ``n_channels * n_bins`` samples straight out of the array, so a
+       half-length response is an out-of-bounds read rather than a shorthand.
+       Stack the two responses (``[VV, VH]``) as you do for the data. This is
+       refused rather than tolerated because it used to be *silent* — the curve
+       came back looking plausible and the process died later, elsewhere.
    * - The lifetime comes back in the thousands, and ``2I*`` looks *good*.
      - Sparse data. Below a few hundred photons the likelihood barely
        distinguishes a real lifetime from one far longer than the recorded

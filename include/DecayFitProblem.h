@@ -213,12 +213,27 @@ public:
               << n << " (n_channels * n_bins)";
             return s.str();
         }
-        if (!irf.empty() && irf.size() != static_cast<std::size_t>(n_bins) && irf.size() != n) {
-            return "irf must hold n_bins samples (shared) or n_channels * n_bins (per channel)";
+        // A response sized for *one* channel is accepted as "shared", but only
+        // when there is one channel to share it with. A two-channel model reads
+        // `2 * n_bins` samples straight out of `irf.data()`, so a half-length
+        // response there is an out-of-bounds read, not a shorthand — and it is
+        // silent, because the memory just past a heap vector is usually mapped.
+        // This was reached in practice: `model_curve` on a two-channel fit23
+        // with a one-channel IRF returned plausible numbers and corrupted the
+        // heap, surfacing as a crash in an unrelated test much later.
+        if (!irf.empty() && irf.size() != n &&
+            !(n_channels == 1 && irf.size() == static_cast<std::size_t>(n_bins))) {
+            std::stringstream s;
+            s << "irf has " << irf.size() << " samples, expected " << n
+              << " (n_channels * n_bins)";
+            return s.str();
         }
-        if (!background.empty() && background.size() != static_cast<std::size_t>(n_bins) &&
-            background.size() != n) {
-            return "background must hold n_bins samples or n_channels * n_bins";
+        if (!background.empty() && background.size() != n &&
+            !(n_channels == 1 && background.size() == static_cast<std::size_t>(n_bins))) {
+            std::stringstream s;
+            s << "background has " << background.size() << " samples, expected "
+              << n << " (n_channels * n_bins)";
+            return s.str();
         }
         for (std::size_t k = 0; k < patterns.size(); ++k) {
             if (patterns[k].size() != static_cast<std::size_t>(n_bins) &&
