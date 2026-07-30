@@ -176,6 +176,7 @@
         "z0": {"type": "number", "default": 2.0, "description": "Axial 1/e² radius (µm) for gaussian3d."},
         "zR": {"type": "number", "default": 1.0, "description": "Rayleigh range (µm) for gaussian_lorentzian (w(z)² = w0²(1+(z/zR)²))."},
         "analytic": {"type": "boolean", "default": false, "description": "gaussian3d only: evaluate analytically (no voxels)."},
+        "radial": {"type": "boolean", "default": false, "description": "Store a cylindrically symmetric field on a (rho, z) table instead of an x-y-z lattice. Same physics when the PSF really is symmetric about the optical axis, and much cheaper: an 81x81x161 lattice (8.5 MB) becomes 41x161 (53 kB), so the table stays in cache and the lookup is bilinear rather than trilinear. Measured 1.4x faster at 0.05 um spacing and 2.9x at 0.025 um, with the cost becoming independent of resolution. Cannot represent an astigmatic, tilted or comatic focus - anything varying with azimuth needs the lattice, which is the default."},
         "amplitude": {"type": "number", "default": 1.0},
         "value": {"type": "number", "default": 1.0, "description": "uniform only: the constant value."},
         "extent_xy": {"type": "number", "default": 2.0, "description": "Grid half-extent XY (µm); size to the focus, not the box, for cheap construction."},

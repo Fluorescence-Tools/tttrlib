@@ -544,6 +544,23 @@ Measured on a 200-molecule open volume, 8 cores, in order of what they are worth
 * **``drift_midpoint: false``: 22-26 %** on a grid field, by dropping the second field
   lookup. Safe for shear-like fields such as ``poiseuille``; see the discussion above for
   when it is not.
+* **A cylindrically symmetric PSF on a ``(rho, z)`` table: up to 2.9x**, and the cost
+  stops depending on lateral resolution. Pass ``"radial": true`` on a ``gaussian3d``,
+  ``gaussian_lorentzian`` or ``radial`` field. A confocal focus depends only on distance
+  from the optical axis and on z, so an x-y-z lattice stores one number per azimuth that
+  is the same number: 81x81x161 (8.5 MB) becomes 41x161 (53 kB), which is the difference
+  between streaming from RAM and reading from cache on every lookup, and the interpolation
+  drops from trilinear to bilinear. Measured at 400k windows: 4.4 -> 3.9 s at 0.10 um
+  spacing, 5.4 -> 3.9 s at 0.05 um, and 11.7 -> 4.0 s at 0.025 um -- the radial run is
+  flat while the lattice degrades.
+
+  This is **less general, so it is opt-in**: a radial table cannot represent an
+  astigmatic focus (different x and y waists), a tilted or comatic PSF, or anything else
+  that varies with azimuth. The full lattice remains the default. Note the radial form is
+  also the *more* accurate of the two where it applies, having no azimuthal interpolation
+  error -- at 0.10 um spacing the two differ by 2.3 % in count rate, and it is the lattice
+  that is wrong.
+
 * **Threads in the default window mode: only above ~2000 molecules.** The per-window
   fork/join dominates below that -- at 200 molecules forcing it on is *three times slower*.
   ``parallel_threshold`` (default 2048) encodes this; the measured speedup is 1.1x at 2000

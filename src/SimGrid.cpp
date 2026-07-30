@@ -9,6 +9,7 @@ namespace tttrlib {
 
 void SimGrid::build_bbox(double threshold_frac) {
     clear_bbox();
+    if (radial_) return;   // the (rho,z) table is already the tight support
     if (nx <= 0 || ny <= 0 || nz <= 0 || data.empty() || threshold_frac >= 1.0) return;
     double peak = 0.0;
     for (double v : data) { double a = std::fabs(v); if (a > peak) peak = a; }
@@ -41,6 +42,21 @@ SimGrid SimGrid::analytic_gaussian3d(double w0, double z0v, double amplitude) {
 
 double SimGrid::at(double x, double y, double z) const {
     if (analytic_) return an_amp_ * std::exp(an_cxy_ * (x * x + y * y) + an_cz_ * z * z);
+    if (radial_) {
+        // Bilinear in (rho, z): the azimuth carries no information for a cylindrically
+        // symmetric field, so it is not stored and not interpolated over.
+        const double fr = std::sqrt(x * x + y * y) / dr_;
+        const double fz = (z - zr0_) / dzr_;
+        if (fr > nr_ - 1 || fz < 0.0 || fz > nzr_ - 1) return 0.0;
+        const int ir = int(fr), iz = int(fz);
+        const double tr = fr - ir, tz = fz - iz;
+        const size_t sr = (ir < nr_ - 1) ? 1 : 0;
+        const size_t sz = (iz < nzr_ - 1) ? size_t(nr_) : 0;
+        const double* d = rz_.data() + size_t(iz) * nr_ + ir;
+        const double c0 = d[0] * (1 - tr) + d[sr] * tr;
+        const double c1 = d[sz] * (1 - tr) + d[sz + sr] * tr;
+        return c0 * (1 - tz) + c1 * tz;
+    }
     if (nx <= 0 || ny <= 0 || nz <= 0) return 0.0;
 
     // Two-step lookup: cheap bounding-box reject before the trilinear (when active).
@@ -167,6 +183,48 @@ SimGrid SimGrid::from_radial(const std::vector<double>& rz, int nr, int nz_in,
         }
     }
     return g;
+}
+
+SimGrid SimGrid::gaussian3d_radial(double w0, double z0v,
+                                   double extent_xy, double extent_z,
+                                   double spacing, double amplitude) {
+    const double w0sq = w0 * w0, z0sq = z0v * z0v;
+    return radial_from([&](double r, double z) {
+        return amplitude * std::exp(-2.0 * (r * r / w0sq + z * z / z0sq));
+    }, extent_xy, extent_z, spacing);
+}
+
+SimGrid SimGrid::gaussian_lorentzian_radial(double w0, double zR,
+                                            double extent_xy, double extent_z,
+                                            double spacing, double amplitude) {
+    const double w0sq = w0 * w0;
+    return radial_from([&](double r, double z) {
+        const double wz2 = (zR > 0.0) ? w0sq * (1.0 + (z / zR) * (z / zR)) : w0sq;
+        return amplitude * (w0sq / wz2) * std::exp(-2.0 * r * r / wz2);
+    }, extent_xy, extent_z, spacing);
+}
+
+SimGrid SimGrid::from_radial_table(const std::vector<double>& rz, int nr, int nz_in,
+                                   double r_step, double z_step,
+                                   double extent_xy, double extent_z,
+                                   double spacing, double amplitude) {
+    if (nr < 2 || nz_in < 2 || r_step <= 0.0 || z_step <= 0.0 ||
+        rz.size() < size_t(nr) * nz_in)
+        return SimGrid();
+    const double z_lo = -0.5 * (nz_in - 1) * z_step;
+    auto sample = [&](double r, double z) -> double {
+        double fr = r / r_step, fz = (z - z_lo) / z_step;
+        if (fr < 0.0 || fz < 0.0 || fr > nr - 1 || fz > nz_in - 1) return 0.0;
+        int ir = int(fr), iz2 = int(fz);
+        int ir1 = (ir < nr - 1) ? ir + 1 : ir, iz1 = (iz2 < nz_in - 1) ? iz2 + 1 : iz2;
+        double tr = fr - ir, tz = fz - iz2;
+        double v00 = rz[size_t(iz2) * nr + ir],  v10 = rz[size_t(iz2) * nr + ir1];
+        double v01 = rz[size_t(iz1) * nr + ir],  v11 = rz[size_t(iz1) * nr + ir1];
+        double v0 = v00 * (1 - tr) + v10 * tr, v1 = v01 * (1 - tr) + v11 * tr;
+        return v0 * (1 - tz) + v1 * tz;
+    };
+    return radial_from([&](double r, double z) { return amplitude * sample(r, z); },
+                       extent_xy, extent_z, spacing);
 }
 
 SimGrid SimGrid::uniform(double value,

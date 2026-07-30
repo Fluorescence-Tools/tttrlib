@@ -191,6 +191,28 @@ static bool grid_focus_aabb(const SimGrid& g, double focus_threshold,
         x0 = -rxy; x1 = rxy; y0 = -rxy; y1 = rxy; z0 = -rz; z1 = rz;
         return true;
     }
+    if (g.radial_) {
+        // The support of a radial table is a cylinder, so the AABB follows from the largest
+        // (rho, z) above threshold rather than from a voxel sweep.
+        double vmax = 0.0;
+        for (double v : g.rz_) if (v > vmax) vmax = v;
+        if (vmax <= 0.0 || g.nr_ <= 0) return false;
+        const double thr = ((focus_threshold > 0.0) ? focus_threshold : 1e-3) * vmax;
+        int ir1 = -1, iz0i = g.nzr_, iz1 = -1;
+        for (int iz = 0; iz < g.nzr_; ++iz)
+            for (int ir = 0; ir < g.nr_; ++ir)
+                if (g.rz_[size_t(iz) * g.nr_ + ir] > thr) {
+                    if (ir > ir1) ir1 = ir;
+                    if (iz < iz0i) iz0i = iz;
+                    if (iz > iz1) iz1 = iz;
+                }
+        if (ir1 < 0) return false;
+        const double rxy = (ir1 + 1) * g.dr_;                 // pad one cell, as below
+        x0 = -rxy; x1 = rxy; y0 = -rxy; y1 = rxy;
+        z0 = g.zr0_ + (iz0i - 1) * g.dzr_;
+        z1 = g.zr0_ + (iz1 + 1) * g.dzr_;
+        return true;
+    }
     if (g.nx <= 0 || g.data.empty()) return false;
     double vmax = 0.0;
     for (double v : g.data) if (v > vmax) vmax = v;
@@ -862,17 +884,32 @@ SimGrid grid_from(const json& g) {
     if (t == "analytic_gaussian3d" || (t == "gaussian3d" && g.value("analytic", false)))
         return SimGrid::analytic_gaussian3d(g.value("w0", 0.3), g.value("z0", 2.0),
                                             g.value("amplitude", 1.0));
+    // "radial": true keeps a cylindrically symmetric field on a (rho, z) table instead of
+    // an x-y-z lattice -- far cheaper, but it cannot represent an astigmatic or otherwise
+    // azimuth-dependent focus, so it is opt-in and the lattice stays the default.
+    const bool radial = g.value("radial", false);
     if (t == "gaussian3d")
-        return SimGrid::gaussian3d(g.value("w0", 0.3), g.value("z0", 2.0),
-                                   ext_xy, ext_z, sp, g.value("amplitude", 1.0));
+        return radial
+            ? SimGrid::gaussian3d_radial(g.value("w0", 0.3), g.value("z0", 2.0),
+                                         ext_xy, ext_z, sp, g.value("amplitude", 1.0))
+            : SimGrid::gaussian3d(g.value("w0", 0.3), g.value("z0", 2.0),
+                                  ext_xy, ext_z, sp, g.value("amplitude", 1.0));
     if (t == "gaussian_lorentzian")
-        return SimGrid::gaussian_lorentzian(g.value("w0", 0.3), g.value("zR", 1.0),
-                                            ext_xy, ext_z, sp, g.value("amplitude", 1.0));
+        return radial
+            ? SimGrid::gaussian_lorentzian_radial(g.value("w0", 0.3), g.value("zR", 1.0),
+                                                  ext_xy, ext_z, sp, g.value("amplitude", 1.0))
+            : SimGrid::gaussian_lorentzian(g.value("w0", 0.3), g.value("zR", 1.0),
+                                           ext_xy, ext_z, sp, g.value("amplitude", 1.0));
     if (t == "radial" && g.contains("rz"))
-        return SimGrid::from_radial(g["rz"].get<std::vector<double>>(),
-                                    g.value("nr", 0), g.value("nz", 0),
-                                    g.value("r_step", 0.05), g.value("z_step", 0.05),
-                                    ext_xy, ext_z, sp, g.value("amplitude", 1.0));
+        return radial
+            ? SimGrid::from_radial_table(g["rz"].get<std::vector<double>>(),
+                                         g.value("nr", 0), g.value("nz", 0),
+                                         g.value("r_step", 0.05), g.value("z_step", 0.05),
+                                         ext_xy, ext_z, sp, g.value("amplitude", 1.0))
+            : SimGrid::from_radial(g["rz"].get<std::vector<double>>(),
+                                   g.value("nr", 0), g.value("nz", 0),
+                                   g.value("r_step", 0.05), g.value("z_step", 0.05),
+                                   ext_xy, ext_z, sp, g.value("amplitude", 1.0));
     return SimGrid::uniform(g.value("value", 1.0), ext_xy, ext_z, sp);
 }
 } // namespace

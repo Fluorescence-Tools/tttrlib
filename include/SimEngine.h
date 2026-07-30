@@ -291,6 +291,11 @@ private:
         double lx0, ly0, lz0, lx1, ly1, lz1;
         if (focus_aabb_valid_) {
             lx0 = fx0_; ly0 = fy0_; lz0 = fz0_; lx1 = fx1_; ly1 = fy1_; lz1 = fz1_;
+        } else if (!exc_.empty() && exc_[0].radial_) {
+            double r_max, z_max;
+            exc_[0].radial_extent(r_max, z_max);
+            lx0 = -r_max; ly0 = -r_max; lz0 = -z_max;
+            lx1 = r_max;  ly1 = r_max;  lz1 = z_max;
         } else if (!exc_.empty() && exc_[0].nx > 0) {
             const SimGrid& g = exc_[0];
             lx0 = g.x0; ly0 = g.y0; lz0 = g.z0;

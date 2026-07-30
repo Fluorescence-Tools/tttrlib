@@ -829,3 +829,85 @@ def test_independent_mode_injects_flow_aware():
     assert abs(n_win - n_ind) / max(n_win, n_ind) < 0.15, (
         f"window mode and independent mode disagree on the count rate: "
         f"{n_win} vs {n_ind} photons")
+
+
+# ---------------------------------------------------------------------------
+# Cylindrical symmetry: the (rho, z) fast path
+# ---------------------------------------------------------------------------
+def _run_with_excitation(exc, windows=120000, seed=3):
+    cfg = {
+        "settings": {"dt": 0.001, "n_ph_max": 10 ** 12, "max_windows": windows,
+                     "seed_diffusion": seed, "seed_emission": seed + 2, "n_channels": 1,
+                     "per_molecule_skip": False},
+        "box": {"xy": 2.0, "z": 4.0},
+        "species": [{"D": 1.0, "q": [50.0]}],
+        "k_rad": [0.0], "k_nrad": [0.0], "background": [0.0],
+        "population": [200.0],
+        "excitation": exc,
+    }
+    e = tttrlib.SimEngine.from_json(json.dumps(cfg))
+    e.run()
+    return e.n_photons()
+
+
+def test_radial_psf_matches_the_lattice():
+    """A (rho, z) table reproduces the x-y-z lattice for a symmetric PSF.
+
+    The excitation of a confocal focus depends only on distance from the optical axis and
+    on z, so storing it per (x, y, z) keeps one number per azimuth that is the same number.
+    The radial form drops that axis: 81x81x161 becomes 41x161, which is the difference
+    between streaming 8.5 MB from RAM on every lookup and reading 53 kB out of cache.
+
+    Both must describe the same field, so the photon counts must agree. They are not
+    bit-identical: the two interpolate differently off-node, and the radial one is in fact
+    the more faithful of the two, since it has no azimuthal interpolation error at all --
+    which is why the agreement is asserted at the few-per-cent level rather than exactly,
+    and why the coarse grid disagrees more than the fine one.
+
+    This is a speed path, not a replacement: it cannot represent an astigmatic focus (one
+    with different x and y waists), a tilted PSF, or anything else that varies with
+    azimuth. Those need the lattice, which stays the default.
+    """
+    fine = dict(type="gaussian3d", w0=0.3, z0=1.5, extent_xy=2.0, extent_z=4.0,
+                spacing=0.05, amplitude=1.0)
+    n_lattice = _run_with_excitation({**fine, "radial": False})
+    n_radial = _run_with_excitation({**fine, "radial": True})
+    assert n_lattice > 3000, f"too few photons to compare: {n_lattice}"
+    assert abs(n_lattice - n_radial) / n_lattice < 0.05, (
+        f"radial and lattice PSFs disagree: {n_lattice} vs {n_radial}")
+
+    # ...and both must agree with the exact analytic Gaussian they discretise.
+    n_analytic = _run_with_excitation(
+        {"type": "analytic_gaussian3d", "w0": 0.3, "z0": 1.5, "amplitude": 1.0})
+    assert abs(n_radial - n_analytic) / n_analytic < 0.05, (
+        f"radial PSF disagrees with the analytic field: {n_radial} vs {n_analytic}")
+
+
+def test_radial_psf_is_faster_and_resolution_independent():
+    """Halving the voxel size must not cost the radial path anything.
+
+    The point of dropping the azimuth is that the table stops depending on the lateral
+    sampling: refining from 0.05 um to 0.025 um multiplies the lattice by eight (1.1 M ->
+    8.3 M voxels) and its lookup cost with it, while the radial table only doubles in one
+    direction and stays in cache. Measured: the lattice run goes 5.4 s -> 11.7 s while the
+    radial one holds at 3.9 s.
+
+    Asserted as a ratio so the test means the same on any machine, with a wide bar (the
+    lattice must be at least 1.5x slower at fine spacing) well inside the ~2.9x measured.
+    """
+    import time
+
+    fine = dict(type="gaussian3d", w0=0.3, z0=1.5, extent_xy=2.0, extent_z=4.0,
+                spacing=0.025, amplitude=1.0)
+
+    def timed(radial):
+        t0 = time.perf_counter()
+        n = _run_with_excitation({**fine, "radial": radial})
+        return time.perf_counter() - t0, n
+
+    t_lat, n_lat = timed(False)
+    t_rad, n_rad = timed(True)
+    assert n_lat > 3000 and n_rad > 3000
+    assert t_lat > 1.5 * t_rad, (
+        f"the radial table should be much cheaper at fine spacing: "
+        f"lattice {t_lat:.2f}s vs radial {t_rad:.2f}s")
