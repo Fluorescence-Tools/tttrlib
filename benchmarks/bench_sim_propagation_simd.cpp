@@ -1,37 +1,37 @@
-// Is SIMD worth it for the simulator's propagation kernel?  ANSWER: no -- ~8 % end to end.
+// Is SIMD worth it for the simulator's propagation kernel?
 //
 // Build and run:
 //   clang++ -std=c++17 -O3 -mcpu=native -Iinclude \
 //       benchmarks/bench_sim_propagation_simd.cpp -o /tmp/simd_bench && /tmp/simd_bench
 //
-// Measured on an 8-core Apple arm64:
+// Measured on an 8-core Apple arm64 (NEON, 4 lanes), five interleaved runs:
 //
-//   scalar (ziggurat)              11.02 ns/molecule-step   1.00x
-//   NEON 2x f64 (probit)           13.37 ns/molecule-step   0.82x
-//   NEON 4x f32 (probit)           11.15 ns/molecule-step   0.99x
-//   NEON 4x f32, vector RNG         7.4  ns/molecule-step   1.4-1.5x (run to run)
+//   scalar (ziggurat)                    9.5-9.9 ns/molecule-step   1.00x
+//   NEON 2x f64, scalar RNG             13-14   ns/molecule-step   ~0.7x
+//   NEON 4x f32, scalar RNG             11      ns/molecule-step   ~0.9x
+//   SimSimd.h (vector RNG, Box-Muller)   9.1-9.8 ns/molecule-step   1.01-1.05x
 //
-// The first two vector rows lose because their random numbers are still drawn one lane at
-// a time: vectorising the arithmetic alone is pointless, since the arithmetic was never the
-// cost. Only the last row -- four independent xoshiro128+ generators stepped in NEON --
-// wins, and it wins 1.4-1.5x.
+// Three things this measurement teaches, in increasing order of how much time they cost:
 //
-// That 1.4-1.5x applies to 11 ns of the engine's ~45 ns per molecule-step, so it is worth
-// about 8 % of a run. Buying it would cost: a structure-of-arrays molecule pool, float32
-// positions, the ziggurat replaced by a probit approximation, and -- the real objection --
-// the per-molecule RNG keying that makes results independent of thread count. Compare
-// active_margin (up to 3x) and independent_molecules (5-7x), both already available and
-// exact. Hence: measured, and declined.
+// 1. Vectorising the arithmetic while still drawing random numbers one lane at a time is
+//    SLOWER than scalar. The arithmetic was never the cost.
 //
-// The engine spends ~82 % of its time on "propagation + loop + RNG", at ~45 ns per
-// molecule-step, and that scales perfectly linearly with molecule count. So the only
-// vectorisation shape that could pay is across molecules. This measures the ceiling for
-// that: the same drift+diffusion+boundary step, scalar (the engine's own ziggurat) versus
-// NEON over 2 doubles and 4 floats, on a structure-of-arrays molecule pool.
+// 2. The transform matters more than the vectorisation. A rational approximation of the
+//    normal quantile looks like the obvious choice and is a trap: its central branch covers
+//    only |z| < 1.97, so 4.85 % of lanes need a scalar fix-up that costs more than the
+//    vectorisation saves (0.71x), and skipping that fix-up silently truncates the
+//    distribution at |z| = 3.22 while mean, variance and a KS test all stay clean.
+//    Box-Muller is exact, table-free and branch-free, and lands at parity-to-slightly-ahead.
 //
-// The vector paths cannot use the ziggurat -- it is a rejection sampler, so its control
-// flow diverges per lane. They use a branch-free rational approximation of the normal
-// quantile (Acklam) instead, which is the standard vectorisable alternative.
+// 3. The scalar ziggurat is very hard to beat at 4 lanes. Its fast path is one 32-bit draw,
+//    a table lookup, a compare and a multiply, taken ~98 % of the time, and its tail is part
+//    of the same rejection loop rather than a separate fix-up.
+//
+// AVX2 (8 lanes) is where a real win should be, and is UNMEASURED for speed here: this
+// machine is arm64. The AVX2 path is checked for correctness by cross-compiling and running
+// under emulation, which says nothing about its throughput. Run this on x86-64 before
+// assuming either way.
+//
 #include <arm_neon.h>
 
 #include <cmath>
@@ -42,6 +42,7 @@
 
 #include "SimXoshiroRandom.h"
 #include "SimZiggurat.h"
+#include "SimSimd.h"
 
 using tttrlib::SimXoshiroRandom;
 using tttrlib::sim_randn;
@@ -171,81 +172,42 @@ static double run_neon_f32(std::vector<float>& x, std::vector<float>& y,
 }
 
 
-// ------------------------------------------- NEON, 4 x float32, VECTORISED RNG TOO
-// Four independent xoshiro128+ generators, one per lane, stepped entirely in NEON: this is
-// the strongest form of the idea -- nothing in the inner loop is scalar.
-struct Xoshiro128x4 {
-    uint32x4_t s0, s1, s2, s3;
-    void seed() {
-        uint32_t a[4] = {0x9E3779B9u, 0x243F6A88u, 0xB7E15162u, 0xDEADBEEFu};
-        uint32_t b[4] = {0x13198A2Eu, 0x85A308D3u, 0x03707344u, 0xCAFEBABEu};
-        uint32_t c[4] = {0xA4093822u, 0x299F31D0u, 0x082EFA98u, 0xFEEDFACEu};
-        uint32_t d[4] = {0x452821E6u, 0x38D01377u, 0xBE5466CFu, 0x34E90C6Cu};
-        s0 = vld1q_u32(a); s1 = vld1q_u32(b); s2 = vld1q_u32(c); s3 = vld1q_u32(d);
-    }
-    inline uint32x4_t next() {
-        const uint32x4_t result = vaddq_u32(s0, s3);
-        const uint32x4_t t = vshlq_n_u32(s1, 9);
-        s2 = veorq_u32(s2, s0);
-        s3 = veorq_u32(s3, s1);
-        s1 = veorq_u32(s1, s2);
-        s0 = veorq_u32(s0, s3);
-        s2 = veorq_u32(s2, t);
-        s3 = vorrq_u32(vshlq_n_u32(s3, 11), vshrq_n_u32(s3, 21));   // rotl(s3, 11)
-        return result;
-    }
-};
-
-static inline float32x4_t probit4(float32x4_t u) {
-    // q = u - 0.5, r = q*q, then the same rational form, all in vector registers.
-    const float32x4_t half = vdupq_n_f32(0.5f);
-    const float32x4_t q = vsubq_f32(u, half);
-    const float32x4_t r = vmulq_f32(q, q);
-    float32x4_t num = vdupq_n_f32(-3.969683028665376e+01f);
-    num = vmlaq_f32(vdupq_n_f32(2.209460984245205e+02f), num, r);
-    num = vmlaq_f32(vdupq_n_f32(-2.759285104469687e+02f), num, r);
-    num = vmlaq_f32(vdupq_n_f32(1.383577518672690e+02f), num, r);
-    num = vmlaq_f32(vdupq_n_f32(-3.066479806614716e+01f), num, r);
-    num = vmlaq_f32(vdupq_n_f32(2.506628277459239e+00f), num, r);
-    num = vmulq_f32(num, q);
-    float32x4_t den = vdupq_n_f32(-5.447609879822406e+01f);
-    den = vmlaq_f32(vdupq_n_f32(1.615858368580409e+02f), den, r);
-    den = vmlaq_f32(vdupq_n_f32(-1.556989798598866e+02f), den, r);
-    den = vmlaq_f32(vdupq_n_f32(6.680131188771972e+01f), den, r);
-    den = vmlaq_f32(vdupq_n_f32(-1.328068155288572e+01f), den, r);
-    den = vmlaq_f32(vdupq_n_f32(1.0f), den, r);
-    return vdivq_f32(num, den);
-}
-
-static double run_neon_full(std::vector<float>& x, std::vector<float>& y,
-                            std::vector<float>& z, std::vector<uint8_t>& alive, int reps) {
-    Xoshiro128x4 rng; rng.seed();
-    const float32x4_t vdrift = vdupq_n_f32(float(VX * DT));
-    const float32x4_t vstep = vdupq_n_f32(float(STEP));
+// -------------------------------- vectorised RNG + quantile, from the library header
+// This used to carry its own copy of the four-lane xoshiro and the quantile. It now uses
+// SimSimd.h, so the thing benchmarked is the thing shipped -- and so the two cannot drift.
+static double run_vector_boxmuller(std::vector<float>& x, std::vector<float>& y,
+                                   std::vector<float>& z, std::vector<uint8_t>& alive,
+                                   int reps) {
+    using namespace tttrlib;
+    using namespace tttrlib::simd;
+    SimRandomV rng; rng.seed(12345u);
+    const int L = kSimdLanes;
+    const f32v vdrift = f_set(float(VX * DT));
+    const f32v vstep = f_set(float(STEP));
     const float box_xy_sq = float(BOX_XY * BOX_XY);
-    const float32x4_t vbox = vdupq_n_f32(box_xy_sq);
-    const float32x4_t vbrs = vdupq_n_f32(float(box_xy_sq / (BOX_Z * BOX_Z)));
-    const float32x4_t inv32 = vdupq_n_f32(2.3283064365386963e-10f);   // 1/2^32
-    auto norm4 = [&]() {
-        float32x4_t u = vmulq_f32(vcvtq_f32_u32(rng.next()), inv32);
-        u = vmaxq_f32(u, vdupq_n_f32(1e-7f));
-        return probit4(u);
-    };
+    const f32v vbrs = f_set(box_xy_sq / float(BOX_Z * BOX_Z));
+    float rr[8];
+    f32v spare = f_set(0.0f); bool have_spare = false;
     auto t0 = std::chrono::steady_clock::now();
     for (int r = 0; r < reps; ++r) {
-        for (size_t i = 0; i + 3 < x.size(); i += 4) {
-            float32x4_t vx = vld1q_f32(&x[i]);
-            float32x4_t vy = vld1q_f32(&y[i]);
-            float32x4_t vz = vld1q_f32(&z[i]);
-            vx = vmlaq_f32(vaddq_f32(vx, vdrift), vstep, norm4());
-            vy = vmlaq_f32(vy, vstep, norm4());
-            vz = vmlaq_f32(vz, vstep, norm4());
-            vst1q_f32(&x[i], vx); vst1q_f32(&y[i], vy); vst1q_f32(&z[i], vz);
-            float32x4_t rr = vmlaq_f32(vmlaq_f32(vmulq_f32(vx, vx), vy, vy),
-                                       vbrs, vmulq_f32(vz, vz));
-            uint32x4_t out = vcgtq_f32(rr, vbox);
-            uint32_t m[4]; vst1q_u32(m, out);
-            for (int k = 0; k < 4; ++k) if (m[k]) alive[i + k] = 0;
+        for (size_t i = 0; i + size_t(L) <= x.size(); i += size_t(L)) {
+            // Box-Muller yields two vectors per call and a block needs three, so the
+            // fourth is carried to the next block instead of thrown away -- that waste was
+            // a quarter of the transform work.
+            f32v gx, gy, gz;
+            if (have_spare) { gx = spare; have_spare = false; sim_normalv_boxmuller(rng, &gy, &gz); }
+            else { sim_normalv_boxmuller(rng, &gx, &gy);
+                   sim_normalv_boxmuller(rng, &gz, &spare); have_spare = true; }
+            f32v vx = *reinterpret_cast<f32v*>(&x[i]);
+            f32v vy = *reinterpret_cast<f32v*>(&y[i]);
+            f32v vz = *reinterpret_cast<f32v*>(&z[i]);
+            vx = f_add(f_add(vx, vdrift), f_mul(vstep, gx));
+            vy = f_add(vy, f_mul(vstep, gy));
+            vz = f_add(vz, f_mul(vstep, gz));
+            f_store(&x[i], vx); f_store(&y[i], vy); f_store(&z[i], vz);
+            f32v r2 = f_add(f_add(f_mul(vx, vx), f_mul(vy, vy)), f_mul(vbrs, f_mul(vz, vz)));
+            f_store(rr, r2);
+            for (int k = 0; k < L; ++k) if (rr[k] > box_xy_sq) alive[i + k] = 0;
         }
     }
     auto t1 = std::chrono::steady_clock::now();
@@ -283,9 +245,13 @@ int main() {
     std::fill(a.begin(), a.end(), 1);
     std::fill(xf.begin(), xf.end(), 0.1f); std::fill(yf.begin(), yf.end(), 0.1f);
     std::fill(zf.begin(), zf.end(), 0.1f);
-    double tfull = run_neon_full(xf, yf, zf, a, REPS);
-    std::printf("  %-28s %8.2f s   %6.2f ns/molecule-step   %5.2fx\n",
-                "NEON 4x f32, vector RNG", tfull, 1e9 * tfull / total, ts / tfull);
+
+    std::fill(a.begin(), a.end(), 1);
+    std::fill(xf.begin(), xf.end(), 0.1f); std::fill(yf.begin(), yf.end(), 0.1f);
+    std::fill(zf.begin(), zf.end(), 0.1f);
+    double tbm = run_vector_boxmuller(xf, yf, zf, a, REPS);
+    std::printf("  SimSimd.h %-14s %8.2f s   %6.2f ns/molecule-step   %5.2fx\n",
+                tttrlib::sim_simd_backend(), tbm, 1e9 * tbm / total, ts / tbm);
 
     std::printf("\n  engine measures ~45 ns per molecule-step for the whole step,\n"
                 "  of which propagation+loop+RNG is ~82%%.\n");

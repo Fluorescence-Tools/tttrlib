@@ -7,6 +7,7 @@
 #include "SimDecay.h"
 #include "SimSpecies.h"
 #include "SimGrid.h"
+#include "SimSimd.h"
 #include "SimVectorGrid.h"
 #include "SimSystem.h"
 #include "SimScanner.h"
@@ -84,6 +85,36 @@
 }
 
 %include "SimGrid.h"
+
+
+// Vectorised normals for the propagation kernel. SWIG is given only the small public
+// surface by hand: parsing SimSimd.h would make it try to wrap the intrinsic vector types
+// (uint32x4_t, __m256i, ...), which are not structures it can generate accessors for.
+// See SimSimd.h for why this cannot reproduce the scalar ziggurat stream.
+namespace tttrlib {
+    struct SimRandomV {
+        void seed(uint32_t base);
+        void seed_lane(int k, uint32_t key);
+        std::vector<double> draw();
+    };
+    const char* sim_simd_backend();
+    int sim_simd_lanes();
+}
+
+%extend tttrlib::SimRandomV {
+    %pythoncode %{
+    def normals(self, n):
+        """Return about `n` standard normals, drawn `sim_simd_lanes()` at a time."""
+        import numpy as np
+        lanes = sim_simd_lanes()
+        rows = max(int(n) // lanes, 1)
+        out = np.empty(rows * lanes, dtype=np.float64)
+        for i in range(rows):
+            out[i * lanes:(i + 1) * lanes] = self.draw()
+        return out
+    %}
+}
+
 %template(VectorSimGrid) std::vector<tttrlib::SimGrid>;
 
 %include "SimVectorGrid.h"

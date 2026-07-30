@@ -588,19 +588,26 @@ What does **not** help, measured so that nobody repeats it:
   with three uniforms of matching variance packed out of two 32-bit draws made the run
   *slower* (3.9 s -> 4.2 s). Its fast path is one 32-bit draw, a table lookup, a compare and
   a multiply, and it is taken ~98 % of the time.
-* **SIMD**, and this one was measured rather than argued
-  (``benchmarks/bench_sim_propagation_simd.cpp``). Vectorising the arithmetic alone is
-  pointless -- NEON over 2 doubles came out at 0.82x and over 4 floats at 0.99x, because
-  the arithmetic was never the cost and their random numbers are still drawn one lane at a
-  time. The honest version, four independent xoshiro128+ generators stepped entirely in
-  NEON, does win: **1.4-1.5x on the propagation kernel**, 11.0 -> 7.4 ns.
+* **SIMD**, measured rather than argued
+  (``benchmarks/bench_sim_propagation_simd.cpp``, primitive in ``include/SimSimd.h``).
+  Vectorising the arithmetic alone *loses* -- 0.7x over 2 doubles, 0.9x over 4 floats --
+  because the arithmetic was never the cost and those versions still draw random numbers one
+  lane at a time. A fully vectorised 32-bit generator with a branch-free Box-Muller reaches
+  **1.01-1.06x** on 4-wide NEON: parity, slightly ahead.
 
-  But that kernel is 11 ns of the engine's ~45 ns per molecule-step, so the win is about
-  **8 % of a run**, and buying it costs a structure-of-arrays molecule pool, float32
-  positions, the ziggurat replaced by a probit approximation, and the per-molecule RNG
-  keying that makes results independent of thread count. Against ``active_margin`` at 3x
-  and ``independent_molecules`` at 5-7x, both already available and exact, it does not earn
-  the risk.
+  The transform turns out to matter more than the vectorisation. A rational approximation of
+  the normal quantile is the obvious choice and a trap: its central branch covers only
+  |z| < 1.97, so 4.85 % of lanes need a scalar fix-up that costs more than vectorising
+  saves (0.71x), while skipping the fix-up truncates the distribution at |z| = 3.22 with
+  mean, variance and a KS test all still clean. Box-Muller is exact, table-free and
+  branch-free, and has neither problem.
+
+  **AVX2 (8 lanes) is where a win should be and is unmeasured**: this machine is arm64, and
+  the AVX2 backend is verified for correctness by cross-compiling and running under
+  emulation, which says nothing about throughput. Anyone on x86-64 should run the benchmark.
+  At 4 lanes, against ``active_margin`` (3x) and ``independent_molecules`` (5-7x), parity is
+  not a reason to take on a structure-of-arrays molecule pool and the loss of the
+  per-molecule RNG keying that makes results thread-count independent.
 
 * **Chasing the field lookup by profile alone.** A sampling profile attributes ~60 % of the
   run to the return from the excitation lookup, which reads as "``std::exp`` dominates". It
