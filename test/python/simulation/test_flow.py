@@ -393,6 +393,40 @@ def test_flow_components_mismatched():
 
 
 # ---------------------------------------------------------------------------
+def test_rotation_preserves_radius():
+    """A rigid rotation must not change a molecule's distance from the axis.
+
+    With ``D = 0`` the motion is pure advection and the exact flow is a rotation, so the
+    radius is conserved exactly. Explicit Euler is not: its map ``I + omega*dt*A`` has
+    determinant ``1 + (omega*dt)^2 > 1``, so it inflates phase-space volume on every step
+    and molecules spiral *outward*. The error is O(dt^2) per step but systematic rather
+    than random, so it accumulates linearly in time instead of averaging away -- at
+    ``omega*dt = 0.002`` the radius grew 1.82x over 3e5 windows (matching the determinant
+    prediction of 1.822x) and drained an open volume by a third through the absorbing
+    boundary, with no error raised anywhere.
+
+    The drift is integrated with an explicit midpoint step for non-uniform fields, which
+    takes the per-step volume error to ``(omega*dt)^4/4``. Tolerance 1e-4 is far below the
+    0.82 that plain Euler produces here and far above the ~1e-6 that midpoint leaves.
+    """
+    omega, dt, n_windows = 2.0, 0.001, 300000
+    s = tttrlib.SimSystem()
+    sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([0.0]); s.add_species(sp)
+    s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0]))
+    s.set_box(1e6, 1e6)
+    s.add_fluorophore(1.0, 0.0, 0.0, 0, True)          # radius exactly 1
+    s.set_flow_field(tttrlib.SimVectorGrid.rotation(omega, 2, 3.0, 3.0, 0.05))
+    st = tttrlib.SimIntegrator()
+    st.dt = dt; st.n_ph_max = 10 ** 9; st.max_windows = n_windows; st.n_channels = 1
+    e = tttrlib.SimEngine(s, [tttrlib.SimGrid.uniform(0.0, 1.0, 1.0, 0.5)],
+                          tttrlib.VectorSimGrid([]), st)
+    e.set_trajectory_reporter(1000); e.run()
+    r = np.hypot(np.asarray(e.trajectory_x()), np.asarray(e.trajectory_y()))
+    assert r.size > 10, "no trajectory recorded"
+    assert abs(r[-1] / r[0] - 1.0) < 1e-4, f"radius grew {r[-1] / r[0]:.4f}x under rotation"
+
+
+# ---------------------------------------------------------------------------
 # T7.7 — Poiseuille is spatially varying
 # ---------------------------------------------------------------------------
 def test_poiseuille_is_spatially_varying():

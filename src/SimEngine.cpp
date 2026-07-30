@@ -142,6 +142,7 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
     for (int i = 0; i < nsp; ++i)
         flow_dt_[i] = sample_.species()[i].v_scale * set_.dt;
     has_flow_ = sample_.has_flow() && sample_.flow_field().max_speed() > kEps;
+    uniform_flow_ = has_flow_ && sample_.flow_field().is_uniform();
     has_occ_  = sample_.has_occlusion();
 
     // Per-laser emission weights for ALEX. Each species' per-laser row is its q_alex[L] if

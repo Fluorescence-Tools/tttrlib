@@ -649,9 +649,24 @@ private:
                                                      // aligned with the no-flow build
             double nx = m.x, ny = m.y, nz = m.z;
             if (has_flow_) {
+                const double a = flow_dt_[i];       // v_scale[i] * dt
                 double vx, vy, vz;
                 sample_.flow_field().at(nx, ny, nz, vx, vy, vz);
-                const double a = flow_dt_[i];       // v_scale[i] * dt
+                if (!uniform_flow_) {
+                    // Explicit midpoint for the drift. Plain Euler is EXACT for a uniform
+                    // field but not for one with shear or rotation: the Euler map of a rigid
+                    // rotation is I + omega*dt*A, whose determinant is 1 + (omega*dt)^2 > 1,
+                    // so it inflates volume on every step and molecules spiral outward until
+                    // the absorbing boundary eats them. Measured at omega*dt = 0.002: the
+                    // radius grows 1.82x over 3e5 windows (predicted 1.822x), draining an
+                    // open volume by a third. Midpoint drops the per-step volume error from
+                    // (omega*dt)^2 to (omega*dt)^4/4 -- a factor of 1e6 at that step size --
+                    // and costs one extra field lookup, which the uniform path never pays.
+                    const double hx = nx + vx * 0.5 * a;
+                    const double hy = ny + vy * 0.5 * a;
+                    const double hz = nz + vz * 0.5 * a;
+                    sample_.flow_field().at(hx, hy, hz, vx, vy, vz);
+                }
                 nx += vx * a; ny += vy * a; nz += vz * a;
             }
             const double step = diff_step_[i];      // sqrt(2·D·dt)
@@ -743,6 +758,7 @@ private:
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
     std::vector<double> flow_dt_;                     // v_scale[i] * dt, precomputed per species
     bool has_flow_ = false;
+    bool uniform_flow_ = false;   // constant field: Euler integrates the drift exactly
     bool has_occ_  = false;
     // Per-laser emission weights for ALEX: q_by_laser_[laser][species] is the per-channel row
     // used under that laser (species' q_alex row, or the scalar q broadcast). qtot_by_laser_ is
