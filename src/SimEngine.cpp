@@ -29,20 +29,6 @@ namespace {
 constexpr double kEps = 1e-8;
 constexpr double kPi = 3.14159265358979;
 
-// Integral of the standard normal from x to infinity (ccmath qnorm), for random_erfc.
-double qnorm(double x) {
-    double y, ro, f, t; int k, nf;
-    if (x < 0.) { x = -x; nf = 0; } else nf = 1;
-    y = x * x; ro = std::exp(-y / 2.) / 2.506628274631;
-    if (x < 3.) { f = t = 1.;
-        for (k = 1; t > 1.e-14;) { t *= y / (k += 2); f += t; }
-        f = .5 - x * ro * f; }
-    else { f = x; k = int(std::ceil(250. / y)); if (k < 3) k = 3;
-        for (; k > 0;) f = x + (k--) / f;
-        f = ro / f; }
-    return nf ? f : 1. - f;
-}
-
 // Draw from Poisson(mean): Knuth for small mean, normal approximation for large.
 template <class Rng>
 long poisson_draw(double mean, Rng& rng) {
@@ -56,46 +42,6 @@ long poisson_draw(double mean, Rng& rng) {
     return n < 0 ? 0 : n;
 }
 
-// Random number with p(x) ~ erf(x/sqrt(2)); the legacy surface penetration depth.
-template <class Rng>
-double random_erfc(Rng& rng) {
-    const double sqrt_pi_half = 1.2533141373155;
-    double v, x, yv;
-    do {
-        v = rng.random0e1e();
-        x = -std::log(v) * sqrt_pi_half;
-        yv = v * rng.random0i1e();
-    } while (yv > 2. * qnorm(x));
-    return x;
-}
-
-/// Standard-normal PDF.
-inline double std_phi(double u) { return std::exp(-0.5 * u * u) / std::sqrt(2. * kPi); }
-
-/// Standard-normal CDF.
-inline double std_Phi(double u) { return 0.5 * std::erfc(-u / std::sqrt(2.)); }
-
-/// E[s⁺] for s ~ N(mu, sigma²) — the per-area influx weight across a surface whose
-/// inward normal displacement has mean `mu`. Reduces to sigma/sqrt(2π) at mu = 0.
-inline double influx_weight(double mu, double sigma) {
-    if (sigma <= 0.0) return (mu > 0.0) ? mu : 0.0;
-    const double u = mu / sigma;
-    return mu * std_Phi(u) + sigma * std_phi(u);
-}
-
-/// Sample the entry depth h ≥ 0 with density ∝ Q((h − mu)/sigma) by rejection against a
-/// uniform envelope. At mu = 0 the caller must use `random_erfc` instead, so the no-flow
-/// path stays bit-identical.
-template <class Rng>
-double random_entry_depth(Rng& rng, double mu, double sigma) {
-    const double hi = ((mu > 0.0) ? mu : 0.0) + 8.0 * sigma;
-    for (int k = 0; k < 1000; ++k) {
-        const double h = rng.random0i1e() * hi;
-        const double q = 0.5 * std::erfc((h - mu) / (sigma * std::sqrt(2.)));
-        if (rng.random0i1e() < q) return h;
-    }
-    return 0.0;
-}
 } // namespace
 
 SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
@@ -340,7 +286,7 @@ double SimEngine::mean_influx_weight(int sp) const {
         double vx, vy, vz;
         sample_.flow_field().at(px, py, pz, vx, vy, vz);
         const double mu = -vs * (vx * nxv + vy * nyv + vz * nzv) * set_.dt;
-        num += influx_weight(mu, sigma) * dA;
+        num += sim_detail::influx_weight(mu, sigma) * dA;
         den += dA;
     }
     return (den > 0.0) ? num / den : sigma / std::sqrt(2. * kPi);
@@ -361,7 +307,7 @@ double SimEngine::max_influx_weight(int sp) const {
     const double sigma = step_[sp];
     const double vs = std::fabs(sample_.species()[sp].v_scale);
     const double mu_max = vs * flow_max_speed_ * set_.dt;
-    const double w = influx_weight(mu_max, sigma);
+    const double w = sim_detail::influx_weight(mu_max, sigma);
     return (w > 0.0) ? w : sigma / std::sqrt(2. * kPi);
 }
 
@@ -409,24 +355,22 @@ void SimEngine::seed_population() {
             if (M < kEps) continue;
             double t = 0.;
             while ((t -= std::log(rng_diff_.random0e1e()) / M) < 1.) {
-                double x, y, z;
-                int occ_attempts = 0;
-                do {
-                    x = 2. * rng_diff_.random0i1e() - 1.;
-                    y = 2. * rng_diff_.random0i1e() - 1.;
-                    z = 2. * rng_diff_.random0i1e() - 1.;
-                } while (x * x + y * y + z * z > 1.);
-                double px = x * box_xy, py = y * box_xy, pz = z * box_z;
-                if (has_occ_) {
-                    while (occ_attempts < 100 && sample_.occlusion().at(px, py, pz) > 0.0) {
-                        do {
-                            x = 2. * rng_diff_.random0i1e() - 1.;
-                            y = 2. * rng_diff_.random0i1e() - 1.;
-                            z = 2. * rng_diff_.random0i1e() - 1.;
-                        } while (x * x + y * y + z * z > 1.);
-                        px = x * box_xy; py = y * box_xy; pz = z * box_z;
-                        ++occ_attempts;
-                    }
+                // One uniform-in-the-ellipsoid draw, retried while it lands inside a wall.
+                // Written as a single loop rather than a draw followed by a redrawing copy
+                // of itself: the two copies have to stay identical, and the first thing the
+                // duplicated version of this file taught us is that they do not.
+                double px = 0., py = 0., pz = 0.;
+                for (int occ_attempts = 0; ; ++occ_attempts) {
+                    double x, y, z;
+                    do {
+                        x = 2. * rng_diff_.random0i1e() - 1.;
+                        y = 2. * rng_diff_.random0i1e() - 1.;
+                        z = 2. * rng_diff_.random0i1e() - 1.;
+                    } while (x * x + y * y + z * z > 1.);
+                    px = x * box_xy; py = y * box_xy; pz = z * box_z;
+                    if (!has_occ_ || occ_attempts >= 100 ||
+                        sample_.occlusion().at(px, py, pz) <= 0.0)
+                        break;
                 }
                 Mol m{px, py, pz, i, true, next_id_++, true};
                 init_orientation(m);
@@ -440,89 +384,13 @@ void SimEngine::seed_population() {
 }
 
 void SimEngine::inject_open_volume(double windows) {
-    const double box_xy = sample_.box_xy(), box_z = sample_.box_z();
-    const double box_xy_sq = box_xy * box_xy;
-    const double box_r_sq = box_xy_sq / box_z / box_z;
-    double ell_f = box_z / box_xy;
-    double ell_Pzmax = (ell_f <= 0.999999) ? 1. / ell_f : 1.;
-    int nsp = sample_.n_species();
+    const int nsp = sample_.n_species();
 
     for (int i = 0; i < nsp; ++i) {
         if (rate_in_[i] < kEps) continue;
         while (t_in_[i] <= windows) {
-            // Draw a surface point on the ellipsoid.
-            double ze, r;
-            do {
-                ze = 2. * rng_diff_.random0i1e() - 1.;
-                r = rng_diff_.random0i1e() * ell_Pzmax;
-            } while (r * r > 1. - ze * ze * (1. - box_r_sq));
-            double r_xy = std::sqrt(1. - ze * ze) * box_xy;
-            ze *= box_z;
-            double phi = rng_diff_.random0i1e() * 2. * kPi;
-            double xe = std::cos(phi) * r_xy, ye = std::sin(phi) * r_xy;
-
-            double step_in;
-            if (has_flow_) {
-                double nxv = xe / (box_xy * box_xy);
-                double nyv = ye / (box_xy * box_xy);
-                double nzv = ze / (box_z  * box_z);
-                const double nn = std::sqrt(nxv*nxv + nyv*nyv + nzv*nzv);
-                nxv /= nn; nyv /= nn; nzv /= nn;
-                double vx, vy, vz;
-                sample_.flow_field().at(xe, ye, ze, vx, vy, vz);
-                const double vs = sample_.species()[i].v_scale;
-                const double mu = -vs * (vx*nxv + vy*nyv + vz*nzv) * set_.dt;
-                if (rng_diff_.random0i1e() * w_max_[i] > influx_weight(mu, step_[i]))
-                    continue;                     // rejected: redraw a surface point
-                step_in = random_entry_depth(rng_diff_, mu, step_[i]);
-            } else {
-                step_in = step_[i] * random_erfc(rng_diff_);
-            }
-
-            double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
-            double mx = xe * (1. - step_in * rnnorm);
-            double my = ye * (1. - step_in * rnnorm);
-            double mz = ze * (1. - step_in * rnnorm * box_r_sq);
-
-            // Reject occluded entry positions.
-            if (has_occ_) {
-                int occ_attempts = 0;
-                while (occ_attempts < 100 && sample_.occlusion().at(mx, my, mz) > 0.5) {
-                    // Redraw the surface point
-                    do {
-                        ze = 2. * rng_diff_.random0i1e() - 1.;
-                        r = rng_diff_.random0i1e() * ell_Pzmax;
-                    } while (r * r > 1. - ze * ze * (1. - box_r_sq));
-                    r_xy = std::sqrt(1. - ze * ze) * box_xy;
-                    ze *= box_z;
-                    phi = rng_diff_.random0i1e() * 2. * kPi;
-                    xe = std::cos(phi) * r_xy;
-                    ye = std::sin(phi) * r_xy;
-                    if (has_flow_) {
-                        // Recompute mu and re-accept
-                        double nxv2 = xe / (box_xy * box_xy);
-                        double nyv2 = ye / (box_xy * box_xy);
-                        double nzv2 = ze / (box_z  * box_z);
-                        const double nn2 = std::sqrt(nxv2*nxv2 + nyv2*nyv2 + nzv2*nzv2);
-                        nxv2 /= nn2; nyv2 /= nn2; nzv2 /= nn2;
-                        double vx2, vy2, vz2;
-                        sample_.flow_field().at(xe, ye, ze, vx2, vy2, vz2);
-                        const double vs2 = sample_.species()[i].v_scale;
-                        const double mu2 = -vs2 * (vx2*nxv2 + vy2*nyv2 + vz2*nzv2) * set_.dt;
-                        if (rng_diff_.random0i1e() * w_max_[i] > influx_weight(mu2, step_[i]))
-                            continue;
-                        step_in = random_entry_depth(rng_diff_, mu2, step_[i]);
-                    } else {
-                        step_in = step_[i] * random_erfc(rng_diff_);
-                    }
-                    rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
-                    mx = xe * (1. - step_in * rnnorm);
-                    my = ye * (1. - step_in * rnnorm);
-                    mz = ze * (1. - step_in * rnnorm * box_r_sq);
-                    ++occ_attempts;
-                }
-            }
-
+            double mx, my, mz;
+            draw_surface_entry(rng_diff_, i, mx, my, mz);
             Mol m{mx, my, mz, i, true, next_id_++, true};
             init_orientation(m);
             mols_.push_back(m);
@@ -772,10 +640,6 @@ void SimEngine::run_independent_impl(uint64_t W) {
     // on [0,W). So every molecule (its random start time, entry point, orientation and whole
     // trajectory) is a fully independent, id-keyed work unit: no coordinated birth phase, no
     // shared clock. Photon streams are merged afterwards, each shifted by its start window.
-    const double box_xy = sample_.box_xy(), box_z = sample_.box_z();
-    const double box_r_sq = (box_xy * box_xy) / (box_z * box_z);
-    const double ell_f = box_z / box_xy;
-    const double ell_Pzmax = (ell_f <= 0.999999) ? 1. / ell_f : 1.;
     const bool aniso = any_aniso_;
 
     const size_t init = mols_.size();
@@ -812,39 +676,9 @@ void SimEngine::run_independent_impl(uint64_t W) {
                 Rng br; br.reset(mol_base_seed_ ^ kBirthSalt, uint32_t(k), 0);
                 int i = species_of(k - init);
                 w_birth = uint32_t(br.random0i1e() * double(W));          // uniform start time
-                double ze, r, r_xy, phi, xe, ye, step_in;
-                // Surface point + entry depth, advection-aware exactly as inject_open_volume
-                // does it: under flow the upstream face admits more molecules than the
-                // downstream one, so a uniformly drawn point is the wrong distribution even
-                // when the total rate (rate_in_, already flow-aware) is right.
-                for (int attempt = 0; ; ++attempt) {
-                    do { ze = 2. * br.random0i1e() - 1.; r = br.random0i1e() * ell_Pzmax; }
-                    while (r * r > 1. - ze * ze * (1. - box_r_sq));
-                    r_xy = std::sqrt(1. - ze * ze) * box_xy; ze *= box_z;
-                    phi = br.random0i1e() * 2. * kPi;
-                    xe = std::cos(phi) * r_xy; ye = std::sin(phi) * r_xy;
-                    if (!has_flow_) {
-                        step_in = step_[i] * random_erfc(br);             // UNCHANGED at v = 0
-                        break;
-                    }
-                    double nxv = xe / (box_xy * box_xy);
-                    double nyv = ye / (box_xy * box_xy);
-                    double nzv = ze / (box_z * box_z);
-                    const double nn = std::sqrt(nxv*nxv + nyv*nyv + nzv*nzv);
-                    nxv /= nn; nyv /= nn; nzv /= nn;
-                    double vx, vy, vz;
-                    sample_.flow_field().at(xe, ye, ze, vx, vy, vz);
-                    const double vs = sample_.species()[i].v_scale;
-                    const double mu = -vs * (vx*nxv + vy*nyv + vz*nzv) * set_.dt;
-                    if (attempt < 1000 &&
-                        br.random0i1e() * w_max_[i] > influx_weight(mu, step_[i]))
-                        continue;                                        // rejected: redraw
-                    step_in = random_entry_depth(br, mu, step_[i]);
-                    break;
-                }
-                double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
-                m = Mol{xe * (1. - step_in * rnnorm), ye * (1. - step_in * rnnorm),
-                        ze * (1. - step_in * rnnorm * box_r_sq), i, true, int(k), true};
+                double mx, my, mz;
+                draw_surface_entry(br, i, mx, my, mz);
+                m = Mol{mx, my, mz, i, true, int(k), true};
                 if (aniso) {
                     double z = 2. * br.random0i1e() - 1., ph = 2. * kPi * br.random0i1e();
                     double rr = std::sqrt(std::max(0., 1. - z * z));

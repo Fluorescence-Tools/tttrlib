@@ -32,6 +32,7 @@
 #include "SimThreadPool.h"
 #include "SimZiggurat.h"
 #include "SimMicrotimeEncoder.h"
+#include "SimInjection.h"
 
 namespace tttrlib {
 
@@ -345,6 +346,101 @@ private:
         return i;
     }
 
+    /*!
+     * \brief Largest coast length, in windows, that keeps a molecule inside `d` of a boundary.
+     *
+     * The coast has to bound both transport mechanisms: the deterministic drift
+     * `v_max*n*dt` and the diffusive spread `safety*sqrt(2*D*n*dt)`. Requiring their sum to
+     * stay under `d` is a quadratic in `s = sqrt(n)`,
+     *
+     *     A*s^2 + B*s - d <= 0,   A = v_max*dt,  B = safety*sqrt(2*D*dt)
+     *
+     * so `s = (-B + sqrt(B^2 + 4*A*d)) / (2*A)`. With no flow (`A == 0`) it degenerates to
+     * the original diffusion-only bound, which is taken verbatim rather than as a limit so
+     * a no-flow run keeps its exact previous coast lengths.
+     *
+     * Shared by `maybe_sleep` (window engine) and `simulate_timeline` (independent engine),
+     * which have to agree: a molecule coasting further in one than the other would put the
+     * two engines on different trajectories for the same configuration.
+     */
+    inline uint64_t coast_windows(double d, double D) const {
+        const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
+        const double A = flow_max_speed_ * set_.dt;
+        if (A <= kEps) {
+            const double sigma = d / safety;          // allowed per-step displacement std
+            return uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+        }
+        const double B = safety * std::sqrt(2.0 * D * set_.dt);
+        const double s = (-B + std::sqrt(B * B + 4.0 * A * d)) / (2.0 * A);
+        return (s > 0.0) ? uint64_t(s * s) : 0;
+    }
+
+    /*!
+     * \brief Draw one open-volume entry position for species `sp` across the box surface.
+     *
+     * The single implementation of the surface flux, used by both the window engine
+     * (`inject_open_volume`) and the independent engine (`run_independent_impl`). It used
+     * to be copied into both, and the copies fell out of step: the independent one kept
+     * drawing surface points uniformly with a diffusion-only depth long after the window
+     * one became advection-aware. That bias does not show up in the molecule count, only
+     * in where molecules enter, so nothing failed.
+     *
+     * Under flow the surface point is accepted with probability `w(mu)/w_max`, so the
+     * upstream face admits more molecules than the downstream one, and the entry depth
+     * follows the drift-diffusion law. With no flow both reduce to the historical
+     * uniform-point + `random_erfc` draw, consuming the same random numbers in the same
+     * order. Occluded entry points are redrawn.
+     */
+    template <class Rng>
+    void draw_surface_entry(Rng& rng, int sp, double& mx, double& my, double& mz) const {
+        const double box_xy = sample_.box_xy(), box_z = sample_.box_z();
+        const double box_r_sq = (box_xy * box_xy) / (box_z * box_z);
+        const double ell_f = box_z / box_xy;
+        const double ell_Pzmax = (ell_f <= 0.999999) ? 1. / ell_f : 1.;
+
+        for (int attempt = 0; ; ++attempt) {
+            // Uniform point on the ellipsoid surface.
+            double ze, r;
+            do {
+                ze = 2. * rng.random0i1e() - 1.;
+                r = rng.random0i1e() * ell_Pzmax;
+            } while (r * r > 1. - ze * ze * (1. - box_r_sq));
+            const double r_xy = std::sqrt(1. - ze * ze) * box_xy;
+            ze *= box_z;
+            const double phi = rng.random0i1e() * 2. * sim_detail::kInjPi;
+            const double xe = std::cos(phi) * r_xy, ye = std::sin(phi) * r_xy;
+
+            double step_in;
+            if (has_flow_) {
+                // Outward normal of x^2/a^2 + y^2/a^2 + z^2/c^2 = 1 is (x/a^2, y/a^2, z/c^2).
+                double nxv = xe / (box_xy * box_xy);
+                double nyv = ye / (box_xy * box_xy);
+                double nzv = ze / (box_z * box_z);
+                const double nn = std::sqrt(nxv * nxv + nyv * nyv + nzv * nzv);
+                nxv /= nn; nyv /= nn; nzv /= nn;
+                double vx, vy, vz;
+                sample_.flow_field().at(xe, ye, ze, vx, vy, vz);
+                const double vs = sample_.species()[sp].v_scale;
+                const double mu = -vs * (vx * nxv + vy * nyv + vz * nzv) * set_.dt;
+                if (attempt < 1000 &&
+                    rng.random0i1e() * w_max_[sp] > sim_detail::influx_weight(mu, step_[sp]))
+                    continue;                                     // rejected: redraw
+                step_in = sim_detail::random_entry_depth(rng, mu, step_[sp]);
+            } else {
+                step_in = step_[sp] * sim_detail::random_erfc(rng);
+            }
+
+            const double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
+            mx = xe * (1. - step_in * rnnorm);
+            my = ye * (1. - step_in * rnnorm);
+            mz = ze * (1. - step_in * rnnorm * box_r_sq);
+
+            if (has_occ_ && attempt < 100 && sample_.occlusion().at(mx, my, mz) > 0.5)
+                continue;                                         // entered inside a wall
+            return;
+        }
+    }
+
     /// After processing molecule `m` at window `T0`, decide whether it may sleep. The coast
     /// is sized by its own distance to the nearest boundary (focus or box surface), so it can
     /// reach neither while asleep.
@@ -363,19 +459,7 @@ private:
         if (d <= 0.0) return;                                  // inside focus: stay awake
         d = std::min(d, surface_margin(m.x, m.y, m.z));
         if (d <= 0.0) return;
-        const double vmax = flow_max_speed_;                   // cached at construction
-        const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
-        const double A = vmax * set_.dt;
-        uint64_t n = 0;
-        if (A <= kEps) {
-            const double sigma = d / safety;                   // allowed per-step displacement std
-            n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
-        } else {
-            const double B = safety * std::sqrt(2.0 * D * set_.dt);
-            // Quadratic bound: A·s² + B·s − d ≤ 0, s = sqrt(n)
-            double s = (-B + std::sqrt(B * B + 4.0 * A * d)) / (2.0 * A);
-            if (s > 0.0) n = uint64_t(s * s);
-        }
+        const uint64_t n = coast_windows(d, D);
         if (n < set_.min_coast_windows) return;
         m.coasting = true; m.w_sleep = T0 + 1; m.w_wake = uint32_t(T0 + 1 + n);
     }
@@ -481,19 +565,8 @@ private:
                     double d = std::min(gap, surface_margin(m.x, m.y, m.z));
                     const double D = sample_.species()[m.state].D;
                     if (d > 0.0 && D > kEps) {
-                        const double vmax = flow_max_speed_;   // cached at construction
                         {
-                            const double safety_i = safety;
-                            const double A = vmax * set_.dt;
-                            uint64_t n = 0;
-                            if (A <= kEps) {
-                                const double sigma = d / safety_i;
-                                n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
-                            } else {
-                                const double B = safety_i * std::sqrt(2.0 * D * set_.dt);
-                                double s = (-B + std::sqrt(B * B + 4.0 * A * d)) / (2.0 * A);
-                                if (s > 0.0) n = uint64_t(s * s);
-                            }
+                            uint64_t n = coast_windows(d, D);
                             if (n >= set_.min_coast_windows) {
                                 if (uint64_t(w) + n > W) n = W - w;
                                 if (n > 0) {
