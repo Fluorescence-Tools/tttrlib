@@ -3594,7 +3594,13 @@ void CLSMImage::get_roi(
                             value = static_cast<double>(line->pixels[p].size());
                         }
                     } else if (images != nullptr) {
-                        value = images[f * (nl * np) + l * nl + p];
+                        // Row stride is the number of PIXELS PER LINE, not the number
+                        // of lines. With `l * nl` a non-square frame is read scrambled,
+                        // and when nl > np the index runs past the frame -- for the last
+                        // frame, past the allocation, which is where the NaNs came from.
+                        // The two agree when nl == np, which is why square ROIs were fine
+                        // and this survived so long.
+                        value = images[f * (nl * np) + l * np + p];
                     }
                     img_roi[current_pixel] = value;
                 } else {
@@ -3738,17 +3744,30 @@ void CLSMImage::compute_ics(
     // Allocate memory for the ICS output array
     auto out_tmp = (T *) calloc(frames_index_pairs.size() * pixel_in_roi, sizeof(T));
 
-    // Allocate arrays for FFTWs
-    std::vector<CT> in(pixel_in_roi, 0);
-    std::vector<CT> fft_roi1(pixel_in_roi, 0);
-    std::vector<CT> fft_roi2(pixel_in_roi, 0);
-    std::vector<CT> ics(pixel_in_roi, 0);
+    // Allocate arrays for the transforms.
+    //
+    // `r2c` produces a HALF spectrum: `np/2 + 1` complex numbers per row, packed
+    // compactly. Handing it strides for a full `nl x np` complex array made it write that
+    // compact result into a buffer read as if it were full-width, so the spectrum was
+    // simply misread -- the autocorrelation of a single delta came back as 1.0625 at the
+    // peak with 0.0625 = 2/np repeated at every even column, instead of 1 and 0. A flat
+    // field survived it (its spectrum is pure DC), which is how it went unnoticed, and the
+    // RICS fits recover D straight through it because they fit a shape and rescale.
+    //
+    // The half spectrum is now given its own strides, and the inverse is `c2r`, which
+    // consumes exactly that layout and produces the real correlation directly.
+    const int nh = np / 2 + 1;                       // columns in the half spectrum
+    const size_t n_half = (size_t) nl * nh;
+    std::vector<CT> in(n_half, 0);
+    std::vector<CT> fft_roi1(n_half, 0);
+    std::vector<CT> fft_roi2(n_half, 0);
+    std::vector<T> ics(pixel_in_roi, 0);
 
     std::ptrdiff_t sd = sizeof(T);
     std::ptrdiff_t sc = sizeof(CT);
     pocketfft::shape_t shape{(size_t) nl, (size_t) np};
     pocketfft::stride_t stride_d{sd * np, sd};
-    pocketfft::stride_t stride_c{sc * np, sc};
+    pocketfft::stride_t stride_c{sc * nh, sc};        // half spectrum, compact rows
     pocketfft::shape_t axes{0, 1};
     T norm = T(1.0 / pixel_in_roi);
 
@@ -3759,33 +3778,30 @@ void CLSMImage::compute_ics(
         //double roi2_int = 0.0; // sum of values in roi1 & roi2
 
         // ROI1
-        //for(int i = frame_pair.first * pixel_in_roi; i < frame_pair.first * pixel_in_roi + pixel_in_roi; i++) roi1_int += roi[i];
-        pocketfft::r2c<double>(shape, stride_d, stride_c, axes, pocketfft::FORWARD,
-                               &roi[frame_pair.first * pixel_in_roi], fft_roi1.data(), 1.0);
+        pocketfft::r2c<T>(shape, stride_d, stride_c, axes, pocketfft::FORWARD,
+                          &roi[frame_pair.first * pixel_in_roi], fft_roi1.data(), 1.0);
 
         // ROI2
         if (frame_pair.second != frame_pair.first) {
-            //for(int i = frame_pair.first * pixel_in_roi; i < frame_pair.first * pixel_in_roi + pixel_in_roi; i++) roi2_int += roi[i];
             pocketfft::r2c<T>(shape, stride_d, stride_c, axes, pocketfft::FORWARD,
                               &roi[frame_pair.second * pixel_in_roi], fft_roi2.data(), 1.0);
         } else {
             fft_roi2 = fft_roi1;
-            //roi2_int = roi1_int;
         }
 
-        // FFT(roi1) * conj(FFT(roi2))
-        for (size_t i = 0; i < fft_roi1.size(); i++) {
+        // FFT(roi1) * conj(FFT(roi2)), over the half spectrum only
+        for (size_t i = 0; i < n_half; i++) {
             in[i] = fft_roi1[i] * std::conj(fft_roi2[i]);
         }
 
-        // make backward transform FFT-1(FFT(roi1) * conj(FFT(roi2)))
-        pocketfft::c2c<T>(shape, stride_c, stride_c, axes, pocketfft::BACKWARD, in.data(), ics.data(), norm);
+        // Inverse: c2r consumes the half spectrum and yields the real correlation.
+        pocketfft::c2r<T>(shape, stride_c, stride_d, axes, pocketfft::BACKWARD,
+                          in.data(), ics.data(), norm);
 
-        // write results to ics output and normalize
+        // write results to ics output
         int frame_offset = current_pair * pixel_in_roi;
-        //double denom = roi1_int * roi2_int;
         for (int i = 0; i < pixel_in_roi; i++) {
-            out_tmp[frame_offset + i] = real(ics[i]);
+            out_tmp[frame_offset + i] = ics[i];
         }
 
         current_pair++;
