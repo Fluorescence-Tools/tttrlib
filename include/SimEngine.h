@@ -652,7 +652,7 @@ private:
                 const double a = flow_dt_[i];       // v_scale[i] * dt
                 double vx, vy, vz;
                 sample_.flow_field().at(nx, ny, nz, vx, vy, vz);
-                if (!uniform_flow_) {
+                if (drift_midpoint_) {
                     // Explicit midpoint for the drift. Plain Euler is EXACT for a uniform
                     // field but not for one with shear or rotation: the Euler map of a rigid
                     // rotation is I + omega*dt*A, whose determinant is 1 + (omega*dt)^2 > 1,
@@ -758,7 +758,8 @@ private:
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
     std::vector<double> flow_dt_;                     // v_scale[i] * dt, precomputed per species
     bool has_flow_ = false;
-    bool uniform_flow_ = false;   // constant field: Euler integrates the drift exactly
+    bool uniform_flow_ = false;    // constant field: Euler integrates the drift exactly
+    bool drift_midpoint_ = false;  // midpoint drift step (non-uniform fields, opt-out)
     bool has_occ_  = false;
     // Per-laser emission weights for ALEX: q_by_laser_[laser][species] is the per-channel row
     // used under that laser (species' q_alex row, or the scalar q broadcast). qtot_by_laser_ is
