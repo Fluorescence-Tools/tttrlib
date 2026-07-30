@@ -588,13 +588,20 @@ What does **not** help, measured so that nobody repeats it:
   with three uniforms of matching variance packed out of two 32-bit draws made the run
   *slower* (3.9 s -> 4.2 s). Its fast path is one 32-bit draw, a table lookup, a compare and
   a multiply, and it is taken ~98 % of the time.
-* **SIMD.** The per-molecule cost is ~45 ns and scales perfectly linearly with the molecule
-  count, so vectorising across molecules is the only shape that would pay. That needs a
-  structure-of-arrays molecule pool, and it would break the per-molecule RNG keying that
-  makes results independent of thread count -- a guarantee the engine deliberately holds.
-  The remaining per-molecule work is also branchy (photophysics loop, Poisson emission,
-  rejection sampling), so only the propagation would vectorise. Against ``active_margin``
-  at 3x and ``independent_molecules`` at 5-7x, both already available, it is not worth it.
+* **SIMD**, and this one was measured rather than argued
+  (``benchmarks/bench_sim_propagation_simd.cpp``). Vectorising the arithmetic alone is
+  pointless -- NEON over 2 doubles came out at 0.82x and over 4 floats at 0.99x, because
+  the arithmetic was never the cost and their random numbers are still drawn one lane at a
+  time. The honest version, four independent xoshiro128+ generators stepped entirely in
+  NEON, does win: **1.4-1.5x on the propagation kernel**, 11.0 -> 7.4 ns.
+
+  But that kernel is 11 ns of the engine's ~45 ns per molecule-step, so the win is about
+  **8 % of a run**, and buying it costs a structure-of-arrays molecule pool, float32
+  positions, the ziggurat replaced by a probit approximation, and the per-molecule RNG
+  keying that makes results independent of thread count. Against ``active_margin`` at 3x
+  and ``independent_molecules`` at 5-7x, both already available and exact, it does not earn
+  the risk.
+
 * **Chasing the field lookup by profile alone.** A sampling profile attributes ~60 % of the
   run to the return from the excitation lookup, which reads as "``std::exp`` dominates". It
   does not: skipping 44 % of the exponentials changes nothing measurable. The cost is memory
