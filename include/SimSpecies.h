@@ -35,6 +35,8 @@ struct SimSpecies {
     double r0 = 0.0;                ///< limiting anisotropy
     double l1 = 0.0, l2 = 0.0;      ///< polarisation mixing factors
     double D_rot = 0.0;             ///< rotational diffusion coefficient
+    double v_scale = 1.0;           ///< coupling of this species to the global flow field
+                                    ///< (0 = not advected, e.g. a surface-bound state)
 };
 
 } // namespace tttrlib

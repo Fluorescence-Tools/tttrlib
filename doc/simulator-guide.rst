@@ -431,7 +431,7 @@ CLSM / FLIM imaging
 Use discrete ``emitters`` for the sample and drive a raster scan with
 :class:`~tttrlib.SimScanner`; the output is a marker-annotated stream that
 :class:`~tttrlib.CLSMImage` reconstructs, with per-species decays giving FLIM
-contrast. See :ref:`clsm-flim-guide` and ``examples/simulation/clsm_star_scan.py``.
+contrast. See :doc:`clsm-flim-guide` and ``examples/simulation/clsm_star_scan.py``.
 
 
 .. _sim-performance:
@@ -454,6 +454,61 @@ default off (exact):
 See ``performance_guide`` for the trade-offs and measured speedups.
 
 
+Flow and directed transport
+===========================
+
+The simulator supports advective transport (flow) and static barriers (occlusion),
+modelled on the Smoluchowski advection–diffusion equation:
+
+.. math::
+
+    dr = v(r)\\,dt + \\sqrt{2D}\\,dW
+
+A molecule in a velocity field :math:`v(r)` follows the Itô SDE above (Euler–Maruyama
+integration). The three built-in fields are all divergence-free and therefore preserve
+a uniform equilibrium concentration (see §0.1 of the implementation spec):
+
+* **Uniform** — constant :math:`v = (v_x, v_y, v_z)`. Evaluated analytically; no grid.
+* **Poiseuille** — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section
+  :math:`v_a(\\rho) = v_{\\max}(1 - \\rho^2/R^2)`, clamped to 0 outside radius :math:`R`.
+* **Rotation** — rigid-body rotation about an axis, :math:`v = \\omega \\times r`.
+
+Arbitrary fields can be constructed from three same-shaped component arrays via
+``from_components``. A compressible field (one violating :math:`\\nabla\\cdot v = 0`)
+will concentrate molecules — real physics, but it invalidates any homogeneous-sample
+correlation analysis. The user is warned, not prevented.
+
+The ``v_scale`` attribute on :class:`SimSpecies` controls coupling of each species to the
+flow field (0 = not advected, e.g. a surface-bound dark state).
+
+**Injection must be advection-aware.** The open-volume surface-flux model injects molecules
+across the ellipsoid boundary. Without flow the per-area influx rate is
+:math:`\\sigma/\\sqrt{2\\pi}` (step size :math:`\\sigma = \\sqrt{2D\\Delta t}`). With flow
+the normal displacement has mean :math:`\\mu = -v_\\perp\\Delta t`, giving the generalised
+influx weight :math:`w = \\mu\\Phi(\\mu/\\sigma) + \\sigma\\phi(\\mu/\\sigma)` where
+:math:`\\Phi` is the standard-normal CDF and :math:`\\phi` its PDF. Using the old
+:math:`\\sigma/\\sqrt{2\\pi}` formula under flow under-injects upstream-facing surfaces
+and the population slowly drains — a silent, cumulative error that the simulator now
+corrects.
+
+**Barriers (occlusion).** An occlusion mask ``occ(r) ∈ [0,1]`` implements excluded-volume
+rejection: a proposed step to :math:`r'` is accepted with probability
+:math:`1 - \\text{occ}(r')`. When :math:`v = 0` this satisfies detailed balance and the
+equilibrium concentration inside a region of occlusion :math:`q` is :math:`1 - q` times the
+outside value (the effective diffusion is also reduced by the same factor). Two limitations:
+
+* A wall thinner than about :math:`4\\sigma` may be tunnelled through in a single step
+  with no warning. Ensure ``thickness ≳ 4\\sqrt{2D\\Delta t}``.
+* Partial occlusion (:math:`0 < \\text{occ} < 1`) combined with flow is outside the
+  validated regime. Hard walls (:math:`\\text{occ} = 1`) with flow are fine.
+
+**Coasting** is disabled for any non-uniform field or for any occlusion mask. A uniform
+field uses a quadratic bound that accounts for both diffusion and drift (the original
+diffusion-only bound would under-estimate the coastable gap). Coasting for a non-uniform
+or masked sample would silently lose molecules that tunnel through a wall or miss the
+focus — the safe answer is to never skip windows.
+
+
 API reference
 =============
 
@@ -473,6 +528,9 @@ API reference
    :members:
 
 .. autoclass:: SimGrid
+   :members:
+
+.. autoclass:: SimVectorGrid
    :members:
 
 .. autoclass:: SimDecay

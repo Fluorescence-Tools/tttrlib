@@ -1111,20 +1111,6 @@ public:
      void get_routing_channel(signed char** output, int* n_output);
 
      /*!
-      * \brief Replaces the routing channel of every event.
-      *
-      * The bulk companion to `set_routing_channel_at`: relabelling a whole
-      * measurement (as an H2MM state split does) through the per-event setter
-      * costs a Python-level call per photon, which at photon scale is the
-      * dominant cost of the operation. `used_routing_channels` is refreshed, so
-      * `get_used_routing_channels` cannot go stale behind this.
-      *
-      * @param input Array of routing channel numbers, one per event.
-      * @param n_input Number of elements; must equal the number of events.
-      */
-     void set_routing_channel(signed char* input, int n_input);
-
-     /*!
       * \brief Returns an array containing the event types of the valid TTTR events.
       *
       * The event types are stored in the output array, and the number of elements in

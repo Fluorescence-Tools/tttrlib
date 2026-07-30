@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <vector>
 #include "SimSpecies.h"
+#include "SimVectorGrid.h"
 
 namespace tttrlib {
 
@@ -97,12 +98,28 @@ public:
 
     const std::vector<SimEmitter>& emitters() const { return emitters_; }
 
+    // --- flow field ---------------------------------------------------------------
+    void set_flow_field(const SimVectorGrid& f) { flow_ = f; }
+    const SimVectorGrid& flow_field() const { return flow_; }
+    bool has_flow() const { return !flow_.empty(); }
+
+    /// Occlusion mask: 0 = freely accessible, 1 = impermeable. Stored as *occlusion*
+    /// (not accessibility) because SimGrid::at returns 0 outside the lattice, so
+    /// "outside the mask" must read as free — the inverted spelling would put an
+    /// invisible wall around the mask.
+    void set_occlusion(const SimGrid& occ) { occ_ = occ; has_occ_ = true; }
+    const SimGrid& occlusion() const { return occ_; }
+    bool has_occlusion() const { return has_occ_; }
+
 private:
     std::vector<SimSpecies> species_;
     std::vector<double> k_rad_, k_nrad_, q_bg_, population_;
     std::vector<SimDecay> bg_decays_;
     std::vector<SimEmitter> emitters_;
     double box_xy_ = 2.0, box_z_ = 4.0;
+    SimVectorGrid flow_;
+    SimGrid occ_;
+    bool has_occ_ = false;
 };
 
 } // namespace tttrlib

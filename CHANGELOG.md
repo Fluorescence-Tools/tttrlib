@@ -44,12 +44,6 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
-- **A C++ throw from `TTTR`, `TTTRMask` or `H2MM` aborted the interpreter.**
-  Those three `.i` files had no SWIG `%exception` handler, so an exception
-  raised to report a bad argument (a mismatched array length, an unreadable
-  file, a foreign msgpack payload) unwound through the wrapper and terminated
-  the process — no traceback, and no way to catch it. They now raise
-  `RuntimeError` like the rest of the library.
 - **`get_used_routing_channels` could return the channels the file had before
   you edited it.** `set_routing_channel_at` is public but
   `find_used_routing_channels`, which refreshes the cache it invalidates, was
@@ -101,17 +95,6 @@
   is documented as a failure mode in `doc/fit-guide.rst`.
 
 ### Added
-- **`TTTR::set_routing_channel`** — the bulk companion to
-  `set_routing_channel_at`. Relabelling a whole measurement through the
-  per-event setter costs one binding call per photon, which at photon scale is
-  the dominant cost of the operation. Refreshes `used_routing_channels`, so the
-  accessor cannot go stale behind it.
-- **`H2mmChannelMap::allocate` and `H2mmStateSidecar::set_arrays`** — the id
-  allocation and the sidecar format, usable without an `H2MM` engine. A caller
-  that assembled its photon streams some other way (several source files, a
-  burst table, a nanotime-split stream set) can now write *this* layout and
-  *this* file rather than a second, subtly different one; `H2MM::build_channel_map`
-  is a thin wrapper over the former.
 - **H2MM state decoding that reports a distribution, not a winner.** Viterbi
   answers "what is the single most likely state sequence"; most burst analysis
   instead asks "how do the photons distribute over the states", and the argmax
@@ -278,6 +261,61 @@
   significance filters are measured against an estimated baseline. Above roughly
   half of photons belonging to bursts that assumption fails and those two filters
   should be disabled (`min_contrast=0`, `min_significance=0`).
+- **Bayesian Blocks stage-1 trigger is now O(n).** The Fries/Eggeling trigger — a
+  pure macro-time-difference test — marked all `m` photons of every firing
+  window, which costs O(n*m) and costs it precisely inside bursts, where windows
+  fire at every offset. Consecutive firing windows overlap by construction, so
+  the candidate runs are now accumulated in a single pass and the intermediate
+  per-photon flag array is gone. The candidate set is unchanged; only the
+  bookkeeping is cheaper, which makes permissive trigger settings more affordable.
+
+  Measured against the simulated ground truth, the trigger/segmentation trade is
+  monotonic but shallow: `trigger_contrast` 1.5 gives F1 0.952 in 51 ms,
+  2.5 (the default) 0.943 in 11 ms, and 4.0 0.941 in 4.5 ms for 200k photons. A
+  permissive stage 1 is genuinely the most accurate setting, at roughly 5x the
+  time for +0.01 F1.
+
+- **Coincident (multi-detector) burst search** — `TTTR.burst_search_coincident`,
+  registered as `coincident`. Keeps only bursts found *independently* in several
+  groups of detectors, which is what rejects singly-labelled and photobleached
+  molecules in ALEX/PIE; the classical dual-channel burst search is the
+  two-group case. Any number of groups is accepted and `min_groups` sets how many
+  must agree, so "2 of 3" is expressible as well as "all of 2". It is a
+  composition rather than a new algorithm — the search named by `algorithm` runs
+  once per group — so it works with every other registered search, including ones
+  added later. Coincidence is decided in time, not per photon.
+
+  On a simulation with 40 molecules emitting into all three detector groups plus
+  40 *brighter* ones emitting into a single group, a pooled max-tree search finds
+  all 80 and cannot separate them; the coincident search finds the 40 complete
+  events and none of the 40 partial ones, at every quorum tested.
+
+  Composite entries like this carry a `parameters_of: {category, selector}` link
+  on the property holding the inner search's parameters, so a consumer can render
+  them as a nested form rather than as raw JSON. chisurf does; the link is
+  declarative, so any future composite entry nests the same way with no new code.
+
+- **API registry and generated API index.** Two complementary ways to ask what
+  tttrlib can do, both as JSON so every language binding reads the same bytes
+  instead of re-declaring lists that drift.
+
+  `tttrlib.registry()` (C++ `tttrlib::registry_json()`, `include/Registry.h`) is
+  the *curated* layer: `{category: {name: entry}}`, currently `burst_search` and
+  `file_container`. Entries carry what a signature cannot express — what a thing
+  is, which parameters are meaningful, their units, ranges and defaults — as
+  standard **JSON Schema**, so a consumer that can already render a JSON Schema
+  can offer a tttrlib feature with no tttrlib-specific code and picks up new
+  entries on upgrade. `registry("burst_search")` supersedes
+  `TTTR.burst_search_algorithms()`, which still works.
+
+  `tttrlib.api_index()` is the *generated* layer: every class, method, function,
+  property and attribute the module exports — 111 classes, ~1450 methods, 73
+  functions — with signatures, defaults and docstrings, so a scripting language
+  can discover and call anything without parsing C++ headers. It is derived from
+  the built module rather than authored, which is the only way coverage that wide
+  stays correct; a hand-written index would be wrong within a release.
+  `tools/generate_api_index.py` dumps either layer to a file.
+
 - **Burst-search registry** (`TTTR::burst_search_algorithms_json()`, and in Python
   `TTTR.burst_search_algorithms()`, `TTTR.burst_search_defaults()`,
   `TTTR.burst_search_by_name()`). Advertises every burst search with its label,

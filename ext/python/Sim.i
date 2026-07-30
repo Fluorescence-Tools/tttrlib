@@ -7,6 +7,7 @@
 #include "SimDecay.h"
 #include "SimSpecies.h"
 #include "SimGrid.h"
+#include "SimVectorGrid.h"
 #include "SimSystem.h"
 #include "SimScanner.h"
 #include "SimIntegrator.h"
@@ -84,6 +85,28 @@
 
 %include "SimGrid.h"
 %template(VectorSimGrid) std::vector<tttrlib::SimGrid>;
+
+%include "SimVectorGrid.h"
+%extend tttrlib::SimVectorGrid {
+    %pythoncode %{
+        @staticmethod
+        def from_numpy(vx, vy, vz, dx=0.1, dy=0.1, dz=0.1, x0=None, y0=None, z0=None):
+            """Build a SimVectorGrid from three same-shaped (nz, ny, nx) numpy arrays (µm per
+            macro-time unit). Origins default to centring the lattice on (0, 0, 0)."""
+            import numpy as _np
+            a = [_np.ascontiguousarray(_np.asarray(c, dtype=float)) for c in (vx, vy, vz)]
+            if a[0].shape != a[1].shape or a[0].shape != a[2].shape:
+                raise ValueError("vx, vy and vz must have the same shape")
+            nz, ny, nx = a[0].shape
+            if x0 is None: x0 = -0.5 * (nx - 1) * dx
+            if y0 is None: y0 = -0.5 * (ny - 1) * dy
+            if z0 is None: z0 = -0.5 * (nz - 1) * dz
+            return SimVectorGrid.from_components(
+                a[0].ravel().tolist(), a[1].ravel().tolist(), a[2].ravel().tolist(),
+                int(nx), int(ny), int(nz), float(dx), float(dy), float(dz),
+                float(x0), float(y0), float(z0))
+    %}
+}
 
 %include "SimSystem.h"
 %include "SimScanner.h"
@@ -297,10 +320,8 @@
     %}
 }
 
-%newobject tttrlib::SimEngine::from_json;   // Python owns the returned engine
-
-// Translate C++ exceptions from the engine (e.g. from_json / constructor config validation such
-// as a q_alex row-count mismatch) into Python exceptions instead of terminating the interpreter.
+// Translate C++ exceptions (e.g. from_json / constructor config validation such as a
+// q_alex row-count mismatch) into Python exceptions instead of terminating the interpreter.
 %exception {
     try {
         $action
@@ -312,5 +333,8 @@
         SWIG_exception(SWIG_UnknownError, "Unknown exception");
     }
 }
+
 %include "SimEngine.h"
 %exception;   // reset to the previous global handler
+
+%newobject tttrlib::SimEngine::from_json;   // Python owns the returned engine

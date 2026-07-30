@@ -82,6 +82,8 @@
           "l2": {"type": "number", "default": 0.0, "description": "Detection polarization mixing, perpendicular channel."},
           "D_rot": {"type": "number", "default": 0.0, "minimum": 0,
             "description": "Rotational diffusion coefficient, rad²/ns; depolarizes over the lifetime (Perrin)."},
+          "v_scale": {"type": "number", "default": 1.0, "minimum": 0,
+            "description": "Coupling of this species to the global flow field. 0 = not advected (e.g. surface-bound)."},
           "decay": {"$ref": "#/definitions/decay"}
         }
       }
@@ -96,6 +98,51 @@
       "description": "Optional micro-time pattern for background photons (scatter/IRF or flat); broadcast to all channels."},
     "population": {"type": "array", "items": {"type": "number", "minimum": 0},
       "description": "Open-volume expected molecule count per species in the box (index = species)."},
+    "flow": {
+      "type": "object", "additionalProperties": false,
+      "description": "Uniform velocity field, Poiseuille flow, rigid rotation, or a field from three component arrays. A divergence-free field must be used for a stationary, homogeneous correlation analysis (see the simulator guide).",
+      "properties": {
+        "type": {"type": "string", "enum": ["uniform", "poiseuille", "rotation", "components"], "default": "uniform",
+          "description": "Flow-field type. uniform: constant vx,vy,vz (analytic, no lattice). poiseuille: Hagen-Poiseuille pipe flow along axis. rotation: rigid-body rotation about axis. components: arbitrary field from three same-shaped voxel arrays."},
+        "vx": {"type": "number", "default": 0.0, "description": "X velocity (µm/macro-time) for uniform type."},
+        "vy": {"type": "number", "default": 0.0, "description": "Y velocity (µm/macro-time) for uniform type."},
+        "vz": {"type": "number", "default": 0.0, "description": "Z velocity (µm/macro-time) for uniform type."},
+        "v_max": {"type": "number", "default": 0.0, "description": "Peak velocity (µm/macro-time) for poiseuille type."},
+        "radius": {"type": "number", "default": 1.0, "minimum": 0, "description": "Pipe radius (µm) for poiseuille type."},
+        "axis": {"type": "integer", "default": 0, "minimum": 0, "maximum": 2,
+          "description": "Flow axis: 0=x, 1=y, 2=z. For poiseuille the axis of the pipe; for rotation the axis of rotation."},
+        "omega": {"type": "number", "default": 0.0, "description": "Angular velocity (rad/macro-time) for rotation type."},
+        "extent_xy": {"type": "number", "default": 2.0, "description": "Grid half-extent XY (µm) for poiseuille/rotation lattice."},
+        "extent_z": {"type": "number", "default": 4.0, "description": "Grid half-extent Z (µm) for poiseuille/rotation lattice."},
+        "spacing": {"type": "number", "default": 0.1, "description": "Voxel spacing (µm) for poiseuille/rotation/component lattices."},
+        "nx": {"type": "integer", "description": "Grid X dimension for components type."},
+        "ny": {"type": "integer", "description": "Grid Y dimension for components type."},
+        "nz": {"type": "integer", "description": "Grid Z dimension for components type."},
+        "dx": {"type": "number", "default": 0.1, "description": "X voxel spacing (µm) for components type."},
+        "dy": {"type": "number", "default": 0.1, "description": "Y voxel spacing (µm) for components type."},
+        "dz": {"type": "number", "default": 0.1, "description": "Z voxel spacing (µm) for components type."},
+        "x0": {"type": "number", "default": 0.0, "description": "Physical X origin of the components lattice."},
+        "y0": {"type": "number", "default": 0.0, "description": "Physical Y origin of the components lattice."},
+        "z0": {"type": "number", "default": 0.0, "description": "Physical Z origin of the components lattice."}
+      }
+    },
+    "occlusion": {
+      "type": "object", "additionalProperties": false,
+      "description": "Occlusion mask: a scalar field in [0,1] where 0 = free, 1 = impermeable. Molecules propose a step and accept it with probability 1 − occ(destination). A slab thinner than 4·sqrt(2·D·dt) may be tunnelled. Partial occlusion (0 < occ < 1) combined with flow is outside the validated regime.",
+      "properties": {
+        "nx": {"type": "integer", "description": "Grid X dimension."},
+        "ny": {"type": "integer", "description": "Grid Y dimension."},
+        "nz": {"type": "integer", "description": "Grid Z dimension."},
+        "dx": {"type": "number", "default": 0.1, "description": "X voxel spacing (µm)."},
+        "dy": {"type": "number", "default": 0.1, "description": "Y voxel spacing (µm)."},
+        "dz": {"type": "number", "default": 0.1, "description": "Z voxel spacing (µm)."},
+        "x0": {"type": "number", "default": 0.0, "description": "Physical X origin."},
+        "y0": {"type": "number", "default": 0.0, "description": "Physical Y origin."},
+        "z0": {"type": "number", "default": 0.0, "description": "Physical Z origin."},
+        "data": {"type": "array", "items": {"type": "number", "minimum": 0, "maximum": 1},
+          "description": "Occlusion values in [0,1], row-major with x fastest. Size must be nx*ny*nz."}
+      }
+    },
     "emitters": {
       "type": "array",
       "description": "Explicit discrete fluorophores (e.g. immobile emitters for CLSM). Alternative to open-volume population.",

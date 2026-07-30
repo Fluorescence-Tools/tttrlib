@@ -351,15 +351,27 @@ private:
     template <class Rng>
     void maybe_sleep(Mol& m, uint32_t T0, Rng&) {
         if (!m.mobile || !m.alive) return;
+        if (has_occ_) return;                                  // a sleeper would tunnel through a wall
         const double D = sample_.species()[m.state].D;
         if (D <= kEps) return;
         double d = focus_gap(m.x, m.y, m.z);
         if (d <= 0.0) return;                                  // inside focus: stay awake
         d = std::min(d, surface_margin(m.x, m.y, m.z));
         if (d <= 0.0) return;
+        const double vmax = has_flow_ ? sample_.flow_field().max_speed() : 0.0;
+        if (has_flow_ && !sample_.flow_field().is_uniform()) return;  // no closed-form catch-up
         const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
-        const double sigma = d / safety;                       // allowed per-step displacement std
-        const uint64_t n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+        const double A = vmax * set_.dt;
+        uint64_t n = 0;
+        if (A <= kEps) {
+            const double sigma = d / safety;                   // allowed per-step displacement std
+            n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+        } else {
+            const double B = safety * std::sqrt(2.0 * D * set_.dt);
+            // Quadratic bound: A·s² + B·s − d ≤ 0, s = sqrt(n)
+            double s = (-B + std::sqrt(B * B + 4.0 * A * d)) / (2.0 * A);
+            if (s > 0.0) n = uint64_t(s * s);
+        }
         if (n < set_.min_coast_windows) return;
         m.coasting = true; m.w_sleep = T0 + 1; m.w_wake = uint32_t(T0 + 1 + n);
     }
@@ -407,6 +419,12 @@ private:
         const double s = std::sqrt(var);
         double g0, g1, g2; norm3(crng, g0, g1, g2);          // ziggurat catch-up displacement
         m.x += s * g0; m.y += s * g1; m.z += s * g2;
+        if (has_flow_) {
+            double vx, vy, vz;
+            sample_.flow_field().at(m.x, m.y, m.z, vx, vy, vz);
+            const double a = sample_.species()[m.state].v_scale * tau;
+            m.x += vx * a; m.y += vy * a; m.z += vz * a;
+        }
         m.state = i;
         const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
         const double box_r_sq = box_xy_sq / sample_.box_z() / sample_.box_z();
@@ -443,21 +461,33 @@ private:
         };
         uint32_t w = w_birth;
         while (w < W && m.alive) {
-            if (coast && m.mobile) {
+            if (coast && m.mobile && !has_occ_) {
                 const double gap = focus_gap(m.x, m.y, m.z);
                 if (gap > 0.0) {
                     double d = std::min(gap, surface_margin(m.x, m.y, m.z));
                     const double D = sample_.species()[m.state].D;
                     if (d > 0.0 && D > kEps) {
-                        const double sigma = d / safety;
-                        uint64_t n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
-                        if (n >= set_.min_coast_windows) {
-                            if (uint64_t(w) + n > W) n = W - w;   // clamp to horizon
-                            if (n > 0) {
-                                coast_over<Rng>(m, w, n, tr ? &buf : nullptr);
-                                drain();
-                                w += uint32_t(n);
-                                continue;
+                        const double vmax = has_flow_ ? sample_.flow_field().max_speed() : 0.0;
+                        if (!has_flow_ || sample_.flow_field().is_uniform()) {
+                            const double safety_i = safety;
+                            const double A = vmax * set_.dt;
+                            uint64_t n = 0;
+                            if (A <= kEps) {
+                                const double sigma = d / safety_i;
+                                n = uint64_t((sigma * sigma) / (2.0 * D) / set_.dt);
+                            } else {
+                                const double B = safety_i * std::sqrt(2.0 * D * set_.dt);
+                                double s = (-B + std::sqrt(B * B + 4.0 * A * d)) / (2.0 * A);
+                                if (s > 0.0) n = uint64_t(s * s);
+                            }
+                            if (n >= set_.min_coast_windows) {
+                                if (uint64_t(w) + n > W) n = W - w;
+                                if (n > 0) {
+                                    coast_over<Rng>(m, w, n, tr ? &buf : nullptr);
+                                    drain();
+                                    w += uint32_t(n);
+                                    continue;
+                                }
                             }
                         }
                     }
@@ -606,16 +636,27 @@ private:
         m.state = i;
 
         if (m.mobile) {
-            const double step = diff_step_[i];   // precomputed sqrt(2·D·dt) per species
             double g0, g1, g2;
-            norm3(rng, g0, g1, g2);
-            m.x += step * g0;
-            m.y += step * g1;
-            m.z += step * g2;
+            norm3(rng, g0, g1, g2);                 // draw FIRST: keeps the RNG stream
+                                                     // aligned with the no-flow build
+            double nx = m.x, ny = m.y, nz = m.z;
+            if (has_flow_) {
+                double vx, vy, vz;
+                sample_.flow_field().at(nx, ny, nz, vx, vy, vz);
+                const double a = flow_dt_[i];       // v_scale[i] * dt
+                nx += vx * a; ny += vy * a; nz += vz * a;
+            }
+            const double step = diff_step_[i];      // sqrt(2·D·dt)
+            nx += step * g0; ny += step * g1; nz += step * g2;
+            if (has_occ_) {
+                const double occ = sample_.occlusion().at(nx, ny, nz);
+                if (occ > 0.0 && (occ >= 1.0 || rng.random0i1e() < occ)) {
+                    nx = m.x; ny = m.y; nz = m.z;   // blocked
+                }
+            }
+            m.x = nx; m.y = ny; m.z = nz;
             if (open_volume_ && m.x * m.x + m.y * m.y + box_r_sq * m.z * m.z > box_xy_sq) {
                 m.alive = false;
-                // The step is one Gaussian draw, so the crossing has no resolvable time within
-                // the window; attribute the death to its end.
                 if (state_log_) buf.push_transition(window, dt, m.id, i, -1);
             }
         }
@@ -692,6 +733,9 @@ private:
     std::vector<char> aniso_;                         // 1 if species has anisotropy
     std::vector<double> qtot_, tg_th0_, l1l2f_, rot_step_;
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
+    std::vector<double> flow_dt_;                     // v_scale[i] * dt, precomputed per species
+    bool has_flow_ = false;
+    bool has_occ_  = false;
     // Per-laser emission weights for ALEX: q_by_laser_[laser][species] is the per-channel row
     // used under that laser (species' q_alex row, or the scalar q broadcast). qtot_by_laser_ is
     // its row-sum (used by the anisotropy rate). One laser => identical to qtot_/species q.
@@ -709,6 +753,7 @@ private:
 
     // open-volume injection bookkeeping
     std::vector<double> step_, rate_in_, t_in_;
+    std::vector<double> w_in_, w_max_;        // cached per-species influx weight and max
     bool open_volume_ = false;
 
     // per-channel background arrival times, carried across windows
@@ -721,6 +766,11 @@ private:
     std::vector<double> st_t_;
     std::vector<int32_t> st_mol_;
     std::vector<int16_t> st_from_, st_to_;
+
+    /// Mean influx weight over the ellipsoid surface for species sp (flow-aware).
+    double mean_influx_weight(int sp) const;
+    /// Max influx weight over the ellipsoid surface for species sp (acceptance sampling).
+    double max_influx_weight(int sp) const;
 
     /// Append one recorded state change to the engine-level log (serial contexts only).
     void log_state(uint32_t w, double t, int mol, int from, int to) {

@@ -68,6 +68,34 @@ double random_erfc(Rng& rng) {
     } while (yv > 2. * qnorm(x));
     return x;
 }
+
+/// Standard-normal PDF.
+inline double std_phi(double u) { return std::exp(-0.5 * u * u) / std::sqrt(2. * kPi); }
+
+/// Standard-normal CDF.
+inline double std_Phi(double u) { return 0.5 * std::erfc(-u / std::sqrt(2.)); }
+
+/// E[s⁺] for s ~ N(mu, sigma²) — the per-area influx weight across a surface whose
+/// inward normal displacement has mean `mu`. Reduces to sigma/sqrt(2π) at mu = 0.
+inline double influx_weight(double mu, double sigma) {
+    if (sigma <= 0.0) return (mu > 0.0) ? mu : 0.0;
+    const double u = mu / sigma;
+    return mu * std_Phi(u) + sigma * std_phi(u);
+}
+
+/// Sample the entry depth h ≥ 0 with density ∝ Q((h − mu)/sigma) by rejection against a
+/// uniform envelope. At mu = 0 the caller must use `random_erfc` instead, so the no-flow
+/// path stays bit-identical.
+template <class Rng>
+double random_entry_depth(Rng& rng, double mu, double sigma) {
+    const double hi = ((mu > 0.0) ? mu : 0.0) + 8.0 * sigma;
+    for (int k = 0; k < 1000; ++k) {
+        const double h = rng.random0i1e() * hi;
+        const double q = 0.5 * std::erfc((h - mu) / (sigma * std::sqrt(2.)));
+        if (rng.random0i1e() < q) return h;
+    }
+    return 0.0;
+}
 } // namespace
 
 SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
@@ -109,6 +137,12 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
         l1l2f_[i] = (s.l1 > s.l2) ? 1.0 / (1.0 - s.l2 + s.l1) : 1.0 / (1.0 - s.l1 + s.l2);
         rot_step_[i] = std::sqrt(2.0 * s.D_rot * set_.dt);
     }
+
+    flow_dt_.assign(nsp, 0.0);
+    for (int i = 0; i < nsp; ++i)
+        flow_dt_[i] = sample_.species()[i].v_scale * set_.dt;
+    has_flow_ = sample_.has_flow() && sample_.flow_field().max_speed() > kEps;
+    has_occ_  = sample_.has_occlusion();
 
     // Per-laser emission weights for ALEX. Each species' per-laser row is its q_alex[L] if
     // provided (must be exactly n_lasers rows), else the scalar q broadcast to every laser. With
@@ -165,6 +199,22 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
             for (size_t i = 0; i < pop.size(); ++i)
                 sample_.set_population(int(i), pop[i] * vol_ratio);           // preserve concentration
         }
+    }
+
+    if (has_flow_ && !sample_.flow_field().is_uniform()) {
+        double gx0, gy0, gz0, gx1, gy1, gz1;
+        sample_.flow_field().bounds(gx0, gy0, gz0, gx1, gy1, gz1);
+        const double bxy = sample_.box_xy(), bz = sample_.box_z();
+        if (open_volume_ && (gx0 > -bxy || gx1 < bxy || gy0 > -bxy || gy1 < bxy ||
+                             gz0 > -bz  || gz1 < bz))
+            throw std::invalid_argument(
+                "the flow field does not cover the simulation box: SimGrid sampling "
+                "returns 0 outside the lattice, so flow would silently stop at its edge");
+        const double h = sample_.flow_field().min_spacing();
+        if (h > 0.0 && sample_.flow_field().max_speed() * set_.dt > 0.25 * h)
+            throw std::invalid_argument(
+                "max_speed * dt exceeds a quarter of the flow-grid spacing: the drift "
+                "would jump grid cells in one step; reduce dt or coarsen the field");
     }
 
     seed_population();
@@ -259,6 +309,55 @@ void SimEngine::push_alex_marker(int laser) {
     ++n_markers_;
 }
 
+double SimEngine::mean_influx_weight(int sp) const {
+    const int N = 4096;
+    const double bxy = sample_.box_xy(), bz = sample_.box_z();
+    const double sigma = step_[sp];
+    const double vs = sample_.species()[sp].v_scale;
+    const double ga = kPi * (3.0 - std::sqrt(5.0));      // golden angle
+    double num = 0.0, den = 0.0;
+    for (int k = 0; k < N; ++k) {
+        const double zc = 1.0 - 2.0 * (k + 0.5) / N;     // uniform on the unit sphere
+        const double rc = std::sqrt(std::max(0.0, 1.0 - zc * zc));
+        const double th = ga * k;
+        const double ux = rc * std::cos(th), uy = rc * std::sin(th), uz = zc;
+        const double px = ux * bxy, py = uy * bxy, pz = uz * bz;
+        // Outward normal of x²/bxy² + y²/bxy² + z²/bz² = 1 is ∝ (x/bxy², y/bxy², z/bz²).
+        double nxv = px / (bxy * bxy), nyv = py / (bxy * bxy), nzv = pz / (bz * bz);
+        const double nn = std::sqrt(nxv*nxv + nyv*nyv + nzv*nzv);
+        nxv /= nn; nyv /= nn; nzv /= nn;
+        const double dA = bxy * bxy * bz * nn;
+        double vx, vy, vz;
+        sample_.flow_field().at(px, py, pz, vx, vy, vz);
+        const double mu = -vs * (vx * nxv + vy * nyv + vz * nzv) * set_.dt;
+        num += influx_weight(mu, sigma) * dA;
+        den += dA;
+    }
+    return (den > 0.0) ? num / den : sigma / std::sqrt(2. * kPi);
+}
+
+double SimEngine::max_influx_weight(int sp) const {
+    const int N = 4096;
+    const double bxy = sample_.box_xy(), bz = sample_.box_z();
+    const double sigma = step_[sp];
+    const double vs = sample_.species()[sp].v_scale;
+    const double ga = kPi * (3.0 - std::sqrt(5.0));
+    double wmax = 0.0;
+    for (int k = 0; k < N; ++k) {
+        const double zc = 1.0 - 2.0 * (k + 0.5) / N;
+        const double rc = std::sqrt(std::max(0.0, 1.0 - zc * zc));
+        const double th = ga * k;
+        const double ux = rc * std::cos(th), uy = rc * std::sin(th), uz = zc;
+        const double px = ux * bxy, py = uy * bxy, pz = uz * bz;
+        double vx, vy, vz;
+        sample_.flow_field().at(px, py, pz, vx, vy, vz);
+        const double mu = -vs * (vx * ux + vy * uy + vz * uz) * set_.dt;
+        double w = influx_weight(mu, sigma);
+        if (w > wmax) wmax = w;
+    }
+    return (wmax > 0.0) ? wmax : sigma / std::sqrt(2. * kPi);
+}
+
 void SimEngine::seed_population() {
     // Discrete / grid emitters: fixed instances from the sample.
     for (const auto& e : sample_.emitters()) {
@@ -282,11 +381,18 @@ void SimEngine::seed_population() {
         const double sqrt_2pi = std::sqrt(2. * kPi);
 
         step_.assign(nsp, 0.0); rate_in_.assign(nsp, 0.0); t_in_.assign(nsp, 1e60);
+        w_in_.assign(nsp, 0.0); w_max_.assign(nsp, 0.0);
         for (int i = 0; i < nsp; ++i) {
             double D = sample_.species()[i].D;
             step_[i] = std::sqrt(2. * D * set_.dt);
             double M = (i < int(pop.size())) ? pop[i] : 0.0;
-            rate_in_[i] = M * step_[i] * ell_S_V / sqrt_2pi;
+            if (!has_flow_) {
+                rate_in_[i] = M * step_[i] * ell_S_V / sqrt_2pi;
+            } else {
+                w_in_[i] = mean_influx_weight(i);
+                w_max_[i] = max_influx_weight(i);
+                rate_in_[i] = M * ell_S_V * w_in_[i];
+            }
             if (rate_in_[i] > kEps) t_in_[i] = -std::log(rng_diff_.random0e1e()) / rate_in_[i];
         }
 
@@ -297,12 +403,25 @@ void SimEngine::seed_population() {
             double t = 0.;
             while ((t -= std::log(rng_diff_.random0e1e()) / M) < 1.) {
                 double x, y, z;
+                int occ_attempts = 0;
                 do {
                     x = 2. * rng_diff_.random0i1e() - 1.;
                     y = 2. * rng_diff_.random0i1e() - 1.;
                     z = 2. * rng_diff_.random0i1e() - 1.;
                 } while (x * x + y * y + z * z > 1.);
-                Mol m{x * box_xy, y * box_xy, z * box_z, i, true, next_id_++, true};
+                double px = x * box_xy, py = y * box_xy, pz = z * box_z;
+                if (has_occ_) {
+                    while (occ_attempts < 100 && sample_.occlusion().at(px, py, pz) > 0.0) {
+                        do {
+                            x = 2. * rng_diff_.random0i1e() - 1.;
+                            y = 2. * rng_diff_.random0i1e() - 1.;
+                            z = 2. * rng_diff_.random0i1e() - 1.;
+                        } while (x * x + y * y + z * z > 1.);
+                        px = x * box_xy; py = y * box_xy; pz = z * box_z;
+                        ++occ_attempts;
+                    }
+                }
+                Mol m{px, py, pz, i, true, next_id_++, true};
                 init_orientation(m);
                 mols_.push_back(m);
             }
@@ -324,6 +443,7 @@ void SimEngine::inject_open_volume(double windows) {
     for (int i = 0; i < nsp; ++i) {
         if (rate_in_[i] < kEps) continue;
         while (t_in_[i] <= windows) {
+            // Draw a surface point on the ellipsoid.
             double ze, r;
             do {
                 ze = 2. * rng_diff_.random0i1e() - 1.;
@@ -333,12 +453,70 @@ void SimEngine::inject_open_volume(double windows) {
             ze *= box_z;
             double phi = rng_diff_.random0i1e() * 2. * kPi;
             double xe = std::cos(phi) * r_xy, ye = std::sin(phi) * r_xy;
-            double step_in = step_[i] * random_erfc(rng_diff_);
+
+            double step_in;
+            if (has_flow_) {
+                double nxv = xe / (box_xy * box_xy);
+                double nyv = ye / (box_xy * box_xy);
+                double nzv = ze / (box_z  * box_z);
+                const double nn = std::sqrt(nxv*nxv + nyv*nyv + nzv*nzv);
+                nxv /= nn; nyv /= nn; nzv /= nn;
+                double vx, vy, vz;
+                sample_.flow_field().at(xe, ye, ze, vx, vy, vz);
+                const double vs = sample_.species()[i].v_scale;
+                const double mu = -vs * (vx*nxv + vy*nyv + vz*nzv) * set_.dt;
+                if (rng_diff_.random0i1e() * w_max_[i] > influx_weight(mu, step_[i]))
+                    continue;                     // rejected: redraw a surface point
+                step_in = random_entry_depth(rng_diff_, mu, step_[i]);
+            } else {
+                step_in = step_[i] * random_erfc(rng_diff_);
+            }
+
             double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
-            Mol m{xe * (1. - step_in * rnnorm),
-                  ye * (1. - step_in * rnnorm),
-                  ze * (1. - step_in * rnnorm * box_r_sq),
-                  i, true, next_id_++, true};
+            double mx = xe * (1. - step_in * rnnorm);
+            double my = ye * (1. - step_in * rnnorm);
+            double mz = ze * (1. - step_in * rnnorm * box_r_sq);
+
+            // Reject occluded entry positions.
+            if (has_occ_) {
+                int occ_attempts = 0;
+                while (occ_attempts < 100 && sample_.occlusion().at(mx, my, mz) > 0.5) {
+                    // Redraw the surface point
+                    do {
+                        ze = 2. * rng_diff_.random0i1e() - 1.;
+                        r = rng_diff_.random0i1e() * ell_Pzmax;
+                    } while (r * r > 1. - ze * ze * (1. - box_r_sq));
+                    r_xy = std::sqrt(1. - ze * ze) * box_xy;
+                    ze *= box_z;
+                    phi = rng_diff_.random0i1e() * 2. * kPi;
+                    xe = std::cos(phi) * r_xy;
+                    ye = std::sin(phi) * r_xy;
+                    if (has_flow_) {
+                        // Recompute mu and re-accept
+                        double nxv2 = xe / (box_xy * box_xy);
+                        double nyv2 = ye / (box_xy * box_xy);
+                        double nzv2 = ze / (box_z  * box_z);
+                        const double nn2 = std::sqrt(nxv2*nxv2 + nyv2*nyv2 + nzv2*nzv2);
+                        nxv2 /= nn2; nyv2 /= nn2; nzv2 /= nn2;
+                        double vx2, vy2, vz2;
+                        sample_.flow_field().at(xe, ye, ze, vx2, vy2, vz2);
+                        const double vs2 = sample_.species()[i].v_scale;
+                        const double mu2 = -vs2 * (vx2*nxv2 + vy2*nyv2 + vz2*nzv2) * set_.dt;
+                        if (rng_diff_.random0i1e() * w_max_[i] > influx_weight(mu2, step_[i]))
+                            continue;
+                        step_in = random_entry_depth(rng_diff_, mu2, step_[i]);
+                    } else {
+                        step_in = step_[i] * random_erfc(rng_diff_);
+                    }
+                    rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
+                    mx = xe * (1. - step_in * rnnorm);
+                    my = ye * (1. - step_in * rnnorm);
+                    mz = ze * (1. - step_in * rnnorm * box_r_sq);
+                    ++occ_attempts;
+                }
+            }
+
+            Mol m{mx, my, mz, i, true, next_id_++, true};
             init_orientation(m);
             mols_.push_back(m);
             mol_alive_++;
@@ -874,6 +1052,7 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
                 s.q_alex = sp["q_alex"].get<std::vector<std::vector<double>>>();
             s.r0 = sp.value("r0", 0.0); s.l1 = sp.value("l1", 0.0);
             s.l2 = sp.value("l2", 0.0); s.D_rot = sp.value("D_rot", 0.0);
+            s.v_scale = sp.value("v_scale", 1.0);
             if (sp.contains("decay")) {   // micro-time decay: arbitrary pattern (primary) or a model helper
                 const json& d = sp["decay"];
                 double ddt = d.value("dt", 0.008), dt0 = d.value("t0", 0.0);
@@ -907,6 +1086,41 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
     }
     if (cfg.contains("box"))
         sample.set_box(cfg["box"].value("xy", 2.0), cfg["box"].value("z", 4.0));
+    if (cfg.contains("flow")) {
+        const json& f = cfg["flow"];
+        const std::string ty = f.value("type", std::string("uniform"));
+        const double ext_xy = f.value("extent_xy", 2.0), ext_z = f.value("extent_z", 4.0);
+        const double sp_ = f.value("spacing", 0.1);
+        if (ty == "uniform")
+            sample.set_flow_field(SimVectorGrid::uniform(
+                f.value("vx", 0.0), f.value("vy", 0.0), f.value("vz", 0.0)));
+        else if (ty == "poiseuille")
+            sample.set_flow_field(SimVectorGrid::poiseuille(
+                f.value("v_max", 0.0), f.value("radius", 1.0), f.value("axis", 0),
+                ext_xy, ext_z, sp_));
+        else if (ty == "rotation")
+            sample.set_flow_field(SimVectorGrid::rotation(
+                f.value("omega", 0.0), f.value("axis", 2), ext_xy, ext_z, sp_));
+        else if (ty == "components")
+            sample.set_flow_field(SimVectorGrid::from_components(
+                f["vx"].get<std::vector<double>>(), f["vy"].get<std::vector<double>>(),
+                f["vz"].get<std::vector<double>>(),
+                f.value("nx", 0), f.value("ny", 0), f.value("nz", 0),
+                f.value("dx", 0.1), f.value("dy", 0.1), f.value("dz", 0.1),
+                f.value("x0", 0.0), f.value("y0", 0.0), f.value("z0", 0.0)));
+        else
+            throw std::invalid_argument("unknown flow.type: " + ty);
+    }
+    if (cfg.contains("occlusion")) {
+        const json& o = cfg["occlusion"];
+        SimGrid g(o.value("nx",0), o.value("ny",0), o.value("nz",0),
+                  o.value("dx",0.1), o.value("dy",0.1), o.value("dz",0.1),
+                  o.value("x0",0.0), o.value("y0",0.0), o.value("z0",0.0));
+        g.data = o["data"].get<std::vector<double>>();
+        if (g.data.size() != size_t(g.nx) * g.ny * g.nz)
+            throw std::invalid_argument("occlusion.data size does not match nx*ny*nz");
+        sample.set_occlusion(g);
+    }
     if (cfg.contains("population")) {
         const json& pop = cfg["population"];
         for (size_t i = 0; i < pop.size(); ++i) sample.set_population(int(i), pop[i].get<double>());
