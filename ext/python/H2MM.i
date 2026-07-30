@@ -37,12 +37,6 @@
 // Decoder input paths come in as NumPy int64 arrays.
 %apply(long long* IN_ARRAY1, int DIM1) {(const long long* path, int n_path)};
 
-// H2mmStateSidecar::set_arrays -- per-photon uint8 arrays in from NumPy.
-%apply(unsigned char* IN_ARRAY1, int DIM1) {
-    (unsigned char* states_in, int n_states_in)};
-%apply(unsigned char* IN_ARRAY1, int DIM1) {
-    (unsigned char* streams_in, int n_streams_in)};
-
 // Release the GIL around the heavy EM / decode kernels (parallel over bursts).
 TTTRLIB_NOGIL(tttrlib::H2MM::optimize)
 TTTRLIB_NOGIL(tttrlib::H2MM::viterbi)

@@ -142,10 +142,6 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
     for (int i = 0; i < nsp; ++i)
         flow_dt_[i] = sample_.species()[i].v_scale * set_.dt;
     has_flow_ = sample_.has_flow() && sample_.flow_field().max_speed() > kEps;
-    uniform_flow_ = has_flow_ && sample_.flow_field().is_uniform();
-    // A uniform field is a constant drift, which Euler integrates exactly, so it never
-    // pays for the midpoint regardless of the setting.
-    drift_midpoint_ = has_flow_ && !uniform_flow_ && set_.drift_midpoint;
     has_occ_  = sample_.has_occlusion();
 
     // Per-laser emission weights for ALEX. Each species' per-laser row is its q_alex[L] if
@@ -1034,7 +1030,6 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
         st.alex_marker_event_type = s.value("alex_marker_event_type", st.alex_marker_event_type);
         st.rng_kind = rng_kind_from(s.value("rng_kind", std::string("xoshiro")));
         st.rng_scope = rng_scope_from(s.value("rng_scope", std::string("per_molecule")));
-        st.drift_midpoint = s.value("drift_midpoint", st.drift_midpoint);
         st.fast_grid_bbox = s.value("fast_grid_bbox", st.fast_grid_bbox);
         st.focus_threshold = s.value("focus_threshold", st.focus_threshold);
         st.per_molecule_skip = s.value("per_molecule_skip", st.per_molecule_skip);
@@ -1157,7 +1152,7 @@ std::string SimEngine::default_json() {
     "seed_diffusion": 12345, "seed_emission": 54321, "n_channels": 2,
     "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0,
     "rng_kind": "xoshiro", "rng_scope": "per_molecule",
-    "per_molecule_skip": false, "fast_grid_bbox": false, "drift_midpoint": true,
+    "per_molecule_skip": false, "fast_grid_bbox": false,
     "independent_molecules": false, "active_margin": 0.0
   },
   "box": {"xy": 2.0, "z": 4.0},

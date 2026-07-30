@@ -464,22 +464,9 @@ modelled on the Smoluchowski advection–diffusion equation:
 
     dr = v(r)\,dt + \sqrt{2D}\,dW
 
-A molecule in a velocity field :math:`v(r)` follows the Itô SDE above, integrated with
-Euler–Maruyama for the noise. The **drift** is integrated exactly for a uniform field
-(constant drift needs no scheme) and with an explicit **midpoint** step for any other
-field. That is not a refinement but a correctness requirement: plain Euler applied to a
-rigid rotation has map :math:`I + \omega\,\Delta t\,A` with determinant
-:math:`1 + (\omega\Delta t)^2 > 1`, so it inflates phase-space volume on every step and
-molecules spiral outward. The error is :math:`O(\Delta t^2)` per step but *systematic*, so
-it accumulates linearly in time rather than averaging away — at
-:math:`\omega\Delta t = 0.002` the radius grows by a factor 1.82 over 300 000 windows.
-Midpoint reduces the per-step volume error to :math:`(\omega\Delta t)^4/4` and costs one
-extra field lookup, which the uniform path never pays. Independently of the scheme, the
-drift is sampled at the step start, so the field should vary slowly over one diffusion
-length :math:`\sigma = \sqrt{2D\Delta t}`.
-
-The three built-in fields are all divergence-free and therefore preserve a uniform
-equilibrium concentration:
+A molecule in a velocity field :math:`v(r)` follows the Itô SDE above (Euler–Maruyama
+integration). The three built-in fields are all divergence-free and therefore preserve
+a uniform equilibrium concentration (see §0.1 of the implementation spec):
 
 * **Uniform** — constant :math:`v = (v_x, v_y, v_z)`. Evaluated analytically; no grid.
 * **Poiseuille** — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section

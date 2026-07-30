@@ -86,37 +86,6 @@ struct SimIntegrator {
     ///     kinetics-sensitive observables. Default 0 = no clip (exact).
     double active_margin = 0.0;
 
-    /*!
-     * Integrate the flow drift with an explicit midpoint step (default) instead of plain
-     * Euler. Costs **one extra field lookup per step**, which on a grid field is the
-     * dominant cost: measured 9.7 s vs 6.9 s for a 400k-window Poiseuille run, i.e. about
-     * 30 % of the run time.
-     *
-     * Only non-uniform fields are affected. A uniform field is a constant drift, which
-     * Euler integrates exactly, so it never takes the midpoint path and never pays.
-     *
-     * When it is safe to turn off. The concern is whether the drift map preserves
-     * phase-space volume; if it does not, the molecule density drifts and an open volume
-     * slowly gains or loses molecules. For a velocity Jacobian `J = grad v`, the Euler map
-     * `I + J·dt` has determinant `1 - tr(J^2)·dt^2/2 + ...` for a divergence-free field,
-     * and `tr(J^2) = ||S||^2 - ||W||^2` splits into its symmetric (strain) and
-     * antisymmetric (vorticity) parts. So:
-     *
-     *   • **Pure shear — safe to disable.** `Poiseuille` has a nilpotent Jacobian
-     *     (`v_x` depends only on y and z), so `tr(J^2) = 0` and Euler is volume-exact.
-     *     Its trajectory is exact too, since the transverse coordinates never change.
-     *   • **Vorticity — keep it on.** `rotation` has `S = 0`, so the determinant is
-     *     `1 + (omega·dt)^2 > 1`: Euler inflates volume every step and molecules spiral
-     *     outward. The error is systematic, so it accumulates linearly in time rather than
-     *     averaging away — at `omega·dt = 0.002` the radius grows 1.82x over 300k windows.
-     *   • **Pure strain — keep it on.** Note that zero vorticity is *not* sufficient:
-     *     a strain-only field has `tr(J^2) > 0`, so Euler contracts.
-     *
-     * In short, disable it for shear-like transport (the usual pCF/flow-profile case) and
-     * leave it on for anything that rotates or strains, or when unsure.
-     */
-    bool drift_midpoint = true;
-
     /// Two-step field lookup (opt-in throughput). When true, the engine builds a cheap
     /// bounding box (at `focus_threshold`·peak) around each excitation/detection grid so
     /// `SimGrid::at` rejects far-from-focus queries with 6 comparisons before the

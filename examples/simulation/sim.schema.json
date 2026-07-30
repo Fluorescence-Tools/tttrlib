@@ -48,8 +48,6 @@
           "description": "Minimum sleep length in windows. Only used with coasting."},
         "focus_threshold": {"type": "number", "default": 0.001, "minimum": 0, "maximum": 1,
           "description": "Fraction of peak excitation defining the effective-focus box used by coasting, the two-step lookup and active_margin."},
-        "drift_midpoint": {"type": "boolean", "default": true,
-          "description": "Integrate the flow drift with an explicit midpoint step instead of plain Euler. Only non-uniform fields are affected (a uniform field is a constant drift, integrated exactly either way). Costs one extra field lookup per step (~30% of run time on a grid field). Safe to disable for pure-shear transport such as poiseuille, whose Jacobian is nilpotent so Euler is volume-exact; keep it on for rotation or any field with vorticity or strain, where Euler inflates or contracts phase-space volume every step and molecules drift radially."},
         "fast_grid_bbox": {"type": "boolean", "default": false,
           "description": "Two-step field lookup: reject far-from-focus queries with a bounding box before the trilinear interpolation."},
         "independent_molecules": {"type": "boolean", "default": false,
