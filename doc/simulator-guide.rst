@@ -464,9 +464,22 @@ modelled on the Smoluchowski advection–diffusion equation:
 
     dr = v(r)\,dt + \sqrt{2D}\,dW
 
-A molecule in a velocity field :math:`v(r)` follows the Itô SDE above (Euler–Maruyama
-integration). The three built-in fields are all divergence-free and therefore preserve
-a uniform equilibrium concentration (see §0.1 of the implementation spec):
+A molecule in a velocity field :math:`v(r)` follows the Itô SDE above, integrated with
+Euler–Maruyama for the noise. The **drift** is integrated exactly for a uniform field
+(constant drift needs no scheme) and with an explicit **midpoint** step for any other
+field. That is not a refinement but a correctness requirement: plain Euler applied to a
+rigid rotation has map :math:`I + \omega\,\Delta t\,A` with determinant
+:math:`1 + (\omega\Delta t)^2 > 1`, so it inflates phase-space volume on every step and
+molecules spiral outward. The error is :math:`O(\Delta t^2)` per step but *systematic*, so
+it accumulates linearly in time rather than averaging away — at
+:math:`\omega\Delta t = 0.002` the radius grows by a factor 1.82 over 300 000 windows.
+Midpoint reduces the per-step volume error to :math:`(\omega\Delta t)^4/4` and costs one
+extra field lookup, which the uniform path never pays. Independently of the scheme, the
+drift is sampled at the step start, so the field should vary slowly over one diffusion
+length :math:`\sigma = \sqrt{2D\Delta t}`.
+
+The three built-in fields are all divergence-free and therefore preserve a uniform
+equilibrium concentration:
 
 * **Uniform** — constant :math:`v = (v_x, v_y, v_z)`. Evaluated analytically; no grid.
 * **Poiseuille** — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section
@@ -514,6 +527,30 @@ Three limitations:
   to it. Seal the region with :math:`\text{occ} = 1` walls (no injection, no absorption)
   and the law is recovered to about 1 %, which is how
   ``test_partial_occlusion_follows_one_minus_occ`` measures it.
+
+Making a flow simulation fast
+-----------------------------
+
+Measured on a 200-molecule open volume, 8 cores, in order of what they are worth:
+
+* **``independent_molecules``: 5-6x.** Each molecule's whole timeline is simulated on its
+  own and the photon streams are merged, so there is no per-window barrier and the work is
+  embarrassingly parallel. This is by far the largest single win for a stationary-focus
+  run, and it is exact: it draws the injection count from a Poisson over the horizon and
+  gives each molecule an independent birth time. Needs ``max_windows > 0``.
+* **``per_molecule_skip`` (coasting) on top: a further ~1.3x**, so ~7x combined. Uniform
+  fields only -- a non-uniform field has no closed-form catch-up and an occlusion mask
+  would be tunnelled through, so both disable it.
+* **``drift_midpoint: false``: 22-26 %** on a grid field, by dropping the second field
+  lookup. Safe for shear-like fields such as ``poiseuille``; see the discussion above for
+  when it is not.
+* **Threads in the default window mode: only above ~2000 molecules.** The per-window
+  fork/join dominates below that -- at 200 molecules forcing it on is *three times slower*.
+  ``parallel_threshold`` (default 2048) encodes this; the measured speedup is 1.1x at 2000
+  molecules and 1.9-2.3x at 20000. Prefer ``independent_molecules``, which has no barrier.
+
+Grid fields cost about 1.7x a uniform one, so if the physics only needs a constant drift,
+use ``{"type": "uniform"}`` rather than a lattice holding a constant.
 
 **Coasting** is disabled for any non-uniform field or for any occlusion mask. A uniform
 field uses a quadratic bound that accounts for both diffusion and drift (the original

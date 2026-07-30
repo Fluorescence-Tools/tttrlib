@@ -141,7 +141,17 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
     flow_dt_.assign(nsp, 0.0);
     for (int i = 0; i < nsp; ++i)
         flow_dt_[i] = sample_.species()[i].v_scale * set_.dt;
-    has_flow_ = sample_.has_flow() && sample_.flow_field().max_speed() > kEps;
+    // max_speed() walks the whole lattice, so it is computed exactly once here and read
+    // from the cache everywhere else — the coast decision consults it per molecule per
+    // window, where a rescan is ruinous.
+    flow_max_speed_ = sample_.has_flow() ? sample_.flow_field().max_speed() : 0.0;
+    has_flow_ = sample_.has_flow() && flow_max_speed_ > kEps;
+    uniform_flow_ = has_flow_ && sample_.flow_field().is_uniform();
+    if (uniform_flow_)
+        sample_.flow_field().at(0.0, 0.0, 0.0, flow_ux_, flow_uy_, flow_uz_);
+    // A uniform field is a constant drift, which Euler integrates exactly, so it never
+    // pays for the midpoint regardless of the setting.
+    drift_midpoint_ = has_flow_ && !uniform_flow_ && set_.drift_midpoint;
     has_occ_  = sample_.has_occlusion();
 
     // Per-laser emission weights for ALEX. Each species' per-laser row is its q_alex[L] if
@@ -211,7 +221,7 @@ SimEngine::SimEngine(SimSystem sample, std::vector<SimGrid> excitation,
                 "the flow field does not cover the simulation box: SimGrid sampling "
                 "returns 0 outside the lattice, so flow would silently stop at its edge");
         const double h = sample_.flow_field().min_spacing();
-        if (h > 0.0 && sample_.flow_field().max_speed() * set_.dt > 0.25 * h)
+        if (h > 0.0 && flow_max_speed_ * set_.dt > 0.25 * h)
             throw std::invalid_argument(
                 "max_speed * dt exceeds a quarter of the flow-grid spacing: the drift "
                 "would jump grid cells in one step; reduce dt or coarsen the field");
@@ -350,7 +360,7 @@ double SimEngine::max_influx_weight(int sp) const {
     // more draws, but injections are rare events and correctness is not negotiable here.
     const double sigma = step_[sp];
     const double vs = std::fabs(sample_.species()[sp].v_scale);
-    const double mu_max = vs * sample_.flow_field().max_speed() * set_.dt;
+    const double mu_max = vs * flow_max_speed_ * set_.dt;
     const double w = influx_weight(mu_max, sigma);
     return (w > 0.0) ? w : sigma / std::sqrt(2. * kPi);
 }
@@ -802,13 +812,36 @@ void SimEngine::run_independent_impl(uint64_t W) {
                 Rng br; br.reset(mol_base_seed_ ^ kBirthSalt, uint32_t(k), 0);
                 int i = species_of(k - init);
                 w_birth = uint32_t(br.random0i1e() * double(W));          // uniform start time
-                double ze, r;
-                do { ze = 2. * br.random0i1e() - 1.; r = br.random0i1e() * ell_Pzmax; }
-                while (r * r > 1. - ze * ze * (1. - box_r_sq));
-                double r_xy = std::sqrt(1. - ze * ze) * box_xy; ze *= box_z;
-                double phi = br.random0i1e() * 2. * kPi;
-                double xe = std::cos(phi) * r_xy, ye = std::sin(phi) * r_xy;
-                double step_in = step_[i] * random_erfc(br);
+                double ze, r, r_xy, phi, xe, ye, step_in;
+                // Surface point + entry depth, advection-aware exactly as inject_open_volume
+                // does it: under flow the upstream face admits more molecules than the
+                // downstream one, so a uniformly drawn point is the wrong distribution even
+                // when the total rate (rate_in_, already flow-aware) is right.
+                for (int attempt = 0; ; ++attempt) {
+                    do { ze = 2. * br.random0i1e() - 1.; r = br.random0i1e() * ell_Pzmax; }
+                    while (r * r > 1. - ze * ze * (1. - box_r_sq));
+                    r_xy = std::sqrt(1. - ze * ze) * box_xy; ze *= box_z;
+                    phi = br.random0i1e() * 2. * kPi;
+                    xe = std::cos(phi) * r_xy; ye = std::sin(phi) * r_xy;
+                    if (!has_flow_) {
+                        step_in = step_[i] * random_erfc(br);             // UNCHANGED at v = 0
+                        break;
+                    }
+                    double nxv = xe / (box_xy * box_xy);
+                    double nyv = ye / (box_xy * box_xy);
+                    double nzv = ze / (box_z * box_z);
+                    const double nn = std::sqrt(nxv*nxv + nyv*nyv + nzv*nzv);
+                    nxv /= nn; nyv /= nn; nzv /= nn;
+                    double vx, vy, vz;
+                    sample_.flow_field().at(xe, ye, ze, vx, vy, vz);
+                    const double vs = sample_.species()[i].v_scale;
+                    const double mu = -vs * (vx*nxv + vy*nyv + vz*nzv) * set_.dt;
+                    if (attempt < 1000 &&
+                        br.random0i1e() * w_max_[i] > influx_weight(mu, step_[i]))
+                        continue;                                        // rejected: redraw
+                    step_in = random_entry_depth(br, mu, step_[i]);
+                    break;
+                }
                 double rnnorm = 1. / std::sqrt(r_xy * r_xy + ze * ze * box_r_sq * box_r_sq);
                 m = Mol{xe * (1. - step_in * rnnorm), ye * (1. - step_in * rnnorm),
                         ze * (1. - step_in * rnnorm * box_r_sq), i, true, int(k), true};
@@ -1030,6 +1063,7 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
         st.alex_marker_event_type = s.value("alex_marker_event_type", st.alex_marker_event_type);
         st.rng_kind = rng_kind_from(s.value("rng_kind", std::string("xoshiro")));
         st.rng_scope = rng_scope_from(s.value("rng_scope", std::string("per_molecule")));
+        st.drift_midpoint = s.value("drift_midpoint", st.drift_midpoint);
         st.fast_grid_bbox = s.value("fast_grid_bbox", st.fast_grid_bbox);
         st.focus_threshold = s.value("focus_threshold", st.focus_threshold);
         st.per_molecule_skip = s.value("per_molecule_skip", st.per_molecule_skip);
@@ -1152,7 +1186,7 @@ std::string SimEngine::default_json() {
     "seed_diffusion": 12345, "seed_emission": 54321, "n_channels": 2,
     "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0,
     "rng_kind": "xoshiro", "rng_scope": "per_molecule",
-    "per_molecule_skip": false, "fast_grid_bbox": false,
+    "per_molecule_skip": false, "fast_grid_bbox": false, "drift_midpoint": true,
     "independent_molecules": false, "active_margin": 0.0
   },
   "box": {"xy": 2.0, "z": 4.0},
