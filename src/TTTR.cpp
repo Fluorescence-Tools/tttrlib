@@ -1505,6 +1505,16 @@ void TTTR::get_routing_channel(signed char** output, int* n_output){
     get_array<signed char>(n_valid_events, routing_channels, output, n_output);
 }
 
+void TTTR::set_routing_channel(signed char* input, int n_input){
+    if (input == nullptr) return;
+    if (static_cast<size_t>(n_input < 0 ? 0 : n_input) != n_valid_events)
+        throw std::invalid_argument(
+            "TTTR::set_routing_channel: got " + std::to_string(n_input) +
+            " channels for " + std::to_string(n_valid_events) + " events");
+    std::copy(input, input + n_valid_events, routing_channels);
+    find_used_routing_channels();
+}
+
 void TTTR::get_used_routing_channels(signed char** output, int* n_output){
     get_array<signed char>(
             used_routing_channels.size(),

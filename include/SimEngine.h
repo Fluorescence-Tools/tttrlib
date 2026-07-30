@@ -352,14 +352,18 @@ private:
     void maybe_sleep(Mol& m, uint32_t T0, Rng&) {
         if (!m.mobile || !m.alive) return;
         if (has_occ_) return;                                  // a sleeper would tunnel through a wall
+        // Bail on a non-uniform field FIRST: there is no closed-form catch-up for one, so
+        // everything below is wasted. (This used to sit after the max_speed() call, which
+        // scans every voxel of the field -- per molecule, per window. On a 51x51x91 grid
+        // that is 237k operations for a decision that was always "return".)
+        if (has_flow_ && !uniform_flow_) return;
         const double D = sample_.species()[m.state].D;
         if (D <= kEps) return;
         double d = focus_gap(m.x, m.y, m.z);
         if (d <= 0.0) return;                                  // inside focus: stay awake
         d = std::min(d, surface_margin(m.x, m.y, m.z));
         if (d <= 0.0) return;
-        const double vmax = has_flow_ ? sample_.flow_field().max_speed() : 0.0;
-        if (has_flow_ && !sample_.flow_field().is_uniform()) return;  // no closed-form catch-up
+        const double vmax = flow_max_speed_;                   // cached at construction
         const double safety = (set_.coast_safety > 1e-3) ? set_.coast_safety : 3.0;
         const double A = vmax * set_.dt;
         uint64_t n = 0;
@@ -469,14 +473,16 @@ private:
         };
         uint32_t w = w_birth;
         while (w < W && m.alive) {
-            if (coast && m.mobile && !has_occ_) {
+            // A non-uniform field has no closed-form catch-up, so it can never coast; test
+            // that before any per-window work (see maybe_sleep).
+            if (coast && m.mobile && !has_occ_ && !(has_flow_ && !uniform_flow_)) {
                 const double gap = focus_gap(m.x, m.y, m.z);
                 if (gap > 0.0) {
                     double d = std::min(gap, surface_margin(m.x, m.y, m.z));
                     const double D = sample_.species()[m.state].D;
                     if (d > 0.0 && D > kEps) {
-                        const double vmax = has_flow_ ? sample_.flow_field().max_speed() : 0.0;
-                        if (!has_flow_ || sample_.flow_field().is_uniform()) {
+                        const double vmax = flow_max_speed_;   // cached at construction
+                        {
                             const double safety_i = safety;
                             const double A = vmax * set_.dt;
                             uint64_t n = 0;
@@ -649,9 +655,31 @@ private:
                                                      // aligned with the no-flow build
             double nx = m.x, ny = m.y, nz = m.z;
             if (has_flow_) {
-                double vx, vy, vz;
-                sample_.flow_field().at(nx, ny, nz, vx, vy, vz);
                 const double a = flow_dt_[i];       // v_scale[i] * dt
+                double vx, vy, vz;
+                if (uniform_flow_) {
+                    // The overwhelmingly common case, and the one every closed-loop test
+                    // uses. Reading the cached constant here keeps the whole drift to
+                    // three fused multiply-adds with no field lookup at all.
+                    vx = flow_ux_; vy = flow_uy_; vz = flow_uz_;
+                } else {
+                    sample_.flow_field().at(nx, ny, nz, vx, vy, vz);
+                }
+                if (drift_midpoint_) {
+                    // Explicit midpoint for the drift. Plain Euler is EXACT for a uniform
+                    // field but not for one with shear or rotation: the Euler map of a rigid
+                    // rotation is I + omega*dt*A, whose determinant is 1 + (omega*dt)^2 > 1,
+                    // so it inflates volume on every step and molecules spiral outward until
+                    // the absorbing boundary eats them. Measured at omega*dt = 0.002: the
+                    // radius grows 1.82x over 3e5 windows (predicted 1.822x), draining an
+                    // open volume by a third. Midpoint drops the per-step volume error from
+                    // (omega*dt)^2 to (omega*dt)^4/4 -- a factor of 1e6 at that step size --
+                    // and costs one extra field lookup, which the uniform path never pays.
+                    const double hx = nx + vx * 0.5 * a;
+                    const double hy = ny + vy * 0.5 * a;
+                    const double hz = nz + vz * 0.5 * a;
+                    sample_.flow_field().at(hx, hy, hz, vx, vy, vz);
+                }
                 nx += vx * a; ny += vy * a; nz += vz * a;
             }
             const double step = diff_step_[i];      // sqrt(2·D·dt)
@@ -743,6 +771,10 @@ private:
     std::vector<double> diff_step_;                   // precomputed sqrt(2·D·dt) per species
     std::vector<double> flow_dt_;                     // v_scale[i] * dt, precomputed per species
     bool has_flow_ = false;
+    bool uniform_flow_ = false;    // constant field: Euler integrates the drift exactly
+    bool drift_midpoint_ = false;  // midpoint drift step (non-uniform fields, opt-out)
+    double flow_max_speed_ = 0.0;  // cached: SimVectorGrid::max_speed() scans every voxel
+    double flow_ux_ = 0.0, flow_uy_ = 0.0, flow_uz_ = 0.0;  // cached uniform velocity
     bool has_occ_  = false;
     // Per-laser emission weights for ALEX: q_by_laser_[laser][species] is the per-channel row
     // used under that laser (species' q_alex row, or the scalar q broadcast). qtot_by_laser_ is
