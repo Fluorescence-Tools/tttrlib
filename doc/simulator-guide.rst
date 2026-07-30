@@ -561,6 +561,17 @@ Measured on a 200-molecule open volume, 8 cores, in order of what they are worth
   error -- at 0.10 um spacing the two differ by 2.3 % in count rate, and it is the lattice
   that is wrong.
 
+* **``active_margin``: up to 3x, and it is the first thing to reach for.** It shrinks the
+  open volume to focus-plus-margin while holding the concentration, so molecules too far
+  away to be seen are never stepped at all. Measured on a flow-FCS run: 40.3 s at margin 0
+  (94 molecules), 27.6 s at 1.0 um (71), 12.9 s at 0.5 um (25) -- with the observables
+  intact, ``G(0)`` 0.948 -> 0.963 and the fitted ``D``/``v`` moving 0.453/9.67 ->
+  0.515/10.07 against true values of 0.5/10.0, i.e. inside the fit scatter. Use a margin of
+  a few diffusion lengths; for kinetics use ``>= sqrt(2*D/k_min)`` so freshly injected
+  molecules reach their stationary state before they can be seen.
+* **``rng_kind: pcg``: ~8 %** over the default xoshiro on this machine; philox is ~12 %
+  slower. All three are thread-count independent, so this is a free swap.
+
 * **Threads in the default window mode: only above ~2000 molecules.** The per-window
   fork/join dominates below that -- at 200 molecules forcing it on is *three times slower*.
   ``parallel_threshold`` (default 2048) encodes this; the measured speedup is 1.1x at 2000
@@ -568,6 +579,26 @@ Measured on a 200-molecule open volume, 8 cores, in order of what they are worth
 
 Grid fields cost about 1.7x a uniform one, so if the physics only needs a constant drift,
 use ``{"type": "uniform"}`` rather than a lattice holding a constant.
+
+What does **not** help, measured so that nobody repeats it:
+
+* **Weakening the random numbers.** The diffusion step needs three normals per molecule per
+  window, and it is tempting to note that diffusion would survive a poorer generator. It
+  would -- but the ziggurat sampler is already cheaper than the alternatives: replacing it
+  with three uniforms of matching variance packed out of two 32-bit draws made the run
+  *slower* (3.9 s -> 4.2 s). Its fast path is one 32-bit draw, a table lookup, a compare and
+  a multiply, and it is taken ~98 % of the time.
+* **SIMD.** The per-molecule cost is ~45 ns and scales perfectly linearly with the molecule
+  count, so vectorising across molecules is the only shape that would pay. That needs a
+  structure-of-arrays molecule pool, and it would break the per-molecule RNG keying that
+  makes results independent of thread count -- a guarantee the engine deliberately holds.
+  The remaining per-molecule work is also branchy (photophysics loop, Poisson emission,
+  rejection sampling), so only the propagation would vectorise. Against ``active_margin``
+  at 3x and ``independent_molecules`` at 5-7x, both already available, it is not worth it.
+* **Chasing the field lookup by profile alone.** A sampling profile attributes ~60 % of the
+  run to the return from the excitation lookup, which reads as "``std::exp`` dominates". It
+  does not: skipping 44 % of the exponentials changes nothing measurable. The cost is memory
+  traffic, which is what the radial table above addresses.
 
 **Coasting** is disabled for any non-uniform field or for any occlusion mask. A uniform
 field uses a quadratic bound that accounts for both diffusion and drift (the original
