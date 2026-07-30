@@ -531,6 +531,70 @@ Three limitations:
 Making a flow simulation fast
 -----------------------------
 
+They compose, and that is the headline: on a flow-FCS run to a fixed photon budget, the
+default configuration takes 19.0 s and the fully-tuned one 1.8 s -- **10.8x** -- with the
+physics unchanged. The fitted values move around inside their own scatter and the
+amplitude, which reports the concentration, drifts *toward* the exact value rather than
+away from it:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 10 10 10 10 10
+
+   * - configuration
+     - time
+     - G(0)
+     - D
+     - v
+     - speedup
+   * - default (lattice PSF, nothing enabled)
+     - 19.0 s
+     - 0.933
+     - 0.440
+     - 9.44
+     - 1.0x
+   * - ``+ "radial": true`` on the excitation
+     - 14.8 s
+     - 0.935
+     - 0.426
+     - 9.50
+     - 1.3x
+   * - ``+ active_margin: 1.0``
+     - 9.8 s
+     - 0.985
+     - 0.530
+     - 10.08
+     - 1.9x
+   * - ``+ independent_molecules: true``
+     - 1.9 s
+     - 0.978
+     - 0.426
+     - 9.78
+     - 10.2x
+   * - ``+ per_molecule_skip: true``
+     - 1.8 s
+     - 0.989
+     - 0.593
+     - 9.94
+     - 10.8x
+   * - *simulated truth*
+     -
+     - 1.000
+     - 0.500
+     - 10.00
+     -
+
+A ready-made fast configuration, for a stationary-focus run with a symmetric PSF::
+
+    "settings": {"independent_molecules": true, "per_molecule_skip": true,
+                 "active_margin": 1.0, "max_windows": 3000000},
+    "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 1.5,
+                   "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.05,
+                   "radial": true}
+
+Each knob on its own, in order of what it is worth:
+
+
 Measured on a 200-molecule open volume, 8 cores, in order of what they are worth:
 
 * **``independent_molecules``: 5-6x.** Each molecule's whole timeline is simulated on its
