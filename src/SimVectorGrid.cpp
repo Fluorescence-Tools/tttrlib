@@ -8,10 +8,6 @@
 
 namespace tttrlib {
 
-namespace {
-constexpr double kPi = 3.14159265358979323846;
-}
-
 void SimVectorGrid::at(double x, double y, double z,
                         double& vx, double& vy, double& vz) const {
     if (uniform_) {

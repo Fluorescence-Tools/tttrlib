@@ -337,25 +337,22 @@ double SimEngine::mean_influx_weight(int sp) const {
 }
 
 double SimEngine::max_influx_weight(int sp) const {
-    const int N = 4096;
-    const double bxy = sample_.box_xy(), bz = sample_.box_z();
+    // Rejection sampling in inject_open_volume needs an envelope that is *never* below the
+    // true surface maximum of w. Sampling the surface cannot promise that: a quasi-random
+    // point set misses the true maximum by O(theta^2) and the resulting over-acceptance is
+    // silent. Since mu = -v_scale*(v . n_hat)*dt <= v_scale*max_speed*dt for any normal, and
+    // influx_weight is monotonically increasing in mu, the analytic bound below is a rigorous
+    // envelope that needs no surface sampling at all.
+    //
+    // It is exactly tight for a uniform field (the upstream pole attains it). For a field
+    // whose maximum speed occurs away from the box surface (a narrow Poiseuille pipe inside a
+    // wide box) the envelope is loose and the acceptance rate drops — injection then costs
+    // more draws, but injections are rare events and correctness is not negotiable here.
     const double sigma = step_[sp];
-    const double vs = sample_.species()[sp].v_scale;
-    const double ga = kPi * (3.0 - std::sqrt(5.0));
-    double wmax = 0.0;
-    for (int k = 0; k < N; ++k) {
-        const double zc = 1.0 - 2.0 * (k + 0.5) / N;
-        const double rc = std::sqrt(std::max(0.0, 1.0 - zc * zc));
-        const double th = ga * k;
-        const double ux = rc * std::cos(th), uy = rc * std::sin(th), uz = zc;
-        const double px = ux * bxy, py = uy * bxy, pz = uz * bz;
-        double vx, vy, vz;
-        sample_.flow_field().at(px, py, pz, vx, vy, vz);
-        const double mu = -vs * (vx * ux + vy * uy + vz * uz) * set_.dt;
-        double w = influx_weight(mu, sigma);
-        if (w > wmax) wmax = w;
-    }
-    return (wmax > 0.0) ? wmax : sigma / std::sqrt(2. * kPi);
+    const double vs = std::fabs(sample_.species()[sp].v_scale);
+    const double mu_max = vs * sample_.flow_field().max_speed() * set_.dt;
+    const double w = influx_weight(mu_max, sigma);
+    return (w > 0.0) ? w : sigma / std::sqrt(2. * kPi);
 }
 
 void SimEngine::seed_population() {

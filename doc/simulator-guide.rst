@@ -462,7 +462,7 @@ modelled on the Smoluchowski advection–diffusion equation:
 
 .. math::
 
-    dr = v(r)\\,dt + \\sqrt{2D}\\,dW
+    dr = v(r)\,dt + \sqrt{2D}\,dW
 
 A molecule in a velocity field :math:`v(r)` follows the Itô SDE above (Euler–Maruyama
 integration). The three built-in fields are all divergence-free and therefore preserve
@@ -470,11 +470,11 @@ a uniform equilibrium concentration (see §0.1 of the implementation spec):
 
 * **Uniform** — constant :math:`v = (v_x, v_y, v_z)`. Evaluated analytically; no grid.
 * **Poiseuille** — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section
-  :math:`v_a(\\rho) = v_{\\max}(1 - \\rho^2/R^2)`, clamped to 0 outside radius :math:`R`.
-* **Rotation** — rigid-body rotation about an axis, :math:`v = \\omega \\times r`.
+  :math:`v_a(\rho) = v_{\max}(1 - \rho^2/R^2)`, clamped to 0 outside radius :math:`R`.
+* **Rotation** — rigid-body rotation about an axis, :math:`v = \omega \times r`.
 
 Arbitrary fields can be constructed from three same-shaped component arrays via
-``from_components``. A compressible field (one violating :math:`\\nabla\\cdot v = 0`)
+``from_components``. A compressible field (one violating :math:`\nabla\cdot v = 0`)
 will concentrate molecules — real physics, but it invalidates any homogeneous-sample
 correlation analysis. The user is warned, not prevented.
 
@@ -483,24 +483,37 @@ flow field (0 = not advected, e.g. a surface-bound dark state).
 
 **Injection must be advection-aware.** The open-volume surface-flux model injects molecules
 across the ellipsoid boundary. Without flow the per-area influx rate is
-:math:`\\sigma/\\sqrt{2\\pi}` (step size :math:`\\sigma = \\sqrt{2D\\Delta t}`). With flow
-the normal displacement has mean :math:`\\mu = -v_\\perp\\Delta t`, giving the generalised
-influx weight :math:`w = \\mu\\Phi(\\mu/\\sigma) + \\sigma\\phi(\\mu/\\sigma)` where
-:math:`\\Phi` is the standard-normal CDF and :math:`\\phi` its PDF. Using the old
-:math:`\\sigma/\\sqrt{2\\pi}` formula under flow under-injects upstream-facing surfaces
+:math:`\sigma/\sqrt{2\pi}` (step size :math:`\sigma = \sqrt{2D\Delta t}`). With flow
+the normal displacement has mean :math:`\mu = -v_\perp\Delta t`, giving the generalised
+influx weight :math:`w = \mu\Phi(\mu/\sigma) + \sigma\phi(\mu/\sigma)` where
+:math:`\Phi` is the standard-normal CDF and :math:`\phi` its PDF. Using the old
+:math:`\sigma/\sqrt{2\pi}` formula under flow under-injects upstream-facing surfaces
 and the population slowly drains — a silent, cumulative error that the simulator now
 corrects.
 
 **Barriers (occlusion).** An occlusion mask ``occ(r) ∈ [0,1]`` implements excluded-volume
 rejection: a proposed step to :math:`r'` is accepted with probability
-:math:`1 - \\text{occ}(r')`. When :math:`v = 0` this satisfies detailed balance and the
-equilibrium concentration inside a region of occlusion :math:`q` is :math:`1 - q` times the
-outside value (the effective diffusion is also reduced by the same factor). Two limitations:
+:math:`1 - \text{occ}(r')`. When :math:`v = 0` this satisfies detailed balance and the
+**equilibrium** concentration inside a region of occlusion :math:`q` is :math:`1 - q` times
+the outside value (the effective diffusion is reduced by the same factor). So the mask is an
+excluded-volume / partial-accessibility medium — not a membrane with a permeability.
 
-* A wall thinner than about :math:`4\\sigma` may be tunnelled through in a single step
-  with no warning. Ensure ``thickness ≳ 4\\sqrt{2D\\Delta t}``.
-* Partial occlusion (:math:`0 < \\text{occ} < 1`) combined with flow is outside the
-  validated regime. Hard walls (:math:`\\text{occ} = 1`) with flow are fine.
+Three limitations:
+
+* A wall thinner than about :math:`4\sigma` may be tunnelled through in a single step
+  with no warning. Ensure ``thickness ≳ 4\sqrt{2D\Delta t}``.
+* Partial occlusion (:math:`0 < \text{occ} < 1`) combined with flow is outside the
+  validated regime. Hard walls (:math:`\text{occ} = 1`) with flow are fine.
+* The :math:`1 - q` law is an **equilibrium** statement, and an open volume is not at
+  equilibrium: molecules are injected across the surface and absorbed at it. When the
+  turnover time is comparable to the time needed to diffuse across the occluded region the
+  measured density ratio lands well above :math:`1 - q` — in a box of radius 3 µm with a
+  1 µm slab at :math:`q = 0.5` and :math:`D = 3`, it is 0.66 rather than 0.50, because the
+  residence time :math:`R^2/6D` is only about three times the crossing time
+  :math:`L^2/2D`. Nothing is wrong in that run; the equilibrium law simply does not apply
+  to it. Seal the region with :math:`\text{occ} = 1` walls (no injection, no absorption)
+  and the law is recovered to about 1 %, which is how
+  ``test_partial_occlusion_follows_one_minus_occ`` measures it.
 
 **Coasting** is disabled for any non-uniform field or for any occlusion mask. A uniform
 field uses a quadratic bound that accounts for both diffusion and drift (the original

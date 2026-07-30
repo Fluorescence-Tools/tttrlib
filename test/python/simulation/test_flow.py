@@ -1,4 +1,6 @@
 """Flow, occlusion and pair-correlation tests for the photon simulator (PRD-005)."""
+import json
+
 import numpy as np
 import pytest
 
@@ -29,8 +31,15 @@ def _free_sample(D=3.0, v_scale=1.0, n=1, box=(1e6, 1e6)):
 # T7.1 — zero flow is bit-identical
 # ---------------------------------------------------------------------------
 def test_zero_flow_is_bit_identical():
-    """Two engines with identical seeds: no flow vs. uniform(0,0,0) produce exactly the
-    same photon stream. This guards every 'reduces to today's formula' claim."""
+    """A uniform(0,0,0) field produces exactly the photon stream of a no-flow build.
+
+    Note what this does and does not prove. The engine sets ``has_flow_`` only when
+    ``max_speed() > kEps``, so a zero field short-circuits onto the no-flow code path and
+    this test guards *that short-circuit* — it does not exercise the advected step or the
+    advection-aware injection at all. The claim that those reduce to the old formulas at
+    mu = 0 is covered by ``test_v_scale_zero_matches_no_flow`` below, which keeps the flow
+    machinery switched on.
+    """
     cfg = {
         "settings": {"dt": 0.01, "n_ph_max": 5000, "seed_diffusion": 42, "seed_emission": 99,
                      "n_channels": 2, "per_molecule_skip": False},
@@ -43,14 +52,53 @@ def test_zero_flow_is_bit_identical():
     }
     cfg0 = {**cfg}
     cfg1 = {**cfg, "flow": {"type": "uniform", "vx": 0.0, "vy": 0.0, "vz": 0.0}}
-    e0 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg0))
-    e1 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg1))
+    e0 = tttrlib.SimEngine.from_json(json.dumps(cfg0))
+    e1 = tttrlib.SimEngine.from_json(json.dumps(cfg1))
     e0.run(); e1.run()
     p0 = e0.photons()
     p1 = e1.photons()
     assert np.array_equal(p0["macro_window"], p1["macro_window"])
     assert np.array_equal(p0["arrival_time"], p1["arrival_time"])
     assert np.array_equal(p0["channel"], p1["channel"])
+
+
+def test_v_scale_zero_matches_no_flow():
+    """With a real flow field but ``v_scale = 0`` the mu = 0 limit must reproduce no-flow.
+
+    This is the test that actually exercises the new machinery: ``max_speed() > 0`` so
+    ``has_flow_`` is true, the advected step runs (adding ``v * 0``), and injection goes
+    through ``mean_influx_weight`` and ``random_entry_depth`` rather than the closed-form
+    ``sigma/sqrt(2*pi)`` and ``random_erfc``. Because those are two different samplers of
+    the *same* distribution the streams cannot be bit-identical, so the comparison is
+    statistical: the injection rate, and hence the standing population and the photon
+    count, must agree.
+
+    Tolerance: the photon count is a sum over ~5 molecules diffusing through the focus for
+    a fixed number of windows; 8 % is roughly 2 sigma of the run-to-run spread measured by
+    varying only the seed, and a broken influx weight moves it by far more (the drain in
+    ``test_open_volume_population_survives_flow`` is a factor of ~1000).
+    """
+    base = {
+        "settings": {"dt": 0.01, "n_ph_max": 10 ** 9, "max_windows": 40000,
+                     "seed_diffusion": 7, "seed_emission": 11,
+                     "n_channels": 2, "per_molecule_skip": False},
+        "box": {"xy": 2.0, "z": 4.0},
+        "k_rad": [0.0], "k_nrad": [0.0],
+        "background": [0.0, 0.0],
+        "population": [5.0],
+        "excitation": {"type": "analytic_gaussian3d", "w0": 0.3, "z0": 2.0, "amplitude": 1.0},
+    }
+    cfg0 = {**base, "species": [{"D": 3.0, "q": [50.0, 50.0]}]}
+    cfg1 = {**base,
+            "species": [{"D": 3.0, "q": [50.0, 50.0], "v_scale": 0.0}],
+            "flow": {"type": "uniform", "vx": 2.0, "vy": 0.0, "vz": 0.0}}
+
+    e0 = tttrlib.SimEngine.from_json(json.dumps(cfg0)); e0.run()
+    e1 = tttrlib.SimEngine.from_json(json.dumps(cfg1)); e1.run()
+
+    n0, n1 = e0.n_photons(), e1.n_photons()
+    assert n0 > 1000 and n1 > 1000, f"too few photons to compare: {n0}, {n1}"
+    assert abs(n0 - n1) / max(n0, n1) < 0.08, f"photon counts {n0} vs {n1}"
 
 
 # ---------------------------------------------------------------------------
@@ -104,12 +152,12 @@ def test_open_volume_population_survives_flow():
     }
     # control: v=0
     cfg0 = {**cfg}
-    e0 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg0))
+    e0 = tttrlib.SimEngine.from_json(json.dumps(cfg0))
     e0.run()
     n0 = e0.n_molecules()
     # flow: v=(1,0,0)
     cfg1 = {**cfg, "flow": {"type": "uniform", "vx": 1.0, "vy": 0.0, "vz": 0.0}}
-    e1 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg1))
+    e1 = tttrlib.SimEngine.from_json(json.dumps(cfg1))
     e1.run()
     n1 = e1.n_molecules()
     for n in (n0, n1):
@@ -176,44 +224,76 @@ def test_occlusion_is_symmetric():
         assert 0.35 < ratio < 0.65, f"symmetry broken: {ratio:.3f}"
 
 
-def test_partial_occlusion_depletes_concentration():
-    """A slab with occ=0.5 reduces trajectory position density inside vs outside,
-    observable as fewer trajectory points inside the slab per unit time."""
-    s = _free_sample(D=3.0, n=1, box=(3.0, 6.0))
-    occ = tttrlib.SimGrid(61, 61, 121, 0.1, 0.1, 0.1, -3.0, -3.0, -6.0)
-    for iz in range(occ.nz):
-        for iy in range(occ.ny):
-            for ix in range(occ.nx):
-                x = occ.x0 + ix * occ.dx
-                if 0.0 <= x <= 1.0:
-                    occ.set_voxel(ix, iy, iz, 0.5)
-    s.set_occlusion(occ)
-    exc = tttrlib.SimGrid.uniform(0.0, 3.0, 6.0, 0.1)
-    det = tttrlib.SimGrid.uniform(0.0, 3.0, 6.0, 0.1)
+def _sealed_cavity_density_ratio(occ_val, windows=40000, seed=5, D=3.0, dt=0.01):
+    """Return density(occluded slab) / density(free slab) for molecules sealed in a cavity.
+
+    The cavity walls are ``occ = 1``, so no molecule can leave and none is injected: the
+    chain is closed and reversible, which is precisely the condition under which the
+    stationary law is exactly ``pi(x) ~ 1 - occ(x)``.
+    """
+    s = tttrlib.SimSystem()
+    sp = tttrlib.SimSpecies(); sp.D = D; sp.q = _vd([0.0, 0.0]); s.add_species(sp)
+    s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
+    s.set_box(1e6, 1e6)                       # no absorbing surface, no surface injection
+    # Cavity |x|<=2, |y|<=1, |z|<=1 walled in by occ=1; the test slab sits on x in [0,1].
+    g = tttrlib.SimGrid(61, 41, 41, 0.1, 0.1, 0.1, -3.0, -2.0, -2.0)
+    for iz in range(g.nz):
+        z = g.z0 + iz * g.dz
+        for iy in range(g.ny):
+            y = g.y0 + iy * g.dy
+            for ix in range(g.nx):
+                x = g.x0 + ix * g.dx
+                if abs(x) > 2.0 or abs(y) > 1.0 or abs(z) > 1.0:
+                    g.set_voxel(ix, iy, iz, 1.0)
+                elif 0.0 <= x <= 1.0:
+                    g.set_voxel(ix, iy, iz, occ_val)
+    s.set_occlusion(g)
+    rng = np.random.default_rng(seed)
+    for _ in range(60):                       # all seeded in the free half
+        s.add_fluorophore(float(rng.uniform(-1.8, -0.2)), float(rng.uniform(-0.8, 0.8)),
+                          float(rng.uniform(-0.8, 0.8)), 0, True)
+    exc = tttrlib.SimGrid.uniform(0.0, 3.0, 3.0, 0.2)
     st = tttrlib.SimIntegrator()
-    st.dt = 0.01; st.n_ph_max = 10**9; st.max_windows = 50000
-    st.seed_diffusion = 5; st.seed_emission = 7; st.n_channels = 2
-    s.set_population(0, 50.0)
-    e = tttrlib.SimEngine(s, [exc], [det], st)
-    e.set_trajectory_reporter(5)
-    e.run()
+    st.dt = dt; st.n_ph_max = 10 ** 9; st.max_windows = windows
+    st.seed_diffusion = seed; st.seed_emission = seed + 2; st.n_channels = 2
+    e = tttrlib.SimEngine(s, [exc], tttrlib.VectorSimGrid([]), st)
+    e.set_trajectory_reporter(10); e.run()
     x = np.asarray(e.trajectory_x())
-    # Compare the fraction of trajectory points on the left (-2, -0.5) vs
-    # the expected fraction if occlusion had no effect (uniform). The slab
-    # at [0,1] blocks 50% of entries, so fewer molecules are inside it,
-    # and more must be outside.
-    right_of_slab = x > 1.0
-    left_of_slab = x < 0.0
-    # Without occlusion, roughly equal numbers on each side. With occlusion
-    # blocking the centre slab, the sides should have more than the centre.
-    n_inside = np.count_nonzero((x >= 0.0) & (x <= 1.0))
-    n_outside = np.count_nonzero((x < 0.0) | (x > 1.0))
-    # The occlusion must reduce the inside count vs a no-occlusion expectation.
-    # With the wall at 50%, the inside should have fewer points than either side region.
-    n_left = np.count_nonzero(x < 0.0)
-    n_right = np.count_nonzero(x > 1.0)
-    assert n_inside < n_left or n_inside < n_right, \
-        f"occlusion should deplete inside (in={n_inside}, left={n_left}, right={n_right})"
+    x = x[len(x) // 5:]                       # discard the approach to stationarity
+    # Sample strictly inside the flat parts, clear of the one-voxel interpolation ramp.
+    n_in = np.count_nonzero((x >= 0.15) & (x <= 0.85))
+    n_free = np.count_nonzero((x >= -0.85) & (x <= -0.15))
+    return n_in / max(n_free, 1), n_in, n_free
+
+
+@pytest.mark.parametrize("occ_val", [0.0, 0.25, 0.5, 0.75])
+def test_partial_occlusion_follows_one_minus_occ(occ_val):
+    """An occ = q region holds (1 - q) times the density of the free region beside it.
+
+    This is the defining property of the step rule "accept the destination with
+    probability 1 - occ(destination)": with a symmetric proposal it satisfies detailed
+    balance with respect to ``pi(x) ~ 1 - occ(x)``, so the rule is an excluded-volume /
+    partial-accessibility medium, not a membrane with a permeability. Measuring it across
+    several q is what distinguishes the two readings.
+
+    The cavity must be **sealed**, and that is not a detail. Run the same comparison in the
+    ordinary absorbing box with surface injection and the ratio comes out at 0.66 rather
+    than 0.50 for q = 0.5 -- not because the rule is wrong but because that system never
+    reaches local equilibrium: a molecule's residence time there (R^2/6D) is only ~3x the
+    time to diffuse across the slab (L^2/2D), so the driven steady state is nowhere near
+    the equilibrium the law describes. Sealing the cavity removes the turnover and the law
+    is recovered to about 1%.
+
+    Tolerance: 0.06 absolute. Measured deviations across q are <= 0.01 with this seed; the
+    band covers seed-to-seed spread with room to spare, and any misreading of the mask
+    (using accessibility instead of occlusion, say) moves the ratio by 0.25 or more.
+    """
+    ratio, n_in, n_free = _sealed_cavity_density_ratio(occ_val)
+    assert n_free > 500, f"too few samples in the free slab: {n_free}"
+    assert abs(ratio - (1.0 - occ_val)) < 0.06, (
+        f"pi ~ 1-occ predicts {1.0 - occ_val:.3f}, measured {ratio:.3f} "
+        f"(occluded={n_in}, free={n_free})"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -236,8 +316,8 @@ def test_coasting_agrees_with_flow():
     }
     cfg_no_coast = {**cfg, "per_molecule_skip": False, "seed_diffusion": 11, "seed_emission": 22}
     cfg_coast = {**cfg, "per_molecule_skip": True, "seed_diffusion": 11, "seed_emission": 22}
-    e0 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg_no_coast))
-    e1 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg_coast))
+    e0 = tttrlib.SimEngine.from_json(json.dumps(cfg_no_coast))
+    e1 = tttrlib.SimEngine.from_json(json.dumps(cfg_coast))
     e0.run(); e1.run()
     p0 = e0.photons()["channel"]
     p1 = e1.photons()["channel"]
@@ -263,8 +343,8 @@ def test_coasting_inert_for_poiseuille():
     }
     cfg_off = {**cfg, "per_molecule_skip": False, "seed_diffusion": 7, "seed_emission": 8}
     cfg_on = {**cfg, "per_molecule_skip": True, "seed_diffusion": 7, "seed_emission": 8}
-    e0 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg_off))
-    e1 = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg_on))
+    e0 = tttrlib.SimEngine.from_json(json.dumps(cfg_off))
+    e1 = tttrlib.SimEngine.from_json(json.dumps(cfg_on))
     e0.run(); e1.run()
     assert e0.n_molecules() == e1.n_molecules()
 
@@ -286,7 +366,7 @@ def test_flow_field_smaller_than_box():
         "excitation": {"type": "uniform", "value": 1.0, "extent_xy": 12.0, "extent_z": 12.0, "spacing": 1.0},
     }
     with pytest.raises(ValueError):
-        tttrlib.SimEngine.from_json(__import__("json").dumps(cfg))
+        tttrlib.SimEngine.from_json(json.dumps(cfg))
 
 
 def test_flow_dt_too_large():
@@ -303,7 +383,7 @@ def test_flow_dt_too_large():
         "excitation": {"type": "uniform", "value": 1.0, "extent_xy": 5.0, "extent_z": 5.0, "spacing": 1.0},
     }
     with pytest.raises(ValueError):
-        tttrlib.SimEngine.from_json(__import__("json").dumps(cfg))
+        tttrlib.SimEngine.from_json(json.dumps(cfg))
 
 
 def test_flow_components_mismatched():
@@ -364,40 +444,81 @@ def test_poiseuille_is_spatially_varying():
 # ---------------------------------------------------------------------------
 @pytest.mark.slow
 def test_flow_fcs_matches_the_analytic_curve():
-    """Open-volume simulation correlated as FCS: fit recovers D and v."""
+    """End-to-end: correlate an open-volume run and recover the simulated D and v.
+
+    This is the proof that the flow physics is right, and it uses no pCF code at all --
+    so a failure points at the simulator rather than at the analysis being validated.
+
+    Choosing parameters that can actually see the flow is the whole difficulty. The flow
+    term ``exp(-(v*tau)^2 / (wr^2 + 4*D*tau))`` only bites once the transit time across the
+    waist is comparable to the diffusion time through it, i.e. once
+
+        v  >~  4*D/wr      (here 4*0.5/0.3 = 6.7 um/ms, and v = 10 um/ms)
+
+    Below that threshold the flow term is numerically invisible against diffusion and the
+    fit cannot recover ``v`` however long the run: at D = 3, wr = 0.3 and v = 1 the term is
+    3e-4 at the diffusion time, i.e. far under the shot noise. The regression that this
+    test guards would be indistinguishable from that mis-specification, which is why the
+    parameters are pinned here with the reasoning attached.
+
+    Concentration is set so that N in the focus is about 1 (the usual FCS working point):
+    ``V_eff = pi^1.5 * wr^2 * wz = 0.75 um^3`` against an ellipsoid box of 67 um^3, so a
+    population of 90 gives N = 1.0 and an amplitude G(0) = 1/N = 1.0.
+
+    Tolerances: 10 % on v and 15 % on D, against a measured accuracy of about 2 % at this
+    photon count -- the band is loose enough not to flake on the seed and tight enough that
+    the no-flow mis-fit (which lands at v = 0) fails it outright.
+    """
     try:
         from scipy.optimize import curve_fit
     except ImportError:
         pytest.skip("scipy not available")
+
+    D_true, v_true, wr, wz, dt = 0.5, 10.0, 0.3, 1.5, 0.001
     cfg = {
-        "settings": {"dt": 0.001, "n_ph_max": 2000000, "seed_diffusion": 42, "seed_emission": 99,
+        "settings": {"dt": dt, "n_ph_max": 150000, "max_windows": 20000000,
+                     "seed_diffusion": 42, "seed_emission": 99,
                      "n_channels": 1, "per_molecule_skip": False},
-        "box": {"xy": 5.0, "z": 10.0},
-        "species": [{"D": 3.0, "q": [50.0]}],
+        "box": {"xy": 2.0, "z": 4.0},
+        "species": [{"D": D_true, "q": [50.0]}],
         "k_rad": [0.0], "k_nrad": [0.0],
         "background": [0.0],
-        "population": [5.0],
-        "flow": {"type": "uniform", "vx": 1.0, "vy": 0.0, "vz": 0.0},
-        "excitation": {"type": "analytic_gaussian3d", "w0": 0.3, "z0": 2.0, "amplitude": 1.0},
+        "population": [90.0],
+        "flow": {"type": "uniform", "vx": v_true, "vy": 0.0, "vz": 0.0},
+        "excitation": {"type": "analytic_gaussian3d", "w0": wr, "z0": wz, "amplitude": 1.0},
     }
-    e = tttrlib.SimEngine.from_json(__import__("json").dumps(cfg))
+    e = tttrlib.SimEngine.from_json(json.dumps(cfg))
     e.run()
+
+    # The population must survive the flow -- a molecule crosses this box in 0.2 ms, so a
+    # diffusion-only influx would have drained it long before the photon budget was met.
+    assert 60 < e.n_molecules() < 130, f"population sagged to {e.n_molecules()}"
+
     ph = e.photons()
-    T = np.asarray(ph["macro_window"], dtype=np.float64) * cfg["settings"]["dt"]
+    t = np.ascontiguousarray(np.asarray(ph["macro_window"], dtype=np.uint64))
+    assert t.size > 100000, f"only {t.size} photons"
+
     corr = tttrlib.Correlator()
-    corr.append(T)
-    tau, G = np.asarray(corr.correlation[0]), np.asarray(corr.correlation[1])
-    # mask tau>0
-    m = tau > 0
-    tau, G = tau[m], G[m]
-    # analytic: G(τ) = G0 / ((1+4Dτ/wr²)*sqrt(1+4Dτ/wz²)) * exp(-(vτ)²/(wr²+4Dτ))
-    wr, wz = 0.3, 2.0
-    def model(t, G0, D, v):
-        denom = (1 + 4*D*t/wr**2) * np.sqrt(1 + 4*D*t/wz**2)
-        exp_arg = -(v*t)**2 / (wr**2 + 4*D*t)
-        return G0 / denom * np.exp(exp_arg)
-    popt, _ = curve_fit(model, tau, G, p0=[0.1, 3.0, 1.0],
-                        bounds=([0, 0.1, 0], [10, 30, 10]))
-    D_fit, v_fit = popt[1], popt[2]
-    assert abs(v_fit - 1.0) / 1.0 < 0.10, f"v_fit={v_fit:.3f}"
-    assert abs(D_fit - 3.0) / 3.0 < 0.15, f"D_fit={D_fit:.3f}"
+    corr.n_bins = 8
+    corr.n_casc = 20
+    w = np.ones(t.size, dtype=float)
+    corr.set_macrotimes(t, t)
+    corr.set_weights(w, w)
+    corr.run()
+    tau = np.asarray(corr.get_x_axis(), dtype=float) * dt
+    g = np.asarray(corr.get_corr_normalized(), dtype=float) - 1.0
+    keep = (tau > 0) & np.isfinite(g)
+    tau, g = tau[keep], g[keep]
+
+    def model(x, g0, d, v):
+        return (g0 / ((1 + 4 * d * x / wr ** 2) * np.sqrt(1 + 4 * d * x / wz ** 2))
+                * np.exp(-(v * x) ** 2 / (wr ** 2 + 4 * d * x)))
+
+    popt, _ = curve_fit(model, tau, g, p0=[g[0], D_true, v_true],
+                        bounds=([0, 0.01, 0], [100, 50, 200]), maxfev=20000)
+    g0_fit, d_fit, v_fit = popt
+    assert abs(v_fit - v_true) / v_true < 0.10, f"v_fit={v_fit:.3f} (true {v_true})"
+    assert abs(d_fit - D_true) / D_true < 0.15, f"D_fit={d_fit:.3f} (true {D_true})"
+    # The amplitude is 1/N, so it cross-checks that injection holds the *concentration*
+    # and not merely a molecule count: a drifting density shows up here first.
+    assert abs(g0_fit - 1.0) < 0.25, f"G(0)={g0_fit:.3f}, expected ~1/N = 1.0"

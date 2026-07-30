@@ -397,12 +397,18 @@ private:
                              uint64_t(w_start) * kWindowStride);
         const int nsp = sample_.n_species();
         const auto& kn = sample_.k_nrad();
-        int i = m.state; double t = 0.0, var = 0.0;
+        int i = m.state; double t = 0.0, var = 0.0, vs_dt = 0.0;
         for (;;) {
             const double koff = any_knrad_ ? koff_nrad_[i] : 0.0;
             const double hold = (koff > kEps) ? -std::log(crng.random0e1e()) / koff : 1e300;
             const double seg = std::min(hold, tau - t);
             var += 2.0 * sample_.species()[i].D * seg;         // piecewise-const D along the path
+            // The advective displacement is accumulated the same piecewise way: v_scale is a
+            // per-species property, so a molecule that changes state mid-coast is advected by
+            // each state's coupling for the time it spent in it. Taking a single state's
+            // v_scale for the whole coast (either endpoint) is wrong whenever v_scale differs
+            // between states, and wrong silently.
+            vs_dt += sample_.species()[i].v_scale * seg;
             t += seg;
             if (t >= tau - kEps || koff <= kEps) break;
             double r = (1.0 - crng.random0i1e()) * koff;
@@ -420,10 +426,12 @@ private:
         double g0, g1, g2; norm3(crng, g0, g1, g2);          // ziggurat catch-up displacement
         m.x += s * g0; m.y += s * g1; m.z += s * g2;
         if (has_flow_) {
+            // Only a uniform field ever reaches here (maybe_sleep refuses to sleep a molecule
+            // under a non-uniform field), so the field value is position-independent and the
+            // closed-form displacement v * integral(v_scale dt) is exact.
             double vx, vy, vz;
             sample_.flow_field().at(m.x, m.y, m.z, vx, vy, vz);
-            const double a = sample_.species()[m.state].v_scale * tau;
-            m.x += vx * a; m.y += vy * a; m.z += vz * a;
+            m.x += vx * vs_dt; m.y += vy * vs_dt; m.z += vz * vs_dt;
         }
         m.state = i;
         const double box_xy_sq = sample_.box_xy() * sample_.box_xy();
