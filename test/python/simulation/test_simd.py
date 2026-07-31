@@ -100,3 +100,61 @@ def test_seeding_is_deterministic_and_seed_dependent():
     b = _draw(4096, seed=8)
     assert np.array_equal(a1, a2), "same seed must give the same stream"
     assert not np.array_equal(a1, b), "different seeds must give different streams"
+
+
+# ---------------------------------------------------------------------------
+# NumPy-friendly vector members
+# ---------------------------------------------------------------------------
+def test_vector_members_accept_numpy_and_sequences():
+    """`species.q = [50.0]` must work; requiring VectorDouble was a papercut.
+
+    SWIG's std::vector typemaps already covered function *arguments*, so
+    ``set_background([0.0])`` always worked. Member *variables* went through a
+    different path and accepted only an actual ``VectorDouble``, so every example had
+    to spell out ``tttrlib.VectorDouble([...])`` and the error when they did not named
+    a C++ type (``std::vector< double,std::allocator< double > >``) rather than
+    anything the caller had in hand.
+    """
+    sp = tttrlib.SimSpecies()
+
+    for value in ([50.0], (50.0, 25.0), np.array([50.0, 25.0]),
+                  np.array([50.0], dtype=np.float32), np.array([50, 25]),
+                  tttrlib.VectorDouble([3.0])):
+        sp.q = value                       # must not raise for any of these
+    np.testing.assert_allclose(np.asarray(list(sp.q)), [3.0])
+
+    sp.q = np.array([7.0, 8.0])
+    np.testing.assert_allclose(np.asarray(list(sp.q)), [7.0, 8.0])
+
+    # nested: one brightness row per ALEX laser
+    sp.q_alex = np.array([[1.0, 2.0], [3.0, 4.0]])
+    assert [list(row) for row in sp.q_alex] == [[1.0, 2.0], [3.0, 4.0]]
+    sp.q_alex = [[5.0, 6.0]]
+    assert [list(row) for row in sp.q_alex] == [[5.0, 6.0]]
+
+    grid = tttrlib.SimGrid(2, 2, 2, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0)
+    grid.data = np.arange(8, dtype=float)
+    np.testing.assert_allclose(np.asarray(list(grid.data)), np.arange(8))
+
+
+def test_a_species_can_be_configured_without_naming_a_swig_type():
+    """The whole point: a working species with no `tttrlib.Vector*` in sight."""
+    system = tttrlib.SimSystem()
+    sp = tttrlib.SimSpecies()
+    sp.D = 1.0
+    sp.q = np.array([50.0])
+    system.add_species(sp)
+    system.set_rate_matrices([0.0], [0.0])
+    system.set_background([0.0])
+    system.set_box(2.0, 4.0)
+    system.set_population(0, 5.0)
+
+    st = tttrlib.SimIntegrator()
+    st.dt = 0.01
+    st.n_channels = 1
+    st.n_ph_max = 2000
+    st.max_windows = 10 ** 7
+    engine = tttrlib.SimEngine(
+        system, tttrlib.SimGrid.analytic_gaussian3d(0.3, 1.5, 1.0), [], st)
+    engine.run()
+    assert engine.n_photons() > 0

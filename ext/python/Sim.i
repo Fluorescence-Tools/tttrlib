@@ -369,3 +369,64 @@ namespace tttrlib {
 %exception;   // reset to the previous global handler
 
 %newobject tttrlib::SimEngine::from_json;   // Python owns the returned engine
+
+// ---------------------------------------------------------------------------------
+// NumPy-friendly vector members.
+//
+// SWIG's std::vector typemaps already accept any Python sequence for *function
+// arguments* -- `set_background([0.0])` and `set_rate_matrices(np.zeros(1), ...)` work
+// as they are. Member *variables* go through a different path and only accepted an
+// actual VectorDouble, so `species.q = [50.0]` raised a TypeError telling the caller
+// about `std::vector< double,std::allocator< double > >`, which is not a thing anyone
+// has in hand. Every example then had to write `tttrlib.VectorDouble([...])`.
+//
+// The properties SWIG generates are ordinary Python property objects, so they can be
+// rewrapped: the getter is untouched, and the setter coerces whatever it is given --
+// list, tuple, NumPy array of any dtype, scalar -- into the vector type first.
+%pythoncode %{
+def _sim_as_vector_double(value):
+    """Coerce a sequence, NumPy array or scalar into a VectorDouble."""
+    if isinstance(value, VectorDouble):
+        return value
+    try:
+        import numpy as _np
+        flat = _np.asarray(value, dtype=float).ravel()
+    except Exception:
+        flat = [float(value)] if _is_scalar_number(value) else [float(v) for v in value]
+    return VectorDouble([float(v) for v in flat])
+
+
+def _is_scalar_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _sim_as_vector_double_2d(value):
+    """Coerce a 2-D sequence or NumPy array into the nested vector type."""
+    if isinstance(value, VectorDouble_2D):
+        return value
+    import numpy as _np
+    rows = _np.asarray(value, dtype=float)
+    if rows.ndim == 1:
+        rows = rows[None, :]
+    out = VectorDouble_2D()
+    for row in rows:
+        out.append(VectorDouble([float(v) for v in row]))
+    return out
+
+
+def _sim_numpy_property(cls, name, coerce):
+    """Replace a generated vector property with one whose setter coerces its input."""
+    prop = getattr(cls, name, None)
+    if not isinstance(prop, property) or prop.fset is None:
+        return
+    setter = prop.fset
+    setattr(cls, name,
+            property(prop.fget,
+                     lambda self, value, _s=setter, _c=coerce: _s(self, _c(value)),
+                     prop.fdel, prop.__doc__))
+
+
+_sim_numpy_property(SimSpecies, "q", _sim_as_vector_double)
+_sim_numpy_property(SimSpecies, "q_alex", _sim_as_vector_double_2d)
+_sim_numpy_property(SimGrid, "data", _sim_as_vector_double)
+%}
