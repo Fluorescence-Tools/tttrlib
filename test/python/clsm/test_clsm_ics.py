@@ -82,5 +82,121 @@ class TestComputeIcs(unittest.TestCase):
         np.testing.assert_allclose(alone[0], together[0])
 
 
+def _numpy_reference(a, b=None):
+    """The correlation compute_ics is supposed to produce, straight from NumPy.
+
+    ``ifft2(fft2(A) * conj(fft2(B)))``, real part. This is the same convention the
+    published implementations use -- PAM's ``Do_2D_XCor.m`` and the Kolin/Wiseman STICS
+    reference both compute exactly this and then divide by ``N * mean^2`` to normalise,
+    which is what ChiSurf's ``normalise_ics`` does. Only the convention was read from
+    those; no code was taken (both are GPL-3, against this project's GPL-2.0).
+    """
+    b = a if b is None else b
+    return np.real(np.fft.ifft2(np.fft.fft2(a) * np.conj(np.fft.fft2(b))))
+
+
+def _raw_ics(a, b=None):
+    """compute_ics on one frame pair with no averaging, so it is directly comparable."""
+    second = a if b is None else b
+    images = np.ascontiguousarray(np.stack([a, second]).astype(float))
+    pairs = [(0, 0)] if b is None else [(0, 1)]
+    return np.asarray(tttrlib.CLSMImage.compute_ics(
+        images=images, x_range=[0, -1], y_range=[0, -1],
+        subtract_average="", frames_index_pairs=pairs))[0]
+
+
+class TestAgainstNumpy(unittest.TestCase):
+    """A/B the correlation kernel against NumPy, on shapes that are not square.
+
+    Every other test in this file uses a 16x16 stack, and that is exactly why two
+    defects lived here for so long: `get_roi` indexed rows with the line count instead
+    of the pixel count, which is identical when the frame is square, and `compute_ics`
+    fed an `r2c` half spectrum to a full `c2c` inverse. Together they scrambled every
+    non-square correlation and read past the buffer on the last frame of a tall one.
+    Neither showed up as a failure, because a fit of a shape with a free amplitude
+    absorbs both.
+    """
+
+    SHAPES = [(16, 16), (16, 32), (32, 16), (64, 8), (8, 64), (33, 17), (17, 33)]
+
+    def test_autocorrelation_matches_numpy(self):
+        rng = np.random.default_rng(5)
+        for ny, nx in self.SHAPES:
+            a = rng.poisson(4.0, size=(ny, nx)).astype(float)
+            got, want = _raw_ics(a), _numpy_reference(a)
+            scale = max(np.abs(want).max(), 1e-30)
+            self.assertLess(np.abs(got - want).max() / scale, 1e-12,
+                            f"auto-correlation differs from NumPy at {ny}x{nx}")
+
+    def test_crosscorrelation_matches_numpy(self):
+        rng = np.random.default_rng(7)
+        for ny, nx in self.SHAPES:
+            a = rng.poisson(4.0, size=(ny, nx)).astype(float)
+            b = rng.poisson(4.0, size=(ny, nx)).astype(float)
+            got, want = _raw_ics(a, b), _numpy_reference(a, b)
+            scale = max(np.abs(want).max(), 1e-30)
+            self.assertLess(np.abs(got - want).max() / scale, 1e-12,
+                            f"cross-correlation differs from NumPy at {ny}x{nx}")
+
+    def test_autocorrelation_of_a_delta_is_a_delta(self):
+        """The acceptance test, and the one that made the defect visible.
+
+        It needs no agreement about normalisation: whatever the scale, every lag other
+        than zero must be zero. Before the fix a delta at (4, 7) in a 16x32 frame gave
+        1.0625 at the peak with 0.0625 = 2/nx smeared across every even column.
+        """
+        for pos in [(0, 0), (2, 3), (4, 7), (10, 25), (15, 31)]:
+            a = np.zeros((16, 32))
+            a[pos] = 1.0
+            g = _raw_ics(a)
+            self.assertAlmostEqual(g[0, 0], 1.0, places=10,
+                                   msg=f"delta at {pos}: peak should be 1")
+            off_peak = np.abs(np.delete(g.ravel(), 0)).max()
+            self.assertLess(off_peak, 1e-10,
+                            f"delta at {pos}: off-peak should be 0, got {off_peak}")
+
+    def test_autocorrelation_does_not_depend_on_position(self):
+        """Translation invariance -- a property, not a reference value.
+
+        Shifting the image cannot change its autocorrelation. It did: the row-stride
+        defect made the answer depend on where the signal sat, and one position lost the
+        signal altogether.
+        """
+        rng = np.random.default_rng(11)
+        a = rng.poisson(4.0, size=(16, 32)).astype(float)
+        base = _raw_ics(a)
+        for shift, axis in ((1, 0), (5, 0), (1, 1), (13, 1)):
+            rolled = np.ascontiguousarray(np.roll(a, shift, axis=axis))
+            np.testing.assert_allclose(
+                _raw_ics(rolled), base, rtol=1e-10, atol=1e-8,
+                err_msg=f"autocorrelation changed after a shift of {shift} on axis {axis}")
+
+    def test_non_square_stacks_are_finite(self):
+        """Guards the non-finite frames: a tall ROI used to read past its own buffer.
+
+        It was always the LAST frame and only for a self-pair, because the overread of
+        any earlier frame lands harmlessly in the next one.
+        """
+        rng = np.random.default_rng(0)
+        for shape in [(12, 32, 16), (12, 64, 8), (12, 33, 17), (24, 32, 16), (12, 16, 32)]:
+            images = np.ascontiguousarray(rng.poisson(3.0, size=shape).astype(float))
+            out = np.asarray(tttrlib.CLSMImage.compute_ics(
+                images=images, x_range=[0, -1], y_range=[0, -1],
+                subtract_average="frame"))
+            self.assertTrue(np.isfinite(out).all(),
+                            f"{shape}: {int((~np.isfinite(out)).sum())} non-finite values")
+
+    def test_pam_normalisation_reproduces_the_published_form(self):
+        """G = corr / (N * mean^2) - 1, the form PAM and the STICS reference both use."""
+        rng = np.random.default_rng(3)
+        a = rng.poisson(25.0, size=(16, 32)).astype(float)
+        n = a.size
+        g_pam = _numpy_reference(a) / (n * a.mean() ** 2) - 1.0
+        g_ours = _raw_ics(a) / (n * a.mean() ** 2) - 1.0
+        np.testing.assert_allclose(g_ours, g_pam, rtol=1e-10, atol=1e-12)
+        # and the zero-lag amplitude is the usual 1/N_particles-style quantity
+        self.assertGreater(g_ours[0, 0], 0.0)
+
+
 if __name__ == '__main__':
     unittest.main()
