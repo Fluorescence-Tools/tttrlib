@@ -1,0 +1,425 @@
+"""
+Ground-truth simulation generators for eSRRF validation and benchmarking.
+
+This module provides phantom generators with KNOWN emitter positions, so the
+reconstruction can be validated by comparing against the true structure.
+
+Phantoms include:
+- Isolated point emitters
+- Two-point pairs at varying separations (resolution test)
+- Crossing filaments
+- Ring/vesicle
+- Siemens-star resolution target
+- Dense random emitter field
+- Two-colour phantoms (for channel mode validation)
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from typing import Tuple, List
+from dataclasses import dataclass
+
+
+@dataclass
+class Emitter:
+    """
+    A single point emitter with known position and brightness.
+
+    Attributes:
+        x: x position in native pixels (continuous, may be fractional)
+        y: y position in native pixels (continuous, may be fractional)
+        photons: expected photon count per frame (Poisson mean)
+        channel: routing channel (default 0)
+    """
+    x: float
+    y: float
+    photons: float
+    channel: int = 0
+
+
+@dataclass
+class CLSMScanParameters:
+    """
+    CLSM raster scan parameters.
+
+    Attributes:
+        nx: number of pixels per line (x axis)
+        ny: number of lines (y axis)
+        pixel_duration: dwell time per pixel (macro time units)
+        line_duration: total time per line (including flyback)
+        frame_marker_delay: delay between frames (if any)
+    """
+    nx: int = 256
+    ny: int = 256
+    pixel_duration: int = 100
+    line_duration: int = 30000  # includes flyback
+    frame_marker_delay: int = 5000
+
+
+def gaussian_psf(
+    x: float,
+    y: float,
+    emitters: List[Emitter],
+    sigma: float = 1.0,
+    background: float = 0.0,
+) -> float:
+    """
+    Expected intensity at a point from a sum of Gaussian emitters.
+
+    Args:
+        x, y: query position
+        emitters: list of Emitters with known positions and brightnesses
+        sigma: Gaussian PSF sigma (in pixels)
+        background: constant background level
+
+    Returns:
+        Expected photon count at (x, y) (before Poisson noise)
+    """
+    intensity = background
+    for e in emitters:
+        r2 = (x - e.x) ** 2 + (y - e.y) ** 2
+        intensity += e.photons * np.exp(-r2 / (2 * sigma * sigma))
+    return intensity
+
+
+def render_frame(
+    emitters: List[Emitter],
+    params: CLSMScanParameters,
+    sigma: float = 1.0,
+    background: float = 0.0,
+    noise_seed: Optional[int] = None,
+) -> np.ndarray:
+    """
+    Render a single CLSM frame from known emitters.
+
+    This simulates the physical imaging process: each pixel receives photons
+    from nearby emitters according to the Gaussian PSF, plus Poisson noise.
+
+    Args:
+        emitters: list of Emitters with known positions and brightnesses
+        params: scan parameters
+        sigma: Gaussian PSF sigma (in pixels)
+        background: constant background level
+        noise_seed: random seed for Poisson noise (None = no noise)
+
+    Returns:
+        (ny, nx) image frame
+    """
+    ny, nx = params.ny, params.nx
+    frame = np.zeros((ny, nx), dtype=float)
+
+    for y in range(ny):
+        for x in range(nx):
+            # Expected photons at this pixel
+            expected = gaussian_psf(float(x), float(y), emitters, sigma, background)
+            frame[y, x] = expected
+
+    # Add Poisson noise if requested
+    if noise_seed is not None:
+        rng = np.random.default_rng(noise_seed)
+        frame = rng.poisson(frame).astype(float)
+
+    return frame
+
+
+def render_photon_stream(
+    emitters: List[Emitter],
+    params: CLSMScanParameters,
+    n_frames: int,
+    sigma: float = 1.0,
+    background: float = 0.0,
+    noise_seed: Optional[int] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Render a CLSM photon stream from known emitters.
+
+    This generates a TTTR-like representation of the photons, with:
+    - Exact macro times (for exact x reconstruction)
+    - Frame, line, and pixel indices (for CLSMImage compatibility)
+    - Micro times (dummy, all zero for now)
+    - Routing channels
+
+    Args:
+        emitters: list of Emitters
+        params: scan parameters
+        n_frames: number of frames to render
+        sigma: Gaussian PSF sigma
+        background: background level
+        noise_seed: random seed for Poisson noise
+
+    Returns:
+        macro_times: (N,) macro time for each photon
+        frames: (N,) frame index for each photon
+        lines: (N,) line index for each photon
+        pixels: (N,) pixel index for each photon
+        routing_channels: (N,) routing channel for each photon
+    """
+    rng = np.random.default_rng(noise_seed)
+
+    # First pass: count total photons (expensive but straightforward)
+    all_photons = []
+
+    for f in range(n_frames):
+        for y in range(params.ny):
+            # Line start time
+            line_start = f * params.frame_marker_delay + y * params.line_duration
+
+            for x in range(params.nx):
+                # Pixel start time
+                pixel_start = line_start + x * params.pixel_duration
+
+                # Expected photons at this pixel
+                expected = gaussian_psf(
+                    float(x), float(y), emitters, sigma, background
+                )
+
+                # Sample photon count
+                n_photons = rng.poisson(expected)
+
+                # For each photon, assign exact macro time and channel
+                for _ in range(n_photons):
+                    # Exact macro time within the pixel (uniform)
+                    macro_time = pixel_start + rng.random() * params.pixel_duration
+
+                    # Assign to a channel (weighted by emitter brightness)
+                    # This is a simplification: real multi-colour depends on labelling
+                    total_photons = sum(e.photons for e in emitters)
+                    if total_photons > 0:
+                        r = rng.random() * total_photons
+                        acc = 0.0
+                        for e in emitters:
+                            acc += e.photons
+                            if r < acc:
+                                channel = e.channel
+                                break
+                        else:
+                            channel = 0
+                    else:
+                        channel = 0
+
+                    all_photons.append(
+                        (macro_time, f, y, x, channel)
+                    )
+
+    if not all_photons:
+        return (
+            np.array([], dtype=np.uint64),
+            np.array([], dtype=int),
+            np.array([], dtype=int),
+            np.array([], dtype=int),
+            np.array([], dtype=int),
+        )
+
+    # Convert to arrays
+    data = np.array(all_photons, dtype=object)
+    macro_times = np.array(data[:, 0], dtype=np.uint64)
+    frames = np.array(data[:, 1], dtype=int)
+    lines = np.array(data[:, 2], dtype=int)
+    pixels = np.array(data[:, 3], dtype=int)
+    routing_channels = np.array(data[:, 4], dtype=int)
+
+    return macro_times, frames, lines, pixels, routing_channels
+
+
+# ----------------------------------------------------------------------
+# Specific phantom generators
+# ----------------------------------------------------------------------
+
+
+def isolated_point_emitters(
+    n_points: int = 9,
+    spacing: float = 20.0,
+    photons_per_point: float = 1000.0,
+    nx: int = 128,
+    ny: int = 128,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate isolated point emitters on a regular grid.
+
+    Useful for checking that reassignment localizes correctly and doesn't create
+    spurious structures.
+    """
+    emitters = []
+    grid_side = int(np.ceil(np.sqrt(n_points)))
+
+    offset_x = (nx - spacing * (grid_side - 1)) / 2
+    offset_y = (ny - spacing * (grid_side - 1)) / 2
+
+    for i in range(grid_side):
+        for j in range(grid_side):
+            if len(emitters) >= n_points:
+                break
+            x = offset_x + i * spacing
+            y = offset_y + j * spacing
+            emitters.append(Emitter(x=x, y=y, photons=photons_per_point))
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+def two_point_pairs(
+    separations: List[float],
+    photons_per_point: float = 1000.0,
+    nx: int = 128,
+    ny: int = 128,
+) -> List[Tuple[List[Emitter], float, CLSMScanParameters]]:
+    """
+    Generate two-point emitter pairs at varying separations.
+
+    Returns a list of (emitters, separation, params) for testing resolution.
+    """
+    results = []
+
+    for sep in separations:
+        # Center the pair
+        x0 = (nx - sep) / 2
+        x1 = x0 + sep
+        y = ny / 2
+
+        emitters = [
+            Emitter(x=x0, y=y, photons=photons_per_point),
+            Emitter(x=x1, y=y, photons=photons_per_point),
+        ]
+        params = CLSMScanParameters(nx=nx, ny=ny)
+        results.append((emitters, sep, params))
+
+    return results
+
+
+def crossing_filaments(
+    nx: int = 128,
+    ny: int = 128,
+    photons_per_pixel: float = 100.0,
+    width: float = 2.0,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate two crossing filaments (horizontal and vertical).
+
+    Filaments are modeled as dense chains of point emitters.
+    """
+    emitters = []
+
+    # Horizontal filament
+    for x in np.linspace(10, nx - 10, nx // 2):
+        emitters.append(Emitter(x=x, y=ny / 2, photons=photons_per_pixel))
+
+    # Vertical filament
+    for y in np.linspace(10, ny - 10, ny // 2):
+        emitters.append(Emitter(x=nx / 2, y=y, photons=photons_per_pixel))
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+def ring_phantom(
+    radius: float = 30.0,
+    nx: int = 128,
+    ny: int = 128,
+    photons_per_point: float = 100.0,
+    n_points: int = 60,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate a ring/vesicle phantom.
+
+    The ring is approximated by point emitters on a circle.
+    """
+    emitters = []
+
+    cx, cy = nx / 2, ny / 2
+
+    for angle in np.linspace(0, 2 * np.pi, n_points, endpoint=False):
+        x = cx + radius * np.cos(angle)
+        y = cy + radius * np.sin(angle)
+        emitters.append(Emitter(x=x, y=y, photons=photons_per_point))
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+def siemens_star(
+    n_spokes: int = 12,
+    max_radius: float = 40.0,
+    nx: int = 128,
+    ny: int = 128,
+    photons_per_pixel: float = 100.0,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate a Siemens-star resolution target.
+
+    Alternating spokes with angular width pi / n_spokes.
+    """
+    emitters = []
+    cx, cy = nx / 2, ny / 2
+
+    # Sample a dense grid and keep only points in the spokes
+    for x in np.linspace(cx - max_radius, cx + max_radius, int(max_radius * 2)):
+        for y in np.linspace(cy - max_radius, cy + max_radius, int(max_radius * 2)):
+            dx, dy = x - cx, y - cy
+            r = np.sqrt(dx * dx + dy * dy)
+            if r > max_radius or r < 5:
+                continue
+
+            angle = np.arctan2(dy, dx)
+            spoke_index = int((angle + np.pi) / (2 * np.pi) * n_spokes) % n_spokes
+            if spoke_index % 2 == 0:
+                emitters.append(Emitter(x=x, y=y, photons=photons_per_pixel))
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+def dense_random_field(
+    n_emitters: int = 50,
+    nx: int = 128,
+    ny: int = 128,
+    photons_per_point: float = 500.0,
+    seed: int = 20260731,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate a dense random emitter field.
+
+    This tests whether the method hallucinates structure where there is none.
+    """
+    rng = np.random.default_rng(seed)
+
+    emitters = []
+    for _ in range(n_emitters):
+        x = rng.uniform(10, nx - 10)
+        y = rng.uniform(10, ny - 10)
+        emitters.append(Emitter(x=x, y=y, photons=photons_per_point))
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+def two_colour_filaments(
+    nx: int = 128,
+    ny: int = 128,
+    photons_per_pixel: float = 100.0,
+    channel_separation: float = 5.0,
+) -> Tuple[List[Emitter], CLSMScanParameters]:
+    """
+    Generate two crossing filaments in different channels.
+
+    Tests the split channel mode: a shared prior should bleed one colour
+    into the other, while split mode keeps them separate.
+    """
+    emitters = []
+
+    # Channel 0: horizontal filament
+    for x in np.linspace(10, nx - 10, nx // 2):
+        emitters.append(
+            Emitter(x=x, y=ny / 2 - channel_separation / 2,
+                   photons=photons_per_pixel, channel=0)
+        )
+
+    # Channel 1: vertical filament
+    for y in np.linspace(10, ny - 10, ny // 2):
+        emitters.append(
+            Emitter(x=nx / 2 + channel_separation / 2, y=y,
+                   photons=photons_per_pixel, channel=1)
+        )
+
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
