@@ -1,12 +1,12 @@
 /*
- * CLSMeSRRF.cpp
+ * CLSMSuperRes.cpp
  *
  * Implementation of photon-level eSRRF for CLSM data.
  *
- * See CLSMeSRRF.h for detailed documentation.
+ * See CLSMSuperRes.h for detailed documentation.
  */
 
-#include "CLSMeSRRF.h"
+#include "CLSMSuperRes.h"
 #include "CLSMImage.h"
 #include "TTTR.h"
 #include "Random.h"  // centralized counter-based RNG (Philox, PCG, SplitMix64, MT19937)
@@ -64,7 +64,7 @@ namespace {
 // RGC Map Computation
 // ========================================================================
 
-void CLSMeSRRF::rgc_map(
+void CLSMSuperRes::rgc_map(
     const double* img,
     int nx,
     int ny,
@@ -73,8 +73,8 @@ void CLSMeSRRF::rgc_map(
     int sensitivity,
     bool intensity_weighting,
     double** output,
-    int* out_ny,
-    int* out_nx
+    int* n_output1,
+    int* n_output2
 ) {
     // Derived parameters (from LiveSRRF_CL.java:266-345)
     double sigma = fwhm / 2.354;
@@ -221,11 +221,11 @@ void CLSMeSRRF::rgc_map(
     }
 
     *output = rgc;
-    *out_ny = my;
-    *out_nx = mx;
+    *n_output1 = my;
+    *n_output2 = mx;
 }
 
-double* CLSMeSRRF::rgc_map(
+double* CLSMSuperRes::rgc_map(
     const double* img,
     int nx,
     int ny,
@@ -245,7 +245,7 @@ double* CLSMeSRRF::rgc_map(
 // Photon Reassignment
 // ========================================================================
 
-TTTR* CLSMeSRRF::reassign_photons(
+TTTR* CLSMSuperRes::reassign_photons(
     CLSMImage* clsm,
     TTTR* tttr,
     int magnification,
@@ -539,7 +539,7 @@ TTTR* CLSMeSRRF::reassign_photons(
 // Temporal Combination
 // ========================================================================
 
-void CLSMeSRRF::temporal_combine(
+void CLSMSuperRes::temporal_combine(
     const double* stack,
     int n_frames,
     int ny,
@@ -613,7 +613,7 @@ void CLSMeSRRF::temporal_combine(
     *output = result;
 }
 
-double* CLSMeSRRF::temporal_combine(
+double* CLSMSuperRes::temporal_combine(
     const double* stack,
     int n_frames,
     int ny,
@@ -629,7 +629,7 @@ double* CLSMeSRRF::temporal_combine(
 // Public Photon-Position Seam
 // ========================================================================
 
-void CLSMeSRRF::get_photon_positions(
+void CLSMSuperRes::get_photon_positions(
     CLSMImage* clsm,
     TTTR* tttr,
     int** out_frame,
@@ -656,7 +656,7 @@ void CLSMeSRRF::get_photon_positions(
 // PTU Output with Magnified Raster
 // ========================================================================
 
-bool CLSMeSRRF::write_ptu_magnified(
+bool CLSMSuperRes::write_ptu_magnified(
     TTTR* tttr_reassigned,
     int nx,
     int ny,

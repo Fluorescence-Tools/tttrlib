@@ -2732,8 +2732,9 @@ void CLSMImage::get_photon_positions(
                 CLSMLine* line = frame->lines[l_idx];
                 int line_idx = static_cast<int>(l_idx);
                 double y_line = static_cast<double>(line_idx);
-                const unsigned long long line_start_time = line->get_start_time(tttr);
+                const unsigned long long line_start_time = line->get_start_time(this->tttr);
                 auto pixel_duration = line->get_pixel_duration();
+                if (pixel_duration == 0) pixel_duration = 1;  // avoid division by zero
 
                 for (size_t p_idx = 0; p_idx < line->pixels.size(); ++p_idx) {
                     CLSMPixel& pixel = line->pixels[p_idx];
@@ -2794,7 +2795,7 @@ void CLSMImage::get_photon_positions(
 
     *out_frame = frame_arr;
     *out_line = line_arr;
-    *out_x_exact = x_exact;
+    *out_x_exact = x_arr;
     *out_y_line = y_arr;
     *out_event_idx = event_arr;
 }

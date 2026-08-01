@@ -1,5 +1,5 @@
 /*
- * CLSMeSRRF.h
+ * CLSMSuperRes.h
  *
  * Photon-level eSRRF (enhanced Super-Resolution Radial Fluctuations) for CLSM data.
  *
@@ -18,8 +18,8 @@
  * License: Same as tttrlib (see LICENSE)
  */
 
-#ifndef TTTRLIB_CLSMESRRF_H
-#define TTTRLIB_CLSMESRRF_H
+#ifndef TTTRLIB_CLSMSUPERRES_H
+#define TTTRLIB_CLSMSUPERRES_H
 
 #include <vector>
 #include <memory>
@@ -66,10 +66,10 @@ enum class SuperResMethod {
  * Output arrays are malloc()ed and ownership is transferred to the caller
  * (numpy will free() them via ARGOUTVIEWM typemaps).
  */
-class CLSMeSRRF {
+class CLSMSuperRes {
 public:
-    CLSMeSRRF() = default;
-    ~CLSMeSRRF() = default;
+    CLSMSuperRes() = default;
+    ~CLSMSuperRes() = default;
 
     // ========================================================================
     // RGC Map Computation
@@ -86,8 +86,8 @@ public:
      * @param sensitivity Exponent applied to normalized RGC (higher = sharper)
      * @param intensity_weighting If true, multiply RGC by interpolated intensity
      * @param output Output RGC array (M*ny * M*nx), caller must free()
-     * @param out_ny Output height (= M*ny)
-     * @param out_nx Output width (= M*nx)
+     * @param n_output1 Output height (= M*ny)
+     * @param n_output2 Output width (= M*nx)
      */
     static void rgc_map(
         const double* img,
@@ -98,8 +98,8 @@ public:
         int sensitivity,
         bool intensity_weighting,
         double** output,
-        int* out_ny,
-        int* out_nx
+        int* n_output1,
+        int* n_output2
     );
 
     // Overload returning the array directly (for SWIG)
@@ -253,4 +253,4 @@ public:
     );
 };
 
-#endif // TTTRLIB_CLSMESRRF_H
+#endif // TTTRLIB_CLSMSUPERRES_H
