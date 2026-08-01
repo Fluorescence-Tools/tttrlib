@@ -2616,6 +2616,189 @@ void CLSMImage::get_tttr_indices(int** output, int* n_output) {
     *output = out;
 }
 
+void CLSMImage::get_photon_positions(
+    TTTR* tttr,
+    int** out_frame,
+    int** out_line,
+    double** out_x_exact,
+    double** out_y_line,
+    int** out_event_idx,
+    int* n_photons
+) {
+    // Initialize outputs
+    *out_frame = nullptr;
+    *out_line = nullptr;
+    *out_x_exact = nullptr;
+    *out_y_line = nullptr;
+    *out_event_idx = nullptr;
+    *n_photons = 0;
+
+    if (!tttr) {
+        return;
+    }
+
+    // Temporary vectors to collect data
+    std::vector<int> frames_vec;
+    std::vector<int> lines_vec;
+    std::vector<double> x_exact_vec;
+    std::vector<double> y_line_vec;
+    std::vector<int> event_idx_vec;
+
+    // Use the mask path if available (more efficient)
+    if (!pixels_materialized_ && !stream_masks_.empty() && mask_tttr_ != nullptr) {
+        const size_t n_events = static_cast<size_t>(mask_tttr_->size());
+        const unsigned long long* mt_raw = mask_tttr_->is_macro_time_compression_enabled()
+                ? nullptr : mask_tttr_->macro_times;
+        SeqMacroTime smt(mt_raw, mask_tttr_->macro_times_compressed,
+                         mask_tttr_->macro_time_keyframes, mask_tttr_->keyframe_interval);
+
+        for (size_t f_idx = 0; f_idx < frames.size(); ++f_idx) {
+            const size_t mi = (mask_split_ && mask_block_size_ > 0)
+                    ? f_idx / mask_block_size_ : 0;
+            if (mi >= stream_masks_.size()) continue;
+            const uint64_t* accept_words = stream_masks_[mi].data();
+            CLSMFrame* frame = frames[f_idx];
+            int frame_idx = static_cast<int>(f_idx);
+
+            for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
+                CLSMLine* line = frame->lines[l_idx];
+                if (line->pixels.empty()) continue;
+                auto pixel_duration = line->get_pixel_duration();
+                const std::vector<double>* cumsum =
+                        has_non_uniform_durations() ? line_cumsum(l_idx) : nullptr;
+                if (pixel_duration == 0 && cumsum == nullptr) continue;
+                const int start_idx = line->get_start();
+                const int stop_idx = std::min(line->get_stop(), static_cast<int>(n_events));
+                if (start_idx < 0 || stop_idx <= start_idx) continue;
+                const unsigned long long line_start_time = line->get_start_time(mask_tttr_);
+                const int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
+                const double reciprocal = 1.0 / static_cast<double>(pixel_duration);
+                int line_idx = static_cast<int>(l_idx);
+
+                smt.reset(static_cast<size_t>(start_idx));
+                const int64_t w_first = start_idx >> 6;
+                const int64_t w_last = (stop_idx - 1) >> 6;
+
+                for (int64_t wi = w_first; wi <= w_last; ++wi) {
+                    uint64_t w = accept_words[wi];
+                    if (wi == w_first) w &= (~0ull) << (start_idx & 63);
+                    if (wi == w_last) {
+                        const int r = (stop_idx - 1) & 63;
+                        if (r != 63) w &= (1ull << (r + 1)) - 1;
+                    }
+
+                    while (w) {
+                        const int b = tttrlib::bitops::ctz64(w);
+                        w &= w - 1;
+                        const int event_i = static_cast<int>((wi << 6) + b);
+                        unsigned long long time_offset =
+                                smt.at(static_cast<size_t>(event_i)) - line_start_time;
+
+                        // Compute exact x position
+                        int raw_pixel;
+                        if (cumsum != nullptr) {
+                            auto it = std::upper_bound(cumsum->begin(), cumsum->end(),
+                                                           static_cast<double>(time_offset));
+                            raw_pixel = static_cast<int>(std::distance(cumsum->begin(), it));
+                        } else {
+                            raw_pixel = static_cast<int>(
+                                    static_cast<double>(time_offset) * reciprocal);
+                        }
+
+                        if (raw_pixel > n_pixels_minus_1 || raw_pixel < 0) continue;
+
+                        // Exact fractional x position within the line
+                        double x_exact = static_cast<double>(raw_pixel) +
+                                       (static_cast<double>(time_offset) -
+                                        static_cast<double>(raw_pixel) * pixel_duration) / pixel_duration;
+                        double y_line = static_cast<double>(line_idx);
+
+                        frames_vec.push_back(frame_idx);
+                        lines_vec.push_back(line_idx);
+                        x_exact_vec.push_back(x_exact);
+                        y_line_vec.push_back(y_line);
+                        event_idx_vec.push_back(event_i);
+                    }
+                }
+            }
+        }
+    } else {
+        // Fallback: materialized pixel path
+        ensure_pixels_materialized();
+        for (size_t f_idx = 0; f_idx < frames.size(); ++f_idx) {
+            CLSMFrame* frame = frames[f_idx];
+            int frame_idx = static_cast<int>(f_idx);
+            for (size_t l_idx = 0; l_idx < frame->lines.size(); ++l_idx) {
+                CLSMLine* line = frame->lines[l_idx];
+                int line_idx = static_cast<int>(l_idx);
+                double y_line = static_cast<double>(line_idx);
+                const unsigned long long line_start_time = line->get_start_time(tttr);
+                auto pixel_duration = line->get_pixel_duration();
+
+                for (size_t p_idx = 0; p_idx < line->pixels.size(); ++p_idx) {
+                    CLSMPixel& pixel = line->pixels[p_idx];
+                    int pixel_idx = static_cast<int>(p_idx);
+                    const auto& indices = pixel.get_tttr_indices();
+
+                    for (int event_i : indices) {
+                        unsigned long long mt = tttr->get_macro_time_at(event_i);
+                        unsigned long long time_offset = mt - line_start_time;
+
+                        // Exact fractional x position
+                        double x_exact = static_cast<double>(pixel_idx) +
+                                       static_cast<double>(time_offset) / pixel_duration;
+
+                        frames_vec.push_back(frame_idx);
+                        lines_vec.push_back(line_idx);
+                        x_exact_vec.push_back(x_exact);
+                        y_line_vec.push_back(y_line);
+                        event_idx_vec.push_back(event_i);
+                    }
+                }
+            }
+        }
+    }
+
+    // Allocate output arrays
+    size_t n = frames_vec.size();
+    if (n == 0) {
+        *n_photons = 0;
+        return;
+    }
+
+    *n_photons = static_cast<int>(n);
+
+    int* frame_arr = static_cast<int*>(malloc(n * sizeof(int)));
+    int* line_arr = static_cast<int*>(malloc(n * sizeof(int)));
+    double* x_arr = static_cast<double*>(malloc(n * sizeof(double)));
+    double* y_arr = static_cast<double*>(malloc(n * sizeof(double)));
+    int* event_arr = static_cast<int*>(malloc(n * sizeof(int)));
+
+    if (!frame_arr || !line_arr || !x_arr || !y_arr || !event_arr) {
+        // Clean up on allocation failure
+        if (frame_arr) std::free(frame_arr);
+        if (line_arr) std::free(line_arr);
+        if (x_arr) std::free(x_arr);
+        if (y_arr) std::free(y_arr);
+        if (event_arr) std::free(event_arr);
+        *n_photons = 0;
+        return;
+    }
+
+    // Copy data
+    std::memcpy(frame_arr, frames_vec.data(), n * sizeof(int));
+    std::memcpy(line_arr, lines_vec.data(), n * sizeof(int));
+    std::memcpy(x_arr, x_exact_vec.data(), n * sizeof(double));
+    std::memcpy(y_arr, y_line_vec.data(), n * sizeof(double));
+    std::memcpy(event_arr, event_idx_vec.data(), n * sizeof(int));
+
+    *out_frame = frame_arr;
+    *out_line = line_arr;
+    *out_x_exact = x_exact;
+    *out_y_line = y_arr;
+    *out_event_idx = event_arr;
+}
+
 void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3) {
     // Lazy fill: compute the counts straight from the stream masks (no
     // per-pixel index materialization). Marker-based binning is handled by

@@ -29,13 +29,38 @@ class TTTR;
 class CLSMImage;
 
 /**
- * @brief Photon-level eSRRF reassignment for CLSM data
+ * @brief Super-resolution method selector.
+ *
+ * eSRRF (Radial Gradient Convergence reassignment) is one of a family of
+ * photon-level super-resolution approaches. This enum selects which spatial
+ * prior is used to redistribute photons. New methods (SOFI, ISM, etc.) are
+ * added here as they are implemented.
+ *
+ *   - "esrrf"    : Radial Gradient Convergence (RGC) reassignment [default]
+ *                  Ported from NanoJ-eSRRF (Laine & Heil, Nat. Methods 2023)
+ *   - "uniform"  : No spatial prior — uniform upsampling within search radius
+ *                  (baseline; equivalent to esrrf with sensitivity=0)
+ *   - "sofi"     : SOFI-style reweighting [not yet implemented]
+ *   - "ism"      : Image Scanning Microscopy shift [not yet implemented]
+ */
+enum class SuperResMethod {
+    ESRRF,    // Radial Gradient Convergence reassignment
+    UNIFORM,  // Uniform upsampling (no spatial prior)
+    SOFI,     // SOFI-style (reserved)
+    ISM       // Image Scanning Microscopy (reserved)
+};
+
+/**
+ * @brief Photon-level super-resolution reassignment for CLSM data
  *
  * This class provides static methods for:
- *   - Computing RGC maps on magnified grids
- *   - Reassigning photons to sub-pixel positions using RGC as a spatial prior
+ *   - Computing RGC maps on magnified grids (the eSRRF spatial prior)
+ *   - Reassigning photons to sub-pixel positions using a spatial prior
  *   - Temporal combination (AVG/VAR/TAC2) of reassigned frames
  *   - PTU output with magnified raster
+ *
+ * eSRRF is the first and default method; the framework supports adding more
+ * (SOFI, ISM variants) via SuperResMethod.
  *
  * All methods are static and work on plain C arrays for SWIG compatibility.
  * Output arrays are malloc()ed and ownership is transferred to the caller
@@ -106,7 +131,8 @@ public:
      * @param sensitivity RGC sensitivity exponent
      * @param search_radius Search radius in native pixels (default: fwhm/2)
      * @param channel_mode "merged" or "split" (see below)
-     * @param seed RNG seed for reproducibility
+     * @param method Super-resolution method (default "esrrf"); see SuperResMethod
+     * @param seed RNG seed for reproducibility (controlled by TTTR_RNG_SEED if 0)
      *
      * channel_mode:
      *   - "merged": one RGC field from sum over all channels, all photons sample from it
@@ -123,7 +149,8 @@ public:
         int sensitivity,
         double search_radius,
         const char* channel_mode,  // "merged" or "split"
-        unsigned long long seed
+        unsigned long long seed,
+        const char* method = "esrrf"  // super-res method: "esrrf", "uniform", ...
     );
 
     // ========================================================================

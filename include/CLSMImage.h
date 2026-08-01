@@ -458,6 +458,31 @@ public:
      */
     void get_tttr_indices(int** output, int* n_output);
 
+    /*!
+     * \brief Get per-photon positions with exact fractional x coordinates
+     *
+     * This method extracts frame, line, exact fractional x, line index, and TTTR event
+     * indices for all photons. The x coordinate is computed exactly from macro times
+     * within each line, giving sub-pixel resolution along the fast scan axis.
+     *
+     * @param tttr                    TTTR object for macro time access
+     * @param out_frame               Output frame indices (n_photons), caller must free
+     * @param out_line                Output line indices (n_photons), caller must free
+     * @param out_x_exact             Output exact fractional x coordinates (n_photons), caller must free
+     * @param out_y_line              Output y line coordinates (n_photons), caller must free
+     * @param out_event_idx           Output TTTR event indices (n_photons), caller must free
+     * @param n_photons               Output number of photons
+     */
+    void get_photon_positions(
+        TTTR* tttr,
+        int** out_frame,
+        int** out_line,
+        double** out_x_exact,
+        double** out_y_line,
+        int** out_event_idx,
+        int* n_photons
+    );
+
     std::shared_ptr<TTTR> get_tttr(){
         return tttr;
     }

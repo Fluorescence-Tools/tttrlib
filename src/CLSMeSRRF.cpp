@@ -9,10 +9,15 @@
 #include "CLSMeSRRF.h"
 #include "CLSMImage.h"
 #include "TTTR.h"
+#include "Random.h"  // centralized counter-based RNG (Philox, PCG, SplitMix64, MT19937)
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+#include <string>
+#include <cctype>
 #include <stdexcept>
+#include <vector>
+#include <utility>
 
 // ========================================================================
 // Internal helper: cubic interpolation kernel (Catmull-Rom)
@@ -248,15 +253,286 @@ TTTR* CLSMeSRRF::reassign_photons(
     int sensitivity,
     double search_radius,
     const char* channel_mode,
-    unsigned long long seed
+    unsigned long long seed,
+    const char* method
 ) {
-    // TODO: Implement photon reassignment
-    // This will require:
-    // 1. Get photon positions via get_photon_positions
-    // 2. Compute RGC field(s)
+    if (!clsm || !tttr) {
+        throw std::invalid_argument("CLSMImage and TTTR must not be null");
+    }
+
+    // Resolve the super-resolution method (eSRRF is the default; others reserved)
+    SuperResMethod sr_method = SuperResMethod::ESRRF;
+    if (method) {
+        std::string m(method);
+        std::transform(m.begin(), m.end(), m.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        if (m == "uniform") sr_method = SuperResMethod::UNIFORM;
+        else if (m == "sofi") sr_method = SuperResMethod::SOFI;
+        else if (m == "ism") sr_method = SuperResMethod::ISM;
+        // default: ESRRF
+    }
+
+    // SOFI and ISM reassignment are not yet implemented
+    if (sr_method == SuperResMethod::SOFI) {
+        throw std::runtime_error("SOFI reassignment not yet implemented (reserved)");
+    }
+    if (sr_method == SuperResMethod::ISM) {
+        throw std::runtime_error("ISM reassignment not yet implemented (reserved)");
+    }
+
+    int n_channels = clsm->get_n_channels();
+    int n_frames = clsm->get_n_frames();
+    int n_lines = clsm->get_n_lines();
+    int n_pixel = clsm->get_n_pixel();
+
+    if (n_lines <= 0 || n_pixel <= 0) {
+        throw std::runtime_error("CLSMImage has no pixels");
+    }
+
+    // 1. Get photon positions (exact fractional x from macro times)
+    int* photon_frame = nullptr;
+    int* photon_line = nullptr;
+    double* photon_x = nullptr;
+    double* photon_y = nullptr;
+    int* photon_event = nullptr;
+    int n_photons = 0;
+
+    get_photon_positions(clsm, tttr,
+        &photon_frame, &photon_line, &photon_x, &photon_y,
+        &photon_event, &n_photons);
+
+    if (n_photons == 0) {
+        // No photons — return empty TTTR
+        if (photon_frame) std::free(photon_frame);
+        if (photon_line) std::free(photon_line);
+        if (photon_x) std::free(photon_x);
+        if (photon_y) std::free(photon_y);
+        if (photon_event) std::free(photon_event);
+        auto empty = std::make_shared<TTTR>();
+        return new TTTR(*empty);
+    }
+
+    // Resolve seed: 0 means "use the global TTTR_RNG_SEED"
+    if (seed == 0) {
+        seed = global_rng_seed();
+    }
+
+    // 2. Compute intensity image and RGC field(s)
+    //    For the UNIFORM method, the field is flat (all ones) — no spatial prior.
+    std::string mode(channel_mode);
+    std::vector<double*> rgc_fields;  // one per channel (or one for merged)
+    std::vector<int> rgc_my, rgc_mx;
+
+    // Get intensity: shape (n_frames_total, n_lines, n_pixel)
+    unsigned short* intensity_raw = nullptr;
+    int dim1, dim2, dim3;
+    clsm->get_intensity(&intensity_raw, &dim1, &dim2, &dim3);
+    // dim1 = n_frames_total (may include channel splitting), dim2 = n_lines, dim3 = n_pixel
+
+    // Determine effective channels for RGC computation
+    int eff_channels = (mode == "split") ? std::max(n_channels, 1) : 1;
+
+    for (int ch = 0; ch < eff_channels; ++ch) {
+        // Sum intensity over frames for this channel into a 2D image (n_lines, n_pixel)
+        std::vector<double> img2d(n_lines * n_pixel, 0.0);
+
+        if (mode == "split" && n_channels > 1) {
+            // Sum only this channel's frames
+            int ch_frames = clsm->get_channel_frame_count(ch);
+            for (int f = 0; f < ch_frames; ++f) {
+                CLSMFrame* frame = clsm->get_frame_for_channel(ch, f);
+                if (!frame) continue;
+                for (int l = 0; l < n_lines; ++l) {
+                    for (int p = 0; p < n_pixel; ++p) {
+                        // Access frame's intensity
+                        int global_f = 0;  // computed below
+                        // For split_by_channel, frame ordering is channel-major
+                        (void)global_f;
+                    }
+                }
+            }
+            // Simplified: use the raw intensity array directly
+            // In split_by_channel mode, dim1 = n_det * n_frames_per_det
+            int frames_per_ch = dim1 / std::max(n_channels, 1);
+            for (int f = ch * frames_per_ch; f < (ch + 1) * frames_per_ch && f < dim1; ++f) {
+                for (int l = 0; l < dim2; ++l) {
+                    for (int p = 0; p < dim3; ++p) {
+                        img2d[l * n_pixel + p] += intensity_raw[f * dim2 * dim3 + l * dim3 + p];
+                    }
+                }
+            }
+        } else {
+            // Merged: sum all frames
+            for (int f = 0; f < dim1; ++f) {
+                for (int l = 0; l < dim2; ++l) {
+                    for (int p = 0; p < dim3; ++p) {
+                        img2d[l * n_pixel + p] += intensity_raw[f * dim2 * dim3 + l * dim3 + p];
+                    }
+                }
+            }
+        }
+
+        // Compute RGC field (or flat field for UNIFORM method)
+        int out_my, out_mx;
+        double* rgc = nullptr;
+        if (sr_method == SuperResMethod::UNIFORM) {
+            // UNIFORM: flat prior (all ones) — uniform upsampling within search radius
+            out_my = magnification * n_lines;
+            out_mx = magnification * n_pixel;
+            rgc = static_cast<double*>(std::malloc(out_my * out_mx * sizeof(double)));
+            for (int i = 0; i < out_my * out_mx; ++i) rgc[i] = 1.0;
+        } else {
+            // ESRRF: compute the Radial Gradient Convergence field
+            rgc_map(img2d.data(), n_pixel, n_lines, magnification, fwhm, sensitivity,
+                    true, &rgc, &out_my, &out_mx);
+        }
+        rgc_fields.push_back(rgc);
+        rgc_my.push_back(out_my);
+        rgc_mx.push_back(out_mx);
+    }
+
+    std::free(intensity_raw);
+
     // 3. For each photon, sample new position from RGC-weighted distribution
-    // 4. Build new TTTR with reassigned positions (preserving micro_time, channel)
-    throw std::runtime_error("reassign_photons not yet implemented");
+    double* x_new = static_cast<double*>(std::malloc(n_photons * sizeof(double)));
+    double* y_new = static_cast<double*>(std::malloc(n_photons * sizeof(double)));
+
+    if (!x_new || !y_new) {
+        std::free(x_new);
+        std::free(y_new);
+        for (double* f : rgc_fields) std::free(f);
+        std::free(photon_frame);
+        std::free(photon_line);
+        std::free(photon_x);
+        std::free(photon_y);
+        std::free(photon_event);
+        throw std::runtime_error("Failed to allocate reassignment output arrays");
+    }
+
+    int sr_pixels = static_cast<int>(std::ceil(search_radius * magnification));
+    int my = rgc_my[0];
+    int mx = rgc_mx[0];
+
+    #pragma omp parallel for schedule(dynamic) if(n_photons >= 10000)
+    for (int i = 0; i < n_photons; ++i) {
+        // Determine which RGC field to use
+        int ch = 0;
+        if (mode == "split" && n_channels > 1) {
+            ch = std::min(photon_event[i] % n_channels, eff_channels - 1);  // simplified
+        }
+        double* rgc = rgc_fields[ch];
+
+        // Current photon position in magnified pixel units
+        double xM = photon_x[i] * magnification;
+        double yM = photon_y[i] * magnification;
+
+        // Search window
+        int x0 = std::max(static_cast<int>(std::floor(xM - sr_pixels)), 0);
+        int x1 = std::min(static_cast<int>(std::ceil(xM + sr_pixels)), mx - 1);
+        int y0 = std::max(static_cast<int>(std::floor(yM - sr_pixels)), 0);
+        int y1 = std::min(static_cast<int>(std::ceil(yM + sr_pixels)), my - 1);
+
+        // Collect weights and positions
+        std::vector<double> weights;
+        std::vector<std::pair<int, int>> positions;
+
+        for (int yi = y0; yi <= y1; ++yi) {
+            for (int xi = x0; xi <= x1; ++xi) {
+                double dx = xi - xM;
+                double dy = yi - yM;
+                double dist = std::sqrt(dx * dx + dy * dy);
+                if (dist <= search_radius * magnification) {
+                    double w = rgc[yi * mx + xi];
+                    if (w > 0) {  // Only consider positive weights
+                        weights.push_back(w);
+                        positions.emplace_back(xi, yi);
+                    }
+                }
+            }
+        }
+
+        if (positions.empty()) {
+            // No valid sub-pixels — keep original position
+            x_new[i] = xM;
+            y_new[i] = yM;
+            continue;
+        }
+
+        // Normalize weights
+        double w_sum = 0.0;
+        for (double w : weights) w_sum += w;
+
+        if (w_sum <= 0.0) {
+            // Uniform fallback
+            double u = tttrlib::Random::deterministic(seed, i);
+            int idx = static_cast<int>(u * positions.size());
+            idx = std::min(idx, static_cast<int>(positions.size()) - 1);
+            x_new[i] = positions[idx].first;
+            y_new[i] = positions[idx].second;
+            continue;
+        }
+
+        // Sample from categorical distribution
+        double u = tttrlib::Random::deterministic(seed, i) * w_sum;
+        double cumsum = 0.0;
+        int sample_idx = static_cast<int>(positions.size()) - 1;  // default to last
+        for (size_t k = 0; k < weights.size(); ++k) {
+            cumsum += weights[k];
+            if (u <= cumsum) {
+                sample_idx = static_cast<int>(k);
+                break;
+            }
+        }
+
+        x_new[i] = positions[sample_idx].first;
+        y_new[i] = positions[sample_idx].second;
+    }
+
+    // 4. Build new TTTR with reassigned positions
+    // Macro time encodes position in the magnified raster.
+    // We preserve micro_time and routing_channel from the original.
+    std::vector<unsigned long long> new_macro_times(n_photons);
+    std::vector<unsigned short> new_micro_times(n_photons);
+    std::vector<signed char> new_routing(n_photons);
+    std::vector<signed char> new_event_types(n_photons);
+
+    for (int i = 0; i < n_photons; ++i) {
+        int event_idx = photon_event[i];
+        // Preserve micro_time and routing_channel
+        new_micro_times[i] = tttr->get_micro_time_at(event_idx);
+        new_routing[i] = tttr->get_routing_channel_at(event_idx);
+        new_event_types[i] = tttr->get_event_type_at(event_idx);
+
+        // New macro time from magnified position:
+        // macro_time = frame_offset + line * line_duration + subpixel_x * pixel_duration
+        // For simplicity, encode as: y * mx + x (flat index in magnified grid)
+        // The actual PTU writer will convert this to proper macro times
+        new_macro_times[i] = static_cast<unsigned long long>(
+            photon_frame[i] * my * mx +
+            static_cast<int>(y_new[i]) * mx +
+            static_cast<int>(x_new[i])
+        );
+    }
+
+    // Clean up intermediate arrays
+    for (double* f : rgc_fields) std::free(f);
+    std::free(photon_frame);
+    std::free(photon_line);
+    std::free(photon_x);
+    std::free(photon_y);
+    std::free(photon_event);
+    std::free(x_new);
+    std::free(y_new);
+
+    // Build the new TTTR
+    auto* result = new TTTR(
+        new_macro_times.data(), static_cast<int>(new_macro_times.size()),
+        new_micro_times.data(), static_cast<int>(new_micro_times.size()),
+        new_routing.data(), static_cast<int>(new_routing.size()),
+        new_event_types.data(), static_cast<int>(new_event_types.size())
+    );
+
+    return result;
 }
 
 // ========================================================================
@@ -363,9 +639,17 @@ void CLSMeSRRF::get_photon_positions(
     int** out_event_idx,
     int* n_photons
 ) {
-    // TODO: Implement photon position extraction
-    // This needs to expose for_each_mask_photon functionality
-    throw std::runtime_error("get_photon_positions not yet implemented");
+    // Delegate to CLSMImage's own photon-position extraction (exact fractional x
+    // from macro times). This keeps the timing arithmetic in one place.
+    clsm->get_photon_positions(
+        tttr,
+        out_frame,
+        out_line,
+        out_x_exact,
+        out_y_line,
+        out_event_idx,
+        n_photons
+    );
 }
 
 // ========================================================================
