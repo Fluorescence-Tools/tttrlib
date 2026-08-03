@@ -436,6 +436,61 @@ def two_colour_filaments(
     return emitters, params
 
 
+def detector_grid(n_side: int, geometry: str = "rect") -> np.ndarray:
+    """
+    Normalized coordinates of the detector element centres.
+
+    Ported from BrightEyes-ISM ``detector.rect_grid`` / ``hex_grid``. A
+    hexagonal packing is what real SPAD arrays use -- the 23-element array of
+    the CW-SOFISM work, for instance -- not the square lattice a Gaussian toy
+    model usually assumes.
+
+    Parameters
+    ----------
+    n_side : int
+        Elements per side of the generating square.
+    geometry : str
+        ``'rect'`` or ``'hex'``.
+
+    Returns
+    -------
+    np.ndarray
+        ``(n_elements, 2)`` array of (x, y) centres in element units. A
+        hexagonal grid is trimmed to the inscribed region, so it returns fewer
+        than ``n_side ** 2`` elements.
+    """
+    x = np.arange(-(n_side // 2), n_side // 2 + 1)
+    if geometry == "rect":
+        return np.array([[i, j] for i in x for j in x], dtype=float)
+    if geometry == "hex":
+        s = np.array([[0.5 * np.sqrt(3) * i, j - 0.5 * (i % 2)] for i in x for j in x])
+        return s[np.abs(s[:, 1]) <= (n_side // 2)]
+    raise ValueError("geometry must be 'rect' or 'hex'")
+
+
+def airy_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+             centre=None) -> np.ndarray:
+    """
+    Scalar diffraction-limited PSF: the Airy pattern ``(2 J1(v) / v) ** 2``.
+
+    The exact scalar result rather than the Gaussian approximation to it. The
+    difference is in the *wings*: a Gaussian has none, so it understates both
+    the out-of-focus background and the crosstalk between neighbouring
+    detector elements.
+    """
+    from scipy.special import j1
+
+    ny, nx = shape
+    cy, cx = ((ny - 1) / 2.0, (nx - 1) / 2.0) if centre is None else centre
+    y, x = np.mgrid[0:ny, 0:nx]
+    r_nm = np.hypot(x - cx, y - cy) * pixel_size_nm
+    v = 2.0 * np.pi * na * r_nm / wavelength_nm
+    out = np.ones_like(v)
+    nz = v > 1e-12
+    out[nz] = (2.0 * j1(v[nz]) / v[nz]) ** 2
+    return out
+
+
 def generate_ism_psf(
     na: float = 1.4,
     wavelength_exc: float = 488.0,
@@ -445,7 +500,9 @@ def generate_ism_psf(
     nx: int = 64,
     ny: int = 64,
     pixel_size_nm: float = 10.0,
-    pinhole_shape: str = 'square'
+    pinhole_shape: str = 'square',
+    geometry: str = 'rect',
+    model: str = 'gaussian'
 ):
     """
     Generate physical Image Scanning Microscopy (ISM) Point Spread Functions (PSFs).
@@ -453,6 +510,20 @@ def generate_ism_psf(
     Simulates the excitation PSF, detection PSF, SPAD detector array geometry,
     and calculates individual detector channel PSFs, standard CLSM sum image,
     and shift-reassigned ISM PSF.
+
+    Parameters
+    ----------
+    geometry : str
+        Detector lattice, ``'rect'`` or ``'hex'`` (see :func:`detector_grid`).
+    model : str
+        ``'gaussian'`` for the usual approximation, ``'airy'`` for the exact
+        scalar diffraction PSF.
+
+    Notes
+    -----
+    This is a *scalar* model. The vectorial calculation of BrightEyes-ISM
+    ``PSF_sim`` additionally accounts for polarization and high-NA apodization,
+    which begin to matter above roughly NA 1.0.
     """
     airy_radius_nm = 0.61 * wavelength_det / na
     sigma_exc = (0.5 * wavelength_exc / na) / 2.35482
@@ -466,26 +537,27 @@ def generate_ism_psf(
     y_grid = np.arange(ny, dtype=float)[:, None] - ny / 2.0
     r2_grid = x_grid[None, :]**2 + y_grid**2
 
-    h_exc = np.exp(-r2_grid / (2.0 * sigma_exc_px**2))
+    if model == 'airy':
+        h_exc = airy_psf((ny, nx), na, wavelength_exc, pixel_size_nm,
+                         centre=(ny / 2.0, nx / 2.0))
+    elif model == 'gaussian':
+        h_exc = np.exp(-r2_grid / (2.0 * sigma_exc_px**2))
+    else:
+        raise ValueError("model must be 'gaussian' or 'airy'")
 
-    det_side = n_det
-    det_offsets = []
-    channel_psfs = np.zeros((det_side * det_side, ny, nx), dtype=float)
+    # element centres on the requested lattice, scaled to the pitch
+    det_offsets = detector_grid(n_det, geometry) * pitch_px
+    channel_psfs = np.zeros((len(det_offsets), ny, nx), dtype=float)
 
-    idx = 0
-    for row in range(det_side):
-        for col in range(det_side):
-            dx_ch = (col - (det_side - 1) / 2.0) * pitch_px
-            dy_ch = (row - (det_side - 1) / 2.0) * pitch_px
-            det_offsets.append([dx_ch, dy_ch])
-
+    for idx, (dx_ch, dy_ch) in enumerate(det_offsets):
+        if model == 'airy':
+            h_det_k = airy_psf((ny, nx), na, wavelength_det, pixel_size_nm,
+                               centre=(ny / 2.0 + dy_ch, nx / 2.0 + dx_ch))
+        else:
             r2_ch = (x_grid[None, :] - dx_ch)**2 + (y_grid - dy_ch)**2
             h_det_k = np.exp(-r2_ch / (2.0 * sigma_det_px**2))
-            ch_psf = h_exc * h_det_k
-            channel_psfs[idx] = ch_psf / ch_psf.sum()
-            idx += 1
-
-    det_offsets = np.array(det_offsets)
+        ch_psf = h_exc * h_det_k
+        channel_psfs[idx] = ch_psf / ch_psf.sum()
     sum_psf = channel_psfs.sum(axis=0)
 
     # Shift-reassigned ISM PSF

@@ -33,6 +33,20 @@
   `CLSMSuperRes.fourier_reweight` applies the Wiener-type filter
   `W(k) = 1/(OTF^2(k) + eps)` of the paper's Eq. 3.
 
+- **A better ISM PSF model.** `prototype/esrrf/simulate` gains `detector_grid`,
+  ported from BrightEyes-ISM `detector.rect_grid`/`hex_grid`, so the simulated
+  array can be hexagonal rather than only square -- a 5-per-side hexagonal grid
+  gives the 23 elements of the SPAD23G array the CW-SOFISM work uses. It also
+  gains `airy_psf`, the exact scalar diffraction PSF, selectable with
+  `model=airy`. Cross-validated against the analytic limit: the first zero
+  lands at 0.61 lambda/NA and the FWHM at 0.51 lambda/NA. The point of having it
+  is that the Gaussian approximation tracks the core closely but has no wings,
+  and holds ~43x less energy beyond the first zero -- which is exactly where
+  out-of-focus background and element-to-element crosstalk live, so any result
+  judged on a Gaussian-simulated background inherits that error. The model
+  remains scalar; the vectorial calculation of BrightEyes-ISM `PSF_sim` needs
+  torch, psf_generator and zernikepy and could not be run to compare against.
+
 ### Fixed
 - **eSRRF now reproduces NanoJ.** The RGC kernel deviated from
   `liveSRRF.cl` in four places, none of which showed at the image centre and
