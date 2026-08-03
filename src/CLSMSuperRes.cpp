@@ -2082,7 +2082,7 @@ static void s2ism_core(
         for (auto& o : obj) std::fill(o.data.begin(), o.data.end(), flat);
     }
 
-    std::vector<CImage> obj_fft(nz), frac_fft(n_ch), work(std::max(nz, n_ch));
+    std::vector<CImage> obj_fft(nz), frac_fft(n_ch);
     Image scratch(nx, ny, 0.0);
     std::vector<Image> fraction(n_ch, Image(nx, ny, 0.0));
 
@@ -2106,11 +2106,8 @@ static void s2ism_core(
         }
 
         // correlate the ratio back through each plane's PSFs and update
-        double focal_before = obj[nz / 2].data.size()
-                ? std::accumulate(obj[nz / 2].data.begin(), obj[nz / 2].data.end(), 0.0) : 0.0;
-        double all_before = 0.0;
-        for (const auto& o : obj)
-            all_before += std::accumulate(o.data.begin(), o.data.end(), 0.0);
+        const double focal_before = std::accumulate(
+                obj[nz / 2].data.begin(), obj[nz / 2].data.end(), 0.0);
 
         for (size_t z = 0; z < nz; ++z) {
             CImage acc(nx, ny, cpx(0.0, 0.0));
@@ -2132,7 +2129,6 @@ static void s2ism_core(
             double focal_after = std::accumulate(
                     obj[nz / 2].data.begin(), obj[nz / 2].data.end(), 0.0);
             const double d_focal = (focal_after - focal_before) / total;
-            (void) all_before;
             if (std::abs(d_focal) < threshold) {
                 if (!pre_flag) running = false;   // second consecutive quiet step
                 else pre_flag = false;
